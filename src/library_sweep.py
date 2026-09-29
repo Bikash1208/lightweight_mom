@@ -246,3 +246,50 @@ def write_app_library_json(database, path):
     path = Path(path)
     path.write_text(json.dumps(doc, indent=1, allow_nan=False) + "\n")
     return path
+
+
+def build_square_library_cells(base_config_dict, l_values_mm, frequency_hz, progress=None):
+    """PHASE13C: one real solve per L value, SQUARE cells only (L=W) -- the wizard's auto-built
+    board library never exposes an independent L,W grid the way the Library page does. `base_
+    config_dict`: `config.config_from_dict`'s own shape, with `geometry`/`excitation.frequency`
+    as placeholders (overwritten per L here, same convention `routers/library.py`'s
+    `LibrarySweepRequest` already documents). Deliberately one `run_custom_sweep` call per L
+    (each a single-cell sweep) rather than `l_values_mm x w_values_mm` through
+    `build_sweep_definition`'s two independent axes, which would solve the full cross product
+    (e.g. 25 cells for 5 L values) when only the 5 diagonal (square) cells are wanted. Returns the
+    list of per-cell JSON docs (the same shape `write_app_library_json`'s `doc["cells"]` has)."""
+    from .config import config_from_dict
+
+    cells = []
+    for i, l_mm in enumerate(l_values_mm):
+        if progress is not None:
+            progress({"done": i, "total": len(l_values_mm)})
+        cfg = config_from_dict(
+            {
+                **base_config_dict,
+                "geometry": {"type": "rectangle", "length": l_mm * 1e-3, "width": l_mm * 1e-3},
+                "excitation": {"frequency": frequency_hz},
+            }
+        )
+        spec = SweepSpec(
+            f_min_hz=frequency_hz,
+            f_max_hz=frequency_hz,
+            f_step_hz=1.0e9,
+            f_design_hz=frequency_hz,
+            l_values_mm=(l_mm,),
+            w_values_mm=(l_mm,),
+        )
+        result = run_custom_sweep(cfg, spec, out_dir=None)
+        cells.append(_cell_doc(result.database.cells[0], result.database))
+    if progress is not None:
+        progress({"done": len(l_values_mm), "total": len(l_values_mm)})
+    return cells
+
+
+def write_square_library_json(cells, path):
+    """Writes a `build_square_library_cells` cell list in the same on-disk shape
+    `write_app_library_json` produces."""
+    doc = {"format": LIBRARY_FORMAT_NAME, "version": LIBRARY_FORMAT_VERSION, "cells": cells}
+    path = Path(path)
+    path.write_text(json.dumps(doc, indent=1, allow_nan=False) + "\n")
+    return path

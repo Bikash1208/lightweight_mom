@@ -295,3 +295,27 @@ def test_formulation_a_rescales_to_beta_bar_by_default_when_the_table_has_it(cli
     assert job_opt_out["status"] == "done", job_opt_out
     labels_opt_out = job_opt_out["result"]["labels"]
     assert any(label.startswith("REFERENCE_WAVE_NOT_RESCALED(") for label in labels_opt_out)
+
+
+@pytest.mark.slow
+def test_ensure_library_builds_once_and_reuses_on_repeat(client):
+    """PHASE13C: the wizard never sends the user to a separate Library page -- /ensure_library
+    must build a real square-patch library for a chosen board/frequency the first time, then
+    reuse it (not re-solve) on a repeat request for the identical board."""
+    body = {"period_mm": 8.0, "eps_r": 2.2, "tan_delta": 0.0009, "thickness_mm": 1.575, "frequency_hz": 12.5e9}
+    resp1 = client.post("/api/hmsa/ensure_library", json=body)
+    job1 = _wait_for_job(client, resp1.json()["id"], timeout=120.0)
+    assert job1["status"] == "done", job1
+    assert job1["result"]["already_built"] is False
+    assert job1["result"]["n_geometries"] == 6
+    library_id = job1["result"]["library_id"]
+
+    lib_resp = client.get(f"/api/library/{library_id}")
+    assert lib_resp.status_code == 200
+    assert lib_resp.json()["n_cells"] == 6
+
+    resp2 = client.post("/api/hmsa/ensure_library", json=body)
+    job2 = _wait_for_job(client, resp2.json()["id"], timeout=30.0)
+    assert job2["status"] == "done", job2
+    assert job2["result"]["already_built"] is True
+    assert job2["result"]["library_id"] == library_id

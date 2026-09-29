@@ -30,13 +30,23 @@ from ...fields.reference_field_grid import (
 )
 from ...hologram.hmsa_synthesis import synthesize_formulation_a, synthesize_formulation_b
 from ...labels import FEED_REGION_MASKED, reference_field_frequency_mismatch
+from ...library_sweep import build_square_library_cells, write_square_library_json
 from ...phase8b.object_wave import Beam
 from ...reflectarray.designer import CellAssignment
 from ...unit_cell_library import UnitCellLibrary
 from .. import library_registry
+from ..jobs import config_hash
 from ..jsonutil import to_jsonable
 from ..library_query import available_frequencies_hz, library_candidates_at_frequency
-from ..storage import upload_dir
+from ..storage import job_output_dir, upload_dir
+
+# PHASE13C: the wizard never sends the user to a separate Library page -- these are the fixed
+# square-patch geometry family and mesh the auto-built board library always uses. A reasonable
+# interactive-speed mesh, NOT alignment-searched (`discretization.smallest_aligned_cells` could
+# need an unboundedly large mesh for an arbitrary user-chosen period/L combination -- deferred,
+# documented in docs/phases/PHASE13_WEBAPP.md).
+AUTO_LIBRARY_L_FRACTIONS_OF_PERIOD = (0.15, 0.30, 0.45, 0.60, 0.75, 0.90)
+AUTO_LIBRARY_MESH_CELLS = 32
 
 # PHASE13B A3: relative tolerance before an upload-vs-synthesis frequency difference is labeled a
 # mismatch -- generous enough to absorb GHz/Hz round-trip and user-typed rounding, not a physics
@@ -314,4 +324,89 @@ def synthesize(body: HmsaSynthesizeRequest, request: Request):
         except KeyError as exc:
             raise HTTPException(404, str(exc)) from exc
     job = request.app.state.jobs.submit("hmsa_synthesize", _run_synthesize_job, body.model_dump())
+    return job.to_dict()
+
+
+class EnsureLibraryRequest(BaseModel):
+    period_mm: float
+    eps_r: float
+    tan_delta: float
+    thickness_mm: float
+    frequency_hz: float
+
+
+def _auto_library_id(body_dict):
+    payload = {
+        "kind": "hmsa_auto_library",
+        "l_fractions": AUTO_LIBRARY_L_FRACTIONS_OF_PERIOD,
+        "mesh_cells": AUTO_LIBRARY_MESH_CELLS,
+        **body_dict,
+    }
+    return "auto_" + config_hash(payload)[:20]
+
+
+def _run_ensure_library_job(job, body_dict, library_id):
+    l_values_mm = tuple(round(body_dict["period_mm"] * f, 6) for f in AUTO_LIBRARY_L_FRACTIONS_OF_PERIOD)
+    base_config = {
+        "period_x": body_dict["period_mm"] * 1e-3,
+        "period_y": body_dict["period_mm"] * 1e-3,
+        "substrate": {
+            "name": "user",
+            "eps_r": body_dict["eps_r"],
+            "tan_delta": body_dict["tan_delta"],
+            "thickness": body_dict["thickness_mm"] * 1e-3,
+            "backing": "pec",
+        },
+        "geometry": {"type": "rectangle", "length": l_values_mm[0], "width": l_values_mm[0]},  # placeholder
+        "excitation": {"frequency": body_dict["frequency_hz"]},  # placeholder
+        "mesh": {
+            "cells_x": AUTO_LIBRARY_MESH_CELLS,
+            "cells_y": AUTO_LIBRARY_MESH_CELLS,
+            "floquet_order": AUTO_LIBRARY_MESH_CELLS,
+        },
+        "reference_planes": {"top_air_thickness": 5.0e-3},
+    }
+
+    def _progress(event):
+        job.progress = event["done"] / max(event["total"], 1)
+        job.progress_message = f"{event['done']}/{event['total']} cell sizes solved"
+
+    cells = build_square_library_cells(base_config, l_values_mm, body_dict["frequency_hz"], progress=_progress)
+    out_dir = job_output_dir(job.id)
+    path = write_square_library_json(cells, out_dir / "unit_cell_library.json")
+    library_registry.register(
+        library_id,
+        path,
+        meta={
+            "period_mm": body_dict["period_mm"],
+            "backing": "pec",
+            "substrate": "user",
+            "n_geometries": len(cells),
+            "auto_built": True,
+            "frequency_hz": body_dict["frequency_hz"],
+        },
+    )
+    return {"library_id": library_id, "n_geometries": len(cells), "l_values_mm": l_values_mm, "already_built": False}
+
+
+@router.post("/ensure_library")
+def ensure_library(body: EnsureLibraryRequest, request: Request):
+    """PHASE13C: the wizard never sends the user to a separate Library page -- it builds (or
+    reuses -- across requests via the job cache, and across app restarts via the persisted
+    `library_registry`) a small square-patch library for the chosen board/frequency automatically.
+    Always returns a job (even the "already built" fast path), so the frontend has one uniform
+    poll-until-done code path."""
+    library_id = _auto_library_id(body.model_dump())
+    try:
+        library_registry.resolve_path(library_id)
+        job = request.app.state.jobs.submit(
+            "hmsa_ensure_library", lambda job: {"library_id": library_id, "already_built": True}
+        )
+        return job.to_dict()
+    except KeyError:
+        pass
+    key = config_hash({"kind": "hmsa_ensure_library", **body.model_dump()})
+    job = request.app.state.jobs.submit(
+        "hmsa_ensure_library", _run_ensure_library_job, body.model_dump(), library_id, cache_key=key
+    )
     return job.to_dict()

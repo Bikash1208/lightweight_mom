@@ -10,11 +10,13 @@ import pytest
 from src.config import config_from_dict
 from src.library_sweep import (
     SweepSpec,
+    build_square_library_cells,
     classify_cell_backing_aware,
     detect_resonance_phase_crossing,
     extract_design_frequency,
     run_custom_sweep,
     write_app_library_json,
+    write_square_library_json,
 )
 from src.unit_cell_library import UnitCellLibrary
 
@@ -178,3 +180,51 @@ def test_classify_cell_backing_aware_finds_the_grounded_design_point_resonance()
     new_classification = classify_cell_backing_aware(cell, result.database, rows[0], cfg.unit_cell)
     assert old_classification.resonance.is_resonant is False  # the pre-existing bug, still true
     assert new_classification.resonance.is_resonant is True
+
+
+# --------------------------------------------------------------- PHASE13C: auto-built board library
+
+
+def test_build_square_library_cells_solves_only_the_diagonal():
+    """5 L values must give exactly 5 cells (all L=W), not the 25 a full L x W cross product
+    through build_sweep_definition's two independent axes would solve."""
+    base_config = {
+        "period_x": 8.0e-3,
+        "period_y": 8.0e-3,
+        "substrate": {**_SUBSTRATE, "backing": "pec"},
+        "geometry": {"type": "rectangle", "length": 2.0e-3, "width": 2.0e-3},  # placeholder
+        "excitation": {"frequency": 12.5e9},  # placeholder
+        "mesh": _MESH,
+        "reference_planes": {"top_air_thickness": 5.0e-3},
+    }
+    calls = []
+    cells = build_square_library_cells(
+        base_config, l_values_mm=(2.0, 3.0, 4.0), frequency_hz=12.5e9, progress=calls.append
+    )
+    assert len(cells) == 3
+    for cell, l_mm in zip(cells, (2.0, 3.0, 4.0), strict=True):
+        assert cell["L_mm"] == pytest.approx(l_mm)
+        assert cell["W_mm"] == pytest.approx(l_mm)
+        assert cell["solver_status"] == "OK"
+    assert calls[0] == {"done": 0, "total": 3}
+    assert calls[-1] == {"done": 3, "total": 3}
+
+
+def test_write_square_library_json_round_trips_through_unit_cell_library_query_api(tmp_path):
+    base_config = {
+        "period_x": 8.0e-3,
+        "period_y": 8.0e-3,
+        "substrate": {**_SUBSTRATE, "backing": "pec"},
+        "geometry": {"type": "rectangle", "length": 2.0e-3, "width": 2.0e-3},
+        "excitation": {"frequency": 12.5e9},
+        "mesh": _MESH,
+        "reference_planes": {"top_air_thickness": 5.0e-3},
+    }
+    cells = build_square_library_cells(base_config, l_values_mm=(2.0, 3.0), frequency_hz=12.5e9)
+    path = write_square_library_json(cells, tmp_path / "square_lib.json")
+    doc = json.loads(path.read_text())
+    assert len(doc["cells"]) == 2
+
+    lib = UnitCellLibrary.from_json(path)
+    entry = lib.response(2.0, 2.0, 12.5, family="S11")
+    assert set(entry) == {"real", "imag", "mag", "mag_db", "phase_deg"}

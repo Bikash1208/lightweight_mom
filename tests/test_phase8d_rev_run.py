@@ -78,6 +78,7 @@ def test_regression_suite_criterion_is_false_unless_explicitly_confirmed(tmp_pat
     assert by_name["Full regression suite passes"] is False
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(not _HAS_CHECKPOINT, reason="Phase 7 checkpoint not present")
 def test_cli_runs_against_the_real_checkpoint(tmp_path):
     out_dir = tmp_path / "cli_out"

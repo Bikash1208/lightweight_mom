@@ -11,6 +11,8 @@ import pytest
 
 from src.phase10 import run as run_mod
 
+pytestmark = pytest.mark.slow
+
 
 @pytest.fixture(scope="module")
 def reduced_run(tmp_path_factory):

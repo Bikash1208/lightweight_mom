@@ -42,6 +42,7 @@ def test_periods_for_topology_never_assumes_4p8mm(phase8c_full_database):
     assert udb.periods_for_topology("rectangular_patch") == ((4.8, 4.8),)
 
 
+@pytest.mark.slow
 def test_with_benchmark_registers_exactly_one_reference_validation_library_entry():
     udb = with_benchmark()
     entries = udb.entries()

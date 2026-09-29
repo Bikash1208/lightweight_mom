@@ -1,6 +1,7 @@
 """Sec. 30-33, 47: the gradient and abrupt-discontinuity generalization tests."""
 
 import numpy as np
+import pytest
 
 from src.materials import Metal, Substrate
 from src.phase10 import generalization as gen
@@ -34,6 +35,7 @@ def test_build_abrupt_grid_has_exactly_two_regions():
     assert grid[0][gen.GRID_N - 1] == (4.4, 4.4)
 
 
+@pytest.mark.slow
 def test_run_gradient_test_produces_one_case_per_interior_cell():
     surrogate = _dummy_surrogate()
     grid_mm, cases = gen.run_gradient_test(P, SUB, MET, F, surrogate, mesh_cells_per_subcell=8)
@@ -43,6 +45,7 @@ def test_run_gradient_test_produces_one_case_per_interior_cell():
         assert isinstance(c.px_mom, complex)
 
 
+@pytest.mark.slow
 def test_run_abrupt_discontinuity_test_labels_distance_from_boundary():
     surrogate = _dummy_surrogate()
     grid_mm, cases, labeled = gen.run_abrupt_discontinuity_test(

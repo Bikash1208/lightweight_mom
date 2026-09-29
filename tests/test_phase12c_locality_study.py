@@ -1,5 +1,7 @@
 """Phase 12C Task B: the local-periodicity test for the grounded 8 mm cell."""
 
+import pytest
+
 from src.phase12c import locality_study as ls
 
 
@@ -75,6 +77,7 @@ def test_run_gradient_case_matches_phase9_error_metric_semantics():
     assert result.n_unknowns_embedded > result.n_unknowns_isolated
 
 
+@pytest.mark.slow
 def test_periodic_supercell_spans_less_than_a_full_cycle_and_is_honestly_reported():
     """Task B's own explicit honesty requirement: if a full 2*pi cannot be built from real, solved
     geometries, say so."""

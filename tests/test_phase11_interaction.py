@@ -32,6 +32,7 @@ def test_response_for_subset_empty_equals_homogeneous():
     assert r_empty == r_none_applied  # deterministic, no ML
 
 
+@pytest.mark.slow
 def test_pairwise_interaction_reports_measured_and_predicted():
     r0, results = run_pairwise_interaction(
         CENTER, PERTURBATIONS, [("N", "S"), ("N", "E")], N, P, SUB, MET, F, mesh_cells_per_subcell=8
@@ -47,6 +48,7 @@ def test_higher_order_interaction_requires_exactly_three_names():
         run_higher_order_interaction(CENTER, PERTURBATIONS, ("N", "S"), N, P, SUB, MET, F, mesh_cells_per_subcell=8)
 
 
+@pytest.mark.slow
 def test_higher_order_interaction_residual_is_nonnegative():
     result = run_higher_order_interaction(
         CENTER, PERTURBATIONS, ("N", "S", "E"), N, P, SUB, MET, F, mesh_cells_per_subcell=8

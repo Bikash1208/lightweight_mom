@@ -7,6 +7,8 @@ import pytest
 
 from src.phase12d.run import run_phase12d
 
+pytestmark = pytest.mark.slow
+
 
 def _small_step_family(mesh_cells_per_subcell):
     unit_mm = 2.0 * 8.0 / mesh_cells_per_subcell

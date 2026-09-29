@@ -1,5 +1,7 @@
 """Phase 12C Task C: coupling extent, grounded."""
 
+import pytest
+
 from src.phase12c import coupling_study as cs
 from src.phase12c import locality_study as ls
 
@@ -27,6 +29,7 @@ def test_checkerboard_pattern_matches_phase11_definition():
     assert grid[0][0] == (2.0, 2.0)  # diagonal neighbour equals the centre (5-cell pattern)
 
 
+@pytest.mark.slow
 def test_coupling_radius_series_is_monotone_truncation_of_one_pattern():
     grid = cs.build_gradient_pattern_mm(2.4, 1.6, 7.2, 3)
     points = cs.run_coupling_radius_series(grid, sizes=(1, 3))
@@ -34,6 +37,7 @@ def test_coupling_radius_series_is_monotone_truncation_of_one_pattern():
     assert points[0].n_unknowns < points[1].n_unknowns
 
 
+@pytest.mark.slow
 def test_analyze_coupling_series_reuses_phase11_machinery_unmodified():
     grid = cs.build_gradient_pattern_mm(2.4, 1.6, 7.2, 3)
     points = cs.run_coupling_radius_series(grid, sizes=(1, 3))

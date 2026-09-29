@@ -7,6 +7,8 @@ import pytest
 
 from src.phase12c.run import run_phase12c
 
+pytestmark = pytest.mark.slow
+
 
 @pytest.fixture(scope="module")
 def reduced_result(tmp_path_factory):

@@ -44,6 +44,7 @@ def test_grounded_library_cell_matches_phase7_period_and_substrate():
 
 
 @pytest.mark.skipif(not DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present")
+@pytest.mark.slow
 def test_ungrounded_phase7_coverage_matches_the_documented_24_8_degrees():
     result = ungrounded_phase7_coverage(frequency_hz=DESIGN_F)
     assert result["status"] == "AVAILABLE"
@@ -52,6 +53,7 @@ def test_ungrounded_phase7_coverage_matches_the_documented_24_8_degrees():
 
 
 @pytest.mark.skipif(not DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present")
+@pytest.mark.slow
 def test_ungrounded_phase7_diagonal_table_has_18_points():
     rows = ungrounded_phase7_diagonal_table(frequency_hz=DESIGN_F)
     assert len(rows) == 18

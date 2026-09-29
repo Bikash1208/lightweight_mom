@@ -12,6 +12,8 @@ import pytest
 
 from src.phase12a.run import run_phase12a
 
+pytestmark = pytest.mark.slow
+
 REDUCED_L_MM = (1.0, 2.0, 3.0, 4.4)
 REDUCED_FREQUENCIES_HZ = (12.5e9,)  # must include DESIGN_FREQUENCY_HZ (12.5 GHz)
 

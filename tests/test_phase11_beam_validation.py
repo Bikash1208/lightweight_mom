@@ -1,5 +1,7 @@
 """Sec. 23, 28: beam-level validation generated entirely from a direct heterogeneous MoM solve."""
 
+import pytest
+
 from src.materials import Metal, Substrate
 from src.phase11 import beam_validation as bv
 from src.phase11 import patterns as pt
@@ -12,6 +14,7 @@ CENTER = (2.8, 2.8)
 CONTRAST = (4.4, 4.4)
 
 
+@pytest.mark.slow
 def test_solve_aperture_returns_only_interior_points():
     grid_mm = pt.checkerboard(5, CENTER, CONTRAST)
     sg, points = bv.solve_aperture(grid_mm, P, SUB, MET, F, mesh_cells_per_subcell=8)
@@ -22,6 +25,7 @@ def test_solve_aperture_returns_only_interior_points():
     assert len(points) == (n - 2 * bv.INTERIOR_MARGIN) ** 2
 
 
+@pytest.mark.slow
 def test_run_beam_case_produces_far_field_and_metrics():
     grid_mm = pt.checkerboard(5, CENTER, CONTRAST)
     result = bv.run_beam_case("checkerboard", grid_mm, P, SUB, MET, F, mesh_cells_per_subcell=8)

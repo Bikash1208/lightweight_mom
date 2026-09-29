@@ -21,6 +21,7 @@ def _hash(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(not _HAS_CHECKPOINT, reason="Phase 7 checkpoint not present")
 def test_run_produces_all_required_output_files(tmp_path, phase8c_full_database):
     result = run_phase8e(tmp_path / "out", database=phase8c_full_database)
@@ -42,6 +43,7 @@ def test_run_produces_all_required_output_files(tmp_path, phase8c_full_database)
     assert len(plot_files) >= 17
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(not _HAS_CHECKPOINT, reason="Phase 7 checkpoint not present")
 def test_run_never_forces_a_positive_result(tmp_path, phase8c_full_database):
     result = run_phase8e(tmp_path / "out", database=phase8c_full_database)
@@ -65,6 +67,7 @@ def test_run_beam_reconstruction_identifies_all_three_demo_beams(tmp_path, phase
     assert all(e < 5.0 for e in metrics.pointing_error_deg)  # within the far-field grid's own 2 deg resolution
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(not _HAS_CHECKPOINT, reason="Phase 7 checkpoint not present")
 def test_run_does_not_modify_phase7_or_universal_database_outputs(tmp_path, phase8c_full_database):
     delivered = _LIBRARY_DIR / "database" / "unit_cell_library.json"
@@ -91,6 +94,7 @@ def test_print_final_report_never_claims_hfss_performed(tmp_path, capsys, phase8
     assert "Phase 8D-REV modified:    NO" in out
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(not _HAS_CHECKPOINT, reason="Phase 7 checkpoint not present")
 def test_cli_runs_against_the_real_checkpoint(tmp_path):
     out_dir = tmp_path / "cli_out"

@@ -1,5 +1,7 @@
 """Sec. 8, 28: single-neighbor-at-increasing-distance perturbation, all 8 compass directions."""
 
+import pytest
+
 from src.materials import Metal, Substrate
 from src.phase11 import directional_coupling as dc
 
@@ -10,6 +12,7 @@ F = 12.5e9
 CENTER = (2.8, 2.8)
 
 
+@pytest.mark.slow
 def test_run_directional_coupling_covers_all_directions_and_distances():
     baseline, points = dc.run_directional_coupling(
         CENTER, P, SUB, MET, F, grid_n=5, distances=(1, 2), mesh_cells_per_subcell=8

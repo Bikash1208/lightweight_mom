@@ -68,6 +68,7 @@ def test_all_ok_records_recovers_every_geometry_at_design_frequency(phase8c_full
     assert len(records) == 324
 
 
+@pytest.mark.slow
 def test_benchmark_library_loader_cross_checks_and_registers_manifest_provenance():
     entry = le.benchmark_library()
     assert entry.library_id == le.BENCHMARK_LIBRARY_ID

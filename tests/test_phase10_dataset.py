@@ -1,6 +1,8 @@
 """Sec. 18-21, 47: dataset harvesting/generation, symmetry-safe grouping, and the geometry-based
 holdout."""
 
+import pytest
+
 from src.materials import Metal, Substrate
 from src.phase10 import dataset as ds_mod
 from src.phase10 import environment_geometry as eg
@@ -17,6 +19,7 @@ def _sample(sample_id, center, neighbors, center_name="C3"):
     return EnvironmentSample(sample_id, center_name, center, neighbors, "test", F, 1.0 + 0j, "test")
 
 
+@pytest.mark.slow
 def test_harvest_structured_samples_from_a_real_small_study():
     study = run_full_neighborhood_study({"C3": (2.8, 2.8)}, P, SUB, MET, F, mesh_cells_per_subcell=8)
     samples = ds_mod.harvest_structured_samples(study, F)

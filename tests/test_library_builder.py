@@ -88,6 +88,7 @@ def test_build_raises_if_geometry_count_does_not_match_config():
 # ---------------------------------------------------------------------------- reproducibility
 
 
+@pytest.mark.slow
 def test_two_builds_of_the_same_config_are_numerically_identical(tmp_path):
     """Req. 27: no random ordering, no hidden global state -- repeated builds of the same small
     config give the same cells in the same order with the same S-matrices."""

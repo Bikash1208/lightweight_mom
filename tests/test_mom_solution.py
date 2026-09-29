@@ -124,6 +124,7 @@ def test_full_cell_metal_has_zero_total_tangential_field_everywhere():
     assert np.abs(tot).max() < 1e-12 * np.abs(s.e_stack).max()
 
 
+@pytest.mark.slow
 def test_pec_condition_holds_in_the_weak_sense_and_converges_with_the_mesh():
     """Galerkin enforces E_tan = 0 weakly. For a 6 x 2 mm strip: (a) the mean |E_tot|/|E_inc| away from the
     strip ends and (b) a smooth-window (cosine) average of E_tot both fall roughly like 1/N when the

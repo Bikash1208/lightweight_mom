@@ -89,6 +89,7 @@ def test_print_final_report_never_claims_geometry_unlocked(tmp_path, capsys, pha
 
 
 @pytest.mark.skipif(not _HAS_CHECKPOINT, reason="Phase 7 checkpoint not present")
+@pytest.mark.slow
 def test_cli_runs_against_the_real_checkpoint(tmp_path):
     out_dir = tmp_path / "cli_out"
     proc = subprocess.run(

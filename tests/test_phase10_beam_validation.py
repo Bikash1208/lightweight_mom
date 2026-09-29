@@ -2,6 +2,7 @@
 (unmodified) planar-aperture radiation integral."""
 
 import numpy as np
+import pytest
 
 from src.materials import Metal, Substrate
 from src.phase10 import beam_validation as bv
@@ -22,6 +23,7 @@ def _dummy_surrogate():
     )
 
 
+@pytest.mark.slow
 def test_build_aperture_from_cases_uses_physical_subcell_positions():
     surrogate = _dummy_surrogate()
     grid_mm, cases = gen.run_gradient_test(P, SUB, MET, F, surrogate, mesh_cells_per_subcell=8)
@@ -32,6 +34,7 @@ def test_build_aperture_from_cases_uses_physical_subcell_positions():
     assert span > 0 and span < gen.GRID_N * P  # positions span less than the whole outer grid
 
 
+@pytest.mark.slow
 def test_run_beam_validation_matches_identical_apertures_when_surrogate_equals_mom():
     """A trivial 'surrogate' that returns the exact MoM value for every case must give an
     essentially perfect far-field match."""

@@ -145,6 +145,7 @@ def test_classify_cell_invalid_geometry_is_unclassified():
     assert result.resonance is None
 
 
+@pytest.mark.slow
 def test_classify_cell_on_a_real_small_database():
     cfg = LibraryConfig(
         period_m=4.8e-3,

@@ -85,6 +85,7 @@ def test_select_representative_cells_default_config_gives_corners_and_centre():
 # --------------------------------------------------------------------------------------- plots
 
 
+@pytest.mark.slow
 def test_all_8_plots_are_generated(built, tmp_path):
     cfg, database, table, coverage, classifications = built
     paths = generate_all_plots(database, cfg, table, coverage, classifications, tmp_path)
@@ -104,6 +105,7 @@ def test_all_8_plots_are_generated(built, tmp_path):
         assert p.stat().st_size > 1000
 
 
+@pytest.mark.slow
 def test_s_parameter_curve_plot_skips_failed_cells_without_raising(built, tmp_path):
     cfg, database, *_ = built
     cells = select_representative_cells(cfg)
@@ -112,6 +114,7 @@ def test_s_parameter_curve_plot_skips_failed_cells_without_raising(built, tmp_pa
     assert path.exists()
 
 
+@pytest.mark.slow
 def test_phase_vs_geometry_plot_covers_the_full_grid_not_a_subset(built, tmp_path):
     cfg, database, table, coverage, classifications = built
     path = tmp_path / "pvg.png"

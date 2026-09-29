@@ -72,6 +72,7 @@ def test_print_final_report_never_claims_hfss_performed_or_bare_pass(tmp_path, c
     assert final_line[1].strip() != "PASS"
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(not _HAS_CHECKPOINT, reason="Phase 7 internal solve checkpoint not present")
 def test_cli_runs_against_the_real_checkpoint(tmp_path):
     out_dir = tmp_path / "cli_out"

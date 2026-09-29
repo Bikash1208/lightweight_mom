@@ -18,6 +18,8 @@ from src.library_validation import (
 from src.phase_extraction import extract_design_frequency, phase_vs_geometry_table
 from src.unit_cell_library import write_library_csv, write_library_json
 
+pytestmark = pytest.mark.slow
+
 warnings.filterwarnings("ignore", category=UserWarning)
 
 _SUBSTRATE = {"name": "Rogers RT/Duroid 5880", "eps_r": 2.2, "tan_delta": 0.0009, "thickness_m": 1.575e-3}

@@ -25,6 +25,7 @@ def test_phase7_library_duplicate_report_matches_the_brief_own_documented_count(
 
 
 @pytest.mark.skipif(not DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present")
+@pytest.mark.slow
 def test_delivered_lookup_cross_check_matches_the_geometric_count():
     result = phase7_delivered_lookup_duplicate_count()
     assert result["n_cells"] == 324

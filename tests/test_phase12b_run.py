@@ -11,6 +11,8 @@ import pytest
 
 from src.phase12b.run import run_phase12b
 
+pytestmark = pytest.mark.slow
+
 REDUCED_L_MM = (1.0, 2.0, 3.0, 4.4)
 REDUCED_FREQUENCIES_HZ = (12.5e9,)
 REDUCED_PERIOD_L_MM = {8.0: (2.0, 4.0, 6.0)}

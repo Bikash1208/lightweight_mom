@@ -2,10 +2,13 @@
 `excitation.PlaneWaveExcitation`'s actual behaviour -- never a re-typed, potentially-drifted copy."""
 
 import math
+from pathlib import Path
 
 import pytest
 
 from src.phase8b import conventions
+
+CONVENTIONS_MD = Path(__file__).resolve().parent.parent / "docs" / "theory" / "CONVENTIONS.md"
 
 
 def test_time_convention_matches_database_conventions():
@@ -34,7 +37,5 @@ def test_no_ground_plane_and_no_surface_wave_solver_are_true_facts():
 
 
 def test_coordinate_system_matches_conventions_md_text():
-    import pathlib
-
-    text = pathlib.Path("CONVENTIONS.md").read_text()
+    text = CONVENTIONS_MD.read_text()
     assert "Px/2" in text and "no ground plane" in text.lower()

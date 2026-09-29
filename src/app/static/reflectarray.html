@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reflectarray -- lwmom</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>lwmom</h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/unit_cell.html">Unit cell</a>
+      <a href="/library.html">Library</a>
+      <a href="/reflectarray.html">Reflectarray</a>
+      <a href="/pattern.html">Pattern</a>
+      <a href="/verify.html">Verify</a>
+      <a href="/export.html">Export</a>
+      <a href="/hfss_compare.html">HFSS compare</a>
+      <a href="/hmsa.html">HMSA designer</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Reflectarray designer</h2>
+      <p>Required phase from the standard feed-distance + steering formula, cells picked from a
+      library by nearest complex response. Build a library on the <a href="/library.html">Library</a>
+      page first.</p>
+      <form id="form">
+        <label>Library
+          <select name="library_id" id="library-select"></select>
+        </label>
+        <label>Frequency (GHz)<input type="number" step="any" name="frequency_ghz" value="12.5" required /></label>
+        <label>Array size: cells in X<input type="number" name="nx" value="10" required /></label>
+        <label>Array size: cells in Y<input type="number" name="ny" value="10" required /></label>
+        <label>Cell period (mm)<input type="number" step="any" name="period_mm" value="8.0" required /></label>
+        <label>Feed position x,y,z (mm), comma-separated<input type="text" name="feed_xyz_mm" value="0,0,80" required /></label>
+        <label>Beam direction theta0 (deg)<input type="number" step="any" name="theta0_deg" value="20" required /></label>
+        <label>Beam direction phi0 (deg)<input type="number" step="any" name="phi0_deg" value="0" required /></label>
+        <label>Feed taper q<input type="number" step="any" name="taper_q" value="1.0" required /></label>
+        <button type="submit">Design</button>
+      </form>
+      <p class="status" id="status"></p>
+    </div>
+
+    <div class="card" id="results" style="display:none">
+      <h3>Results</h3>
+      <div id="labels" class="labels"></div>
+      <p id="grad"></p>
+      <p>
+        Job id: <code id="job-id"></code> --
+        <a id="pattern-link" href="#">predict pattern for this design</a> --
+        <a id="export-link" href="#">export this design</a>
+      </p>
+      <details open>
+        <summary>Per-cell assignments</summary>
+        <table id="table">
+          <thead><tr><th>i</th><th>j</th><th>required (deg)</th><th>achieved (deg)</th><th>error (deg)</th><th>L (mm)</th><th>W (mm)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </details>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+  <script>
+    async function refreshLibraryList() {
+      const resp = await fetch("/api/library");
+      const libs = await resp.json();
+      const select = document.getElementById("library-select");
+      select.innerHTML = "";
+      for (const [id, entry] of Object.entries(libs)) {
+        const opt = document.createElement("option");
+        opt.value = id;
+        opt.textContent = `${id} (${entry.meta.backing || "?"}, ${entry.meta.period_mm || "?"} mm)`;
+        select.appendChild(opt);
+      }
+    }
+    refreshLibraryList();
+
+    document.getElementById("form").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const f = new FormData(ev.target);
+      const body = {
+        library_id: f.get("library_id"),
+        frequency_hz: parseFloat(f.get("frequency_ghz")) * 1e9,
+        nx: parseInt(f.get("nx"), 10),
+        ny: parseInt(f.get("ny"), 10),
+        period_mm: parseFloat(f.get("period_mm")),
+        feed_xyz_mm: f.get("feed_xyz_mm").split(",").map((s) => parseFloat(s.trim())),
+        theta0_deg: parseFloat(f.get("theta0_deg")),
+        phi0_deg: parseFloat(f.get("phi0_deg")),
+        taper_q: parseFloat(f.get("taper_q")),
+      };
+      const statusEl = document.getElementById("status");
+      statusEl.textContent = "submitting...";
+      statusEl.className = "status";
+      try {
+        const submitted = await LWMOM.postJson("/api/reflectarray/design", body);
+        const job = await LWMOM.pollJob(submitted.id, {
+          onTick: (j) => { statusEl.textContent = `${j.status}: ${j.progress_message || ""}`; },
+        });
+        if (job.status !== "done") {
+          statusEl.textContent = `${job.status}: ${job.error ? job.error.message : ""}`;
+          statusEl.className = "status err";
+          return;
+        }
+        statusEl.textContent = "done";
+        statusEl.className = "status ok";
+        const result = job.result;
+        document.getElementById("results").style.display = "block";
+        document.getElementById("job-id").textContent = job.id;
+        document.getElementById("pattern-link").href = `/pattern.html?job=${job.id}`;
+        document.getElementById("export-link").href = `/export.html?job=${job.id}`;
+        document.getElementById("grad").textContent =
+          `max phase gradient: ${result.max_phase_gradient_deg_per_cell.toFixed(2)} deg/cell`;
+        LWMOM.renderLabels(document.getElementById("labels"), result.labels, []);
+        const tbody = document.querySelector("#table tbody");
+        tbody.innerHTML = "";
+        for (const a of result.assignments) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${a.i}</td><td>${a.j}</td><td>${a.required_phase_deg.toFixed(1)}</td>` +
+            `<td>${a.achieved_phase_deg !== null ? a.achieved_phase_deg.toFixed(1) : "--"}</td>` +
+            `<td>${a.phase_error_deg !== null ? a.phase_error_deg.toFixed(1) : "--"}</td>` +
+            `<td>${a.chosen_l_mm !== null ? a.chosen_l_mm : "--"}</td><td>${a.chosen_w_mm !== null ? a.chosen_w_mm : "--"}</td>`;
+          tbody.appendChild(tr);
+        }
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status err";
+      }
+    });
+  </script>
+</body>
+</html>

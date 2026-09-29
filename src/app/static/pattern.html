@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pattern -- lwmom</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>lwmom</h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/unit_cell.html">Unit cell</a>
+      <a href="/library.html">Library</a>
+      <a href="/reflectarray.html">Reflectarray</a>
+      <a href="/pattern.html">Pattern</a>
+      <a href="/verify.html">Verify</a>
+      <a href="/export.html">Export</a>
+      <a href="/hfss_compare.html">HFSS compare</a>
+      <a href="/hmsa.html">HMSA designer</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Pattern prediction</h2>
+      <p>Far field from a reflectarray (or HMSA) design's aperture field, via aperture-integration
+      Fourier optics. Labelled <code>LOCAL_PERIODICITY_APPROXIMATION</code>: each cell's response
+      is taken from its own isolated-cell library entry, not a full-array solve (see the
+      <a href="/verify.html">Verify</a> page for that check).</p>
+      <form id="form">
+        <label>Design job id (from the Reflectarray or HMSA page)
+          <input type="text" name="source_job_id" id="source-job-id" required />
+        </label>
+        <label>Frequency (GHz)<input type="number" step="any" name="frequency_ghz" value="12.5" required /></label>
+        <label>Theta max (deg)<input type="number" step="any" name="theta_max_deg" value="90" required /></label>
+        <label>Theta points<input type="number" name="n_theta" value="91" required /></label>
+        <label>Phi points<input type="number" name="n_phi" value="73" required /></label>
+        <button type="submit">Predict</button>
+      </form>
+      <p class="status" id="status"></p>
+    </div>
+
+    <div class="card" id="results" style="display:none">
+      <h3>Results</h3>
+      <div id="labels" class="labels"></div>
+      <table>
+        <tbody>
+          <tr><th>Main beam</th><td id="main-beam"></td></tr>
+          <tr><th>Side-lobe level</th><td id="sll"></td></tr>
+          <tr><th>Directivity estimate</th><td id="directivity"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("job")) document.getElementById("source-job-id").value = params.get("job");
+
+    document.getElementById("form").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const f = new FormData(ev.target);
+      const body = {
+        source_job_id: f.get("source_job_id"),
+        frequency_hz: parseFloat(f.get("frequency_ghz")) * 1e9,
+        theta_max_deg: parseFloat(f.get("theta_max_deg")),
+        n_theta: parseInt(f.get("n_theta"), 10),
+        n_phi: parseInt(f.get("n_phi"), 10),
+      };
+      const statusEl = document.getElementById("status");
+      statusEl.textContent = "submitting...";
+      statusEl.className = "status";
+      try {
+        const submitted = await LWMOM.postJson("/api/pattern/predict", body);
+        const job = await LWMOM.pollJob(submitted.id, {
+          onTick: (j) => { statusEl.textContent = `${j.status}: ${j.progress_message || ""}`; },
+        });
+        if (job.status !== "done") {
+          statusEl.textContent = `${job.status}: ${job.error ? job.error.message : ""}`;
+          statusEl.className = "status err";
+          return;
+        }
+        statusEl.textContent = "done";
+        statusEl.className = "status ok";
+        const result = job.result.result;
+        document.getElementById("results").style.display = "block";
+        document.getElementById("main-beam").textContent =
+          `theta=${result.main_beam_theta_deg.toFixed(1)} deg, phi=${result.main_beam_phi_deg.toFixed(1)} deg`;
+        document.getElementById("sll").textContent = result.sll_db !== null ? `${result.sll_db.toFixed(1)} dB` : "n/a (single peak found)";
+        document.getElementById("directivity").textContent = `${result.directivity_estimate_dbi.toFixed(1)} dBi`;
+        LWMOM.renderLabels(document.getElementById("labels"), job.result.labels, []);
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status err";
+      }
+    });
+  </script>
+</body>
+</html>

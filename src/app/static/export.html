@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Export -- lwmom</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>lwmom</h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/unit_cell.html">Unit cell</a>
+      <a href="/library.html">Library</a>
+      <a href="/reflectarray.html">Reflectarray</a>
+      <a href="/pattern.html">Pattern</a>
+      <a href="/verify.html">Verify</a>
+      <a href="/export.html">Export</a>
+      <a href="/hfss_compare.html">HFSS compare</a>
+      <a href="/hmsa.html">HMSA designer</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Export</h2>
+      <p>Full-array STEP (grounded designs only -- a square N x N array, the underlying
+      supercell builder's own limitation), layout CSV/JSON, and an HFSS-ready README with the
+      Phase 12 setup lessons baked in.</p>
+      <form id="form">
+        <label>Design job id (from the Reflectarray or HMSA page)
+          <input type="text" name="source_job_id" id="source-job-id" required />
+        </label>
+        <label>Cell period (mm)<input type="number" step="any" name="period_mm" value="8.0" required /></label>
+        <label>Substrate eps_r<input type="number" step="any" name="eps_r" value="2.2" required /></label>
+        <label>Substrate tan_delta<input type="number" step="any" name="tan_delta" value="0.0009" required /></label>
+        <label>Substrate thickness (mm)<input type="number" step="any" name="thickness_mm" value="1.575" required /></label>
+        <label><input type="checkbox" name="include_step" checked style="width:auto" /> include STEP file (needs cadquery)</label>
+        <button type="submit">Export</button>
+      </form>
+      <p class="status" id="status"></p>
+    </div>
+
+    <div class="card" id="results" style="display:none">
+      <h3>Results</h3>
+      <p id="summary"></p>
+      <ul id="downloads"></ul>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("job")) document.getElementById("source-job-id").value = params.get("job");
+
+    document.getElementById("form").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const f = new FormData(ev.target);
+      const body = {
+        source_job_id: f.get("source_job_id"),
+        period_mm: parseFloat(f.get("period_mm")),
+        eps_r: parseFloat(f.get("eps_r")),
+        tan_delta: parseFloat(f.get("tan_delta")),
+        thickness_mm: parseFloat(f.get("thickness_mm")),
+        include_step: f.get("include_step") === "on",
+      };
+      const statusEl = document.getElementById("status");
+      statusEl.textContent = "submitting...";
+      statusEl.className = "status";
+      try {
+        const submitted = await LWMOM.postJson("/api/export/array", body);
+        const job = await LWMOM.pollJob(submitted.id, {
+          onTick: (j) => { statusEl.textContent = `${j.status}: ${j.progress_message || ""}`; },
+        });
+        if (job.status !== "done") {
+          statusEl.textContent = `${job.status}: ${job.error ? job.error.message : ""}`;
+          statusEl.className = "status err";
+          return;
+        }
+        statusEl.textContent = "done";
+        statusEl.className = "status ok";
+        const result = job.result;
+        document.getElementById("results").style.display = "block";
+        const sizeMb = result.file_size_bytes ? (result.file_size_bytes / 1e6).toFixed(2) + " MB" : "n/a";
+        const time = result.export_time_s ? result.export_time_s.toFixed(2) + " s" : "n/a";
+        document.getElementById("summary").textContent = `${result.n_cells} cells; STEP ${sizeMb} in ${time}`;
+        const list = document.getElementById("downloads");
+        list.innerHTML = "";
+        for (const [label, url] of [
+          ["STEP file", result.step_download_url],
+          ["Layout CSV", result.layout_csv_download_url],
+          ["Layout JSON", result.layout_json_download_url],
+          ["HFSS README", result.readme_download_url],
+        ]) {
+          if (!url) continue;
+          const li = document.createElement("li");
+          const a = document.createElement("a");
+          a.href = url;
+          a.textContent = label;
+          li.appendChild(a);
+          list.appendChild(li);
+        }
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status err";
+      }
+    });
+  </script>
+</body>
+</html>

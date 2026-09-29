@@ -1,0 +1,154 @@
+"""Phase 13 Part 3: reflectarray designer -> pattern prediction -> export, chained through the job
+queue exactly as the app's own pages do (a small real grounded library, a small real array).
+Needs the optional 'app'/'cad' extras; skipped entirely otherwise."""
+
+import time
+import uuid
+
+import pytest
+
+fastapi = pytest.importorskip("fastapi")
+pytest.importorskip("cadquery")
+from fastapi.testclient import TestClient  # noqa: E402
+
+from src.app.main import create_app  # noqa: E402
+
+_SUBSTRATE = {"name": "Rogers RT/Duroid 5880", "eps_r": 2.2, "tan_delta": 0.0009, "thickness": 1.575e-3}
+_SMALL_MESH = {"cells_x": 8, "cells_y": 8, "floquet_order": 8}
+
+
+@pytest.fixture
+def client(tmp_path, monkeypatch):
+    monkeypatch.setenv("LWMOM_APP_DATA_DIR", str(tmp_path / "lwmom_data"))
+    return TestClient(create_app())
+
+
+def _wait_for_job(client, job_id, timeout=60.0):
+    deadline = time.time() + timeout
+    while True:
+        resp = client.get(f"/api/jobs/{job_id}")
+        job = resp.json()
+        if job["status"] in ("done", "failed", "cancelled"):
+            return job
+        if time.time() > deadline:
+            raise TimeoutError(f"job {job_id} did not finish in {timeout}s: {job}")
+        time.sleep(0.05)
+
+
+@pytest.fixture
+def grounded_library(client):
+    """Builds a small real grounded library (3x3 L/W grid, 1 frequency) via the actual sweep
+    endpoint, exactly as the Library page would -- no shortcuts around the job queue."""
+    library_id = f"test-refl-{uuid.uuid4().hex[:8]}"
+    body = {
+        "library_id": library_id,
+        "base_config": {
+            "period_x": 8.0e-3,
+            "period_y": 8.0e-3,
+            "substrate": {**_SUBSTRATE, "backing": "pec"},
+            "geometry": {"type": "rectangle", "length": 2.0e-3, "width": 2.0e-3},
+            "excitation": {"frequency": 12.5e9},
+            "mesh": _SMALL_MESH,
+            "reference_planes": {"top_air_thickness": 5.0e-3},
+        },
+        "l_values_mm": [2.0, 3.0, 4.0],
+        "w_values_mm": [2.0, 3.0, 4.0],
+        "f_min_hz": 12.5e9,
+        "f_max_hz": 12.5e9,
+        "f_step_hz": 1.0e9,
+        "f_design_hz": 12.5e9,
+    }
+    resp = client.post("/api/library/sweep", json=body)
+    job = _wait_for_job(client, resp.json()["id"])
+    assert job["status"] == "done", job
+    return library_id
+
+
+def test_reflectarray_design_selects_cells_and_reports_labels(client, grounded_library):
+    resp = client.post(
+        "/api/reflectarray/design",
+        json={
+            "library_id": grounded_library,
+            "frequency_hz": 12.5e9,
+            "nx": 3,
+            "ny": 3,
+            "period_mm": 8.0,
+            "feed_xyz_mm": [0.0, 0.0, 50.0],
+            "theta0_deg": 0.0,
+            "phi0_deg": 0.0,
+            "taper_q": 1.0,
+        },
+    )
+    job = _wait_for_job(client, resp.json()["id"])
+    assert job["status"] == "done", job
+    result = job["result"]
+    assert len(result["assignments"]) == 9
+    assert "LOCAL_PERIODICITY_APPROXIMATION" in result["labels"]
+    for a in result["assignments"]:
+        assert a["chosen_l_mm"] is not None
+
+
+def _design_job_id(client, grounded_library):
+    resp = client.post(
+        "/api/reflectarray/design",
+        json={
+            "library_id": grounded_library,
+            "frequency_hz": 12.5e9,
+            "nx": 3,
+            "ny": 3,
+            "period_mm": 8.0,
+            "feed_xyz_mm": [0.0, 0.0, 50.0],
+            "theta0_deg": 0.0,
+            "phi0_deg": 0.0,
+            "taper_q": 1.0,
+        },
+    )
+    job = _wait_for_job(client, resp.json()["id"])
+    assert job["status"] == "done", job
+    return resp.json()["id"]
+
+
+def test_pattern_prediction_chains_off_a_design_job(client, grounded_library):
+    design_id = _design_job_id(client, grounded_library)
+    resp = client.post(
+        "/api/pattern/predict",
+        json={"source_job_id": design_id, "frequency_hz": 12.5e9, "n_theta": 19, "n_phi": 13},
+    )
+    job = _wait_for_job(client, resp.json()["id"])
+    assert job["status"] == "done", job
+    result = job["result"]["result"]
+    assert "main_beam_theta_deg" in result
+    assert "directivity_estimate_dbi" in result
+
+
+def test_pattern_prediction_404s_on_unknown_source(client):
+    resp = client.post("/api/pattern/predict", json={"source_job_id": "nope", "frequency_hz": 12.5e9})
+    assert resp.status_code == 404
+
+
+def test_export_produces_a_real_step_file(client, grounded_library):
+    design_id = _design_job_id(client, grounded_library)
+    resp = client.post(
+        "/api/export/array",
+        json={
+            "source_job_id": design_id,
+            "period_mm": 8.0,
+            "eps_r": 2.2,
+            "tan_delta": 0.0009,
+            "thickness_mm": 1.575,
+            "include_step": True,
+        },
+    )
+    job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+    assert job["status"] == "done", job
+    result = job["result"]
+    assert result["n_cells"] == 3
+    assert result["step_download_url"] is not None
+
+    step_resp = client.get(result["step_download_url"])
+    assert step_resp.status_code == 200
+    assert len(step_resp.content) > 0
+
+    csv_resp = client.get(result["layout_csv_download_url"])
+    assert csv_resp.status_code == 200
+    assert b"i,j,length_m,width_m" in csv_resp.content

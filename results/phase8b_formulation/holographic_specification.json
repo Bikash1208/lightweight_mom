@@ -1,0 +1,60 @@
+{
+ "status": "PHASE_SOURCE_UNVALIDATED",
+ "time_convention": "exp(+j*omega*t)",
+ "coordinate_system": {
+  "x": "x in [-Px/2, Px/2]",
+  "y": "y in [-Py/2, Py/2]",
+  "z": "air (z>0, incident side) | pattern at z=0 | substrate (-h<z<0) | air (z<-h); no ground plane"
+ },
+ "reference_wave": {
+  "quantity": "monopole-launched guided surface wave (Formulation A) or an arbitrary reference field (Formulation B)",
+  "definition": "see Holographic_Formulation.md Sec. 'Reference field'",
+  "complex_required": true
+ },
+ "object_wave": {
+  "type": "plane_wave (single- or multi-beam superposition)",
+  "definition": "E_obj(x,y) = sum_n w_n exp(j*phi0_n) exp(-j(kx0_n x + ky0_n y)) at z=0",
+  "kx": "k0 sin(theta) cos(phi)",
+  "ky": "k0 sin(theta) sin(phi)",
+  "kz": "k0 cos(theta) (unused at z=0)"
+ },
+ "multi_beam": {
+  "definition": "field-level complex superposition, weight = complex field-amplitude coefficient"
+ },
+ "holographic_modulation": {
+  "formulations": [
+   {
+    "name": "A: Fong et al. 2010 interference-modulation index (grounded holographic impedance surface)",
+    "required_quantity": "surface reactance X(x,y) of a grounded, surface-wave-supporting structure",
+    "library_compatibility": "INCOMPATIBLE",
+    "status": "LIBRARY_CONTROL_VARIABLE_INCOMPATIBLE",
+    "control_variable": {
+     "name": "surface_impedance_Zs",
+     "validated": "INVALID"
+    }
+   },
+   {
+    "name": "B: phase-difference hologram (reflectarray/transmitarray-style)",
+    "required_quantity": "normal-incidence co-polarized reflection or transmission phase (S11xx or S21xx)",
+    "library_compatibility": "PARTIALLY_COMPATIBLE",
+    "status": "PHASE_SOURCE_UNVALIDATED",
+    "control_variable": {
+     "name": "S11_xx",
+     "validated": "INSUFFICIENT_EVIDENCE"
+    }
+   }
+  ],
+  "validated": false
+ },
+ "control_variable": {
+  "name": null,
+  "physical_definition": "unresolved: see holographic_modulation.formulations for both candidates",
+  "validated": false
+ },
+ "library_compatibility": {
+  "status": "PHASE_SOURCE_UNVALIDATED"
+ },
+ "hfss_validation": {
+  "performed": false
+ }
+}

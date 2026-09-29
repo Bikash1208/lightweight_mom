@@ -1,0 +1,34 @@
+{
+ "case_id": "case04_wide_patch",
+ "category": "wide",
+ "description": "Wide patch (3 x 6 mm, width > length): the opposite aspect ratio from case03.",
+ "code_version": "0.5.0",
+ "lattice": {
+  "period_x_m": 0.008,
+  "period_y_m": 0.008
+ },
+ "substrate": {
+  "name": "Rogers RT/Duroid 5880",
+  "eps_r": 2.2,
+  "tan_delta": 0.0009,
+  "thickness_m": 0.001575
+ },
+ "metal": {
+  "model": "pec"
+ },
+ "geometry": {
+  "type": "rectangle",
+  "polarity": "metal",
+  "length_m": 0.003,
+  "width_m": 0.006,
+  "center_x_m": 0.0,
+  "center_y_m": 0.0,
+  "rotation_deg": 0.0,
+  "metal_area_m2": 1.8e-05,
+  "metal_fill_fraction": 0.28125
+ },
+ "cad_export": {
+  "metal_export_thickness_m": 3.5e-05,
+  "note": "CAD solid convenience only (a zero-thickness solid cannot be exported); the MoM model is a zero-thickness PEC surface current at z=0 and does not use this value. See cad_export.py and VALIDATION_EXPORT.md Sec. 4."
+ }
+}

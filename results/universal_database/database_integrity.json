@@ -1,0 +1,76 @@
+{
+ "checks": [
+  {
+   "library_id": "phase7_reference_validation_library_4p8mm",
+   "check_id": "unique_record_identity",
+   "description": "no duplicate (cell_id, frequency_index) records",
+   "passed": true,
+   "detail": "65124 unique records"
+  },
+  {
+   "library_id": "phase7_reference_validation_library_4p8mm",
+   "check_id": "valid_parameter_ranges",
+   "description": "every geometry parameter is finite and physically valid",
+   "passed": true,
+   "detail": "324 cells OK"
+  },
+  {
+   "library_id": "phase7_reference_validation_library_4p8mm",
+   "check_id": "complete_frequency_grid",
+   "description": "every OK cell has a record at every frequency index",
+   "passed": true,
+   "detail": "201 frequency points, all cells complete"
+  },
+  {
+   "library_id": "phase7_reference_validation_library_4p8mm",
+   "check_id": "complex_valued_response_integrity",
+   "description": "S-parameters are finite complex numbers",
+   "passed": true,
+   "detail": "501 records sampled, all finite"
+  },
+  {
+   "library_id": "phase7_reference_validation_library_4p8mm",
+   "check_id": "cross_polarization_preserved",
+   "description": "S_xy/S_yx components are present in the stored schema",
+   "passed": true,
+   "detail": "cross-pol components present"
+  },
+  {
+   "library_id": "phase7_reference_validation_library_4p8mm",
+   "check_id": "missing_value_handling",
+   "description": "invalid/failed cells have no fabricated records",
+   "passed": true,
+   "detail": "0 failed cell(s), 0 with records"
+  },
+  {
+   "library_id": "phase7_reference_validation_library_4p8mm",
+   "check_id": "metadata_completeness",
+   "description": "every Sec. 22 identity/provenance field is present on the entry",
+   "passed": true,
+   "detail": "all fields present"
+  },
+  {
+   "library_id": "phase7_reference_validation_library_4p8mm",
+   "check_id": "database_hash",
+   "description": "a deterministic content hash of this entry's solved data can be computed",
+   "passed": true,
+   "detail": "4a07b726274e1589"
+  },
+  {
+   "library_id": "phase7_reference_validation_library_4p8mm",
+   "check_id": "round_trip_serialization",
+   "description": "a subset of this entry round-trips through JSON exactly",
+   "passed": true,
+   "detail": "exact round trip"
+  },
+  {
+   "library_id": "__all__",
+   "check_id": "identity_consistency",
+   "description": "library_id is unique across all registered entries",
+   "passed": true,
+   "detail": "1 entries, 1 unique ids"
+  }
+ ],
+ "all_passed": true,
+ "phase7_checkpoint_and_delivered_library_untouched": true
+}

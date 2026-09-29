@@ -1,0 +1,124 @@
+{
+  "stack": {
+    "substrate": "Rogers RT/Duroid 5880",
+    "eps_r": 2.2,
+    "tan_delta": 0.0009,
+    "thickness_mm": 1.575,
+    "backing": "PEC ground at z = -h",
+    "period_mm": 8.0,
+    "metal": "PEC, zero thickness in the solver; exported as 0.035 mm slabs (CAD only)"
+  },
+  "units": "mm",
+  "singles": [
+    {
+      "id": "G1",
+      "L_mm": 2.0,
+      "W_mm": 2.0,
+      "file": "single_cells/G1_L2p0mm.step"
+    },
+    {
+      "id": "G2",
+      "L_mm": 4.8,
+      "W_mm": 4.8,
+      "file": "single_cells/G2_L4p8mm.step"
+    },
+    {
+      "id": "G3",
+      "L_mm": 5.6,
+      "W_mm": 5.6,
+      "file": "single_cells/G3_L5p6mm.step"
+    },
+    {
+      "id": "G4",
+      "L_mm": 6.0,
+      "W_mm": 6.0,
+      "file": "single_cells/G4_L6p0mm.step"
+    },
+    {
+      "id": "G5",
+      "L_mm": 6.8,
+      "W_mm": 6.8,
+      "file": "single_cells/G5_L6p8mm.step"
+    },
+    {
+      "id": "G6",
+      "L_mm": 7.6,
+      "W_mm": 7.6,
+      "file": "single_cells/G6_L7p6mm.step"
+    }
+  ],
+  "supercells": [
+    {
+      "id": "S1_uniform_3x3",
+      "description": "uniform: all nine patches L = W = 5.6 mm (sanity check: must match single cell G3)",
+      "period_mm": 24.0,
+      "grid_L_mm_row_is_y_bottom_to_top_col_is_x_left_to_right": [
+        [
+          5.6,
+          5.6,
+          5.6
+        ],
+        [
+          5.6,
+          5.6,
+          5.6
+        ],
+        [
+          5.6,
+          5.6,
+          5.6
+        ]
+      ],
+      "file": "supercells/S1_uniform_3x3.step",
+      "n_solids": 11
+    },
+    {
+      "id": "S2_gradient_3x3",
+      "description": "smooth 1-D gradient along x: columns 5.2 / 5.6 / 6.0 mm (MoM phases at 12.5 GHz: -78.8 / -115.2 / -168.7 deg)",
+      "period_mm": 24.0,
+      "grid_L_mm_row_is_y_bottom_to_top_col_is_x_left_to_right": [
+        [
+          5.2,
+          5.6,
+          6.0
+        ],
+        [
+          5.2,
+          5.6,
+          6.0
+        ],
+        [
+          5.2,
+          5.6,
+          6.0
+        ]
+      ],
+      "file": "supercells/S2_gradient_3x3.step",
+      "n_solids": 11
+    },
+    {
+      "id": "S3_contrast_3x3",
+      "description": "strong contrast: centre 5.6 mm, all eight neighbours 1.6 mm",
+      "period_mm": 24.0,
+      "grid_L_mm_row_is_y_bottom_to_top_col_is_x_left_to_right": [
+        [
+          1.6,
+          1.6,
+          1.6
+        ],
+        [
+          1.6,
+          5.6,
+          1.6
+        ],
+        [
+          1.6,
+          1.6,
+          1.6
+        ]
+      ],
+      "file": "supercells/S3_contrast_3x3.step",
+      "n_solids": 11
+    }
+  ]
+}

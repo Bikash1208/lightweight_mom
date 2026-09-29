@@ -1,0 +1,40 @@
+name: CI
+
+# Written for the user to enable once a remote exists (this repo has no remote yet -- Phase 13
+# rules: "Don't push, don't add remotes"). Push/PR trigger runs lint + the fast (<5 min) suite
+# only, since the full suite (real MoM solves, tens of minutes) and anything needing the ~470 MB
+# Phase 7 checkpoint or real (gitignored) HFSS exports is impractical on every push; those run on
+# the nightly/manual schedule instead, and self-skip cleanly (cad/checkpoint/hfss_data markers)
+# wherever that data genuinely isn't available even there.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 3 * * *"   # nightly full suite
+
+jobs:
+  lint-and-fast-suite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: ruff check src tests examples
+      - run: ruff format --check src tests examples
+      - run: pytest -m "not slow" -q
+
+  full-suite:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev,cad]"
+      - run: pytest -q

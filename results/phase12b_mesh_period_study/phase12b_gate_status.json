@@ -1,0 +1,25 @@
+{
+ "mesh_alignment": {
+  "status": "ALIGNED_MESH_VALIDATED",
+  "reason": "aligned-mesh refinement study converged within tolerance (mesh_error=0.003023, floquet_error=0.0001433 <= 0.02)",
+  "mesh_error_aligned": 0.003022828377645722,
+  "floquet_error_aligned": 0.00014332935846634613,
+  "tolerance": 0.02
+ },
+ "audit": {
+  "status": "CONCLUSIONS_AT_RISK",
+  "reason": "Phase 10 centers (('C2', 'C3'),) are mesh-identical at the solver's own 8-cell/side mesh (dx=0.6mm); their isolated-cell baselines coincide, though the held-out center is unaffected (leaks=())",
+  "at_risk_findings": [
+   "Phase 10 centers (('C2', 'C3'),) are mesh-identical at the solver's own 8-cell/side mesh (dx=0.6mm); their isolated-cell baselines coincide, though the held-out center is unaffected (leaks=())"
+  ]
+ },
+ "period_study": {
+  "status": "COVERAGE_INSUFFICIENT",
+  "reason": "best measured coverage is 296.6 deg at period=12.0mm (< the 300 deg threshold); a single-layer resonant patch typically cannot reach a full 360 deg; standard remedies (thinner substrate, stacked patches, multi-resonant elements) are open options, not implemented here",
+  "coverage_by_period_deg": {
+   "4.8": 237.48743306470675,
+   "8.0": 279.18615748022154,
+   "12.0": 296.6279057581944
+  }
+ }
+}

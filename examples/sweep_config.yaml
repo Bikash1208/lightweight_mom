@@ -1,0 +1,72 @@
+# Example sweep configuration (Phase 5): the same sections as config.yaml plus an optional
+# 'sweep:' section. Run it with:   python examples/run_sweep.py [examples/sweep_config.yaml] [out_dir]
+#
+# Units: plain numbers are SI (metres, hertz; degrees for *_deg keys); a suffix converts at load
+# time ("8 GHz", "3 mm"). Time convention: exp(+j*omega*t). See CONVENTIONS.md and DATABASE.md.
+
+period_x: 8.0e-3
+period_y: 8.0e-3
+
+substrate:
+  name: Rogers RT/Duroid 5880
+  eps_r: 2.2
+  tan_delta: 0.0009
+  thickness: 1.575e-3
+
+metal:
+  model: pec
+
+# Base geometry: parameters that are not swept keep the values given here.
+geometry:
+  type: rectangle
+  length: 5.0e-3
+  width: 2.0e-3
+  center_x: 0.0
+  center_y: 0.0
+  rotation_deg: 0.0
+
+# Only used for single-cell solves; a sweep takes its frequencies from sweep.frequency.
+excitation:
+  frequency: 10.0e9
+
+# Fixed for the whole sweep. 0.5 mm cells: feature edges at whole millimetres lie on mesh lines.
+mesh:
+  cells_x: 16
+  cells_y: 16
+  floquet_order: 32
+
+# S-parameters are referenced to the substrate faces (planes at 0). With planes far from the
+# cell the phase is dominated by propagation, which makes frequency sweeps harder to unwrap
+# (see DATABASE.md, "Phase wrapping and unwrapping").
+reference_planes:
+  top_air_thickness: 0.0
+  bottom_air_thickness: 0.0
+
+sweep:
+  # f_start -> f_stop -> step, both end points included; (stop - start) must be a multiple of step.
+  frequency:
+    start: 8 GHz
+    stop: 12 GHz
+    step: 1 GHz
+
+  # Cartesian product of the axes, first listed varies slowest. Sweepable: length, width,
+  # center_x, center_y (lengths) and rotation_deg (degrees, counter-clockwise). Give either a
+  # start/stop/step range or a list of values.
+  parameters:
+    length:
+      start: 2 mm
+      stop: 6 mm
+      step: 1 mm
+    width: [1 mm, 2 mm]
+
+  on_invalid: error        # error: stop before solving; skip: record the cell as invalid
+
+  validation:
+    min_cells_per_wavelength: 10     # a priori: lambda_substrate / mesh edge
+    max_area_error: 0.05             # a priori: staircase error of the metal area
+    strict: false                    # true: a failed a priori check is an error before any solve
+    refinement:                      # opt-in: re-solve with a finer mesh / Floquet order
+      enabled: true
+      factor: 2
+      tolerance: 0.05                # max |dS| between successive discretizations
+      frequencies: max               # max | all

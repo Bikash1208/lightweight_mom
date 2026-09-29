@@ -1,0 +1,1474 @@
+{
+  "reference_curve": [
+    {
+      "l_mm": 1.3333333333,
+      "s11_mag": 0.9998905556335707,
+      "s11_phase_deg": -21.053182597787796,
+      "n_unknowns": 24
+    },
+    {
+      "l_mm": 2.0,
+      "s11_mag": 0.999876971596455,
+      "s11_phase_deg": -21.893277333447248,
+      "n_unknowns": 60
+    },
+    {
+      "l_mm": 2.6666666667,
+      "s11_mag": 0.9998428653713273,
+      "s11_phase_deg": -23.80779564097479,
+      "n_unknowns": 112
+    },
+    {
+      "l_mm": 3.3333333333,
+      "s11_mag": 0.9997636999195596,
+      "s11_phase_deg": -27.68954748887355,
+      "n_unknowns": 180
+    },
+    {
+      "l_mm": 4.0,
+      "s11_mag": 0.9995769278638919,
+      "s11_phase_deg": -35.34393483980192,
+      "n_unknowns": 264
+    },
+    {
+      "l_mm": 4.6666666667,
+      "s11_mag": 0.9990965177337086,
+      "s11_phase_deg": -51.04951535046819,
+      "n_unknowns": 364
+    },
+    {
+      "l_mm": 5.3333333333,
+      "s11_mag": 0.9977488399478515,
+      "s11_phase_deg": -86.59282661557481,
+      "n_unknowns": 480
+    },
+    {
+      "l_mm": 6.0,
+      "s11_mag": 0.995722407363627,
+      "s11_phase_deg": -164.46789959487418,
+      "n_unknowns": 612
+    },
+    {
+      "l_mm": 6.6666666667,
+      "s11_mag": 0.9974253017623745,
+      "s11_phase_deg": 113.09210860565217,
+      "n_unknowns": 760
+    },
+    {
+      "l_mm": 7.3333333333,
+      "s11_mag": 0.9990165242713398,
+      "s11_phase_deg": 71.38733175527717,
+      "n_unknowns": 924
+    }
+  ],
+  "centers": {
+    "off_resonance": {
+      "l_mm": 2.0,
+      "s11_mag": 0.999876971596455,
+      "s11_phase_deg": -21.893277333447248,
+      "n_unknowns": 60
+    },
+    "near_resonance": {
+      "l_mm": 6.6666666667,
+      "s11_mag": 0.9974253017623745,
+      "s11_phase_deg": 113.09210860565217,
+      "n_unknowns": 760
+    },
+    "at_resonance": {
+      "l_mm": 6.0,
+      "s11_mag": 0.995722407363627,
+      "s11_phase_deg": -164.46789959487418,
+      "n_unknowns": 612
+    }
+  },
+  "step_cases": [
+    {
+      "name": "off_resonance_1d_row_k1_higher_l",
+      "kind": "1d_row",
+      "center_lw_mm": [
+        2.0,
+        2.0
+      ],
+      "grid_mm": [
+        [
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ]
+        ],
+        [
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.6666666667,
+            2.6666666667
+          ]
+        ],
+        [
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ]
+        ]
+      ],
+      "k_separation": 1,
+      "achieved_step_deg": 1.9145183075275405,
+      "isolated_px": "(-7.1001513617628435e-09+3.453865272156154e-09j)",
+      "embedded_px": "(-7.130079933186185e-09+3.482953740720901e-09j)",
+      "dipole_relative_complex_error": 0.005285893083441936,
+      "reflection_phase_error_deg": 0.0057357881187733994,
+      "reflection_magnitude_error_db": 0.00027789781069382347,
+      "n_unknowns_isolated": 60,
+      "n_unknowns_embedded": 592
+    },
+    {
+      "name": "off_resonance_2d_gradient_k1_higher_l",
+      "kind": "2d_gradient",
+      "center_lw_mm": [
+        2.0,
+        2.0
+      ],
+      "grid_mm": [
+        [
+          [
+            1.3333333333,
+            1.3333333333
+          ],
+          [
+            1.3333333333,
+            1.3333333333
+          ],
+          [
+            2.0,
+            2.0
+          ]
+        ],
+        [
+          [
+            1.3333333333,
+            1.3333333333
+          ],
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.6666666667,
+            2.6666666667
+          ]
+        ],
+        [
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.6666666667,
+            2.6666666667
+          ],
+          [
+            2.6666666667,
+            2.6666666667
+          ]
+        ]
+      ],
+      "k_separation": 1,
+      "achieved_step_deg": 1.9145183075275405,
+      "isolated_px": "(-7.1001513617628435e-09+3.453865272156154e-09j)",
+      "embedded_px": "(-7.0957998269745395e-09+3.4790365152510165e-09j)",
+      "dipole_relative_complex_error": 0.0032352757789451967,
+      "reflection_phase_error_deg": 0.001056039676115006,
+      "reflection_magnitude_error_db": 0.0005353041982203131,
+      "n_unknowns_isolated": 60,
+      "n_unknowns_embedded": 588
+    },
+    {
+      "name": "off_resonance_1d_row_k1_lower_l",
+      "kind": "1d_row",
+      "center_lw_mm": [
+        2.0,
+        2.0
+      ],
+      "grid_mm": [
+        [
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ]
+        ],
+        [
+          [
+            1.3333333333,
+            1.3333333333
+          ],
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ]
+        ],
+        [
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ]
+        ]
+      ],
+      "k_separation": 1,
+      "achieved_step_deg": 0.8400947356594521,
+      "isolated_px": "(-7.1001513617628435e-09+3.453865272156154e-09j)",
+      "embedded_px": "(-7.086958898704698e-09+3.4411042224277596e-09j)",
+      "dipole_relative_complex_error": 0.002324626012201847,
+      "reflection_phase_error_deg": 0.0025242819983120057,
+      "reflection_magnitude_error_db": 0.00012132532404728863,
+      "n_unknowns_isolated": 60,
+      "n_unknowns_embedded": 504
+    },
+    {
+      "name": "off_resonance_2d_gradient_k1_lower_l",
+      "kind": "2d_gradient",
+      "center_lw_mm": [
+        2.0,
+        2.0
+      ],
+      "grid_mm": [
+        [
+          [
+            2.6666666667,
+            2.6666666667
+          ],
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ]
+        ],
+        [
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ],
+          [
+            1.3333333333,
+            1.3333333333
+          ]
+        ],
+        [
+          [
+            2.0,
+            2.0
+          ],
+          [
+            1.3333333333,
+            1.3333333333
+          ],
+          [
+            1.3333333333,
+            1.3333333333
+          ]
+        ]
+      ],
+      "k_separation": 1,
+      "achieved_step_deg": 0.8400947356594521,
+      "isolated_px": "(-7.1001513617628435e-09+3.453865272156154e-09j)",
+      "embedded_px": "(-7.104350710054204e-09+3.4469675563275266e-09j)",
+      "dipole_relative_complex_error": 0.001022772575030568,
+      "reflection_phase_error_deg": 9.901564692071929e-05,
+      "reflection_magnitude_error_db": 0.00017598623659929402,
+      "n_unknowns_isolated": 60,
+      "n_unknowns_embedded": 484
+    },
+    {
+      "name": "off_resonance_1d_row_k2_higher_l",
+      "kind": "1d_row",
+      "center_lw_mm": [
+        2.0,
+        2.0
+      ],
+      "grid_mm": [
+        [
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ]
+        ],
+        [
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ],
+          [
+            3.3333333333,
+            3.3333333333
+          ]
+        ],
+        [
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ],
+          [
+            2.0,
+            2.0
+          ]
+        ]
+      ],
+      "k_separation": 2,
+      "achieved_step_deg": 5.796270155426303,
+      "isolated_px": "(-7.1001513617628435e-09+3.453865272156154e-09j)",
+      "embedded_px": "(-7.189742940498854e-09+3.54165539154092e-09j)",
+      "dipole_relative_complex_error": 0.015886497473351857,
+      "reflection_phase_error_deg": 0.017217143839786786,
+      "reflection_magnitude_error_db": 0.0008456260759996903,
+      "n_unknowns_isolated": 60,
+      "n_unknowns_embedded": 660
+    },
+    {
+      "name": "off_resonance_2d_gradient_k2_higher_l",
+      "kind": "2d_gradient",
+      "center_lw_mm": [
+        2.0,
+        2.0
+      ],
+      "grid_mm": [
+        [
+          [
+            1.3333333333,
+            1.3333333333
+          ],
+          [
+            1.3333333333,
+            1.3333333333
+          ],
+          [
+            2.0,
+            2.0
+          ]
+        ],
+        [
+          [
+            1.3333333333,
+            1.3333333333
+          ],
+          [
+            2.0,
+            2.0
+          ],
+          [
+            3.3333333333,
+            3.3333333333
+          ]
+        ],
+        [
+          [
+            2.0,
+            2.0
+          ],
+          [
+            3.3333333333,
+            3.3333333333
+          ],
+          [
+            4.0,
+            4.0
+          ]
+        ]
+      ],
+      "k_separation": 2,
+      "achieved_step_deg": 5.796270155426303,
+      "isolated_px": "(-7.1001513617628435e-09+3.453865272156154e-09j)",
+      "embedded_px": "(-7.07672000815389e-09+3.6181725361439514e-09j)",
+      "dipole_relative_complex_error": 0.02102037586248566,
+      "reflection_phase_error_deg": 0.007538371562709756,
+      "reflection_magnitude_error_db": 0.003446282992306547,
+      "n_unknowns_isolated": 60,
+      "n_unknowns_embedded": 876
+    },
+    {
+      "name": "near_resonance_1d_row_k1_higher_l",
+      "kind": "1d_row",
+      "center_lw_mm": [
+        6.6666666667,
+        6.6666666667
+      ],
+      "grid_mm": [
+        [
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ]
+        ],
+        [
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            7.3333333333,
+            7.3333333333
+          ]
+        ],
+        [
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ]
+        ]
+      ],
+      "k_separation": 1,
+      "achieved_step_deg": 41.704776850375,
+      "isolated_px": "(5.454509399187588e-07+4.848618710178709e-07j)",
+      "embedded_px": "(2.091548746655239e-07+1.6973752713005417e-07j)",
+      "dipole_relative_complex_error": 0.6314978413437182,
+      "reflection_phase_error_deg": 96.78967262354503,
+      "reflection_magnitude_error_db": 6.233131145502285,
+      "n_unknowns_isolated": 760,
+      "n_unknowns_embedded": 7004
+    },
+    {
+      "name": "near_resonance_2d_gradient_k1_higher_l",
+      "kind": "2d_gradient",
+      "center_lw_mm": [
+        6.6666666667,
+        6.6666666667
+      ],
+      "grid_mm": [
+        [
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ]
+        ],
+        [
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            7.3333333333,
+            7.3333333333
+          ]
+        ],
+        [
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            7.3333333333,
+            7.3333333333
+          ],
+          [
+            7.3333333333,
+            7.3333333333
+          ]
+        ]
+      ],
+      "k_separation": 1,
+      "achieved_step_deg": 41.704776850375,
+      "isolated_px": "(5.454509399187588e-07+4.848618710178709e-07j)",
+      "embedded_px": "(2.455267848381335e-07+1.6283142863497923e-07j)",
+      "dipole_relative_complex_error": 0.6029955302095193,
+      "reflection_phase_error_deg": 87.42631484402892,
+      "reflection_magnitude_error_db": 5.5024958859162325,
+      "n_unknowns_isolated": 760,
+      "n_unknowns_embedded": 7332
+    },
+    {
+      "name": "near_resonance_1d_row_k1_lower_l",
+      "kind": "1d_row",
+      "center_lw_mm": [
+        6.6666666667,
+        6.6666666667
+      ],
+      "grid_mm": [
+        [
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ]
+        ],
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ]
+        ],
+        [
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ]
+        ]
+      ],
+      "k_separation": 1,
+      "achieved_step_deg": 82.43999179947366,
+      "isolated_px": "(5.454509399187588e-07+4.848618710178709e-07j)",
+      "embedded_px": "(8.557450248889099e-07+9.02620398603298e-07j)",
+      "dipole_relative_complex_error": 0.7130570501763898,
+      "reflection_phase_error_deg": 19.872149522439514,
+      "reflection_magnitude_error_db": 6.885217780107712,
+      "n_unknowns_isolated": 760,
+      "n_unknowns_embedded": 6692
+    },
+    {
+      "name": "near_resonance_2d_gradient_k1_lower_l",
+      "kind": "2d_gradient",
+      "center_lw_mm": [
+        6.6666666667,
+        6.6666666667
+      ],
+      "grid_mm": [
+        [
+          [
+            4.6666666667,
+            4.6666666667
+          ],
+          [
+            7.3333333333,
+            7.3333333333
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ]
+        ],
+        [
+          [
+            7.3333333333,
+            7.3333333333
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ]
+        ],
+        [
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ]
+        ]
+      ],
+      "k_separation": 1,
+      "achieved_step_deg": 82.43999179947366,
+      "isolated_px": "(5.454509399187588e-07+4.848618710178709e-07j)",
+      "embedded_px": "(9.273646992444358e-08+4.582379342589182e-08j)",
+      "dipole_relative_complex_error": 0.8641252276507807,
+      "reflection_phase_error_deg": 122.35823649725253,
+      "reflection_magnitude_error_db": 1.7863176331576178,
+      "n_unknowns_isolated": 760,
+      "n_unknowns_embedded": 6772
+    },
+    {
+      "name": "near_resonance_1d_row_k2_lower_l",
+      "kind": "1d_row",
+      "center_lw_mm": [
+        6.6666666667,
+        6.6666666667
+      ],
+      "grid_mm": [
+        [
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ]
+        ],
+        [
+          [
+            5.3333333333,
+            5.3333333333
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ]
+        ],
+        [
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ]
+        ]
+      ],
+      "k_separation": 2,
+      "achieved_step_deg": 160.31506477877303,
+      "isolated_px": "(5.454509399187588e-07+4.848618710178709e-07j)",
+      "embedded_px": "(1.0676706441676077e-06+1.3347586803780566e-06j)",
+      "dipole_relative_complex_error": 1.3668349934175905,
+      "reflection_phase_error_deg": 28.854624289565038,
+      "reflection_magnitude_error_db": 10.493644495236918,
+      "n_unknowns_isolated": 760,
+      "n_unknowns_embedded": 6560
+    },
+    {
+      "name": "near_resonance_2d_gradient_k2_lower_l",
+      "kind": "2d_gradient",
+      "center_lw_mm": [
+        6.6666666667,
+        6.6666666667
+      ],
+      "grid_mm": [
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            4.6666666667,
+            4.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ]
+        ],
+        [
+          [
+            4.6666666667,
+            4.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ]
+        ],
+        [
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ]
+        ]
+      ],
+      "k_separation": 2,
+      "achieved_step_deg": 160.31506477877303,
+      "isolated_px": "(5.454509399187588e-07+4.848618710178709e-07j)",
+      "embedded_px": "(2.876242168731847e-06+1.3265702810078188e-06j)",
+      "dipole_relative_complex_error": 3.3956111654492216,
+      "reflection_phase_error_deg": 1.1454218362957675,
+      "reflection_magnitude_error_db": 17.213096372503657,
+      "n_unknowns_isolated": 760,
+      "n_unknowns_embedded": 5900
+    },
+    {
+      "name": "at_resonance_1d_row_k1_higher_l",
+      "kind": "1d_row",
+      "center_lw_mm": [
+        6.0,
+        6.0
+      ],
+      "grid_mm": [
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ],
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.6666666667,
+            6.6666666667
+          ]
+        ],
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ]
+      ],
+      "k_separation": 1,
+      "achieved_step_deg": 82.43999179947366,
+      "isolated_px": "(9.459515193848948e-08+7.472313618658433e-07j)",
+      "embedded_px": "(1.8062061008153836e-06+1.2532025732177354e-06j)",
+      "dipole_relative_complex_error": 2.3696782850138725,
+      "reflection_phase_error_deg": 72.3123564402137,
+      "reflection_magnitude_error_db": 13.47015560043764,
+      "n_unknowns_isolated": 612,
+      "n_unknowns_embedded": 5656
+    },
+    {
+      "name": "at_resonance_2d_gradient_k1_higher_l",
+      "kind": "2d_gradient",
+      "center_lw_mm": [
+        6.0,
+        6.0
+      ],
+      "grid_mm": [
+        [
+          [
+            1.3333333333,
+            1.3333333333
+          ],
+          [
+            5.3333333333,
+            5.3333333333
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ],
+        [
+          [
+            5.3333333333,
+            5.3333333333
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ],
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ]
+      ],
+      "k_separation": 1,
+      "achieved_step_deg": 82.43999179947366,
+      "isolated_px": "(9.459515193848948e-08+7.472313618658433e-07j)",
+      "embedded_px": "(-5.176247341153785e-08+7.360591559876348e-07j)",
+      "dipole_relative_complex_error": 0.194880993079075,
+      "reflection_phase_error_deg": 19.474023881468895,
+      "reflection_magnitude_error_db": 0.8746491682686713,
+      "n_unknowns_isolated": 612,
+      "n_unknowns_embedded": 4656
+    },
+    {
+      "name": "at_resonance_1d_row_k1_lower_l",
+      "kind": "1d_row",
+      "center_lw_mm": [
+        6.0,
+        6.0
+      ],
+      "grid_mm": [
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ],
+        [
+          [
+            5.3333333333,
+            5.3333333333
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ],
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ]
+      ],
+      "k_separation": 1,
+      "achieved_step_deg": 77.87507297929938,
+      "isolated_px": "(9.459515193848948e-08+7.472313618658433e-07j)",
+      "embedded_px": "(2.345815666981473e-08+5.429744799863588e-07j)",
+      "dipole_relative_complex_error": 0.28716323342793715,
+      "reflection_phase_error_deg": 27.536747883627385,
+      "reflection_magnitude_error_db": 4.5167130817842684,
+      "n_unknowns_isolated": 612,
+      "n_unknowns_embedded": 5376
+    },
+    {
+      "name": "at_resonance_2d_gradient_k1_lower_l",
+      "kind": "2d_gradient",
+      "center_lw_mm": [
+        6.0,
+        6.0
+      ],
+      "grid_mm": [
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ],
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            5.3333333333,
+            5.3333333333
+          ]
+        ],
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            5.3333333333,
+            5.3333333333
+          ],
+          [
+            1.3333333333,
+            1.3333333333
+          ]
+        ]
+      ],
+      "k_separation": 1,
+      "achieved_step_deg": 77.87507297929938,
+      "isolated_px": "(9.459515193848948e-08+7.472313618658433e-07j)",
+      "embedded_px": "(-5.176247341154216e-08+7.360591559876381e-07j)",
+      "dipole_relative_complex_error": 0.1948809930790804,
+      "reflection_phase_error_deg": 19.47402388146915,
+      "reflection_magnitude_error_db": 0.8746491682687707,
+      "n_unknowns_isolated": 612,
+      "n_unknowns_embedded": 4656
+    },
+    {
+      "name": "at_resonance_1d_row_k2_higher_l",
+      "kind": "1d_row",
+      "center_lw_mm": [
+        6.0,
+        6.0
+      ],
+      "grid_mm": [
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ],
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            7.3333333333,
+            7.3333333333
+          ]
+        ],
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ]
+      ],
+      "k_separation": 2,
+      "achieved_step_deg": 124.14476864984863,
+      "isolated_px": "(9.459515193848948e-08+7.472313618658433e-07j)",
+      "embedded_px": "(2.273024549455009e-07-4.768436363462395e-07j)",
+      "dipole_relative_complex_error": 1.6346993916491241,
+      "reflection_phase_error_deg": 172.96583463593902,
+      "reflection_magnitude_error_db": 6.5204784439406795,
+      "n_unknowns_isolated": 612,
+      "n_unknowns_embedded": 5820
+    },
+    {
+      "name": "at_resonance_2d_gradient_k2_higher_l",
+      "kind": "2d_gradient",
+      "center_lw_mm": [
+        6.0,
+        6.0
+      ],
+      "grid_mm": [
+        [
+          [
+            7.3333333333,
+            7.3333333333
+          ],
+          [
+            4.0,
+            4.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ],
+        [
+          [
+            4.0,
+            4.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ],
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ]
+      ],
+      "k_separation": 2,
+      "achieved_step_deg": 124.14476864984863,
+      "isolated_px": "(9.459515193848948e-08+7.472313618658433e-07j)",
+      "embedded_px": "(-2.86990305676469e-07+4.648466216525155e-07j)",
+      "dipole_relative_complex_error": 0.6302602446515789,
+      "reflection_phase_error_deg": 65.98516995791526,
+      "reflection_magnitude_error_db": 1.479849233223201,
+      "n_unknowns_isolated": 612,
+      "n_unknowns_embedded": 5124
+    },
+    {
+      "name": "at_resonance_1d_row_k2_lower_l",
+      "kind": "1d_row",
+      "center_lw_mm": [
+        6.0,
+        6.0
+      ],
+      "grid_mm": [
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ],
+        [
+          [
+            4.6666666667,
+            4.6666666667
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ],
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ]
+      ],
+      "k_separation": 2,
+      "achieved_step_deg": 113.41838424440598,
+      "isolated_px": "(9.459515193848948e-08+7.472313618658433e-07j)",
+      "embedded_px": "(9.678438980764654e-09+4.772477165764615e-07j)",
+      "dipole_relative_complex_error": 0.37576316420918554,
+      "reflection_phase_error_deg": 42.58889477436058,
+      "reflection_magnitude_error_db": 5.961360393987865,
+      "n_unknowns_isolated": 612,
+      "n_unknowns_embedded": 5260
+    },
+    {
+      "name": "at_resonance_2d_gradient_k2_lower_l",
+      "kind": "2d_gradient",
+      "center_lw_mm": [
+        6.0,
+        6.0
+      ],
+      "grid_mm": [
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ]
+        ],
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            6.0,
+            6.0
+          ],
+          [
+            4.6666666667,
+            4.6666666667
+          ]
+        ],
+        [
+          [
+            6.0,
+            6.0
+          ],
+          [
+            4.6666666667,
+            4.6666666667
+          ],
+          [
+            7.3333333333,
+            7.3333333333
+          ]
+        ]
+      ],
+      "k_separation": 2,
+      "achieved_step_deg": 113.41838424440598,
+      "isolated_px": "(9.459515193848948e-08+7.472313618658433e-07j)",
+      "embedded_px": "(-3.561693257310833e-07+5.68339222667194e-07j)",
+      "dipole_relative_complex_error": 0.6438768918076597,
+      "reflection_phase_error_deg": 57.32930004772551,
+      "reflection_magnitude_error_db": 3.1160950140111283,
+      "n_unknowns_isolated": 612,
+      "n_unknowns_embedded": 5324
+    }
+  ],
+  "gate": {
+    "status": "LOCAL_PERIODICITY_STEP_LIMIT_MEASURED",
+    "reason": "local periodicity holds within the design tolerance up to 5.8 deg/cell (largest tested step that stayed within it); within the stricter 5.0 deg/0.5 dB tolerance up to 5.8 deg/cell",
+    "max_step_within_design_tolerance_deg": 5.796270155426303,
+    "max_step_within_strict_tolerance_deg": 5.796270155426303,
+    "per_case": [
+      {
+        "name": "off_resonance_1d_row_k1_higher_l",
+        "achieved_step_deg": 1.9145183075275405,
+        "phase_error_deg": 0.0057357881187733994,
+        "magnitude_error_db": 0.00027789781069382347,
+        "within_design_tolerance": "True",
+        "within_strict_tolerance": "True"
+      },
+      {
+        "name": "off_resonance_2d_gradient_k1_higher_l",
+        "achieved_step_deg": 1.9145183075275405,
+        "phase_error_deg": 0.001056039676115006,
+        "magnitude_error_db": 0.0005353041982203131,
+        "within_design_tolerance": "True",
+        "within_strict_tolerance": "True"
+      },
+      {
+        "name": "off_resonance_1d_row_k1_lower_l",
+        "achieved_step_deg": 0.8400947356594521,
+        "phase_error_deg": 0.0025242819983120057,
+        "magnitude_error_db": 0.00012132532404728863,
+        "within_design_tolerance": "True",
+        "within_strict_tolerance": "True"
+      },
+      {
+        "name": "off_resonance_2d_gradient_k1_lower_l",
+        "achieved_step_deg": 0.8400947356594521,
+        "phase_error_deg": 9.901564692071929e-05,
+        "magnitude_error_db": 0.00017598623659929402,
+        "within_design_tolerance": "True",
+        "within_strict_tolerance": "True"
+      },
+      {
+        "name": "off_resonance_1d_row_k2_higher_l",
+        "achieved_step_deg": 5.796270155426303,
+        "phase_error_deg": 0.017217143839786786,
+        "magnitude_error_db": 0.0008456260759996903,
+        "within_design_tolerance": "True",
+        "within_strict_tolerance": "True"
+      },
+      {
+        "name": "off_resonance_2d_gradient_k2_higher_l",
+        "achieved_step_deg": 5.796270155426303,
+        "phase_error_deg": 0.007538371562709756,
+        "magnitude_error_db": 0.003446282992306547,
+        "within_design_tolerance": "True",
+        "within_strict_tolerance": "True"
+      },
+      {
+        "name": "near_resonance_1d_row_k1_higher_l",
+        "achieved_step_deg": 41.704776850375,
+        "phase_error_deg": 96.78967262354503,
+        "magnitude_error_db": 6.233131145502285,
+        "within_design_tolerance": false,
+        "within_strict_tolerance": false
+      },
+      {
+        "name": "near_resonance_2d_gradient_k1_higher_l",
+        "achieved_step_deg": 41.704776850375,
+        "phase_error_deg": 87.42631484402892,
+        "magnitude_error_db": 5.5024958859162325,
+        "within_design_tolerance": false,
+        "within_strict_tolerance": false
+      },
+      {
+        "name": "near_resonance_1d_row_k1_lower_l",
+        "achieved_step_deg": 82.43999179947366,
+        "phase_error_deg": 19.872149522439514,
+        "magnitude_error_db": 6.885217780107712,
+        "within_design_tolerance": false,
+        "within_strict_tolerance": false
+      },
+      {
+        "name": "near_resonance_2d_gradient_k1_lower_l",
+        "achieved_step_deg": 82.43999179947366,
+        "phase_error_deg": 122.35823649725253,
+        "magnitude_error_db": 1.7863176331576178,
+        "within_design_tolerance": false,
+        "within_strict_tolerance": false
+      },
+      {
+        "name": "near_resonance_1d_row_k2_lower_l",
+        "achieved_step_deg": 160.31506477877303,
+        "phase_error_deg": 28.854624289565038,
+        "magnitude_error_db": 10.493644495236918,
+        "within_design_tolerance": false,
+        "within_strict_tolerance": false
+      },
+      {
+        "name": "near_resonance_2d_gradient_k2_lower_l",
+        "achieved_step_deg": 160.31506477877303,
+        "phase_error_deg": 1.1454218362957675,
+        "magnitude_error_db": 17.213096372503657,
+        "within_design_tolerance": "False",
+        "within_strict_tolerance": "False"
+      },
+      {
+        "name": "at_resonance_1d_row_k1_higher_l",
+        "achieved_step_deg": 82.43999179947366,
+        "phase_error_deg": 72.3123564402137,
+        "magnitude_error_db": 13.47015560043764,
+        "within_design_tolerance": false,
+        "within_strict_tolerance": false
+      },
+      {
+        "name": "at_resonance_2d_gradient_k1_higher_l",
+        "achieved_step_deg": 82.43999179947366,
+        "phase_error_deg": 19.474023881468895,
+        "magnitude_error_db": 0.8746491682686713,
+        "within_design_tolerance": false,
+        "within_strict_tolerance": false
+      },
+      {
+        "name": "at_resonance_1d_row_k1_lower_l",
+        "achieved_step_deg": 77.87507297929938,
+        "phase_error_deg": 27.536747883627385,
+        "magnitude_error_db": 4.5167130817842684,
+        "within_design_tolerance": false,
+        "within_strict_tolerance": false
+      },
+      {
+        "name": "at_resonance_2d_gradient_k1_lower_l",
+        "achieved_step_deg": 77.87507297929938,
+        "phase_error_deg": 19.47402388146915,
+        "magnitude_error_db": 0.8746491682687707,
+        "within_design_tolerance": false,
+        "within_strict_tolerance": false
+      },
+      {
+        "name": "at_resonance_1d_row_k2_higher_l",
+        "achieved_step_deg": 124.14476864984863,
+        "phase_error_deg": 172.96583463593902,
+        "magnitude_error_db": 6.5204784439406795,
+        "within_design_tolerance": false,
+        "within_strict_tolerance": false
+      },
+      {
+        "name": "at_resonance_2d_gradient_k2_higher_l",
+        "achieved_step_deg": 124.14476864984863,
+        "phase_error_deg": 65.98516995791526,
+        "magnitude_error_db": 1.479849233223201,
+        "within_design_tolerance": false,
+        "within_strict_tolerance": false
+      },
+      {
+        "name": "at_resonance_1d_row_k2_lower_l",
+        "achieved_step_deg": 113.41838424440598,
+        "phase_error_deg": 42.58889477436058,
+        "magnitude_error_db": 5.961360393987865,
+        "within_design_tolerance": false,
+        "within_strict_tolerance": false
+      },
+      {
+        "name": "at_resonance_2d_gradient_k2_lower_l",
+        "achieved_step_deg": 113.41838424440598,
+        "phase_error_deg": 57.32930004772551,
+        "magnitude_error_db": 3.1160950140111283,
+        "within_design_tolerance": false,
+        "within_strict_tolerance": false
+      }
+    ]
+  }
+}

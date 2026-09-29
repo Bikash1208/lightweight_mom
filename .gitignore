@@ -1,0 +1,43 @@
+# --- Python / venv -----------------------------------------------------------
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.coverage
+htmlcov/
+
+# --- OS / IDE ------------------------------------------------------------------
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# --- Large, regenerable generated data ------------------------------------------
+# The Phase 7 unit-cell-library checkpoint and its derived database/geometry exports
+# (~554 MB total): fully regenerable via `examples/build_unit_cell_library.py`
+# (resumable, appends to checkpoint.jsonl). Tests needing them skip cleanly when
+# absent (tests/conftest.py's session fixture). manifest.json/reports/plots are kept
+# (small, useful as committed reference).
+results/unit_cell_library/_solve/
+results/unit_cell_library/database/
+results/unit_cell_library/geometry/
+
+# Real HFSS Touchstone exports (~23 MB each; 3 of them ~70 MB total). Regenerable
+# only by re-running HFSS itself -- NOT regenerable from this repo's own code.
+# hfss_data-marked tests skip cleanly when these are absent
+# (see docs/DEVELOPING.md "Regenerating or fetching excluded data").
+*.s36p
+*.s4p
+
+# An ad hoc snapshot of src/ bundled alongside an HFSS delivery at some point;
+# redundant with the tracked src/ tree itself.
+hfss_exports/_src_snapshot.tgz
+
+# --- Stray files not meant to be tracked ---------------------------------------
+/efl.txt

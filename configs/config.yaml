@@ -1,0 +1,54 @@
+# Periodic metasurface unit-cell configuration.
+#
+# Units: plain numbers are SI (metres, hertz, degrees for *_deg keys).
+# A unit suffix converts at load time, e.g. "8 mm", "10 GHz" (case-sensitive).
+# YAML note: write floats with a dot ("8.0e-3"); "8e-3" is read as a string and
+# is accepted only because bare-number strings are treated as SI.
+#
+# Time convention: exp(+j*omega*t). See CONVENTIONS.md.
+
+# Rectangular lattice periods
+period_x: 8.0e-3        # [m]
+period_y: 8.0e-3        # [m]
+
+# Single dielectric layer. The metal pattern is on its top face (z = 0),
+# air above (z > 0, incident side) and below (z < -thickness).
+substrate:
+  name: Rogers RT/Duroid 5880
+  eps_r: 2.2
+  tan_delta: 0.0009
+  thickness: 1.575e-3   # [m]
+
+# Phase 1 supports only PEC.
+metal:
+  model: pec
+
+# Types: rectangle | patch | dipole | slot
+geometry:
+  type: rectangle
+  length: 5.0e-3        # [m] along the feature's local x axis
+  width: 2.0e-3         # [m] along the feature's local y axis
+  center_x: 0.0         # [m] offset from cell centre
+  center_y: 0.0         # [m]
+  rotation_deg: 0.0     # counter-clockwise about the feature centre
+
+# Free-space plane wave. Phase 1: single frequency, normal incidence.
+excitation:
+  frequency: 10.0e9     # [Hz]
+  theta_deg: 0.0        # must be 0 in Phase 1
+  phi_deg: 0.0
+  polarization: x       # E-field direction: x | y
+
+# MoM discretization (numerical parameters, not physical).
+mesh:
+  cells_x: 16           # rectangles per period along x (rooftop mesh)
+  cells_y: 16
+  floquet_order: 32     # Floquet harmonics |m|,|n| <= this in the Z assembly
+
+# Explicit S-parameter reference planes (used from Phase 4; they do NOT change Z or V).
+# Placed at the outer boundaries of the modelled air regions:
+#   top plane    z = +top_air_thickness
+#   bottom plane z = -(substrate.thickness + bottom_air_thickness)
+reference_planes:
+  top_air_thickness: 10.0e-3      # [m] pattern plane (z=0) up to the top plane
+  bottom_air_thickness: 10.0e-3   # [m] substrate bottom face down to the bottom plane

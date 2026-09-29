@@ -1,0 +1,81 @@
+{
+ "mesh": {
+  "cells_x": 16,
+  "cells_y": 16,
+  "floquet_order": 32
+ },
+ "reference_planes": {
+  "top_air_thickness_m": 0.005,
+  "bottom_air_thickness_m": 0.005,
+  "z_top_m": 0.005,
+  "z_bottom_m": -0.006575
+ },
+ "frequency_grid": {
+  "start_hz": 8000000000.0,
+  "stop_hz": 12000000000.0,
+  "step_hz": 500000000.0,
+  "count": 9,
+  "frequencies_hz": [
+   8000000000.0,
+   8500000000.0,
+   9000000000.0,
+   9500000000.0,
+   10000000000.0,
+   10500000000.0,
+   11000000000.0,
+   11500000000.0,
+   12000000000.0
+  ]
+ },
+ "excitation": {
+  "description": "Unit-amplitude (1 V/m) normal-incidence plane wave, phase referenced to the pattern plane z=0; both x- and y-polarized incidence are solved for every frequency (both give a column of the 4x4 S-matrix, see S_PARAMETERS.md).",
+  "incidence": "normal (theta=0)",
+  "polarizations_solved": [
+   "x",
+   "y"
+  ]
+ },
+ "conventions": {
+  "time_dependence": "exp(+j*omega*t)",
+  "units": {
+   "frequency": "Hz",
+   "length": "m",
+   "angle": "deg",
+   "phase": "deg",
+   "magnitude": "linear (|S|, not dB)"
+  },
+  "phase": "arg(S), principal value in (-180, 180] deg; a delay is a negative phase",
+  "s_matrix": "4x4 [[S11, S12], [S21, S22]] over (port1 x, port1 y, port2 x, port2 y); entry name S<out><in>_<received><incident>; port 1 = top reference plane (wave incident travelling -z), port 2 = bottom reference plane (wave incident travelling +z)",
+  "linear_basis": "global x and y unit vectors, identical at both ports",
+  "circular_basis": {
+   "R": "(x + j y)/sqrt(2)",
+   "L": "(x - j y)/sqrt(2)",
+   "rotation_in_time": "R rotates clockwise seen from +z (x toward -y); L counter-clockwise",
+   "handedness": "right-hand rule, thumb along propagation: R is RHCP when travelling -z and LHCP when travelling +z; L is the reverse",
+   "components": "S<out><in>_<received><incident> with labels R/L, e.g. S21_LR",
+   "transform": "S_circ = T^H S_lin T, T = [e_R e_L] (unitary)"
+  },
+  "co_cross": {
+   "linear": {
+    "co": [
+     "xx",
+     "yy"
+    ],
+    "cross": [
+     "yx",
+     "xy"
+    ]
+   },
+   "circular": {
+    "co": [
+     "RR",
+     "LL"
+    ],
+    "cross": [
+     "LR",
+     "RL"
+    ]
+   }
+  }
+ }
+}

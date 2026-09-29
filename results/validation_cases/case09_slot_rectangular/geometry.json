@@ -1,0 +1,34 @@
+{
+ "case_id": "case09_slot_rectangular",
+ "category": "slot",
+ "description": "Rectangular slot (5 x 2 mm), metal-complement formulation: a solid plate with an aperture.",
+ "code_version": "0.5.0",
+ "lattice": {
+  "period_x_m": 0.008,
+  "period_y_m": 0.008
+ },
+ "substrate": {
+  "name": "Rogers RT/Duroid 5880",
+  "eps_r": 2.2,
+  "tan_delta": 0.0009,
+  "thickness_m": 0.001575
+ },
+ "metal": {
+  "model": "pec"
+ },
+ "geometry": {
+  "type": "slot",
+  "polarity": "aperture",
+  "length_m": 0.005,
+  "width_m": 0.002,
+  "center_x_m": 0.0,
+  "center_y_m": 0.0,
+  "rotation_deg": 0.0,
+  "metal_area_m2": 5.4e-05,
+  "metal_fill_fraction": 0.84375
+ },
+ "cad_export": {
+  "metal_export_thickness_m": 3.5e-05,
+  "note": "CAD solid convenience only (a zero-thickness solid cannot be exported); the MoM model is a zero-thickness PEC surface current at z=0 and does not use this value. See cad_export.py and VALIDATION_EXPORT.md Sec. 4."
+ }
+}

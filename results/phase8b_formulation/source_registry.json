@@ -1,0 +1,26 @@
+{
+ "fong2010": {
+  "claim": "Holographic interference-modulation index Psi(x,y) = Re{E_ref . conj(E_obj)}, used to modulate a grounded surface's reactance for a leaky-wave antenna fed by a monopole-launched guided surface wave.",
+  "source": "T. Fong, N. C. Colburn, J. J. Ottusch, J. L. Visher, D. F. Sievenpiper, \"Scalar and Tensor Holographic Artificial Impedance Surfaces,\" IEEE Trans. Antennas Propag., vol. 58, no. 10, pp. 3212-3221, 2010.",
+  "equation_section": "Interference/modulation-index formulation (exact page/equation number not independently re-verified against the paywalled full text by this project; the general form Psi=Re{E_ref.conj(E_obj)}, X=X_avg(1+M*Psi) is the widely-cited, standard restatement of this paper's technique across the holographic-impedance-surface literature -- see repository_scientific_audit.md's search log).",
+  "project_convention_compatibility": "Time convention exp(+j*omega*t) is compatible with the general interference-kernel form used here (a real-valued correlation of two complex phasors is convention-symmetric); the *reference-wave* half (a monopole-launched guided surface wave on a grounded structure) is structurally incompatible with this project's solver (no ground plane, no surface-wave dispersion solver).",
+  "implementation_consequence": "src/phase8b/holographic_modulation.py::interference_modulation (kernel, implemented+tested); reactance_from_modulation (X(x,y) mapping, implemented but its M/X_avg calibration constants are NOT available from this project).",
+  "validation_status": "MATHEMATICALLY DEFINED, NUMERICALLY IMPLEMENTED, NUMERICALLY TESTED. NOT physically validated for this project (control_variable.py: SURFACE_IMPEDANCE = INVALID for this library)."
+ },
+ "impedance_boundary_relation": {
+  "claim": "Zs = eta0 (1+Gamma)/(1-Gamma): the surface impedance of a boundary whose normal-incidence reflection coefficient (referenced at the boundary) is Gamma.",
+  "source": "Standard transmission-line/impedance-boundary-condition relation (load-reflection-coefficient formula Gamma=(Z_L-Z_0)/(Z_L+Z_0) applied with Z_0=eta0, Z_L=Zs); textbook EM/microwave engineering (e.g. D. M. Pozar, Microwave Engineering; C. A. Balanis, Advanced Engineering Electromagnetics), used throughout the artificial-impedance-surface/AMC literature including Sievenpiper's own earlier high-impedance-surface work.",
+  "equation_section": "Zs = eta0 (1+Gamma)/(1-Gamma), Gamma referenced at the boundary plane (not de-embedded to any other reference plane).",
+  "project_convention_compatibility": "Requires |Gamma|=1 (a fully reflective, lossless grounded boundary) to give a purely reactive Zs. Phase 7's library is NOT grounded and is mostly transmissive (see control_variable.py's case01 citation), so this relation's assumption is violated for this project's data.",
+  "implementation_consequence": "Not implemented as a conversion function in this package (deliberately -- Sec. 10's prohibition on assuming Zs<->phase equivalence without a validated derivation); only documented and cited here.",
+  "validation_status": "Standard, well-established EM relation in general. INVALID as applied to this project's ungrounded, partially-transmissive unit-cell library (control_variable.py::investigate_surface_impedance)."
+ },
+ "phase_difference_hologram": {
+  "claim": "required_phase(x,y) = wrap(arg(E_obj) - arg(E_ref)): the phase a passive reflectarray/transmitarray unit cell must impose on a locally-incident reference wave to produce a locally-desired object wave.",
+  "source": "Standard phase-conjugate/phase-only hologram and reflectarray/transmitarray antenna design equation (widely used across passive reflectarray and coding-metasurface antenna design literature; not attributed to one single paper here, since it is a standard, convention-independent construction).",
+  "equation_section": "required_phase = wrap(arg(E_obj) - arg(E_ref))",
+  "project_convention_compatibility": "Fully compatible: needs only a normal-incidence co-polarized reflection/transmission phase per cell, exactly the *kind* of quantity Phase 7 solved and stored (S11xx/S21xx).",
+  "implementation_consequence": "src/phase8b/holographic_modulation.py::phase_difference_hologram (implemented+tested); can feed directly into `feasibility_matching.match_required_phase` (Phase 8A).",
+  "validation_status": "MATHEMATICALLY DEFINED, NUMERICALLY IMPLEMENTED, NUMERICALLY TESTED. NOT physically validated as this project's chosen formulation (no project document picks it over Formulation A, and the S11-vs-S21 architecture question remains open)."
+ }
+}

@@ -1,0 +1,84 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lwmom"
+version = "0.13.0"
+description = "A lightweight Method-of-Moments solver for periodic metasurface unit cells, plus a research pipeline toward holographic metasurface synthesis."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary - ISRO internal (see README.md 'Open questions')" }
+authors = [{ name = "ISRO HMSA project" }]
+
+# Core: everything the solver itself needs. `scipy` is used only by
+# `src/phase13/convergence.py`'s Richardson-extrapolation curve fit (Part 0) -- the
+# solver core (Phases 1-12D) needs only numpy/PyYAML, unchanged.
+dependencies = [
+    "numpy>=2.0",
+    "PyYAML>=6.0",
+    "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+# STEP export, plotting: src/cad_export.py, validation_export.py, hfss_comparison.py,
+# geometry_export.py, library_plots.py, unit_cell_library.py and their tests. Never
+# imported by the solver core (CLAUDE.md).
+cad = ["cadquery>=2.8", "matplotlib>=3.8"]
+# The local web app backend (Part 3). No client-side JS framework/build step (plots
+# are rendered server-side with matplotlib, already a `cad` extra -- see
+# docs/ARCHITECTURE.md "Why no frontend build step").
+app = ["fastapi>=0.110", "uvicorn>=0.29", "python-multipart>=0.0.9", "matplotlib>=3.8"]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+    "pre-commit>=3.7",
+    "httpx>=0.27",   # FastAPI TestClient
+]
+
+[project.scripts]
+lwmom-app = "src.app.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+# Superseded by pytest.ini (pytest reads both; pytest.ini's `[pytest]` section wins
+# when both exist -- kept here only so `pyproject.toml` alone documents the markers
+# for tooling that reads project metadata, e.g. IDEs). Single source of truth for
+# actually running tests remains pytest.ini.
+markers = [
+    "slow: real MoM solves expensive enough to exclude from the fast (<5 min) suite",
+    "cad: needs the optional cadquery/matplotlib extras",
+    "checkpoint: needs the ~470 MB Phase 7 unit-cell-library checkpoint on disk",
+    "hfss_data: needs real HFSS exports under hfss_exports/ (not regenerable without HFSS)",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["results", "hfss_exports", ".venv"]
+
+[tool.ruff.lint]
+# A pragmatic rule set: real bugs and obvious style, not a rewrite of this project's
+# own (deliberate, documented) dense-docstring style. E501 (line length) is handled by
+# `line-length` above with real code, not by suppressing it; long docstring prose lines
+# are common here by design (CLAUDE.md's "measured numbers only" narrative style) so
+# E501 is relaxed for docstrings/comments only via `pycodestyle.max-doc-length` below,
+# not disabled outright.
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = [
+    "E741",   # ambiguous variable name `l` -- this project's own convention IS `l_mm` (length)
+    "E501",   # line too long -- this project's dense, citation-heavy docstring style (CLAUDE.md)
+              # routinely exceeds any fixed limit; `line-length` above still governs `ruff format`
+    "E702",   # multiple statements on one line (semicolon) -- used deliberately throughout for
+              # compact, paired append()-style lines (see e.g. tests/*hfss_ingest*.py); a pragmatic
+              # exception for THIS codebase's own established style, not a blanket style opinion
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.format]
+quote-style = "double"

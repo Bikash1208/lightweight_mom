@@ -1,0 +1,104 @@
+{
+  "provenance": {
+    "hfss_version": "HFSS 2025 R1",
+    "port": "Floquet port on the air-box top at z = +5 mm, no de-embed (= MoM reference plane)",
+    "modes": "18 modes per Floquet port (up to 9.25 dB/mm attenuation at 15 GHz)",
+    "backing": "PEC ground",
+    "patch": "PEC, 35 micron thick (CAD only; solver treats it as zero-thickness PEC, README.md)",
+    "convergence": "max delta-S 0.001",
+    "sweep": "10-15 GHz, 401 points",
+    "time_convention": "exp(+j*omega*t), same as this project's solver -- no conjugation",
+    "setup_lesson": "an earlier 2-mode-port / copper-ground run (unit_HFSSDesign1.s4p, kept on disk for this record) was off by up to -4.7 deg -- the 18-mode PEC-ground setup above is the one that reproduces the MoM reference this closely",
+    "remaining_trend_hypothesis": "a residual ~0.5 deg phase trend across the band (Sec. below) is plausibly caused by the 35 micron patch thickness (the MoM reference is zero-thickness PEC) -- a hypothesis, not a finding; not tested here"
+  },
+  "comparisons": [
+    {
+      "case_id": "G1",
+      "l_mm": 2.0,
+      "mean_dphase_mode1_deg": -0.2935154072347893,
+      "max_abs_dphase_mode1_deg": 0.5245700706132794,
+      "max_dmag_mode1_db": 7.370738350962356e-05,
+      "max_crosspol_mag": 2.1439132641555497e-05,
+      "max_top_to_bottom_mag": 0.0,
+      "meets_tolerance": true,
+      "frequency_ghz": [
+        10.0,
+        10.25,
+        10.5,
+        10.75,
+        11.0,
+        11.25,
+        11.5,
+        11.75,
+        12.0,
+        12.25,
+        12.5,
+        12.75,
+        13.0,
+        13.25,
+        13.5,
+        13.75,
+        14.0,
+        14.25,
+        14.5,
+        14.75,
+        15.0
+      ],
+      "dphase_mode1_deg": [
+        -0.12765603760549737,
+        -0.13884930606310242,
+        -0.15073759179212587,
+        -0.16335134481652247,
+        -0.17672215735289099,
+        -0.19088280959819148,
+        -0.20586731663533264,
+        -0.2217109763003009,
+        -0.23845041813260082,
+        -0.25612365310303886,
+        -0.27477012448038707,
+        -0.29443075934883467,
+        -0.3151480211148545,
+        -0.3369659627293018,
+        -0.35993028061123766,
+        -0.3840883693388548,
+        -0.4094893768928216,
+        -0.4361842605801982,
+        -0.46422584345548756,
+        -0.49366887136571336,
+        -0.5245700706132794
+      ]
+    }
+  ],
+  "geometric_identity": [
+    {
+      "case_id": "G2",
+      "phase12c_path": "/Users/biksmac/Documents/ISRO/HMSA/lightweight_mom/results/phase12c_hfss_export/single_cell_L4.8mm.step",
+      "hfss_export_path": "/Users/biksmac/Documents/ISRO/HMSA/lightweight_mom/hfss_exports/phase12_grounded_8mm/single_cells/G2_L4p8mm.step",
+      "metal_volume_relative_diff": 0.0,
+      "metal_bbox_matches": true,
+      "identical": true
+    },
+    {
+      "case_id": "G3",
+      "phase12c_path": "/Users/biksmac/Documents/ISRO/HMSA/lightweight_mom/results/phase12c_hfss_export/single_cell_L5.6mm.step",
+      "hfss_export_path": "/Users/biksmac/Documents/ISRO/HMSA/lightweight_mom/hfss_exports/phase12_grounded_8mm/single_cells/G3_L5p6mm.step",
+      "metal_volume_relative_diff": 0.0,
+      "metal_bbox_matches": true,
+      "identical": true
+    }
+  ],
+  "gate": {
+    "status": "HFSS_SINGLE_CELL_VALIDATED_PARTIAL",
+    "reason": "validated within tolerance: ('G1',); cases with HFSS data but outside tolerance: (none); still pending (no HFSS file yet): ('G2', 'G3', 'G4', 'G5', 'G6')",
+    "cases_with_data": [
+      "G1"
+    ],
+    "cases_pending": [
+      "G2",
+      "G3",
+      "G4",
+      "G5",
+      "G6"
+    ]
+  }
+}

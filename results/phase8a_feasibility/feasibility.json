@@ -1,0 +1,59 @@
+{
+ "status": "PHASE_SOURCE_UNVALIDATED",
+ "library": {
+  "id": "fa2708bd1eee4c80",
+  "geometry_count": 324,
+  "successful_cells": 324,
+  "failed_cells": 0,
+  "frequency_points": 201,
+  "period_x_mm": 4.8,
+  "period_y_mm": 4.8,
+  "step_files": 324
+ },
+ "frequency": {
+  "requested_GHz": 12.5,
+  "supported": true,
+  "exact_grid_point": true,
+  "library_min_GHz": 10.0,
+  "library_max_GHz": 15.0
+ },
+ "phase_source": {
+  "quantity": "S11_xx",
+  "quantity_required": null,
+  "validated_for_holographic_use": false,
+  "status": "PHASE_SOURCE_UNVALIDATED",
+  "note": "This project has no implemented holographic-synthesis formulation (README.md 'Holographic synthesis is not implemented'; DATABASE.md; src/__init__.py), so the physical quantity a holographic generator would require cannot be determined, and therefore cannot be checked against what the unit-cell library provides. The library itself pins its stored phase-vs-geometry data to S11_xx (status=SPECIFICATION_MANDATED): Req. 10's lookup-table schema names S11 explicitly; this project's existing solver has no ground plane, so S21 is not negligible here (unlike a typical grounded reflectarray element) and whether S11 or S21 phase is the one the eventual holographic generator needs is an architecture decision this project has not made. Both S11 and S21 (all four blocks) are stored in full in the library database regardless of this choice; only the phase-vs-geometry table and the coverage/collision/resonance analyses below are pinned to S11_xx. Both facts together mean S11_xx must not be treated as 'the' holographic phase-control quantity without further architecture decisions this project has not made."
+ },
+ "phase_coverage": {
+  "span_deg": 24.83553878214809,
+  "largest_gap_deg": 335.1644612178519
+ },
+ "required_phase": {
+  "available": false
+ },
+ "matching": {
+  "matched": 0,
+  "unmatched": 0,
+  "mean_error_deg": null,
+  "max_error_deg": null
+ },
+ "hfss_validation": {
+  "performed": false
+ },
+ "checks": {
+  "library_integrity": "PASS",
+  "frequency_compatibility": "PASS",
+  "polarization_compatibility": "PASS",
+  "reference_field_validity": "N/A (Mode A)",
+  "phase_source_validation": "FAIL",
+  "resonance_analysis": "COMPUTED",
+  "grating_check": "PASS"
+ },
+ "warnings": [
+  "even under the tentative S11_xx assumption, library phase coverage at 12.5 GHz is only 24.84 deg of 360 deg (largest gap 335.16 deg)"
+ ],
+ "errors": [
+  "The current unit-cell scattering quantity has not yet been validated as the physical phase-control quantity required by the holographic synthesis formulation."
+ ],
+ "solver_version": "0.5.0"
+}

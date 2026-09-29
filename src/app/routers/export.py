@@ -57,7 +57,8 @@ def _run_export_job(job, source_result, params):
         return f"/api/files/{job.id}/{Path(path).name}"
 
     return {
-        "n_cells": result.n_cells,
+        "n_cells_per_side": result.n_cells_per_side,
+        "total_cells": result.total_cells,
         "file_size_bytes": result.file_size_bytes,
         "export_time_s": result.export_time_s,
         "step_download_url": _download(result.step_path),

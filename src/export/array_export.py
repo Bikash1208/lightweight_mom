@@ -39,7 +39,9 @@ class ArrayExportResult:
     layout_csv_path: str
     layout_json_path: str
     readme_path: str
-    n_cells: int
+    n_cells_per_side: int  # PHASE13B A8: was `n_cells` but held only N (the side length) -- an
+    # N x N design's summary reported "N cells" instead of the real N*N, misleadingly small.
+    total_cells: int
     file_size_bytes: "int | None"
     export_time_s: "float | None"
 
@@ -72,7 +74,7 @@ def write_layout_files(lw_grid_m, output_dir, basename="layout"):
         writer.writerows(rows)
 
     json_path = output_dir / f"{basename}.json"
-    json_path.write_text(json.dumps({"n_cells": n, "cells": rows}, indent=2))
+    json_path.write_text(json.dumps({"n_cells_per_side": n, "total_cells": n * n, "cells": rows}, indent=2))
     return csv_path, json_path
 
 
@@ -84,8 +86,9 @@ def write_hfss_readme(output_dir, basename="HFSS_README"):
     return path
 
 
-def export_array(lw_grid_m, period_x_m, period_y_m, substrate, metal, output_dir,
-                  metal_export_thickness_m=None, include_step=True):
+def export_array(
+    lw_grid_m, period_x_m, period_y_m, substrate, metal, output_dir, metal_export_thickness_m=None, include_step=True
+):
     """Writes layout CSV/JSON, an HFSS-ready README, and (if `include_step` and the `cad` extra is
     installed) a full-array STEP file. Raises `errors.LwmomError` (`CAD_UNAVAILABLE`) only if
     `include_step=True` and cadquery is missing -- layout/README are always written first, so a
@@ -114,6 +117,12 @@ def export_array(lw_grid_m, period_x_m, period_y_m, substrate, metal, output_dir
         step_path = str(step_path)
 
     return ArrayExportResult(
-        step_path=step_path, layout_csv_path=str(csv_path), layout_json_path=str(json_path),
-        readme_path=str(readme_path), n_cells=n, file_size_bytes=file_size, export_time_s=export_time,
+        step_path=step_path,
+        layout_csv_path=str(csv_path),
+        layout_json_path=str(json_path),
+        readme_path=str(readme_path),
+        n_cells_per_side=n,
+        total_cells=n * n,
+        file_size_bytes=file_size,
+        export_time_s=export_time,
     )

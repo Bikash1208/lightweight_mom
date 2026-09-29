@@ -21,7 +21,7 @@ def test_broadside_beam_directly_over_a_centered_feed_is_symmetric():
 
 def test_feed_at_center_gives_zero_illumination_angle_at_center():
     taper = des.feed_illumination_taper(np.array([0.0]), np.array([0.0]), feed_xyz_m=(0.0, 0.0, 0.2), q=2.0)
-    assert taper[0] == pytest.approx(1.0)   # directly below the feed: theta_feed = 0, cos^q = 1
+    assert taper[0] == pytest.approx(1.0)  # directly below the feed: theta_feed = 0, cos^q = 1
 
 
 def test_illumination_taper_decreases_away_from_boresight():
@@ -35,9 +35,9 @@ def test_assign_cells_picks_nearest_phase_candidate():
     y = np.array([[0.0, 0.0]])
     required = np.array([[0.0, 90.0]])
     candidates = [
-        ("c1", 2.0, 2.0, "lib", complex(1.0, 0.0)),     # phase 0 deg
-        ("c2", 3.0, 3.0, "lib", complex(0.0, 1.0)),     # phase 90 deg
-        ("c3", 4.0, 4.0, "lib", complex(-1.0, 0.0)),    # phase 180 deg
+        ("c1", 2.0, 2.0, "lib", complex(1.0, 0.0)),  # phase 0 deg
+        ("c2", 3.0, 3.0, "lib", complex(0.0, 1.0)),  # phase 90 deg
+        ("c3", 4.0, 4.0, "lib", complex(-1.0, 0.0)),  # phase 180 deg
     ]
     assignments = des.assign_cells_from_library(x, y, required, candidates)
     assert assignments[0].chosen_l_mm == 2.0
@@ -46,7 +46,7 @@ def test_assign_cells_picks_nearest_phase_candidate():
 
 
 def test_max_phase_gradient_detects_a_step():
-    grid = np.array([[0.0, 10.0, 170.0]])   # last step wraps: |170-10|=160, or 200 the other way -> 160
+    grid = np.array([[0.0, 10.0, 170.0]])  # last step wraps: |170-10|=160, or 200 the other way -> 160
     grad = des.max_phase_gradient_deg_per_cell(grid)
     assert grad == pytest.approx(160.0, abs=1e-6)
 
@@ -58,7 +58,62 @@ def test_design_reflectarray_labels_steep_gradient_when_exceeded():
         ("c2", 3.0, 3.0, "lib", np.exp(1j * np.radians(90.0))),
         ("c3", 4.0, 4.0, "lib", np.exp(1j * np.radians(-90.0))),
     ]
-    design = des.design_reflectarray(x, y, 30e9, feed_xyz_m=(0.0, 0.0, 0.02), theta0_deg=60.0,
-                                      phi0_deg=0.0, library_candidates=candidates)
+    design = des.design_reflectarray(
+        x, y, 30e9, feed_xyz_m=(0.0, 0.0, 0.02), theta0_deg=60.0, phi0_deg=0.0, library_candidates=candidates
+    )
     assert "LOCAL_PERIODICITY_APPROXIMATION" in design.labels
     assert design.max_phase_gradient_deg_per_cell >= 0.0
+
+
+def test_phase_coverage_ok_is_false_above_the_threshold_even_with_a_candidate():
+    """PHASE13B A4: a candidate existing is not enough -- large phase error must be flagged."""
+    x = np.array([[0.0]])
+    y = np.array([[0.0]])
+    required = np.array([[90.0]])
+    # only a 0deg candidate exists: 90deg error, well above the 30deg default threshold
+    candidates = [("c1", 2.0, 2.0, "lib", complex(1.0, 0.0))]
+    assignments = des.assign_cells_from_library(x, y, required, candidates)
+    assert assignments[0].chosen_l_mm == 2.0  # still the (only) chosen candidate
+    assert assignments[0].phase_error_deg == pytest.approx(90.0, abs=1e-6)
+    assert assignments[0].phase_coverage_ok is False
+
+
+def test_phase_error_stats_reflects_the_threshold():
+    x = np.array([[0.0, 0.008]])
+    y = np.array([[0.0, 0.0]])
+    required = np.array([[0.0, 90.0]])
+    candidates = [("c1", 2.0, 2.0, "lib", complex(1.0, 0.0))]  # 0deg: exact for cell 0, 90deg off for cell 1
+    assignments = des.assign_cells_from_library(x, y, required, candidates)
+    stats = des.phase_error_stats(assignments)
+    assert stats.n_cells == 2
+    assert stats.n_unreachable == 1
+    assert stats.max_deg == pytest.approx(90.0, abs=1e-6)
+    assert stats.max_deg >= stats.mean_deg >= 0.0
+
+
+def test_design_reflectarray_labels_phase_coverage_shortfall_when_library_is_too_coarse():
+    """Sparse 3-candidate library (0/+90/-90deg only, missing the whole ~180deg neighbourhood) over
+    a real steered design: some cells must land far enough from any candidate to exceed the
+    default 30deg threshold, so the design-level shortfall label must appear."""
+    x, y = np.meshgrid(np.linspace(-0.02, 0.02, 5), np.linspace(-0.02, 0.02, 5), indexing="xy")
+    candidates = [
+        ("c1", 2.0, 2.0, "lib", complex(1.0, 0.0)),
+        ("c2", 3.0, 3.0, "lib", np.exp(1j * np.radians(90.0))),
+        ("c3", 4.0, 4.0, "lib", np.exp(1j * np.radians(-90.0))),
+    ]
+    design = des.design_reflectarray(
+        x, y, 30e9, feed_xyz_m=(0.0, 0.0, 0.02), theta0_deg=60.0, phi0_deg=0.0, library_candidates=candidates
+    )
+    assert design.phase_error_stats.n_unreachable > 0
+    assert any(label.startswith("PHASE_COVERAGE_SHORTFALL(") for label in design.labels)
+
+
+def test_assign_cells_threshold_is_overridable():
+    x = np.array([[0.0]])
+    y = np.array([[0.0]])
+    required = np.array([[10.0]])
+    candidates = [("c1", 2.0, 2.0, "lib", complex(1.0, 0.0))]  # 10deg error
+    strict = des.assign_cells_from_library(x, y, required, candidates, threshold_deg=5.0)
+    loose = des.assign_cells_from_library(x, y, required, candidates, threshold_deg=15.0)
+    assert strict[0].phase_coverage_ok is False
+    assert loose[0].phase_coverage_ok is True

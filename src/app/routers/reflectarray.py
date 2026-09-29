@@ -11,11 +11,11 @@ import numpy as np
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
-from ...errors import phase_unreachable
+from ...errors import library_frequency_unavailable
 from ...reflectarray.designer import design_reflectarray, feed_illumination_taper
 from ...unit_cell_library import UnitCellLibrary
 from .. import library_registry
-from ..library_query import library_candidates_at_frequency
+from ..library_query import available_frequencies_hz, library_candidates_at_frequency
 
 router = APIRouter(prefix="/api/reflectarray", tags=["reflectarray"])
 
@@ -36,7 +36,11 @@ def _run_design_job(job, library_path, library_id, params):
     lib = UnitCellLibrary.from_json(library_path)
     candidates = library_candidates_at_frequency(lib, library_id, params["frequency_hz"])
     if not candidates:
-        raise phase_unreachable(f"library {library_id!r} has no cell with a record at {params['frequency_hz']:g} Hz")
+        available_ghz = [f / 1e9 for f in available_frequencies_hz(lib)]
+        raise library_frequency_unavailable(
+            f"library {library_id!r} has no record at {params['frequency_hz'] / 1e9:g} GHz; "
+            f"available: {available_ghz} GHz"
+        )
 
     period_m = params["period_mm"] * 1e-3
     x_vals = (np.arange(params["nx"]) - (params["nx"] - 1) / 2) * period_m
@@ -62,6 +66,7 @@ def _run_design_job(job, library_path, library_id, params):
         "achieved_phase_deg": achieved,
         "assignments": design.assignments,
         "max_phase_gradient_deg_per_cell": design.max_phase_gradient_deg_per_cell,
+        "phase_error_stats": design.phase_error_stats,
         "labels": design.labels,
         "aperture_field_real": aperture_field.real,
         "aperture_field_imag": aperture_field.imag,

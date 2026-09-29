@@ -18,54 +18,79 @@ class ErrorCode:
 
 
 CONFIG_INVALID = ErrorCode(
-    "CONFIG_INVALID", "The configuration is invalid or incomplete.",
+    "CONFIG_INVALID",
+    "The configuration is invalid or incomplete.",
     "Check the reported field against docs/theory/CONVENTIONS.md; no electrical value has a code default.",
 )
 GEOMETRY_OUT_OF_CELL = ErrorCode(
-    "GEOMETRY_OUT_OF_CELL", "The requested geometry does not fit inside the unit cell.",
+    "GEOMETRY_OUT_OF_CELL",
+    "The requested geometry does not fit inside the unit cell.",
     "Reduce the patch/feature size or increase the period.",
 )
 MESH_UNALIGNED = ErrorCode(
-    "MESH_UNALIGNED", "A feature edge does not sit on a mesh line at this resolution.",
+    "MESH_UNALIGNED",
+    "A feature edge does not sit on a mesh line at this resolution.",
     "Increase the mesh resolution or adjust the dimension to a mesh-aligned value "
     "(see `src/discretization.py::feature_edges_aligned`); the solve still runs, but with staircasing error.",
 )
 FLOQUET_RANK_DEFICIENT = ErrorCode(
-    "FLOQUET_RANK_DEFICIENT", "The Floquet truncation order is too small for this mesh.",
+    "FLOQUET_RANK_DEFICIENT",
+    "The Floquet truncation order is too small for this mesh.",
     "Increase `floquet_order` so that 2*floquet_order + 1 >= max(cells_x, cells_y).",
 )
 SOLVE_FAILED = ErrorCode(
-    "SOLVE_FAILED", "The linear solve did not complete.",
+    "SOLVE_FAILED",
+    "The linear solve did not complete.",
     "Check the impedance matrix condition (see the run's SolveDiagnostics); an extremely fine mesh "
     "or degenerate geometry can make Z singular or numerically unstable.",
 )
 NOT_CONVERGED = ErrorCode(
-    "NOT_CONVERGED", "The mesh-convergence (Richardson) fit did not converge.",
+    "NOT_CONVERGED",
+    "The mesh-convergence (Richardson) fit did not converge.",
     "Report the finest fixed-mesh result with a MESH_NOT_CONVERGED label instead of an "
     "extrapolated one; see `src/phase13/convergence.py` for the fit's own failure modes.",
 )
 PHASE_UNREACHABLE = ErrorCode(
-    "PHASE_UNREACHABLE", "The requested reflection phase is outside this library's achievable range.",
+    "PHASE_UNREACHABLE",
+    "The requested reflection phase is outside this library's achievable range.",
     "Widen the geometry-parameter sweep, accept a quantization error, or use a different library.",
 )
 CAD_UNAVAILABLE = ErrorCode(
-    "CAD_UNAVAILABLE", "STEP export / CAD-dependent features need the optional 'cad' extra.",
+    "CAD_UNAVAILABLE",
+    "STEP export / CAD-dependent features need the optional 'cad' extra.",
     "Install with `pip install -e '.[cad]'` (cadquery, matplotlib).",
 )
 FIELD_EXPRESSION_UNSUPPORTED = ErrorCode(
-    "FIELD_EXPRESSION_UNSUPPORTED", "This reference-field file's field-calculator expression is not recognised.",
+    "FIELD_EXPRESSION_UNSUPPORTED",
+    "This reference-field file's field-calculator expression is not recognised.",
     "Supported: CmplxPhase/CmplxMag/CmplxReal/CmplxImag of ScalarX/Y/Z(<Ex,Ey,Ez>). "
     "Re-export with one of these, or extend `src/fields/fld_parser.py`'s expression table.",
 )
 IMPEDANCE_UNREACHABLE = ErrorCode(
-    "IMPEDANCE_UNREACHABLE", "A required surface reactance value is outside the dispersion library's range.",
+    "IMPEDANCE_UNREACHABLE",
+    "A required surface reactance value is outside the dispersion library's range.",
     "Widen the dispersion library's geometry sweep, or accept the nearest achievable value "
     "(the app reports which cells this affects).",
 )
+LIBRARY_FREQUENCY_UNAVAILABLE = ErrorCode(
+    "LIBRARY_FREQUENCY_UNAVAILABLE",
+    "The requested frequency has no stored record in this library.",
+    "Choose one of the library's own stored frequencies, or build/select a library that includes "
+    "the requested one -- `UnitCellLibrary.response` never interpolates across frequency.",
+)
 
 ALL_ERROR_CODES = (
-    CONFIG_INVALID, GEOMETRY_OUT_OF_CELL, MESH_UNALIGNED, FLOQUET_RANK_DEFICIENT, SOLVE_FAILED,
-    NOT_CONVERGED, PHASE_UNREACHABLE, CAD_UNAVAILABLE, FIELD_EXPRESSION_UNSUPPORTED, IMPEDANCE_UNREACHABLE,
+    CONFIG_INVALID,
+    GEOMETRY_OUT_OF_CELL,
+    MESH_UNALIGNED,
+    FLOQUET_RANK_DEFICIENT,
+    SOLVE_FAILED,
+    NOT_CONVERGED,
+    PHASE_UNREACHABLE,
+    CAD_UNAVAILABLE,
+    FIELD_EXPRESSION_UNSUPPORTED,
+    IMPEDANCE_UNREACHABLE,
+    LIBRARY_FREQUENCY_UNAVAILABLE,
 )
 
 
@@ -140,3 +165,7 @@ def field_expression_unsupported(expression, message=None):
 
 def impedance_unreachable(message=None):
     return LwmomError(IMPEDANCE_UNREACHABLE, message=message)
+
+
+def library_frequency_unavailable(message=None):
+    return LwmomError(LIBRARY_FREQUENCY_UNAVAILABLE, message=message)

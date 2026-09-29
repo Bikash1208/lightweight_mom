@@ -19,13 +19,19 @@ being used to represent a coupled, continuously-varying surface) and a cells-per
 own measured local wavenumber.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 
-from ..errors import impedance_unreachable
-from ..fields.reference_field_grid import aliasing_warning, cells_per_fringe
-from ..labels import EXPERIMENTAL, LOCAL_PERIODICITY_APPROXIMATION
+from ..fields.reference_field_grid import aliasing_warning, cells_per_fringe, resample_to_cell_grid
+from ..labels import (
+    EXPERIMENTAL,
+    LOCAL_PERIODICITY_APPROXIMATION,
+    REFERENCE_AMPLITUDE_ASSUMED_UNIFORM,
+    phase_coverage_shortfall,
+    reference_wave_not_rescaled,
+    reference_wave_rescaled_to_beta_bar,
+)
 from ..phase8b.holographic_modulation import (
     interference_modulation,
     phase_difference_hologram_from_phases_deg,
@@ -33,6 +39,7 @@ from ..phase8b.holographic_modulation import (
 )
 from ..phase8b.object_wave import combine_beams_scalar
 from ..phase8d_rev.response_matching import nearest_response_match
+from ..reflectarray.designer import PHASE_ERROR_UNREACHABLE_THRESHOLD_DEG
 
 
 @dataclass(frozen=True)
@@ -41,31 +48,80 @@ class GeometryCell:
     j: int
     x_m: float
     y_m: float
-    control_value: float            # X(x,y) [ohm] for Formulation A, or required_phase [deg] for B
-    geometry_param: "float | None"  # None if unreachable
+    control_value: float  # X(x,y) [ohm] for Formulation A, or required_phase [deg] for B
+    geometry_param: "float | None"  # None if unreachable; L_mm for Formulation B, the dispersion
+    # table's geometry parameter for A
     achieved_value: "float | None"
+    phase_error_deg: "float | None"  # Formulation B only (phase-quantization error); None for A
     reachable: bool
+    geometry_param_w: "float | None" = None  # Formulation B only: the matched cell's W_mm (the
+    # library search is over the full L,W grid, not just square cells -- PHASE13B B2 needs both
+    # to build an exportable per-cell L/W assignment)
 
 
 @dataclass(frozen=True)
 class HmsaDesign:
-    formulation: str   # "A_impedance_modulation" | "B_phase_difference"
+    formulation: str  # "A_impedance_modulation" | "B_phase_difference"
     x_m: np.ndarray
     y_m: np.ndarray
     control_map: np.ndarray
     cells: "tuple[GeometryCell, ...]"
     labels: tuple
     unreachable_fraction: float
+    phase_error_stats: "dict | None"  # Formulation B only: {mean,rms,max}_deg, n_cells, n_unreachable
 
 
 def formulation_a_control_map(reference_field, object_beams, frequency_hz, x_avg_ohm, modulation_index):
     """Fong et al. 2010: X(x,y) = X_avg*(1 + M*Re{E_ref*conj(E_obj)}). Requires a COMPLEX
-    reference field (amplitude available), since Formulation A's kernel needs it."""
+    reference field (amplitude available) -- see `_ensure_complex_reference` (PHASE13B B4) for the
+    phase-only fallback callers should apply before this."""
     if not reference_field.amplitude_available:
         raise ValueError("Formulation A needs a complex reference field (amplitude available)")
     e_obj = combine_beams_scalar(reference_field.x_m, reference_field.y_m, object_beams, frequency_hz)
     psi = interference_modulation(reference_field.Ex, e_obj)
     return reactance_from_modulation(psi, x_avg_ohm, modulation_index)
+
+
+def _ensure_complex_reference(reference_field):
+    """PHASE13B B4: the live review found Formulation A refused to run at all without a complex
+    (magnitude+phase) reference field, even though the project's only real reference-field export
+    is phase-only. The brief permits running phase-only here too, with UNIFORM amplitude assumed
+    (never silently -- the caller must apply `REFERENCE_AMPLITUDE_ASSUMED_UNIFORM`). Returns
+    `(field_with_Ex, amplitude_was_assumed)`."""
+    if reference_field.amplitude_available:
+        return reference_field, False
+    ex = np.exp(1j * np.radians(reference_field.phase()))
+    return replace(reference_field, Ex=ex, Ey=np.zeros_like(ex), amplitude_available=True), True
+
+
+def _rescale_reference_to_beta_bar(cell_field, raw_reference_field, dispersion_table, x_avg_ohm):
+    """PHASE13B B3: the imported field is the bare-slab TM0 wave; once patches are present the
+    guided wavenumber becomes beta_bar, set by the hologram's own mean surface reactance X_avg
+    (looked up from the SAME dispersion table Formulation A already needs). Using the bare-slab
+    phase as-is accumulates a phase error ~ (beta_bar - beta_slab)*r across the aperture. Rather
+    than the brief's idealized analytic ψ_ref ~ A(r)*exp(-j*beta_bar*r) (which would discard every
+    measured deviation from a perfectly radial wave), this applies the additive correction
+    `phase_new(r) = phase_measured(r) + (beta_slab - beta_bar)*r` -- replaces only the mean radial
+    slope, keeps the field's own measured detail, and reduces to the brief's formula exactly when
+    the measured field already IS purely radial.
+
+    Returns `(rescaled_cell_field, beta_bar, beta_slab, worst_case_error_deg)`. Raises `ValueError`
+    if the dispersion table has no `beta_rad_per_m` column (a `x_s_ohm`-only table, e.g. from a
+    reactance-only HFSS export, cannot supply beta_bar at all -- the caller falls back to
+    reporting the accumulated-error estimate without applying a correction)."""
+    from ..fields.reference_field_grid import local_wavenumber_field
+
+    beta_field = local_wavenumber_field(_as_fld_like(raw_reference_field))
+    beta_slab = float(np.nanmedian(beta_field))
+    geometry_param, _achieved_xs, _within = dispersion_table.geometry_for_x_s(x_avg_ohm)
+    beta_bar = dispersion_table.beta_at(geometry_param)  # raises ValueError if no beta column
+
+    r_m = np.hypot(cell_field.x_m, cell_field.y_m)
+    correction_rad = (beta_slab - beta_bar) * r_m
+    ex_new = cell_field.Ex * np.exp(1j * correction_rad)
+    worst_case_error_deg = float(np.degrees(abs(beta_bar - beta_slab) * np.max(r_m)))
+    rescaled = replace(cell_field, Ex=ex_new, Ey=np.zeros_like(ex_new), phase_deg=np.degrees(np.angle(ex_new)))
+    return rescaled, beta_bar, beta_slab, worst_case_error_deg
 
 
 def formulation_b_control_map(reference_field, object_beams, frequency_hz):
@@ -85,14 +141,20 @@ def map_control_to_geometry_dispersion(x_m, y_m, control_map, dispersion_table):
         for j in range(nx):
             target = float(control_map[i, j])
             gp, achieved, within = dispersion_table.geometry_for_x_s(target)
-            cells.append(GeometryCell(i, j, float(x_m[i, j]), float(y_m[i, j]), target, gp, achieved, within))
+            cells.append(GeometryCell(i, j, float(x_m[i, j]), float(y_m[i, j]), target, gp, achieved, None, within))
     return tuple(cells)
 
 
-def map_control_to_geometry_library(x_m, y_m, required_phase_deg_map, library_candidates):
+def map_control_to_geometry_library(
+    x_m, y_m, required_phase_deg_map, library_candidates, threshold_deg=PHASE_ERROR_UNREACHABLE_THRESHOLD_DEG
+):
     """Formulation B path: required_phase(x,y) -> geometry via the normal-incidence-phase
     library, reusing `nearest_response_match` unmodified (phase-only match: unit-magnitude target,
-    same convention `reflectarray.designer.assign_cells_from_library` uses)."""
+    same convention `reflectarray.designer.assign_cells_from_library` uses). `reachable` requires
+    BOTH a candidate to exist AND its phase error to be within `threshold_deg` (PHASE13B A4 --
+    previously any candidate at all, however large its error, counted as reachable; phase
+    libraries are periodic so there is no true out-of-range case the way a monotonic dispersion
+    table has, but a large quantization error is still a real design problem)."""
     candidates = list(library_candidates)
     ny, nx = np.shape(x_m)
     cells = []
@@ -103,49 +165,131 @@ def map_control_to_geometry_library(x_m, y_m, required_phase_deg_map, library_ca
             matches = nearest_response_match(target_complex, candidates)
             best = matches[0] if matches else None
             achieved = float(np.degrees(np.angle(best.complex_value))) if best else None
-            # "reachable" here means the library has ANY candidate; phase libraries are periodic
-            # (any phase is nominally reachable to within quantization) so there is no true
-            # out-of-range case the way a monotonic dispersion table has -- quantization error is
-            # reported via achieved vs target instead.
-            cells.append(GeometryCell(i, j, float(x_m[i, j]), float(y_m[i, j]), target_deg,
-                                       best.L_mm if best else None, achieved, best is not None))
+            phase_error = best.phase_error_deg if best else None
+            reachable = best is not None and phase_error <= threshold_deg
+            cells.append(
+                GeometryCell(
+                    i,
+                    j,
+                    float(x_m[i, j]),
+                    float(y_m[i, j]),
+                    target_deg,
+                    best.L_mm if best else None,
+                    achieved,
+                    phase_error,
+                    reachable,
+                    geometry_param_w=best.W_mm if best else None,
+                )
+            )
     return tuple(cells)
 
 
-def synthesize_formulation_a(reference_field, object_beams, frequency_hz, x_avg_ohm, modulation_index,
-                              dispersion_table, period_m):
-    control_map = formulation_a_control_map(reference_field, object_beams, frequency_hz, x_avg_ohm, modulation_index)
-    cells = map_control_to_geometry_dispersion(reference_field.x_m, reference_field.y_m, control_map, dispersion_table)
-    return _finish_design("A_impedance_modulation", reference_field, control_map, cells, period_m, extra_labels=(EXPERIMENTAL,))
+def synthesize_formulation_a(
+    reference_field,
+    object_beams,
+    frequency_hz,
+    x_avg_ohm,
+    modulation_index,
+    dispersion_table,
+    period_m,
+    rescale_to_beta_bar=True,
+):
+    # PHASE13B A2: synthesize on the unit-cell-centre grid of the CHOSEN period, not one "cell"
+    # per raw field sample (a 151x151, 2mm-pitch import would otherwise give 22801 "cells" instead
+    # of the real e.g. 37x37 the period implies).
+    cell_field = resample_to_cell_grid(reference_field, period_m)
+    cell_field, amplitude_assumed = _ensure_complex_reference(cell_field)  # PHASE13B B4
+    extra_labels = [EXPERIMENTAL]
+    if amplitude_assumed:
+        extra_labels.append(REFERENCE_AMPLITUDE_ASSUMED_UNIFORM)
+
+    try:  # PHASE13B B3: rescale to beta_bar (on by default), or at least report the risk of not doing so
+        rescaled_field, beta_bar, _beta_slab, worst_case_error_deg = _rescale_reference_to_beta_bar(
+            cell_field, reference_field, dispersion_table, x_avg_ohm
+        )
+        if rescale_to_beta_bar:
+            cell_field = rescaled_field
+            extra_labels.append(reference_wave_rescaled_to_beta_bar(beta_bar))
+        else:
+            extra_labels.append(reference_wave_not_rescaled(worst_case_error_deg))
+    except ValueError:
+        pass  # the dispersion table has no beta_rad_per_m column -- beta_bar is not computable at all
+
+    control_map = formulation_a_control_map(cell_field, object_beams, frequency_hz, x_avg_ohm, modulation_index)
+    cells = map_control_to_geometry_dispersion(cell_field.x_m, cell_field.y_m, control_map, dispersion_table)
+    return _finish_design(
+        "A_impedance_modulation",
+        reference_field,
+        cell_field.x_m,
+        cell_field.y_m,
+        control_map,
+        cells,
+        period_m,
+        extra_labels=tuple(extra_labels),
+    )
 
 
 def synthesize_formulation_b(reference_field, object_beams, frequency_hz, library_candidates, period_m):
-    control_map = formulation_b_control_map(reference_field, object_beams, frequency_hz)
-    cells = map_control_to_geometry_library(reference_field.x_m, reference_field.y_m, control_map, library_candidates)
-    return _finish_design("B_phase_difference", reference_field, control_map, cells, period_m, extra_labels=())
+    # PHASE13B B4: B uses a normal-incidence S11-phase library -- a reflectarray control variable,
+    # not the surface-wave one (dispersion/impedance) a monopole-fed hologram actually needs.
+    # Recommended path is A; B is offered as a usable-today approximation, labelled accordingly.
+    cell_field = resample_to_cell_grid(reference_field, period_m)
+    control_map = formulation_b_control_map(cell_field, object_beams, frequency_hz)
+    cells = map_control_to_geometry_library(cell_field.x_m, cell_field.y_m, control_map, library_candidates)
+    return _finish_design(
+        "B_phase_difference",
+        reference_field,
+        cell_field.x_m,
+        cell_field.y_m,
+        control_map,
+        cells,
+        period_m,
+        extra_labels=(EXPERIMENTAL,),
+    )
 
 
-def _finish_design(formulation, reference_field, control_map, cells, period_m, extra_labels):
+def _finish_design(formulation, raw_reference_field, x_m, y_m, control_map, cells, period_m, extra_labels):
+    """`raw_reference_field` is the RAW (un-resampled) imported field, used only for the
+    cells-per-fringe sanity check (a property of the imported wave itself, best measured at its
+    native resolution); `x_m`/`y_m`/`control_map`/`cells` are already on the resampled cell grid."""
     labels = [LOCAL_PERIODICITY_APPROXIMATION, *extra_labels]
-    if reference_field.dx_m is not None:
-        # Estimate local wavenumber from the ORIGINAL reference field's own phase, not from
-        # control_map (which for Formulation A is a reactance, not a phase).
+    if raw_reference_field.dx_m is not None:
         from ..fields.reference_field_grid import local_wavenumber_field
 
         try:
-            beta_field = local_wavenumber_field(_as_fld_like(reference_field))
+            beta_field = local_wavenumber_field(_as_fld_like(raw_reference_field))
             beta_typical = float(np.nanmedian(beta_field))
             cpf = cells_per_fringe(beta_typical, period_m)
             warning = aliasing_warning(cpf)
             if warning:
                 labels.append(f"CELLS_PER_FRINGE({cpf:.1f})")
         except Exception:
-            pass   # best-effort sanity check only; never blocks synthesis
+            pass  # best-effort sanity check only; never blocks synthesis
     unreachable = sum(1 for c in cells if not c.reachable)
     unreachable_fraction = unreachable / len(cells) if cells else 0.0
+    phase_errors = [c.phase_error_deg for c in cells if c.phase_error_deg is not None]
+    stats = None
+    if phase_errors:
+        errors = np.array(phase_errors)
+        stats = {
+            "mean_deg": float(np.mean(errors)),
+            "rms_deg": float(np.sqrt(np.mean(errors**2))),
+            "max_deg": float(np.max(errors)),
+            "n_cells": len(cells),
+            "n_unreachable": unreachable,
+        }
+        if unreachable > 0:
+            worst = max(c.phase_error_deg for c in cells if not c.reachable)
+            labels.append(phase_coverage_shortfall(worst))
     return HmsaDesign(
-        formulation=formulation, x_m=reference_field.x_m, y_m=reference_field.y_m,
-        control_map=control_map, cells=cells, labels=tuple(labels), unreachable_fraction=unreachable_fraction,
+        formulation=formulation,
+        x_m=x_m,
+        y_m=y_m,
+        control_map=control_map,
+        cells=cells,
+        labels=tuple(labels),
+        unreachable_fraction=unreachable_fraction,
+        phase_error_stats=stats,
     )
 
 

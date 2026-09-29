@@ -5,7 +5,7 @@ from src import labels
 
 def test_parameterized_labels_bake_in_the_value():
     assert labels.hfss_residual_at_resonance(3.7) == "HFSS_RESIDUAL_AT_RESONANCE(~3.7deg)"
-    assert labels.phase_coverage_shortfall(186.0) == "PHASE_COVERAGE_SHORTFALL(174deg)"
+    assert labels.phase_coverage_shortfall(41.6) == "PHASE_COVERAGE_SHORTFALL(42deg)"
     assert labels.steep_gradient(5.8) == "STEEP_GRADIENT(>5.8deg/cell)"
 
 

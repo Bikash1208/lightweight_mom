@@ -20,13 +20,15 @@ def test_export_array_writes_layout_readme_and_step(tmp_path):
     substrate = Substrate("RT5880", eps_r=2.2, tan_delta=0.0009, thickness=1.575e-3)
     metal = Metal("pec")
     result = ae.export_array(_grid(), 8.0e-3, 8.0e-3, substrate, metal, tmp_path)
-    assert result.n_cells == 4
+    assert result.n_cells_per_side == 4
+    assert result.total_cells == 16
     assert result.step_path is not None
     assert result.file_size_bytes > 0
     assert result.export_time_s >= 0.0
 
     layout = json.loads((tmp_path / "layout.json").read_text())
-    assert layout["n_cells"] == 4
+    assert layout["n_cells_per_side"] == 4
+    assert layout["total_cells"] == 16
     assert len(layout["cells"]) == 16
     assert (tmp_path / "HFSS_README.md").exists()
 
@@ -35,7 +37,7 @@ def test_export_array_writes_layout_readme_and_step(tmp_path):
 def test_non_square_grid_raises_clear_error(tmp_path):
     substrate = Substrate("RT5880", eps_r=2.2, tan_delta=0.0009, thickness=1.575e-3)
     metal = Metal("pec")
-    bad_grid = [[(2e-3, 2e-3)] * 4, [(2e-3, 2e-3)] * 3]   # ragged, not square
+    bad_grid = [[(2e-3, 2e-3)] * 4, [(2e-3, 2e-3)] * 3]  # ragged, not square
     with pytest.raises(ValueError, match="square"):
         ae.export_array(bad_grid, 8.0e-3, 8.0e-3, substrate, metal, tmp_path)
 

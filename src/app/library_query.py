@@ -6,6 +6,17 @@ routers so there is one place this conversion happens.
 """
 
 
+def available_frequencies_hz(lib):
+    """Every distinct frequency (Hz) actually stored in this library, across all cells -- used to
+    report a clear `LIBRARY_FREQUENCY_UNAVAILABLE` error that names what IS available (PHASE13B
+    A3) instead of silently returning zero candidates."""
+    freqs = set()
+    for cell in lib.all_cells():
+        for f_ghz in cell.get("frequency_GHz", ()):
+            freqs.add(round(f_ghz * 1e9))
+    return sorted(freqs)
+
+
 def library_candidates_at_frequency(lib, library_id, frequency_hz, family="S11"):
     """``lib``: a loaded `unit_cell_library.UnitCellLibrary`. Only cells with an exact stored
     record at ``frequency_hz`` are included (no interpolation -- `UnitCellLibrary.response`'s own

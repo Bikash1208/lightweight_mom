@@ -82,7 +82,8 @@
         document.getElementById("results").style.display = "block";
         const sizeMb = result.file_size_bytes ? (result.file_size_bytes / 1e6).toFixed(2) + " MB" : "n/a";
         const time = result.export_time_s ? result.export_time_s.toFixed(2) + " s" : "n/a";
-        document.getElementById("summary").textContent = `${result.n_cells} cells; STEP ${sizeMb} in ${time}`;
+        document.getElementById("summary").textContent =
+          `${result.n_cells_per_side}x${result.n_cells_per_side} = ${result.total_cells} cells; STEP ${sizeMb} in ${time}`;
         const list = document.getElementById("downloads");
         list.innerHTML = "";
         for (const [label, url] of [

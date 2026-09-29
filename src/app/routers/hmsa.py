@@ -6,11 +6,13 @@ formulations -- thin glue over `fields.fld_parser`/`fields.reference_field_grid`
 Two synchronous upload endpoints (parsing is fast -- no job queue needed) plus one job-queued
 synthesis endpoint (the object-wave combination + per-cell geometry lookup over the whole grid).
 Formulation B's result also carries a synthesized aperture field (achieved phase from the library
-match), so it can chain into the Pattern page exactly as a reflectarray design job does;
-Formulation A's achieved quantity is a surface reactance, not a phase, so that chaining is not
-offered for it here (documented limitation, not silently wrong).
+match) AND a reflectarray-shaped `assignments` list (PHASE13B B2), so it can chain into the
+Pattern AND Export pages exactly as a reflectarray design job does; Formulation A's achieved
+quantity is a surface reactance, not a phase or an L/W pair, so neither chaining is offered for it
+here (documented limitation, not silently wrong).
 """
 
+import json
 import uuid
 
 import numpy as np
@@ -18,7 +20,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from pydantic import BaseModel
 
 from ...dispersion.hfss_table import read_dispersion_csv
-from ...errors import LwmomError, config_invalid
+from ...errors import LwmomError, config_invalid, library_frequency_unavailable, phase_unreachable
 from ...fields.fld_parser import read_fld
 from ...fields.reference_field_grid import (
     check_grid_regularity,
@@ -27,13 +29,19 @@ from ...fields.reference_field_grid import (
     radial_beta_profile,
 )
 from ...hologram.hmsa_synthesis import synthesize_formulation_a, synthesize_formulation_b
-from ...labels import FEED_REGION_MASKED
+from ...labels import FEED_REGION_MASKED, reference_field_frequency_mismatch
 from ...phase8b.object_wave import Beam
+from ...reflectarray.designer import CellAssignment
 from ...unit_cell_library import UnitCellLibrary
 from .. import library_registry
 from ..jsonutil import to_jsonable
-from ..library_query import library_candidates_at_frequency
+from ..library_query import available_frequencies_hz, library_candidates_at_frequency
 from ..storage import upload_dir
+
+# PHASE13B A3: relative tolerance before an upload-vs-synthesis frequency difference is labeled a
+# mismatch -- generous enough to absorb GHz/Hz round-trip and user-typed rounding, not a physics
+# constant.
+_FREQUENCY_MISMATCH_RTOL = 1e-4
 
 router = APIRouter(prefix="/api/hmsa", tags=["hmsa"])
 
@@ -60,6 +68,13 @@ async def upload_field(
     if magnitude_file is not None:
         magnitude_path = updir / "magnitude.fld"
         magnitude_path.write_bytes(await magnitude_file.read())
+
+    if frequency_hz is not None:
+        # Persisted so `/synthesize` can carry this frequency forward and loudly label a mismatch
+        # against whatever frequency synthesis is actually requested at (PHASE13B A3) -- the .fld
+        # file itself carries no frequency (the app asks for it separately, docs/briefs/
+        # PHASE13_WEBAPP_PROMPT.md), so this is the only place it's ever recorded.
+        (updir / "meta.json").write_text(json.dumps({"frequency_hz": frequency_hz}))
 
     regularity = check_grid_regularity(phase_fld)
     r_bins, beta_median = radial_beta_profile(phase_fld)
@@ -123,6 +138,7 @@ class HmsaSynthesizeRequest(BaseModel):
     dispersion_id: "str | None" = None  # formulation A
     x_avg_ohm: "float | None" = None  # formulation A
     modulation_index: "float | None" = None  # formulation A
+    rescale_to_beta_bar: bool = True  # formulation A (PHASE13B B3); on by default per the brief
 
 
 def _load_reference_field(upload_id):
@@ -134,6 +150,15 @@ def _load_reference_field(upload_id):
     magnitude_path = updir / "magnitude.fld"
     magnitude_fld = read_fld(magnitude_path) if magnitude_path.exists() else None
     return fld_to_reference_field_grid(phase_fld, magnitude_fld)
+
+
+def _uploaded_frequency_hz(upload_id):
+    """The frequency recorded (if any) when this reference field was uploaded/analyzed -- see
+    `upload_field`'s `meta.json`."""
+    meta_path = upload_dir(upload_id) / "meta.json"
+    if not meta_path.exists():
+        return None
+    return json.loads(meta_path.read_text()).get("frequency_hz")
 
 
 def _mask_feed_region(reference_field):
@@ -168,7 +193,15 @@ def _mask_feed_region(reference_field):
 def _run_synthesize_job(job, body: dict):
     reference_field = _load_reference_field(body["upload_id"])
     reference_field, masked_cells = _mask_feed_region(reference_field)
-    feed_labels = (FEED_REGION_MASKED,) if masked_cells else ()
+    extra_labels = (FEED_REGION_MASKED,) if masked_cells else ()
+    upload_frequency_hz = _uploaded_frequency_hz(body["upload_id"])
+    if upload_frequency_hz is not None and not np.isclose(
+        upload_frequency_hz, body["frequency_hz"], rtol=_FREQUENCY_MISMATCH_RTOL
+    ):
+        # PHASE13B A3(b): the review found synthesis silently accepted a frequency that didn't
+        # match the uploaded field's own (10.54 GHz field, 12.5 GHz synthesis -> 100% unreachable,
+        # no explanation) -- carry the mismatch forward as a loud label rather than a silent no-op.
+        extra_labels = (*extra_labels, reference_field_frequency_mismatch(upload_frequency_hz, body["frequency_hz"]))
     beams = [
         Beam(
             theta_deg=b["theta_deg"],
@@ -194,6 +227,7 @@ def _run_synthesize_job(job, body: dict):
             body["modulation_index"],
             dispersion_table,
             period_m,
+            rescale_to_beta_bar=body["rescale_to_beta_bar"],
         )
         return {
             "formulation": design.formulation,
@@ -201,8 +235,9 @@ def _run_synthesize_job(job, body: dict):
             "y_m": design.y_m,
             "control_map": design.control_map,
             "cells": design.cells,
-            "labels": design.labels + feed_labels,
+            "labels": design.labels + extra_labels,
             "unreachable_fraction": design.unreachable_fraction,
+            "phase_error_stats": design.phase_error_stats,
             "masked_cells": masked_cells,
         }
 
@@ -212,12 +247,46 @@ def _run_synthesize_job(job, body: dict):
         library_path = library_registry.resolve_path(body["library_id"])
         lib = UnitCellLibrary.from_json(library_path)
         candidates = library_candidates_at_frequency(lib, body["library_id"], body["frequency_hz"])
+        if not candidates:
+            # PHASE13B A3(a): report exactly what IS available instead of silently synthesizing
+            # against zero candidates (every cell then has no achieved phase -- see A5 below).
+            available_ghz = [f / 1e9 for f in available_frequencies_hz(lib)]
+            raise library_frequency_unavailable(
+                f"library {body['library_id']!r} has no record at {body['frequency_hz'] / 1e9:g} GHz; "
+                f"available: {available_ghz} GHz"
+            )
         design = synthesize_formulation_b(reference_field, beams, body["frequency_hz"], candidates, period_m)
 
-        achieved = np.array([c.achieved_value if c.achieved_value is not None else 0.0 for c in design.cells]).reshape(
-            design.x_m.shape
-        )
+        if any(c.achieved_value is None for c in design.cells):
+            # PHASE13B A5: never hand Pattern prediction a placeholder (achieved_value defaulting
+            # to 0deg -> aperture 1+0j) for a cell that has no real achieved phase -- refuse instead.
+            n_missing = sum(1 for c in design.cells if c.achieved_value is None)
+            raise phase_unreachable(
+                f"{n_missing} of {len(design.cells)} cells have no achieved phase from library "
+                f"{body['library_id']!r} at {body['frequency_hz'] / 1e9:g} GHz -- refusing to build "
+                "a placeholder aperture field for Pattern prediction"
+            )
+        achieved = np.array([c.achieved_value for c in design.cells]).reshape(design.x_m.shape)
         aperture_field = np.exp(1j * np.radians(achieved))
+        # PHASE13B B2: the same shape `export.py`'s `_lw_grid_from_assignments` reads off a
+        # reflectarray design job (`.i/.j/.chosen_l_mm/.chosen_w_mm`) -- lets an HMSA design chain
+        # straight into Export exactly as a reflectarray design already does.
+        assignments = tuple(
+            CellAssignment(
+                i=c.i,
+                j=c.j,
+                x_m=c.x_m,
+                y_m=c.y_m,
+                required_phase_deg=c.control_value,
+                chosen_l_mm=c.geometry_param,
+                chosen_w_mm=c.geometry_param_w,
+                achieved_phase_deg=c.achieved_value,
+                phase_error_deg=c.phase_error_deg,
+                library_id=body["library_id"],
+                phase_coverage_ok=c.reachable,
+            )
+            for c in design.cells
+        )
         return {
             "formulation": design.formulation,
             "x_m": design.x_m,
@@ -225,8 +294,10 @@ def _run_synthesize_job(job, body: dict):
             "period_mm": body["period_mm"],
             "control_map": design.control_map,
             "cells": design.cells,
-            "labels": design.labels + feed_labels,
+            "assignments": assignments,
+            "labels": design.labels + extra_labels,
             "unreachable_fraction": design.unreachable_fraction,
+            "phase_error_stats": design.phase_error_stats,
             "masked_cells": masked_cells,
             "aperture_field_real": aperture_field.real,
             "aperture_field_imag": aperture_field.imag,

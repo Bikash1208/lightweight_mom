@@ -24,7 +24,7 @@ from ..frequency import free_space_wavenumber
 from ..phase8e.reference_field_input import ReferenceFieldGrid, phase_only_reference_field
 from .fld_parser import FldGrid
 
-RECOMMENDED_MIN_CELLS_PER_FRINGE = 6.0   # brief: "surface-wave holograms normally use ~ lambda/6-lambda/10"
+RECOMMENDED_MIN_CELLS_PER_FRINGE = 6.0  # brief: "surface-wave holograms normally use ~ lambda/6-lambda/10"
 
 
 def fld_to_reference_field_grid(phase_fld: FldGrid, magnitude_fld: "FldGrid | None" = None):
@@ -50,9 +50,16 @@ def fld_to_reference_field_grid(phase_fld: FldGrid, magnitude_fld: "FldGrid | No
         raise ValueError("fld_to_reference_field_grid: phase_fld and magnitude_fld are not on the same grid")
     ex = magnitude_fld.value * np.exp(1j * phase_fld.value)
     return ReferenceFieldGrid(
-        x_m=phase_fld.x_m, y_m=phase_fld.y_m, Ex=ex, Ey=np.zeros_like(ex), amplitude_available=True,
-        source=f"FILE:{phase_fld.path}+{magnitude_fld.path}", dx_m=dx_m, dy_m=dy_m,
-        z_reference_m=z_reference_m, phase_deg=phase_deg,
+        x_m=phase_fld.x_m,
+        y_m=phase_fld.y_m,
+        Ex=ex,
+        Ey=np.zeros_like(ex),
+        amplitude_available=True,
+        source=f"FILE:{phase_fld.path}+{magnitude_fld.path}",
+        dx_m=dx_m,
+        dy_m=dy_m,
+        z_reference_m=z_reference_m,
+        phase_deg=phase_deg,
     )
 
 
@@ -74,9 +81,13 @@ def check_grid_regularity(fld_grid: FldGrid, rtol=1e-6):
     dy_spread = float(np.std(dy_steps) / abs(np.mean(dy_steps))) if np.mean(dy_steps) else 0.0
     regular = dx_spread <= rtol and dy_spread <= rtol
     return GridRegularityReport(
-        regular=regular, dx_m=float(np.mean(dx_steps)), dy_m=float(np.mean(dy_steps)),
-        dx_relative_spread=dx_spread, dy_relative_spread=dy_spread,
-        nx=fld_grid.value.shape[1], ny=fld_grid.value.shape[0],
+        regular=regular,
+        dx_m=float(np.mean(dx_steps)),
+        dy_m=float(np.mean(dy_steps)),
+        dx_relative_spread=dx_spread,
+        dy_relative_spread=dy_spread,
+        nx=fld_grid.value.shape[1],
+        ny=fld_grid.value.shape[0],
     )
 
 
@@ -145,8 +156,10 @@ def compare_beta_to_tm0(beta_measured, frequency_hz, eps_r, thickness_m):
     beta_tm0 = tm0_beta(frequency_hz, eps_r, thickness_m)
     k0 = free_space_wavenumber(frequency_hz)
     return TM0Comparison(
-        beta_measured=beta_measured, beta_tm0=beta_tm0,
-        n_eff_measured=beta_measured / k0, n_eff_tm0=beta_tm0 / k0,
+        beta_measured=beta_measured,
+        beta_tm0=beta_tm0,
+        n_eff_measured=beta_measured / k0,
+        n_eff_tm0=beta_tm0 / k0,
         relative_difference=abs(beta_measured - beta_tm0) / beta_tm0,
     )
 
@@ -159,6 +172,75 @@ def cells_per_fringe(beta_rad_per_m, period_m):
         raise ValueError(f"beta_rad_per_m must be > 0, got {beta_rad_per_m!r}")
     lambda_sw = 2.0 * np.pi / beta_rad_per_m
     return lambda_sw / period_m
+
+
+def _cell_centers(vmin, vmax, period_m):
+    """`n` centres of `period_m`-spaced cells, symmetric about the midpoint, spanning no more than
+    `[vmin, vmax]` -- `n = floor((vmax-vmin)/period_m)` (e.g. a 300mm aperture at an 8mm period
+    gives 37 cells, matching the PHASE13B review's own worked example, not 38)."""
+    span = vmax - vmin
+    n = max(1, int(span // period_m))
+    center = 0.5 * (vmin + vmax)
+    offsets = (np.arange(n) - (n - 1) / 2.0) * period_m
+    return center + offsets, n
+
+
+def _complex_interpolate(x_1d, y_1d, values, x_new, y_new):
+    """Bilinear interpolation of a complex-valued field, done on the real and imaginary parts
+    SEPARATELY (never on magnitude/phase -- interpolating phase directly is exactly the wrapping
+    hazard PHASE13_WEBAPP_PROMPT.md's "complex (not phase) interpolation" note warns about, e.g.
+    averaging -179deg and +179deg naively gives ~0deg instead of +-180deg)."""
+    from scipy.interpolate import RegularGridInterpolator
+
+    real_interp = RegularGridInterpolator((y_1d, x_1d), values.real, bounds_error=False, fill_value=None)
+    imag_interp = RegularGridInterpolator((y_1d, x_1d), values.imag, bounds_error=False, fill_value=None)
+    pts = np.stack([y_new.ravel(), x_new.ravel()], axis=-1)
+    real_new = real_interp(pts).reshape(x_new.shape)
+    imag_new = imag_interp(pts).reshape(x_new.shape)
+    return real_new + 1j * imag_new
+
+
+def resample_to_cell_grid(reference_field, period_m):
+    """PHASE13B A2: resample an imported reference field (typically a fine field-calculator grid,
+    e.g. 2mm pitch) onto the cell-CENTRE grid of a `period_m` unit cell, covering the same
+    aperture extent -- so hologram synthesis runs once per physical unit cell, not once per raw
+    field sample. Complex interpolation throughout (see `_complex_interpolate`); works for both a
+    phase-only field (interpolates the unit-magnitude phasor, keeps `amplitude_available=False`)
+    and a complex one (interpolates `Ex` itself, so magnitude is resampled too)."""
+    if period_m <= 0.0:
+        raise ValueError(f"period_m must be > 0, got {period_m!r}")
+    x_1d = reference_field.x_m[0, :]
+    y_1d = reference_field.y_m[:, 0]
+    x_centers, _ = _cell_centers(float(x_1d.min()), float(x_1d.max()), period_m)
+    y_centers, _ = _cell_centers(float(y_1d.min()), float(y_1d.max()), period_m)
+    x_new, y_new = np.meshgrid(x_centers, y_centers, indexing="xy")
+
+    source = f"{reference_field.source}+RESAMPLED({period_m * 1e3:.3g}mm)"
+    if reference_field.amplitude_available:
+        ex_new = _complex_interpolate(x_1d, y_1d, reference_field.Ex, x_new, y_new)
+        return replace(
+            reference_field,
+            x_m=x_new,
+            y_m=y_new,
+            Ex=ex_new,
+            Ey=np.zeros_like(ex_new),
+            dx_m=period_m,
+            dy_m=period_m,
+            phase_deg=np.degrees(np.angle(ex_new)),
+            source=source,
+        )
+
+    phasor = np.exp(1j * np.radians(reference_field.phase()))
+    phasor_new = _complex_interpolate(x_1d, y_1d, phasor, x_new, y_new)
+    return replace(
+        reference_field,
+        x_m=x_new,
+        y_m=y_new,
+        dx_m=period_m,
+        dy_m=period_m,
+        phase_deg=np.degrees(np.angle(phasor_new)),
+        source=source,
+    )
 
 
 def aliasing_warning(cells_per_fringe_value, minimum=RECOMMENDED_MIN_CELLS_PER_FRINGE):

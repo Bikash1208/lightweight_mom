@@ -86,6 +86,29 @@ def test_reflectarray_design_selects_cells_and_reports_labels(client, grounded_l
     assert "LOCAL_PERIODICITY_APPROXIMATION" in result["labels"]
     for a in result["assignments"]:
         assert a["chosen_l_mm"] is not None
+    assert result["phase_error_stats"]["n_cells"] == 9
+
+
+def test_reflectarray_design_at_unavailable_frequency_is_a_named_error(client, grounded_library):
+    """PHASE13B A3(a): the grounded_library fixture only has a record at 12.5 GHz."""
+    resp = client.post(
+        "/api/reflectarray/design",
+        json={
+            "library_id": grounded_library,
+            "frequency_hz": 10.0e9,
+            "nx": 2,
+            "ny": 2,
+            "period_mm": 8.0,
+            "feed_xyz_mm": [0.0, 0.0, 50.0],
+            "theta0_deg": 0.0,
+            "phi0_deg": 0.0,
+            "taper_q": 1.0,
+        },
+    )
+    job = _wait_for_job(client, resp.json()["id"])
+    assert job["status"] == "failed", job
+    assert job["error"]["code"] == "LIBRARY_FREQUENCY_UNAVAILABLE"
+    assert "12.5" in job["error"]["message"]
 
 
 def _design_job_id(client, grounded_library):
@@ -142,7 +165,8 @@ def test_export_produces_a_real_step_file(client, grounded_library):
     job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
     assert job["status"] == "done", job
     result = job["result"]
-    assert result["n_cells"] == 3
+    assert result["n_cells_per_side"] == 3
+    assert result["total_cells"] == 9
     assert result["step_download_url"] is not None
 
     step_resp = client.get(result["step_download_url"])

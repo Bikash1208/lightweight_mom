@@ -108,13 +108,84 @@ def test_synthesize_formulation_b_end_to_end(client, grounded_library):
     assert job["status"] == "done", job
     result = job["result"]
     assert result["formulation"] == "B_phase_difference"
-    assert len(result["cells"]) == 151 * 151
+    # PHASE13B A2: resampled onto the 8mm-period cell grid (300mm aperture / 8mm -> 37x37), not
+    # one "cell" per raw 2mm field sample (151x151).
+    assert len(result["cells"]) == 37 * 37
+    assert result["cells"][0]["x_m"] != pytest.approx(-0.15)  # not the raw field's own first sample
     assert "LOCAL_PERIODICITY_APPROXIMATION" in result["labels"]
     assert "aperture_field_real" in result
     # The example file's single feed-point NaN must be filled (so synthesis can run at all) and
     # reported, never silently dropped.
     assert "FEED_REGION_MASKED" in result["labels"]
     assert len(result["masked_cells"]) == 1
+
+    # PHASE13B B2: Export was not wired up from an HMSA design -- it must chain exactly like a
+    # reflectarray design job (real L/W per cell, not a placeholder).
+    export_resp = client.post(
+        "/api/export/array",
+        json={
+            "source_job_id": resp.json()["id"],
+            "period_mm": 8.0,
+            "eps_r": 2.2,
+            "tan_delta": 0.0009,
+            "thickness_mm": 1.575,
+            "include_step": False,  # avoid the optional 'cad' extra just to prove the wiring
+        },
+    )
+    export_job = _wait_for_job(client, export_resp.json()["id"], timeout=60.0)
+    assert export_job["status"] == "done", export_job
+    assert export_job["result"]["n_cells_per_side"] == 37
+    assert export_job["result"]["total_cells"] == 37 * 37
+    assert export_job["result"]["layout_csv_download_url"]
+
+
+def test_synthesize_at_a_frequency_the_library_never_solved_is_a_named_error(client, grounded_library):
+    """PHASE13B A3(a): the grounded_library fixture only has a record at 10.54 GHz; requesting
+    12.5 GHz must fail with LIBRARY_FREQUENCY_UNAVAILABLE naming what IS available, not silently
+    synthesize against zero candidates."""
+    with open(_EXAMPLE_FLD, "rb") as fh:
+        upload_resp = client.post(
+            "/api/hmsa/upload_field", files={"phase_file": ("efl_phase_EzZ_example.fld", fh, "text/plain")}
+        )
+    upload_id = upload_resp.json()["upload_id"]
+    body = {
+        "upload_id": upload_id,
+        "formulation": "B",
+        "frequency_hz": 12.5e9,
+        "object_beams": [{"theta_deg": 20.0, "phi_deg": 0.0}],
+        "period_mm": 8.0,
+        "library_id": grounded_library,
+    }
+    resp = client.post("/api/hmsa/synthesize", json=body)
+    job = _wait_for_job(client, resp.json()["id"])
+    assert job["status"] == "failed", job
+    assert job["error"]["code"] == "LIBRARY_FREQUENCY_UNAVAILABLE"
+    assert "10.54" in job["error"]["message"]
+
+
+def test_synthesize_frequency_mismatch_with_the_upload_is_labeled_not_silent(client, grounded_library):
+    """PHASE13B A3(b): the reviewer uploaded a 10.54 GHz field and synthesized at a different
+    frequency with no explanation of the mismatch. Upload at 10.0 GHz, synthesize at 10.54 GHz
+    (a frequency the library DOES have) so the run succeeds but must carry a loud label."""
+    with open(_EXAMPLE_FLD, "rb") as fh:
+        upload_resp = client.post(
+            "/api/hmsa/upload_field",
+            files={"phase_file": ("efl_phase_EzZ_example.fld", fh, "text/plain")},
+            data={"eps_r": "2.2", "thickness_mm": "1.575", "frequency_hz": str(10.0e9)},
+        )
+    upload_id = upload_resp.json()["upload_id"]
+    body = {
+        "upload_id": upload_id,
+        "formulation": "B",
+        "frequency_hz": 10.54e9,
+        "object_beams": [{"theta_deg": 20.0, "phi_deg": 0.0}],
+        "period_mm": 8.0,
+        "library_id": grounded_library,
+    }
+    resp = client.post("/api/hmsa/synthesize", json=body)
+    job = _wait_for_job(client, resp.json()["id"], timeout=120.0)
+    assert job["status"] == "done", job
+    assert any(label.startswith("REFERENCE_FIELD_FREQUENCY_MISMATCH(") for label in job["result"]["labels"])
 
 
 def test_synthesize_unknown_library_is_404(client):
@@ -168,7 +239,59 @@ def test_upload_dispersion_and_synthesize_formulation_a(client, tmp_path):
     }
     resp = client.post("/api/hmsa/synthesize", json=body)
     job = _wait_for_job(client, resp.json()["id"], timeout=120.0)
-    # Formulation A needs a COMPLEX reference field (amplitude available); the example file is
-    # phase-only, so this is expected to fail with a clear, typed error -- not silently succeed
-    # with a fabricated amplitude (hologram.hmsa_synthesis.formulation_a_control_map's own rule).
-    assert job["status"] == "failed", job
+    # PHASE13B B4: Formulation A's kernel needs a complex field, but the example file (like every
+    # real reference-field export this project has) is phase-only -- it must run anyway with a
+    # loudly-labeled uniform-amplitude assumption, not refuse outright.
+    assert job["status"] == "done", job
+    result = job["result"]
+    assert "REFERENCE_AMPLITUDE_ASSUMED_UNIFORM" in result["labels"]
+    # This dispersion table has no beta_rad_per_m column, so the B3 beta_bar rescale is silently
+    # unavailable (no beta to rescale to) -- neither rescale label should appear.
+    assert not any(label.startswith("REFERENCE_WAVE_") for label in result["labels"])
+
+
+def test_formulation_a_rescales_to_beta_bar_by_default_when_the_table_has_it(client, tmp_path):
+    """PHASE13B B3: with a dispersion table that DOES carry beta_rad_per_m, the default
+    (rescale_to_beta_bar=True) must apply the correction and label it; opting out must instead
+    report the accumulated-error estimate without changing the result."""
+    csv_path = tmp_path / "dispersion.csv"
+    csv_path.write_text(
+        "geometry_param,beta_rad_per_m,x_s_ohm\n"
+        "2.0,230.0,50.0\n2.5,228.0,80.0\n3.0,225.0,110.0\n3.5,222.0,140.0\n4.0,219.0,170.0\n"
+    )
+    with open(csv_path, "rb") as fh:
+        disp_resp = client.post(
+            "/api/hmsa/upload_dispersion",
+            files={"csv_file": ("dispersion.csv", fh, "text/csv")},
+            data={"frequency_hz": "10.54e9"},
+        )
+    dispersion_id = disp_resp.json()["dispersion_id"]
+
+    with open(_EXAMPLE_FLD, "rb") as fh:
+        upload_resp = client.post(
+            "/api/hmsa/upload_field", files={"phase_file": ("efl_phase_EzZ_example.fld", fh, "text/plain")}
+        )
+    upload_id = upload_resp.json()["upload_id"]
+
+    base_body = {
+        "upload_id": upload_id,
+        "formulation": "A",
+        "frequency_hz": 10.54e9,
+        "object_beams": [{"theta_deg": 20.0, "phi_deg": 0.0}],
+        "period_mm": 8.0,
+        "dispersion_id": dispersion_id,
+        "x_avg_ohm": 100.0,
+        "modulation_index": 0.3,
+    }
+
+    resp_default = client.post("/api/hmsa/synthesize", json=base_body)
+    job_default = _wait_for_job(client, resp_default.json()["id"], timeout=120.0)
+    assert job_default["status"] == "done", job_default
+    labels_default = job_default["result"]["labels"]
+    assert any(label.startswith("REFERENCE_WAVE_RESCALED_TO_BETA_BAR(") for label in labels_default)
+
+    resp_opt_out = client.post("/api/hmsa/synthesize", json={**base_body, "rescale_to_beta_bar": False})
+    job_opt_out = _wait_for_job(client, resp_opt_out.json()["id"], timeout=120.0)
+    assert job_opt_out["status"] == "done", job_opt_out
+    labels_opt_out = job_opt_out["result"]["labels"]
+    assert any(label.startswith("REFERENCE_WAVE_NOT_RESCALED(") for label in labels_opt_out)

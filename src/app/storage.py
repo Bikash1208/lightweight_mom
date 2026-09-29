@@ -26,3 +26,11 @@ def job_output_dir(job_id):
     d = output_root() / job_id
     d.mkdir(parents=True, exist_ok=True)
     return d
+
+
+def upload_dir(upload_id):
+    """Separate from `output_root()`: an upload is job INPUT (a .fld reference field, a
+    dispersion CSV), read back inside a later job rather than produced by one."""
+    d = app_data_dir() / "uploads" / upload_id
+    d.mkdir(parents=True, exist_ok=True)
+    return d

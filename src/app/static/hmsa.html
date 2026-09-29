@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HMSA designer -- lwmom</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>lwmom</h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/unit_cell.html">Unit cell</a>
+      <a href="/library.html">Library</a>
+      <a href="/reflectarray.html">Reflectarray</a>
+      <a href="/pattern.html">Pattern</a>
+      <a href="/verify.html">Verify</a>
+      <a href="/export.html">Export</a>
+      <a href="/hfss_compare.html">HFSS compare</a>
+      <a href="/hmsa.html">HMSA designer</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h2>1. Import reference field</h2>
+      <p>HFSS field-calculator export (<code>.fld</code>), e.g. <code>CmplxPhase(ScalarZ(&lt;Ex,Ey,Ez&gt;))</code>.
+      Phase-only is fine (Formulation B only needs phase); add a matching magnitude file for
+      Formulation A.</p>
+      <form id="upload-form">
+        <label>Phase file (.fld)<input type="file" name="phase_file" required /></label>
+        <label>Magnitude file (.fld), optional<input type="file" name="magnitude_file" /></label>
+        <label>Substrate eps_r (for the TM0 sanity check)<input type="number" step="any" name="eps_r" value="2.2" /></label>
+        <label>Substrate thickness (mm)<input type="number" step="any" name="thickness_mm" value="1.575" /></label>
+        <label>Frequency (GHz)<input type="number" step="any" name="frequency_ghz" value="10.54" /></label>
+        <button type="submit">Upload &amp; analyze</button>
+      </form>
+      <p class="status" id="upload-status"></p>
+      <div id="upload-summary"></div>
+    </div>
+
+    <div class="card">
+      <h2>2. Object beam(s) and synthesis</h2>
+      <form id="synth-form">
+        <label>Upload id<input type="text" name="upload_id" id="upload-id-field" required /></label>
+        <label>Formulation
+          <select name="formulation" id="formulation-select">
+            <option value="B">B: phase-difference (phase-only reference OK)</option>
+            <option value="A">A: impedance-modulated (needs a complex reference field)</option>
+          </select>
+        </label>
+        <label>Frequency (GHz)<input type="number" step="any" name="frequency_ghz" value="10.54" required /></label>
+        <label>Cell period (mm)<input type="number" step="any" name="period_mm" value="8.0" required /></label>
+        <label>Beam(s): theta,phi (deg), one per line<textarea name="beams" rows="3" style="width:100%">20,0</textarea></label>
+
+        <div id="formulation-b-fields">
+          <label>Library
+            <select name="library_id" id="library-select"></select>
+          </label>
+        </div>
+        <div id="formulation-a-fields" style="display:none">
+          <label>Dispersion CSV (geometry_param, beta_rad_per_m and/or x_s_ohm)
+            <input type="file" name="dispersion_file" />
+          </label>
+          <label>X_avg (ohm)<input type="number" step="any" name="x_avg_ohm" value="100" /></label>
+          <label>Modulation index<input type="number" step="any" name="modulation_index" value="0.3" /></label>
+        </div>
+
+        <button type="submit">Synthesize</button>
+      </form>
+      <p class="status" id="synth-status"></p>
+    </div>
+
+    <div class="card" id="results" style="display:none">
+      <h3>Results</h3>
+      <div id="labels" class="labels"></div>
+      <p id="summary"></p>
+      <p id="chain-links"></p>
+      <details>
+        <summary>First 20 cells</summary>
+        <table id="table">
+          <thead><tr><th>i</th><th>j</th><th>control value</th><th>geometry param</th><th>achieved</th><th>reachable</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </details>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+  <script>
+    async function refreshLibraryList() {
+      const resp = await fetch("/api/library");
+      const libs = await resp.json();
+      const select = document.getElementById("library-select");
+      select.innerHTML = "";
+      for (const [id, entry] of Object.entries(libs)) {
+        const opt = document.createElement("option");
+        opt.value = id;
+        opt.textContent = `${id} (${entry.meta.backing || "?"}, ${entry.meta.period_mm || "?"} mm)`;
+        select.appendChild(opt);
+      }
+    }
+    refreshLibraryList();
+
+    document.getElementById("formulation-select").addEventListener("change", (ev) => {
+      const isA = ev.target.value === "A";
+      document.getElementById("formulation-a-fields").style.display = isA ? "block" : "none";
+      document.getElementById("formulation-b-fields").style.display = isA ? "none" : "block";
+    });
+
+    document.getElementById("upload-form").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const f = new FormData(ev.target);
+      const form = new FormData();
+      form.append("phase_file", f.get("phase_file"));
+      if (f.get("magnitude_file") && f.get("magnitude_file").size > 0) form.append("magnitude_file", f.get("magnitude_file"));
+      form.append("eps_r", f.get("eps_r"));
+      form.append("thickness_mm", f.get("thickness_mm"));
+      form.append("frequency_hz", parseFloat(f.get("frequency_ghz")) * 1e9);
+
+      const statusEl = document.getElementById("upload-status");
+      statusEl.textContent = "uploading...";
+      statusEl.className = "status";
+      try {
+        const data = await LWMOM.postForm("/api/hmsa/upload_field", form);
+        statusEl.textContent = "parsed";
+        statusEl.className = "status ok";
+        document.getElementById("upload-id-field").value = data.upload_id;
+        let html = `<p>${data.nx} x ${data.ny} points, ${data.nan_count} NaN, ordering=${data.ordering}, ` +
+          `CS="${data.coordinate_system}", grid regular: ${data.regularity.regular}</p>`;
+        if (data.tm0_comparison) {
+          const t = data.tm0_comparison;
+          html += `<p>Measured beta ${t.beta_measured.toFixed(1)} rad/m vs analytic TM0 ${t.beta_tm0.toFixed(1)} rad/m ` +
+            `(${(t.relative_difference * 100).toFixed(1)}% difference) -- sanity check only, not a requirement.</p>`;
+        }
+        document.getElementById("upload-summary").innerHTML = html;
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status err";
+      }
+    });
+
+    document.getElementById("synth-form").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const f = new FormData(ev.target);
+      const formulation = f.get("formulation");
+      const beams = f.get("beams").split("\n").map((s) => s.trim()).filter(Boolean).map((line) => {
+        const [theta, phi] = line.split(",").map((s) => parseFloat(s.trim()));
+        return { theta_deg: theta, phi_deg: phi };
+      });
+      const body = {
+        upload_id: f.get("upload_id"),
+        formulation,
+        frequency_hz: parseFloat(f.get("frequency_ghz")) * 1e9,
+        object_beams: beams,
+        period_mm: parseFloat(f.get("period_mm")),
+        library_id: null, dispersion_id: null, x_avg_ohm: null, modulation_index: null,
+      };
+      const statusEl = document.getElementById("synth-status");
+      statusEl.textContent = "submitting...";
+      statusEl.className = "status";
+      try {
+        if (formulation === "B") {
+          body.library_id = f.get("library_id");
+        } else {
+          const dispFile = f.get("dispersion_file");
+          if (!dispFile || dispFile.size === 0) throw new Error("a dispersion CSV is required for Formulation A");
+          const dispForm = new FormData();
+          dispForm.append("csv_file", dispFile);
+          dispForm.append("frequency_hz", body.frequency_hz);
+          const disp = await LWMOM.postForm("/api/hmsa/upload_dispersion", dispForm);
+          body.dispersion_id = disp.dispersion_id;
+          body.x_avg_ohm = parseFloat(f.get("x_avg_ohm"));
+          body.modulation_index = parseFloat(f.get("modulation_index"));
+        }
+
+        const submitted = await LWMOM.postJson("/api/hmsa/synthesize", body);
+        const job = await LWMOM.pollJob(submitted.id, {
+          onTick: (j) => { statusEl.textContent = `${j.status}: ${j.progress_message || ""}`; },
+        });
+        if (job.status !== "done") {
+          statusEl.textContent = `${job.status}: ${job.error ? job.error.message : ""}`;
+          statusEl.className = "status err";
+          return;
+        }
+        statusEl.textContent = "done";
+        statusEl.className = "status ok";
+        const result = job.result;
+        document.getElementById("results").style.display = "block";
+        LWMOM.renderLabels(document.getElementById("labels"), result.labels, []);
+        document.getElementById("summary").textContent =
+          `${result.cells.length} cells; ${(result.unreachable_fraction * 100).toFixed(1)}% unreachable; ${result.masked_cells.length} masked (feed region)`;
+        const chain = document.getElementById("chain-links");
+        chain.innerHTML = "";
+        if (result.aperture_field_real) {
+          chain.innerHTML = `Job id: <code>${job.id}</code> -- ` +
+            `<a href="/pattern.html?job=${job.id}">predict pattern</a>. ` +
+            `(Export/STEP is not wired up from an HMSA design in this version -- the Export page ` +
+            `expects a reflectarray design's per-cell L/W assignment, which this page's per-cell ` +
+            `control-value/geometry-param result does not carry in the same shape.)`;
+        }
+        const tbody = document.querySelector("#table tbody");
+        tbody.innerHTML = "";
+        for (const c of result.cells.slice(0, 20)) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${c.i}</td><td>${c.j}</td><td>${c.control_value.toFixed(2)}</td>` +
+            `<td>${c.geometry_param !== null ? c.geometry_param : "--"}</td>` +
+            `<td>${c.achieved_value !== null ? c.achieved_value.toFixed(2) : "--"}</td><td>${c.reachable}</td>`;
+          tbody.appendChild(tr);
+        }
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status err";
+      }
+    });
+  </script>
+</body>
+</html>

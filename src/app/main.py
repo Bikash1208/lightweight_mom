@@ -28,6 +28,7 @@ def create_app():
 
     from .routers import export as export_router
     from .routers import files as files_router
+    from .routers import hmsa as hmsa_router
     from .routers import jobs as jobs_router
     from .routers import library as library_router
     from .routers import pattern as pattern_router
@@ -41,6 +42,7 @@ def create_app():
     app.include_router(reflectarray_router.router)
     app.include_router(pattern_router.router)
     app.include_router(export_router.router)
+    app.include_router(hmsa_router.router)
 
     @app.get("/api/health")
     def health():

@@ -68,5 +68,11 @@ ignore = [
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
 
+[tool.ruff.lint.flake8-bugbear]
+# B008 flags any function call in an argument default -- FastAPI's dependency-injection style
+# (`File(...)`, `Form(...)`, `Depends(...)`) *requires* exactly that as a default value; this is
+# the documented idiom, not a mutable-default bug B008 exists to catch.
+extend-immutable-calls = ["fastapi.File", "fastapi.Form", "fastapi.Depends", "fastapi.Query"]
+
 [tool.ruff.format]
 quote-style = "double"

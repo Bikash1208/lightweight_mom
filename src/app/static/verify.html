@@ -30,7 +30,7 @@
       runtimes: N=6 ~7s, N=8 ~18.5s, N=12 ~124s; larger sizes are extrapolated, and anything
       beyond N=20 is refused outright as untrustworthy extrapolation).</p>
       <form id="cost-form">
-        <label>N cells (aperture side length)<input type="number" name="n_cells" value="6" required /></label>
+        <label>N (cells per 2&pi; gradient period)<input type="number" name="n_cells" value="6" required /></label>
         <button type="submit">Estimate cost</button>
       </form>
       <p class="status" id="cost-status"></p>
@@ -44,7 +44,7 @@
       <h3>Results</h3>
       <p id="summary"></p>
       <details open>
-        <summary>Spurious orders</summary>
+        <summary>Order powers (specular + spurious)</summary>
         <table id="spurious-table">
           <thead><tr><th>(m, n)</th><th>fraction of propagating power</th></tr></thead>
           <tbody></tbody>
@@ -104,10 +104,14 @@
         const ap = result.aperture_result;
         document.getElementById("summary").textContent =
           `N=${result.n_cells}: achieved span ${ap.achieved_span_deg.toFixed(1)} deg (full 2*pi: ${ap.is_full_2pi}), ` +
-          `intended-order fraction ${ap.fraction_intended.toFixed(3)} (predicted ${result.predicted_order_powers ? "" : "n/a"}` +
+          `intended-order fraction ${ap.fraction_intended.toFixed(3)} (predicted ${result.predicted_intended_fraction.toFixed(3)}` +
           `, |predicted - measured| = ${result.predicted_vs_measured_intended_fraction_diff.toFixed(4)})`;
         const tbody = document.querySelector("#spurious-table tbody");
         tbody.innerHTML = "";
+        const specularTr = document.createElement("tr");
+        specularTr.innerHTML =
+          `<td>${JSON.stringify(ap.intended_order)} (specular/intended)</td><td>${ap.fraction_intended.toFixed(4)}</td>`;
+        tbody.appendChild(specularTr);
         for (const [order, fraction] of ap.spurious_orders) {
           const tr = document.createElement("tr");
           tr.innerHTML = `<td>${JSON.stringify(order)}</td><td>${fraction.toFixed(4)}</td>`;

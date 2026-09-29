@@ -61,6 +61,9 @@ class VerificationResult:
     n_cells: int
     aperture_result: object          # phase12d.aperture_test.ApertureTestResult
     predicted_order_powers: object   # phase13.order_power_prediction.PredictedOrderPowers
+    predicted_intended_fraction: float  # PHASE13B A10: the app couldn't show this without it being
+    # returned explicitly (it was previously buried inside `predicted_order_powers`, keyed by an
+    # order tuple the frontend has no easy way to look up)
     predicted_vs_measured_intended_fraction_diff: float
     cost: CostEstimate
 
@@ -81,6 +84,10 @@ def run_verification(n_cells, mesh_cells_per_subcell=DEFAULT_MESH_CELLS_PER_SUBC
     diff = abs(predicted_fraction - aperture_result.fraction_intended)
 
     return VerificationResult(
-        n_cells=n_cells, aperture_result=aperture_result, predicted_order_powers=predicted,
-        predicted_vs_measured_intended_fraction_diff=diff, cost=cost,
+        n_cells=n_cells,
+        aperture_result=aperture_result,
+        predicted_order_powers=predicted,
+        predicted_intended_fraction=predicted_fraction,
+        predicted_vs_measured_intended_fraction_diff=diff,
+        cost=cost,
     )

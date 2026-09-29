@@ -62,3 +62,7 @@ def test_run_verification_at_the_smallest_measured_size(client):
     assert result["n_cells"] == 6
     assert result["cost"]["is_measured"] is True
     assert "predicted_vs_measured_intended_fraction_diff" in result
+    # PHASE13B A10: the app's summary line reads this field directly -- must be a real number,
+    # not missing/None (the blank "(predicted , |...|" bug).
+    assert isinstance(result["predicted_intended_fraction"], float)
+    assert result["aperture_result"]["intended_order"] is not None

@@ -36,6 +36,25 @@ def test_instrumented_solve_returns_result_and_diagnostics():
     assert d.energy_conservation_residual is not None and d.energy_conservation_residual < 0.2
     assert d.reciprocity_residual is not None and d.reciprocity_residual < 1e-9   # exact reciprocity
     assert d.surface_wave_margin is None   # ungrounded stack
+    # PHASE13B A9: platform-normalized to kB everywhere -- a tiny test-process solve is nowhere
+    # near the ~1.4e9 "kB" the live review saw from an un-normalized macOS ru_maxrss (bytes).
+    assert d.peak_memory_kb is not None and 0.0 < d.peak_memory_kb < 1.0e7
+
+
+def test_ru_maxrss_kb_normalizes_macos_bytes_but_not_linux_kilobytes(monkeypatch):
+    """PHASE13B A9: POSIX leaves ru_maxrss's unit unspecified -- Linux reports kB, macOS/BSD report
+    bytes. `_ru_maxrss_kb` must divide by 1024 only on the platforms that need it."""
+
+    class _FakeUsage:
+        ru_maxrss = 1_400_000_000  # the live review's own reported (buggy, un-normalized) value
+
+    monkeypatch.setattr(diag.resource, "getrusage", lambda who: _FakeUsage())
+
+    monkeypatch.setattr(diag.sys, "platform", "darwin")
+    assert diag._ru_maxrss_kb() == pytest.approx(1_400_000_000 / 1024.0)
+
+    monkeypatch.setattr(diag.sys, "platform", "linux")
+    assert diag._ru_maxrss_kb() == pytest.approx(1_400_000_000.0)
 
 
 def test_condition_estimate_skipped_above_threshold(monkeypatch):

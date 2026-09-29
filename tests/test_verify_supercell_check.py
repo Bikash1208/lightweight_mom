@@ -38,3 +38,8 @@ def test_run_verification_end_to_end_smallest_size():
     assert result.n_cells == 6
     assert result.cost.is_measured
     assert result.predicted_vs_measured_intended_fraction_diff < 0.05
+    # PHASE13B A10: the predicted intended-order fraction must be available directly (previously
+    # the app's summary line showed a blank value here, only the |predicted - measured| diff).
+    assert abs(result.predicted_intended_fraction - result.aperture_result.fraction_intended) == pytest.approx(
+        result.predicted_vs_measured_intended_fraction_diff, abs=1e-9
+    )

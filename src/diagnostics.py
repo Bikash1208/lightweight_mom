@@ -6,6 +6,7 @@ instrumentation, per CLAUDE.md's "physics/numerics untouched" rule.
 """
 
 import resource
+import sys
 import time
 from dataclasses import dataclass
 
@@ -46,6 +47,15 @@ class SolveDiagnostics:
     reciprocity_residual: float | None            # |S21_xx - S12_xx|, None for a grounded (one-port) result
 
 
+def _ru_maxrss_kb():
+    """`ru_maxrss` units are platform-dependent (POSIX leaves them unspecified): Linux reports
+    kilobytes, macOS/BSD report BYTES (PHASE13B A9, live review: `peak_memory_kb` showed ~1.4e9
+    for a 2.5k-unknown solve on macOS, ~1000x too large). Normalized here to kB on every platform
+    so callers never have to know which OS produced a given diagnostics record."""
+    raw = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return raw / 1024.0 if sys.platform == "darwin" else float(raw)
+
+
 def _grating_orders_propagate(unit_cell, green, floquet_order):
     """Whether any Floquet harmonic other than (0,0) is propagating (a plain, public
     re-derivation of the same physics `sparameters._warn_if_grating_orders` checks, exposed here
@@ -72,7 +82,7 @@ def instrumented_compute_s_parameters(unit_cell, frequency, mesh, planes, run_id
     backing = getattr(unit_cell, "backing", "air")
     green = LayeredGreenFunction(unit_cell.substrate, frequency, backing=backing)
 
-    mem_before = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    mem_before = _ru_maxrss_kb()
     t0 = time.perf_counter()
     try:
         result = compute_s_parameters(unit_cell, frequency, mesh, planes, **kwargs)
@@ -80,8 +90,8 @@ def instrumented_compute_s_parameters(unit_cell, frequency, mesh, planes, run_id
         _log.error("solve failed: %s", exc, extra={"cells_x": mesh.cells_x, "cells_y": mesh.cells_y})
         raise solve_failed(exc) from exc
     total_time = time.perf_counter() - t0
-    mem_after = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-    peak_memory_kb = float(max(mem_after, mem_before))  # ru_maxrss is already a running peak (POSIX)
+    mem_after = _ru_maxrss_kb()
+    peak_memory_kb = max(mem_after, mem_before)  # ru_maxrss is already a running peak (POSIX)
 
     condition_estimate, skip_reason = None, None
     if basis.n_unknowns <= CONDITION_ESTIMATE_MAX_UNKNOWNS:

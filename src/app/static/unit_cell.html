@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Unit cell -- lwmom</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>lwmom</h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/unit_cell.html">Unit cell</a>
+      <a href="/library.html">Library</a>
+      <a href="/reflectarray.html">Reflectarray</a>
+      <a href="/pattern.html">Pattern</a>
+      <a href="/verify.html">Verify</a>
+      <a href="/export.html">Export</a>
+      <a href="/hfss_compare.html">HFSS compare</a>
+      <a href="/hmsa.html">HMSA designer</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Unit cell</h2>
+      <p>Solve one rectangular-patch unit cell (grounded or ungrounded) and inspect S11/S21,
+      diagnostics and validation labels. "Richardson" mode runs a small mesh-refinement family and
+      extrapolates to the zero-mesh-size limit (Part 0); "fast" solves once at the mesh given
+      below and is honestly labelled <code>MESH_NOT_CONVERGED</code> since it was never checked.</p>
+
+      <form id="form">
+        <label>Backing
+          <select name="backing">
+            <option value="air">air (ungrounded, 2-port)</option>
+            <option value="pec">pec (grounded, 1-port)</option>
+          </select>
+        </label>
+        <label>Period (mm)<input type="number" step="any" name="period_mm" value="8.0" required /></label>
+        <label>Substrate eps_r<input type="number" step="any" name="eps_r" value="2.2" required /></label>
+        <label>Substrate tan_delta<input type="number" step="any" name="tan_delta" value="0.0009" required /></label>
+        <label>Substrate thickness (mm)<input type="number" step="any" name="thickness_mm" value="1.575" required /></label>
+        <label>Patch length L (mm)<input type="number" step="any" name="length_mm" value="4.0" required /></label>
+        <label>Patch width W (mm)<input type="number" step="any" name="width_mm" value="4.0" required /></label>
+        <label>Mesh cells per side<input type="number" name="cells" value="40" required /></label>
+        <label>Frequency (GHz), comma-separated for a sweep
+          <input type="text" name="frequencies_ghz" value="12.5" required />
+        </label>
+        <label>Mesh mode
+          <select name="mesh_mode">
+            <option value="fast">fast (fixed mesh above)</option>
+            <option value="richardson">richardson (mesh-convergence extrapolated)</option>
+          </select>
+        </label>
+        <button type="submit">Solve</button>
+        <button type="button" id="export-step">Export STEP</button>
+      </form>
+      <p class="status" id="status"></p>
+    </div>
+
+    <div class="card" id="results" style="display:none">
+      <h3>Results</h3>
+      <div id="labels" class="labels"></div>
+      <table id="table">
+        <thead>
+          <tr><th>f (GHz)</th><th>|S11| (dB)</th><th>&ang;S11 (deg)</th><th>|S21| (dB)</th><th>&ang;S21 (deg)</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <details>
+        <summary>Raw job result</summary>
+        <pre id="raw"></pre>
+      </details>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+  <script>
+    function buildConfig(form) {
+      const f = new FormData(form);
+      const backing = f.get("backing");
+      const period_m = parseFloat(f.get("period_mm")) * 1e-3;
+      const substrate = {
+        name: "user", eps_r: parseFloat(f.get("eps_r")), tan_delta: parseFloat(f.get("tan_delta")),
+        thickness: parseFloat(f.get("thickness_mm")) * 1e-3,
+      };
+      if (backing === "pec") substrate.backing = "pec";
+      const cells = parseInt(f.get("cells"), 10);
+      const referencePlanes = backing === "pec"
+        ? { top_air_thickness: 5.0e-3 }
+        : { top_air_thickness: 5.0e-3, bottom_air_thickness: 5.0e-3 };
+      const frequencies = f.get("frequencies_ghz").split(",").map((s) => parseFloat(s.trim()) * 1e9);
+      return {
+        config: {
+          period_x: period_m, period_y: period_m,
+          substrate,
+          geometry: { type: "rectangle", length: parseFloat(f.get("length_mm")) * 1e-3, width: parseFloat(f.get("width_mm")) * 1e-3 },
+          excitation: { frequency: frequencies[0] },
+          mesh: { cells_x: cells, cells_y: cells, floquet_order: cells },
+          reference_planes: referencePlanes,
+        },
+        frequencies_hz: frequencies,
+        mesh_mode: f.get("mesh_mode"),
+      };
+    }
+
+    async function runJob(url, body, onDone) {
+      const statusEl = document.getElementById("status");
+      statusEl.className = "status";
+      statusEl.textContent = "Submitting...";
+      try {
+        const submitted = await LWMOM.postJson(url, body);
+        const job = await LWMOM.pollJob(submitted.id, {
+          onTick: (j) => { statusEl.textContent = `${j.status}: ${j.progress_message || ""}`; },
+        });
+        if (job.status === "done") {
+          statusEl.textContent = "done";
+          statusEl.className = "status ok";
+          onDone(job.result);
+        } else {
+          statusEl.textContent = `${job.status}: ${job.error ? job.error.message : ""}`;
+          statusEl.className = "status err";
+        }
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status err";
+      }
+    }
+
+    document.getElementById("form").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const body = buildConfig(ev.target);
+      await runJob("/api/unit_cell/solve", body, (result) => {
+        document.getElementById("results").style.display = "block";
+        const tbody = document.querySelector("#table tbody");
+        tbody.innerHTML = "";
+        const allLabels = new Set();
+        const allWarnings = new Set();
+        const toDb = (mag) => (20 * Math.log10(Math.max(mag, 1e-15))).toFixed(2);
+        for (const point of result.points) {
+          const r = point.record;
+          point.labels.forEach((l) => allLabels.add(l));
+          point.warnings.forEach((w) => allWarnings.add(w));
+          const tr = document.createElement("tr");
+          const s21mag = r["S21_xx_mag"] !== undefined ? toDb(r["S21_xx_mag"]) : "--";
+          const s21phase = r["S21_xx_phase_deg"] !== undefined ? r["S21_xx_phase_deg"].toFixed(2) : "--";
+          tr.innerHTML = `<td>${(r.frequency_hz / 1e9).toFixed(3)}</td><td>${toDb(r["S11_xx_mag"])}</td>` +
+            `<td>${r["S11_xx_phase_deg"].toFixed(2)}</td><td>${s21mag}</td><td>${s21phase}</td>`;
+          tbody.appendChild(tr);
+        }
+        LWMOM.renderLabels(document.getElementById("labels"), [...allLabels], [...allWarnings]);
+        document.getElementById("raw").textContent = JSON.stringify(result, null, 2);
+      });
+    });
+
+    document.getElementById("export-step").addEventListener("click", async () => {
+      const body = { config: buildConfig(document.getElementById("form")).config };
+      await runJob("/api/unit_cell/export_step", body, (result) => {
+        window.location = result.download_url;
+      });
+    });
+  </script>
+</body>
+</html>

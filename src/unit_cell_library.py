@@ -231,6 +231,11 @@ class UnitCellLibrary:
     def from_json(cls, path):
         return cls(json.loads(Path(path).read_text()))
 
+    def all_cells(self):
+        """Every cell's raw document, in the library's own on-disk order (Phase 13's app "Library"
+        page browse view; purely additive -- every other method above is unchanged)."""
+        return list(self._doc["cells"])
+
     def get_cell(self, L_mm, W_mm):
         """The raw cell document for (L_mm, W_mm), or `None` if that exact geometry is not in
         the library."""

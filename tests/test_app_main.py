@@ -10,7 +10,8 @@ from src.app.main import create_app  # noqa: E402
 
 
 @pytest.fixture
-def client():
+def client(tmp_path, monkeypatch):
+    monkeypatch.setenv("LWMOM_APP_DATA_DIR", str(tmp_path / "lwmom_data"))
     return TestClient(create_app())
 
 

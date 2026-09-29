@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Library -- lwmom</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>lwmom</h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/unit_cell.html">Unit cell</a>
+      <a href="/library.html">Library</a>
+      <a href="/reflectarray.html">Reflectarray</a>
+      <a href="/pattern.html">Pattern</a>
+      <a href="/verify.html">Verify</a>
+      <a href="/export.html">Export</a>
+      <a href="/hfss_compare.html">HFSS compare</a>
+      <a href="/hmsa.html">HMSA designer</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Browse a library</h2>
+      <label>Library
+        <select id="library-select"></select>
+      </label>
+      <label>Frequency (GHz)<input type="number" step="any" id="browse-freq" value="12.5" /></label>
+      <button type="button" id="browse-btn">Browse</button>
+      <p class="status" id="browse-status"></p>
+      <div id="browse-meta"></div>
+      <table id="browse-table" style="display:none">
+        <thead><tr><th>L (mm)</th><th>W (mm)</th><th>Phase S11 (deg)</th><th>|S11| (dB)</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Run a new sweep</h2>
+      <p>Solves every (L, W) combination in the ranges below across the given frequency grid.
+      Reuses the same solver every unit-cell solve uses; a sweep over more than a handful of
+      points can take minutes.</p>
+      <form id="sweep-form">
+        <label>New library id<input type="text" name="library_id" value="" placeholder="e.g. grounded_8mm_v1" required /></label>
+        <label>Backing
+          <select name="backing">
+            <option value="air">air (ungrounded)</option>
+            <option value="pec" selected>pec (grounded)</option>
+          </select>
+        </label>
+        <label>Period (mm)<input type="number" step="any" name="period_mm" value="8.0" required /></label>
+        <label>Substrate eps_r<input type="number" step="any" name="eps_r" value="2.2" required /></label>
+        <label>Substrate tan_delta<input type="number" step="any" name="tan_delta" value="0.0009" required /></label>
+        <label>Substrate thickness (mm)<input type="number" step="any" name="thickness_mm" value="1.575" required /></label>
+        <label>L values (mm), comma-separated<input type="text" name="l_values_mm" value="2,3,4,5,6" required /></label>
+        <label>W values (mm), comma-separated<input type="text" name="w_values_mm" value="2,3,4,5,6" required /></label>
+        <label>Mesh cells per side<input type="number" name="cells" value="24" required /></label>
+        <label>Frequency min (GHz)<input type="number" step="any" name="f_min_ghz" value="10" required /></label>
+        <label>Frequency max (GHz)<input type="number" step="any" name="f_max_ghz" value="15" required /></label>
+        <label>Frequency step (GHz)<input type="number" step="any" name="f_step_ghz" value="0.5" required /></label>
+        <label>Design frequency (GHz)<input type="number" step="any" name="f_design_ghz" value="12.5" required /></label>
+        <button type="submit">Run sweep</button>
+      </form>
+      <p class="status" id="sweep-status"></p>
+      <div id="sweep-labels" class="labels"></div>
+      <table id="sweep-table" style="display:none">
+        <thead><tr><th>L (mm)</th><th>W (mm)</th><th>Phase S11 (deg)</th><th>|S11| (dB)</th><th>Resonant?</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+  <script>
+    async function refreshLibraryList() {
+      const resp = await fetch("/api/library");
+      const libs = await resp.json();
+      const select = document.getElementById("library-select");
+      select.innerHTML = "";
+      for (const [id, entry] of Object.entries(libs)) {
+        const opt = document.createElement("option");
+        opt.value = id;
+        opt.textContent = `${id} (${entry.meta.backing || "?"}, ${entry.meta.period_mm || "?"} mm)`;
+        select.appendChild(opt);
+      }
+    }
+    refreshLibraryList();
+
+    document.getElementById("browse-btn").addEventListener("click", async () => {
+      const id = document.getElementById("library-select").value;
+      const freq = document.getElementById("browse-freq").value;
+      const statusEl = document.getElementById("browse-status");
+      if (!id) { statusEl.textContent = "no library selected"; statusEl.className = "status err"; return; }
+      statusEl.textContent = "loading...";
+      statusEl.className = "status";
+      try {
+        const resp = await fetch(`/api/library/${encodeURIComponent(id)}?frequency_ghz=${freq}`);
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || resp.statusText);
+        statusEl.textContent = `${data.n_cells} cells; ${data.phase_vs_geometry.length} with a record at ${freq} GHz`;
+        statusEl.className = "status ok";
+        document.getElementById("browse-meta").textContent = data.coverage
+          ? `coverage: ${data.coverage.coverage_deg.toFixed(1)} deg, largest gap: ${data.coverage.largest_gap_deg.toFixed(1)} deg`
+          : "";
+        const table = document.getElementById("browse-table");
+        table.style.display = "table";
+        const tbody = table.querySelector("tbody");
+        tbody.innerHTML = "";
+        for (const row of data.phase_vs_geometry) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${row.L_mm}</td><td>${row.W_mm}</td><td>${row.phase_deg.toFixed(2)}</td><td>${row.magnitude_db.toFixed(2)}</td>`;
+          tbody.appendChild(tr);
+        }
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status err";
+      }
+    });
+
+    document.getElementById("sweep-form").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const f = new FormData(ev.target);
+      const backing = f.get("backing");
+      const period_m = parseFloat(f.get("period_mm")) * 1e-3;
+      const substrate = { name: "user", eps_r: parseFloat(f.get("eps_r")), tan_delta: parseFloat(f.get("tan_delta")), thickness: parseFloat(f.get("thickness_mm")) * 1e-3 };
+      if (backing === "pec") substrate.backing = "pec";
+      const cells = parseInt(f.get("cells"), 10);
+      const l0 = parseFloat(f.get("l_values_mm").split(",")[0]) * 1e-3;
+      const w0 = parseFloat(f.get("w_values_mm").split(",")[0]) * 1e-3;
+      const referencePlanes = backing === "pec" ? { top_air_thickness: 5.0e-3 } : { top_air_thickness: 5.0e-3, bottom_air_thickness: 5.0e-3 };
+      const body = {
+        library_id: f.get("library_id"),
+        base_config: {
+          period_x: period_m, period_y: period_m, substrate,
+          geometry: { type: "rectangle", length: l0, width: w0 },
+          excitation: { frequency: parseFloat(f.get("f_design_ghz")) * 1e9 },
+          mesh: { cells_x: cells, cells_y: cells, floquet_order: cells },
+          reference_planes: referencePlanes,
+        },
+        l_values_mm: f.get("l_values_mm").split(",").map((s) => parseFloat(s.trim())),
+        w_values_mm: f.get("w_values_mm").split(",").map((s) => parseFloat(s.trim())),
+        f_min_hz: parseFloat(f.get("f_min_ghz")) * 1e9,
+        f_max_hz: parseFloat(f.get("f_max_ghz")) * 1e9,
+        f_step_hz: parseFloat(f.get("f_step_ghz")) * 1e9,
+        f_design_hz: parseFloat(f.get("f_design_ghz")) * 1e9,
+      };
+      const statusEl = document.getElementById("sweep-status");
+      statusEl.textContent = "submitting...";
+      statusEl.className = "status";
+      try {
+        const submitted = await LWMOM.postJson("/api/library/sweep", body);
+        const job = await LWMOM.pollJob(submitted.id, {
+          onTick: (j) => { statusEl.textContent = `${j.status}: ${j.progress_message || ""}`; },
+        });
+        if (job.status !== "done") {
+          statusEl.textContent = `${job.status}: ${job.error ? job.error.message : ""}`;
+          statusEl.className = "status err";
+          return;
+        }
+        statusEl.textContent = `done: ${job.result.n_ok}/${job.result.n_geometries} solved OK`;
+        statusEl.className = "status ok";
+        const table = document.getElementById("sweep-table");
+        table.style.display = "table";
+        const tbody = table.querySelector("tbody");
+        tbody.innerHTML = "";
+        const byId = {};
+        for (const c of job.result.classifications) byId[c.cell_id] = c;
+        for (const row of job.result.table) {
+          const tr = document.createElement("tr");
+          const cls = Object.values(byId).find((c) => c.l_mm === row.L_mm && c.w_mm === row.W_mm);
+          const resonant = cls && cls.resonance ? cls.resonance.is_resonant : "?";
+          tr.innerHTML = `<td>${row.L_mm}</td><td>${row.W_mm}</td><td>${row.phase_deg.toFixed(2)}</td><td>${row.magnitude_db.toFixed(2)}</td><td>${resonant}</td>`;
+          tbody.appendChild(tr);
+        }
+        refreshLibraryList();
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status err";
+      }
+    });
+  </script>
+</body>
+</html>

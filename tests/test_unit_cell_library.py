@@ -276,6 +276,7 @@ def test_invert_phase_structure_when_found(library_json):
 
 
 def test_build_full_library_end_to_end_directory_layout(tmp_path):
+    pytest.importorskip("cadquery")  # build_full_library's STEP export needs the optional 'cad' extra
     cfg = small_config()
     result = build_full_library(cfg, tmp_path / "lib", deterministic_timestamp="2026-01-01T00:00:00Z")
 
@@ -292,6 +293,7 @@ def test_build_full_library_end_to_end_directory_layout(tmp_path):
 
 
 def test_build_full_library_report_mentions_no_hfss_validation(tmp_path):
+    pytest.importorskip("cadquery")  # build_full_library's STEP export needs the optional 'cad' extra
     cfg = small_config()
     result = build_full_library(cfg, tmp_path / "lib2", deterministic_timestamp="2026-01-01T00:00:00Z")
     text = result.library_report_path.read_text()

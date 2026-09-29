@@ -116,6 +116,7 @@ def test_same_request_hits_the_job_cache(client):
 
 
 def test_export_step_produces_a_downloadable_file(client):
+    pytest.importorskip("cadquery")  # STEP export needs the optional 'cad' extra
     resp = client.post("/api/unit_cell/export_step", json={"config": _config()})
     job = _wait_for_job(client, resp.json()["id"], timeout=30.0)
     assert job["status"] == "done", job

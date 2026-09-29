@@ -12,6 +12,7 @@ quantity is a surface reactance, not a phase or an L/W pair, so neither chaining
 here (documented limitation, not silently wrong).
 """
 
+import base64
 import json
 import uuid
 
@@ -38,6 +39,7 @@ from .. import library_registry
 from ..jobs import config_hash
 from ..jsonutil import to_jsonable
 from ..library_query import available_frequencies_hz, library_candidates_at_frequency
+from ..plots import layout_map_png, reference_phase_map_png
 from ..storage import job_output_dir, upload_dir
 
 # PHASE13C: the wizard never sends the user to a separate Library page -- these are the fixed
@@ -95,6 +97,17 @@ async def upload_field(
         if np.isfinite(beta_typical):
             tm0 = compare_beta_to_tm0(beta_typical, frequency_hz, eps_r, thickness_mm * 1e-3)
 
+    # 13C Step 1: "show immediately: a PNG of the reference phase map" -- inlined as base64 (no
+    # job/download-route machinery needed for a one-off preview of a synchronous upload).
+    phase_map_png_base64 = None
+    try:
+        png_path = reference_phase_map_png(
+            phase_fld.x_m, phase_fld.y_m, np.degrees(phase_fld.value), updir / "phase_map.png"
+        )
+        phase_map_png_base64 = base64.b64encode(png_path.read_bytes()).decode("ascii")
+    except Exception:
+        pass  # best-effort preview only; never blocks the upload itself
+
     return to_jsonable(
         {
             "upload_id": upload_id,
@@ -109,6 +122,7 @@ async def upload_field(
             "radial_beta_r_m": r_bins,
             "radial_beta_median_rad_per_m": beta_median,
             "tm0_comparison": tm0,
+            "phase_map_png_base64": phase_map_png_base64,
         }
     )
 
@@ -200,6 +214,17 @@ def _mask_feed_region(reference_field):
     return replace(reference_field, phase_deg=filled), masked_indices
 
 
+def _layout_preview_url(job, x_m, y_m, value, label, title):
+    """13C Step 3's "hologram/layout preview" PNG. Best-effort: a plotting failure must never
+    fail a real synthesis result the user is waiting on."""
+    try:
+        out_dir = job_output_dir(job.id)
+        path = layout_map_png(x_m, y_m, value, out_dir / "layout.png", title=title, label=label)
+        return f"/api/files/{job.id}/{path.name}"
+    except Exception:
+        return None
+
+
 def _run_synthesize_job(job, body: dict):
     reference_field = _load_reference_field(body["upload_id"])
     reference_field, masked_cells = _mask_feed_region(reference_field)
@@ -239,6 +264,9 @@ def _run_synthesize_job(job, body: dict):
             period_m,
             rescale_to_beta_bar=body["rescale_to_beta_bar"],
         )
+        layout_png_url = _layout_preview_url(
+            job, design.x_m, design.y_m, design.control_map, "reactance (ohm)", "Impedance modulation"
+        )
         return {
             "formulation": design.formulation,
             "x_m": design.x_m,
@@ -249,6 +277,7 @@ def _run_synthesize_job(job, body: dict):
             "unreachable_fraction": design.unreachable_fraction,
             "phase_error_stats": design.phase_error_stats,
             "masked_cells": masked_cells,
+            "layout_png_url": layout_png_url,
         }
 
     if body["formulation"] == "B":
@@ -297,6 +326,9 @@ def _run_synthesize_job(job, body: dict):
             )
             for c in design.cells
         )
+        layout_png_url = _layout_preview_url(
+            job, design.x_m, design.y_m, achieved, "achieved phase (deg)", "Layout (achieved phase)"
+        )
         return {
             "formulation": design.formulation,
             "x_m": design.x_m,
@@ -311,6 +343,7 @@ def _run_synthesize_job(job, body: dict):
             "masked_cells": masked_cells,
             "aperture_field_real": aperture_field.real,
             "aperture_field_imag": aperture_field.imag,
+            "layout_png_url": layout_png_url,
         }
 
     raise config_invalid(message=f"formulation must be 'A' or 'B', got {body['formulation']!r}")

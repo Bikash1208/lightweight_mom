@@ -3,6 +3,7 @@ small real grounded library, and synthesize Formulation B end to end. Formulatio
 with a synthetic dispersion CSV (no real HFSS eigenmode export is bundled with the repo). Needs
 the optional 'app' extra; skipped entirely otherwise."""
 
+import base64
 import time
 import uuid
 from pathlib import Path
@@ -78,6 +79,9 @@ def test_upload_field_parses_the_real_example_file(client):
     assert body["regularity"]["regular"] is True
     assert body["tm0_comparison"] is not None
     assert body["upload_id"]
+    # 13C Step 1: "show immediately: a PNG of the reference phase map".
+    assert body["phase_map_png_base64"]
+    assert base64.b64decode(body["phase_map_png_base64"])[:8] == b"\x89PNG\r\n\x1a\n"
 
 
 def test_upload_field_rejects_a_malformed_file(client, tmp_path):
@@ -119,6 +123,11 @@ def test_synthesize_formulation_b_end_to_end(client, grounded_library):
     assert "FEED_REGION_MASKED" in result["labels"]
     assert len(result["masked_cells"]) == 1
 
+    # 13C Step 3: "the hologram/layout preview" PNG.
+    layout_resp = client.get(result["layout_png_url"])
+    assert layout_resp.status_code == 200
+    assert layout_resp.content[:8] == b"\x89PNG\r\n\x1a\n"
+
     # PHASE13B B2: Export was not wired up from an HMSA design -- it must chain exactly like a
     # reflectarray design job (real L/W per cell, not a placeholder).
     export_resp = client.post(
@@ -137,6 +146,25 @@ def test_synthesize_formulation_b_end_to_end(client, grounded_library):
     assert export_job["result"]["n_cells_per_side"] == 37
     assert export_job["result"]["total_cells"] == 37 * 37
     assert export_job["result"]["layout_csv_download_url"]
+
+    # Chain into Pattern prediction and confirm its own plots are produced too (13C Step 3).
+    pattern_resp = client.post(
+        "/api/pattern/predict",
+        json={
+            "source_job_id": resp.json()["id"],
+            "frequency_hz": 10.54e9,
+            "n_theta": 15,
+            "n_phi": 9,
+            "beams": [{"theta_deg": 20.0, "phi_deg": 0.0}],
+        },
+    )
+    pattern_job = _wait_for_job(client, pattern_resp.json()["id"], timeout=60.0)
+    assert pattern_job["status"] == "done", pattern_job
+    pattern_result = pattern_job["result"]
+    assert pattern_result["pattern_uv_png_url"]
+    assert len(pattern_result["pattern_cut_png_urls"]) == 1
+    uv_resp = client.get(pattern_result["pattern_uv_png_url"])
+    assert uv_resp.status_code == 200 and uv_resp.content[:8] == b"\x89PNG\r\n\x1a\n"
 
 
 def test_synthesize_at_a_frequency_the_library_never_solved_is_a_named_error(client, grounded_library):

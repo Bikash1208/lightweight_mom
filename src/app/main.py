@@ -28,12 +28,14 @@ def create_app():
 
     from .routers import export as export_router
     from .routers import files as files_router
+    from .routers import hfss_compare as hfss_compare_router
     from .routers import hmsa as hmsa_router
     from .routers import jobs as jobs_router
     from .routers import library as library_router
     from .routers import pattern as pattern_router
     from .routers import reflectarray as reflectarray_router
     from .routers import unit_cell as unit_cell_router
+    from .routers import verify as verify_router
 
     app.include_router(jobs_router.router)
     app.include_router(files_router.router)
@@ -43,6 +45,8 @@ def create_app():
     app.include_router(pattern_router.router)
     app.include_router(export_router.router)
     app.include_router(hmsa_router.router)
+    app.include_router(hfss_compare_router.router)
+    app.include_router(verify_router.router)
 
     @app.get("/api/health")
     def health():

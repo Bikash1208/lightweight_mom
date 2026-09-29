@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HFSS compare -- lwmom</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>lwmom</h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/unit_cell.html">Unit cell</a>
+      <a href="/library.html">Library</a>
+      <a href="/reflectarray.html">Reflectarray</a>
+      <a href="/pattern.html">Pattern</a>
+      <a href="/verify.html">Verify</a>
+      <a href="/export.html">Export</a>
+      <a href="/hfss_compare.html">HFSS compare</a>
+      <a href="/hmsa.html">HMSA designer</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h2>HFSS compare</h2>
+      <p>Upload a Touchstone (.sNp) export and compare it against this project's own MoM
+      reference for the matching single-cell case (G1-G6). Only G1 has real HFSS data recorded
+      by this project so far (<code>docs/phases/PHASE12D_LOCAL_PERIODICITY.md</code>); the others
+      are accepted if you have your own export.</p>
+      <form id="form">
+        <label>Touchstone file (.sNp)<input type="file" name="touchstone_file" required /></label>
+        <label>Case
+          <select name="case_id" id="case-select"></select>
+        </label>
+        <label>Top Floquet port name<input type="text" name="top_port_name" value="FloquetPort1" /></label>
+        <label>Bottom Floquet port name<input type="text" name="bottom_port_name" value="FloquetPort2" /></label>
+        <button type="submit">Compare</button>
+      </form>
+      <p class="status" id="status"></p>
+    </div>
+
+    <div class="card" id="results" style="display:none">
+      <h3>Results</h3>
+      <div id="labels" class="labels"></div>
+      <p id="summary"></p>
+      <table id="table">
+        <thead><tr><th>f (GHz)</th><th>MoM |S| (lin)</th><th>MoM phase (deg)</th><th>HFSS |S| (lin)</th><th>HFSS phase (deg)</th><th>d(phase) (deg)</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Ledger of past comparisons</h3>
+      <button type="button" id="refresh-ledger">Refresh</button>
+      <table id="ledger-table">
+        <thead><tr><th>case</th><th>mean d(phase)</th><th>max |d(phase)|</th><th>max d(mag) dB</th><th>meets tolerance</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+  <script>
+    async function loadCases() {
+      const resp = await fetch("/api/hfss_compare/cases");
+      const data = await resp.json();
+      const select = document.getElementById("case-select");
+      select.innerHTML = "";
+      for (const id of data.case_ids) {
+        const opt = document.createElement("option");
+        opt.value = id;
+        opt.textContent = id === data.case_with_real_hfss_data_on_disk ? `${id} (has real HFSS data on disk)` : id;
+        select.appendChild(opt);
+      }
+    }
+    loadCases();
+
+    async function refreshLedger() {
+      const resp = await fetch("/api/hfss_compare/ledger");
+      const rows = await resp.json();
+      const tbody = document.querySelector("#ledger-table tbody");
+      tbody.innerHTML = "";
+      for (const r of rows) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${r.case_id}</td><td>${r.mean_dphase_deg.toFixed(3)}</td>` +
+          `<td>${r.max_abs_dphase_deg.toFixed(3)}</td><td>${r.max_dmag_db.toFixed(4)}</td><td>${r.meets_tolerance}</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+    document.getElementById("refresh-ledger").addEventListener("click", refreshLedger);
+    refreshLedger();
+
+    document.getElementById("form").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const form = new FormData(ev.target);
+      const statusEl = document.getElementById("status");
+      statusEl.textContent = "comparing...";
+      statusEl.className = "status";
+      try {
+        const data = await LWMOM.postForm("/api/hfss_compare/upload", form);
+        statusEl.textContent = "done";
+        statusEl.className = "status ok";
+        document.getElementById("results").style.display = "block";
+        LWMOM.renderLabels(document.getElementById("labels"), data.summary.labels, []);
+        document.getElementById("summary").textContent =
+          `mean d(phase)=${data.summary.mean_dphase_deg.toFixed(3)} deg, ` +
+          `max |d(phase)|=${data.summary.max_abs_dphase_deg.toFixed(3)} deg, ` +
+          `max d(mag)=${data.summary.max_dmag_db.toFixed(4)} dB, meets tolerance: ${data.summary.meets_tolerance}`;
+        const tbody = document.querySelector("#table tbody");
+        tbody.innerHTML = "";
+        for (const row of data.overlay) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${row.frequency_ghz.toFixed(3)}</td><td>${row.mom_mag.toFixed(4)}</td>` +
+            `<td>${row.mom_phase_deg.toFixed(2)}</td><td>${row.hfss_mode1_mag.toFixed(4)}</td>` +
+            `<td>${row.hfss_mode1_phase_deg.toFixed(2)}</td><td>${row.dphase_mode1_deg.toFixed(3)}</td>`;
+          tbody.appendChild(tr);
+        }
+        refreshLedger();
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status err";
+      }
+    });
+  </script>
+</body>
+</html>

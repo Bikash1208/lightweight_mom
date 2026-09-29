@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Verify -- lwmom</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>lwmom</h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/unit_cell.html">Unit cell</a>
+      <a href="/library.html">Library</a>
+      <a href="/reflectarray.html">Reflectarray</a>
+      <a href="/pattern.html">Pattern</a>
+      <a href="/verify.html">Verify</a>
+      <a href="/export.html">Export</a>
+      <a href="/hfss_compare.html">HFSS compare</a>
+      <a href="/hmsa.html">HMSA designer</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Verify</h2>
+      <p>Runs a real full-supercell MoM solve of an N-cell periodic gradient and compares its
+      per-order power against the idealized lookup-table prediction (Part 0's own comparison). A
+      real solve, not an estimate -- costed and gated before it runs (Phase 12D's own measured
+      runtimes: N=6 ~7s, N=8 ~18.5s, N=12 ~124s; larger sizes are extrapolated, and anything
+      beyond N=20 is refused outright as untrustworthy extrapolation).</p>
+      <form id="cost-form">
+        <label>N cells (aperture side length)<input type="number" name="n_cells" value="6" required /></label>
+        <button type="submit">Estimate cost</button>
+      </form>
+      <p class="status" id="cost-status"></p>
+      <div id="cost-summary"></div>
+      <button type="button" id="run-btn" style="display:none">Run verification</button>
+      <button type="button" id="force-run-btn" style="display:none">Run anyway (force)</button>
+      <p class="status" id="run-status"></p>
+    </div>
+
+    <div class="card" id="results" style="display:none">
+      <h3>Results</h3>
+      <p id="summary"></p>
+      <details open>
+        <summary>Spurious orders</summary>
+        <table id="spurious-table">
+          <thead><tr><th>(m, n)</th><th>fraction of propagating power</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </details>
+      <details>
+        <summary>Raw result</summary>
+        <pre id="raw"></pre>
+      </details>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+  <script>
+    let currentN = null;
+
+    document.getElementById("cost-form").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const n = parseInt(new FormData(ev.target).get("n_cells"), 10);
+      currentN = n;
+      const statusEl = document.getElementById("cost-status");
+      statusEl.textContent = "checking...";
+      statusEl.className = "status";
+      try {
+        const resp = await fetch(`/api/verify/cost_estimate?n_cells=${n}`);
+        const cost = await resp.json();
+        statusEl.textContent = "";
+        const runtime = cost.estimated_runtime_s !== null ? `${cost.estimated_runtime_s.toFixed(1)}s` : "n/a";
+        const kind = cost.is_measured ? "measured" : cost.is_extrapolated ? "extrapolated" : "n/a";
+        document.getElementById("cost-summary").innerHTML =
+          `<p>Estimated runtime: ${runtime} (${kind}). Refused: ${cost.refused}${cost.refusal_reason ? " -- " + cost.refusal_reason : ""}</p>`;
+        document.getElementById("run-btn").style.display = cost.refused ? "none" : "inline-block";
+        document.getElementById("force-run-btn").style.display = cost.refused ? "inline-block" : "none";
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status err";
+      }
+    });
+
+    async function runVerification(force) {
+      const statusEl = document.getElementById("run-status");
+      statusEl.textContent = "submitting...";
+      statusEl.className = "status";
+      try {
+        const submitted = await LWMOM.postJson("/api/verify/run", { n_cells: currentN, force });
+        const job = await LWMOM.pollJob(submitted.id, {
+          onTick: (j) => { statusEl.textContent = `${j.status}: ${j.progress_message || ""}`; },
+        });
+        if (job.status !== "done") {
+          statusEl.textContent = `${job.status}: ${job.error ? job.error.message : ""}`;
+          statusEl.className = "status err";
+          return;
+        }
+        statusEl.textContent = "done";
+        statusEl.className = "status ok";
+        const result = job.result;
+        document.getElementById("results").style.display = "block";
+        const ap = result.aperture_result;
+        document.getElementById("summary").textContent =
+          `N=${result.n_cells}: achieved span ${ap.achieved_span_deg.toFixed(1)} deg (full 2*pi: ${ap.is_full_2pi}), ` +
+          `intended-order fraction ${ap.fraction_intended.toFixed(3)} (predicted ${result.predicted_order_powers ? "" : "n/a"}` +
+          `, |predicted - measured| = ${result.predicted_vs_measured_intended_fraction_diff.toFixed(4)})`;
+        const tbody = document.querySelector("#spurious-table tbody");
+        tbody.innerHTML = "";
+        for (const [order, fraction] of ap.spurious_orders) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${JSON.stringify(order)}</td><td>${fraction.toFixed(4)}</td>`;
+          tbody.appendChild(tr);
+        }
+        document.getElementById("raw").textContent = JSON.stringify(result, null, 2);
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status err";
+      }
+    }
+
+    document.getElementById("run-btn").addEventListener("click", () => runVerification(false));
+    document.getElementById("force-run-btn").addEventListener("click", () => runVerification(true));
+  </script>
+</body>
+</html>

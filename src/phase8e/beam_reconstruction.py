@@ -43,10 +43,21 @@ class DetectedPeak:
     relative_power_db: float
 
 
-def detect_local_maxima(power, theta_grid_deg, phi_grid_deg, min_relative_db=-20.0):
+def detect_local_maxima(power, theta_grid_deg, phi_grid_deg, min_relative_db=-20.0, phi_periodic=False):
     """Simple grid-based local-maximum detector (greater than all 4 axis-neighbours), above
     ``min_relative_db`` of the global peak -- sufficient to separate a handful of intended beams
-    from sidelobes on a modest angular grid; not a general antenna-pattern peak-search algorithm."""
+    from sidelobes on a modest angular grid; not a general antenna-pattern peak-search algorithm.
+
+    ``phi_periodic`` (PHASE13D item 2): the j axis (phi) wraps at the array edge instead of seeing
+    a fake ``-inf`` neighbour there. Off by default (this function is also used on grids that are
+    not a full 0-360 deg sweep, e.g. this module's own tests, where index 0 and index -1 are NOT
+    physically adjacent and must not be treated as such); `pattern.aperture_pattern.compute_pattern`
+    passes `True` because its own phi grid genuinely is `linspace(0, 360, n_phi, endpoint=False)`.
+    Without this, a peak sitting exactly on the phi=0 grid line has its phi=(360-step) neighbour
+    read as -inf instead of the (very high) true main-lobe value one grid step away across the
+    seam -- so that neighbour can register as a spurious "local maximum" of its own tiny
+    neighbourhood, one grid step from the real peak (a false near-in "sidelobe" that is really
+    just the main lobe's own flank)."""
     power = np.asarray(power, dtype=float)
     peak_power = power.max()
     peaks = []
@@ -56,11 +67,16 @@ def detect_local_maxima(power, theta_grid_deg, phi_grid_deg, min_relative_db=-20
             v = power[i, j]
             if v < peak_power * 10 ** (min_relative_db / 10.0):
                 continue
+            if phi_periodic:
+                j_lo, j_hi = power[i, (j - 1) % nx], power[i, (j + 1) % nx]
+            else:
+                j_lo = power[i, j - 1] if j > 0 else -np.inf
+                j_hi = power[i, j + 1] if j + 1 < nx else -np.inf
             neighbors = [
                 power[i - 1, j] if i > 0 else -np.inf,
                 power[i + 1, j] if i + 1 < ny else -np.inf,
-                power[i, j - 1] if j > 0 else -np.inf,
-                power[i, j + 1] if j + 1 < nx else -np.inf,
+                j_lo,
+                j_hi,
             ]
             if v >= max(neighbors):
                 peaks.append(

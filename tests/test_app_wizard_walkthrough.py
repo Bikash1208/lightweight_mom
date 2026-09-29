@@ -105,8 +105,20 @@ def test_one_beam_walkthrough_ends_in_a_valid_zip_with_the_beam_near_its_target(
     )
     pattern_job = _wait_for_job(client, pattern_resp.json()["id"])
     assert pattern_job["status"] == "done", pattern_job
-    peak_theta = pattern_job["result"]["result"]["main_beam_theta_deg"]
+    pattern_result = pattern_job["result"]["result"]
+    peak_theta = pattern_result["main_beam_theta_deg"]
     assert peak_theta == pytest.approx(20.0, abs=5.0)  # a stated tolerance around the target
+
+    # PHASE13D item 2: this exact case (a 4 mm cell, heavily phase-quantized hologram) used to
+    # report an SLL of ~-1.5 dB (an unphysical bright ring near the horizon, plus a spurious
+    # near-in "sidelobe" from a phi=0 grid-seam artifact) instead of the true first sidelobe.
+    assert pattern_result["sll_db"] < -5.0
+
+    # PHASE13D item 1: this same case has 4 mm cells on a board whose phase-lookup achievable
+    # range is well under 360 deg -- most cells cannot reach their required value. The wizard
+    # should say so, not just report a number.
+    phase_stats = synth_result["phase_error_stats"]
+    assert phase_stats["n_unreachable"] / phase_stats["n_cells"] > 0.2
 
     export_resp = client.post(
         "/api/export/array",
@@ -124,7 +136,11 @@ def test_one_beam_walkthrough_ends_in_a_valid_zip_with_the_beam_near_its_target(
 
     pkg_resp = client.post(
         "/api/export/package",
-        json={"export_job_id": export_resp.json()["id"], "pattern_job_id": pattern_resp.json()["id"]},
+        json={
+            "export_job_id": export_resp.json()["id"],
+            "pattern_job_id": pattern_resp.json()["id"],
+            "synthesize_job_id": synth_job_id,
+        },
     )
     pkg_job = _wait_for_job(client, pkg_resp.json()["id"])
     assert pkg_job["status"] == "done", pkg_job
@@ -134,7 +150,12 @@ def test_one_beam_walkthrough_ends_in_a_valid_zip_with_the_beam_near_its_target(
     with zipfile.ZipFile(io.BytesIO(zip_resp.content)) as zf:
         assert zf.testzip() is None  # every member's CRC checks out -- a genuinely valid zip
         names = set(zf.namelist())
-        assert {"layout.csv", "layout.json", "HFSS_README.md", "pattern_uv.png", "project_record.json"} <= names
+        # PHASE13D item 4: the zip used to only ever get STEP/CSV/notes -- PNGs, DXF and the
+        # project record either weren't wired in (layout.png) or weren't implemented (DXF) yet.
+        assert {
+            "layout.csv", "layout.json", "layout.dxf", "layout.png",
+            "HFSS_README.md", "pattern_uv.png", "project_record.json",
+        } <= names
 
 
 @pytest.mark.slow

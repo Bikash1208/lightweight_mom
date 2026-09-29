@@ -38,6 +38,7 @@ class ArrayExportResult:
     step_path: "str | None"
     layout_csv_path: str
     layout_json_path: str
+    layout_dxf_path: str
     readme_path: str
     n_cells_per_side: int  # PHASE13B A8: was `n_cells` but held only N (the side length) -- an
     # N x N design's summary reported "N cells" instead of the real N*N, misleadingly small.
@@ -86,6 +87,54 @@ def write_hfss_readme(output_dir, basename="HFSS_README"):
     return path
 
 
+def _rectangle_lines_mm(cx_mm, cy_mm, length_mm, width_mm):
+    hl, hw = length_mm / 2.0, width_mm / 2.0
+    corners = [
+        (cx_mm - hl, cy_mm - hw),
+        (cx_mm + hl, cy_mm - hw),
+        (cx_mm + hl, cy_mm + hw),
+        (cx_mm - hl, cy_mm + hw),
+    ]
+    return [(corners[k], corners[(k + 1) % 4]) for k in range(4)]
+
+
+def write_layout_dxf(lw_grid_m, period_x_m, period_y_m, output_dir, basename="layout"):
+    """PHASE13D item 4: a lightweight DXF of the patch layer (millimetres, layer ``PATCHES``) -- a
+    PCB fab wants this or a Gerber, not a 100 MB STEP (PHASE13D_POLISH_AND_PHYSICS.md). Hand-written
+    DXF R12 (``LINE`` entities only -- valid in every DXF reader since R12, unlike ``LWPOLYLINE``
+    which needs R14+): no new dependency (`ezdxf` was never added -- see this module's own history).
+    Same cell-centre convention as `phase9.supercell_geometry.SupercellUnitCell.sub_cell_center`
+    (row i = y-index, column j = x-index), so the drawing lines up with the STEP/CSV export of the
+    same design.
+    """
+    n = _validate_square(lw_grid_m)
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    px_mm, py_mm = period_x_m * 1e3, period_y_m * 1e3
+    sub_px_mm, sub_py_mm = px_mm / n, py_mm / n
+
+    lines = []
+    for i, row in enumerate(lw_grid_m):
+        for j, (length_m, width_m) in enumerate(row):
+            cx_mm = -px_mm / 2.0 + (j + 0.5) * sub_px_mm
+            cy_mm = -py_mm / 2.0 + (i + 0.5) * sub_py_mm
+            lines.extend(_rectangle_lines_mm(cx_mm, cy_mm, length_m * 1e3, width_m * 1e3))
+
+    parts = ["0", "SECTION", "2", "HEADER", "9", "$ACADVER", "1", "AC1009", "0", "ENDSEC"]
+    parts += ["0", "SECTION", "2", "ENTITIES"]
+    for (x1, y1), (x2, y2) in lines:
+        parts += [
+            "0", "LINE", "8", "PATCHES",
+            "10", f"{x1:.6f}", "20", f"{y1:.6f}", "30", "0.0",
+            "11", f"{x2:.6f}", "21", f"{y2:.6f}", "31", "0.0",
+        ]
+    parts += ["0", "ENDSEC", "0", "EOF"]
+
+    path = output_dir / f"{basename}.dxf"
+    path.write_text("\n".join(parts) + "\n")
+    return path
+
+
 def export_array(
     lw_grid_m, period_x_m, period_y_m, substrate, metal, output_dir, metal_export_thickness_m=None, include_step=True
 ):
@@ -98,6 +147,7 @@ def export_array(
     n = _validate_square(lw_grid_m)
     output_dir = Path(output_dir)
     csv_path, json_path = write_layout_files(lw_grid_m, output_dir)
+    dxf_path = write_layout_dxf(lw_grid_m, period_x_m, period_y_m, output_dir)
     readme_path = write_hfss_readme(output_dir)
 
     step_path, file_size, export_time = None, None, None
@@ -120,6 +170,7 @@ def export_array(
         step_path=step_path,
         layout_csv_path=str(csv_path),
         layout_json_path=str(json_path),
+        layout_dxf_path=str(dxf_path),
         readme_path=str(readme_path),
         n_cells_per_side=n,
         total_cells=n * n,

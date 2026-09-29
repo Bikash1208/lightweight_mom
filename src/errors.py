@@ -78,6 +78,12 @@ LIBRARY_FREQUENCY_UNAVAILABLE = ErrorCode(
     "Choose one of the library's own stored frequencies, or build/select a library that includes "
     "the requested one -- `UnitCellLibrary.response` never interpolates across frequency.",
 )
+DISPERSION_MOM_NO_CLEAR_MODE = ErrorCode(
+    "DISPERSION_MOM_NO_CLEAR_MODE",
+    "The MoM surface-wave search found no clear bound mode for this cell/frequency.",
+    "Try a different geometry_param, direction, or mesh; or import an HFSS eigenmode table instead "
+    "(dispersion.hfss_table.read_dispersion_csv, label DISPERSION_FROM_HFSS).",
+)
 
 ALL_ERROR_CODES = (
     CONFIG_INVALID,
@@ -91,6 +97,7 @@ ALL_ERROR_CODES = (
     FIELD_EXPRESSION_UNSUPPORTED,
     IMPEDANCE_UNREACHABLE,
     LIBRARY_FREQUENCY_UNAVAILABLE,
+    DISPERSION_MOM_NO_CLEAR_MODE,
 )
 
 
@@ -169,3 +176,7 @@ def impedance_unreachable(message=None):
 
 def library_frequency_unavailable(message=None):
     return LwmomError(LIBRARY_FREQUENCY_UNAVAILABLE, message=message)
+
+
+def dispersion_mom_no_clear_mode(message=None):
+    return LwmomError(DISPERSION_MOM_NO_CLEAR_MODE, message=message)

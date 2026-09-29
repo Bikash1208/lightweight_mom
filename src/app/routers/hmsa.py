@@ -22,6 +22,7 @@ from pydantic import BaseModel
 
 from ...dispersion.hfss_table import read_dispersion_csv
 from ...errors import LwmomError, config_invalid, library_frequency_unavailable, phase_unreachable
+from ...feasibility_coverage import library_table_at_frequency, phase_density
 from ...fields.fld_parser import read_fld
 from ...fields.reference_field_grid import (
     check_grid_regularity,
@@ -42,13 +43,19 @@ from ..library_query import available_frequencies_hz, library_candidates_at_freq
 from ..plots import layout_map_png, reference_phase_map_png
 from ..storage import job_output_dir, upload_dir
 
-# PHASE13C: the wizard never sends the user to a separate Library page -- these are the fixed
+# PHASE13C/13D: the wizard never sends the user to a separate Library page -- these are the fixed
 # square-patch geometry family and mesh the auto-built board library always uses. A reasonable
-# interactive-speed mesh, NOT alignment-searched (`discretization.smallest_aligned_cells` could
-# need an unboundedly large mesh for an arbitrary user-chosen period/L combination -- deferred,
-# documented in docs/phases/PHASE13_WEBAPP.md).
-AUTO_LIBRARY_L_FRACTIONS_OF_PERIOD = (0.15, 0.30, 0.45, 0.60, 0.75, 0.90)
+# interactive-speed mesh. Mesh-aligned BY CONSTRUCTION (not a search, so no risk of
+# `smallest_aligned_cells` needing an unboundedly large mesh): a centred feature of length L on an
+# `AUTO_LIBRARY_MESH_CELLS`-cell mesh over `period` has both edges on mesh lines iff
+# `L / period == k / (AUTO_LIBRARY_MESH_CELLS / 2)` for integer k (`discretization.
+# feature_edges_aligned`'s condition, solved for L) -- i.e. every fraction below is a multiple of
+# `2 / AUTO_LIBRARY_MESH_CELLS`. PHASE13D_POLISH_AND_PHYSICS.md's live walk-through found the old
+# 6-point family (step 0.15, NOT a multiple of 2/32 -- unaligned, so subject to staircasing error
+# on top of being sparse) too sparse: 4006/5476 cells unreachable at a 4 mm cell size. This family
+# is aligned and denser (13 points, step 0.0625).
 AUTO_LIBRARY_MESH_CELLS = 32
+AUTO_LIBRARY_L_FRACTIONS_OF_PERIOD = tuple(k / (AUTO_LIBRARY_MESH_CELLS / 2) for k in range(2, 15))
 
 # PHASE13B A3: relative tolerance before an upload-vs-synthesis frequency difference is labeled a
 # mismatch -- generous enough to absorb GHz/Hz round-trip and user-typed rounding, not a physics
@@ -408,6 +415,14 @@ def _run_ensure_library_job(job, body_dict, library_id):
     cells = build_square_library_cells(base_config, l_values_mm, body_dict["frequency_hz"], progress=_progress)
     out_dir = job_output_dir(job.id)
     path = write_square_library_json(cells, out_dir / "unit_cell_library.json")
+
+    # PHASE13D item 1: report the achievable phase-lookup range as soon as the library exists, so
+    # Step 2 can show it before the user commits to a synthesis run (and Step 3 can explain a poor
+    # unreachable-fraction result in terms of it).
+    table = library_table_at_frequency({"cells": cells}, body_dict["frequency_hz"] / 1e9)
+    density = phase_density(table)
+    coverage_meta = {"phase_span_deg": density.phase_span_deg, "resolution_deg": density.median_gap_deg}
+
     library_registry.register(
         library_id,
         path,
@@ -418,9 +433,16 @@ def _run_ensure_library_job(job, body_dict, library_id):
             "n_geometries": len(cells),
             "auto_built": True,
             "frequency_hz": body_dict["frequency_hz"],
+            **coverage_meta,
         },
     )
-    return {"library_id": library_id, "n_geometries": len(cells), "l_values_mm": l_values_mm, "already_built": False}
+    return {
+        "library_id": library_id,
+        "n_geometries": len(cells),
+        "l_values_mm": l_values_mm,
+        "already_built": False,
+        **coverage_meta,
+    }
 
 
 @router.post("/ensure_library")
@@ -433,9 +455,14 @@ def ensure_library(body: EnsureLibraryRequest, request: Request):
     library_id = _auto_library_id(body.model_dump())
     try:
         library_registry.resolve_path(library_id)
-        job = request.app.state.jobs.submit(
-            "hmsa_ensure_library", lambda job: {"library_id": library_id, "already_built": True}
-        )
+        meta = library_registry.list_libraries()[library_id]["meta"]
+        result = {
+            "library_id": library_id,
+            "already_built": True,
+            "phase_span_deg": meta.get("phase_span_deg"),
+            "resolution_deg": meta.get("resolution_deg"),
+        }
+        job = request.app.state.jobs.submit("hmsa_ensure_library", lambda job: result)
         return job.to_dict()
     except KeyError:
         pass

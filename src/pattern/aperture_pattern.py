@@ -31,13 +31,26 @@ def compute_pattern(x_m, y_m, aperture_field, frequency_hz, dx_m, dy_m,
     theta_grid, phi_grid = np.meshgrid(theta, phi, indexing="ij")
 
     field = far_field_pattern(x_m, y_m, aperture_field, frequency_hz, theta_grid, phi_grid, dx_m, dy_m)
+    # PHASE13D item 2: `far_field_pattern` is the bare aperture radiation integral (a scalar
+    # Fourier transform, no element pattern -- by design, see its own docstring). This aperture is
+    # a tangential field on an infinite PEC ground plane (a reflectarray/HMSA stack), radiating
+    # through Love/image equivalence as a doubled magnetic current into the forward half-space;
+    # the standard result for that geometry (Balanis, "Antenna Theory," aperture-on-ground-plane
+    # pattern) carries an obliquity factor of cos(theta) -- physically, the projected effective
+    # aperture area shrinks to zero at grazing incidence. Without it, the walk-through's own case
+    # showed an unphysical bright ring near theta=90 deg (SLL misreported as -1.5 dB, from that
+    # ring, instead of the true ~-8 to -10 dB first sidelobe) and no falloff toward the horizon.
+    field = field * np.cos(np.radians(theta_grid))
     power = np.abs(field) ** 2
     peak = power.max()
     if peak <= 0.0:
         raise ValueError("compute_pattern: aperture field radiates zero power (all-zero input?)")
     power_db = 10.0 * np.log10(power / peak)
 
-    peaks = detect_local_maxima(power, theta_grid, phi_grid, min_relative_db=-40.0)
+    # PHASE13D item 2: phi is a genuine 0-360 deg periodic sweep here (unlike some other callers'
+    # test grids) -- without phi_periodic, a point one grid step from the main beam across the
+    # phi=0 seam was misdetected as a spurious sidelobe (see detect_local_maxima's own docstring).
+    peaks = detect_local_maxima(power, theta_grid, phi_grid, min_relative_db=-40.0, phi_periodic=True)
     peaks = sorted(peaks, key=lambda p: -p.relative_power_db)
     main = peaks[0]
     sll_db = peaks[1].relative_power_db if len(peaks) > 1 else None

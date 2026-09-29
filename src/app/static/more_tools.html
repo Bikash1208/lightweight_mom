@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>More tools -- lwmom</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1><a href="/">lwmom</a></h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/more_tools.html" class="active">More tools</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h2>More tools</h2>
+      <p>The 3-step designer on the Home page covers the main HMSA workflow end to end. These
+      pages are the lower-level building blocks it uses internally -- useful for a reflectarray
+      (not HMSA) design, for inspecting a single unit cell or library directly, or for checking a
+      design against a full-wave solve or measured HFSS data.</p>
+    </div>
+    <div class="tools-grid">
+      <a class="tool-card" href="/unit_cell.html">
+        <h3>Unit cell</h3>
+        <p>Solve one patch geometry directly: S11/S21, diagnostics, STEP export.</p>
+      </a>
+      <a class="tool-card" href="/library.html">
+        <h3>Unit-cell library</h3>
+        <p>Build or browse a phase-vs-size sweep for a board/substrate.</p>
+      </a>
+      <a class="tool-card" href="/reflectarray.html">
+        <h3>Reflectarray designer</h3>
+        <p>Feed-illuminated reflectarray design from a library (not a hologram).</p>
+      </a>
+      <a class="tool-card" href="/pattern.html">
+        <h3>Pattern prediction</h3>
+        <p>Far field from any design job's aperture, standalone.</p>
+      </a>
+      <a class="tool-card" href="/export.html">
+        <h3>Export</h3>
+        <p>STEP/layout/README export from any design job, standalone.</p>
+      </a>
+      <a class="tool-card" href="/verify.html">
+        <h3>Full-wave check (Verify)</h3>
+        <p>A real supercell MoM solve vs. the lookup-table prediction.</p>
+      </a>
+      <a class="tool-card" href="/hfss_compare.html">
+        <h3>HFSS comparison</h3>
+        <p>Overlay a Touchstone (.sNp) export against a MoM solve.</p>
+      </a>
+    </div>
+    <div class="card">
+      <h3>Diagnostics &amp; logs</h3>
+      <p>Every job's request/run details are written to <code>~/.lwmom/logs/lwmom.log</code>
+      (JSON lines, filterable by the job ID shown in its status line/URL). There's no dedicated
+      page for browsing them yet -- see <code>docs/DEVELOPING.md</code> "Reading a diagnostic
+      bundle".</p>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

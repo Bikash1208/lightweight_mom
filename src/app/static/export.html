@@ -8,17 +8,10 @@
 </head>
 <body>
   <header>
-    <h1>lwmom</h1>
+    <h1><a href="/">lwmom</a></h1>
     <nav>
       <a href="/">Home</a>
-      <a href="/unit_cell.html">Unit cell</a>
-      <a href="/library.html">Library</a>
-      <a href="/reflectarray.html">Reflectarray</a>
-      <a href="/pattern.html">Pattern</a>
-      <a href="/verify.html">Verify</a>
-      <a href="/export.html">Export</a>
-      <a href="/hfss_compare.html">HFSS compare</a>
-      <a href="/hmsa.html">HMSA designer</a>
+      <a href="/more_tools.html">More tools</a>
     </nav>
   </header>
   <main>
@@ -32,8 +25,8 @@
           <input type="text" name="source_job_id" id="source-job-id" required />
         </label>
         <label>Cell period (mm)<input type="number" step="any" name="period_mm" value="8.0" required /></label>
-        <label>Substrate eps_r<input type="number" step="any" name="eps_r" value="2.2" required /></label>
-        <label>Substrate tan_delta<input type="number" step="any" name="tan_delta" value="0.0009" required /></label>
+        <label>Substrate εr<input type="number" step="any" name="eps_r" value="2.2" required /></label>
+        <label>Substrate loss tangent<input type="number" step="any" name="tan_delta" value="0.0009" required /></label>
         <label>Substrate thickness (mm)<input type="number" step="any" name="thickness_mm" value="1.575" required /></label>
         <label><input type="checkbox" name="include_step" checked style="width:auto" /> include STEP file (needs cadquery)</label>
         <button type="submit">Export</button>

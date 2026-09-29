@@ -1,14 +1,50 @@
+/* PHASE13C: Apple-like light theme by default, automatic dark mode (prefers-color-scheme), one
+   accent colour, plain CSS -- no framework/build step (docs/ARCHITECTURE.md). Every page in the
+   app (the 3-step wizard and the "More tools" pages) shares this file and its class vocabulary
+   (.card, .status, .label, table/th/td, img.plot) so old and new pages look consistent. */
+
 :root {
-  --bg: #0f1216;
-  --panel: #171b21;
-  --border: #2a3038;
-  --text: #e6e8eb;
-  --muted: #9aa4b2;
-  --accent: #4f8cff;
-  --ok: #3ecf8e;
-  --warn: #e0a72c;
-  --err: #e0524c;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --bg: #f5f5f7;
+  --panel: #ffffff;
+  --border: #d2d2d7;
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --accent: #0071e3;
+  --accent-text: #ffffff;
+  --ok: #1f9d55;
+  --warn: #b8860b;
+  --err: #d70015;
+  --radius: 14px;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Inter, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000;
+    --panel: #1c1c1e;
+    --border: #38383a;
+    --text: #f5f5f7;
+    --muted: #98989d;
+    --accent: #0a84ff;
+    --ok: #32d74b;
+    --warn: #ffd60a;
+    --err: #ff453a;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #000000;
+  --panel: #1c1c1e;
+  --border: #38383a;
+  --text: #f5f5f7;
+  --muted: #98989d;
+  --accent: #0a84ff;
+  --ok: #32d74b;
+  --warn: #ffd60a;
+  --err: #ff453a;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 * { box-sizing: border-box; }
@@ -18,92 +54,204 @@ body {
   background: var(--bg);
   color: var(--text);
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 header {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  padding: 0.75rem 1.25rem;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem;
   border-bottom: 1px solid var(--border);
   background: var(--panel);
+  flex-wrap: wrap;
 }
 
-header h1 { font-size: 1.1rem; margin: 0; font-weight: 600; }
+header h1 { font-size: 1.05rem; margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+header h1 a { color: inherit; text-decoration: none; }
 
-nav { display: flex; gap: 1rem; flex-wrap: wrap; }
+nav { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
 
 nav a {
   color: var(--muted);
   text-decoration: none;
   font-size: 0.9rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-nav a:hover, nav a.active { color: var(--text); background: var(--border); }
+nav a:hover, nav a.active { color: var(--text); background: var(--bg); }
 
-main { padding: 1.25rem; max-width: 960px; margin: 0 auto; }
+main { padding: 1.5rem 1.25rem 3rem; max-width: 720px; margin: 0 auto; }
 
 .card {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1rem 1.25rem;
-  margin-bottom: 1rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
-label { display: block; font-size: 0.85rem; color: var(--muted); margin-top: 0.6rem; }
+.card h2 { margin-top: 0; font-size: 1.25rem; letter-spacing: -0.01em; }
+.card h3 { font-size: 1.05rem; letter-spacing: -0.01em; }
+.card p { color: var(--muted); }
 
-input, select {
+label {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--text);
+  margin-top: 1rem;
+  font-weight: 500;
+}
+
+label .unit { color: var(--muted); font-weight: 400; }
+
+input, select, textarea {
   width: 100%;
-  padding: 0.4rem 0.5rem;
+  padding: 0.55rem 0.7rem;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 10px;
   color: var(--text);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  margin-top: 0.35rem;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
 button {
   background: var(--accent);
-  color: white;
+  color: var(--accent-text);
   border: none;
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
+  border-radius: 980px;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.95rem;
+  font-weight: 500;
   cursor: pointer;
-  margin-top: 0.75rem;
+  margin-top: 1rem;
+  transition: opacity 0.15s ease;
 }
 
-button:disabled { opacity: 0.5; cursor: default; }
+button:hover { opacity: 0.88; }
+button:disabled { opacity: 0.4; cursor: default; }
 
-.labels { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.5rem; }
+button.secondary {
+  background: transparent;
+  color: var(--accent);
+  padding: 0.6rem 0.9rem;
+}
+
+button.secondary:hover { background: var(--bg); opacity: 1; }
+
+/* segmented control: for <= 4 choices, used in place of <select> where the wizard asks for one */
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 0.35rem;
+}
+
+.segmented button {
+  margin: 0;
+  border-radius: 0;
+  background: var(--panel);
+  color: var(--text);
+  font-weight: 400;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.9rem;
+}
+
+.segmented button + button { border-left: 1px solid var(--border); }
+.segmented button.active { background: var(--accent); color: var(--accent-text); }
+
+/* stepper (3-step wizard) */
+.stepper { display: flex; gap: 0.5rem; align-items: center; margin: 0 auto 1.5rem; max-width: 720px; padding: 0 1.25rem; }
+.stepper .step {
+  display: flex; align-items: center; gap: 0.5rem; color: var(--muted); font-size: 0.9rem;
+  text-decoration: none;
+}
+.stepper .step .dot {
+  width: 1.6rem; height: 1.6rem; border-radius: 999px; border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+  background: var(--panel);
+}
+.stepper .step.active { color: var(--text); font-weight: 600; }
+.stepper .step.active .dot { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.stepper .step.done .dot { background: var(--ok); border-color: var(--ok); color: var(--accent-text); }
+.stepper .sep { flex: 1; height: 1px; background: var(--border); }
+
+details.advanced { margin-top: 1rem; }
+details.advanced summary { cursor: pointer; color: var(--accent); font-size: 0.9rem; }
+details.advanced .card { box-shadow: none; margin-top: 0.75rem; margin-bottom: 0; background: var(--bg); }
+
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--muted);
+  margin-top: 0.75rem;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.dropzone.dragover { border-color: var(--accent); background: var(--bg); }
+
+.labels { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
 
 .label {
-  font-size: 0.75rem;
-  padding: 0.15rem 0.5rem;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.7rem;
   border-radius: 999px;
-  background: var(--border);
+  background: var(--bg);
+  border: 1px solid var(--border);
   color: var(--text);
 }
 
-.label.warn { background: color-mix(in srgb, var(--warn) 25%, var(--panel)); color: var(--warn); }
+.label.warn { background: color-mix(in srgb, var(--warn) 18%, var(--panel)); color: var(--warn); border-color: transparent; }
 
-.status { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
+.status { font-size: 0.9rem; color: var(--muted); margin-top: 0.6rem; }
 .status.err { color: var(--err); }
 .status.ok { color: var(--ok); }
+
+.result-list { list-style: none; padding: 0; margin: 0.75rem 0; }
+.result-list li { padding: 0.35rem 0; border-bottom: 1px solid var(--border); font-size: 0.92rem; display: flex; justify-content: space-between; gap: 1rem; }
+.result-list li:last-child { border-bottom: none; }
+.result-list .k { color: var(--muted); }
 
 pre {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 0.75rem;
+  border-radius: 10px;
+  padding: 0.85rem;
   overflow-x: auto;
   font-size: 0.8rem;
 }
 
-table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
-th, td { text-align: left; padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--border); }
+table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--border); }
 
-img.plot { max-width: 100%; border-radius: 4px; border: 1px solid var(--border); }
+img.plot { max-width: 100%; border-radius: 10px; border: 1px solid var(--border); margin-top: 0.5rem; display: block; }
+
+.tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+.tools-grid a.tool-card {
+  display: block; text-decoration: none; color: inherit;
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 1.1rem; transition: transform 0.15s ease;
+}
+.tools-grid a.tool-card:hover { transform: translateY(-2px); }
+.tools-grid a.tool-card h3 { margin: 0 0 0.35rem; font-size: 1rem; }
+.tools-grid a.tool-card p { margin: 0; font-size: 0.85rem; color: var(--muted); }
+
+@media (max-width: 480px) {
+  main { padding: 1rem 1rem 2.5rem; }
+  .card { padding: 1.1rem; }
+}

@@ -50,12 +50,45 @@ const LWMOM = (() => {
     });
   }
 
+  // PHASE13C section 3 ("Words"): validation-label CODES stay in the raw job result (and in the
+  // `title` tooltip below, for anyone who wants them) but the screen shows a plain-English note --
+  // never a snake_case/internal identifier as the only visible text.
+  const LABEL_DESCRIPTIONS = {
+    LOCAL_PERIODICITY_APPROXIMATION: () => "Estimated from individual cells — confirm in HFSS before fabrication.",
+    FEED_REGION_MASKED: () => "Feed point excluded.",
+    MESH_NOT_CONVERGED: () => "Fast accuracy — switch to Accurate in Advanced for final designs.",
+    MESH_CONVERGED: () => "Accurate (mesh-converged).",
+    ZERO_THICKNESS_METAL_MODEL: () => "Modeled with zero-thickness metal (standard for this tool).",
+    REFERENCE_AMPLITUDE_ASSUMED_UNIFORM: () => "No magnitude file — uniform amplitude assumed.",
+    EXPERIMENTAL: () => "Experimental.",
+    CELLS_PER_FRINGE: (v) => `Cells are large for this wave (${v} per fringe). Try a smaller cell size for a cleaner pattern.`,
+    PHASE_COVERAGE_SHORTFALL: (v) => `Some cells can't reach the needed value (worst error ${v}).`,
+    REFERENCE_WAVE_RESCALED_TO_BETA_BAR: (v) => `Reference wave adjusted to the board's own wavenumber (${v}).`,
+    REFERENCE_WAVE_NOT_RESCALED: (v) => `Using the raw reference wave — possible error: ${v}.`,
+    REFERENCE_FIELD_FREQUENCY_MISMATCH: () => "The uploaded file's frequency doesn't match this design — check Step 1.",
+    STEEP_GRADIENT: () => "Phase changes sharply from cell to cell — pattern accuracy may suffer.",
+    HFSS_RESIDUAL_AT_RESONANCE: (v) => `Small unexplained gap vs HFSS near resonance (${v}).`,
+    DISPERSION_FROM_HFSS: () => "Dispersion data imported from HFSS.",
+    GEOMETRY_INVERSION_LOCKED: () => "Geometry inversion isn't available in this build.",
+    STEP_EXPORT_LOCKED: () => "STEP export isn't available in this build.",
+    HFSS_VALIDATED_OFF_RESONANCE: () => "Validated against HFSS off resonance.",
+  };
+
+  function describeLabel(raw) {
+    const m = /^([A-Z0-9_]+)(?:\((.*)\))?$/.exec(raw || "");
+    if (!m) return raw;
+    const [, code, param] = m;
+    const fn = LABEL_DESCRIPTIONS[code];
+    return fn ? fn(param) : raw;
+  }
+
   function renderLabels(container, labels, warnings) {
     container.innerHTML = "";
     (labels || []).forEach((l) => {
       const span = document.createElement("span");
       span.className = "label";
-      span.textContent = l;
+      span.textContent = describeLabel(l);
+      span.title = l;
       container.appendChild(span);
     });
     (warnings || []).forEach((w) => {
@@ -73,7 +106,7 @@ const LWMOM = (() => {
     });
   }
 
-  return { postJson, postForm, pollJob, renderLabels, markActiveNav };
+  return { postJson, postForm, pollJob, renderLabels, describeLabel, markActiveNav };
 })();
 
 document.addEventListener("DOMContentLoaded", LWMOM.markActiveNav);

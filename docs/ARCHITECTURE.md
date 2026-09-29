@@ -91,13 +91,23 @@ and would add a Node toolchain dependency to a Python-only project whose one dep
 "the developer's own machine." Pages that chain off a prior job (Pattern, Export) accept a
 `?job=<id>` query-string parameter that a completed design page links to directly.
 
-**Plots**: the original brief called for server-rendered matplotlib PNGs (`matplotlib` is already
-an `app`-extra dependency, pulled in transitively by `cad`). **This was not built.** Every page
-that shows per-point data (S-parameter sweeps, phase-vs-geometry tables, far-field patterns,
-HFSS-vs-MoM overlays) renders an HTML `<table>` instead — capped to a manageable number of rows
-(e.g. the HMSA page's 22,801-cell result shows only the first 20) rather than a chart. This is the
-single largest scope gap against the original brief; see `docs/phases/PHASE13_WEBAPP.md` "Known
-limitations."
+**Plots** (`src/app/plots.py`, matplotlib, `Agg` backend): the original brief called for
+server-rendered PNGs; Part 3 shipped without them (every page rendered an HTML `<table>` instead).
+Part 3C built this for the home-page wizard's own flow (reference phase map, layout/hologram
+preview, pattern u-v map + per-beam cuts) since that flow explicitly required it — the "More
+tools" pages (S-parameter sweeps, phase-vs-geometry tables, HFSS-vs-MoM overlays) still render
+tables, not revisited. Two delivery styles: a synchronous endpoint with no job id yet
+(`upload_field`) inlines the PNG as base64 in the JSON response; a job-backed endpoint writes the
+PNG into `job_output_dir(job.id)` and returns a normal `/api/files/{job_id}/{filename}` URL, the
+same mechanism STEP export already used. Every plot call is wrapped best-effort — a matplotlib
+failure never fails the real numeric result the user is waiting on.
+
+**The 3-step wizard** (`index.html`, the home page as of Part 3C) is a single-page flow across
+three `<section>` panels toggled by JS, not three separate HTML files — it calls the same
+`/api/hmsa/*`, `/api/pattern/*`, `/api/export/*` endpoints the old standalone `hmsa.html` (removed)
+and the "More tools" pages use. `POST /api/hmsa/ensure_library` is new: it hides the Library page
+from this flow entirely by building (or reusing, via both the job cache and the persisted
+`library_registry`) a small square-patch library for the chosen board/frequency automatically.
 
 ## Diagnostics, errors, labels, manifests (Part 2, `src/logging_setup.py`/`errors.py`/`labels.py`/`manifest.py`)
 
@@ -125,8 +135,9 @@ limitations."
 
 ## Config-hash caching in practice
 
-`unit_cell.py`'s solve endpoint is the one currently using `cache_key=config_hash(...)`; other
-routers (library sweep, reflectarray design, HMSA synthesis, export) do not cache by config —
+`unit_cell.py`'s solve endpoint and `hmsa.py`'s `ensure_library` endpoint use
+`cache_key=config_hash(...)`; other routers (library sweep, reflectarray design, HMSA synthesis,
+export) do not cache by config —
 re-submitting an identical reflectarray design, for instance, re-runs it. Caching wasn't extended
 to every endpoint because most of them are already fast relative to a unit-cell solve (a
 reflectarray design over a small library is sub-second) or explicitly write files as a side effect

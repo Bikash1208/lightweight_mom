@@ -68,7 +68,9 @@ into `diagnostics.py` is wired for the Unit Cell page only; `RunManifest`/
 Eight pages (`docs/USER_GUIDE.md` has the full per-page walkthrough): Unit cell, Library,
 Reflectarray designer, Pattern prediction, Verify, Export, HFSS compare, HMSA designer. FastAPI
 backend + in-process job queue + static HTML/vanilla-JS frontend, no build step
-(`docs/ARCHITECTURE.md`).
+(`docs/ARCHITECTURE.md`). **Superseded by Part 3B/3C below**: the flat page list is now a 3-step
+HMSA wizard plus a "More tools" page for the rest; this section (and the numbers below) describes
+Part 3 as originally delivered and is kept as the historical record.
 
 ### Verified against the app (not just unit tests)
 
@@ -100,22 +102,132 @@ reporting the masked grid index and attaching `FEED_REGION_MASKED` — not a sil
 
 - **No server-rendered plots.** The brief specified matplotlib PNGs served per-job; every page
   instead shows an HTML table (capped for large results). The single largest scope gap against
-  the brief — see `docs/ARCHITECTURE.md`/`docs/USER_GUIDE.md` "Known limitations."
+  the brief at the time — **since closed for the 3-step wizard's own flow, not for the "More
+  tools" pages**, by Part 3B/3C below (`src/app/plots.py`).
 - **Richardson mesh convergence is opt-in (`mesh_mode`), not the Unit Cell page's default** — the
   brief said "make it the app default for single-cell/library solves." A `richardson` solve costs
   several single solves (the `FAST_CELL_COUNTS` family), so defaulting to it would make the most
   common interactive action on the busiest page noticeably slower; `fast` (a single solve, clearly
   labelled `MESH_NOT_CONVERGED`) is the default instead, `richardson` one click away.
 - **No run manifest / diagnostic-bundle download** (Part 2 built it, Part 3 never attached it to a
-  job — see Part 2 above).
-- **Export does not accept an HMSA design**, only a Reflectarray one (shape mismatch between
-  `GeometryCell` and `CellAssignment` — `docs/USER_GUIDE.md` "Known limitations").
+  job — see Part 2 above). Still true after Part 3B/3C.
+- **Export does not accept an HMSA design**, only a Reflectarray one — **fixed in Part 3B (B2)
+  below**; both now chain into Export the same way.
 - **`UniversalDatabase` is not wired into the app's library registry** (a separate, lighter JSON
   registry is used instead — `docs/ARCHITECTURE.md` "Storage").
 - **App-level end-to-end smoke tests exist as real `pytest` integration tests** (a small real
   library → reflectarray design → pattern prediction → export chain; a real `.fld` import → a
   real library → Formulation B synthesis), matching the brief's two required smoke tests, but they
   run through `fastapi.testclient.TestClient`, not a headless browser (none was available).
+
+## Part 3B/3C — live-review fixes and the 3-step redesign
+
+A live browser review of the running Part 3 app (`docs/briefs/PHASE13B_UI_REVIEW_FIXES.md`) found
+several real bugs; a follow-up brief (`docs/briefs/PHASE13C_REDESIGN.md`) then asked for the app to
+be rebuilt around one 3-step HMSA flow, superseding Part 3's flat 8-page layout and absorbing the
+review's must-fix items. Both are implemented; commit history has the full per-item account.
+
+**13B fixes (A1–A10, B2–B4), all landed:**
+- **A1** Richardson mode now displays the extrapolated S11_xx (not the finest fixed-mesh solve),
+  with an error bar defined as the extrapolation-correction size (`|v_inf - finest|`), not
+  `curve_fit`'s covariance (not credible from a 4-point fit).
+- **A2** Hologram synthesis resamples onto the CHOSEN period's cell-centre grid (complex
+  interpolation) instead of running one "cell" per raw imported-field sample.
+- **A3** An out-of-library-frequency request now raises `LIBRARY_FREQUENCY_UNAVAILABLE` naming
+  what IS available; the upload's own frequency is persisted and compared against the synthesis
+  frequency, labelling (`REFERENCE_FIELD_FREQUENCY_MISMATCH`) rather than silently diverging.
+- **A4** "Reachable" now requires the phase error to be within a threshold
+  (`reflectarray.designer.PHASE_ERROR_UNREACHABLE_THRESHOLD_DEG`, a documented policy default, not
+  a measured limit), with mean/RMS/max error stats and a `PHASE_COVERAGE_SHORTFALL` label.
+- **A5** An HMSA cell with no achieved phase now refuses (`phase_unreachable`) instead of a
+  placeholder `1+0j` aperture entry.
+- **A6** The Library page's grounded "Resonant?" column was always false: the classifier looked for
+  a magnitude PEAK, but a low-loss grounded cell's own resonance is a phase crossing through
+  ±180° at essentially constant |S11| (measured: 0.9957–0.9959 across a 1 GHz band at the project's
+  own G4 design point). `library_sweep.detect_resonance_phase_crossing` fixes this for `backing=
+  "pec"` cells only, leaving the ungrounded classifier untouched.
+- **A7** TM0 check: could not reproduce the reported `tm0_comparison: null` via either
+  `TestClient` or a live `uvicorn` process with the same inputs the review describes — the backend
+  path was already correct when given all three of eps_r/thickness/frequency. Re-verified as part
+  of the new Step 1 wizard flow instead of chased further as a standalone bug.
+- **A8** Export's `n_cells` was actually N (the side length) — an N×N design reported "N cells".
+  Split into `n_cells_per_side`/`total_cells` everywhere.
+- **A9** `peak_memory_kb` read ~1000× too large on macOS: `ru_maxrss`'s unit is
+  POSIX-unspecified (Linux: kB, macOS/BSD: bytes). `diagnostics._ru_maxrss_kb` normalizes per
+  `sys.platform`.
+- **A10** Verify page: the predicted intended-order fraction is now returned explicitly
+  (`VerificationResult.predicted_intended_fraction`) instead of a broken ternary leaving it blank;
+  the specular/intended order is shown alongside the spurious orders; "N cells (aperture side
+  length)" reworded to "N (cells per 2π gradient period)".
+- **B2** HMSA Formulation B results carry a reflectarray-shaped `assignments` list (with both L_mm
+  and W_mm from the library match, previously only L was kept), chaining into Export exactly like a
+  reflectarray design.
+- **B3** Reference-wave rescaling to β̄ (the guided wavenumber implied by the hologram's own mean
+  surface reactance) is on by default for Formulation A, applying an additive phase correction that
+  preserves the imported field's own measured detail; opting out reports the accumulated-error
+  estimate instead of staying silent.
+- **B4** Formulation A now runs on a phase-only field with an explicit, labelled uniform-amplitude
+  assumption (every real reference-field export this project has is phase-only) instead of
+  refusing outright; Formulation B now also carries `EXPERIMENTAL` (a reflectarray-style control
+  variable standing in for a genuinely different, surface-wave one).
+
+**A deeper bug found while building 13C's own end-to-end test, not on the 13B list:** Formulation
+B's aperture field for Pattern prediction was built as `exp(j*achieved_modulation_phase)` alone.
+The actual radiated field of a modulated hologram is `E_ref(x,y) * Modulation(x,y)` — designed so
+the reference wave's own phase cancels back out, leaving the pure desired-beam phase. Omitting that
+multiplication silently propagated the reference wave's own phase structure into the predicted
+aperture instead. Every existing hologram test happened to use a uniform-zero reference phase, the
+one case where the bug is invisible (multiplying by 1 changes nothing) — an idealized
+(zero-quantization) case with the real example `.fld` file and a 20°/0° object beam predicted a
+peak at 51°/130° with the old construction, 21°/0° with the fix. `hologram.hmsa_synthesis.
+synthesize_formulation_b` now computes and returns the correct field on `HmsaDesign.aperture_field`.
+
+**13C redesign:** the app's home page is now a 3-step wizard (Reference wave → Beams & board →
+Pattern & export), replacing the flat page list; everything else (Unit cell, Library, Reflectarray,
+Pattern, Export, Verify, HFSS compare) moved to a "More tools" page, one click away, unchanged
+otherwise. New pieces the wizard needed that didn't exist in Part 3:
+- **Server-rendered PNG plots** (`src/app/plots.py`, matplotlib — closing Part 3's largest
+  documented scope gap, at least for the wizard's own flow): the Step 1 reference phase map
+  (inlined as base64 — no job id exists yet for a synchronous upload), a Step 3 layout/hologram
+  preview, a pattern u-v map, and one principal cut per requested beam. "More tools" pages still
+  show tables, not plots — not revisited.
+- **`POST /api/hmsa/ensure_library`**: the wizard never sends the user to a separate Library page.
+  Builds (or reuses, both across requests via the job cache and across app restarts via the
+  persisted library registry) a small square-patch (L=W only) library for the chosen board and
+  frequency automatically. Uses a fixed 6-point L family and a fixed 32-cell mesh — not an
+  alignment search (`discretization.smallest_aligned_cells` could need an unboundedly large mesh
+  for an arbitrary period/L combination) and not a resonance search. **Known consequence, measured
+  while building the walkthrough test**: for a board/frequency combination whose resonance falls
+  between two of those 6 points, phase coverage can be poor (the app's own
+  `PHASE_COVERAGE_SHORTFALL` label fires) — e.g. an 8 mm period at 10.54 GHz showed mean/RMS/max
+  phase error 33°/41°/82° with 686 of 1369 cells unreachable in one run. This is reported honestly
+  (the label is the point), not hidden, but a denser or resonance-aware auto-built library would
+  give real designs a better starting point — a documented follow-up, not attempted here.
+- **`POST /api/export/package`**: bundles a completed export job's STEP/layout/README, an optional
+  pattern job's plots, and a `project_record.json` (the export/pattern RESULTS, not the full
+  original request bodies — the app does not currently persist those anywhere a later request
+  could read back, so "reload later" means re-inspecting the numeric outcome, not resuming an
+  edit session) into one downloadable zip.
+- **A label→plain-English wording layer** (`app.js`'s `LABEL_DESCRIPTIONS`/`describeLabel`): the
+  validation-label vocabulary stays machine-readable in the raw job result and in each label
+  pill's tooltip; the visible pill text is a plain sentence, per 13C's own code→text table.
+- **Apple-like light/dark theme** (`style.css`, `prefers-color-scheme` + a `data-theme` override
+  hook), shared by every page so "More tools" kept its existing look, restyled.
+
+**New deferrals/simplifications this introduced (beyond the ones already listed below):**
+- **Aperture size is shown read-only**, pre-filled from the uploaded field's own extent — 13C asked
+  for it "editable," but no cropping/resizing logic exists for the reference field or the synthesis
+  grid; claiming it was freely editable would have been a UI that didn't do what it said.
+- **No fast/accurate (mesh-extrapolated) toggle for the auto-built library** — every auto-built cell
+  uses the same fixed mesh `ensure_library` always has; Richardson-extrapolated library cells would
+  need ~4x the solves per L value, not implemented.
+- **DXF export was never built** (`ezdxf` is not a project dependency, despite an old docstring
+  claiming otherwise, now corrected) — STEP + CSV/JSON layout only.
+- **Screenshots of each step (light/dark) were not captured** — 13C's "Tests & done-when" asks for
+  them saved to `docs/screenshots/`; no browser or screenshot tool was available in this session
+  either (same constraint Part 3 itself recorded — see "Verified against the app" above). The
+  `curl`/`urllib`-driven live-server methodology substituted for it, as it did in Part 3, and caught
+  the aperture-field bug above.
 
 ## Validation labels actually produced by the app
 
@@ -130,3 +242,11 @@ parameterization machinery): plain `MESH_CONVERGED`/`MESH_NOT_CONVERGED` strings
 solve depending on `mesh_mode` and (for `richardson`) the Richardson fit's own status. The HMSA
 page additionally emits `CELLS_PER_FRINGE(X.X)` (a locally-formatted string, mirroring
 `labels.steep_gradient`'s pattern) whenever `fields.reference_field_grid.aliasing_warning` fires.
+
+**Added in Part 3B/3C** (`src/labels.py`): `reference_wave_rescaled_to_beta_bar(beta_bar)` /
+`reference_wave_not_rescaled(worst_case_error_deg)` (B3), `reference_field_frequency_mismatch
+(upload_hz, synthesis_hz)` (A3), and a redefinition of `phase_coverage_shortfall` (A4 — now the
+worst per-cell phase error among unreachable cells, not an unused achieved-vs-target-span
+metric). The wizard's wording layer (`app.js`'s `LABEL_DESCRIPTIONS`) maps every label above,
+including these, to the plain-English text 13C's own table asks for; unrecognised codes fall back
+to showing the raw code rather than hiding it.

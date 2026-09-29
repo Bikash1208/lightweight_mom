@@ -13,9 +13,13 @@ geometry → periodic MoM (Z I = V) → surface current → fields → S11/S21 �
 
 Status: Phases 1–11, 12A, 12B, 12C, 12D and 13 done. Phase 13 curated the repo to production-push grade (git,
 `pyproject.toml`, `docs/` layout, logging/diagnostics/error-taxonomy/validation-labels/run-manifest, ruff, CI) and
-built a local web app (FastAPI backend, static HTML/vanilla-JS frontend — tables, not the originally-planned
-server-rendered plots, a documented scope gap, see `docs/phases/PHASE13_WEBAPP.md` "Deviations from the brief") that
-produces reflectarray/HMSA designs NOW, labelled honestly, rather than waiting on the open questions below.
+built a local web app (FastAPI backend, static HTML/vanilla-JS frontend) that produces reflectarray/HMSA designs NOW,
+labelled honestly, rather than waiting on the open questions below. A live UI review (`docs/briefs/
+PHASE13B_UI_REVIEW_FIXES.md`) then a redesign brief (`docs/briefs/PHASE13C_REDESIGN.md`) rebuilt the app around one
+3-step HMSA wizard (home page) plus a "More tools" page for the rest, added server-rendered PNG plots for the
+wizard's own flow (still tables elsewhere — a documented, narrower scope gap now, see
+`docs/phases/PHASE13_WEBAPP.md` "Part 3B/3C"), and fixed several correctness bugs the review found, including one
+real physics bug (Formulation B's predicted aperture field was missing the reference-wave phasor).
 Holographic synthesis, geometry inversion and full-array STEP export remain recorded as **LOCKED** scientific
 findings (see `README.md` "Before Phase 13's app is trusted for a real design → still open") even though the app now
 produces designs/exports anyway per the user's explicit Phase 13 decision — every such output carries these labels.

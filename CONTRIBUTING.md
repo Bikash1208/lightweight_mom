@@ -37,6 +37,9 @@ diagnostic bundle) and what's excluded from git / how to regenerate or obtain it
 
 ## Reporting a bug
 
-Use the app's "download diagnostic bundle" action (manifest + logs + inputs) if the bug happened
-in the web app -- it captures everything needed to reproduce without you needing to describe the
-exact steps from memory.
+If the bug happened in the web app, include the failing request's job ID (shown in the status
+line/URL) and, if relevant, the log file at `~/.lwmom/logs/lwmom.log` (JSON lines, filterable by
+that job ID via `run_id`). `src/manifest.py`'s `RunManifest`/`build_diagnostic_bundle` exist and
+are tested for exactly this purpose, but no page currently attaches a manifest to its jobs or
+exposes a "download diagnostic bundle" action yet -- see `docs/ARCHITECTURE.md`/
+`docs/DEVELOPING.md` "Reading a diagnostic bundle" for wiring it up.

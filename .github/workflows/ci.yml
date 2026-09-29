@@ -23,7 +23,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -e ".[dev]"
+      - run: pip install -e ".[dev,app]"
       - run: ruff check src tests examples
       - run: ruff format --check src tests examples
       - run: pytest -m "not slow" -q
@@ -36,5 +36,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -e ".[dev,cad]"
+      - run: pip install -e ".[dev,app,cad]"
       - run: pytest -q

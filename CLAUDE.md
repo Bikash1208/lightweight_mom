@@ -13,11 +13,12 @@ geometry → periodic MoM (Z I = V) → surface current → fields → S11/S21 �
 
 Status: Phases 1–11, 12A, 12B, 12C, 12D and 13 done. Phase 13 curated the repo to production-push grade (git,
 `pyproject.toml`, `docs/` layout, logging/diagnostics/error-taxonomy/validation-labels/run-manifest, ruff, CI) and
-built a local web app (FastAPI + server-rendered plots, see `docs/ARCHITECTURE.md`) that produces reflectarray/HMSA
-designs NOW, labelled honestly, rather than waiting on the open questions below. Holographic synthesis, geometry
-inversion and full-array STEP export remain recorded as **LOCKED** scientific findings (see `README.md` "Before
-Phase 13's app is trusted for a real design → still open") even though the app now produces designs/exports anyway
-per the user's explicit Phase 13 decision — every such output carries these labels.
+built a local web app (FastAPI backend, static HTML/vanilla-JS frontend — tables, not the originally-planned
+server-rendered plots, a documented scope gap, see `docs/phases/PHASE13_WEBAPP.md` "Deviations from the brief") that
+produces reflectarray/HMSA designs NOW, labelled honestly, rather than waiting on the open questions below.
+Holographic synthesis, geometry inversion and full-array STEP export remain recorded as **LOCKED** scientific
+findings (see `README.md` "Before Phase 13's app is trusted for a real design → still open") even though the app now
+produces designs/exports anyway per the user's explicit Phase 13 decision — every such output carries these labels.
 
 ## Commands
 
@@ -77,8 +78,10 @@ make app                                                              # starts t
   earlier unmodified. Parts 2/3's own new capabilities live in their own top-level packages, not under `phase13/`:
   `src/logging_setup.py`, `src/diagnostics.py`, `src/errors.py`, `src/labels.py`, `src/manifest.py`, `src/fields/`
   (HFSS field-calculator `.fld` import), `src/dispersion/` (surface-wave dispersion library), `src/hologram/`,
-  `src/reflectarray/`, `src/pattern/` (app-facing synthesis/prediction services), `src/app/` (the FastAPI backend
-  and static frontend).
+  `src/reflectarray/`, `src/pattern/`, `src/verify/`, `src/export/`, `src/hfss_compare/` (app-facing
+  synthesis/prediction/verification/export services), `src/library_sweep.py` (generalizes `library_builder.py`'s
+  sweep orchestration to an arbitrary, including grounded, config), `src/app/` (the FastAPI backend and static
+  frontend — see `docs/ARCHITECTURE.md`).
 - `examples/` — CLIs (`run_phaseN_*.py`) that write to `results/<phase_name>/`.
 - `results/` — generated outputs (CSV/JSON/plots/reports). Treat existing library data as read-only benchmarks.
   Some large/regenerable subfolders and the real HFSS `.s36p`/`.s4p` exports are `.gitignore`d — see

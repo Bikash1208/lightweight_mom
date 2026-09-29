@@ -5,6 +5,10 @@ chaining off a completed reflectarray (or HMSA) design job's cell assignments. T
 `export_array`'s own module docstring states (square N x N grid).
 """
 
+import json
+import zipfile
+from pathlib import Path
+
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
@@ -12,6 +16,7 @@ from ...errors import config_invalid
 from ...export.array_export import export_array
 from ...materials import Metal, Substrate
 from ..jobs import JobStatus
+from ..jsonutil import to_jsonable
 from ..storage import job_output_dir
 
 router = APIRouter(prefix="/api/export", tags=["export"])
@@ -52,8 +57,6 @@ def _run_export_job(job, source_result, params):
     def _download(path):
         if path is None:
             return None
-        from pathlib import Path
-
         return f"/api/files/{job.id}/{Path(path).name}"
 
     return {
@@ -79,4 +82,73 @@ def export_reflectarray(body: ExportRequest, request: Request):
         raise HTTPException(422, f"source job {body.source_job_id!r} did not produce cell assignments")
 
     job = request.app.state.jobs.submit("array_export", _run_export_job, source.result, body.model_dump())
+    return job.to_dict()
+
+
+def _download_url_to_path(download_url):
+    """`download_url`s this app hands out are always `/api/files/{job_id}/{filename}` -- resolve
+    straight back to the file `files.py`'s route would serve, without an HTTP round-trip."""
+    if not download_url:
+        return None
+    job_id, filename = download_url.rsplit("/", 2)[-2:]
+    return job_output_dir(job_id) / filename
+
+
+class ExportPackageRequest(BaseModel):
+    export_job_id: str
+    pattern_job_id: "str | None" = None  # optional: bundles the pattern PNGs too
+
+
+def _run_package_job(job, export_result, pattern_result):
+    """13C Step 3: "one 'Download package' (zip) ... the project record (inputs + results, to
+    reload later)". The project record here captures every RESULT value already computed
+    (export summary, pattern summary/plots) -- not the full original request bodies (beam list,
+    board substrate, ...), which the app does not currently persist anywhere the export job could
+    read back; a documented simplification, not a silent one (docs/phases/PHASE13_WEBAPP.md)."""
+    out_dir = job_output_dir(job.id)
+    zip_path = out_dir / "package.zip"
+    record = {"export": to_jsonable(export_result), "pattern": to_jsonable(pattern_result)}
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        for key, arcname in (
+            ("step_download_url", "array.step"),
+            ("layout_csv_download_url", "layout.csv"),
+            ("layout_json_download_url", "layout.json"),
+            ("readme_download_url", "HFSS_README.md"),
+        ):
+            src = _download_url_to_path(export_result.get(key))
+            if src is not None and src.is_file():
+                zf.write(src, arcname)
+        if pattern_result is not None:
+            uv_src = _download_url_to_path(pattern_result.get("pattern_uv_png_url"))
+            if uv_src is not None and uv_src.is_file():
+                zf.write(uv_src, "pattern_uv.png")
+            for i, cut_url in enumerate(pattern_result.get("pattern_cut_png_urls") or ()):
+                cut_src = _download_url_to_path(cut_url)
+                if cut_src is not None and cut_src.is_file():
+                    zf.write(cut_src, f"pattern_cut_{i}.png")
+        layout_src = _download_url_to_path(export_result.get("layout_png_url"))
+        if layout_src is not None and layout_src.is_file():
+            zf.write(layout_src, "layout.png")
+        zf.writestr("project_record.json", json.dumps(record, indent=2))
+    return {"download_url": f"/api/files/{job.id}/{zip_path.name}"}
+
+
+@router.post("/package")
+def export_package(body: ExportPackageRequest, request: Request):
+    export_job = request.app.state.jobs.get(body.export_job_id)
+    if export_job is None:
+        raise HTTPException(404, f"job {body.export_job_id!r} not found")
+    if export_job.status != JobStatus.DONE:
+        raise HTTPException(409, f"export job {body.export_job_id!r} is {export_job.status.value}, not done")
+
+    pattern_result = None
+    if body.pattern_job_id is not None:
+        pattern_job = request.app.state.jobs.get(body.pattern_job_id)
+        if pattern_job is None:
+            raise HTTPException(404, f"job {body.pattern_job_id!r} not found")
+        if pattern_job.status != JobStatus.DONE:
+            raise HTTPException(409, f"pattern job {body.pattern_job_id!r} is {pattern_job.status.value}, not done")
+        pattern_result = pattern_job.result
+
+    job = request.app.state.jobs.submit("export_package", _run_package_job, export_job.result, pattern_result)
     return job.to_dict()

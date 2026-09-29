@@ -2,8 +2,11 @@
 queue exactly as the app's own pages do (a small real grounded library, a small real array).
 Needs the optional 'app'/'cad' extras; skipped entirely otherwise."""
 
+import io
+import json
 import time
 import uuid
+import zipfile
 
 import pytest
 
@@ -176,3 +179,51 @@ def test_export_produces_a_real_step_file(client, grounded_library):
     csv_resp = client.get(result["layout_csv_download_url"])
     assert csv_resp.status_code == 200
     assert b"i,j,length_m,width_m" in csv_resp.content
+
+
+def test_export_package_bundles_a_real_downloadable_zip(client, grounded_library):
+    """13C Step 3: one "Download package" (zip) with the STEP/layout/README and the project
+    record, optionally including the pattern plots too."""
+    design_id = _design_job_id(client, grounded_library)
+    export_resp = client.post(
+        "/api/export/array",
+        json={
+            "source_job_id": design_id,
+            "period_mm": 8.0,
+            "eps_r": 2.2,
+            "tan_delta": 0.0009,
+            "thickness_mm": 1.575,
+            "include_step": False,
+        },
+    )
+    export_job_id = export_resp.json()["id"]
+    export_job = _wait_for_job(client, export_resp.json()["id"], timeout=60.0)
+    assert export_job["status"] == "done", export_job
+
+    pattern_resp = client.post(
+        "/api/pattern/predict",
+        json={"source_job_id": design_id, "frequency_hz": 12.5e9, "n_theta": 15, "n_phi": 9},
+    )
+    pattern_job_id = pattern_resp.json()["id"]
+    pattern_job = _wait_for_job(client, pattern_resp.json()["id"], timeout=60.0)
+    assert pattern_job["status"] == "done", pattern_job
+
+    pkg_resp = client.post(
+        "/api/export/package", json={"export_job_id": export_job_id, "pattern_job_id": pattern_job_id}
+    )
+    pkg_job = _wait_for_job(client, pkg_resp.json()["id"], timeout=30.0)
+    assert pkg_job["status"] == "done", pkg_job
+    download_url = pkg_job["result"]["download_url"]
+
+    zip_resp = client.get(download_url)
+    assert zip_resp.status_code == 200
+
+    with zipfile.ZipFile(io.BytesIO(zip_resp.content)) as zf:
+        names = set(zf.namelist())
+        assert "layout.csv" in names
+        assert "layout.json" in names
+        assert "HFSS_README.md" in names
+        assert "project_record.json" in names
+        assert "pattern_uv.png" in names
+        record = json.loads(zf.read("project_record.json"))
+        assert record["export"]["total_cells"] == 9

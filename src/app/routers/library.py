@@ -10,8 +10,13 @@ from pydantic import BaseModel
 
 from ...config import ConfigError, config_from_dict
 from ...errors import config_invalid
-from ...library_classifier import classify_cell
-from ...library_sweep import SweepSpec, extract_design_frequency, run_custom_sweep, write_app_library_json
+from ...library_sweep import (
+    SweepSpec,
+    classify_cell_backing_aware,
+    extract_design_frequency,
+    run_custom_sweep,
+    write_app_library_json,
+)
 from ...phase_extraction import phase_coverage, phase_vs_geometry_table
 from ...unit_cell_library import UnitCellLibrary
 from .. import library_registry
@@ -114,7 +119,9 @@ def _run_sweep_job(job, library_id, base_config_dict, spec_kwargs):
     table = phase_vs_geometry_table(design_rows)
     coverage = phase_coverage(table) if table else None
     by_id = {c.cell_id: c for c in result.database.cells}
-    classifications = [classify_cell(by_id[row.cell_id], result.database, row) for row in design_rows]
+    classifications = [
+        classify_cell_backing_aware(by_id[row.cell_id], result.database, row, unit_cell) for row in design_rows
+    ]
 
     return {
         "library_id": library_id,

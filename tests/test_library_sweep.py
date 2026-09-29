@@ -4,10 +4,18 @@ no field for at all (CLAUDE.md: "Only one library is actually built, still ungro
 
 import json
 
+import numpy as np
 import pytest
 
 from src.config import config_from_dict
-from src.library_sweep import SweepSpec, extract_design_frequency, run_custom_sweep, write_app_library_json
+from src.library_sweep import (
+    SweepSpec,
+    classify_cell_backing_aware,
+    detect_resonance_phase_crossing,
+    extract_design_frequency,
+    run_custom_sweep,
+    write_app_library_json,
+)
 from src.unit_cell_library import UnitCellLibrary
 
 _SUBSTRATE = {"name": "Rogers RT/Duroid 5880", "eps_r": 2.2, "tan_delta": 0.0009, "thickness": 1.575e-3}
@@ -110,3 +118,63 @@ def test_write_app_library_json_grounded_cell_has_no_s21_key(tmp_path):
         assert "S11" in cell
         assert "S21" not in cell
         assert cell["backing"] == "pec"
+
+
+# ------------------------------------------------------------- PHASE13B A6: grounded resonance
+
+
+def test_detect_resonance_phase_crossing_finds_a_synthetic_branch_cut_jump():
+    """A grounded cell's resonance is the reflection phase crossing +-180deg, essentially at
+    constant |S11| -- `library_classifier.detect_resonance`'s magnitude-peak criterion cannot see
+    this at all."""
+    freqs = np.linspace(12.0e9, 13.0e9, 5)
+    phase = np.array([-140.0, -160.0, -178.0, 175.0, 155.0])  # wraps between index 2 and 3
+    result = detect_resonance_phase_crossing(freqs, phase)
+    assert result.is_resonant is True
+    assert result.resonance_frequency_hz == pytest.approx(0.5 * (freqs[2] + freqs[3]))
+
+
+def test_detect_resonance_phase_crossing_reports_none_found_when_phase_never_wraps():
+    freqs = np.linspace(12.0e9, 13.0e9, 5)
+    phase = np.array([-140.0, -145.0, -150.0, -155.0, -160.0])  # smooth drift, no branch-cut jump
+    result = detect_resonance_phase_crossing(freqs, phase)
+    assert result.is_resonant is False
+
+
+@pytest.mark.slow
+def test_classify_cell_backing_aware_finds_the_grounded_design_point_resonance():
+    """L=W=6.0mm, 8mm period, 12.5 GHz is this project's own recorded grounded resonance
+    (PHASE12D_ADDENDUM.md/phase13/convergence.py); classify_cell_backing_aware must report it as
+    resonant, unlike the ungrounded-tuned `classify_cell` (PHASE13B A6, live review). Real-measured
+    sweep confirms |S11_xx| stays within 0.9957-0.9959 across the whole band while the phase falls
+    smoothly through +-180deg between 12.6 and 12.7 GHz -- a magnitude-based criterion cannot see
+    this design point's resonance at any mesh/frequency resolution."""
+    cfg = config_from_dict(
+        {
+            "period_x": 8.0e-3,
+            "period_y": 8.0e-3,
+            "substrate": {**_SUBSTRATE, "backing": "pec"},
+            "geometry": {"type": "rectangle", "length": 6.0e-3, "width": 6.0e-3},
+            "excitation": {"frequency": 12.5e9},
+            "mesh": {"cells_x": 40, "cells_y": 40, "floquet_order": 40},
+            "reference_planes": {"top_air_thickness": 5.0e-3},
+        }
+    )
+    spec = SweepSpec(
+        f_min_hz=12.0e9,
+        f_max_hz=13.0e9,
+        f_step_hz=0.1e9,
+        f_design_hz=12.5e9,
+        l_values_mm=(6.0,),
+        w_values_mm=(6.0,),
+    )
+    result = run_custom_sweep(cfg, spec, out_dir=None)
+    rows = extract_design_frequency(result.database, spec)
+    cell = result.database.cells[0]
+
+    from src.library_classifier import classify_cell
+
+    old_classification = classify_cell(cell, result.database, rows[0])
+    new_classification = classify_cell_backing_aware(cell, result.database, rows[0], cfg.unit_cell)
+    assert old_classification.resonance.is_resonant is False  # the pre-existing bug, still true
+    assert new_classification.resonance.is_resonant is True

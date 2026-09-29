@@ -15,11 +15,13 @@ module checks `record.port_topology` first instead.
 """
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import numpy as np
 
+from .library_classifier import ResonanceResult, classify_cell
+from .library_schema import RESONANCE_MIN_PROMINENCE
 from .runner import run_sweep
 from .sweep import FrequencyGrid, ParameterAxis, SweepDefinition, ValidationPolicy
 from .validation_export import _db
@@ -170,6 +172,64 @@ def extract_design_frequency(database, spec: SweepSpec):
                 )
             )
     return rows
+
+
+RESONANCE_PHASE_JUMP_MIN_DEG = 180.0  # a jump of exactly this much is an exact +-180deg crossing
+
+
+def detect_resonance_phase_crossing(frequencies_hz, phase_deg, min_jump_deg=RESONANCE_PHASE_JUMP_MIN_DEG):
+    """PHASE13B A6: `library_classifier.detect_resonance` looks for a magnitude PEAK -- correct
+    for the ungrounded library it was written for, but measured on this project's own grounded
+    design point (L=W=6.0mm, 8mm period, 12.5 GHz), |S11_xx| stays within 0.9957-0.9959 across
+    12.0-13.0 GHz (prominence ~2e-4, far below `RESONANCE_MIN_PROMINENCE`): a low-loss grounded
+    reflector barely absorbs anything even at resonance, so a magnitude-dip criterion can
+    structurally never cross that threshold either -- it is not just "the wrong sign", it is the
+    wrong physical quantity. The standard resonance signature for a low-loss reflective element
+    (patch/reflectarray design curves, e.g. Huang & Encinar, "Reflectarray Antennas") is instead
+    the reflection PHASE passing through +-180deg -- and that is exactly what the same measured
+    sweep shows (-134.8deg at 12.0 GHz falling smoothly through -175.4deg at 12.6 GHz to +178.1deg
+    at 12.7 GHz: a genuine crossing of the (-180,180] branch cut). Detected directly off the raw
+    (wrapped) phase sequence: a jump of >= `min_jump_deg` between two adjacent frequency samples
+    means the true continuous phase crossed an odd multiple of 180deg somewhere between them."""
+    frequencies_hz = np.asarray(frequencies_hz, dtype=float)
+    phase_deg = np.asarray(phase_deg, dtype=float)
+    criterion = (
+        f"the raw ((-180,180]) reflection phase jumps by >= {min_jump_deg:g}deg between two "
+        f"adjacent frequency samples -- the continuous phase crossed +-180deg between them (the "
+        f"standard low-loss reflective-element resonance signature; no magnitude dip required, "
+        f"unlike the ungrounded library's detect_resonance)"
+    )
+    if phase_deg.size < 2:
+        return ResonanceResult(False, None, None, None, criterion)
+
+    jumps = np.abs(np.diff(phase_deg))
+    crossing_indices = np.flatnonzero(jumps >= min_jump_deg)
+    if crossing_indices.size == 0:
+        return ResonanceResult(False, None, None, None, criterion)
+
+    i = int(crossing_indices[np.argmax(jumps[crossing_indices])])
+    return ResonanceResult(
+        is_resonant=True,
+        resonance_frequency_hz=float(0.5 * (frequencies_hz[i] + frequencies_hz[i + 1])),
+        resonance_metric=float(jumps[i]),
+        peak_magnitude=None,  # not a magnitude criterion -- see docstring
+        criterion=criterion,
+    )
+
+
+def classify_cell_backing_aware(cell_entry, database, design_row, unit_cell, min_prominence=RESONANCE_MIN_PROMINENCE):
+    """Wraps `library_classifier.classify_cell` unmodified for an ungrounded cell; for a grounded
+    one (PHASE13B A6), re-runs resonance detection with `detect_resonance_phase_crossing` instead
+    -- every other flag (phase usability, grating risk) is backing-agnostic and left as
+    `classify_cell` computed it."""
+    classification = classify_cell(cell_entry, database, design_row, min_prominence)
+    if unit_cell.backing != "pec" or classification.solver_status != "OK":
+        return classification
+    records = sorted(database.records_of(cell_entry.index), key=lambda r: r.frequency_index)
+    freqs = np.array([r.frequency for r in records])
+    phase = np.array([r.phase_deg("S11_xx") for r in records])
+    resonance = detect_resonance_phase_crossing(freqs, phase)
+    return replace(classification, resonance=resonance)
 
 
 def write_app_library_json(database, path):

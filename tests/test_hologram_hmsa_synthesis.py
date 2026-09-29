@@ -42,6 +42,46 @@ def test_formulation_b_phase_only_field_end_to_end():
     assert all(c.reachable for c in design.cells)
 
 
+def test_formulation_b_aperture_field_reconstructs_the_object_beam_when_unquantized():
+    """Regression test: an earlier version of this code built the Pattern-prediction aperture
+    field as `exp(j*achieved_modulation_phase)` alone, silently dropping the reference wave's own
+    phase -- correct only for the special case of a UNIFORM-ZERO reference (every other test in
+    this file happens to use exactly that degenerate case, which is why none of them caught it).
+    With a genuinely non-uniform reference phase and a library fine enough to match the required
+    modulation almost exactly (near-zero quantization error), the RADIATED aperture field
+    (design.aperture_field = E_ref * modulation) must reconstruct the pure object-beam phase
+    pattern -- exp(j*obj_phase) -- not the modulation phasor alone."""
+    x, y = _grid(n=7, extent_m=0.03)
+    # a non-trivial, non-uniform reference phase (a linear ramp, not the degenerate uniform-zero
+    # case every other test in this file uses)
+    ref_phase_deg = 40.0 * x / 0.01
+    ref = phase_only_reference_field(x, y, ref_phase_deg)
+    beams = [Beam(theta_deg=15.0, phi_deg=0.0)]
+
+    # A dense, fine-grained phase library (360 candidates, ~1deg spacing) so the achieved phase is
+    # essentially exact -- isolates the aperture-field construction from quantization error.
+    candidates = [(f"c{i}", 1.0, 1.0, "lib", np.exp(1j * np.radians(i))) for i in range(-180, 180)]
+    design = hs.synthesize_formulation_b(ref, beams, FREQ, candidates, period_m=8e-3)
+
+    from src.phase8b.object_wave import combine_beams_scalar
+
+    e_obj = combine_beams_scalar(design.x_m, design.y_m, beams, FREQ)
+    expected = np.exp(1j * np.angle(e_obj))  # the pure desired-beam phase pattern
+
+    achieved_deg = np.array([c.achieved_value for c in design.cells]).reshape(design.x_m.shape)
+    # sanity: quantization really is near-exact with this dense a library
+    assert np.max([c.phase_error_deg for c in design.cells]) < 2.0
+
+    phase_diff = np.angle(design.aperture_field * np.conj(expected))
+    assert np.max(np.abs(np.degrees(phase_diff))) < 3.0  # matches to within quantization error
+
+    # the OLD (buggy) construction -- the modulation phasor alone -- must NOT match nearly as well,
+    # proving this test actually distinguishes the fix from the regression it guards against.
+    old_aperture_field = np.exp(1j * np.radians(achieved_deg))
+    old_phase_diff = np.angle(old_aperture_field * np.conj(expected))
+    assert np.max(np.abs(np.degrees(old_phase_diff))) > 30.0
+
+
 def test_formulation_a_needs_complex_field():
     x, y = _grid()
     ref = phase_only_reference_field(x, y, np.zeros_like(x))

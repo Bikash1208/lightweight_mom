@@ -306,7 +306,8 @@ def _run_synthesize_job(job, body: dict):
                 "a placeholder aperture field for Pattern prediction"
             )
         achieved = np.array([c.achieved_value for c in design.cells]).reshape(design.x_m.shape)
-        aperture_field = np.exp(1j * np.radians(achieved))
+        aperture_field = design.aperture_field  # the RADIATED field, not the modulation phasor
+        # alone -- see hologram.hmsa_synthesis.synthesize_formulation_b's docstring
         # PHASE13B B2: the same shape `export.py`'s `_lw_grid_from_assignments` reads off a
         # reflectarray design job (`.i/.j/.chosen_l_mm/.chosen_w_mm`) -- lets an HMSA design chain
         # straight into Export exactly as a reflectarray design already does.

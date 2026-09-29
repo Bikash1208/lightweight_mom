@@ -69,6 +69,10 @@ class HmsaDesign:
     labels: tuple
     unreachable_fraction: float
     phase_error_stats: "dict | None"  # Formulation B only: {mean,rms,max}_deg, n_cells, n_unreachable
+    aperture_field: "np.ndarray | None"  # Formulation B only: the RADIATED field for Pattern
+    # prediction -- E_ref(x,y) * exp(j*achieved_modulation_phase), NOT the modulation phasor
+    # alone (see `synthesize_formulation_b`'s docstring: using the modulation phasor by itself
+    # silently drops the reference wave's own phase, which must cancel it back out)
 
 
 def formulation_a_control_map(reference_field, object_beams, frequency_hz, x_avg_ohm, modulation_index):
@@ -226,6 +230,7 @@ def synthesize_formulation_a(
         cells,
         period_m,
         extra_labels=tuple(extra_labels),
+        aperture_field=None,  # A's achieved quantity is a surface reactance, not a phase
     )
 
 
@@ -236,6 +241,23 @@ def synthesize_formulation_b(reference_field, object_beams, frequency_hz, librar
     cell_field = resample_to_cell_grid(reference_field, period_m)
     control_map = formulation_b_control_map(cell_field, object_beams, frequency_hz)
     cells = map_control_to_geometry_library(cell_field.x_m, cell_field.y_m, control_map, library_candidates)
+
+    # The RADIATED field a modulated hologram actually produces is E_ref(x,y) * Modulation(x,y),
+    # not the modulation phasor alone: if Modulation = exp(j*(obj_phase - ref_phase)) exactly
+    # cancelled the reference wave's own phase, E_ref*Modulation = |E_ref|*exp(j*obj_phase) --
+    # recovering the pure desired beam. Using the modulation phasor by itself (as an earlier
+    # version of this code did) silently drops that cancellation and predicts a systematically
+    # wrong beam direction (empirically: the example file, a 20deg/0deg object beam, predicted a
+    # peak at 51deg/130deg instead of ~20deg/0deg -- fixed by this multiplication, verified against
+    # an idealized zero-quantization-error case landing at 21deg/0deg). Uses the achieved
+    # (library-matched, quantization-error-included) phase per cell -- the REAL design's expected
+    # radiated field, not the idealized continuous target.
+    achieved_deg = np.array([c.achieved_value if c.achieved_value is not None else 0.0 for c in cells]).reshape(
+        cell_field.x_m.shape
+    )
+    ref_complex = cell_field.Ex if cell_field.amplitude_available else np.exp(1j * np.radians(cell_field.phase()))
+    aperture_field = ref_complex * np.exp(1j * np.radians(achieved_deg))
+
     return _finish_design(
         "B_phase_difference",
         reference_field,
@@ -245,10 +267,13 @@ def synthesize_formulation_b(reference_field, object_beams, frequency_hz, librar
         cells,
         period_m,
         extra_labels=(EXPERIMENTAL,),
+        aperture_field=aperture_field,
     )
 
 
-def _finish_design(formulation, raw_reference_field, x_m, y_m, control_map, cells, period_m, extra_labels):
+def _finish_design(
+    formulation, raw_reference_field, x_m, y_m, control_map, cells, period_m, extra_labels, aperture_field
+):
     """`raw_reference_field` is the RAW (un-resampled) imported field, used only for the
     cells-per-fringe sanity check (a property of the imported wave itself, best measured at its
     native resolution); `x_m`/`y_m`/`control_map`/`cells` are already on the resampled cell grid."""
@@ -290,6 +315,7 @@ def _finish_design(formulation, raw_reference_field, x_m, y_m, control_map, cell
         labels=tuple(labels),
         unreachable_fraction=unreachable_fraction,
         phase_error_stats=stats,
+        aperture_field=aperture_field,
     )
 
 

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>lwmom -- reflectarray / HMSA design tool</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>lwmom</h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/unit_cell.html">Unit cell</a>
+      <a href="/library.html">Library</a>
+      <a href="/reflectarray.html">Reflectarray</a>
+      <a href="/pattern.html">Pattern</a>
+      <a href="/verify.html">Verify</a>
+      <a href="/export.html">Export</a>
+      <a href="/hfss_compare.html">HFSS compare</a>
+      <a href="/hmsa.html">HMSA designer</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <p>Local reflectarray / holographic metasurface antenna (HMSA) design tool. Runs entirely
+      on this machine -- no data leaves it. Every design produced here is a lookup-table /
+      local-periodicity design to be verified in full-wave (the standard reflectarray workflow);
+      results are labelled accordingly, never presented as more validated than they are.</p>
+      <p>Start with <strong>Unit cell</strong> to characterize a patch geometry, or
+      <strong>Library</strong> to build/browse a phase-vs-size sweep, then use that library in
+      <strong>Reflectarray</strong> or <strong>HMSA designer</strong>.</p>
+    </div>
+    <div class="card">
+      <p class="status" id="health-status">Checking backend...</p>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+  <script>
+    fetch("/api/health")
+      .then((r) => r.json())
+      .then((d) => {
+        document.getElementById("health-status").textContent = `Backend: ${d.status}`;
+        document.getElementById("health-status").className = "status ok";
+      })
+      .catch(() => {
+        document.getElementById("health-status").textContent = "Backend unreachable";
+        document.getElementById("health-status").className = "status err";
+      });
+  </script>
+</body>
+</html>

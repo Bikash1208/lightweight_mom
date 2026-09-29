@@ -1,18 +1,25 @@
 """Phase 12C gates: explicit named states, and the two negative-test convention this project's
 gates all follow (a clearly-failing input must not be classified as passing)."""
 
-import pytest
-
 from src.phase12c import gate
 from src.phase12c.locality_study import GradientCaseResult
 
 
 def _case(name, achieved_step_deg, phase_error_deg, isolated_px, embedded_px, relative_complex_error=0.0):
     return GradientCaseResult(
-        name=name, n=3, center_lw_mm=(2.0, 2.0), grid_mm=(), isolated_px=isolated_px,
-        embedded_px=embedded_px, complex_error=0.0, magnitude_error=0.0, phase_error_deg=phase_error_deg,
-        relative_complex_error=relative_complex_error, achieved_step_deg=achieved_step_deg,
-        n_unknowns_isolated=10, n_unknowns_embedded=90,
+        name=name,
+        n=3,
+        center_lw_mm=(2.0, 2.0),
+        grid_mm=(),
+        isolated_px=isolated_px,
+        embedded_px=embedded_px,
+        complex_error=0.0,
+        magnitude_error=0.0,
+        phase_error_deg=phase_error_deg,
+        relative_complex_error=relative_complex_error,
+        achieved_step_deg=achieved_step_deg,
+        n_unknowns_isolated=10,
+        n_unknowns_embedded=90,
     )
 
 
@@ -44,31 +51,33 @@ def test_mixed_cases_report_the_largest_step_that_still_holds():
 
 
 def test_spot_check_gate_reports_changed_when_c2_c3_mask_is_no_longer_identical():
-    from src.phase12c.spot_check import C2C3Recheck, CaseDRecheck, Phase9SpotCheck, CouplingSpotCheckPoint
+    from src.phase12c.spot_check import C2C3Recheck, CaseDRecheck, CouplingSpotCheckPoint, Phase9SpotCheck
 
     c2_c3 = C2C3Recheck(24, False, 1.0 + 0j, 1.5 + 0j, 0.5)
     p9 = Phase9SpotCheck(48, 3, 1.0 + 0j, 0.01 + 0j, 0.99, 10, 90, 0.997)
     case_d = CaseDRecheck(48, 3, 1.0 + 0j, 2.0 + 0j, 1.0, True)
-    result = gate.decide_spot_check(c2_c3, p9, case_d, [CouplingSpotCheckPoint(1, 1.0 + 0j, 10),
-                                                          CouplingSpotCheckPoint(3, 1.1 + 0j, 90)])
+    result = gate.decide_spot_check(
+        c2_c3, p9, case_d, [CouplingSpotCheckPoint(1, 1.0 + 0j, 10), CouplingSpotCheckPoint(3, 1.1 + 0j, 90)]
+    )
     assert result.status == gate.EARLIER_CONCLUSIONS_CHANGED
     names = [f[0] for f in result.findings]
     assert "phase10_c2_c3" in names
 
 
 def test_spot_check_gate_reports_hold_when_nothing_changed():
-    from src.phase12c.spot_check import C2C3Recheck, CaseDRecheck, Phase9SpotCheck, CouplingSpotCheckPoint
+    from src.phase12c.spot_check import C2C3Recheck, CaseDRecheck, CouplingSpotCheckPoint, Phase9SpotCheck
 
     c2_c3 = C2C3Recheck(24, True, 1.0 + 0j, 1.0 + 0j, 0.0)
     p9 = Phase9SpotCheck(48, 3, 1.0 + 0j, 0.001 + 0j, 0.999, 10, 90, 0.997)
     case_d = CaseDRecheck(48, 3, 1.0 + 0j, 2.0 + 0j, 1.0, True)
-    result = gate.decide_spot_check(c2_c3, p9, case_d, [CouplingSpotCheckPoint(1, 1.0 + 0j, 10),
-                                                          CouplingSpotCheckPoint(3, 2.0 + 0j, 90)])
+    result = gate.decide_spot_check(
+        c2_c3, p9, case_d, [CouplingSpotCheckPoint(1, 1.0 + 0j, 10), CouplingSpotCheckPoint(3, 2.0 + 0j, 90)]
+    )
     assert result.status == gate.EARLIER_CONCLUSIONS_HOLD
 
 
 def test_hfss_export_status_requires_every_file_to_exist(tmp_path):
-    from src.phase12c.exports import SingleCellExport, SupercellExport
+    from src.phase12c.exports import SingleCellExport
 
     missing = SingleCellExport(1.0, str(tmp_path / "nonexistent.step"), 0.9, -10.0, 8, 8)
     assert gate.hfss_export_status([missing], [], None) == "HFSS_EXPORT_NOT_READY"

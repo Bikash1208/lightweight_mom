@@ -44,17 +44,18 @@ class CaseExportResult:
     case: ValidationCase
     out_dir: Path
     step_path: Path
-    step_result: object          # cad_export.StepExportResult
+    step_result: object  # cad_export.StepExportResult
     database: Database
     geometry_json_path: Path
     solver_config_json_path: Path
     mom_results_json_path: Path
     mom_results_csv_path: Path
-    plot_paths: dict             # name -> Path
+    plot_paths: dict  # name -> Path
     readme_path: Path
 
 
 # ------------------------------------------------------------------------------- solving
+
 
 def _solve_case(case: ValidationCase):
     """The case's Database: run_sweep with no geometry axes, so exactly one cell, over the
@@ -64,6 +65,7 @@ def _solve_case(case: ValidationCase):
 
 
 # --------------------------------------------------------------------------------- JSON
+
 
 def geometry_dict(case: ValidationCase, metal_export_thickness_m):
     uc = case.config.unit_cell
@@ -75,14 +77,22 @@ def geometry_dict(case: ValidationCase, metal_export_thickness_m):
         "code_version": __version__,
         "lattice": {"period_x_m": lat.period_x, "period_y_m": lat.period_y},
         "substrate": {
-            "name": sub.name, "eps_r": sub.eps_r, "tan_delta": sub.tan_delta, "thickness_m": sub.thickness,
+            "name": sub.name,
+            "eps_r": sub.eps_r,
+            "tan_delta": sub.tan_delta,
+            "thickness_m": sub.thickness,
         },
         "metal": {"model": uc.metal.model},
         "geometry": {
-            "type": geo.kind, "polarity": geo.polarity,
-            "length_m": geo.length, "width_m": geo.width,
-            "center_x_m": geo.center_x, "center_y_m": geo.center_y, "rotation_deg": units.to_deg(geo.rotation),
-            "metal_area_m2": uc.metal_area, "metal_fill_fraction": uc.metal_fill_fraction,
+            "type": geo.kind,
+            "polarity": geo.polarity,
+            "length_m": geo.length,
+            "width_m": geo.width,
+            "center_x_m": geo.center_x,
+            "center_y_m": geo.center_y,
+            "rotation_deg": units.to_deg(geo.rotation),
+            "metal_area_m2": uc.metal_area,
+            "metal_fill_fraction": uc.metal_fill_fraction,
         },
         "cad_export": {
             "metal_export_thickness_m": metal_export_thickness_m,
@@ -101,8 +111,10 @@ def solver_config_dict(case: ValidationCase, database: Database):
     return {
         "mesh": {"cells_x": mesh.cells_x, "cells_y": mesh.cells_y, "floquet_order": mesh.floquet_order},
         "reference_planes": {
-            "top_air_thickness_m": rp.top_air_thickness, "bottom_air_thickness_m": rp.bottom_air_thickness,
-            "z_top_m": rp.z_top, "z_bottom_m": rp.z_bottom,
+            "top_air_thickness_m": rp.top_air_thickness,
+            "bottom_air_thickness_m": rp.bottom_air_thickness,
+            "z_top_m": rp.z_top,
+            "z_bottom_m": rp.z_bottom,
         },
         "frequency_grid": database.metadata["frequency_grid"],
         "excitation": {
@@ -119,6 +131,7 @@ def solver_config_dict(case: ValidationCase, database: Database):
 
 
 # -------------------------------------------------------------------------------- plots
+
 
 def _require_matplotlib():
     try:
@@ -193,14 +206,17 @@ def generate_plots(database, plots_dir):
     }
     _plot_family(plt, database, paths["s11"], "S11", "S11 (reflection): magnitude and phase vs frequency")
     _plot_family(plt, database, paths["s21"], "S21", "S21 (transmission): magnitude and phase vs frequency")
-    _plot_overview(plt, database, paths["co_polarized"], _COMPONENTS_XX_YY,
-                   "Co-polarized response (xx, yy) vs frequency")
-    _plot_overview(plt, database, paths["cross_polarized"], _COMPONENTS_CROSS,
-                   "Cross-polarized response (yx, xy) vs frequency")
+    _plot_overview(
+        plt, database, paths["co_polarized"], _COMPONENTS_XX_YY, "Co-polarized response (xx, yy) vs frequency"
+    )
+    _plot_overview(
+        plt, database, paths["cross_polarized"], _COMPONENTS_CROSS, "Cross-polarized response (yx, xy) vs frequency"
+    )
     return paths
 
 
 # ------------------------------------------------------------------------------- README
+
 
 def render_readme(case: ValidationCase, step_result, database: Database, plot_paths):
     uc = case.config.unit_cell
@@ -223,8 +239,8 @@ phasor `F` represents `Re{{F * exp(+j*omega*t)}}`; a delay is a *negative* phase
 conventions: `CONVENTIONS.md`; S-parameter/port definitions: `S_PARAMETERS.md`.
 
 ## Frequency range
-{units.to_ghz(grid['start_hz']):.4g} GHz to {units.to_ghz(grid['stop_hz']):.4g} GHz, step
-{units.to_ghz(grid['step_hz']):.4g} GHz ({grid['count']} points): `{', '.join(f'{units.to_ghz(f):.4g}' for f in grid['frequencies_hz'])}` GHz.
+{units.to_ghz(grid["start_hz"]):.4g} GHz to {units.to_ghz(grid["stop_hz"]):.4g} GHz, step
+{units.to_ghz(grid["step_hz"]):.4g} GHz ({grid["count"]} points): `{", ".join(f"{units.to_ghz(f):.4g}" for f in grid["frequencies_hz"])}` GHz.
 
 ## Unit-cell period
 `period_x` = {units.to_mm(lat.period_x):.6g} mm, `period_y` = {units.to_mm(lat.period_y):.6g} mm
@@ -316,15 +332,15 @@ in metres and this file is the one place besides `units.py` that converts):
    `z = {units.to_mm(rp.z_top):.6g}` mm (matching `z_top`/`z_bottom` above), centred on the
    `Substrate`/`Metal` solids (both already centred at `x=y=0`).
 5. Assign **periodic (lattice-pair / master-slave) boundaries** on the four side faces of that
-   box, pairing `x = -{units.to_mm(lat.period_x)/2:.6g}` mm with `x = +{units.to_mm(lat.period_x)/2:.6g}`
-   mm and `y = -{units.to_mm(lat.period_y)/2:.6g}` mm with `y = +{units.to_mm(lat.period_y)/2:.6g}` mm,
+   box, pairing `x = -{units.to_mm(lat.period_x) / 2:.6g}` mm with `x = +{units.to_mm(lat.period_x) / 2:.6g}`
+   mm and `y = -{units.to_mm(lat.period_y) / 2:.6g}` mm with `y = +{units.to_mm(lat.period_y) / 2:.6g}` mm,
    zero phase delay (normal incidence).
 6. Assign **Floquet ports** on the top face (`z = {units.to_mm(rp.z_top):.6g}` mm) and bottom face
    (`z = {units.to_mm(rp.z_bottom):.6g}` mm), each with two modes (TE00/TM00, i.e. the linear x and
    y polarizations of the (0,0) Floquet order) so the resulting S-matrix is the same 4x4
    [[S11,S12],[S21,S22]] over (port1 x, port1 y, port2 x, port2 y) as `mom_results.json`.
-7. Set an interpolating frequency sweep from {units.to_ghz(grid['start_hz']):.4g} GHz to
-   {units.to_ghz(grid['stop_hz']):.4g} GHz (at least the {grid['count']} points listed above).
+7. Set an interpolating frequency sweep from {units.to_ghz(grid["start_hz"]):.4g} GHz to
+   {units.to_ghz(grid["stop_hz"]):.4g} GHz (at least the {grid["count"]} points listed above).
 8. Solve, then compare magnitude directly; compare phase after checking your HFSS version's time
    convention against "exp(+jwt) convention" above (conjugate if it differs) and, if your Floquet
    port reference planes are not exactly `z_top`/`z_bottom` above, re-reference this project's
@@ -337,6 +353,7 @@ results to match HFSS; any difference you find is data for you to interpret; see
 
 
 # --------------------------------------------------------------------------- orchestration
+
 
 def export_case(case: ValidationCase, out_dir, metal_export_thickness_m=DEFAULT_METAL_EXPORT_THICKNESS_M):
     """Write the full validation-case folder for ``case`` into ``out_dir`` (created if needed)."""
@@ -366,9 +383,17 @@ def export_case(case: ValidationCase, out_dir, metal_export_thickness_m=DEFAULT_
     readme_path.write_text(render_readme(case, step_result, database, plot_paths))
 
     return CaseExportResult(
-        case, out_dir, step_path, step_result, database,
-        geometry_json_path, solver_config_json_path, mom_results_json_path, mom_results_csv_path,
-        plot_paths, readme_path,
+        case,
+        out_dir,
+        step_path,
+        step_result,
+        database,
+        geometry_json_path,
+        solver_config_json_path,
+        mom_results_json_path,
+        mom_results_csv_path,
+        plot_paths,
+        readme_path,
     )
 
 

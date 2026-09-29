@@ -39,13 +39,15 @@ def _cell(geometry, lattice=_LAT, substrate=_SUB):
 # hand-rolled) -- so the consistency check exercises both "any UnitCell" and "the shipped cases".
 _AD_HOC = {
     "metal_unrotated": _cell(Geometry(kind="rectangle", length=5.0e-3, width=2.0e-3)),
-    "metal_rotated_30": _cell(
-        Geometry(kind="dipole", length=6.0e-3, width=1.2e-3, rotation=math.radians(30.0))
-    ),
+    "metal_rotated_30": _cell(Geometry(kind="dipole", length=6.0e-3, width=1.2e-3, rotation=math.radians(30.0))),
     "metal_rotated_offset": _cell(
         Geometry(
-            kind="rectangle", length=4.0e-3, width=3.0e-3,
-            center_x=1.0e-3, center_y=-0.7e-3, rotation=math.radians(50.0),
+            kind="rectangle",
+            length=4.0e-3,
+            width=3.0e-3,
+            center_x=1.0e-3,
+            center_y=-0.7e-3,
+            rotation=math.radians(50.0),
         )
     ),
     "metal_rotation_90": _cell(Geometry(kind="rectangle", length=5.0e-3, width=2.0e-3, rotation=math.radians(90.0))),
@@ -65,6 +67,7 @@ def named_cell(request):
 
 # ---------------------------------------------------------------------- pre-export solid checks
 
+
 def test_build_solids_valid_and_countable(named_cell):
     """Before any export: exactly one substrate solid, one metal solid, both topologically valid."""
     _, uc = named_cell
@@ -76,6 +79,7 @@ def test_build_solids_valid_and_countable(named_cell):
 
 
 # -------------------------------------------------------------------- export/import round trip
+
 
 def test_step_round_trip_matches_ground_truth(named_cell, tmp_path):
     """export_unit_cell_step's own returned properties equal what import_and_summarize recovers
@@ -109,6 +113,7 @@ def test_step_solids_are_valid_after_reimport(named_cell, tmp_path):
 
 
 # --------------------------------------------------------------- STEP geometry == MoM geometry
+
 
 def test_substrate_bbox_matches_lattice_and_thickness(named_cell, tmp_path):
     """Substrate solid recovered from the STEP file is exactly the Px x Py x h box the solver's
@@ -176,6 +181,7 @@ def test_metal_centroid_matches_feature_center(named_cell, tmp_path):
 
 # ------------------------------------------------------------------------------ sensitivity
 
+
 def test_rotation_changes_recovered_bbox():
     """Non-vacuousness check: two otherwise-identical cells that differ only in rotation must
     give measurably different recovered metal bounding boxes -- the consistency checks above are
@@ -240,6 +246,7 @@ def test_thickness_changes_metal_volume_but_not_bbox_footprint():
 
 
 # -------------------------------------------------------------------------------- error handling
+
 
 def test_export_rejects_non_positive_thickness(tmp_path):
     uc = _cell(Geometry(kind="rectangle", length=4.0e-3, width=2.0e-3))

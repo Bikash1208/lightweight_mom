@@ -15,9 +15,9 @@ from ..phase8e.beam_reconstruction import evaluate_beam_reconstruction, far_fiel
 from . import patterns as pt
 from .reference_solver import solve_grid
 
-APERTURE_N = 7                  # Sec. 23 cases 1-4: keeps each solve <= ~4 s (measured).
-INTERIOR_MARGIN = 1              # read out every cell except the outer ring (needs full neighbors
-                                  # to be a fair "aperture element," matching Phase 10's own choice).
+APERTURE_N = 7  # Sec. 23 cases 1-4: keeps each solve <= ~4 s (measured).
+INTERIOR_MARGIN = 1  # read out every cell except the outer ring (needs full neighbors
+# to be a fair "aperture element," matching Phase 10's own choice).
 DEFAULT_BEAM = Beam(theta_deg=20.0, phi_deg=0.0)
 THETA_GRID_DEG, PHI_GRID_DEG = np.meshgrid(np.linspace(0.0, 70.0, 36), np.linspace(0.0, 359.0, 72))
 
@@ -48,8 +48,9 @@ def far_field_from_aperture(points, period_m, frequency_hz, n):
     return far_field_pattern(xs, ys, values, frequency_hz, THETA_GRID_DEG, PHI_GRID_DEG, period_m, period_m)
 
 
-def run_beam_case(name, grid_mm, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell=8,
-                   intended_beams=(DEFAULT_BEAM,)):
+def run_beam_case(
+    name, grid_mm, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell=8, intended_beams=(DEFAULT_BEAM,)
+):
     """Sec. 23 cases 1-4 (smooth gradient / abrupt boundary / strong contrast / checkerboard):
     solves ``grid_mm`` once, builds its far field, and evaluates the requested intended beam(s)."""
     n = len(grid_mm)

@@ -48,9 +48,12 @@ def compute_error_stats(a, b):
     ce, me, pe = complex_error(a, b), magnitude_error(a, b), phase_error_deg(a, b)
     return ComplexErrorStats(
         n_points=int(a.size),
-        mean_complex_error=float(np.mean(ce)), rms_complex_error=float(np.sqrt(np.mean(ce**2))),
+        mean_complex_error=float(np.mean(ce)),
+        rms_complex_error=float(np.sqrt(np.mean(ce**2))),
         max_complex_error=float(np.max(ce)),
-        mean_magnitude_error=float(np.mean(me)), rms_magnitude_error=float(np.sqrt(np.mean(me**2))),
+        mean_magnitude_error=float(np.mean(me)),
+        rms_magnitude_error=float(np.sqrt(np.mean(me**2))),
         max_magnitude_error=float(np.max(me)),
-        mean_abs_phase_error_deg=float(np.mean(pe)), max_abs_phase_error_deg=float(np.max(pe)),
+        mean_abs_phase_error_deg=float(np.mean(pe)),
+        max_abs_phase_error_deg=float(np.max(pe)),
     )

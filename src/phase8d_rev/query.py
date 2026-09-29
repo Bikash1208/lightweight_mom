@@ -16,22 +16,22 @@ class UnitCellQuery:
     eps_r: float | None = None
     tan_delta: float | None = None
     substrate_thickness_mm: float | None = None
-    backing: str | None = None           # "air" | "pec" (Phase 12A: never mix grounded/ungrounded)
+    backing: str | None = None  # "air" | "pec" (Phase 12A: never mix grounded/ungrounded)
     p_x_mm: float | None = None
     p_y_mm: float | None = None
     frequency_hz: float | None = None
-    polarization: str | None = None      # "x" | "y"
-    incidence: str | None = None         # "normal"
-    min_validation_status: str | None = None   # e.g. "NUMERICALLY_VALIDATED"
+    polarization: str | None = None  # "x" | "y"
+    incidence: str | None = None  # "normal"
+    min_validation_status: str | None = None  # e.g. "NUMERICALLY_VALIDATED"
 
 
 @dataclass(frozen=True)
 class QueryResult:
-    status: str                          # "MATCH" | "DATABASE_COVERAGE_MISSING"
+    status: str  # "MATCH" | "DATABASE_COVERAGE_MISSING"
     query: UnitCellQuery
-    matching_entries: tuple              # LibraryEntry objects that survived every filter
-    filter_trail: tuple                  # (filter_name, n_candidates_remaining) per stage, in order
-    eliminated_at: str | None            # which filter first reduced candidates to zero, if any
+    matching_entries: tuple  # LibraryEntry objects that survived every filter
+    filter_trail: tuple  # (filter_name, n_candidates_remaining) per stage, in order
+    eliminated_at: str | None  # which filter first reduced candidates to zero, if any
 
 
 def _close(a, b, rtol=_RTOL):
@@ -40,21 +40,30 @@ def _close(a, b, rtol=_RTOL):
 
 _FILTERS = (
     ("topology", lambda e, q: q.topology is None or e.topology == q.topology),
-    ("material_stack", lambda e, q: (
-        (q.substrate_name is None or e.substrate["name"] == q.substrate_name)
-        and (q.eps_r is None or _close(e.substrate["eps_r"], q.eps_r))
-        and (q.tan_delta is None or _close(e.substrate["tan_delta"], q.tan_delta))
-        and (q.substrate_thickness_mm is None or _close(e.substrate["thickness_mm"], q.substrate_thickness_mm))
-        # Phase 12A: an explicit backing request is never satisfied by a library built for the
-        # other backing -- a grounded (backing="pec") and an ungrounded (backing="air") library
-        # are never silently mixed in a search result.
-        and (q.backing is None or e.backing == q.backing)
-    )),
+    (
+        "material_stack",
+        lambda e, q: (
+            (q.substrate_name is None or e.substrate["name"] == q.substrate_name)
+            and (q.eps_r is None or _close(e.substrate["eps_r"], q.eps_r))
+            and (q.tan_delta is None or _close(e.substrate["tan_delta"], q.tan_delta))
+            and (q.substrate_thickness_mm is None or _close(e.substrate["thickness_mm"], q.substrate_thickness_mm))
+            # Phase 12A: an explicit backing request is never satisfied by a library built for the
+            # other backing -- a grounded (backing="pec") and an ungrounded (backing="air") library
+            # are never silently mixed in a search result.
+            and (q.backing is None or e.backing == q.backing)
+        ),
+    ),
     ("frequency", lambda e, q: q.frequency_hz is None or e.has_frequency(q.frequency_hz)),
-    ("period", lambda e, q: (q.p_x_mm is None and q.p_y_mm is None) or e.matches_period(
-        q.p_x_mm if q.p_x_mm is not None else e.p_x_mm,
-        q.p_y_mm if q.p_y_mm is not None else e.p_y_mm,
-    )),
+    (
+        "period",
+        lambda e, q: (
+            (q.p_x_mm is None and q.p_y_mm is None)
+            or e.matches_period(
+                q.p_x_mm if q.p_x_mm is not None else e.p_x_mm,
+                q.p_y_mm if q.p_y_mm is not None else e.p_y_mm,
+            )
+        ),
+    ),
     ("polarization", lambda e, q: q.polarization is None or q.polarization in e.polarizations_supported),
     ("incidence", lambda e, q: q.incidence is None or q.incidence in e.incidence_supported),
     ("response_availability", lambda e, q: e.n_ok_cells > 0),
@@ -62,7 +71,10 @@ _FILTERS = (
 )
 
 _VALIDATION_ORDER = (
-    "DATA_PRESENT", "NUMERICALLY_VALIDATED", "CROSS_SOLVER_VALIDATED", "HFSS_VALIDATED",
+    "DATA_PRESENT",
+    "NUMERICALLY_VALIDATED",
+    "CROSS_SOLVER_VALIDATED",
+    "HFSS_VALIDATED",
     "EXPERIMENTALLY_VALIDATED",
 )
 
@@ -86,6 +98,9 @@ def search_unit_cells(universal_db, query: UnitCellQuery):
             eliminated_at = name
     status = "MATCH" if candidates else "DATABASE_COVERAGE_MISSING"
     return QueryResult(
-        status=status, query=query, matching_entries=tuple(candidates),
-        filter_trail=tuple(trail), eliminated_at=eliminated_at,
+        status=status,
+        query=query,
+        matching_entries=tuple(candidates),
+        filter_trail=tuple(trail),
+        eliminated_at=eliminated_at,
     )

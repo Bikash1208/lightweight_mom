@@ -11,10 +11,10 @@ from dataclasses import dataclass
 from ..database import CONVENTIONS as DATABASE_CONVENTIONS
 from ..excitation import PlaneWaveExcitation
 
-TIME_CONVENTION = DATABASE_CONVENTIONS["time_dependence"]                # "exp(+j*omega*t)"
-PLANE_WAVE_PHASE_CONVENTION = "exp(-j*k.r)"                              # CONVENTIONS.md line 19
-PHASE_PRINCIPAL_RANGE_DEG = (-180.0, 180.0)                              # CONVENTIONS.md, phase.py
-POLARIZATION_BASIS = DATABASE_CONVENTIONS["linear_basis"]                # "global x and y unit vectors..."
+TIME_CONVENTION = DATABASE_CONVENTIONS["time_dependence"]  # "exp(+j*omega*t)"
+PLANE_WAVE_PHASE_CONVENTION = "exp(-j*k.r)"  # CONVENTIONS.md line 19
+PHASE_PRINCIPAL_RANGE_DEG = (-180.0, 180.0)  # CONVENTIONS.md, phase.py
+POLARIZATION_BASIS = DATABASE_CONVENTIONS["linear_basis"]  # "global x and y unit vectors..."
 S_MATRIX_CONVENTION = DATABASE_CONVENTIONS["s_matrix"]
 
 
@@ -34,7 +34,7 @@ COORDINATE_SYSTEM = CoordinateSystem(
     y_range="y in [-Py/2, Py/2]",
     z_convention="air (z>0, incident side) | pattern at z=0 | substrate (-h<z<0) | air (z<-h); no ground plane",
     pattern_plane="z = 0 (the plane a holographic modulation pattern would also need to live in, to match "
-                  "the plane Phase 7's metal geometry and S-parameter phase reference already use)",
+    "the plane Phase 7's metal geometry and S-parameter phase reference already use)",
     rotation_sense="counter-clockwise (from +x toward +y) about a feature's centre",
 )
 
@@ -54,7 +54,7 @@ PORT_DEFINITION = PortDefinition(
     port1_incident_direction="-z (toward the pattern)",
     port2_incident_direction="+z (toward the pattern)",
     modes="only the specular (0,0) Floquet order at normal incidence is a port mode "
-          "(oblique-incidence/surface-wave ports are NOT implemented, README.md 'Still open')",
+    "(oblique-incidence/surface-wave ports are NOT implemented, README.md 'Still open')",
 )
 
 
@@ -68,12 +68,14 @@ def incident_wavevector_deg(frequency_hz, theta_deg, phi_deg, polarization="x"):
     import math
 
     return PlaneWaveExcitation(
-        frequency=frequency_hz, theta=math.radians(theta_deg), phi=math.radians(phi_deg),
+        frequency=frequency_hz,
+        theta=math.radians(theta_deg),
+        phi=math.radians(phi_deg),
         polarization=polarization,
     )
 
 
-NO_GROUND_PLANE = True                      # README.md "Assumptions" item 2, unchanged since Phase 1
-NORMAL_INCIDENCE_ONLY = True                # CONVENTIONS.md "Ports": only specular (0,0) at normal incidence
+NO_GROUND_PLANE = True  # README.md "Assumptions" item 2, unchanged since Phase 1
+NORMAL_INCIDENCE_ONLY = True  # CONVENTIONS.md "Ports": only specular (0,0) at normal incidence
 OBLIQUE_INCIDENCE_PORTS_IMPLEMENTED = False  # README.md "Still open": "Oblique incidence ports... not yet"
 SURFACE_WAVE_DISPERSION_IMPLEMENTED = False  # no eigenmode/dispersion solver exists anywhere in src/

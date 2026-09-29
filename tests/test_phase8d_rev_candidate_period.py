@@ -52,8 +52,9 @@ def test_candidate_periods_from_sampling_are_all_candidate_heuristic_never_valid
 
 @pytest.mark.skipif(not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present")
 def test_validate_period_reports_validated_for_the_registered_benchmark_period(phase8c_full_database):
-    entry = _library_entry.from_database(phase8c_full_database, "lib1", "rectangular_patch",
-                                          _library_entry.REFERENCE_VALIDATION_LIBRARY)
+    entry = _library_entry.from_database(
+        phase8c_full_database, "lib1", "rectangular_patch", _library_entry.REFERENCE_VALIDATION_LIBRARY
+    )
     udb = _udb.UniversalDatabase()
     udb.register(entry)
     result = validate_period(udb, "rectangular_patch", entry.p_x_mm, entry.p_y_mm, frequency_hz=12.5e9)
@@ -63,8 +64,9 @@ def test_validate_period_reports_validated_for_the_registered_benchmark_period(p
 
 @pytest.mark.skipif(not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present")
 def test_validate_period_reports_candidate_only_for_an_unregistered_period(phase8c_full_database):
-    entry = _library_entry.from_database(phase8c_full_database, "lib1", "rectangular_patch",
-                                          _library_entry.REFERENCE_VALIDATION_LIBRARY)
+    entry = _library_entry.from_database(
+        phase8c_full_database, "lib1", "rectangular_patch", _library_entry.REFERENCE_VALIDATION_LIBRARY
+    )
     udb = _udb.UniversalDatabase()
     udb.register(entry)
     result = validate_period(udb, "rectangular_patch", 3.2, 3.2, frequency_hz=12.5e9)
@@ -74,10 +76,11 @@ def test_validate_period_reports_candidate_only_for_an_unregistered_period(phase
 
 @pytest.mark.skipif(not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present")
 def test_validate_period_reports_grating_safety_independently_of_validated_status(phase8c_full_database):
-    entry = _library_entry.from_database(phase8c_full_database, "lib1", "rectangular_patch",
-                                          _library_entry.REFERENCE_VALIDATION_LIBRARY)
+    entry = _library_entry.from_database(
+        phase8c_full_database, "lib1", "rectangular_patch", _library_entry.REFERENCE_VALIDATION_LIBRARY
+    )
     udb = _udb.UniversalDatabase()
     udb.register(entry)
     result = validate_period(udb, "rectangular_patch", 3.2, 3.2, frequency_hz=12.5e9)
     assert result.status == "CANDIDATE_ONLY"
-    assert result.grating_safe is True   # 3.2 mm at 12.5 GHz is well below grating onset either way
+    assert result.grating_safe is True  # 3.2 mm at 12.5 GHz is well below grating onset either way

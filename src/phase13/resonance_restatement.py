@@ -36,7 +36,7 @@ from ..phase12c.locality_study import MESH_CELLS_PER_SUBCELL as PHASE12C_LOCALIT
 from ..phase12d.step_curve import EMBEDDED_MESH_CELLS_PER_SUBCELL as PHASE12D_STEP_MESH_CELLS
 from . import convergence as conv
 
-RESONANT_L_MM = 6.0          # G4 -- the L value Phases 12C/12D/13 all treat as "at resonance"
+RESONANT_L_MM = 6.0  # G4 -- the L value Phases 12C/12D/13 all treat as "at resonance"
 RESONANT_FREQUENCY_HZ = 12.5e9
 
 MESHES_TO_RESTATE = {
@@ -51,7 +51,7 @@ class RestatedMeshError:
     label: str
     cells: int
     dx_mm: float
-    scaled_correction_deg: float   # |phi_inf - phi(this dx)|, scaled from the measured G4 power law
+    scaled_correction_deg: float  # |phi_inf - phi(this dx)|, scaled from the measured G4 power law
 
 
 def restate_resonance_region_error(reference_fit=None):
@@ -72,7 +72,7 @@ def restate_resonance_region_error(reference_fit=None):
     for label, cells in MESHES_TO_RESTATE.items():
         dx_mm = period_mm / cells
         dx_m = dx_mm * 1e-3
-        correction_deg = abs(reference_fit.coefficient) * dx_m ** reference_fit.order
+        correction_deg = abs(reference_fit.coefficient) * dx_m**reference_fit.order
         out.append(RestatedMeshError(label, cells, dx_mm, correction_deg))
     return tuple(out)
 

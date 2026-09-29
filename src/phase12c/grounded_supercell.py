@@ -77,12 +77,13 @@ def build_grounded_supercell(n, sub_period_x, sub_period_y, substrate, metal, lw
 
 @dataclass(frozen=True)
 class SolvedDipole:
-    dipole: object          # phase9.dipole_extraction.DipoleMoment
+    dipole: object  # phase9.dipole_extraction.DipoleMoment
     n_unknowns: int
 
 
-def solve_isolated_grounded_cell(period_x, period_y, length_m, width_m, substrate, metal,
-                                  frequency_hz, mesh_cells_per_side, floquet_order):
+def solve_isolated_grounded_cell(
+    period_x, period_y, length_m, width_m, substrate, metal, frequency_hz, mesh_cells_per_side, floquet_order
+):
     """The grounded reference: Phase 9's own ``supercell_solver.solve_isolated_cell``, generalized
     with ``backing="pec"`` -- a real capability (a grounded ``UnitCell`` solved through the exact
     same, unmodified ``solver.assemble_system``/``solve``), not a new EM formulation."""
@@ -97,8 +98,9 @@ def solve_isolated_grounded_cell(period_x, period_y, length_m, width_m, substrat
     return SolvedDipole(dipole, system.basis.n_unknowns)
 
 
-def solve_grounded_supercell_center(supercell: GroundedSupercellUnitCell, center_lw, frequency_hz,
-                                     mesh_cells_per_subcell, floquet_order):
+def solve_grounded_supercell_center(
+    supercell: GroundedSupercellUnitCell, center_lw, frequency_hz, mesh_cells_per_subcell, floquet_order
+):
     """As Phase 9's own ``supercell_solver.solve_supercell_center``, for a
     :class:`GroundedSupercellUnitCell`."""
     inner = supercell.inner
@@ -108,8 +110,7 @@ def solve_grounded_supercell_center(supercell: GroundedSupercellUnitCell, center
     center_geom = inner.patches[i_center][j_center]
     if (center_geom.length, center_geom.width) != tuple(center_lw):
         raise ValueError(
-            f"supercell centre patch is {(center_geom.length, center_geom.width)}, "
-            f"expected {tuple(center_lw)}"
+            f"supercell centre patch is {(center_geom.length, center_geom.width)}, expected {tuple(center_lw)}"
         )
     mesh_cells = inner.n * mesh_cells_per_subcell
     excitation = PlaneWaveExcitation(frequency=frequency_hz, polarization="x")
@@ -118,7 +119,12 @@ def solve_grounded_supercell_center(supercell: GroundedSupercellUnitCell, center
     currents = solver_mod.solve(system.z, system.v)
     cx, cy = inner.sub_cell_center(i_center, j_center)
     dipole = local_dipole_moment(
-        system.basis, currents, cx, cy, inner.sub_period_x / 2, inner.sub_period_y / 2,
+        system.basis,
+        currents,
+        cx,
+        cy,
+        inner.sub_period_x / 2,
+        inner.sub_period_y / 2,
     )
     return SolvedDipole(dipole, system.basis.n_unknowns)
 
@@ -138,11 +144,10 @@ class CorrectnessCheckResult:
     n_unknowns_isolated: int
     n_unknowns_embedded: int
     runtime_s: float
-    estimated_z_bytes: int   # dominant memory cost: n_unknowns^2 * 16 bytes (complex128 dense Z)
+    estimated_z_bytes: int  # dominant memory cost: n_unknowns^2 * 16 bytes (complex128 dense Z)
 
 
-def homogeneous_correctness_check(length_m, n, mesh_cells_per_subcell, period_m, substrate, metal,
-                                   frequency_hz):
+def homogeneous_correctness_check(length_m, n, mesh_cells_per_subcell, period_m, substrate, metal, frequency_hz):
     """Sec. A: a homogeneous n x n grounded supercell (every sub-cell identical) MUST reproduce the
     isolated grounded cell's own dipole moment exactly (Phase 9's own "9 identical cells repeated
     periodically == 1 cell repeated periodically" argument, unchanged by grounding), to the
@@ -159,18 +164,35 @@ def homogeneous_correctness_check(length_m, n, mesh_cells_per_subcell, period_m,
     floquet_isolated = 2 * mesh_cells_per_subcell
     floquet_embedded = 2 * mesh_cells_per_subcell * n
     isolated = solve_isolated_grounded_cell(
-        period_m, period_m, length_m, length_m, substrate, metal, frequency_hz,
-        mesh_cells_per_subcell, floquet_isolated,
+        period_m,
+        period_m,
+        length_m,
+        length_m,
+        substrate,
+        metal,
+        frequency_hz,
+        mesh_cells_per_subcell,
+        floquet_isolated,
     )
     grid = [[(length_m, length_m)] * n for _ in range(n)]
     supercell = build_grounded_supercell(n, period_m, period_m, substrate, metal, grid)
-    embedded = solve_grounded_supercell_center(supercell, (length_m, length_m), frequency_hz,
-                                                mesh_cells_per_subcell, floquet_embedded)
+    embedded = solve_grounded_supercell_center(
+        supercell, (length_m, length_m), frequency_hz, mesh_cells_per_subcell, floquet_embedded
+    )
     runtime = time.perf_counter() - t0
     rel = abs(embedded.dipole.px - isolated.dipole.px) / abs(isolated.dipole.px)
-    z_bytes = embedded.n_unknowns ** 2 * 16
-    return CorrectnessCheckResult(n, mesh_cells_per_subcell, isolated.dipole.px, embedded.dipole.px,
-                                   rel, isolated.n_unknowns, embedded.n_unknowns, runtime, z_bytes)
+    z_bytes = embedded.n_unknowns**2 * 16
+    return CorrectnessCheckResult(
+        n,
+        mesh_cells_per_subcell,
+        isolated.dipole.px,
+        embedded.dipole.px,
+        rel,
+        isolated.n_unknowns,
+        embedded.n_unknowns,
+        runtime,
+        z_bytes,
+    )
 
 
 @dataclass(frozen=True)
@@ -185,8 +207,9 @@ class MeshConvergenceResult:
     finer_runtime_s: float
 
 
-def supercell_mesh_convergence_check(length_m, n, base_mesh_cells_per_subcell, finer_mesh_cells_per_subcell,
-                                      period_m, substrate, metal, frequency_hz):
+def supercell_mesh_convergence_check(
+    length_m, n, base_mesh_cells_per_subcell, finer_mesh_cells_per_subcell, period_m, substrate, metal, frequency_hz
+):
     """Sec. A: "verify on a 3x3 case that the result converges against a finer aligned mesh" --
     the SAME homogeneous n x n case at ``base_mesh_cells_per_subcell`` and (doubled, so every
     original mesh line stays a mesh line, Phase 12B's own alignment-preserving-doubling argument)
@@ -195,14 +218,16 @@ def supercell_mesh_convergence_check(length_m, n, base_mesh_cells_per_subcell, f
 
     def _run(mesh_cells_per_subcell):
         t0 = time.perf_counter()
-        floquet = 2 * mesh_cells_per_subcell * n   # validated convention, see homogeneous_correctness_check
+        floquet = 2 * mesh_cells_per_subcell * n  # validated convention, see homogeneous_correctness_check
         supercell = build_grounded_supercell(n, period_m, period_m, substrate, metal, grid)
-        embedded = solve_grounded_supercell_center(supercell, (length_m, length_m), frequency_hz,
-                                                    mesh_cells_per_subcell, floquet)
+        embedded = solve_grounded_supercell_center(
+            supercell, (length_m, length_m), frequency_hz, mesh_cells_per_subcell, floquet
+        )
         return embedded.dipole.px, time.perf_counter() - t0
 
     base_px, base_t = _run(base_mesh_cells_per_subcell)
     finer_px, finer_t = _run(finer_mesh_cells_per_subcell)
     rel = abs(finer_px - base_px) / abs(base_px) if abs(base_px) > 0 else float("inf")
-    return MeshConvergenceResult(n, base_mesh_cells_per_subcell, finer_mesh_cells_per_subcell,
-                                  base_px, finer_px, rel, base_t, finer_t)
+    return MeshConvergenceResult(
+        n, base_mesh_cells_per_subcell, finer_mesh_cells_per_subcell, base_px, finer_px, rel, base_t, finer_t
+    )

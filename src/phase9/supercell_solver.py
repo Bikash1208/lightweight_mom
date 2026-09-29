@@ -18,12 +18,13 @@ from .supercell_geometry import SupercellUnitCell
 
 @dataclass(frozen=True)
 class SolvedDipole:
-    dipole: object          # DipoleMoment
+    dipole: object  # DipoleMoment
     n_unknowns: int
 
 
-def solve_isolated_cell(period_x, period_y, length_m, width_m, substrate, metal, frequency_hz,
-                         mesh_cells_per_side, floquet_order):
+def solve_isolated_cell(
+    period_x, period_y, length_m, width_m, substrate, metal, frequency_hz, mesh_cells_per_side, floquet_order
+):
     """The reference: this geometry alone, periodic, exactly the Phase 1-7 single-cell pipeline
     (`solver.assemble_system`, unmodified), at the same mesh resolution the supercell's own
     sub-cells use (so the comparison is apples-to-apples, Sec. 20-21)."""
@@ -38,8 +39,9 @@ def solve_isolated_cell(period_x, period_y, length_m, width_m, substrate, metal,
     return SolvedDipole(dipole, system.basis.n_unknowns)
 
 
-def solve_supercell_center(supercell: SupercellUnitCell, center_lw, frequency_hz,
-                            mesh_cells_per_subcell, floquet_order):
+def solve_supercell_center(
+    supercell: SupercellUnitCell, center_lw, frequency_hz, mesh_cells_per_subcell, floquet_order
+):
     """The heterogeneous case: solves the whole supercell (one MoM solve, `solver.assemble_system`,
     unmodified) and extracts the centre sub-cell's dipole moment. ``center_lw`` is not used for the
     solve (the supercell's own ``patches`` already define every sub-cell's geometry, including the
@@ -50,8 +52,7 @@ def solve_supercell_center(supercell: SupercellUnitCell, center_lw, frequency_hz
     center_geom = supercell.patches[i_center][j_center]
     if (center_geom.length, center_geom.width) != tuple(center_lw):
         raise ValueError(
-            f"supercell centre patch is {(center_geom.length, center_geom.width)}, "
-            f"expected {tuple(center_lw)}"
+            f"supercell centre patch is {(center_geom.length, center_geom.width)}, expected {tuple(center_lw)}"
         )
     mesh_cells = supercell.n * mesh_cells_per_subcell
     excitation = PlaneWaveExcitation(frequency=frequency_hz, polarization="x")
@@ -60,6 +61,11 @@ def solve_supercell_center(supercell: SupercellUnitCell, center_lw, frequency_hz
     currents = solver_mod.solve(system.z, system.v)
     cx, cy = supercell.sub_cell_center(i_center, j_center)
     dipole = local_dipole_moment(
-        system.basis, currents, cx, cy, supercell.sub_period_x / 2, supercell.sub_period_y / 2,
+        system.basis,
+        currents,
+        cx,
+        cy,
+        supercell.sub_period_x / 2,
+        supercell.sub_period_y / 2,
     )
     return SolvedDipole(dipole, system.basis.n_unknowns)

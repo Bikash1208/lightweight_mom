@@ -68,6 +68,7 @@ def test_empty_file_is_detected(tmp_path):
 
 # ---------------------------------------------------------------------------- beam definition
 
+
 def _beam(**overrides):
     beam = {"theta_deg": 20.0, "phi_deg": 30.0, "weight": 1.0, "initial_phase_deg": 0.0, "polarization": "x"}
     beam.update(overrides)

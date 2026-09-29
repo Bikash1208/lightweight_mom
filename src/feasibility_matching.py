@@ -14,10 +14,10 @@ class MatchResult:
     required_phase_deg: float
     matched: bool
     nearest_library_phase_deg: float | None
-    phase_error_deg: float | None       # signed, wrapped_difference_deg(nearest, required)
+    phase_error_deg: float | None  # signed, wrapped_difference_deg(nearest, required)
     candidate_L_mm: float | None
     candidate_W_mm: float | None
-    candidate_validity: str | None      # "VALID" | None (no candidate at all)
+    candidate_validity: str | None  # "VALID" | None (no candidate at all)
 
 
 def match_required_phase(required_phase_deg_array, table, tolerance_deg):
@@ -36,12 +36,17 @@ def match_required_phase(required_phase_deg_array, table, tolerance_deg):
             if best_err is None or abs(err) < abs(best_err):
                 best_err, best_row = err, row
         matched = abs(best_err) <= tolerance_deg
-        results.append(MatchResult(
-            required_phase_deg=float(required), matched=matched,
-            nearest_library_phase_deg=best_row["phase_deg"], phase_error_deg=best_err,
-            candidate_L_mm=best_row["L_mm"], candidate_W_mm=best_row["W_mm"],
-            candidate_validity="VALID",
-        ))
+        results.append(
+            MatchResult(
+                required_phase_deg=float(required),
+                matched=matched,
+                nearest_library_phase_deg=best_row["phase_deg"],
+                phase_error_deg=best_err,
+                candidate_L_mm=best_row["L_mm"],
+                candidate_W_mm=best_row["W_mm"],
+                candidate_validity="VALID",
+            )
+        )
     return results
 
 
@@ -68,7 +73,9 @@ def is_phase_coverage_sufficient(required_phase_deg_array, table, tolerance_deg)
     errors = [abs(m.phase_error_deg) for m in matched]
     return CoverageSufficiencyResult(
         sufficient=len(matches) > 0 and len(unmatched) == 0,
-        n_required=len(matches), n_matched=len(matched), n_unmatched=len(unmatched),
+        n_required=len(matches),
+        n_matched=len(matched),
+        n_unmatched=len(unmatched),
         mean_error_deg=(sum(errors) / len(errors)) if errors else None,
         max_error_deg=max(errors) if errors else None,
         unmatched_samples=tuple(m.required_phase_deg for m in unmatched),

@@ -4,7 +4,7 @@ named cases, from the measured `convergence.ConvergenceResult`s (never assumed b
 
 from dataclasses import dataclass
 
-from .convergence import CONVERGED, NOT_CONVERGED, STILL_SUBSTANTIALLY_CHANGING
+from .convergence import CONVERGED, STILL_SUBSTANTIALLY_CHANGING
 
 CASE_A_LOCAL = "CASE_A_LOCAL"
 CASE_B_MODERATELY_NONLOCAL = "CASE_B_MODERATELY_NONLOCAL"

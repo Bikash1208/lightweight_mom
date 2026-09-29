@@ -30,10 +30,19 @@ def reduced_run(tmp_path_factory):
 def test_run_produces_all_required_top_level_outputs(reduced_run):
     out = reduced_run["output_dir"]
     required = (
-        "phase11_report.md", "phase11_summary.json", "phase11_gate_status.json",
-        "coupling_radius_results.json", "incremental_shell_results.json", "directional_coupling.json",
-        "diagonal_coupling.json", "pattern_study.json", "frequency_study.json", "polarization_study.json",
-        "pairwise_interaction.json", "higher_order_interaction.json", "convergence.json",
+        "phase11_report.md",
+        "phase11_summary.json",
+        "phase11_gate_status.json",
+        "coupling_radius_results.json",
+        "incremental_shell_results.json",
+        "directional_coupling.json",
+        "diagonal_coupling.json",
+        "pattern_study.json",
+        "frequency_study.json",
+        "polarization_study.json",
+        "pairwise_interaction.json",
+        "higher_order_interaction.json",
+        "convergence.json",
         "beam_validation.json",
     )
     for name in required:
@@ -49,7 +58,7 @@ def test_summary_json_is_well_formed_and_matches_decision(reduced_run):
     out = reduced_run["output_dir"]
     doc = json.loads((out / "phase11_summary.json").read_text())
     assert doc["overall_case"] == reduced_run["decision"].overall_case
-    assert doc["hfss_status"] == "HFSS_NOT_AVAILABLE"   # no HFSS reference in this repo
+    assert doc["hfss_status"] == "HFSS_NOT_AVAILABLE"  # no HFSS reference in this repo
 
 
 def test_run_never_unlocks_geometry_inversion_without_hfss_or_convergence(reduced_run):
@@ -75,11 +84,13 @@ def test_run_reports_no_ml_by_construction(reduced_run):
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 for alias in node.names:
-                    assert alias.name.split(".")[0] not in forbidden_modules, \
+                    assert alias.name.split(".")[0] not in forbidden_modules, (
                         f"forbidden ML import {alias.name!r} found in {path}"
+                    )
             elif isinstance(node, ast.ImportFrom) and node.module:
-                assert node.module.split(".")[0] not in forbidden_modules, \
+                assert node.module.split(".")[0] not in forbidden_modules, (
                     f"forbidden ML import {node.module!r} found in {path}"
+                )
 
 
 def test_diagonal_reproduction_is_within_or_near_phase10s_own_range(reduced_run):

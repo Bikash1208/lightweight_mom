@@ -6,6 +6,7 @@ import json
 
 import numpy as np
 import pytest
+from sweep_helpers import sweep_config
 
 from src.database import (
     CONVENTIONS,
@@ -24,7 +25,6 @@ from src.phase import principal_phase_deg, wrapped_difference_deg
 from src.polarization import block_to_circular
 from src.runner import run_sweep
 from src.sparameters import compute_s_parameters
-from sweep_helpers import FREQ_8_12, sweep_config
 
 SWEEP = {
     "frequency": {"start": "8 GHz", "stop": "10 GHz", "step": "1 GHz"},
@@ -52,6 +52,7 @@ def files(db, tmp_path):
 
 
 # ------------------------------------------------------------------------------ content
+
 
 def test_database_shape_and_skipped_cells(db):
     assert len(db.cells) == 6 and len(db.records) == 4 * 3
@@ -85,7 +86,7 @@ def test_record_diagnostics_are_typed_and_physically_sensible(db):
         assert set(r.diagnostics) == set(DIAGNOSTIC_TYPES)
         assert r.diagnostics["incoming_residual"] < 1e-12
         assert r.diagnostics["reciprocity_error"] < 1e-10
-        assert r.diagnostics["passivity_min_eig"] > -1e-10            # lossy cell: strictly passive
+        assert r.diagnostics["passivity_min_eig"] > -1e-10  # lossy cell: strictly passive
         assert r.diagnostics["specular_only"] is True and r.diagnostics["checks_passed"] is True
         assert isinstance(r.diagnostics["n_unknowns"], int)
 
@@ -111,9 +112,13 @@ def test_record_matrices_are_immutable_and_validated(db):
         Record("x", 0, 1e9, np.zeros((2, 2)), r.diagnostics)
     with pytest.raises(DatabaseError):
         Record("x", 0, 1e9, np.full((4, 4), np.nan), r.diagnostics)
-    for bad in ({**r.diagnostics, "extra": 1}, {k: v for k, v in r.diagnostics.items() if k != "n_unknowns"},
-                {**r.diagnostics, "specular_only": 1}, {**r.diagnostics, "n_unknowns": 1.5},
-                {**r.diagnostics, "reciprocity_error": float("nan")}):
+    for bad in (
+        {**r.diagnostics, "extra": 1},
+        {k: v for k, v in r.diagnostics.items() if k != "n_unknowns"},
+        {**r.diagnostics, "specular_only": 1},
+        {**r.diagnostics, "n_unknowns": 1.5},
+        {**r.diagnostics, "reciprocity_error": float("nan")},
+    ):
         with pytest.raises(DatabaseError):
             Record("x", 0, 1e9, r.s, bad)
 
@@ -128,6 +133,7 @@ def test_phase_is_stored_on_the_principal_interval(db, files):
 
 
 # ------------------------------------------------------------------------- JSON round trip
+
 
 def test_json_round_trip_is_bit_exact(db, files):
     back = Database.from_json(files[0])
@@ -172,8 +178,11 @@ def test_rebuilt_unit_cells_reproduce_the_stored_s_parameters(db, files, result)
     from src.excitation import ReferencePlanes
 
     mesh = MeshSettings(**cfg["mesh"])
-    planes = ReferencePlanes(cfg["reference_planes"]["top_air_thickness_m"],
-                             cfg["reference_planes"]["bottom_air_thickness_m"], cfg["substrate"]["thickness_m"])
+    planes = ReferencePlanes(
+        cfg["reference_planes"]["top_air_thickness_m"],
+        cfg["reference_planes"]["bottom_air_thickness_m"],
+        cfg["substrate"]["thickness_m"],
+    )
     for cell in back.cells:
         if cell.status != "ok":
             continue
@@ -193,14 +202,24 @@ def test_unit_cell_of_an_invalid_cell_or_csv_import_is_refused(db, files):
 
 # -------------------------------------------------------------------------- CSV round trip
 
+
 def test_csv_layout(db, files):
     with open(files[1], newline="") as fh:
         rows = list(csv.reader(fh))
     assert tuple(rows[0]) == CSV_COLUMNS and len(rows) == 1 + len(db.records)
     assert len(CSV_COLUMNS) == 4 + 5 + 7 + 2 * 16 + 2 * 16
-    assert rows[0][:9] == ["cell_id", "cell_index", "frequency_index", "frequency_hz",
-                           "length_m", "width_m", "center_x_m", "center_y_m", "rotation_deg"]
-    assert len(set(r[0] for r in rows[1:])) == 4                       # skipped cells are not in the CSV
+    assert rows[0][:9] == [
+        "cell_id",
+        "cell_index",
+        "frequency_index",
+        "frequency_hz",
+        "length_m",
+        "width_m",
+        "center_x_m",
+        "center_y_m",
+        "rotation_deg",
+    ]
+    assert len(set(r[0] for r in rows[1:])) == 4  # skipped cells are not in the CSV
 
 
 def test_csv_round_trip_preserves_values_to_rounding(db, files):
@@ -235,7 +254,9 @@ def test_csv_circular_columns_are_the_conversion_of_the_linear_ones(db, files):
         for fam in ("S11", "S12", "S21", "S22"):
             lin = np.zeros((2, 2), dtype=complex)
             for comp, (i, j) in {"xx": (0, 0), "yx": (1, 0), "xy": (0, 1), "yy": (1, 1)}.items():
-                lin[i, j] = float(row[f"{fam}_{comp}_mag"]) * np.exp(1j * np.radians(float(row[f"{fam}_{comp}_phase_deg"])))
+                lin[i, j] = float(row[f"{fam}_{comp}_mag"]) * np.exp(
+                    1j * np.radians(float(row[f"{fam}_{comp}_phase_deg"]))
+                )
             circ = block_to_circular(lin)
             for comp, (i, j) in {"RR": (0, 0), "LR": (1, 0), "RL": (0, 1), "LL": (1, 1)}.items():
                 assert float(row[f"{fam}_{comp}_mag"]) == pytest.approx(abs(circ[i, j]), abs=1e-13)
@@ -254,6 +275,7 @@ def test_csv_export_is_deterministic_bytes(db, tmp_path):
 
 # ---------------------------------------------------------------------------- import errors
 
+
 def load_doc(path):
     return json.loads(path.read_text())
 
@@ -266,8 +288,11 @@ def write_doc(doc, tmp_path, name="bad.json"):
 
 def test_json_import_rejects_wrong_format_version_and_garbage(files, tmp_path):
     doc = load_doc(files[0])
-    for change, fragment in (({"format": "other"}, "not a"), ({"version": 2}, "unsupported database version"),
-                             ({"version": None}, "unsupported")):
+    for change, fragment in (
+        ({"format": "other"}, "not a"),
+        ({"version": 2}, "unsupported database version"),
+        ({"version": None}, "unsupported"),
+    ):
         with pytest.raises(DatabaseError, match=fragment):
             Database.from_json(write_doc({**doc, **change}, tmp_path))
     for key in ("metadata", "cells"):
@@ -373,13 +398,14 @@ def test_csv_import_rejects_negative_magnitude_and_tampered_circular_columns(fil
 
 # -------------------------------------------------------------------------------- queries
 
+
 def test_series_and_phase_series(db):
     f, s = db.series(0, "S21_xx")
     assert f.tolist() == [8e9, 9e9, 10e9] and s.shape == (3,)
     f2, ph = db.phase_series_deg(0, "S21_xx")
     assert np.allclose(ph, principal_phase_deg(s))
     _, un = db.phase_series_deg(0, "S21_xx", unwrap=True)
-    assert np.allclose(np.mod(un - ph + 180, 360) - 180, 0.0, atol=1e-9)       # same modulo 360
+    assert np.allclose(np.mod(un - ph + 180, 360) - 180, 0.0, atol=1e-9)  # same modulo 360
     with pytest.raises(KeyError):
         db.cell(99)
     with pytest.raises(KeyError):
@@ -396,13 +422,13 @@ def test_unwrap_requires_consecutive_frequency_indices(db):
     gappy = Database(db.metadata, [cell], recs)
     with pytest.raises(DatabaseError, match="consecutive"):
         gappy.phase_series_deg(0, "S21_xx", unwrap=True)
-    assert gappy.phase_series_deg(0, "S21_xx")[0].size == 2          # principal values are fine
+    assert gappy.phase_series_deg(0, "S21_xx")[0].size == 2  # principal values are fine
 
 
 def test_s_array_layout_and_missing_entries(db):
     lin = db.s_array()
     assert lin.shape == (6, 3, 4, 4)
-    assert np.all(np.isnan(lin[2])) and np.all(np.isnan(lin[3]))     # skipped cells
+    assert np.all(np.isnan(lin[2])) and np.all(np.isnan(lin[3]))  # skipped cells
     assert np.array_equal(lin[0, 1], db.record(0, 1).s)
     circ = db.s_array("circular")
     assert np.allclose(circ[4, 2, 2:, :2], block_to_circular(family_block(db.record(4, 2).s, "S21")), atol=1e-14)
@@ -421,12 +447,22 @@ def test_parameter_array_and_failed_validation(db):
 
 def test_failed_validation_reports_failed_refinement_and_failed_checks(db):
     cell = db.cells[0]
-    bad_ref = CellEntry(cell.index, cell.cell_id, cell.parameters, "ok", None,
-                        {**cell.validation, "refinement": {**cell.validation["refinement"], "passed": False}})
+    bad_ref = CellEntry(
+        cell.index,
+        cell.cell_id,
+        cell.parameters,
+        "ok",
+        None,
+        {**cell.validation, "refinement": {**cell.validation["refinement"], "passed": False}},
+    )
     tweaked = Database(db.metadata, [bad_ref] + list(db.cells[1:]), db.records)
     assert [c.cell_id for c in tweaked.failed_validation()] == [cell.cell_id]
-    worse = [Record(r.cell_id, r.frequency_index, r.frequency, r.s, {**r.diagnostics, "checks_passed": False})
-             if r.cell_id == db.cells[1].cell_id else r for r in db.records]
+    worse = [
+        Record(r.cell_id, r.frequency_index, r.frequency, r.s, {**r.diagnostics, "checks_passed": False})
+        if r.cell_id == db.cells[1].cell_id
+        else r
+        for r in db.records
+    ]
     assert [c.cell_id for c in Database(db.metadata, db.cells, worse).failed_validation()] == [db.cells[1].cell_id]
 
 

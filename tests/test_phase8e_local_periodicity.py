@@ -14,7 +14,7 @@ def test_always_reports_unvalidated():
 
 def test_cells_per_fringe_is_computed_correctly():
     period_m = 4.8e-3
-    k_t = 2.0 * math.pi / 0.024   # fringe period = 24 mm
+    k_t = 2.0 * math.pi / 0.024  # fringe period = 24 mm
     result = assess_local_periodicity(period_m, k_t)
     assert result.cells_per_fringe == pytest.approx(0.024 / period_m)
 

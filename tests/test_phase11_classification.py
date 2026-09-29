@@ -1,8 +1,12 @@
 """Sec. 18, 28: CASE A/B/C/D classification from measured convergence results."""
 
-from src.phase11.classification import (CASE_A_LOCAL, CASE_B_MODERATELY_NONLOCAL,
-                                          CASE_C_STRONGLY_NONLOCAL, CASE_D_PATTERN_DEPENDENT,
-                                          classify_overall)
+from src.phase11.classification import (
+    CASE_A_LOCAL,
+    CASE_B_MODERATELY_NONLOCAL,
+    CASE_C_STRONGLY_NONLOCAL,
+    CASE_D_PATTERN_DEPENDENT,
+    classify_overall,
+)
 from src.phase11.convergence import ConvergenceResult
 
 

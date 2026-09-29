@@ -13,28 +13,30 @@ DOMAIN_STEP_MM = 0.2
 # Sec. 6: five center cells spanning near-small, mid-range, near-large and anisotropic geometry,
 # all exact points on the existing 0.2 mm sweep grid (verified in tests).
 CENTER_CELLS_MM = {
-    "C1": (1.4, 1.4),   # near-small
-    "C2": (2.0, 2.8),   # anisotropic, mid-small
-    "C3": (2.8, 2.8),   # mid-range (Phase 9's own default center)
-    "C4": (3.6, 2.8),   # anisotropic, mid-large
-    "C5": (4.2, 4.2),   # near-large
+    "C1": (1.4, 1.4),  # near-small
+    "C2": (2.0, 2.8),  # anisotropic, mid-small
+    "C3": (2.8, 2.8),  # mid-range (Phase 9's own default center)
+    "C4": (3.6, 2.8),  # anisotropic, mid-large
+    "C5": (4.2, 4.2),  # near-large
 }
 PRIMARY_CENTER = "C3"
 
-WEAK_DELTA_MM = 0.2     # Sec. 7
+WEAK_DELTA_MM = 0.2  # Sec. 7
 MODERATE_DELTA_MM = 0.6  # Sec. 8
 STRONG_LW_MM = (1.0, 4.4)  # Sec. 9: the sweep's own domain extremes
 
 
 def in_domain(l_mm, w_mm, tol=1e-9):
-    return (DOMAIN_L_MIN_MM - tol <= l_mm <= DOMAIN_L_MAX_MM + tol
-            and DOMAIN_W_MIN_MM - tol <= w_mm <= DOMAIN_W_MAX_MM + tol)
+    return (
+        DOMAIN_L_MIN_MM - tol <= l_mm <= DOMAIN_L_MAX_MM + tol
+        and DOMAIN_W_MIN_MM - tol <= w_mm <= DOMAIN_W_MAX_MM + tol
+    )
 
 
 @dataclass(frozen=True)
 class PerturbedNeighbor:
     lw_mm: tuple
-    direction: str   # "+" or "-", whichever stayed in-domain
+    direction: str  # "+" or "-", whichever stayed in-domain
     delta_mm: float
 
 
@@ -49,8 +51,10 @@ def perturbed_neighbor(center_lw_mm, delta_mm):
         return PerturbedNeighbor(plus, "+", delta_mm)
     if in_domain(*minus):
         return PerturbedNeighbor(minus, "-", delta_mm)
-    raise ValueError(f"perturbed_neighbor: neither {center_lw_mm}+-{delta_mm} stays in the "
-                      f"validated {DOMAIN_L_MIN_MM}-{DOMAIN_L_MAX_MM} mm domain")
+    raise ValueError(
+        f"perturbed_neighbor: neither {center_lw_mm}+-{delta_mm} stays in the "
+        f"validated {DOMAIN_L_MIN_MM}-{DOMAIN_L_MAX_MM} mm domain"
+    )
 
 
 def weak_neighbor(center_lw_mm):

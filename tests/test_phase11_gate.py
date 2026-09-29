@@ -41,14 +41,19 @@ def test_step_export_unlocked_only_when_inversion_unlocked_and_all_conditions_tr
 
 # --------------------------------------------------------------------- Sec. 28 mandatory negatives
 
+
 def test_negative_unvalidated_control_variable_keeps_geometry_inversion_locked():
     """Even with every other condition true, a missing HFSS/control variable must lock inversion."""
     conditions = _all_true_geometry_conditions()
     conditions["physical_control_variable_validated"] = False
-    decision = gate_mod.decide(CASE_A_LOCAL, hfss_exists=False, inverse_mostly_found=True,
-                                reduction_decision_status=REDUCTION_VALIDATED,
-                                geometry_inversion_conditions=conditions,
-                                step_export_conditions=_all_true_step_conditions())
+    decision = gate_mod.decide(
+        CASE_A_LOCAL,
+        hfss_exists=False,
+        inverse_mostly_found=True,
+        reduction_decision_status=REDUCTION_VALIDATED,
+        geometry_inversion_conditions=conditions,
+        step_export_conditions=_all_true_step_conditions(),
+    )
     assert decision.geometry_inversion_status == gate_mod.GEOMETRY_INVERSION_LOCKED
     assert decision.step_export_status == gate_mod.STEP_EXPORT_LOCKED
 
@@ -58,20 +63,28 @@ def test_negative_unvalidated_heterogeneous_forward_model_keeps_geometry_inversi
     everything else claims to pass."""
     conditions = _all_true_geometry_conditions()
     conditions["heterogeneous_forward_model_converges"] = False
-    decision = gate_mod.decide(CASE_C_STRONGLY_NONLOCAL, hfss_exists=True, inverse_mostly_found=True,
-                                reduction_decision_status=REDUCTION_NOT_ATTEMPTED,
-                                geometry_inversion_conditions=conditions,
-                                step_export_conditions=_all_true_step_conditions())
+    decision = gate_mod.decide(
+        CASE_C_STRONGLY_NONLOCAL,
+        hfss_exists=True,
+        inverse_mostly_found=True,
+        reduction_decision_status=REDUCTION_NOT_ATTEMPTED,
+        geometry_inversion_conditions=conditions,
+        step_export_conditions=_all_true_step_conditions(),
+    )
     assert decision.geometry_inversion_status == gate_mod.GEOMETRY_INVERSION_LOCKED
     assert decision.coupling_status == gate_mod.COUPLING_NONLOCAL
     assert decision.reduction_status == gate_mod.REDUCTION_INVALIDATED
 
 
 def test_fully_validated_chain_unlocks_geometry_inversion_and_step_export():
-    decision = gate_mod.decide(CASE_A_LOCAL, hfss_exists=True, inverse_mostly_found=True,
-                                reduction_decision_status=REDUCTION_VALIDATED,
-                                geometry_inversion_conditions=_all_true_geometry_conditions(),
-                                step_export_conditions=_all_true_step_conditions())
+    decision = gate_mod.decide(
+        CASE_A_LOCAL,
+        hfss_exists=True,
+        inverse_mostly_found=True,
+        reduction_decision_status=REDUCTION_VALIDATED,
+        geometry_inversion_conditions=_all_true_geometry_conditions(),
+        step_export_conditions=_all_true_step_conditions(),
+    )
     assert decision.geometry_inversion_status == gate_mod.GEOMETRY_INVERSION_UNLOCKED
     assert decision.step_export_status == gate_mod.STEP_EXPORT_UNLOCKED
     assert decision.coupling_status == gate_mod.COUPLING_LOCAL

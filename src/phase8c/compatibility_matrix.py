@@ -25,20 +25,37 @@ class MatrixRow:
     s21xx: str
 
 
-def build_compatibility_matrix(s11_investigation, s21_investigation, s11_coverage, s21_coverage,
-                                s11_reflection_test, s21_transmission_test, s11_phase_only, s21_phase_only):
+def build_compatibility_matrix(
+    s11_investigation,
+    s21_investigation,
+    s11_coverage,
+    s21_coverage,
+    s11_reflection_test,
+    s21_transmission_test,
+    s11_phase_only,
+    s21_phase_only,
+):
     """Sec. 38's exact table -- one row per criterion, S11xx and S21xx side by side, no score, no
     winner."""
     return (
-        MatrixRow("Physical interpretation", s11_investigation.physical_definition, s21_investigation.physical_definition),
+        MatrixRow(
+            "Physical interpretation", s11_investigation.physical_definition, s21_investigation.physical_definition
+        ),
         MatrixRow("Architecture compatible", s11_reflection_test.status, s21_transmission_test.status),
         MatrixRow("Phase coverage (deg)", f"{s11_coverage.coverage_deg:.2f}", f"{s21_coverage.coverage_deg:.2f}"),
-        MatrixRow("Largest circular gap (deg)", f"{s11_coverage.largest_gap_deg:.2f}", f"{s21_coverage.largest_gap_deg:.2f}"),
-        MatrixRow("Magnitude range", f"[{s11_coverage.magnitude_min:.4f}, {s11_coverage.magnitude_max:.4f}]",
-                  f"[{s21_coverage.magnitude_min:.4f}, {s21_coverage.magnitude_max:.4f}]"),
+        MatrixRow(
+            "Largest circular gap (deg)", f"{s11_coverage.largest_gap_deg:.2f}", f"{s21_coverage.largest_gap_deg:.2f}"
+        ),
+        MatrixRow(
+            "Magnitude range",
+            f"[{s11_coverage.magnitude_min:.4f}, {s11_coverage.magnitude_max:.4f}]",
+            f"[{s21_coverage.magnitude_min:.4f}, {s21_coverage.magnitude_max:.4f}]",
+        ),
         MatrixRow("Phase-only approximation", s11_phase_only.status, s21_phase_only.status),
         MatrixRow("Polarization", "co-polarized (x-in, x-out)", "co-polarized (x-in, x-out)"),
-        MatrixRow("Holographic mapping (Formulation B)", "PARTIAL (candidate, unresolved)", "PARTIAL (candidate, unresolved)"),
+        MatrixRow(
+            "Holographic mapping (Formulation B)", "PARTIAL (candidate, unresolved)", "PARTIAL (candidate, unresolved)"
+        ),
         MatrixRow("Validation status", s11_investigation.validated, s21_investigation.validated),
     )
 
@@ -59,8 +76,14 @@ def library_adequacy(control_variable_validated, coverage_deg, tolerance_deg=Non
     return "UNVALIDATED"
 
 
-def final_status(architecture_resolved, s11_investigation, s21_investigation, formulation_a_status,
-                  reciprocity_ok, propagating_modes_ok):
+def final_status(
+    architecture_resolved,
+    s11_investigation,
+    s21_investigation,
+    formulation_a_status,
+    reciprocity_ok,
+    propagating_modes_ok,
+):
     """Sec. 53/62's decision tree, followed in the fixed order (topology -> scattering meaning ->
     Phase 8B compatibility -> complex-response adequacy -> library adequacy -> final status)."""
     if not architecture_resolved:
@@ -69,8 +92,11 @@ def final_status(architecture_resolved, s11_investigation, s21_investigation, fo
         return "SCATTERING_DATA_INSUFFICIENT"
     if not reciprocity_ok:
         return "SCATTERING_DATA_INSUFFICIENT"
-    if formulation_a_status == "LIBRARY_CONTROL_VARIABLE_INCOMPATIBLE" and \
-       s11_investigation.validated != "VALIDATED" and s21_investigation.validated != "VALIDATED":
+    if (
+        formulation_a_status == "LIBRARY_CONTROL_VARIABLE_INCOMPATIBLE"
+        and s11_investigation.validated != "VALIDATED"
+        and s21_investigation.validated != "VALIDATED"
+    ):
         # Formulation A structurally incompatible; Formulation B's own control variable remains
         # unresolved (neither S11xx nor S21xx independently validated) -- the honest, currently
         # correct answer for this project, not a forced choice.

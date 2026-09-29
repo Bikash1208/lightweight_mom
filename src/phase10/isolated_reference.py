@@ -24,8 +24,16 @@ class IsolatedReferenceCache:
         key = (round(center_lw_mm[0], 6), round(center_lw_mm[1], 6), round(frequency_hz, 3))
         if key not in self._cache:
             l_m, w_m = center_lw_mm[0] * 1e-3, center_lw_mm[1] * 1e-3
-            solved = solve_isolated_cell(self.period_m, self.period_m, l_m, w_m, self.substrate,
-                                          self.metal, frequency_hz, self.mesh_cells_per_subcell,
-                                          2 * self.mesh_cells_per_subcell)
+            solved = solve_isolated_cell(
+                self.period_m,
+                self.period_m,
+                l_m,
+                w_m,
+                self.substrate,
+                self.metal,
+                frequency_hz,
+                self.mesh_cells_per_subcell,
+                2 * self.mesh_cells_per_subcell,
+            )
             self._cache[key] = solved.dipole.px
         return self._cache[key]

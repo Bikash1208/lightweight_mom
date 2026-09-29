@@ -42,13 +42,17 @@ def main(argv):
     print(f"\ndone in {dt:.2f}s")
     for case_id, r in results.items():
         n_metal = r.step_result.metal.n_solids if r.step_result.metal.n_solids else 0
-        print(f"  {case_id}: {r.out_dir} "
-              f"(metal volume {r.step_result.metal.volume_mm3:.4f} mm^3, "
-              f"{len(r.database.records)} S-matrix record(s))")
+        print(
+            f"  {case_id}: {r.out_dir} "
+            f"(metal volume {r.step_result.metal.volume_mm3:.4f} mm^3, "
+            f"{len(r.database.records)} S-matrix record(s))"
+        )
 
-    print(f"\nSee {out_dir / cases[0].case_id / 'README.md'} (per-case) and VALIDATION_EXPORT.md "
-          f"(pipeline-wide) for how to reproduce any of these in HFSS. This project does not "
-          f"perform that comparison automatically.")
+    print(
+        f"\nSee {out_dir / cases[0].case_id / 'README.md'} (per-case) and VALIDATION_EXPORT.md "
+        f"(pipeline-wide) for how to reproduce any of these in HFSS. This project does not "
+        f"perform that comparison automatically."
+    )
 
 
 if __name__ == "__main__":

@@ -18,9 +18,12 @@ def test_library_adequacy_incompatible_when_control_variable_invalid():
 
 def test_final_status_architecture_unresolved_short_circuits_everything():
     status = final_status(
-        architecture_resolved=False, s11_investigation=None, s21_investigation=None,
+        architecture_resolved=False,
+        s11_investigation=None,
+        s21_investigation=None,
         formulation_a_status="LIBRARY_CONTROL_VARIABLE_INCOMPATIBLE",
-        reciprocity_ok=True, propagating_modes_ok=True,
+        reciprocity_ok=True,
+        propagating_modes_ok=True,
     )
     assert status == "ARCHITECTURE_UNRESOLVED"
 
@@ -31,9 +34,12 @@ def test_final_status_scattering_data_insufficient_when_modes_or_reciprocity_fai
 
     for reciprocity_ok, modes_ok in [(False, True), (True, False)]:
         status = final_status(
-            architecture_resolved=True, s11_investigation=_Inv(), s21_investigation=_Inv(),
+            architecture_resolved=True,
+            s11_investigation=_Inv(),
+            s21_investigation=_Inv(),
             formulation_a_status="LIBRARY_CONTROL_VARIABLE_INCOMPATIBLE",
-            reciprocity_ok=reciprocity_ok, propagating_modes_ok=modes_ok,
+            reciprocity_ok=reciprocity_ok,
+            propagating_modes_ok=modes_ok,
         )
         assert status == "SCATTERING_DATA_INSUFFICIENT"
 
@@ -43,9 +49,12 @@ def test_final_status_control_variable_unvalidated_for_this_projects_real_findin
         validated = "INSUFFICIENT_EVIDENCE"
 
     status = final_status(
-        architecture_resolved=True, s11_investigation=_Inv(), s21_investigation=_Inv(),
+        architecture_resolved=True,
+        s11_investigation=_Inv(),
+        s21_investigation=_Inv(),
         formulation_a_status="LIBRARY_CONTROL_VARIABLE_INCOMPATIBLE",
-        reciprocity_ok=True, propagating_modes_ok=True,
+        reciprocity_ok=True,
+        propagating_modes_ok=True,
     )
     assert status == "CONTROL_VARIABLE_UNVALIDATED"
 

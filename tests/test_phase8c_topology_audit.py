@@ -17,7 +17,9 @@ def test_ground_plane_is_present_for_a_pec_backed_context():
     """Phase 12A: the audit is now a real per-database read of context['backing'], not a
     project-wide constant."""
     context = {
-        "substrate": {"eps_r": 2.2}, "metal": {"model": "pec"}, "reference_planes": {},
+        "substrate": {"eps_r": 2.2},
+        "metal": {"model": "pec"},
+        "reference_planes": {},
         "backing": "pec",
     }
     label, evidence = ta._ground_plane_test(context)
@@ -52,7 +54,9 @@ def test_architecture_classification_transmissive_case():
 
 
 def test_render_topology_audit_md_includes_ground_plane_status():
-    audit = ta.TopologyAudit("ABSENT", "evidence text", "metal", "substrate", "air", "PARTIALLY_REFLECTIVE_TRANSMISSIVE", "note")
+    audit = ta.TopologyAudit(
+        "ABSENT", "evidence text", "metal", "substrate", "air", "PARTIALLY_REFLECTIVE_TRANSMISSIVE", "note"
+    )
     md = ta.render_topology_audit_md(audit)
     assert "ABSENT" in md
     assert "PARTIALLY_REFLECTIVE_TRANSMISSIVE" in md
@@ -60,7 +64,7 @@ def test_render_topology_audit_md_includes_ground_plane_status():
 
 def test_real_library_audit_finds_no_ground_plane(phase8c_full_database):
     db = phase8c_full_database
-    summary = pb.library_power_summary(db, 100)   # index 100 = 12.5 GHz for the locked 201-pt grid
+    summary = pb.library_power_summary(db, 100)  # index 100 = 12.5 GHz for the locked 201-pt grid
     audit = ta.audit_topology(db, summary)
     assert audit.ground_plane == "ABSENT"
 

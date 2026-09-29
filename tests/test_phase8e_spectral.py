@@ -19,14 +19,32 @@ def _tilted_plane_wave_field(theta_deg, phi_deg, n=32, extent_m=0.05):
     x, y = np.meshgrid(lin, lin, indexing="xy")
     ex = np.exp(-1j * (kx0 * x + ky0 * y))
     dx = float(lin[1] - lin[0])
-    field = ReferenceFieldGrid(x_m=x, y_m=y, Ex=ex, Ey=np.zeros_like(ex), amplitude_available=True,
-                                source="TEST", dx_m=dx, dy_m=dx, z_reference_m=0.0)
+    field = ReferenceFieldGrid(
+        x_m=x,
+        y_m=y,
+        Ex=ex,
+        Ey=np.zeros_like(ex),
+        amplitude_available=True,
+        source="TEST",
+        dx_m=dx,
+        dy_m=dx,
+        z_reference_m=0.0,
+    )
     return field, kx0, ky0
 
 
 def test_reference_field_spectrum_rejects_missing_grid_spacing():
-    field = ReferenceFieldGrid(x_m=np.zeros((2, 2)), y_m=np.zeros((2, 2)), Ex=None, Ey=None,
-                                amplitude_available=False, source="TEST", dx_m=None, dy_m=None, z_reference_m=None)
+    field = ReferenceFieldGrid(
+        x_m=np.zeros((2, 2)),
+        y_m=np.zeros((2, 2)),
+        Ex=None,
+        Ey=None,
+        amplitude_available=False,
+        source="TEST",
+        dx_m=None,
+        dy_m=None,
+        z_reference_m=None,
+    )
     with pytest.raises(ValueError):
         reference_field_spectrum(field, FREQ_HZ)
 

@@ -4,7 +4,7 @@ cross-checked here against the basis's own closed-form Fourier-transform integra
 import numpy as np
 import pytest
 
-from src.basis_functions import MeshSettings, RooftopBasis
+from src.basis_functions import RooftopBasis
 from src.geometry import Geometry, UnitCell
 from src.materials import Metal, Substrate
 from src.periodic_bc import RectangularLattice

@@ -1,15 +1,20 @@
 """Sec. 16, 47: the non-arbitrary (reused, sourced) 5-cell/9-cell/larger-neighborhood decision."""
 
-from src.phase10.neighborhood_decision import (NOISE_FLOOR_RELATIVE, SUBSTANTIAL_DEVIATION_RELATIVE,
-                                                classify_per_contrast, decide_neighborhood_size,
-                                                five_cell_predictive_error)
+from src.phase10.neighborhood_decision import (
+    NOISE_FLOOR_RELATIVE,
+    SUBSTANTIAL_DEVIATION_RELATIVE,
+    classify_per_contrast,
+    decide_neighborhood_size,
+    five_cell_predictive_error,
+)
 
 
 def test_reuses_phase9s_own_constants_not_new_ones():
     from src.phase9.local_periodicity import NOISE_FLOOR_RELATIVE as p9_floor
     from src.phase9.local_periodicity import SUBSTANTIAL_DEVIATION_RELATIVE as p9_sub
-    assert NOISE_FLOOR_RELATIVE == p9_floor
-    assert SUBSTANTIAL_DEVIATION_RELATIVE == p9_sub
+
+    assert p9_floor == NOISE_FLOOR_RELATIVE
+    assert p9_sub == SUBSTANTIAL_DEVIATION_RELATIVE
 
 
 def test_five_cell_sufficient_when_prediction_matches_the_true_9cell_response():
@@ -20,7 +25,7 @@ def test_five_cell_sufficient_when_prediction_matches_the_true_9cell_response():
 
 def test_nine_cell_required_when_prediction_error_is_measurable_but_not_substantial():
     s0 = 1.0 + 0j
-    pe = five_cell_predictive_error("moderate", s0, 1.0 + 0j, 1.1 + 0j)   # 10% relative error
+    pe = five_cell_predictive_error("moderate", s0, 1.0 + 0j, 1.1 + 0j)  # 10% relative error
     assert classify_per_contrast(pe) == "9_CELL_REQUIRED"
 
 

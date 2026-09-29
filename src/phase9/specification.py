@@ -12,24 +12,49 @@ def _write_json(doc, path):
 
 # ------------------------------------------------------------------------------------- Phase 9A
 
+
 def write_hfss_reference_cells_csv(solver_rows, hfss_records, path):
     hfss_by_key = {(r.cell_id, round(r.frequency_ghz, 6)): r for r in hfss_records} if hfss_records else {}
     path = Path(path)
     with open(path, "w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh, lineterminator="\n")
-        writer.writerow(["cell_id", "L_mm", "W_mm", "frequency_GHz",
-                          "solver_S11_real", "solver_S11_imag", "solver_S21_real", "solver_S21_imag",
-                          "hfss_S11_real", "hfss_S11_imag", "hfss_S21_real", "hfss_S21_imag"])
+        writer.writerow(
+            [
+                "cell_id",
+                "L_mm",
+                "W_mm",
+                "frequency_GHz",
+                "solver_S11_real",
+                "solver_S11_imag",
+                "solver_S21_real",
+                "solver_S21_imag",
+                "hfss_S11_real",
+                "hfss_S11_imag",
+                "hfss_S21_real",
+                "hfss_S21_imag",
+            ]
+        )
         for row in solver_rows:
             key = (row.cell_id, round(row.frequency_ghz, 6))
             hfss = hfss_by_key.get(key)
-            hfss_vals = ([repr(hfss.s11.real), repr(hfss.s11.imag), repr(hfss.s21.real), repr(hfss.s21.imag)]
-                         if hfss is not None else ["NOT_AVAILABLE"] * 4)
-            writer.writerow([
-                row.cell_id, repr(row.l_mm), repr(row.w_mm), repr(row.frequency_ghz),
-                repr(row.s11.real), repr(row.s11.imag), repr(row.s21.real), repr(row.s21.imag),
-                *hfss_vals,
-            ])
+            hfss_vals = (
+                [repr(hfss.s11.real), repr(hfss.s11.imag), repr(hfss.s21.real), repr(hfss.s21.imag)]
+                if hfss is not None
+                else ["NOT_AVAILABLE"] * 4
+            )
+            writer.writerow(
+                [
+                    row.cell_id,
+                    repr(row.l_mm),
+                    repr(row.w_mm),
+                    repr(row.frequency_ghz),
+                    repr(row.s11.real),
+                    repr(row.s11.imag),
+                    repr(row.s21.real),
+                    repr(row.s21.imag),
+                    *hfss_vals,
+                ]
+            )
     return path
 
 
@@ -44,27 +69,58 @@ def write_s_parameter_comparison_csv(solver_rows, hfss_records, component, path)
     path = Path(path)
     with open(path, "w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh, lineterminator="\n")
-        writer.writerow(["cell_id", "L_mm", "W_mm", "frequency_GHz",
-                          f"solver_{component}_real", f"solver_{component}_imag",
-                          f"hfss_{component}_real", f"hfss_{component}_imag",
-                          "complex_error", "magnitude_error", "phase_error_deg"])
+        writer.writerow(
+            [
+                "cell_id",
+                "L_mm",
+                "W_mm",
+                "frequency_GHz",
+                f"solver_{component}_real",
+                f"solver_{component}_imag",
+                f"hfss_{component}_real",
+                f"hfss_{component}_imag",
+                "complex_error",
+                "magnitude_error",
+                "phase_error_deg",
+            ]
+        )
         for row in solver_rows:
             key = (row.cell_id, round(row.frequency_ghz, 6))
             hfss = hfss_by_key.get(key)
             solver_val = getattr(row, component)
             if hfss is None:
-                writer.writerow([row.cell_id, repr(row.l_mm), repr(row.w_mm), repr(row.frequency_ghz),
-                                  repr(solver_val.real), repr(solver_val.imag),
-                                  "NOT_AVAILABLE", "NOT_AVAILABLE", "NOT_AVAILABLE", "NOT_AVAILABLE", "NOT_AVAILABLE"])
+                writer.writerow(
+                    [
+                        row.cell_id,
+                        repr(row.l_mm),
+                        repr(row.w_mm),
+                        repr(row.frequency_ghz),
+                        repr(solver_val.real),
+                        repr(solver_val.imag),
+                        "NOT_AVAILABLE",
+                        "NOT_AVAILABLE",
+                        "NOT_AVAILABLE",
+                        "NOT_AVAILABLE",
+                        "NOT_AVAILABLE",
+                    ]
+                )
                 continue
             hfss_val = getattr(hfss, component)
-            writer.writerow([
-                row.cell_id, repr(row.l_mm), repr(row.w_mm), repr(row.frequency_ghz),
-                repr(solver_val.real), repr(solver_val.imag), repr(hfss_val.real), repr(hfss_val.imag),
-                repr(float(complex_error_fn(solver_val, hfss_val))),
-                repr(float(magnitude_error_fn(solver_val, hfss_val))),
-                repr(float(phase_error_fn(solver_val, hfss_val))),
-            ])
+            writer.writerow(
+                [
+                    row.cell_id,
+                    repr(row.l_mm),
+                    repr(row.w_mm),
+                    repr(row.frequency_ghz),
+                    repr(solver_val.real),
+                    repr(solver_val.imag),
+                    repr(hfss_val.real),
+                    repr(hfss_val.imag),
+                    repr(float(complex_error_fn(solver_val, hfss_val))),
+                    repr(float(magnitude_error_fn(solver_val, hfss_val))),
+                    repr(float(phase_error_fn(solver_val, hfss_val))),
+                ]
+            )
     return path
 
 
@@ -73,6 +129,7 @@ def write_architecture_audit_json(audit_dict, path):
 
 
 # ------------------------------------------------------------------------------------- Phase 9B
+
 
 def write_supercell_definitions_csv(cases, path):
     """``cases``: iterable of (name, n, grid_m) with ``grid_m[i][j] = (L_m, W_m)``."""
@@ -92,16 +149,39 @@ def write_supercell_results_csv(results, path):
     path = Path(path)
     with open(path, "w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh, lineterminator="\n")
-        writer.writerow(["name", "n", "isolated_px_real", "isolated_px_imag", "embedded_px_real",
-                          "embedded_px_imag", "complex_error", "magnitude_error", "phase_error_deg",
-                          "relative_complex_error", "n_unknowns_isolated", "n_unknowns_embedded"])
+        writer.writerow(
+            [
+                "name",
+                "n",
+                "isolated_px_real",
+                "isolated_px_imag",
+                "embedded_px_real",
+                "embedded_px_imag",
+                "complex_error",
+                "magnitude_error",
+                "phase_error_deg",
+                "relative_complex_error",
+                "n_unknowns_isolated",
+                "n_unknowns_embedded",
+            ]
+        )
         for r in results:
-            writer.writerow([
-                r.name, r.n, repr(r.isolated_px.real), repr(r.isolated_px.imag),
-                repr(r.embedded_px.real), repr(r.embedded_px.imag), repr(r.complex_error),
-                repr(r.magnitude_error), repr(r.phase_error_deg), repr(r.relative_complex_error),
-                r.n_unknowns_isolated, r.n_unknowns_embedded,
-            ])
+            writer.writerow(
+                [
+                    r.name,
+                    r.n,
+                    repr(r.isolated_px.real),
+                    repr(r.isolated_px.imag),
+                    repr(r.embedded_px.real),
+                    repr(r.embedded_px.imag),
+                    repr(r.complex_error),
+                    repr(r.magnitude_error),
+                    repr(r.phase_error_deg),
+                    repr(r.relative_complex_error),
+                    r.n_unknowns_isolated,
+                    r.n_unknowns_embedded,
+                ]
+            )
     return path
 
 
@@ -111,8 +191,16 @@ def write_lpa_error_metrics_csv(results, path):
         writer = csv.writer(fh, lineterminator="\n")
         writer.writerow(["name", "n", "complex_error", "magnitude_error", "phase_error_deg", "relative_complex_error"])
         for r in results:
-            writer.writerow([r.name, r.n, repr(r.complex_error), repr(r.magnitude_error),
-                              repr(r.phase_error_deg), repr(r.relative_complex_error)])
+            writer.writerow(
+                [
+                    r.name,
+                    r.n,
+                    repr(r.complex_error),
+                    repr(r.magnitude_error),
+                    repr(r.phase_error_deg),
+                    repr(r.relative_complex_error),
+                ]
+            )
     return path
 
 
@@ -129,7 +217,8 @@ def write_locality_analysis_json(results, path):
             "relative_complex_error_5x5": r5.relative_complex_error,
             "change_3x3_to_5x5": r5.relative_complex_error - r3.relative_complex_error,
             "note": (
-                "influence appears localized (5x5 close to 3x3)" if abs(r5.relative_complex_error - r3.relative_complex_error) < 0.5 * r3.relative_complex_error
+                "influence appears localized (5x5 close to 3x3)"
+                if abs(r5.relative_complex_error - r3.relative_complex_error) < 0.5 * r3.relative_complex_error
                 else "influence extends beyond the immediate 3x3 neighborhood (5x5 differs substantially from 3x3)"
             ),
         }
@@ -138,6 +227,7 @@ def write_locality_analysis_json(results, path):
 
 # --------------------------------------------------------------------------------- top-level
 
+
 def write_phase9_summary_json(decision, path):
     doc = {
         "phase": "9",
@@ -145,7 +235,8 @@ def write_phase9_summary_json(decision, path):
         "gate_a_status": decision.gate_a.status,
         "gate_b_status": decision.gate_b.status,
         "control_variable": {
-            "s11": decision.s11_status, "s21": decision.s21_status,
+            "s11": decision.s11_status,
+            "s21": decision.s21_status,
             "selected_control": decision.selected_control,
         },
         "local_periodicity": {"status": decision.local_periodicity_status},
@@ -158,11 +249,12 @@ def write_phase9_summary_json(decision, path):
 def write_phase9_gate_status_json(decision, path):
     doc = {
         "phase": "9",
-        "status": "PASS" if decision.geometry_inversion_unlocked else (
-            "PARTIAL" if decision.final_status == "PARTIALLY_VALIDATED" else "BLOCKED"
-        ),
+        "status": "PASS"
+        if decision.geometry_inversion_unlocked
+        else ("PARTIAL" if decision.final_status == "PARTIALLY_VALIDATED" else "BLOCKED"),
         "control_variable": {
-            "s11": decision.s11_status, "s21": decision.s21_status,
+            "s11": decision.s11_status,
+            "s21": decision.s21_status,
             "selected_control": decision.selected_control,
         },
         "local_periodicity": {"status": decision.local_periodicity_status},

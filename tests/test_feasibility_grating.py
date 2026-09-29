@@ -26,9 +26,14 @@ def test_grating_check_rejects_non_positive_inputs():
 
 def test_grating_onset_matches_discretization_for_the_locked_period():
     cfg = LibraryConfig(
-        period_m=4.8e-3, substrate=_SUBSTRATE,
-        f_min_hz=12.0e9, f_max_hz=13.0e9, f_step_hz=1.0e9, f_design_hz=12.5e9,
-        l_values_mm=(1.0,), w_values_mm=(1.0,),
+        period_m=4.8e-3,
+        substrate=_SUBSTRATE,
+        f_min_hz=12.0e9,
+        f_max_hz=13.0e9,
+        f_step_hz=1.0e9,
+        f_design_hz=12.5e9,
+        l_values_mm=(1.0,),
+        w_values_mm=(1.0,),
     )
     build = build_library_database(cfg, out_dir=None)
     unit_cell = build.database.unit_cell(0)
@@ -42,7 +47,7 @@ def test_locked_library_period_has_no_grating_risk_in_10_to_15_ghz():
     result = grating_check(4.8e-3, 4.8e-3, 12.5e9)
     assert result.is_grating_risk is False
     assert result.grating_onset_hz == pytest.approx(C0 / 4.8e-3, rel=1e-12)
-    assert result.grating_onset_hz / 1e9 > 15.0   # onset (~62.5 GHz) is far above the 10-15 GHz band
+    assert result.grating_onset_hz / 1e9 > 15.0  # onset (~62.5 GHz) is far above the 10-15 GHz band
 
 
 def test_grating_risk_is_true_above_onset():

@@ -29,10 +29,16 @@ def library_table_at_frequency(library_doc, frequency_ghz, rtol=1e-6):
                 f"{cell['cell_id']}; no interpolation is performed"
             )
         e = cell["S11"][matches[0]]
-        rows.append({
-            "L_mm": cell["L_mm"], "W_mm": cell["W_mm"], "phase_deg": e["phase_deg"],
-            "magnitude_db": e["mag_db"], "S11_real": e["real"], "S11_imag": e["imag"],
-        })
+        rows.append(
+            {
+                "L_mm": cell["L_mm"],
+                "W_mm": cell["W_mm"],
+                "phase_deg": e["phase_deg"],
+                "magnitude_db": e["mag_db"],
+                "S11_real": e["real"],
+                "S11_imag": e["imag"],
+            }
+        )
     if not rows:
         raise ValueError("library_table_at_frequency: no successfully-solved cells in this library")
     return rows
@@ -42,11 +48,11 @@ def library_table_at_frequency(library_doc, frequency_ghz, rtol=1e-6):
 class PhaseDensity:
     n_valid_geometries: int
     n_distinct_phase_states: int
-    phase_span_deg: float            # naive max-min (NOT circular); paired with coverage_deg separately
+    phase_span_deg: float  # naive max-min (NOT circular); paired with coverage_deg separately
     largest_gap_deg: float
     smallest_gap_deg: float
     median_gap_deg: float
-    phase_density_per_deg: float     # n_valid_geometries / 360: overall packing rate
+    phase_density_per_deg: float  # n_valid_geometries / 360: overall packing rate
 
 
 def phase_density(table, dedup_eps_deg=1e-6):
@@ -68,9 +74,12 @@ def phase_density(table, dedup_eps_deg=1e-6):
         gaps = [phases[i + 1] - phases[i] for i in range(n - 1)]
         gaps.append((phases[0] + 360.0) - phases[-1])
     return PhaseDensity(
-        n_valid_geometries=n, n_distinct_phase_states=distinct,
+        n_valid_geometries=n,
+        n_distinct_phase_states=distinct,
         phase_span_deg=phases[-1] - phases[0],
-        largest_gap_deg=max(gaps), smallest_gap_deg=min(gaps), median_gap_deg=float(np.median(gaps)),
+        largest_gap_deg=max(gaps),
+        smallest_gap_deg=min(gaps),
+        median_gap_deg=float(np.median(gaps)),
         phase_density_per_deg=n / 360.0,
     )
 
@@ -91,16 +100,17 @@ def phase_coverage_vs_frequency(library_doc):
             )
     results = []
     for i, f_ghz in enumerate(freq_ghz):
-        table = [
-            {"L_mm": c["L_mm"], "W_mm": c["W_mm"], "phase_deg": c["S11"][i]["phase_deg"]}
-            for c in ok_cells
-        ]
+        table = [{"L_mm": c["L_mm"], "W_mm": c["W_mm"], "phase_deg": c["S11"][i]["phase_deg"]} for c in ok_cells]
         cov = phase_coverage(table)
-        results.append({
-            "frequency_GHz": f_ghz, "coverage_deg": cov.coverage_deg,
-            "largest_gap_deg": cov.largest_gap_deg,
-            "phase_min_deg": cov.phase_min_deg, "phase_max_deg": cov.phase_max_deg,
-        })
+        results.append(
+            {
+                "frequency_GHz": f_ghz,
+                "coverage_deg": cov.coverage_deg,
+                "largest_gap_deg": cov.largest_gap_deg,
+                "phase_min_deg": cov.phase_min_deg,
+                "phase_max_deg": cov.phase_max_deg,
+            }
+        )
     return results
 
 

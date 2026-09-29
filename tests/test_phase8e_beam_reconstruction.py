@@ -31,7 +31,7 @@ def test_far_field_broadside_peak_for_a_uniform_in_phase_aperture():
     phi = np.array([[0.0, 0.0]])
     dx = float(lin[1] - lin[0])
     field = far_field_pattern(x, y, aperture, FREQ_HZ, theta, phi, dx, dx)
-    assert abs(field[0, 0]) > abs(field[0, 1])   # broadside stronger than a squinted direction
+    assert abs(field[0, 0]) > abs(field[0, 1])  # broadside stronger than a squinted direction
 
 
 def test_detect_local_maxima_finds_a_single_known_peak():
@@ -56,8 +56,8 @@ def test_evaluate_beam_reconstruction_zero_pointing_error_for_an_exact_peak():
 def test_evaluate_beam_reconstruction_reports_unwanted_peaks_separately():
     theta_grid, phi_grid = np.meshgrid(np.arange(0, 10, dtype=float), np.arange(0, 10, dtype=float), indexing="ij")
     power = np.full((10, 10), 1e-6)
-    power[3, 4] = 1.0     # intended
-    power[8, 8] = 0.5     # unwanted, dominant sidelobe
+    power[3, 4] = 1.0  # intended
+    power[8, 8] = 0.5  # unwanted, dominant sidelobe
     far_field = np.sqrt(power).astype(complex)
     beam = Beam(theta_deg=3.0, phi_deg=4.0)
     metrics = evaluate_beam_reconstruction(far_field, theta_grid, phi_grid, [beam])

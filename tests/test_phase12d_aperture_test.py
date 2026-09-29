@@ -8,7 +8,7 @@ from src.phase12d.aperture_test import run_aperture_test
 
 def _small_l_family(mesh_cells_per_subcell=8):
     unit_mm = 2.0 * 8.0 / mesh_cells_per_subcell
-    return tuple(round(unit_mm * k, 6) for k in range(1, 4))   # stays well inside an 8mm period
+    return tuple(round(unit_mm * k, 6) for k in range(1, 4))  # stays well inside an 8mm period
 
 
 def test_run_aperture_test_reduced_scale_produces_every_field():

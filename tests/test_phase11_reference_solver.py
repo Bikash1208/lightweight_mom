@@ -23,7 +23,7 @@ def test_solve_grid_matches_phase10s_own_wrapper_at_default_polarization():
     d11 = sg11.dipole_at(1, 1)
     d10 = sg10.dipole_at(1, 1)
     assert d11.px == pytest.approx(d10.px)
-    assert sg11.response_at(1, 1) == pytest.approx(d10.px)   # x-pol response is px
+    assert sg11.response_at(1, 1) == pytest.approx(d10.px)  # x-pol response is px
 
 
 def test_solve_grid_homogeneous_matches_isolated_cell():
@@ -43,7 +43,7 @@ def test_solve_grid_n1_matches_solve_isolated():
 
 
 def test_y_polarization_reads_py_not_px():
-    grid_m = [[(1.4e-3, 4.2e-3)] * 3 for _ in range(3)]   # anisotropic patch: px != py expected
+    grid_m = [[(1.4e-3, 4.2e-3)] * 3 for _ in range(3)]  # anisotropic patch: px != py expected
     sg_x = solve_grid(3, P, SUB, MET, grid_m, F, mesh_cells_per_subcell=8, polarization="x")
     sg_y = solve_grid(3, P, SUB, MET, grid_m, F, mesh_cells_per_subcell=8, polarization="y")
     dx = sg_x.dipole_at(1, 1)

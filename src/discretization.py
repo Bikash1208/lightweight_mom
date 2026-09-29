@@ -140,9 +140,8 @@ def is_position_mesh_aligned(position, period, cells, rtol=ALIGNMENT_RTOL):
 def feature_edges_aligned(period, cells, length, center, rtol=ALIGNMENT_RTOL):
     """True iff both edges (``center -+ length/2``) of a feature lie on mesh lines of a
     ``cells``-cell mesh over ``period`` (one axis)."""
-    return (
-        is_position_mesh_aligned(center - length / 2.0, period, cells, rtol)
-        and is_position_mesh_aligned(center + length / 2.0, period, cells, rtol)
+    return is_position_mesh_aligned(center - length / 2.0, period, cells, rtol) and is_position_mesh_aligned(
+        center + length / 2.0, period, cells, rtol
     )
 
 
@@ -153,10 +152,9 @@ def geometry_edges_aligned(geometry, lattice, mesh, rtol=ALIGNMENT_RTOL):
     rotated-edge alignment test."""
     if geometry.rotation != 0.0:
         return False
-    return (
-        feature_edges_aligned(lattice.period_x, mesh.cells_x, geometry.length, geometry.center_x, rtol)
-        and feature_edges_aligned(lattice.period_y, mesh.cells_y, geometry.width, geometry.center_y, rtol)
-    )
+    return feature_edges_aligned(
+        lattice.period_x, mesh.cells_x, geometry.length, geometry.center_x, rtol
+    ) and feature_edges_aligned(lattice.period_y, mesh.cells_y, geometry.width, geometry.center_y, rtol)
 
 
 def smallest_aligned_cells(period, features, max_cells=MAX_ALIGNMENT_SEARCH_CELLS, rtol=ALIGNMENT_RTOL):
@@ -210,12 +208,17 @@ def refinement_study(unit_cell, planes, mesh, frequency, base_matrix, factor):
         raise ValueError(f"refinement factor must be an integer >= 2, got {factor!r}")
     fine_order = factor * mesh.floquet_order
     a = compute_s_parameters(
-        unit_cell, frequency, MeshSettings(mesh.cells_x, mesh.cells_y, fine_order), planes,
+        unit_cell,
+        frequency,
+        MeshSettings(mesh.cells_x, mesh.cells_y, fine_order),
+        planes,
         warn_grating=False,
     )
     b = compute_s_parameters(
-        unit_cell, frequency,
-        MeshSettings(factor * mesh.cells_x, factor * mesh.cells_y, fine_order), planes,
+        unit_cell,
+        frequency,
+        MeshSettings(factor * mesh.cells_x, factor * mesh.cells_y, fine_order),
+        planes,
         warn_grating=False,
     )
     a_m = a.s11 if a.grounded else a.matrix()

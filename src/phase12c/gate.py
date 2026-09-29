@@ -44,12 +44,13 @@ class LocalPeriodicityGateResult:
     status: str
     reason: str
     max_step_within_tolerance_deg: "float | None"
-    phase9_classification: str   # VALIDATED | INVALIDATED | UNVALIDATED (phase9.local_periodicity's own labels)
-    per_case: tuple              # (name, achieved_step_deg, phase_error_deg, magnitude_error_db, within_tolerance)
+    phase9_classification: str  # VALIDATED | INVALIDATED | UNVALIDATED (phase9.local_periodicity's own labels)
+    per_case: tuple  # (name, achieved_step_deg, phase_error_deg, magnitude_error_db, within_tolerance)
 
 
-def decide_local_periodicity(gradient_results, phase_tolerance_deg=PHASE_TOLERANCE_DEG,
-                              magnitude_tolerance_db=MAGNITUDE_TOLERANCE_DB):
+def decide_local_periodicity(
+    gradient_results, phase_tolerance_deg=PHASE_TOLERANCE_DEG, magnitude_tolerance_db=MAGNITUDE_TOLERANCE_DB
+):
     """``gradient_results``: an iterable of ``locality_study.GradientCaseResult`` (1-D row and 2-D
     gradient cases only -- NOT the strong-contrast or periodic-supercell cases, which are reported
     separately, since the brief's own "largest phase step per cell" question is specifically about
@@ -67,18 +68,24 @@ def decide_local_periodicity(gradient_results, phase_tolerance_deg=PHASE_TOLERAN
 
     if not within_cases:
         status = GROUNDED_LOCAL_PERIODICITY_INVALIDATED
-        reason = (f"no tested smooth-gradient case stayed within the stated tolerance "
-                  f"(phase <= {phase_tolerance_deg} deg, magnitude <= {magnitude_tolerance_db} dB); "
-                  f"Phase 9's own criterion also classifies these deviations as {p9_status}")
+        reason = (
+            f"no tested smooth-gradient case stayed within the stated tolerance "
+            f"(phase <= {phase_tolerance_deg} deg, magnitude <= {magnitude_tolerance_db} dB); "
+            f"Phase 9's own criterion also classifies these deviations as {p9_status}"
+        )
     elif len(within_cases) == len(per_case):
         status = GROUNDED_LOCAL_PERIODICITY_VALID_FOR_SMOOTH_GRADIENTS
-        reason = (f"every tested smooth-gradient case (largest achieved step {max_step:.1f} deg) "
-                  f"stayed within the stated tolerance; Phase 9's own criterion: {p9_status}")
+        reason = (
+            f"every tested smooth-gradient case (largest achieved step {max_step:.1f} deg) "
+            f"stayed within the stated tolerance; Phase 9's own criterion: {p9_status}"
+        )
     else:
         status = GROUNDED_LOCAL_PERIODICITY_VALID_FOR_SMOOTH_GRADIENTS
-        reason = (f"local periodicity holds within tolerance up to {max_step:.1f} deg/cell "
-                  f"(the largest step size tested that stayed within tolerance); at least one "
-                  f"larger tested step exceeded it. Phase 9's own criterion: {p9_status}")
+        reason = (
+            f"local periodicity holds within tolerance up to {max_step:.1f} deg/cell "
+            f"(the largest step size tested that stayed within tolerance); at least one "
+            f"larger tested step exceeded it. Phase 9's own criterion: {p9_status}"
+        )
 
     return LocalPeriodicityGateResult(status, reason, max_step, p9_status, tuple(per_case))
 
@@ -96,7 +103,7 @@ class _ForP9:
 class SpotCheckGateResult:
     status: str
     reason: str
-    findings: tuple   # (case_name, verdict, detail)
+    findings: tuple  # (case_name, verdict, detail)
 
 
 def decide_spot_check(c2_c3, phase9_strong, case_d, coupling_points):
@@ -106,13 +113,23 @@ def decide_spot_check(c2_c3, phase9_strong, case_d, coupling_points):
 
     # Phase 10 C2/C3: the earlier (Phase 12B) finding was "mesh-identical" at the coarse mesh.
     if not c2_c3.mask_identical:
-        findings.append(("phase10_c2_c3", EARLIER_CONCLUSIONS_CHANGED,
-                          f"C2 and C3 are mesh-DISTINCT at the finer {c2_c3.mesh_cells_per_side}-cell "
-                          f"mesh (relative isolated-response difference {c2_c3.relative_difference:.3e}); "
-                          f"Phase 12B's coarse-mesh finding does not hold at this resolution"))
+        findings.append(
+            (
+                "phase10_c2_c3",
+                EARLIER_CONCLUSIONS_CHANGED,
+                f"C2 and C3 are mesh-DISTINCT at the finer {c2_c3.mesh_cells_per_side}-cell "
+                f"mesh (relative isolated-response difference {c2_c3.relative_difference:.3e}); "
+                f"Phase 12B's coarse-mesh finding does not hold at this resolution",
+            )
+        )
     else:
-        findings.append(("phase10_c2_c3", EARLIER_CONCLUSIONS_HOLD,
-                          f"C2 and C3 remain mesh-identical at the finer {c2_c3.mesh_cells_per_side}-cell mesh"))
+        findings.append(
+            (
+                "phase10_c2_c3",
+                EARLIER_CONCLUSIONS_HOLD,
+                f"C2 and C3 remain mesh-identical at the finer {c2_c3.mesh_cells_per_side}-cell mesh",
+            )
+        )
 
     # Phase 9 strong contrast: was INVALIDATED (relative_complex_error ~ 0.997, >= the 0.5
     # substantiality threshold, phase9.local_periodicity.SUBSTANTIAL_DEVIATION_RELATIVE) at 8
@@ -123,34 +140,54 @@ def decide_spot_check(c2_c3, phase9_strong, case_d, coupling_points):
     earlier_substantial = phase9_strong.earlier_relative_complex_error >= SUBSTANTIAL_DEVIATION_RELATIVE
     now_substantial = phase9_strong.relative_complex_error >= SUBSTANTIAL_DEVIATION_RELATIVE
     if earlier_substantial == now_substantial:
-        findings.append(("phase9_strong_contrast", EARLIER_CONCLUSIONS_HOLD,
-                          f"relative complex error {phase9_strong.relative_complex_error:.3f} at "
-                          f"{phase9_strong.mesh_cells_per_subcell} cells/subcell (vs {phase9_strong.earlier_relative_complex_error:.3f} "
-                          f"at 8 cells/subcell) -- both are {'>=' if now_substantial else '<'} the "
-                          f"{SUBSTANTIAL_DEVIATION_RELATIVE} substantiality threshold; the INVALIDATED "
-                          f"classification is unaffected"))
+        findings.append(
+            (
+                "phase9_strong_contrast",
+                EARLIER_CONCLUSIONS_HOLD,
+                f"relative complex error {phase9_strong.relative_complex_error:.3f} at "
+                f"{phase9_strong.mesh_cells_per_subcell} cells/subcell (vs {phase9_strong.earlier_relative_complex_error:.3f} "
+                f"at 8 cells/subcell) -- both are {'>=' if now_substantial else '<'} the "
+                f"{SUBSTANTIAL_DEVIATION_RELATIVE} substantiality threshold; the INVALIDATED "
+                f"classification is unaffected",
+            )
+        )
     else:
-        findings.append(("phase9_strong_contrast", EARLIER_CONCLUSIONS_CHANGED,
-                          f"relative complex error dropped from {phase9_strong.earlier_relative_complex_error:.3f} "
-                          f"(>= the {SUBSTANTIAL_DEVIATION_RELATIVE} substantiality threshold, INVALIDATED) at 8 "
-                          f"cells/subcell to {phase9_strong.relative_complex_error:.3f} (< {SUBSTANTIAL_DEVIATION_RELATIVE}) "
-                          f"at the finer, aligned {phase9_strong.mesh_cells_per_subcell}-cell/subcell mesh -- the "
-                          f"INVALIDATED classification itself does not survive this finer mesh for this specific "
-                          f"contrast case; both isolated and embedded solves were independently verified converged "
-                          f"to <1% at this floquet order before reporting this (Sec. D)"))
+        findings.append(
+            (
+                "phase9_strong_contrast",
+                EARLIER_CONCLUSIONS_CHANGED,
+                f"relative complex error dropped from {phase9_strong.earlier_relative_complex_error:.3f} "
+                f"(>= the {SUBSTANTIAL_DEVIATION_RELATIVE} substantiality threshold, INVALIDATED) at 8 "
+                f"cells/subcell to {phase9_strong.relative_complex_error:.3f} (< {SUBSTANTIAL_DEVIATION_RELATIVE}) "
+                f"at the finer, aligned {phase9_strong.mesh_cells_per_subcell}-cell/subcell mesh -- the "
+                f"INVALIDATED classification itself does not survive this finer mesh for this specific "
+                f"contrast case; both isolated and embedded solves were independently verified converged "
+                f"to <1% at this floquet order before reporting this (Sec. D)",
+            )
+        )
 
     # Phase 11 Case D: was "substantial" (>= 0.5 relative) at n=7, 8 cells/subcell.
     if case_d.substantial:
-        findings.append(("phase11_case_d", EARLIER_CONCLUSIONS_HOLD,
-                          f"at the reduced, finer-mesh re-check (n={case_d.n}, {case_d.mesh_cells_per_subcell} "
-                          f"cells/subcell), the checkerboard-vs-block relative difference is "
-                          f"{case_d.relative_difference:.3f} -- still substantial, confirming "
-                          f"arrangement (not just local statistics) matters"))
+        findings.append(
+            (
+                "phase11_case_d",
+                EARLIER_CONCLUSIONS_HOLD,
+                f"at the reduced, finer-mesh re-check (n={case_d.n}, {case_d.mesh_cells_per_subcell} "
+                f"cells/subcell), the checkerboard-vs-block relative difference is "
+                f"{case_d.relative_difference:.3f} -- still substantial, confirming "
+                f"arrangement (not just local statistics) matters",
+            )
+        )
     else:
-        findings.append(("phase11_case_d", EARLIER_CONCLUSIONS_QUANTITATIVELY_CHANGED,
-                          f"at the reduced, finer-mesh re-check (n={case_d.n}), the relative difference "
-                          f"{case_d.relative_difference:.3f} is below the 0.5 substantiality threshold "
-                          f"(the original finding used n=7; this is a reduced-size re-check, Sec. D)"))
+        findings.append(
+            (
+                "phase11_case_d",
+                EARLIER_CONCLUSIONS_QUANTITATIVELY_CHANGED,
+                f"at the reduced, finer-mesh re-check (n={case_d.n}), the relative difference "
+                f"{case_d.relative_difference:.3f} is below the 0.5 substantiality threshold "
+                f"(the original finding used n=7; this is a reduced-size re-check, Sec. D)",
+            )
+        )
 
     # Phase 11 coupling radius: was "not converged by 9x9/11x11" -- at this reduced size range we
     # can only report whether the shell increment is still large, not overturn the original
@@ -158,10 +195,14 @@ def decide_spot_check(c2_c3, phase9_strong, case_d, coupling_points):
     if len(coupling_points) >= 2:
         last, prev = coupling_points[-1], coupling_points[-2]
         rel = abs(last.response - prev.response) / abs(prev.response) if abs(prev.response) > 0 else float("inf")
-        findings.append(("phase11_coupling_radius", EARLIER_CONCLUSIONS_HOLD if rel > 1e-6 else
-                          EARLIER_CONCLUSIONS_QUANTITATIVELY_CHANGED,
-                          f"shell increment n={prev.n}->{last.n} relative change {rel:.3e} at the finer mesh "
-                          f"(feasible sizes only, Sec. 'Cost note'; not a re-run of the original 9x9/11x11 series)"))
+        findings.append(
+            (
+                "phase11_coupling_radius",
+                EARLIER_CONCLUSIONS_HOLD if rel > 1e-6 else EARLIER_CONCLUSIONS_QUANTITATIVELY_CHANGED,
+                f"shell increment n={prev.n}->{last.n} relative change {rel:.3e} at the finer mesh "
+                f"(feasible sizes only, Sec. 'Cost note'; not a re-run of the original 9x9/11x11 series)",
+            )
+        )
 
     changed = [f for f in findings if f[1] == EARLIER_CONCLUSIONS_CHANGED]
     quantitative = [f for f in findings if f[1] == EARLIER_CONCLUSIONS_QUANTITATIVELY_CHANGED]
@@ -178,10 +219,12 @@ def decide_spot_check(c2_c3, phase9_strong, case_d, coupling_points):
 def hfss_export_status(single_cells, supercells, synthetic_records):
     """``HFSS_EXPORT_READY`` iff every requested export actually produced a STEP file and the
     synthetic one-port ingestion round-tripped (Sec. E); never claims real HFSS data exists."""
-    ok = (len(single_cells) > 0 and all(Path(s.step_path).exists() for s in single_cells) and
-          len(supercells) > 0 and all(Path(s.step_path).exists() for s in supercells) and
-          synthetic_records is not None and all(r.s21 is None for r in synthetic_records))
+    ok = (
+        len(single_cells) > 0
+        and all(Path(s.step_path).exists() for s in single_cells)
+        and len(supercells) > 0
+        and all(Path(s.step_path).exists() for s in supercells)
+        and synthetic_records is not None
+        and all(r.s21 is None for r in synthetic_records)
+    )
     return HFSS_EXPORT_READY if ok else "HFSS_EXPORT_NOT_READY"
-
-
-from pathlib import Path  # noqa: E402  (kept near its sole use, matching this project's other gate modules)

@@ -13,7 +13,7 @@ def test_load_full_database_has_324_cells_and_full_linear_basis(phase8c_full_dat
     from src.database import family_block
 
     block = family_block(record.s, "S11")
-    assert block.shape == (2, 2)   # xx, xy, yx, yy all present
+    assert block.shape == (2, 2)  # xx, xy, yx, yy all present
 
 
 def test_cross_check_against_delivered_library_passes(phase8c_full_database):

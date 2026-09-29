@@ -31,9 +31,14 @@ _PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 
 def small_config():
     return LibraryConfig(
-        period_m=4.8e-3, substrate=_SUBSTRATE,
-        f_min_hz=11.0e9, f_max_hz=13.0e9, f_step_hz=1.0e9, f_design_hz=12.0e9,
-        l_values_mm=(1.0, 1.8, 2.6, 3.4, 4.2), w_values_mm=(1.0, 1.8, 2.6, 3.4, 4.2),
+        period_m=4.8e-3,
+        substrate=_SUBSTRATE,
+        f_min_hz=11.0e9,
+        f_max_hz=13.0e9,
+        f_step_hz=1.0e9,
+        f_design_hz=12.0e9,
+        l_values_mm=(1.0, 1.8, 2.6, 3.4, 4.2),
+        w_values_mm=(1.0, 1.8, 2.6, 3.4, 4.2),
     )
 
 
@@ -46,13 +51,16 @@ def built():
     coverage = phase_coverage(table)
     by_lw = {(r.l_mm, r.w_mm): r for r in rows}
     classifications = [
-        classify_cell(c, database, by_lw[(round(c.parameters["length_m"] * 1e3, 9), round(c.parameters["width_m"] * 1e3, 9))])
+        classify_cell(
+            c, database, by_lw[(round(c.parameters["length_m"] * 1e3, 9), round(c.parameters["width_m"] * 1e3, 9))]
+        )
         for c in database.cells
     ]
     return cfg, database, table, coverage, classifications
 
 
 # ---------------------------------------------------------------------- representative selection
+
 
 def test_select_representative_cells_is_a_deterministic_3x3_subgrid():
     cfg = small_config()
@@ -76,12 +84,19 @@ def test_select_representative_cells_default_config_gives_corners_and_centre():
 
 # --------------------------------------------------------------------------------------- plots
 
+
 def test_all_8_plots_are_generated(built, tmp_path):
     cfg, database, table, coverage, classifications = built
     paths = generate_all_plots(database, cfg, table, coverage, classifications, tmp_path)
     assert set(paths) == {
-        "s11_magnitude_db", "s11_phase_deg", "s21_magnitude_db", "s21_phase_deg",
-        "phase_vs_geometry", "phase_coverage_map", "resonance_map", "library_quality_map",
+        "s11_magnitude_db",
+        "s11_phase_deg",
+        "s21_magnitude_db",
+        "s21_phase_deg",
+        "phase_vs_geometry",
+        "phase_coverage_map",
+        "resonance_map",
+        "library_quality_map",
     }
     for p in paths.values():
         assert p.exists()

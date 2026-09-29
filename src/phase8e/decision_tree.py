@@ -37,23 +37,29 @@ GATE_CHECKLIST_KEYS = (
 @dataclass(frozen=True)
 class FormulationDecision:
     formulation: str
-    decision_trail: tuple             # ordered (question, answer), Sec. 29's tree, auditable
+    decision_trail: tuple  # ordered (question, answer), Sec. 29's tree, auditable
     gate_checklist: dict
     geometry_inversion_permitted: bool
     final_status: str
 
 
 def evaluate_formulation_gate(
-    formulation, architecture_status, reference_plane_status, family_exists,
-    continuous_reconstruction_ok, discrete_reconstruction_ok, control_variable_validated,
-    formulation_validated=False, local_periodicity_acceptable=False,
+    formulation,
+    architecture_status,
+    reference_plane_status,
+    family_exists,
+    continuous_reconstruction_ok,
+    discrete_reconstruction_ok,
+    control_variable_validated,
+    formulation_validated=False,
+    local_periodicity_acceptable=False,
 ):
     """Sec. 29's fixed order, stopping at the first structural block and reporting every later
     checkbox as unmet rather than skipped silently."""
     trail = [("architecture compatibility", architecture_status)]
     if architecture_status == "ARCHITECTURE_INCOMPATIBLE":
         checklist = {k: False for k in GATE_CHECKLIST_KEYS}
-        checklist["required_response_defined"] = True   # control_response.py always defines C_req
+        checklist["required_response_defined"] = True  # control_response.py always defines C_req
         return FormulationDecision(formulation, tuple(trail), checklist, False, "ARCHITECTURE_INCOMPATIBLE")
 
     trail.append(("reference-plane compatibility", reference_plane_status))
@@ -74,21 +80,35 @@ def evaluate_formulation_gate(
     trail.append(("discrete beam reconstruction", "PASSED" if discrete_reconstruction_ok else "FAILED"))
     if not discrete_reconstruction_ok:
         checklist = {k: False for k in GATE_CHECKLIST_KEYS}
-        checklist.update(required_response_defined=True, planes_compatible=planes_ok, suitable_family_exists=True,
-                          continuous_reconstruction_passes=True)
+        checklist.update(
+            required_response_defined=True,
+            planes_compatible=planes_ok,
+            suitable_family_exists=True,
+            continuous_reconstruction_passes=True,
+        )
         return FormulationDecision(formulation, tuple(trail), checklist, False, "DISCRETE_RECONSTRUCTION_FAILED")
 
-    trail.append(("physical control variable validated", "YES" if control_variable_validated else "NO "
-                  "(Phase 8B/8C: CONTROL_VARIABLE_UNVALIDATED, unchanged)"))
-    trail.append(("local periodicity acceptable", "YES" if local_periodicity_acceptable else "NO "
-                  "(local_periodicity.py: no coupled-cell solver exists to validate it)"))
+    trail.append(
+        (
+            "physical control variable validated",
+            "YES" if control_variable_validated else "NO (Phase 8B/8C: CONTROL_VARIABLE_UNVALIDATED, unchanged)",
+        )
+    )
+    trail.append(
+        (
+            "local periodicity acceptable",
+            "YES"
+            if local_periodicity_acceptable
+            else "NO (local_periodicity.py: no coupled-cell solver exists to validate it)",
+        )
+    )
     checklist = {
-        "formulation_validated": formulation_validated,     # phase8b.library_compatibility's own status
+        "formulation_validated": formulation_validated,  # phase8b.library_compatibility's own status
         "control_variable_validated": control_variable_validated,
         "planes_compatible": planes_ok,
         "required_response_defined": True,
         "suitable_family_exists": True,
-        "response_within_validated_library_coverage": True,   # data exists to compare against (Sec. 20's 6th box)
+        "response_within_validated_library_coverage": True,  # data exists to compare against (Sec. 20's 6th box)
         "local_periodicity_acceptable": local_periodicity_acceptable,
         "continuous_reconstruction_passes": True,
         "discrete_reconstruction_passes": True,

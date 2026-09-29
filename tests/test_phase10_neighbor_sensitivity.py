@@ -1,7 +1,5 @@
 """Sec. 10-11, 47: the 5-cell test matrix and the neighbor contribution / nonlinearity analysis."""
 
-import pytest
-
 from src.materials import Metal, Substrate
 from src.phase10 import neighbor_sensitivity as ns
 

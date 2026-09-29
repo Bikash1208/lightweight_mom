@@ -26,7 +26,7 @@ def test_sweep_is_lossless_reflection_only_up_to_solver_precision():
     points = run_grounded_patch_sweep(l_values_mm=SMALL_L_MM, frequencies_hz=(DESIGN_F,))
     for p in points:
         assert 0.99 < p.s11_xx_mag <= 1.0
-        assert p.s11_yx_mag < 1e-10   # unrotated square: no cross-pol
+        assert p.s11_yx_mag < 1e-10  # unrotated square: no cross-pol
 
 
 def test_coverage_by_frequency_is_a_real_circular_coverage():

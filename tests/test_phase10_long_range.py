@@ -22,4 +22,4 @@ def test_run_long_range_test_covers_all_four_directions():
     assert set(results.keys()) == {"N2", "S2", "W2", "E2"}
     for c in results.values():
         assert c.delta_s_abs == abs(c.delta_s)
-        assert c.px != s0   # a distance-2 perturbation must change the solved system somewhat
+        assert c.px != s0  # a distance-2 perturbation must change the solved system somewhat

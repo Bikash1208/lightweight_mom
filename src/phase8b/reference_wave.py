@@ -26,9 +26,9 @@ import numpy as np
 
 
 class ReferenceFieldKind(Enum):
-    COMPLEX_E_FIELD = "complex_E_field"          # Sec. 9.A: Ex(x,y), Ey(x,y), (Ez optional)
-    PHASE_ONLY = "phase_only"                      # Sec. 9.B: phi_ref(x,y), no amplitude
-    SURFACE_IMPEDANCE = "surface_impedance"        # Sec. 9.C: Zs(x,y)
+    COMPLEX_E_FIELD = "complex_E_field"  # Sec. 9.A: Ex(x,y), Ey(x,y), (Ez optional)
+    PHASE_ONLY = "phase_only"  # Sec. 9.B: phi_ref(x,y), no amplitude
+    SURFACE_IMPEDANCE = "surface_impedance"  # Sec. 9.C: Zs(x,y)
 
 
 @dataclass(frozen=True)
@@ -38,7 +38,7 @@ class ReferenceField:
     rather than assuming any two of these are interchangeable (Sec. 9-10)."""
 
     kind: ReferenceFieldKind
-    values: np.ndarray            # complex E (A), real phase [deg] (B), or complex Zs [ohm] (C)
+    values: np.ndarray  # complex E (A), real phase [deg] (B), or complex Zs [ohm] (C)
     x_m: np.ndarray
     y_m: np.ndarray
 

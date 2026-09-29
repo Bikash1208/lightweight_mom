@@ -15,8 +15,9 @@ F = 12.5e9
 
 def _dummy_surrogate():
     cache = IsolatedReferenceCache(P, SUB, MET, 8)
-    return surr_mod.EnvironmentSurrogate(cache, np.zeros(surr_mod.N_FEATURES), np.zeros(surr_mod.N_FEATURES),
-                                          0.0, surr_mod.DomainSpec(frequency_hz=F))
+    return surr_mod.EnvironmentSurrogate(
+        cache, np.zeros(surr_mod.N_FEATURES), np.zeros(surr_mod.N_FEATURES), 0.0, surr_mod.DomainSpec(frequency_hz=F)
+    )
 
 
 def test_build_gradient_grid_is_monotonic_along_x():
@@ -44,7 +45,8 @@ def test_run_gradient_test_produces_one_case_per_interior_cell():
 
 def test_run_abrupt_discontinuity_test_labels_distance_from_boundary():
     surrogate = _dummy_surrogate()
-    grid_mm, cases, labeled = gen.run_abrupt_discontinuity_test(P, SUB, MET, F, surrogate,
-                                                                 mesh_cells_per_subcell=8, boundary_col=3)
+    grid_mm, cases, labeled = gen.run_abrupt_discontinuity_test(
+        P, SUB, MET, F, surrogate, mesh_cells_per_subcell=8, boundary_col=3
+    )
     distances = {dist for dist, _ in labeled}
-    assert distances == {0, 1, 2}   # interior columns 1,2 | 4,5 at increasing distance from col 3
+    assert distances == {0, 1, 2}  # interior columns 1,2 | 4,5 at increasing distance from col 3

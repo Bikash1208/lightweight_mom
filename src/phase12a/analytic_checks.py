@@ -54,7 +54,7 @@ def bare_grounded_slab_checks(eps_r=2.2, thickness_m=1.575e-3, frequencies_hz=FR
         for f in frequencies_hz:
             sub = Substrate("x", eps_r, tan_delta, thickness_m)
             green = LayeredGreenFunction(sub, f, backing="pec")
-            planes = ReferencePlanes(0.0, None, thickness_m)   # planes on the substrate faces
+            planes = ReferencePlanes(0.0, None, thickness_m)  # planes on the substrate faces
             s = stack_s_parameters(green, planes)
             mine = s.component("S11_xx")
             textbook = textbook_grounded_slab_gamma(f, eps_r, tan_delta, thickness_m)
@@ -83,8 +83,12 @@ class SurfaceWavePoint:
 
 
 def surface_wave_margin_table(
-    periods_mm=PERIODS_MM, frequencies_hz=FREQUENCIES_HZ, eps_r=2.2, tan_delta=0.0009,
-    thickness_m=1.575e-3, floquet_order=32,
+    periods_mm=PERIODS_MM,
+    frequencies_hz=FREQUENCIES_HZ,
+    eps_r=2.2,
+    tan_delta=0.0009,
+    thickness_m=1.575e-3,
+    floquet_order=32,
 ):
     """Sec. "Physics": for the default 4.8 mm and 8 mm periods at 10-15 GHz, whether any Floquet
     harmonic used in the impedance-matrix assembly falls in (or near) the grounded slab's TM0
@@ -97,8 +101,15 @@ def surface_wave_margin_table(
         for f in frequencies_hz:
             green = LayeredGreenFunction(uc.substrate, f, backing="pec")
             r = surface_wave_proximity(uc, green, floquet_order)
-            points.append(SurfaceWavePoint(
-                p_mm, f, r["k0"], r["k_substrate_re"], r["any_in_band"], r["any_near_band"],
-                r["nearest_margin_over_k0"],
-            ))
+            points.append(
+                SurfaceWavePoint(
+                    p_mm,
+                    f,
+                    r["k0"],
+                    r["k_substrate_re"],
+                    r["any_in_band"],
+                    r["any_near_band"],
+                    r["nearest_margin_over_k0"],
+                )
+            )
     return tuple(points)

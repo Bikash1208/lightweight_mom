@@ -11,18 +11,18 @@ from . import gate, hfss_ingest, plots, specification, step_curve
 from .aperture_test import run_aperture_test
 from .report import render_phase12d_report_md
 
-DEFAULT_MAX_K = 2   # measured cost note (PHASE12D_LOCAL_PERIODICITY.md Sec. 2): near/at-resonance
-                     # step cases involve large (up to ~7.3mm, near the full 8mm period) patches
-                     # and cost far more than the off-resonance ones; max_k=2 already gives 14
-                     # near/at-resonance cases (28 total with off-resonance) spanning steps from
-                     # 0.8 to 160 deg -- ample coverage for "plot error vs step size" without
-                     # extending into k=3, which off-resonance-only timing would underestimate
+DEFAULT_MAX_K = 2  # measured cost note (PHASE12D_LOCAL_PERIODICITY.md Sec. 2): near/at-resonance
+# step cases involve large (up to ~7.3mm, near the full 8mm period) patches
+# and cost far more than the off-resonance ones; max_k=2 already gives 14
+# near/at-resonance cases (28 total with off-resonance) spanning steps from
+# 0.8 to 160 deg -- ample coverage for "plot error vs step size" without
+# extending into k=3, which off-resonance-only timing would underestimate
 DEFAULT_APERTURE_SIZES = (6, 8, 12)
 DEFAULT_APERTURE_MESH_CELLS_PER_SUBCELL = 10
 DEFAULT_APERTURE_L_FAMILY_MM = tuple(
     round(2.0 * 8.0 / DEFAULT_APERTURE_MESH_CELLS_PER_SUBCELL * k, 6) for k in range(1, 5)
-)   # aligned at the aperture test's own (coarser, cost-driven) mesh -- see run_phase12d docstring.
-    # k stops at 4 (1.6, 3.2, 4.8, 6.4 mm): k=5 (8.0 mm) would equal the full period -- invalid.
+)  # aligned at the aperture test's own (coarser, cost-driven) mesh -- see run_phase12d docstring.
+# k stops at 4 (1.6, 3.2, 4.8, 6.4 mm): k=5 (8.0 mm) would equal the full period -- invalid.
 
 
 @dataclass(frozen=True)
@@ -68,10 +68,16 @@ RECOMMENDATION = (
 )
 
 
-def run_phase12d(output_dir, max_k=DEFAULT_MAX_K, step_curve_mesh_cells_per_subcell=None,
-                  step_curve_l_family_mm=None, aperture_sizes=DEFAULT_APERTURE_SIZES,
-                  aperture_mesh_cells_per_subcell=DEFAULT_APERTURE_MESH_CELLS_PER_SUBCELL,
-                  aperture_l_family_mm=None, precomputed_near_at_step_cases=None):
+def run_phase12d(
+    output_dir,
+    max_k=DEFAULT_MAX_K,
+    step_curve_mesh_cells_per_subcell=None,
+    step_curve_l_family_mm=None,
+    aperture_sizes=DEFAULT_APERTURE_SIZES,
+    aperture_mesh_cells_per_subcell=DEFAULT_APERTURE_MESH_CELLS_PER_SUBCELL,
+    aperture_l_family_mm=None,
+    precomputed_near_at_step_cases=None,
+):
     """``precomputed_near_at_step_cases``: an escape hatch for the production run only -- the
     near/at-resonance step cases (large patches, each several minutes) can be supplied already
     solved (e.g. from a prior run of this exact function, same mesh/family) instead of re-solved,
@@ -90,12 +96,16 @@ def run_phase12d(output_dir, max_k=DEFAULT_MAX_K, step_curve_mesh_cells_per_subc
     centers = classify_centers(curve)
     if precomputed_near_at_step_cases is not None:
         assert all(isinstance(c, StepCase) for c in precomputed_near_at_step_cases)
-        off_cases = step_curve.build_step_cases(curve, [("off_resonance", centers.off_resonance)],
-                                                 max_k=max_k, mesh_cells_per_subcell=mesh_a)
+        off_cases = step_curve.build_step_cases(
+            curve, [("off_resonance", centers.off_resonance)], max_k=max_k, mesh_cells_per_subcell=mesh_a
+        )
         step_cases = list(off_cases) + list(precomputed_near_at_step_cases)
     else:
-        named_centers = [("off_resonance", centers.off_resonance), ("near_resonance", centers.near_resonance),
-                          ("at_resonance", centers.at_resonance)]
+        named_centers = [
+            ("off_resonance", centers.off_resonance),
+            ("near_resonance", centers.near_resonance),
+            ("at_resonance", centers.at_resonance),
+        ]
         step_cases = step_curve.build_step_cases(curve, named_centers, max_k=max_k, mesh_cells_per_subcell=mesh_a)
     task_a_gate = gate.decide_step_limit(step_cases)
     specification.write_task_a_json(curve, centers, step_cases, task_a_gate, output_dir / "task_a.json")
@@ -107,7 +117,7 @@ def run_phase12d(output_dir, max_k=DEFAULT_MAX_K, step_curve_mesh_cells_per_subc
         try:
             aperture_results.append(run_aperture_test(n, aperture_mesh_cells_per_subcell, l_family_b))
         except (MemoryError, ValueError):
-            continue   # infeasible size: recorded as "attempted=False" by the gate below
+            continue  # infeasible size: recorded as "attempted=False" by the gate below
     task_b_gate = gate.decide_aperture_adequacy(aperture_results, aperture_sizes)
     specification.write_task_b_json(aperture_results, aperture_sizes, task_b_gate, output_dir / "task_b.json")
 
@@ -115,17 +125,20 @@ def run_phase12d(output_dir, max_k=DEFAULT_MAX_K, step_curve_mesh_cells_per_subc
     hfss_comparisons = []
     if hfss_ingest.TOUCHSTONE_PATH.exists():
         hfss_comparisons.append(hfss_ingest.compare_single_cell(hfss_ingest.CASE_WITH_HFSS_DATA))
-    task_c_gate = gate.decide_hfss_status(hfss_comparisons, hfss_ingest.ALL_SINGLE_CELL_IDS,
-                                           (hfss_ingest.PENDING_RESONANCE_CASE,))
+    task_c_gate = gate.decide_hfss_status(
+        hfss_comparisons, hfss_ingest.ALL_SINGLE_CELL_IDS, (hfss_ingest.PENDING_RESONANCE_CASE,)
+    )
     try:
         geometric_identity = hfss_ingest.check_geometric_identity()
     except ImportError:
         geometric_identity = ()
-    specification.write_task_c_json(hfss_comparisons, hfss_ingest.PROVENANCE, geometric_identity,
-                                     task_c_gate, output_dir / "task_c.json")
+    specification.write_task_c_json(
+        hfss_comparisons, hfss_ingest.PROVENANCE, geometric_identity, task_c_gate, output_dir / "task_c.json"
+    )
 
-    specification.write_gate_status_json(task_a_gate, task_b_gate, task_c_gate,
-                                          output_dir / "phase12d_gate_status.json")
+    specification.write_gate_status_json(
+        task_a_gate, task_b_gate, task_c_gate, output_dir / "phase12d_gate_status.json"
+    )
 
     try:
         plots.generate_all_plots(step_cases, aperture_results, hfss_comparisons, output_dir / "plots")
@@ -133,11 +146,18 @@ def run_phase12d(output_dir, max_k=DEFAULT_MAX_K, step_curve_mesh_cells_per_subc
         pass
 
     result = Phase12dResult(
-        output_dir=output_dir, curve=curve, centers=centers, step_cases=tuple(step_cases),
-        task_a_gate=task_a_gate, aperture_results=tuple(aperture_results),
-        aperture_requested_sizes=tuple(aperture_sizes), task_b_gate=task_b_gate,
-        hfss_comparisons=tuple(hfss_comparisons), hfss_provenance=hfss_ingest.PROVENANCE,
-        geometric_identity=tuple(geometric_identity), task_c_gate=task_c_gate,
+        output_dir=output_dir,
+        curve=curve,
+        centers=centers,
+        step_cases=tuple(step_cases),
+        task_a_gate=task_a_gate,
+        aperture_results=tuple(aperture_results),
+        aperture_requested_sizes=tuple(aperture_sizes),
+        task_b_gate=task_b_gate,
+        hfss_comparisons=tuple(hfss_comparisons),
+        hfss_provenance=hfss_ingest.PROVENANCE,
+        geometric_identity=tuple(geometric_identity),
+        task_c_gate=task_c_gate,
         recommendation=RECOMMENDATION,
     )
     (output_dir / "phase12d_report.md").write_text(render_phase12d_report_md(result))

@@ -1,4 +1,3 @@
-import cmath
 import math
 
 import pytest
@@ -66,11 +65,18 @@ def test_substrate_wavenumber_lossy_attenuates():
 @pytest.mark.parametrize(
     "kw",
     [
-        dict(eps_r=0.0), dict(eps_r=-2.2), dict(eps_r=float("nan")), dict(eps_r=float("inf")),
-        dict(eps_r="2.2"), dict(eps_r=True), dict(eps_r=2.2 + 0j),
+        dict(eps_r=0.0),
+        dict(eps_r=-2.2),
+        dict(eps_r=float("nan")),
+        dict(eps_r=float("inf")),
+        dict(eps_r="2.2"),
+        dict(eps_r=True),
+        dict(eps_r=2.2 + 0j),
         dict(tan_delta=-1e-4),  # would be an active (gain) medium
         dict(tan_delta=float("nan")),
-        dict(thickness=0.0), dict(thickness=-1e-3), dict(thickness=float("nan")),
+        dict(thickness=0.0),
+        dict(thickness=-1e-3),
+        dict(thickness=float("nan")),
     ],
 )
 def test_substrate_rejects_invalid(kw):

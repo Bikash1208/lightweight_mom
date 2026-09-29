@@ -31,11 +31,20 @@ def plot_deviation_vs_phase_step(gradient_results, path):
     errs = [r.relative_complex_error for r in gradient_results]
     ax.scatter(steps, errs, s=30, zorder=3)
     for r in gradient_results:
-        ax.annotate(r.name, (abs(r.achieved_step_deg), r.relative_complex_error), fontsize=7,
-                    xytext=(3, 3), textcoords="offset points")
+        ax.annotate(
+            r.name,
+            (abs(r.achieved_step_deg), r.relative_complex_error),
+            fontsize=7,
+            xytext=(3, 3),
+            textcoords="offset points",
+        )
     ax.axhline(NOISE_FLOOR_RELATIVE, color="green", linestyle=":", label=f"noise floor ({NOISE_FLOOR_RELATIVE:.0e})")
-    ax.axhline(SUBSTANTIAL_DEVIATION_RELATIVE, color="red", linestyle="--",
-               label=f"substantial ({SUBSTANTIAL_DEVIATION_RELATIVE})")
+    ax.axhline(
+        SUBSTANTIAL_DEVIATION_RELATIVE,
+        color="red",
+        linestyle="--",
+        label=f"substantial ({SUBSTANTIAL_DEVIATION_RELATIVE})",
+    )
     ax.set_yscale("log")
     ax.set_xlabel("achieved neighbour phase step [deg]")
     ax.set_ylabel("relative complex LPA error")
@@ -95,8 +104,13 @@ def plot_coupling_vs_size_grounded_vs_ungrounded(grounded_reports, ungrounded_se
             from ..phase11.coupling_radius import compute_shell_increments
 
             incs = compute_shell_increments(points)
-            ax.plot([i.n_to for i in incs], [i.delta_relative for i in incs], marker="x",
-                    linestyle="--", label=f"ungrounded: {name}")
+            ax.plot(
+                [i.n_to for i in incs],
+                [i.delta_relative for i in incs],
+                marker="x",
+                linestyle="--",
+                label=f"ungrounded: {name}",
+            )
     ax.set_yscale("log")
     ax.set_xlabel("supercell size n")
     ax.set_ylabel("relative shell increment")
@@ -113,12 +127,15 @@ def plot_fine_vs_coarse_spot_check_table(spot_gate, path):
     """Sec. D: a table image (Phase 12B's own ``duplicate_audit_table.png`` precedent) of every
     spot-check case's verdict."""
     plt = _require_matplotlib()
-    rows = [[name, verdict, detail[:70] + ("..." if len(detail) > 70 else "")]
-            for name, verdict, detail in spot_gate.findings]
+    rows = [
+        [name, verdict, detail[:70] + ("..." if len(detail) > 70 else "")]
+        for name, verdict, detail in spot_gate.findings
+    ]
     fig, ax = plt.subplots(figsize=(11, 0.6 * (len(rows) + 1) + 0.5))
     ax.axis("off")
-    table = ax.table(cellText=rows, colLabels=["case", "verdict", "detail"], loc="center",
-                      cellLoc="left", colWidths=[0.2, 0.3, 0.5])
+    table = ax.table(
+        cellText=rows, colLabels=["case", "verdict", "detail"], loc="center", cellLoc="left", colWidths=[0.2, 0.3, 0.5]
+    )
     table.auto_set_font_size(False)
     table.set_fontsize(8)
     table.scale(1, 1.6)
@@ -129,12 +146,16 @@ def plot_fine_vs_coarse_spot_check_table(spot_gate, path):
     return Path(path)
 
 
-def generate_all_plots(gradient_results, periodic_results, grounded_coupling_reports,
-                        ungrounded_coupling_series, spot_gate, plots_dir):
+def generate_all_plots(
+    gradient_results, periodic_results, grounded_coupling_reports, ungrounded_coupling_series, spot_gate, plots_dir
+):
     plots_dir = Path(plots_dir)
     plots_dir.mkdir(parents=True, exist_ok=True)
     plot_deviation_vs_phase_step(gradient_results, plots_dir / "deviation_vs_phase_step.png")
-    plot_periodic_supercell_embedded_vs_isolated(periodic_results, plots_dir / "periodic_supercell_embedded_vs_isolated.png")
-    plot_coupling_vs_size_grounded_vs_ungrounded(grounded_coupling_reports, ungrounded_coupling_series,
-                                                   plots_dir / "coupling_vs_size_grounded_vs_ungrounded.png")
+    plot_periodic_supercell_embedded_vs_isolated(
+        periodic_results, plots_dir / "periodic_supercell_embedded_vs_isolated.png"
+    )
+    plot_coupling_vs_size_grounded_vs_ungrounded(
+        grounded_coupling_reports, ungrounded_coupling_series, plots_dir / "coupling_vs_size_grounded_vs_ungrounded.png"
+    )
     plot_fine_vs_coarse_spot_check_table(spot_gate, plots_dir / "fine_vs_coarse_spot_check_table.png")

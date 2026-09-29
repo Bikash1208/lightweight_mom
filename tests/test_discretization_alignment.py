@@ -2,6 +2,7 @@
 
 import pytest
 
+from src.basis_functions import MeshSettings
 from src.discretization import (
     duplicate_geometry_groups,
     feature_edges_aligned,
@@ -10,7 +11,6 @@ from src.discretization import (
     metal_mask_key,
     smallest_aligned_cells,
 )
-from src.basis_functions import MeshSettings
 from src.geometry import Geometry, UnitCell
 from src.materials import Metal, Substrate
 from src.periodic_bc import RectangularLattice

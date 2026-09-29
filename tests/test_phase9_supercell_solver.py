@@ -57,4 +57,4 @@ def test_heterogeneous_supercell_differs_measurably_from_the_isolated_cell():
     sc = build_supercell(3, P, P, SUB, MET, grid)
     emb = solve_supercell_center(sc, (L, W), FREQ, cells, 2 * cells * 3)
     rel_error = abs(emb.dipole.px - iso.dipole.px) / abs(iso.dipole.px)
-    assert rel_error > 0.1   # a real, substantial, physically-driven difference
+    assert rel_error > 0.1  # a real, substantial, physically-driven difference

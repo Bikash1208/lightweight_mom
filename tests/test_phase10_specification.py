@@ -19,7 +19,7 @@ def test_write_dataset_split_csv_only_writes_the_requested_split(tmp_path):
     splits = {"a": "train", "b": "validation"}
     path = spec_mod.write_dataset_split_csv(samples, splits, "train", tmp_path / "train.csv")
     rows = path.read_text().strip().split("\n")
-    assert len(rows) == 2   # header + sample "a" only
+    assert len(rows) == 2  # header + sample "a" only
     assert rows[1].startswith("a,")
 
 
@@ -45,17 +45,19 @@ def test_write_target_responses_and_mom_verification_csvs_do_not_shadow_the_writ
     """Regression test for a real bug caught during development: an inner ``l, w = ...`` unpack
     once shadowed the csv ``writer`` variable named ``w`` and crashed on the second row."""
     results = [
-        InverseResult(1.0 + 1.0j, {p: (2.8, 2.8) for p in ALL_POSITIONS}, (2.8, 2.8),
-                      1.0 + 1.0j, 1.0 + 1.0j, 0.0, "REACHED"),
-        InverseResult(2.0 + 2.0j, {p: (1.0, 4.4) for p in ALL_POSITIONS}, None, None, None,
-                      float("inf"), "TARGET_UNREACHABLE"),
+        InverseResult(
+            1.0 + 1.0j, {p: (2.8, 2.8) for p in ALL_POSITIONS}, (2.8, 2.8), 1.0 + 1.0j, 1.0 + 1.0j, 0.0, "REACHED"
+        ),
+        InverseResult(
+            2.0 + 2.0j, {p: (1.0, 4.4) for p in ALL_POSITIONS}, None, None, None, float("inf"), "TARGET_UNREACHABLE"
+        ),
     ]
     p1 = spec_mod.write_target_responses_csv(results, tmp_path / "targets.csv")
     p2 = spec_mod.write_inverse_results_csv(results, tmp_path / "inverse.csv")
     p3 = spec_mod.write_mom_verification_csv(results, tmp_path / "mom.csv")
     for p in (p1, p2, p3):
         rows = p.read_text().strip().split("\n")
-        assert len(rows) == 3   # header + 2 result rows
+        assert len(rows) == 3  # header + 2 result rows
 
 
 def test_write_phase10_summary_and_gate_status_json_are_consistent(tmp_path):
@@ -69,8 +71,9 @@ def test_write_phase10_summary_and_gate_status_json_are_consistent(tmp_path):
         (gate_mod.GATE_10E_KEYS, gate_mod.evaluate_gate_10e),
     ]
     gates = [ev({k: True for k in keys}) for keys, ev in keys_and_evals]
-    decision = gate_mod.decide(*gates, surrogate_beats_baseline1=True, inverse_mostly_reachable=True,
-                                beam_level_acceptable=True)
+    decision = gate_mod.decide(
+        *gates, surrogate_beats_baseline1=True, inverse_mostly_reachable=True, beam_level_acceptable=True
+    )
     summary_path = spec_mod.write_phase10_summary_json(decision, tmp_path / "summary.json")
     status_path = spec_mod.write_phase10_gate_status_json(decision, tmp_path / "status.json")
     summary = json.loads(summary_path.read_text())

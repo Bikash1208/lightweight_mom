@@ -46,10 +46,26 @@ def test_generate_random_samples_is_reproducible_with_a_fixed_seed():
 
 def test_symmetry_canonical_key_groups_y_reflected_environments_together():
     center = (2.8, 2.8)
-    neighbors_a = {"N": (3.0, 3.0), "E": (2.8, 2.8), "S": (1.0, 1.0), "W": (2.8, 2.8),
-                   "NE": (2.8, 2.8), "NW": (2.8, 2.8), "SE": (2.8, 2.8), "SW": (2.8, 2.8)}
-    neighbors_b = {"N": (1.0, 1.0), "E": (2.8, 2.8), "S": (3.0, 3.0), "W": (2.8, 2.8),   # N<->S swapped
-                   "NE": (2.8, 2.8), "NW": (2.8, 2.8), "SE": (2.8, 2.8), "SW": (2.8, 2.8)}
+    neighbors_a = {
+        "N": (3.0, 3.0),
+        "E": (2.8, 2.8),
+        "S": (1.0, 1.0),
+        "W": (2.8, 2.8),
+        "NE": (2.8, 2.8),
+        "NW": (2.8, 2.8),
+        "SE": (2.8, 2.8),
+        "SW": (2.8, 2.8),
+    }
+    neighbors_b = {
+        "N": (1.0, 1.0),
+        "E": (2.8, 2.8),
+        "S": (3.0, 3.0),
+        "W": (2.8, 2.8),  # N<->S swapped
+        "NE": (2.8, 2.8),
+        "NW": (2.8, 2.8),
+        "SE": (2.8, 2.8),
+        "SW": (2.8, 2.8),
+    }
     sa = _sample("a", center, neighbors_a)
     sb = _sample("b", center, neighbors_b)
     assert ds_mod.symmetry_canonical_key(sa) == ds_mod.symmetry_canonical_key(sb)
@@ -83,12 +99,29 @@ def test_assign_splits_never_separates_a_symmetry_equivalent_group():
     images of each other (``MIRROR_NS``) and MUST share a canonical key -- and therefore a split,
     however ``assign_splits``'s shuffle falls."""
     center = (2.8, 2.8)
-    n_pert = {"N": (3.0, 3.0), "E": (2.8, 2.8), "S": (2.8, 2.8), "W": (2.8, 2.8),
-              "NE": (2.8, 2.8), "NW": (2.8, 2.8), "SE": (2.8, 2.8), "SW": (2.8, 2.8)}
-    s_pert = {"N": (2.8, 2.8), "E": (2.8, 2.8), "S": (3.0, 3.0), "W": (2.8, 2.8),
-              "NE": (2.8, 2.8), "NW": (2.8, 2.8), "SE": (2.8, 2.8), "SW": (2.8, 2.8)}
-    assert ds_mod.symmetry_canonical_key(_sample("x", center, n_pert)) == \
-        ds_mod.symmetry_canonical_key(_sample("y", center, s_pert))
+    n_pert = {
+        "N": (3.0, 3.0),
+        "E": (2.8, 2.8),
+        "S": (2.8, 2.8),
+        "W": (2.8, 2.8),
+        "NE": (2.8, 2.8),
+        "NW": (2.8, 2.8),
+        "SE": (2.8, 2.8),
+        "SW": (2.8, 2.8),
+    }
+    s_pert = {
+        "N": (2.8, 2.8),
+        "E": (2.8, 2.8),
+        "S": (3.0, 3.0),
+        "W": (2.8, 2.8),
+        "NE": (2.8, 2.8),
+        "NW": (2.8, 2.8),
+        "SE": (2.8, 2.8),
+        "SW": (2.8, 2.8),
+    }
+    assert ds_mod.symmetry_canonical_key(_sample("x", center, n_pert)) == ds_mod.symmetry_canonical_key(
+        _sample("y", center, s_pert)
+    )
 
     # Pad with enough unrelated, mutually distinct samples that the group shuffle is nontrivial.
     samples = [_sample("n_pert", center, n_pert, "C3"), _sample("s_pert", center, s_pert, "C3")]

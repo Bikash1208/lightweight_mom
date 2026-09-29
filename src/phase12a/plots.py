@@ -27,8 +27,11 @@ def plot_phase_vs_length(points, path):
     for f in freqs:
         pts = sorted((p for p in points if p.frequency_hz == f), key=lambda p: p.length_width_mm)
         ax.plot(
-            [p.length_width_mm for p in pts], [p.s11_xx_phase_deg for p in pts],
-            marker="o", markersize=3, label=f"{f / 1e9:.2f} GHz",
+            [p.length_width_mm for p in pts],
+            [p.s11_xx_phase_deg for p in pts],
+            marker="o",
+            markersize=3,
+            label=f"{f / 1e9:.2f} GHz",
         )
     ax.set_xlabel("L = W [mm]")
     ax.set_ylabel("phase(S11_xx) [deg]")
@@ -49,8 +52,11 @@ def plot_magnitude_vs_length(points, path):
     for f in freqs:
         pts = sorted((p for p in points if p.frequency_hz == f), key=lambda p: p.length_width_mm)
         ax.plot(
-            [p.length_width_mm for p in pts], [p.s11_xx_mag for p in pts],
-            marker="o", markersize=3, label=f"{f / 1e9:.2f} GHz",
+            [p.length_width_mm for p in pts],
+            [p.s11_xx_mag for p in pts],
+            marker="o",
+            markersize=3,
+            label=f"{f / 1e9:.2f} GHz",
         )
     ax.set_xlabel("L = W [mm]")
     ax.set_ylabel("|S11_xx| (linear)")
@@ -73,15 +79,33 @@ def plot_grounded_vs_ungrounded(grounded_points, ungrounded_table, design_freque
         (p for p in grounded_points if p.frequency_hz == design_frequency_hz),
         key=lambda p: p.length_width_mm,
     )
-    ax.plot([p.length_width_mm for p in g], [p.s11_xx_phase_deg for p in g],
-            marker="o", markersize=3, label="grounded (backing=pec)")
+    ax.plot(
+        [p.length_width_mm for p in g],
+        [p.s11_xx_phase_deg for p in g],
+        marker="o",
+        markersize=3,
+        label="grounded (backing=pec)",
+    )
     if ungrounded_table:
         u = sorted(ungrounded_table, key=lambda r: r["L_mm"])
-        ax.plot([r["L_mm"] for r in u], [r["phase_deg"] for r in u],
-                marker="s", markersize=3, linestyle="--", label="ungrounded (Phase 7 library)")
+        ax.plot(
+            [r["L_mm"] for r in u],
+            [r["phase_deg"] for r in u],
+            marker="s",
+            markersize=3,
+            linestyle="--",
+            label="ungrounded (Phase 7 library)",
+        )
     else:
-        ax.text(0.5, 0.5, "ungrounded Phase 7 data NOT_AVAILABLE", transform=ax.transAxes,
-                ha="center", va="center", color="red")
+        ax.text(
+            0.5,
+            0.5,
+            "ungrounded Phase 7 data NOT_AVAILABLE",
+            transform=ax.transAxes,
+            ha="center",
+            va="center",
+            color="red",
+        )
     ax.set_xlabel("L = W [mm]")
     ax.set_ylabel("phase(S11_xx) [deg]")
     ax.set_ylim(-180, 180)

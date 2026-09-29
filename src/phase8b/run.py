@@ -18,7 +18,11 @@ from .report import (
     render_repository_scientific_audit_md,
 )
 
-DEFAULT_DEMO_BEAMS = (Beam(theta_deg=30.0, phi_deg=0.0), Beam(theta_deg=30.0, phi_deg=120.0), Beam(theta_deg=30.0, phi_deg=240.0))
+DEFAULT_DEMO_BEAMS = (
+    Beam(theta_deg=30.0, phi_deg=0.0),
+    Beam(theta_deg=30.0, phi_deg=120.0),
+    Beam(theta_deg=30.0, phi_deg=240.0),
+)
 DEMO_FREQUENCY_HZ = 12.5e9
 
 
@@ -46,12 +50,14 @@ def run_phase8b(output_dir, library_dir=DEFAULT_LIBRARY_DIR, design_frequency_gh
     try:
         beam1 = DEFAULT_DEMO_BEAMS[0]
         p8b_plots.plot_object_wave_single_beam(beam1, DEMO_FREQUENCY_HZ, plots_dir / "object_wave_single_beam.png")
-        p8b_plots.plot_object_wave_multi_beam(list(DEFAULT_DEMO_BEAMS), DEMO_FREQUENCY_HZ, plots_dir / "object_wave_multi_beam.png")
+        p8b_plots.plot_object_wave_multi_beam(
+            list(DEFAULT_DEMO_BEAMS), DEMO_FREQUENCY_HZ, plots_dir / "object_wave_multi_beam.png"
+        )
         p8b_plots.plot_phase_gradient_test(DEMO_FREQUENCY_HZ, plots_dir / "phase_gradient_test.png")
         p8b_plots.plot_phase_control_quantity(evaluations, plots_dir / "phase_control_quantity.png")
         p8b_plots.plot_distinct_phase_states(distinct, plots_dir / "distinct_phase_states.png")
     except ImportError:
-        pass   # matplotlib not installed; JSON/CSV/MD outputs are still written
+        pass  # matplotlib not installed; JSON/CSV/MD outputs are still written
 
     return {"status": status, "evaluations": evaluations, "distinct_states": distinct, "output_dir": output_dir}
 

@@ -16,7 +16,7 @@ from src.library_classifier import (
     grating_risk,
     phase_usability,
 )
-from src.library_schema import LibraryConfig, PHASE_USABLE_MIN_MAG_DB, RESONANCE_MIN_PROMINENCE
+from src.library_schema import PHASE_USABLE_MIN_MAG_DB, RESONANCE_MIN_PROMINENCE, LibraryConfig
 from src.materials import Metal, Substrate
 from src.periodic_bc import RectangularLattice
 from src.phase_extraction import extract_design_frequency
@@ -27,6 +27,7 @@ _SUBSTRATE = {"name": "Rogers RT/Duroid 5880", "eps_r": 2.2, "tan_delta": 0.0009
 
 
 # --------------------------------------------------------------------------- resonance detection
+
 
 def test_detect_resonance_flat_curve_is_not_resonant():
     freqs = np.linspace(10e9, 15e9, 21)
@@ -47,7 +48,7 @@ def test_detect_resonance_monotonic_curve_is_not_resonant():
 
 def test_detect_resonance_clear_interior_peak_is_resonant():
     freqs = np.linspace(10e9, 15e9, 21)
-    mag = 0.1 + 0.85 * np.exp(-0.5 * ((freqs - 12.5e9) / 0.3e9) ** 2)   # peak ~0.95 at 12.5 GHz
+    mag = 0.1 + 0.85 * np.exp(-0.5 * ((freqs - 12.5e9) / 0.3e9) ** 2)  # peak ~0.95 at 12.5 GHz
     result = detect_resonance(freqs, mag)
     assert result.is_resonant is True
     assert result.resonance_frequency_hz == pytest.approx(12.5e9, abs=0.3e9)
@@ -58,7 +59,7 @@ def test_detect_resonance_edge_peak_is_excluded():
     """A maximum at the very first or last sample (band edge) is not counted -- only strictly
     interior samples are candidates (req. 14: "identify whether it occurs inside 10-15 GHz")."""
     freqs = np.linspace(10e9, 15e9, 11)
-    mag = np.linspace(0.9, 0.1, 11)   # monotonically decreasing: "peak" only at index 0 (edge)
+    mag = np.linspace(0.9, 0.1, 11)  # monotonically decreasing: "peak" only at index 0 (edge)
     result = detect_resonance(freqs, mag)
     assert result.is_resonant is False
 
@@ -68,7 +69,10 @@ def test_detect_resonance_boundary_prominence_classification():
     flips classification there, and nowhere else -- the threshold is meaningful, not vacuous."""
     freqs = np.linspace(10e9, 15e9, 11)
     base = 0.1
-    for prominence, expect_resonant in ((RESONANCE_MIN_PROMINENCE + 0.01, True), (RESONANCE_MIN_PROMINENCE - 0.01, False)):
+    for prominence, expect_resonant in (
+        (RESONANCE_MIN_PROMINENCE + 0.01, True),
+        (RESONANCE_MIN_PROMINENCE - 0.01, False),
+    ):
         mag = np.full(11, base)
         mag[5] = base + prominence
         result = detect_resonance(freqs, mag)
@@ -84,6 +88,7 @@ def test_detect_resonance_too_few_points_is_not_resonant():
 
 
 # --------------------------------------------------------------------------------- grating risk
+
 
 def _cell(length_mm, width_mm, period_mm=4.8):
     sub = Substrate(name="test", eps_r=2.2, tan_delta=0.0009, thickness=1.575e-3)
@@ -104,7 +109,7 @@ def test_grating_risk_false_for_locked_period_across_the_full_band():
 def test_grating_risk_true_when_a_frequency_exceeds_onset():
     """A large period pushed the onset below the swept band -> flagged, using the existing
     discretization.is_specular_only check (not a new period/frequency computation)."""
-    uc = _cell(2.0, 2.0, period_mm=30.0)   # onset = c0/30mm = 10 GHz
+    uc = _cell(2.0, 2.0, period_mm=30.0)  # onset = c0/30mm = 10 GHz
     result = grating_risk(uc, np.linspace(10e9, 15e9, 11))
     assert result["is_grating_risk"] is True
     assert result["grating_onset_hz"] == pytest.approx(C0 / 30.0e-3, rel=1e-6)
@@ -112,10 +117,11 @@ def test_grating_risk_true_when_a_frequency_exceeds_onset():
 
 # ---------------------------------------------------------------------------- phase usability
 
+
 def test_phase_usability_boundary():
     assert phase_usability(PHASE_USABLE_MIN_MAG_DB + 0.01) == "PHASE_USABLE"
     assert phase_usability(PHASE_USABLE_MIN_MAG_DB - 0.01) == "PHASE_UNUSABLE"
-    assert phase_usability(PHASE_USABLE_MIN_MAG_DB) == "PHASE_USABLE"   # >= is usable
+    assert phase_usability(PHASE_USABLE_MIN_MAG_DB) == "PHASE_USABLE"  # >= is usable
 
 
 def test_phase_usability_none_is_unclassified():
@@ -123,6 +129,7 @@ def test_phase_usability_none_is_unclassified():
 
 
 # -------------------------------------------------------------------------------- classify_cell
+
 
 def test_classify_cell_invalid_geometry_is_unclassified():
     from src.database import CellEntry
@@ -140,9 +147,14 @@ def test_classify_cell_invalid_geometry_is_unclassified():
 
 def test_classify_cell_on_a_real_small_database():
     cfg = LibraryConfig(
-        period_m=4.8e-3, substrate=_SUBSTRATE,
-        f_min_hz=10.0e9, f_max_hz=15.0e9, f_step_hz=1.0e9, f_design_hz=12.0e9,
-        l_values_mm=(1.0, 2.4, 4.2), w_values_mm=(1.0, 2.4, 4.2),
+        period_m=4.8e-3,
+        substrate=_SUBSTRATE,
+        f_min_hz=10.0e9,
+        f_max_hz=15.0e9,
+        f_step_hz=1.0e9,
+        f_design_hz=12.0e9,
+        l_values_mm=(1.0, 2.4, 4.2),
+        w_values_mm=(1.0, 2.4, 4.2),
     )
     database = build_library_database(cfg, out_dir=None).database
     rows = extract_design_frequency(database, cfg)
@@ -155,4 +167,4 @@ def test_classify_cell_on_a_real_small_database():
         assert result.phase_status in ("PHASE_USABLE", "PHASE_UNUSABLE")
         assert result.resonance is not None
         assert result.grating is not None
-        assert result.grating["is_grating_risk"] is False   # locked period, full band
+        assert result.grating["is_grating_risk"] is False  # locked period, full band

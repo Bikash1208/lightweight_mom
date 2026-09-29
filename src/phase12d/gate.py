@@ -27,7 +27,7 @@ class StepLimitGateResult:
     reason: str
     max_step_within_design_tolerance_deg: "float | None"
     max_step_within_strict_tolerance_deg: "float | None"
-    per_case: tuple   # (name, achieved_step_deg, phase_error_deg, mag_error_db, within_design, within_strict)
+    per_case: tuple  # (name, achieved_step_deg, phase_error_deg, mag_error_db, within_design, within_strict)
 
 
 def decide_step_limit(step_curve_cases):
@@ -38,10 +38,24 @@ def decide_step_limit(step_curve_cases):
     achieved steps honestly")."""
     per_case = []
     for c in step_curve_cases:
-        within_design = c.reflection_phase_error_deg <= DESIGN_TOLERANCE_DEG and c.reflection_magnitude_error_db <= DESIGN_TOLERANCE_DB
-        within_strict = c.reflection_phase_error_deg <= STRICT_TOLERANCE_DEG and c.reflection_magnitude_error_db <= STRICT_TOLERANCE_DB
-        per_case.append((c.name, c.achieved_step_deg, c.reflection_phase_error_deg,
-                          c.reflection_magnitude_error_db, within_design, within_strict))
+        within_design = (
+            c.reflection_phase_error_deg <= DESIGN_TOLERANCE_DEG
+            and c.reflection_magnitude_error_db <= DESIGN_TOLERANCE_DB
+        )
+        within_strict = (
+            c.reflection_phase_error_deg <= STRICT_TOLERANCE_DEG
+            and c.reflection_magnitude_error_db <= STRICT_TOLERANCE_DB
+        )
+        per_case.append(
+            (
+                c.name,
+                c.achieved_step_deg,
+                c.reflection_phase_error_deg,
+                c.reflection_magnitude_error_db,
+                within_design,
+                within_strict,
+            )
+        )
 
     design_ok = [c for c in per_case if c[4]]
     strict_ok = [c for c in per_case if c[5]]
@@ -51,23 +65,33 @@ def decide_step_limit(step_curve_cases):
     if not per_case:
         return StepLimitGateResult(
             LOCAL_PERIODICITY_STEP_LIMIT_NOT_RESOLVED,
-            "no step-curve case was measured", None, None, (),
+            "no step-curve case was measured",
+            None,
+            None,
+            (),
         )
     if not design_ok:
         status = LOCAL_PERIODICITY_STEP_LIMIT_NOT_RESOLVED
-        reason = (f"no tested case (achieved steps {min(c[1] for c in per_case):.1f}-"
-                  f"{max(c[1] for c in per_case):.1f} deg) stayed within the {DESIGN_TOLERANCE_DEG} "
-                  f"deg / {DESIGN_TOLERANCE_DB} dB design tolerance; the true crossover step (if any "
-                  f"smaller step exists) was not computationally reachable at this mesh -- see the "
-                  f"report's cost note")
+        reason = (
+            f"no tested case (achieved steps {min(c[1] for c in per_case):.1f}-"
+            f"{max(c[1] for c in per_case):.1f} deg) stayed within the {DESIGN_TOLERANCE_DEG} "
+            f"deg / {DESIGN_TOLERANCE_DB} dB design tolerance; the true crossover step (if any "
+            f"smaller step exists) was not computationally reachable at this mesh -- see the "
+            f"report's cost note"
+        )
     else:
         status = LOCAL_PERIODICITY_STEP_LIMIT_MEASURED
-        reason = (f"local periodicity holds within the design tolerance up to {max_design:.1f} "
-                  f"deg/cell (largest tested step that stayed within it)"
-                  + (f"; within the stricter {STRICT_TOLERANCE_DEG} deg/{STRICT_TOLERANCE_DB} dB "
-                     f"tolerance up to {max_strict:.1f} deg/cell" if strict_ok else
-                     f"; no tested step stayed within the stricter {STRICT_TOLERANCE_DEG} deg/"
-                     f"{STRICT_TOLERANCE_DB} dB tolerance"))
+        reason = (
+            f"local periodicity holds within the design tolerance up to {max_design:.1f} "
+            f"deg/cell (largest tested step that stayed within it)"
+            + (
+                f"; within the stricter {STRICT_TOLERANCE_DEG} deg/{STRICT_TOLERANCE_DB} dB "
+                f"tolerance up to {max_strict:.1f} deg/cell"
+                if strict_ok
+                else f"; no tested step stayed within the stricter {STRICT_TOLERANCE_DEG} deg/"
+                f"{STRICT_TOLERANCE_DB} dB tolerance"
+            )
+        )
     return StepLimitGateResult(status, reason, max_design, max_strict, tuple(per_case))
 
 
@@ -75,7 +99,7 @@ def decide_step_limit(step_curve_cases):
 class ApertureGateResult:
     status: str
     reason: str
-    per_size: tuple   # (n_cells, fraction_intended, max_spurious_fraction, adequate, attempted)
+    per_size: tuple  # (n_cells, fraction_intended, max_spurious_fraction, adequate, attempted)
 
 
 def decide_aperture_adequacy(aperture_results, requested_sizes, adequacy_threshold=0.9):
@@ -101,14 +125,17 @@ def decide_aperture_adequacy(aperture_results, requested_sizes, adequacy_thresho
     adequate_ns = sorted(n for n, _, _, ok, _ in tested if ok)
     if adequate_ns:
         status = LOOKUP_TABLE_ADEQUATE
-        reason = (f"the lookup-table-constructed aperture puts >= {adequacy_threshold*100:.0f}% of "
-                  f"reflected power in the intended order for N >= {min(adequate_ns)} (tested: "
-                  f"{sorted(n for n,*_ in tested)})")
+        reason = (
+            f"the lookup-table-constructed aperture puts >= {adequacy_threshold * 100:.0f}% of "
+            f"reflected power in the intended order for N >= {min(adequate_ns)} (tested: "
+            f"{sorted(n for n, *_ in tested)})"
+        )
     else:
         status = LOOKUP_TABLE_INADEQUATE
-        reason = (f"no tested, feasible N reached {adequacy_threshold*100:.0f}% of reflected power "
-                  f"in the intended order (measured: "
-                  + ", ".join(f"N={n}: {f:.3f}" for n, f, *_ in tested) + ")")
+        reason = (
+            f"no tested, feasible N reached {adequacy_threshold * 100:.0f}% of reflected power "
+            f"in the intended order (measured: " + ", ".join(f"N={n}: {f:.3f}" for n, f, *_ in tested) + ")"
+        )
     return ApertureGateResult(status, reason, tuple(per_size))
 
 
@@ -129,10 +156,16 @@ def decide_hfss_status(comparisons, all_case_ids, pending_ids):
     validated = tuple(cid for cid, c in by_id.items() if c.meets_tolerance)
     pending = tuple(cid for cid in all_case_ids if cid not in by_id)
     if not by_id:
-        return HfssGateResult("HFSS_SINGLE_CELL_NOT_VALIDATED",
-                               "no HFSS Touchstone data found for any single-cell case", (), tuple(all_case_ids))
+        return HfssGateResult(
+            "HFSS_SINGLE_CELL_NOT_VALIDATED",
+            "no HFSS Touchstone data found for any single-cell case",
+            (),
+            tuple(all_case_ids),
+        )
     status = HFSS_SINGLE_CELL_VALIDATED_PARTIAL if validated else "HFSS_SINGLE_CELL_NOT_VALIDATED"
-    reason = (f"validated within tolerance: {validated or '(none)'}; cases with HFSS data but "
-              f"outside tolerance: {tuple(cid for cid in by_id if cid not in validated) or '(none)'}; "
-              f"still pending (no HFSS file yet): {pending}")
+    reason = (
+        f"validated within tolerance: {validated or '(none)'}; cases with HFSS data but "
+        f"outside tolerance: {tuple(cid for cid in by_id if cid not in validated) or '(none)'}; "
+        f"still pending (no HFSS file yet): {pending}"
+    )
     return HfssGateResult(status, reason, validated, pending)

@@ -27,9 +27,10 @@ def test_assign_geometry_by_isolated_search_picks_from_the_response_table():
 
 
 def test_run_three_beam_test_produces_a_solved_aperture_and_metrics():
-    result = hb.run_three_beam_test(CENTER, 5, P, SUB, MET, F, margin=1, mesh_cells_per_subcell=8,
-                                     candidate_lw_values_mm=[1.0, 2.8, 4.4])
-    assert len(result.assigned) == 9   # 3x3 interior of a 5x5 aperture
+    result = hb.run_three_beam_test(
+        CENTER, 5, P, SUB, MET, F, margin=1, mesh_cells_per_subcell=8, candidate_lw_values_mm=[1.0, 2.8, 4.4]
+    )
+    assert len(result.assigned) == 9  # 3x3 interior of a 5x5 aperture
     assert result.metrics.n_intended_beams == 3
     for lw in result.assigned.values():
         assert lw in [(1.0, 1.0), (2.8, 2.8), (4.4, 4.4)]

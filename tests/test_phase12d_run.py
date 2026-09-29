@@ -10,7 +10,7 @@ from src.phase12d.run import run_phase12d
 
 def _small_step_family(mesh_cells_per_subcell):
     unit_mm = 2.0 * 8.0 / mesh_cells_per_subcell
-    max_k = int((8.0 * 0.9) // unit_mm)   # stay safely inside the 8mm period
+    max_k = int((8.0 * 0.9) // unit_mm)  # stay safely inside the 8mm period
     return tuple(round(unit_mm * k, 6) for k in range(2, max_k + 1))
 
 
@@ -30,8 +30,7 @@ def reduced_result(tmp_path_factory):
 
 def test_reduced_run_produces_every_output_file(reduced_result):
     out = reduced_result.output_dir
-    for name in ("task_a.json", "task_b.json", "task_c.json", "phase12d_gate_status.json",
-                 "phase12d_report.md"):
+    for name in ("task_a.json", "task_b.json", "task_c.json", "phase12d_gate_status.json", "phase12d_report.md"):
         assert (out / name).exists(), name
 
 

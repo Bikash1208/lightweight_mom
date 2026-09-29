@@ -28,7 +28,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from .library_schema import PHASE_COLLISION_BIN_DEG
-from .validation_export import _DB_FLOOR, _db
+from .validation_export import _db
 
 PHASE_SOURCE_COMPONENT = "S11_xx"
 
@@ -36,7 +36,7 @@ PHASE_SOURCE_COMPONENT = "S11_xx"
 @dataclass(frozen=True)
 class PhaseSourceResolution:
     component: str
-    status: str          # "SPECIFICATION_MANDATED" | "PHYSICALLY_VALIDATED" | "UNRESOLVED"
+    status: str  # "SPECIFICATION_MANDATED" | "PHYSICALLY_VALIDATED" | "UNRESOLVED"
     note: str
 
 
@@ -76,8 +76,11 @@ def _record_metrics(record, component):
     z = record.component(component)
     mag = abs(z)
     return {
-        "real": float(z.real), "imag": float(z.imag), "mag": float(mag),
-        "mag_db": float(_db(np.array([mag]))[0]), "phase_deg": float(record.phase_deg(component)),
+        "real": float(z.real),
+        "imag": float(z.imag),
+        "mag": float(mag),
+        "mag_db": float(_db(np.array([mag]))[0]),
+        "phase_deg": float(record.phase_deg(component)),
     }
 
 
@@ -108,9 +111,12 @@ def extract_design_frequency(database, config):
             # Match by stored geometry parameters (mm -> m), not by re-deriving a cell_id here,
             # so this function stays independent of _canonical.cell_id's hashing details.
             cell = next(
-                (c for c in database.cells
-                 if abs(c.parameters["length_m"] - l_mm * 1e-3) < 1e-15
-                 and abs(c.parameters["width_m"] - w_mm * 1e-3) < 1e-15),
+                (
+                    c
+                    for c in database.cells
+                    if abs(c.parameters["length_m"] - l_mm * 1e-3) < 1e-15
+                    and abs(c.parameters["width_m"] - w_mm * 1e-3) < 1e-15
+                ),
                 None,
             )
             if cell is None:
@@ -122,15 +128,24 @@ def extract_design_frequency(database, config):
             if record is None:
                 rows.append(DesignFrequencyRow(cell.cell_id, l_mm, w_mm, "VALID", "FAILED", None, None, None, None))
                 continue
-            rows.append(DesignFrequencyRow(
-                cell.cell_id, l_mm, w_mm, "VALID", "OK",
-                _record_metrics(record, "S11_xx"), _record_metrics(record, "S21_xx"),
-                _record_metrics(record, "S12_xx"), _record_metrics(record, "S22_xx"),
-            ))
+            rows.append(
+                DesignFrequencyRow(
+                    cell.cell_id,
+                    l_mm,
+                    w_mm,
+                    "VALID",
+                    "OK",
+                    _record_metrics(record, "S11_xx"),
+                    _record_metrics(record, "S21_xx"),
+                    _record_metrics(record, "S12_xx"),
+                    _record_metrics(record, "S22_xx"),
+                )
+            )
     return rows
 
 
 # ---------------------------------------------------------------- phase-vs-geometry lookup table
+
 
 def phase_vs_geometry_table(rows):
     """Req. 10's exact table: L_mm, W_mm, phase_deg, magnitude_db, S11_real, S11_imag -- for
@@ -138,24 +153,29 @@ def phase_vs_geometry_table(rows):
     appear in ``rows`` above with S-blocks `None`, which is where its absence is recorded)."""
     return [
         {
-            "L_mm": r.l_mm, "W_mm": r.w_mm,
-            "phase_deg": r.s11["phase_deg"], "magnitude_db": r.s11["mag_db"],
-            "S11_real": r.s11["real"], "S11_imag": r.s11["imag"],
+            "L_mm": r.l_mm,
+            "W_mm": r.w_mm,
+            "phase_deg": r.s11["phase_deg"],
+            "magnitude_db": r.s11["mag_db"],
+            "S11_real": r.s11["real"],
+            "S11_imag": r.s11["imag"],
         }
-        for r in rows if r.s11 is not None
+        for r in rows
+        if r.s11 is not None
     ]
 
 
 # --------------------------------------------------------------------------- coverage / gaps
 
+
 @dataclass(frozen=True)
 class PhaseCoverage:
     n_points: int
-    phase_min_deg: float          # naive min/max of the (unsorted) phase values themselves
+    phase_min_deg: float  # naive min/max of the (unsorted) phase values themselves
     phase_max_deg: float
-    naive_span_deg: float         # phase_max_deg - phase_min_deg (NOT circularly aware)
-    largest_gap_deg: float        # largest empty arc on the circle between consecutive points
-    coverage_deg: float           # 360 - largest_gap_deg: the circularly-aware "spanned" measure
+    naive_span_deg: float  # phase_max_deg - phase_min_deg (NOT circularly aware)
+    largest_gap_deg: float  # largest empty arc on the circle between consecutive points
+    coverage_deg: float  # 360 - largest_gap_deg: the circularly-aware "spanned" measure
     largest_gap_before_deg: float
     largest_gap_after_deg: float
 
@@ -181,14 +201,19 @@ def phase_coverage(table):
     before = phases[gap_index]
     after = phases[(gap_index + 1) % n]
     return PhaseCoverage(
-        n_points=n, phase_min_deg=phases[0], phase_max_deg=phases[-1],
+        n_points=n,
+        phase_min_deg=phases[0],
+        phase_max_deg=phases[-1],
         naive_span_deg=phases[-1] - phases[0],
-        largest_gap_deg=largest, coverage_deg=360.0 - largest,
-        largest_gap_before_deg=before, largest_gap_after_deg=after,
+        largest_gap_deg=largest,
+        coverage_deg=360.0 - largest,
+        largest_gap_before_deg=before,
+        largest_gap_after_deg=after,
     )
 
 
 # ------------------------------------------------------------------------- collision analysis
+
 
 def phase_collision_groups(table, bin_deg=PHASE_COLLISION_BIN_DEG):
     """Req. 11: bin the design-frequency S11 phase of every successful cell into ``bin_deg``-wide
@@ -205,9 +230,11 @@ def phase_collision_groups(table, bin_deg=PHASE_COLLISION_BIN_DEG):
         if len(members) < 2:
             continue
         lo = -180.0 + bin_index * bin_deg
-        groups.append({
-            "phase_bin_deg": [lo, lo + bin_deg],
-            "n_candidates": len(members),
-            "candidates": sorted(members, key=lambda m: (m["L_mm"], m["W_mm"])),
-        })
+        groups.append(
+            {
+                "phase_bin_deg": [lo, lo + bin_deg],
+                "n_candidates": len(members),
+                "candidates": sorted(members, key=lambda m: (m["L_mm"], m["W_mm"])),
+            }
+        )
     return groups

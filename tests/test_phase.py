@@ -17,12 +17,26 @@ RNG = np.random.default_rng(20240921)
 
 # ----------------------------------------------------------------------------- wrapping
 
+
 @pytest.mark.parametrize(
     "raw, expected",
     [
-        (0.0, 0.0), (-0.0, 0.0), (90.0, 90.0), (-90.0, -90.0), (179.0, 179.0), (-179.0, -179.0),
-        (180.0, 180.0), (-180.0, 180.0), (181.0, -179.0), (-181.0, 179.0),
-        (360.0, 0.0), (-360.0, 0.0), (540.0, 180.0), (-540.0, 180.0), (720.5, 0.5), (-3600.25, -0.25),
+        (0.0, 0.0),
+        (-0.0, 0.0),
+        (90.0, 90.0),
+        (-90.0, -90.0),
+        (179.0, 179.0),
+        (-179.0, -179.0),
+        (180.0, 180.0),
+        (-180.0, 180.0),
+        (181.0, -179.0),
+        (-181.0, 179.0),
+        (360.0, 0.0),
+        (-360.0, 0.0),
+        (540.0, 180.0),
+        (-540.0, 180.0),
+        (720.5, 0.5),
+        (-3600.25, -0.25),
     ],
 )
 def test_wrap_known_values(raw, expected):
@@ -59,7 +73,7 @@ def test_wrap_rejects_non_finite(bad):
 
 def test_branch_cut_negative_real_axis_is_plus_180_for_both_signed_zeros():
     """arg(-1 + 0j) = +pi but arg(-1 - 0j) = -pi in numpy: the database must hold one spelling."""
-    assert np.degrees(np.angle(-1 - 0j)) == -180.0          # documents the numpy behaviour
+    assert np.degrees(np.angle(-1 - 0j)) == -180.0  # documents the numpy behaviour
     assert principal_phase_deg(-1 + 0j) == 180.0
     assert principal_phase_deg(-1 - 0j) == 180.0
     assert principal_phase_deg(1e-3 * (-1 - 0j)) == 180.0
@@ -95,6 +109,7 @@ def test_wrapped_difference_antisymmetric_except_at_exactly_180():
 
 # --------------------------------------------------------------------------- unwrapping
 
+
 @pytest.mark.parametrize("step", [-170.0, -100.0, -30.0, 0.0, 45.0, 100.0, 170.0])
 def test_unwrap_recovers_linear_ramp_when_step_below_180(step):
     true = 25.0 + step * np.arange(40)
@@ -108,13 +123,13 @@ def test_unwrap_aliases_when_step_exceeds_180_documented_limit(step):
     true = step * np.arange(10)
     got = unwrap_deg(wrap_deg(true))
     assert not np.allclose(got, true)
-    expected_step = wrap_deg(step)                    # what the samples actually look like
+    expected_step = wrap_deg(step)  # what the samples actually look like
     assert np.allclose(np.diff(got), expected_step)
 
 
 def test_unwrap_smooth_function_recovers_continuous_phase_anchored_at_first_sample():
     t = np.linspace(0.0, 1.0, 400)
-    true = -2000.0 * t + 300.0 * np.sin(6.0 * t)           # max step ~ 5 deg
+    true = -2000.0 * t + 300.0 * np.sin(6.0 * t)  # max step ~ 5 deg
     got = unwrap_deg(wrap_deg(true))
     assert np.allclose(got - got[0], true - true[0], atol=1e-8)
     assert got[0] == wrap_deg(true[0])
@@ -125,7 +140,7 @@ def test_unwrap_is_continuous_and_consistent_with_wrapping():
     true = 1500.0 * t**2
     got = unwrap_deg(wrap_deg(true))
     assert np.max(np.abs(np.diff(got))) < 180.0
-    diff = (got - wrap_deg(true)) / 360.0                   # a whole number of turns at every sample
+    diff = (got - wrap_deg(true)) / 360.0  # a whole number of turns at every sample
     assert np.allclose(diff, np.round(diff), atol=1e-8)
 
 

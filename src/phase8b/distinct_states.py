@@ -5,7 +5,7 @@ No solver code is touched; this module only reads already-solved data and groups
 
 from dataclasses import dataclass
 
-DEDUP_EPS_DEG = 1e-6   # bit-level dedup, same tolerance as feasibility_coverage.phase_density
+DEDUP_EPS_DEG = 1e-6  # bit-level dedup, same tolerance as feasibility_coverage.phase_density
 
 
 @dataclass(frozen=True)
@@ -60,8 +60,11 @@ def analyze_distinct_states(table, mesh_dx_mm=None):
         "descriptively, as Sec. 30 requires, not asserted as certain."
     )
     return DistinctStateAnalysis(
-        n_geometries=len(table), n_distinct_phase_states=n_distinct, n_duplicate_records=n_dup,
-        rows=tuple(rows), mesh_hypothesis_note=note,
+        n_geometries=len(table),
+        n_distinct_phase_states=n_distinct,
+        n_duplicate_records=n_dup,
+        rows=tuple(rows),
+        mesh_hypothesis_note=note,
     )
 
 

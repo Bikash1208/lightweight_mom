@@ -14,8 +14,8 @@ from ..phase8b import library_compatibility as lib_compat
 @dataclass(frozen=True)
 class ArchitectureTestResult:
     hypothesis: str
-    chain: tuple            # ordered (link, status) pairs, Sec. 24-25's explicit chain
-    status: str              # "...VALIDATED" | "...UNVALIDATED"
+    chain: tuple  # ordered (link, status) pairs, Sec. 24-25's explicit chain
+    status: str  # "...VALIDATED" | "...UNVALIDATED"
 
 
 def reflection_architecture_test():
@@ -29,8 +29,12 @@ def reflection_architecture_test():
         ("S11xx interpretation as that quantity", s11.validated),
         ("Phase 7 response available (S11 stored in full)", "YES"),
     )
-    status = "REFLECTION_ARCHITECTURE_VALIDATED" if s11.validated == "VALIDATED" else "REFLECTION_ARCHITECTURE_UNVALIDATED"
-    return ArchitectureTestResult(hypothesis="Holographic control variable = reflection coefficient (S11xx)", chain=chain, status=status)
+    status = (
+        "REFLECTION_ARCHITECTURE_VALIDATED" if s11.validated == "VALIDATED" else "REFLECTION_ARCHITECTURE_UNVALIDATED"
+    )
+    return ArchitectureTestResult(
+        hypothesis="Holographic control variable = reflection coefficient (S11xx)", chain=chain, status=status
+    )
 
 
 def transmission_architecture_test():
@@ -43,8 +47,14 @@ def transmission_architecture_test():
         ("S21xx interpretation as that quantity", s21.validated),
         ("Phase 7 response available (S21 stored in full)", "YES"),
     )
-    status = "TRANSMISSION_ARCHITECTURE_VALIDATED" if s21.validated == "VALIDATED" else "TRANSMISSION_ARCHITECTURE_UNVALIDATED"
-    return ArchitectureTestResult(hypothesis="Holographic control variable = transmission coefficient (S21xx)", chain=chain, status=status)
+    status = (
+        "TRANSMISSION_ARCHITECTURE_VALIDATED"
+        if s21.validated == "VALIDATED"
+        else "TRANSMISSION_ARCHITECTURE_UNVALIDATED"
+    )
+    return ArchitectureTestResult(
+        hypothesis="Holographic control variable = transmission coefficient (S21xx)", chain=chain, status=status
+    )
 
 
 def formulation_a_reevaluation():
@@ -59,7 +69,7 @@ def formulation_a_reevaluation():
         "object_wave_requirement": "arbitrary desired radiated beam(s)",
         "modulation_equation": "Psi = Re{E_ref . conj(E_obj)}, X = X_avg(1+M*Psi)",
         "unit_cell_response_requirement": "surface reactance of a grounded unit cell",
-        "status": e.final_status,   # unchanged from Phase 8B: LIBRARY_CONTROL_VARIABLE_INCOMPATIBLE
+        "status": e.final_status,  # unchanged from Phase 8B: LIBRARY_CONTROL_VARIABLE_INCOMPATIBLE
     }
 
 
@@ -73,8 +83,8 @@ def formulation_b_reevaluation():
         "corresponds_to_reflection_phase": reflection.status,
         "corresponds_to_transmission_phase": transmission.status,
         "note": "Formulation B (a phase-difference/phase-conjugate hologram) is mathematically "
-                "compatible with either a reflection-phase or a transmission-phase control "
-                "variable; this project has not determined which architecture (reflective vs. "
-                "transmissive MTS) it intends, so neither correspondence is validated (Sec. 28's "
-                "explicit prohibition on calling it 'validated' by resemblance alone).",
+        "compatible with either a reflection-phase or a transmission-phase control "
+        "variable; this project has not determined which architecture (reflective vs. "
+        "transmissive MTS) it intends, so neither correspondence is validated (Sec. 28's "
+        "explicit prohibition on calling it 'validated' by resemblance alone).",
     }

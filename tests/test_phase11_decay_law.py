@@ -32,6 +32,7 @@ def test_fit_refuses_when_trend_is_not_monotonic():
 
 def test_fit_reports_parameters_and_quality_for_a_clean_exponential():
     import numpy as np
+
     distances = [1, 2, 3, 4, 5]
     magnitudes = [10.0 * np.exp(-d / 2.0) for d in distances]
     obs = observe_decay(list(zip(distances, magnitudes)))

@@ -21,8 +21,18 @@ def write_task_a_json(correctness, convergence_series, feasibility_points, path)
     return _write_json(obj, path)
 
 
-def write_task_b_json(curve, centers, gradient_results, strong_contrast, periodic_results,
-                       periodic_grid_mm, periodic_span_deg, periodic_is_full_2pi, gate_result, path):
+def write_task_b_json(
+    curve,
+    centers,
+    gradient_results,
+    strong_contrast,
+    periodic_results,
+    periodic_grid_mm,
+    periodic_span_deg,
+    periodic_is_full_2pi,
+    gate_result,
+    path,
+):
     obj = {
         "reference_curve": [asdict(p) for p in curve],
         "centers": {
@@ -39,12 +49,20 @@ def write_task_b_json(curve, centers, gradient_results, strong_contrast, periodi
             "is_full_2pi": periodic_is_full_2pi,
         },
         "gate": {
-            "status": gate_result.status, "reason": gate_result.reason,
+            "status": gate_result.status,
+            "reason": gate_result.reason,
             "max_step_within_tolerance_deg": gate_result.max_step_within_tolerance_deg,
             "phase9_classification": gate_result.phase9_classification,
-            "per_case": [{"name": n, "achieved_step_deg": s, "phase_error_deg": p,
-                          "magnitude_error_db": m, "within_tolerance": w}
-                         for n, s, p, m, w in gate_result.per_case],
+            "per_case": [
+                {
+                    "name": n,
+                    "achieved_step_deg": s,
+                    "phase_error_deg": p,
+                    "magnitude_error_db": m,
+                    "within_tolerance": w,
+                }
+                for n, s, p, m, w in gate_result.per_case
+            ],
         },
     }
     return _write_json(obj, path)
@@ -69,26 +87,51 @@ def write_task_d_json(c2_c3, phase9_strong, case_d, coupling_mesh, coupling_poin
         "phase10_c2_c3": asdict(c2_c3),
         "phase9_strong_contrast": asdict(phase9_strong),
         "phase11_case_d": asdict(case_d),
-        "phase11_coupling_radius": {"mesh_cells_per_subcell": coupling_mesh,
-                                      "points": [asdict(p) for p in coupling_points]},
-        "gate": {"status": spot_gate.status, "reason": spot_gate.reason,
-                 "findings": [{"case": n, "verdict": v, "detail": d} for n, v, d in spot_gate.findings]},
+        "phase11_coupling_radius": {
+            "mesh_cells_per_subcell": coupling_mesh,
+            "points": [asdict(p) for p in coupling_points],
+        },
+        "gate": {
+            "status": spot_gate.status,
+            "reason": spot_gate.reason,
+            "findings": [{"case": n, "verdict": v, "detail": d} for n, v, d in spot_gate.findings],
+        },
     }
     return _write_json(obj, path)
 
 
 def write_task_d_spot_check_csv(c2_c3, phase9_strong, case_d, path):
     rows = [
-        ("phase10_c2_c3", c2_c3.mesh_cells_per_side, "mask_identical", c2_c3.mask_identical,
-         "relative_difference", c2_c3.relative_difference),
-        ("phase9_strong_contrast", phase9_strong.mesh_cells_per_subcell, "relative_complex_error",
-         phase9_strong.relative_complex_error, "earlier_value", phase9_strong.earlier_relative_complex_error),
-        ("phase11_case_d", case_d.mesh_cells_per_subcell, "relative_difference", case_d.relative_difference,
-         "substantial", case_d.substantial),
+        (
+            "phase10_c2_c3",
+            c2_c3.mesh_cells_per_side,
+            "mask_identical",
+            c2_c3.mask_identical,
+            "relative_difference",
+            c2_c3.relative_difference,
+        ),
+        (
+            "phase9_strong_contrast",
+            phase9_strong.mesh_cells_per_subcell,
+            "relative_complex_error",
+            phase9_strong.relative_complex_error,
+            "earlier_value",
+            phase9_strong.earlier_relative_complex_error,
+        ),
+        (
+            "phase11_case_d",
+            case_d.mesh_cells_per_subcell,
+            "relative_difference",
+            case_d.relative_difference,
+            "substantial",
+            case_d.substantial,
+        ),
     ]
     with open(path, "w", newline="") as fh:
         w = csv.writer(fh)
-        w.writerow(["case", "mesh_cells_per_subcell", "metric_1_name", "metric_1_value", "metric_2_name", "metric_2_value"])
+        w.writerow(
+            ["case", "mesh_cells_per_subcell", "metric_1_name", "metric_1_value", "metric_2_name", "metric_2_value"]
+        )
         w.writerows(rows)
     return path
 

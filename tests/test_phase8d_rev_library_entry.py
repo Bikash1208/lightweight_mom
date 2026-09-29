@@ -5,7 +5,9 @@ import pytest
 from src.phase8c import data_source
 from src.phase8d_rev import library_entry as le
 
-pytestmark = pytest.mark.skipif(not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present")
+pytestmark = pytest.mark.skipif(
+    not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present"
+)
 
 
 def test_benchmark_library_reports_the_real_4p8mm_period(phase8c_full_database):
@@ -23,11 +25,21 @@ def test_benchmark_library_reports_324_geometries(phase8c_full_database):
 def test_from_database_rejects_unknown_role(phase8c_full_database):
     with pytest.raises(ValueError):
         le.LibraryEntry(
-            library_id="x", topology="rectangular_patch", role="not_a_role",
-            database=phase8c_full_database, p_x_mm=4.8, p_y_mm=4.8, substrate={},
-            frequency_min_hz=1.0, frequency_max_hz=2.0, n_frequency_points=2,
-            polarizations_supported=("x", "y"), incidence_supported=("normal",),
-            solver_version=None, configuration_hash=None, source_type="MoM",
+            library_id="x",
+            topology="rectangular_patch",
+            role="not_a_role",
+            database=phase8c_full_database,
+            p_x_mm=4.8,
+            p_y_mm=4.8,
+            substrate={},
+            frequency_min_hz=1.0,
+            frequency_max_hz=2.0,
+            n_frequency_points=2,
+            polarizations_supported=("x", "y"),
+            incidence_supported=("normal",),
+            solver_version=None,
+            configuration_hash=None,
+            source_type="MoM",
             validation_status="DATA_PRESENT",
         )
 

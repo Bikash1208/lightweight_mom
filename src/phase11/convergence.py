@@ -22,11 +22,12 @@ class ConvergenceResult:
     status: str
     last_increment_relative: float
     max_increment_relative: float
-    converged_at_n: object   # the smallest n whose OWN incoming shell increment was <= the floor, or None
+    converged_at_n: object  # the smallest n whose OWN incoming shell increment was <= the floor, or None
 
 
-def classify_convergence(increments, center_name="", noise_floor=NOISE_FLOOR_RELATIVE,
-                          substantial=SUBSTANTIAL_DEVIATION_RELATIVE):
+def classify_convergence(
+    increments, center_name="", noise_floor=NOISE_FLOOR_RELATIVE, substantial=SUBSTANTIAL_DEVIATION_RELATIVE
+):
     """Sec. 16: `R_(N+2) ~= R_N` only when the shell increment is at or below the solver's own
     measured self-consistency floor -- a solver-precision fact, not a judgement call. If ANY
     increment (not just the last) is still at least "substantial" relative to its own base value,

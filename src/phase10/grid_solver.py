@@ -19,8 +19,8 @@ from ..phase9.dipole_extraction import local_dipole_moment
 from ..phase9.supercell_geometry import SupercellUnitCell, build_supercell
 
 FLOQUET_FACTOR = 2  # matches phase9.run.FLOQUET_FACTOR; kept identical so every solve in Phase 10
-                     # uses the same, already-verified mesh/Floquet convergence ratio as Phase 9's
-                     # homogeneous-exact-match proof.
+# uses the same, already-verified mesh/Floquet convergence ratio as Phase 9's
+# homogeneous-exact-match proof.
 
 
 @dataclass(frozen=True)
@@ -35,13 +35,18 @@ class SolvedGrid:
         """The local induced-current dipole moment of sub-cell (row i, column j)."""
         cx, cy = self.supercell.sub_cell_center(i, j)
         return local_dipole_moment(
-            self.basis, self.coeffs, cx, cy,
-            self.supercell.sub_period_x / 2, self.supercell.sub_period_y / 2,
+            self.basis,
+            self.coeffs,
+            cx,
+            cy,
+            self.supercell.sub_period_x / 2,
+            self.supercell.sub_period_y / 2,
         )
 
 
-def solve_grid(n, period_m, substrate, metal, lw_grid_m, frequency_hz, mesh_cells_per_subcell=8,
-               floquet_factor=FLOQUET_FACTOR):
+def solve_grid(
+    n, period_m, substrate, metal, lw_grid_m, frequency_hz, mesh_cells_per_subcell=8, floquet_factor=FLOQUET_FACTOR
+):
     """Builds and solves one n x n heterogeneous supercell (``lw_grid_m[i][j] = (L_m, W_m)``),
     returning a ``SolvedGrid`` from which any sub-cell's dipole moment can be read out cheaply
     (no re-solve)."""

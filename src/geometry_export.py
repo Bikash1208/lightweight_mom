@@ -19,8 +19,8 @@ since a periodic unit cell's boundary is implicit in the solids' extent). Nothin
 from dataclasses import dataclass
 from pathlib import Path
 
-from .cad_export import DEFAULT_METAL_EXPORT_THICKNESS_M, export_unit_cell_step, expected_feature_bbox_mm
 from . import units
+from .cad_export import DEFAULT_METAL_EXPORT_THICKNESS_M, expected_feature_bbox_mm, export_unit_cell_step
 
 
 def step_filename(l_mm, w_mm):
@@ -63,16 +63,23 @@ def check_geometry_bounds(unit_cell):
     patch_x_min, patch_x_max, patch_y_min, patch_y_max = expected_feature_bbox_mm(geo)
 
     return GeometryBoundsCheck(
-        period_x_mm=px_mm, period_y_mm=py_mm,
-        cell_x_min_mm=cell_x_min, cell_x_max_mm=cell_x_max,
-        cell_y_min_mm=cell_y_min, cell_y_max_mm=cell_y_max,
-        patch_x_min_mm=patch_x_min, patch_x_max_mm=patch_x_max,
-        patch_y_min_mm=patch_y_min, patch_y_max_mm=patch_y_max,
+        period_x_mm=px_mm,
+        period_y_mm=py_mm,
+        cell_x_min_mm=cell_x_min,
+        cell_x_max_mm=cell_x_max,
+        cell_y_min_mm=cell_y_min,
+        cell_y_max_mm=cell_y_max,
+        patch_x_min_mm=patch_x_min,
+        patch_x_max_mm=patch_x_max,
+        patch_y_min_mm=patch_y_min,
+        patch_y_max_mm=patch_y_max,
         l_in_range=bool(0.0 < l_mm < px_mm),
         w_in_range=bool(0.0 < w_mm < py_mm),
         within_cell=bool(
-            patch_x_min >= cell_x_min - 1e-9 and patch_x_max <= cell_x_max + 1e-9
-            and patch_y_min >= cell_y_min - 1e-9 and patch_y_max <= cell_y_max + 1e-9
+            patch_x_min >= cell_x_min - 1e-9
+            and patch_x_max <= cell_x_max + 1e-9
+            and patch_y_min >= cell_y_min - 1e-9
+            and patch_y_max <= cell_y_max + 1e-9
         ),
     )
 
@@ -84,7 +91,7 @@ class CellGeometryExport:
     w_mm: float
     step_path: Path
     bounds: GeometryBoundsCheck
-    step_result: object          # cad_export.StepExportResult
+    step_result: object  # cad_export.StepExportResult
 
 
 def export_library_geometries(database, config, out_dir, *, progress=None):

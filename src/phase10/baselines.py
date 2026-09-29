@@ -40,14 +40,16 @@ class Baseline2AdditiveCorrection:
     ``S_C`` itself is looked up from ``isolated_cache`` (a real MoM solve, memoized), not averaged
     from training samples -- it is a physical quantity available for ANY center geometry, including
     ones never seen during training (Sec. 21's whole point)."""
+
     isolated_cache: IsolatedReferenceCache
-    beta_re: object         # length-16 ndarray
+    beta_re: object  # length-16 ndarray
     beta_im: object
 
     def predict(self, sample):
         s = self.isolated_cache.get(sample.center_lw_mm, sample.frequency_hz)
         feats = _delta_features(sample)
         import numpy as np
+
         x = np.asarray(feats, dtype=float)
         return complex(s.real + float(x @ self.beta_re), s.imag + float(x @ self.beta_im))
 

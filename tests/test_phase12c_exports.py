@@ -23,7 +23,7 @@ def test_export_supercells_writes_uniform_gradient_and_strong_contrast(tmp_path)
     assert names == {"uniform_3x3", "smooth_gradient_3x3", "strong_contrast_3x3"}
     for r in results:
         assert (tmp_path / f"{r.name}.step").exists()
-        assert r.n_metal_solids == 9   # 3x3
+        assert r.n_metal_solids == 9  # 3x3
         assert r.has_ground is True
 
 

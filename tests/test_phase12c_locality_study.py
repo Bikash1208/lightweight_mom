@@ -1,7 +1,5 @@
 """Phase 12C Task B: the local-periodicity test for the grounded 8 mm cell."""
 
-import math
-
 from src.phase12c import locality_study as ls
 
 
@@ -19,7 +17,7 @@ def test_reference_curve_is_deterministic_and_physically_bounded():
     curve2 = ls.build_reference_curve()
     assert curve1 == curve2
     for p in curve1:
-        assert 0.0 < p.s11_mag <= 1.0 + 1e-9   # passive, grounded, near-total reflection
+        assert 0.0 < p.s11_mag <= 1.0 + 1e-9  # passive, grounded, near-total reflection
         assert -180.0 < p.s11_phase_deg <= 180.0
 
 
@@ -28,7 +26,7 @@ def test_classify_centers_are_interior_with_two_sided_neighbors():
     centers = ls.classify_centers(curve)
     for c in (centers.off_resonance, centers.near_resonance, centers.at_resonance):
         idx = curve.index(c)
-        assert 0 < idx < len(curve) - 1   # never a domain edge -- both neighbours exist
+        assert 0 < idx < len(curve) - 1  # never a domain edge -- both neighbours exist
     assert centers.at_resonance.s11_mag == min(p.s11_mag for p in curve[1:-1])
 
 

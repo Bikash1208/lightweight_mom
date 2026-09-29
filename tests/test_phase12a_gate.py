@@ -7,8 +7,11 @@ from src.phase12a import gate
 
 def test_all_checks_within_tolerance_gives_validated():
     result = gate.decide(
-        max_analytic_error=1e-15, floquet_error=0.001, mesh_error=0.005,
-        any_surface_wave_in_band=False, coverage_deg=200.0,
+        max_analytic_error=1e-15,
+        floquet_error=0.001,
+        mesh_error=0.005,
+        any_surface_wave_in_band=False,
+        coverage_deg=200.0,
     )
     assert result.status == gate.GROUNDED_STACK_VALIDATED
     assert result.measured_phase_coverage_deg == 200.0
@@ -16,8 +19,11 @@ def test_all_checks_within_tolerance_gives_validated():
 
 def test_analytic_error_over_tolerance_gives_partial():
     result = gate.decide(
-        max_analytic_error=1e-3, floquet_error=0.001, mesh_error=0.005,
-        any_surface_wave_in_band=False, coverage_deg=200.0,
+        max_analytic_error=1e-3,
+        floquet_error=0.001,
+        mesh_error=0.005,
+        any_surface_wave_in_band=False,
+        coverage_deg=200.0,
     )
     assert result.status == gate.GROUNDED_STACK_PARTIAL
     assert "textbook" in result.reason
@@ -25,8 +31,11 @@ def test_analytic_error_over_tolerance_gives_partial():
 
 def test_surface_wave_in_band_gives_partial():
     result = gate.decide(
-        max_analytic_error=1e-15, floquet_error=0.001, mesh_error=0.005,
-        any_surface_wave_in_band=True, coverage_deg=200.0,
+        max_analytic_error=1e-15,
+        floquet_error=0.001,
+        mesh_error=0.005,
+        any_surface_wave_in_band=True,
+        coverage_deg=200.0,
     )
     assert result.status == gate.GROUNDED_STACK_PARTIAL
     assert "surface-wave" in result.reason
@@ -34,8 +43,11 @@ def test_surface_wave_in_band_gives_partial():
 
 def test_mesh_or_floquet_error_over_tolerance_gives_partial():
     result = gate.decide(
-        max_analytic_error=1e-15, floquet_error=0.001, mesh_error=0.05,
-        any_surface_wave_in_band=False, coverage_deg=200.0,
+        max_analytic_error=1e-15,
+        floquet_error=0.001,
+        mesh_error=0.05,
+        any_surface_wave_in_band=False,
+        coverage_deg=200.0,
     )
     assert result.status == gate.GROUNDED_STACK_PARTIAL
     assert "mesh/Floquet" in result.reason

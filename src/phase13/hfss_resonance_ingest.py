@@ -20,7 +20,6 @@ phase re-measured from raw S-parameters.
 
 import csv
 from dataclasses import dataclass
-from pathlib import Path
 
 import numpy as np
 
@@ -30,9 +29,9 @@ from ..phase12d.hfss_ingest import EXPORT_ROOT, MOM_REFERENCE_CSV, compare_singl
 from . import convergence as conv
 
 HFSS_RESULTS_DIR = EXPORT_ROOT / "hfss_results"
-G4_SHEET_TOUCHSTONE = HFSS_RESULTS_DIR / "g4.s36p"          # zero-thickness Perfect E sheet
-G4_THICK_COMPARISON_CSV = HFSS_RESULTS_DIR / "G4_thick35um_comparison.csv"   # 35um run, raw file lost
-G6_TOUCHSTONE = HFSS_RESULTS_DIR / "g6.s36p"                 # 35um patch
+G4_SHEET_TOUCHSTONE = HFSS_RESULTS_DIR / "g4.s36p"  # zero-thickness Perfect E sheet
+G4_THICK_COMPARISON_CSV = HFSS_RESULTS_DIR / "G4_thick35um_comparison.csv"  # 35um run, raw file lost
+G6_TOUCHSTONE = HFSS_RESULTS_DIR / "g6.s36p"  # 35um patch
 
 # The addendum's own representative frequencies for the mesh-convergence study (cheap: 3 points,
 # not the full 21/401-point grid -- a full Richardson family (7 mesh resolutions) at every
@@ -41,13 +40,13 @@ RESONANCE_BUDGET_FREQUENCIES_GHZ = (11.5, 12.5, 13.5)
 
 L_MM = {"G1": 2.0, "G2": 4.8, "G3": 5.6, "G4": 6.0, "G5": 6.8, "G6": 7.6}
 
-RESONANCE_TOLERANCE_DEG = 5.0   # generous, resonance-region-specific tolerance (see report)
+RESONANCE_TOLERANCE_DEG = 5.0  # generous, resonance-region-specific tolerance (see report)
 
 
 @dataclass(frozen=True)
 class ConvergedPoint:
     frequency_ghz: float
-    mesh_0p2mm_phase_deg: float     # the 40-cell (dx=0.2mm) point, Phase 12D/12C's production mesh
+    mesh_0p2mm_phase_deg: float  # the 40-cell (dx=0.2mm) point, Phase 12D/12C's production mesh
     extrapolated_phase_deg: float | None
     extrapolated_phase_error_deg: float | None
     fitted_order: float | None
@@ -57,10 +56,10 @@ class ConvergedPoint:
 @dataclass(frozen=True)
 class ErrorBudget:
     frequency_ghz: float
-    mesh_deg: float                  # |phi(0.2mm) - phi_inf|
-    thickness_deg: float | None      # |phi_HFSS_thick - phi_HFSS_sheet|, None if no thick data
-    residual_deg: float | None       # |phi_HFSS_sheet - phi_inf|, None if extrapolation unavailable
-    total_hfss_vs_0p2mm_deg: float   # |phi_HFSS_thick(or sheet) - phi(0.2mm)|, the originally-observed gap
+    mesh_deg: float  # |phi(0.2mm) - phi_inf|
+    thickness_deg: float | None  # |phi_HFSS_thick - phi_HFSS_sheet|, None if no thick data
+    residual_deg: float | None  # |phi_HFSS_sheet - phi_inf|, None if extrapolation unavailable
+    total_hfss_vs_0p2mm_deg: float  # |phi_HFSS_thick(or sheet) - phi(0.2mm)|, the originally-observed gap
 
 
 def _load_precomputed_comparison_csv(path):
@@ -68,8 +67,7 @@ def _load_precomputed_comparison_csv(path):
         return list(csv.DictReader(fh))
 
 
-def converged_mom_curve(l_mm, frequencies_ghz=RESONANCE_BUDGET_FREQUENCIES_GHZ,
-                         cell_counts=conv.DEFAULT_CELL_COUNTS):
+def converged_mom_curve(l_mm, frequencies_ghz=RESONANCE_BUDGET_FREQUENCIES_GHZ, cell_counts=conv.DEFAULT_CELL_COUNTS):
     """Richardson-extrapolated S11_xx phase at each of `frequencies_ghz`, for the isolated cell at
     `l_mm` -- reuses `convergence.richardson_extrapolate_s11xx` unmodified. Also returns the plain
     0.2 mm (40-cell) point from the same family, so both numbers come from ONE consistent set of
@@ -77,15 +75,18 @@ def converged_mom_curve(l_mm, frequencies_ghz=RESONANCE_BUDGET_FREQUENCIES_GHZ,
     unit_cell = dp.unit_cell_at(l_mm * 1e-3)
     points = []
     for f_ghz in frequencies_ghz:
-        result = conv.richardson_extrapolate_s11xx(unit_cell, f_ghz * 1e9, dp.REFERENCE_PLANES,
-                                                     cell_counts=cell_counts)
+        result = conv.richardson_extrapolate_s11xx(unit_cell, f_ghz * 1e9, dp.REFERENCE_PLANES, cell_counts=cell_counts)
         mesh_40 = next(p for p in result.points if p.cells == 40)
-        points.append(ConvergedPoint(
-            frequency_ghz=f_ghz, mesh_0p2mm_phase_deg=mesh_40.s11_phase_deg,
-            extrapolated_phase_deg=result.phase.value_inf,
-            extrapolated_phase_error_deg=result.phase.value_inf_error,
-            fitted_order=result.phase.order, status=result.phase.status,
-        ))
+        points.append(
+            ConvergedPoint(
+                frequency_ghz=f_ghz,
+                mesh_0p2mm_phase_deg=mesh_40.s11_phase_deg,
+                extrapolated_phase_deg=result.phase.value_inf,
+                extrapolated_phase_error_deg=result.phase.value_inf_error,
+                fitted_order=result.phase.order,
+                status=result.phase.status,
+            )
+        )
     return tuple(points)
 
 
@@ -95,10 +96,11 @@ def error_budget_for_g4(sheet_thick_rows=None):
     CSV), and the unexplained residual (converged MoM vs HFSS sheet -- the apples-to-apples
     zero-thickness-vs-zero-thickness comparison)."""
     converged = {p.frequency_ghz: p for p in converged_mom_curve(L_MM["G4"])}
-    sheet_rows = {round(float(r["f_GHz"]), 6): r for r in
-                  _load_precomputed_comparison_csv(HFSS_RESULTS_DIR / "G4_sheet_comparison.csv")}
-    thick_rows = {round(float(r["f_GHz"]), 6): r for r in
-                  _load_precomputed_comparison_csv(G4_THICK_COMPARISON_CSV)}
+    sheet_rows = {
+        round(float(r["f_GHz"]), 6): r
+        for r in _load_precomputed_comparison_csv(HFSS_RESULTS_DIR / "G4_sheet_comparison.csv")
+    }
+    thick_rows = {round(float(r["f_GHz"]), 6): r for r in _load_precomputed_comparison_csv(G4_THICK_COMPARISON_CSV)}
 
     budgets = []
     for f_ghz in RESONANCE_BUDGET_FREQUENCIES_GHZ:
@@ -110,14 +112,14 @@ def error_budget_for_g4(sheet_thick_rows=None):
             continue
         hfss_sheet_phase = cp.mesh_0p2mm_phase_deg + float(sheet_row["dphase_mode1_deg"])
         mesh_deg = abs(cp.extrapolated_phase_deg - cp.mesh_0p2mm_phase_deg)
-        residual_deg = abs(wrapped_difference_deg(np.array([hfss_sheet_phase]),
-                                                    np.array([cp.extrapolated_phase_deg]))[0])
+        residual_deg = abs(
+            wrapped_difference_deg(np.array([hfss_sheet_phase]), np.array([cp.extrapolated_phase_deg]))[0]
+        )
         thickness_deg = None
         total_deg = abs(float(sheet_row["dphase_mode1_deg"]))
         if thick_row is not None:
             hfss_thick_phase = cp.mesh_0p2mm_phase_deg + float(thick_row["dphase_mode1_deg"])
-            thickness_deg = abs(wrapped_difference_deg(np.array([hfss_thick_phase]),
-                                                          np.array([hfss_sheet_phase]))[0])
+            thickness_deg = abs(wrapped_difference_deg(np.array([hfss_thick_phase]), np.array([hfss_sheet_phase]))[0])
             total_deg = abs(float(thick_row["dphase_mode1_deg"]))
         budgets.append(ErrorBudget(f_ghz, mesh_deg, thickness_deg, residual_deg, total_deg))
     return tuple(budgets)

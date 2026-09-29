@@ -45,13 +45,17 @@ def demonstrate_sensitivity(s11_value, s21_value, frequency_hz, shift_m=1.0e-3):
     delta_s11 = float(wrapped_difference_deg(phase_after_s11, phase_before))
     delta_s21 = float(wrapped_difference_deg(phase_after_s21, float(np.degrees(np.angle(s21_value)))))
     return ReferencePlaneSensitivity(
-        frequency_hz=frequency_hz, shift_m=shift_m,
-        phase_before_deg=phase_before, phase_after_deg_S11=phase_after_s11, phase_after_deg_S21=phase_after_s21,
-        delta_deg_S11=delta_s11, delta_deg_S21=delta_s21,
+        frequency_hz=frequency_hz,
+        shift_m=shift_m,
+        phase_before_deg=phase_before,
+        phase_after_deg_S11=phase_after_s11,
+        phase_after_deg_S21=phase_after_s21,
+        delta_deg_S11=delta_s11,
+        delta_deg_S21=delta_s21,
         note=(
-            f"A {shift_m*1e3:g} mm top-reference-plane shift alone changes S11 phase by "
+            f"A {shift_m * 1e3:g} mm top-reference-plane shift alone changes S11 phase by "
             f"{delta_s11:.2f} deg and S21 phase by {delta_s21:.2f} deg at "
-            f"{frequency_hz/1e9:g} GHz (`CONVENTIONS.md` moving-plane formula, reused, not "
+            f"{frequency_hz / 1e9:g} GHz (`CONVENTIONS.md` moving-plane formula, reused, not "
             "applied to any stored data). Phase is therefore only meaningful relative to the "
             "specific reference planes recorded in the database metadata "
             "(`context['reference_planes']`); it cannot be used as a geometry-control law without "

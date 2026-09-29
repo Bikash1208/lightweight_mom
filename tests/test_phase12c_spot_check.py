@@ -14,7 +14,7 @@ def test_aligned_cells_for_is_the_smallest_that_aligns_every_value():
     n = sc.aligned_cells_for([1.6, 3.2])
     for v in (1.6, 3.2):
         assert feature_edges_aligned(sc.PERIOD_M, n, v * 1e-3, 0.0)
-    assert feature_edges_aligned(sc.PERIOD_M, n * 2, 1.6e-3, 0.0)   # doubling preserves alignment
+    assert feature_edges_aligned(sc.PERIOD_M, n * 2, 1.6e-3, 0.0)  # doubling preserves alignment
 
 
 def test_c2_c3_recheck_runs_and_reports_a_real_relative_difference():

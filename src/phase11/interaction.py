@@ -20,8 +20,17 @@ class Perturbation:
     lw_mm: tuple
 
 
-def response_for_subset(center_lw_mm, perturbations, subset_names, grid_n, period_m, substrate,
-                         metal, frequency_hz, mesh_cells_per_subcell=8):
+def response_for_subset(
+    center_lw_mm,
+    perturbations,
+    subset_names,
+    grid_n,
+    period_m,
+    substrate,
+    metal,
+    frequency_hz,
+    mesh_cells_per_subcell=8,
+):
     grid_mm = uniform(grid_n, center_lw_mm)
     by_name = {p.name: p for p in perturbations}
     for name in subset_names:
@@ -44,14 +53,24 @@ class PairwiseInteractionResult:
     interaction_error_relative: float
 
 
-def run_pairwise_interaction(center_lw_mm, perturbations, pair_names, grid_n, period_m, substrate,
-                              metal, frequency_hz, mesh_cells_per_subcell=8):
+def run_pairwise_interaction(
+    center_lw_mm, perturbations, pair_names, grid_n, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell=8
+):
     """Sec. 12: for each (name_a, name_b) pair in ``pair_names``, computes DeltaR(A), DeltaR(B),
     DeltaR(A+B) and the additive-model interaction_error."""
 
     def resp(subset):
-        return response_for_subset(center_lw_mm, perturbations, subset, grid_n, period_m, substrate,
-                                    metal, frequency_hz, mesh_cells_per_subcell)
+        return response_for_subset(
+            center_lw_mm,
+            perturbations,
+            subset,
+            grid_n,
+            period_m,
+            substrate,
+            metal,
+            frequency_hz,
+            mesh_cells_per_subcell,
+        )
 
     r0 = resp(())
     single_cache = {}
@@ -68,8 +87,7 @@ def run_pairwise_interaction(center_lw_mm, perturbations, pair_names, grid_n, pe
         predicted = delta_a + delta_b
         err = abs(measured - predicted)
         rel = err / abs(r0) if abs(r0) > 0 else float("inf")
-        results.append(PairwiseInteractionResult(f"{name_a}+{name_b}", delta_a, delta_b, measured,
-                                                   predicted, err, rel))
+        results.append(PairwiseInteractionResult(f"{name_a}+{name_b}", delta_a, delta_b, measured, predicted, err, rel))
     return r0, results
 
 
@@ -82,15 +100,33 @@ class HigherOrderInteractionResult:
     residual_relative: float
 
 
-def run_higher_order_interaction(center_lw_mm, perturbations, triple_names, grid_n, period_m,
-                                  substrate, metal, frequency_hz, mesh_cells_per_subcell=8):
+def run_higher_order_interaction(
+    center_lw_mm,
+    perturbations,
+    triple_names,
+    grid_n,
+    period_m,
+    substrate,
+    metal,
+    frequency_hz,
+    mesh_cells_per_subcell=8,
+):
     """Sec. 13: for a triple (A, B, C), tests whether DeltaR(A+B+C) is explained by the THREE
     pairwise interactions (inclusion-exclusion on top of the three singles) or leaves a genuine
     residual only a three-body term can explain."""
 
     def resp(subset):
-        return response_for_subset(center_lw_mm, perturbations, subset, grid_n, period_m, substrate,
-                                    metal, frequency_hz, mesh_cells_per_subcell)
+        return response_for_subset(
+            center_lw_mm,
+            perturbations,
+            subset,
+            grid_n,
+            period_m,
+            substrate,
+            metal,
+            frequency_hz,
+            mesh_cells_per_subcell,
+        )
 
     names = list(triple_names)
     if len(names) != 3:

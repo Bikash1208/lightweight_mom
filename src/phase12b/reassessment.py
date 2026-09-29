@@ -18,12 +18,12 @@ from ..phase_extraction import phase_coverage
 from ..sparameters import compute_s_parameters
 
 PERIOD_M = library_schema.LibraryConfig.default().period_m
-COARSE_L_VALUES_MM = library_schema.L_VALUES_MM                                  # 1.0-4.4mm, 0.2mm step
-FINE_L_VALUES_MM = tuple(round(3.6 + 0.1 * i, 1) for i in range(11))             # 3.6-4.6mm, 0.1mm step
+COARSE_L_VALUES_MM = library_schema.L_VALUES_MM  # 1.0-4.4mm, 0.2mm step
+FINE_L_VALUES_MM = tuple(round(3.6 + 0.1 * i, 1) for i in range(11))  # 3.6-4.6mm, 0.1mm step
 ALL_L_VALUES_MM = tuple(sorted(set(COARSE_L_VALUES_MM) | set(FINE_L_VALUES_MM)))
 
-ALIGNED_STUDY_CELLS = (24, 48, 96)          # Sec. "Redo the grounded refinement study"
-REPRESENTATIVE_LW_MM = 2.8                  # C3, this project's own already-used center geometry
+ALIGNED_STUDY_CELLS = (24, 48, 96)  # Sec. "Redo the grounded refinement study"
+REPRESENTATIVE_LW_MM = 2.8  # C3, this project's own already-used center geometry
 
 # Evidence-based choice (Phase 12B measurement, PHASE12B_MESH_PERIOD_STUDY.md): at the aligned
 # 96-cell mesh, floquet_order=48 agrees with floquet_order=96 to ~0.06deg / ~2e-4 relative on
@@ -54,7 +54,8 @@ class AlignedRefinementPoint:
 
 
 def aligned_mesh_refinement_study(
-    length_width_m=REPRESENTATIVE_LW_MM * 1e-3, frequency_hz=DESIGN_FREQUENCY_HZ,
+    length_width_m=REPRESENTATIVE_LW_MM * 1e-3,
+    frequency_hz=DESIGN_FREQUENCY_HZ,
     cells_list=ALIGNED_STUDY_CELLS,
 ):
     """Sec. 'Redo the grounded refinement study for L=2.8mm on aligned meshes (24/48/96 cells)':
@@ -86,8 +87,10 @@ class FloquetConvergencePoint:
 
 
 def floquet_only_convergence(
-    length_width_m=REPRESENTATIVE_LW_MM * 1e-3, frequency_hz=DESIGN_FREQUENCY_HZ,
-    cells=ALIGNED_SWEEP_CELLS, floquet_orders=(48, 64, 96),
+    length_width_m=REPRESENTATIVE_LW_MM * 1e-3,
+    frequency_hz=DESIGN_FREQUENCY_HZ,
+    cells=ALIGNED_SWEEP_CELLS,
+    floquet_orders=(48, 64, 96),
 ):
     """Sec. 'also check Floquet convergence separately': mesh fixed (aligned) at ``cells``, only
     ``floquet_order`` varies -- isolates Floquet-sum truncation from mesh/staircasing error."""
@@ -113,8 +116,10 @@ class AlignedSweepPoint:
 
 
 def run_aligned_grounded_sweep(
-    l_values_mm=ALL_L_VALUES_MM, frequencies_hz=SWEEP_FREQUENCIES_HZ,
-    cells=ALIGNED_SWEEP_CELLS, floquet_order=ALIGNED_SWEEP_FLOQUET_ORDER,
+    l_values_mm=ALL_L_VALUES_MM,
+    frequencies_hz=SWEEP_FREQUENCIES_HZ,
+    cells=ALIGNED_SWEEP_CELLS,
+    floquet_order=ALIGNED_SWEEP_FLOQUET_ORDER,
 ):
     """Sec. 'Re-run the Phase 12A sweep... on the aligned mesh, plus finer L steps near
     resonance': the same substrate/period/backing as Phase 12A, on the smallest mesh that aligns
@@ -132,9 +137,15 @@ def run_aligned_grounded_sweep(
         for f in frequencies_hz:
             mesh = MeshSettings(cells, cells, floquet_order)
             s = compute_s_parameters(cell, f, mesh, planes, warn_grating=False, warn_surface_wave=False)
-            points.append(AlignedSweepPoint(
-                l_mm, f, s.magnitude("S11_xx"), s.phase_deg("S11_xx"), s.magnitude("S11_yx"),
-            ))
+            points.append(
+                AlignedSweepPoint(
+                    l_mm,
+                    f,
+                    s.magnitude("S11_xx"),
+                    s.phase_deg("S11_xx"),
+                    s.magnitude("S11_yx"),
+                )
+            )
     return tuple(points)
 
 

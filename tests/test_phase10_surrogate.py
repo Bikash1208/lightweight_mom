@@ -1,7 +1,6 @@
 """Sec. 22-24, 27, 35-37, 47: the ridge surrogate, its domain check, and (de)serialization."""
 
 import numpy as np
-import pytest
 
 from src.materials import Metal, Substrate
 from src.phase10 import surrogate as surr_mod
@@ -44,8 +43,9 @@ def test_domain_spec_rejects_out_of_range_geometry():
 
 def test_predict_returns_out_of_domain_sentinel_not_a_number():
     cache = IsolatedReferenceCache(P, SUB, MET, 8)
-    model = surr_mod.EnvironmentSurrogate(cache, np.zeros(surr_mod.N_FEATURES), np.zeros(surr_mod.N_FEATURES),
-                                           0.0, surr_mod.DomainSpec(frequency_hz=F))
+    model = surr_mod.EnvironmentSurrogate(
+        cache, np.zeros(surr_mod.N_FEATURES), np.zeros(surr_mod.N_FEATURES), 0.0, surr_mod.DomainSpec(frequency_hz=F)
+    )
     bad = _sample((0.1, 2.8), {p: (2.8, 2.8) for p in ALL_POSITIONS})
     assert model.predict(bad) == surr_mod.OUT_OF_DOMAIN
 
@@ -54,8 +54,11 @@ def test_save_and_load_round_trips_predictions_exactly(tmp_path):
     cache = IsolatedReferenceCache(P, SUB, MET, 8)
     rng = np.random.default_rng(0)
     model = surr_mod.EnvironmentSurrogate(
-        cache, rng.normal(size=surr_mod.N_FEATURES), rng.normal(size=surr_mod.N_FEATURES),
-        0.01, surr_mod.DomainSpec(frequency_hz=F),
+        cache,
+        rng.normal(size=surr_mod.N_FEATURES),
+        rng.normal(size=surr_mod.N_FEATURES),
+        0.01,
+        surr_mod.DomainSpec(frequency_hz=F),
     )
     s = _sample((2.8, 2.8), {p: (3.0, 2.6) for p in ALL_POSITIONS})
     before = model.predict(s)

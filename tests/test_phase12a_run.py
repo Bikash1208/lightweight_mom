@@ -13,23 +13,31 @@ import pytest
 from src.phase12a.run import run_phase12a
 
 REDUCED_L_MM = (1.0, 2.0, 3.0, 4.4)
-REDUCED_FREQUENCIES_HZ = (12.5e9,)   # must include DESIGN_FREQUENCY_HZ (12.5 GHz)
+REDUCED_FREQUENCIES_HZ = (12.5e9,)  # must include DESIGN_FREQUENCY_HZ (12.5 GHz)
 
 
 @pytest.fixture(scope="module")
 def reduced_run(tmp_path_factory):
     out_dir = tmp_path_factory.mktemp("phase12a_reduced_run") / "out"
     return run_phase12a(
-        out_dir, l_values_mm=REDUCED_L_MM, frequencies_hz=REDUCED_FREQUENCIES_HZ,
-        convergence_sizes=(8, 16), skip_ungrounded_comparison=True,
+        out_dir,
+        l_values_mm=REDUCED_L_MM,
+        frequencies_hz=REDUCED_FREQUENCIES_HZ,
+        convergence_sizes=(8, 16),
+        skip_ungrounded_comparison=True,
     )
 
 
 def test_run_produces_all_required_top_level_outputs(reduced_run):
     out = reduced_run.output_dir
     required = (
-        "phase12a_report.md", "phase12a_gate_status.json", "sweep.csv", "sweep.json",
-        "ungrounded_comparison.json", "analytic_checks.json", "surface_wave_pole.json",
+        "phase12a_report.md",
+        "phase12a_gate_status.json",
+        "sweep.csv",
+        "sweep.json",
+        "ungrounded_comparison.json",
+        "analytic_checks.json",
+        "surface_wave_pole.json",
         "convergence.json",
     )
     for name in required:
@@ -40,8 +48,10 @@ def test_run_produces_the_required_plots(reduced_run):
     out = reduced_run.output_dir
     plots = {p.name for p in (out / "plots").glob("*.png")}
     assert plots == {
-        "phase_vs_length.png", "magnitude_vs_length.png",
-        "grounded_vs_ungrounded.png", "convergence.png",
+        "phase_vs_length.png",
+        "magnitude_vs_length.png",
+        "grounded_vs_ungrounded.png",
+        "convergence.png",
     }
 
 

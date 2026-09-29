@@ -26,25 +26,25 @@ class HMSARequirements:
     input here."""
 
     frequency_hz: float | None = None
-    frequency_band_hz: tuple | None = None            # (min, max)
+    frequency_band_hz: tuple | None = None  # (min, max)
     substrate_name: str | None = None
     substrate_thickness_mm: float | None = None
     desired_polarization: str | None = None
     incidence_condition: str | None = None
-    reference_field: object | None = None             # e.g. a phase8b.reference_wave.ReferenceField
-    object_wave: object | None = None                 # e.g. a phase8b.object_wave.Beam or list thereof
-    beam_directions_deg: tuple = ()                    # ((theta_deg, phi_deg), ...)
+    reference_field: object | None = None  # e.g. a phase8b.reference_wave.ReferenceField
+    object_wave: object | None = None  # e.g. a phase8b.object_wave.Beam or list thereof
+    beam_directions_deg: tuple = ()  # ((theta_deg, phi_deg), ...)
     required_complex_response: complex | None = None
     spatial_sampling_requirement: str | None = None
     fabrication_constraints: dict | None = None
-    fixed_period_mm: tuple | None = None               # (p_x_mm, p_y_mm); None unless explicitly requested
+    fixed_period_mm: tuple | None = None  # (p_x_mm, p_y_mm); None unless explicitly requested
 
 
 @dataclass(frozen=True)
 class PeriodAssessment:
     p_x_mm: float
     p_y_mm: float
-    status: str                       # "VALIDATED" | "CANDIDATE_ONLY"
+    status: str  # "VALIDATED" | "CANDIDATE_ONLY"
     grating_safe: bool
     grating_onset_hz: float | None
     matching_library_ids: tuple
@@ -86,14 +86,14 @@ def candidate_periods_from_sampling(k_required_max_per_m, n_candidates=5):
     if k_required_max_per_m <= 0.0:
         raise ValueError(f"k_required_max_per_m must be > 0, got {k_required_max_per_m!r}")
     p_max_m = math.pi / k_required_max_per_m
-    fractions = [1.0, 0.8, 0.6, 0.4, 0.2][:max(1, n_candidates)]
+    fractions = [1.0, 0.8, 0.6, 0.4, 0.2][: max(1, n_candidates)]
     return tuple(
         {
             "p_mm": p_max_m * frac * 1e3,
             "status": "CANDIDATE_HEURISTIC",
             "rationale": (
                 f"Nyquist-Shannon sampling of the required transverse spatial frequency "
-                f"({k_required_max_per_m:.6g} rad/m): P <= pi/k_max = {p_max_m*1e3:.6g} mm; "
+                f"({k_required_max_per_m:.6g} rad/m): P <= pi/k_max = {p_max_m * 1e3:.6g} mm; "
                 f"this candidate uses {frac:g} of that bound. Not a validated period -- see "
                 "validate_period."
             ),
@@ -110,8 +110,9 @@ def validate_period(universal_db, topology, p_x_mm, p_y_mm, frequency_hz=None, s
     `feasibility_grating.grating_check`, unmodified) as separate, additional information -- a
     period can be `CANDIDATE_ONLY` for lack of data yet still be grating-safe, or vice versa; the
     two are never conflated into one verdict."""
-    query = UnitCellQuery(topology=topology, p_x_mm=p_x_mm, p_y_mm=p_y_mm, frequency_hz=frequency_hz,
-                           substrate_name=substrate_name)
+    query = UnitCellQuery(
+        topology=topology, p_x_mm=p_x_mm, p_y_mm=p_y_mm, frequency_hz=frequency_hz, substrate_name=substrate_name
+    )
     result = search_unit_cells(universal_db, query)
     status = "VALIDATED" if result.status == "MATCH" else "CANDIDATE_ONLY"
 
@@ -122,11 +123,15 @@ def validate_period(universal_db, topology, p_x_mm, p_y_mm, frequency_hz=None, s
 
     note = (
         f"period ({p_x_mm:g}, {p_y_mm:g}) mm is {status} for topology={topology!r}"
-        + (f", frequency={frequency_hz/1e9:g} GHz" if frequency_hz is not None else "")
+        + (f", frequency={frequency_hz / 1e9:g} GHz" if frequency_hz is not None else "")
         + f" (query filter trail: {result.filter_trail})."
     )
     return PeriodAssessment(
-        p_x_mm=p_x_mm, p_y_mm=p_y_mm, status=status, grating_safe=grating_safe,
-        grating_onset_hz=onset_hz, matching_library_ids=tuple(e.library_id for e in result.matching_entries),
+        p_x_mm=p_x_mm,
+        p_y_mm=p_y_mm,
+        status=status,
+        grating_safe=grating_safe,
+        grating_onset_hz=onset_hz,
+        matching_library_ids=tuple(e.library_id for e in result.matching_entries),
         note=note,
     )

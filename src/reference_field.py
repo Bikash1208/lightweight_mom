@@ -20,7 +20,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 REQUIRED_REFERENCE_FIELD_COLUMNS = (
-    "x_mm", "y_mm", "frequency_GHz", "Ex_real", "Ex_imag", "Ey_real", "Ey_imag",
+    "x_mm",
+    "y_mm",
+    "frequency_GHz",
+    "Ex_real",
+    "Ex_imag",
+    "Ey_real",
+    "Ey_imag",
 )
 
 
@@ -41,7 +47,17 @@ class ReferenceFieldValidation:
 
 def _invalid(errors, n_samples=0, frequencies_ghz=()):
     return ReferenceFieldValidation(
-        False, tuple(errors), (), n_samples, None, None, None, None, None, None, tuple(frequencies_ghz),
+        False,
+        tuple(errors),
+        (),
+        n_samples,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        tuple(frequencies_ghz),
     )
 
 
@@ -71,15 +87,22 @@ def validate_reference_field(path, expected_frequency_ghz=None, rtol=1e-6):
     seen_xy = {}
     for lineno, row in enumerate(rows, start=2):
         try:
-            x = float(row["x_mm"]); y = float(row["y_mm"]); f = float(row["frequency_GHz"])
+            x = float(row["x_mm"])
+            y = float(row["y_mm"])
+            f = float(row["frequency_GHz"])
             ex_r, ex_i = float(row["Ex_real"]), float(row["Ex_imag"])
             ey_r, ey_i = float(row["Ey_real"]), float(row["Ey_imag"])
         except (TypeError, ValueError):
             errors.append(f"row {lineno}: non-numeric or missing field")
             continue
         for name, v in (
-            ("x_mm", x), ("y_mm", y), ("frequency_GHz", f),
-            ("Ex_real", ex_r), ("Ex_imag", ex_i), ("Ey_real", ey_r), ("Ey_imag", ey_i),
+            ("x_mm", x),
+            ("y_mm", y),
+            ("frequency_GHz", f),
+            ("Ex_real", ex_r),
+            ("Ex_imag", ex_i),
+            ("Ey_real", ey_r),
+            ("Ey_imag", ey_i),
         ):
             if math.isnan(v) or math.isinf(v):
                 errors.append(f"row {lineno}: {name} is NaN/Inf")
@@ -88,7 +111,9 @@ def validate_reference_field(path, expected_frequency_ghz=None, rtol=1e-6):
             errors.append(f"row {lineno}: duplicate sample at (x={x}, y={y}) mm (first seen row {seen_xy[key]})")
         else:
             seen_xy[key] = lineno
-        xs.append(x); ys.append(y); freqs.add(round(f, 9))
+        xs.append(x)
+        ys.append(y)
+        freqs.add(round(f, 9))
 
     if expected_frequency_ghz is not None and not any(
         abs(f - expected_frequency_ghz) <= rtol * max(abs(expected_frequency_ghz), 1.0) for f in freqs
@@ -106,9 +131,17 @@ def validate_reference_field(path, expected_frequency_ghz=None, rtol=1e-6):
     dy = min(b - a for a, b in zip(ys_u, ys_u[1:])) if len(ys_u) > 1 else None
 
     return ReferenceFieldValidation(
-        ok=len(errors) == 0, errors=tuple(errors), warnings=(), n_samples=len(rows),
-        x_min_mm=min(xs), x_max_mm=max(xs), y_min_mm=min(ys), y_max_mm=max(ys),
-        dx_mm=dx, dy_mm=dy, frequencies_ghz=tuple(sorted(freqs)),
+        ok=len(errors) == 0,
+        errors=tuple(errors),
+        warnings=(),
+        n_samples=len(rows),
+        x_min_mm=min(xs),
+        x_max_mm=max(xs),
+        y_min_mm=min(ys),
+        y_max_mm=max(ys),
+        dx_mm=dx,
+        dy_mm=dy,
+        frequencies_ghz=tuple(sorted(freqs)),
     )
 
 

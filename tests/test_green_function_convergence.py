@@ -37,7 +37,7 @@ def bilinear_form(g, N, kx0=0.0, ky0=0.0, direction="x"):
     J = np.zeros(kx.shape + (2,), dtype=complex)
     if direction == "x":
         J[..., 0] = transform(kx, ky) / (PX * PY)
-    else:                                   # same shape rotated 90 degrees
+    else:  # same shape rotated 90 degrees
         J[..., 1] = transform(ky, kx) / (PX * PY)
     return -PX * PY * np.einsum("mni,mnij,mnj->", J.conj(), G, J)
 
@@ -54,8 +54,8 @@ def gf(tand):
 def test_partial_sums_converge_monotonically_with_floquet_order(tand):
     q = series(gf(tand))
     diffs = np.abs(np.diff(q))
-    assert np.all(np.diff(diffs) < 0.0)                  # Cauchy differences strictly shrink
-    assert diffs[-1] < 1e-3 * abs(q[-1])                 # and are small in relative terms
+    assert np.all(np.diff(diffs) < 0.0)  # Cauchy differences strictly shrink
+    assert diffs[-1] < 1e-3 * abs(q[-1])  # and are small in relative terms
     # measured tail ~ N^-2 (ratio -> 4); demand clearly better than 1/N
     ratios = diffs[:-1] / diffs[1:]
     assert np.all(ratios[1:] > 3.0)
@@ -64,7 +64,7 @@ def test_partial_sums_converge_monotonically_with_floquet_order(tand):
 
 def test_richardson_extrapolation_confirms_algebraic_order_two():
     q = series(gf(0.0009))
-    ext = q[1:] + (q[1:] - q[:-1]) / 3.0                 # eliminates the c/N^2 term
+    ext = q[1:] + (q[1:] - q[:-1]) / 3.0  # eliminates the c/N^2 term
     # extrapolated values agree far better than the raw partial sums
     assert abs(ext[-1] - ext[-2]) < 0.02 * abs(q[-1] - q[-2])
     assert abs(q[-1] - ext[-1]) / abs(ext[-1]) < 2e-4

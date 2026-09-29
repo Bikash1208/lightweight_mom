@@ -14,18 +14,18 @@ speaks about the same discretization.
 
 from dataclasses import dataclass
 
+from .. import solver as solver_mod
 from ..basis_functions import MeshSettings
 from ..excitation import PlaneWaveExcitation
-from .. import solver as solver_mod
 from ..phase9.dipole_extraction import local_dipole_moment
-from ..phase11.coupling_radius import CouplingRadiusPoint, compute_shell_increments, truncate_centered
 from ..phase11.convergence import classify_convergence
+from ..phase11.coupling_radius import CouplingRadiusPoint, compute_shell_increments, truncate_centered
 from ..phase11.decay_law import fit_exponential_if_monotonic, observe_decay
 from . import design_point as dp
 from .grounded_supercell import build_grounded_supercell
 from .locality_study import L_FAMILY_MM, MESH_CELLS_PER_SUBCELL, floquet_for
 
-SIZES = (1, 3, 5, 7)   # extended only if a size proves feasible in practice (Sec. 'why', module-level cost note)
+SIZES = (1, 3, 5, 7)  # extended only if a size proves feasible in practice (Sec. 'why', module-level cost note)
 
 
 def solve_grounded_grid(n, lw_grid_m, mesh_cells_per_subcell=MESH_CELLS_PER_SUBCELL):
@@ -45,8 +45,9 @@ def solve_grounded_grid(n, lw_grid_m, mesh_cells_per_subcell=MESH_CELLS_PER_SUBC
 def _center_response(supercell, system, currents, n):
     mid = n // 2
     cx, cy = supercell.inner.sub_cell_center(mid, mid)
-    dipole = local_dipole_moment(system.basis, currents, cx, cy, supercell.inner.sub_period_x / 2,
-                                  supercell.inner.sub_period_y / 2)
+    dipole = local_dipole_moment(
+        system.basis, currents, cx, cy, supercell.inner.sub_period_x / 2, supercell.inner.sub_period_y / 2
+    )
     return dipole.px
 
 

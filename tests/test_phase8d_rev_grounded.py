@@ -11,8 +11,12 @@ from src.phase8d_rev.query import UnitCellQuery, search_unit_cells
 from src.phase8d_rev.universal_database import UniversalDatabase
 
 DIAG = {
-    "n_unknowns": 10, "incoming_residual": 1e-15, "reciprocity_error": 1e-16,
-    "passivity_min_eig": 0.0, "cells_per_wavelength": 20.0, "specular_only": True,
+    "n_unknowns": 10,
+    "incoming_residual": 1e-15,
+    "reciprocity_error": 1e-16,
+    "passivity_min_eig": 0.0,
+    "cells_per_wavelength": 20.0,
+    "specular_only": True,
     "checks_passed": True,
 }
 PARAMS = dict.fromkeys(("length_m", "width_m", "center_x_m", "center_y_m", "rotation_deg"), 0.0)
@@ -24,11 +28,7 @@ CONTEXT_COMMON = {
 
 def _database(backing):
     ctx = dict(CONTEXT_COMMON, backing=backing)
-    s = (
-        np.array([[0.9 - 0.1j, 0.0], [0.0, 0.9 - 0.1j]])
-        if backing == "pec"
-        else np.eye(4, dtype=complex) * 0.5
-    )
+    s = np.array([[0.9 - 0.1j, 0.0], [0.0, 0.9 - 0.1j]]) if backing == "pec" else np.eye(4, dtype=complex) * 0.5
     r = Record("c0", 0, 12.5e9, s, DIAG, port_topology="one_port" if backing == "pec" else "two_port")
     cell = CellEntry(0, "c0", PARAMS, "ok")
     return Database({"context": ctx}, [cell], [r])
@@ -55,11 +55,23 @@ def test_backing_read_from_context_for_a_grounded_database():
 def test_invalid_backing_rejected():
     with pytest.raises(ValueError):
         le.LibraryEntry(
-            library_id="x", topology="t", role=le.PROJECT_LIBRARY, database=_database("air"),
-            p_x_mm=4.8, p_y_mm=4.8, substrate={}, frequency_min_hz=1.0, frequency_max_hz=2.0,
-            n_frequency_points=1, polarizations_supported=("x", "y"), incidence_supported=("normal",),
-            solver_version=None, configuration_hash=None, source_type="MoM",
-            validation_status="DATA_PRESENT", backing="copper",
+            library_id="x",
+            topology="t",
+            role=le.PROJECT_LIBRARY,
+            database=_database("air"),
+            p_x_mm=4.8,
+            p_y_mm=4.8,
+            substrate={},
+            frequency_min_hz=1.0,
+            frequency_max_hz=2.0,
+            n_frequency_points=1,
+            polarizations_supported=("x", "y"),
+            incidence_supported=("normal",),
+            solver_version=None,
+            configuration_hash=None,
+            source_type="MoM",
+            validation_status="DATA_PRESENT",
+            backing="copper",
         )
 
 

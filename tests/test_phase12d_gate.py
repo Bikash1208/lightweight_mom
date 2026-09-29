@@ -36,7 +36,7 @@ def test_decide_step_limit_empty_input():
 
 
 def test_decide_step_limit_reports_strict_tolerance_separately():
-    cases = [_FakeStepCase("a", 2.0, 7.0, 0.7)]   # within design (10/1) but not strict (5/0.5)
+    cases = [_FakeStepCase("a", 2.0, 7.0, 0.7)]  # within design (10/1) but not strict (5/0.5)
     result = gate.decide_step_limit(cases)
     assert result.status == gate.LOCAL_PERIODICITY_STEP_LIMIT_MEASURED
     assert result.max_step_within_design_tolerance_deg == 2.0

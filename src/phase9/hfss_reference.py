@@ -25,7 +25,9 @@ REQUIRED_HFSS_COLUMNS_COMMON = ("cell_id", "L_mm", "W_mm", "frequency_GHz", "S11
 REQUIRED_HFSS_COLUMNS_TWO_PORT_ONLY = ("S21_real", "S21_imag")
 REQUIRED_HFSS_COLUMNS = REQUIRED_HFSS_COLUMNS_COMMON + REQUIRED_HFSS_COLUMNS_TWO_PORT_ONLY
 
-DEFAULT_HFSS_REFERENCE_PATH = Path(__file__).resolve().parent.parent.parent / "results" / "hfss_reference" / "hfss_reference_cells.csv"
+DEFAULT_HFSS_REFERENCE_PATH = (
+    Path(__file__).resolve().parent.parent.parent / "results" / "hfss_reference" / "hfss_reference_cells.csv"
+)
 
 
 @dataclass(frozen=True)
@@ -35,8 +37,8 @@ class HfssRecord:
     w_mm: float
     frequency_ghz: float
     s11: complex
-    s21: "complex | None" = None   # Phase 12C: None for a one-port (grounded) record -- undefined,
-                                    # not zero; every pre-Phase-12C (two-port) record always sets it.
+    s21: "complex | None" = None  # Phase 12C: None for a one-port (grounded) record -- undefined,
+    # not zero; every pre-Phase-12C (two-port) record always sets it.
 
 
 class HfssReferenceError(ValueError):
@@ -73,11 +75,16 @@ def load_hfss_reference(path=DEFAULT_HFSS_REFERENCE_PATH):
     for lineno, row in enumerate(rows, start=2):
         try:
             s21 = complex(float(row["S21_real"]), float(row["S21_imag"])) if has_s21 else None
-            records.append(HfssRecord(
-                cell_id=row["cell_id"], l_mm=float(row["L_mm"]), w_mm=float(row["W_mm"]),
-                frequency_ghz=float(row["frequency_GHz"]),
-                s11=complex(float(row["S11_real"]), float(row["S11_imag"])), s21=s21,
-            ))
+            records.append(
+                HfssRecord(
+                    cell_id=row["cell_id"],
+                    l_mm=float(row["L_mm"]),
+                    w_mm=float(row["W_mm"]),
+                    frequency_ghz=float(row["frequency_GHz"]),
+                    s11=complex(float(row["S11_real"]), float(row["S11_imag"])),
+                    s21=s21,
+                )
+            )
         except (TypeError, ValueError) as e:
             raise HfssReferenceError(f"{path}:{lineno}: {e}") from None
     return tuple(records)
@@ -113,10 +120,10 @@ class TouchstoneNetwork:
 
     path: Path
     n_ports: int
-    port_labels: tuple   # length n_ports, each a str or None
-    reference_impedance_ohm: "float | None"   # the header's global R, if given (None: default 50 ohm, unused here)
-    frequency_hz: np.ndarray     # (n_freq,)
-    s: np.ndarray                # (n_freq, n_ports, n_ports) complex
+    port_labels: tuple  # length n_ports, each a str or None
+    reference_impedance_ohm: "float | None"  # the header's global R, if given (None: default 50 ohm, unused here)
+    frequency_hz: np.ndarray  # (n_freq,)
+    s: np.ndarray  # (n_freq, n_ports, n_ports) complex
 
     def port_mode_groups(self):
         """Groups 0-based column/row indices by the port name before the ``:mode`` suffix, e.g.

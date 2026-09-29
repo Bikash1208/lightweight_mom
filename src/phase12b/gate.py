@@ -40,8 +40,8 @@ def decide_mesh_alignment(mesh_error_aligned, floquet_error_aligned, tolerance=0
     reason = (
         f"aligned-mesh refinement study converged within tolerance "
         f"(mesh_error={mesh_error_aligned:.4g}, floquet_error={floquet_error_aligned:.4g} <= {tolerance:g})"
-        if ok else
-        f"aligned-mesh refinement study still exceeds tolerance "
+        if ok
+        else f"aligned-mesh refinement study still exceeds tolerance "
         f"(mesh_error={mesh_error_aligned:.4g}, floquet_error={floquet_error_aligned:.4g} > {tolerance:g})"
     )
     return MeshAlignmentGate(status, reason, mesh_error_aligned, floquet_error_aligned, tolerance)
@@ -64,8 +64,9 @@ def decide_audit(phase7_duplicate_report, phase10_holdout_leakage, phase10_cente
         )
     status = CONCLUSIONS_AT_RISK if at_risk else NO_CONCLUSION_CHANGED
     reason = (
-        "; ".join(at_risk) if at_risk else
-        "no mesh-identical 'distinct' geometry was found among the traced Phase 9-11 usages"
+        "; ".join(at_risk)
+        if at_risk
+        else "no mesh-identical 'distinct' geometry was found among the traced Phase 9-11 usages"
     )
     return AuditGate(status, reason, tuple(at_risk))
 
@@ -74,7 +75,7 @@ def decide_audit(phase7_duplicate_report, phase10_holdout_leakage, phase10_cente
 class PeriodStudyGate:
     status: str
     reason: str
-    coverage_by_period_deg: dict   # period_mm -> coverage_deg at design frequency
+    coverage_by_period_deg: dict  # period_mm -> coverage_deg at design frequency
 
 
 def decide_period_study(coverage_by_period_deg, threshold_deg=COVERAGE_SUFFICIENT_THRESHOLD_DEG):
@@ -84,10 +85,12 @@ def decide_period_study(coverage_by_period_deg, threshold_deg=COVERAGE_SUFFICIEN
     reason = (
         f"best measured coverage is {best_coverage:.1f} deg at period={best_period}mm "
         f"({'>=' if sufficient else '<'} the {threshold_deg:g} deg threshold); "
-        + ("a single-layer resonant patch reaching this range is usable as a holographic control "
-           "variable on its own" if sufficient else
-           "a single-layer resonant patch typically cannot reach a full 360 deg; standard remedies "
-           "(thinner substrate, stacked patches, multi-resonant elements) are open options, not "
-           "implemented here")
+        + (
+            "a single-layer resonant patch reaching this range is usable as a holographic control variable on its own"
+            if sufficient
+            else "a single-layer resonant patch typically cannot reach a full 360 deg; standard remedies "
+            "(thinner substrate, stacked patches, multi-resonant elements) are open options, not "
+            "implemented here"
+        )
     )
     return PeriodStudyGate(status, reason, dict(coverage_by_period_deg))

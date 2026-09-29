@@ -67,7 +67,7 @@ class FeasibilityConfig:
     not configuration)."""
 
     library_dir: Path = DEFAULT_LIBRARY_DIR
-    frequency_hz: float | None = None          # None -> the library's own design frequency
+    frequency_hz: float | None = None  # None -> the library's own design frequency
     polarization: str = "x"
     phase_match_tolerance_deg: float = DEFAULT_PHASE_MATCH_TOLERANCE_DEG
     expected_n_geometries: int = 324

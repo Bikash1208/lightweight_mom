@@ -2,7 +2,6 @@
 deterministic, and honest about what has (nothing) and has not been HFSS-validated."""
 
 import csv
-import json
 import warnings
 
 import pytest
@@ -27,22 +26,30 @@ _SUBSTRATE = {"name": "Rogers RT/Duroid 5880", "eps_r": 2.2, "tan_delta": 0.0009
 @pytest.fixture(scope="module")
 def built():
     cfg = LibraryConfig(
-        period_m=4.8e-3, substrate=_SUBSTRATE,
-        f_min_hz=11.0e9, f_max_hz=13.0e9, f_step_hz=1.0e9, f_design_hz=12.0e9,
-        l_values_mm=(1.0, 1.8, 2.6, 3.4, 4.2), w_values_mm=(1.0, 1.8, 2.6, 3.4, 4.2),
+        period_m=4.8e-3,
+        substrate=_SUBSTRATE,
+        f_min_hz=11.0e9,
+        f_max_hz=13.0e9,
+        f_step_hz=1.0e9,
+        f_design_hz=12.0e9,
+        l_values_mm=(1.0, 1.8, 2.6, 3.4, 4.2),
+        w_values_mm=(1.0, 1.8, 2.6, 3.4, 4.2),
     )
     database = build_library_database(cfg, out_dir=None).database
     rows = extract_design_frequency(database, cfg)
     table = phase_vs_geometry_table(rows)
     by_lw = {(r.l_mm, r.w_mm): r for r in rows}
     classifications = [
-        classify_cell(c, database, by_lw[(round(c.parameters["length_m"] * 1e3, 9), round(c.parameters["width_m"] * 1e3, 9))])
+        classify_cell(
+            c, database, by_lw[(round(c.parameters["length_m"] * 1e3, 9), round(c.parameters["width_m"] * 1e3, 9))]
+        )
         for c in database.cells
     ]
     return cfg, database, table, classifications
 
 
 # --------------------------------------------------------------------------- subset selection
+
 
 def test_subset_is_deterministic_across_repeated_calls(built):
     cfg, _, table, classifications = built
@@ -93,6 +100,7 @@ def test_write_hfss_validation_subset_csv_has_required_columns(built, tmp_path):
 
 # --------------------------------------------------------------------------- consistency check
 
+
 def test_consistency_passes_on_a_clean_export(built, tmp_path):
     _, database, _, _ = built
     json_path = write_library_json(database, tmp_path / "lib.json")
@@ -115,7 +123,7 @@ def test_consistency_detects_a_corrupted_csv_value(built, tmp_path):
         rows = list(csv.reader(fh))
     header = rows[0]
     mag_col = header.index("S11_mag")
-    rows[1][mag_col] = repr(float(rows[1][mag_col]) + 1.0)   # corrupt one value
+    rows[1][mag_col] = repr(float(rows[1][mag_col]) + 1.0)  # corrupt one value
     with open(csv_path, "w", newline="", encoding="utf-8") as fh:
         csv.writer(fh, lineterminator="\n").writerows(rows)
 
@@ -126,6 +134,7 @@ def test_consistency_detects_a_corrupted_csv_value(built, tmp_path):
 
 
 # ------------------------------------------------------------------------------------ report
+
 
 def test_render_library_validation_md_states_no_hfss_comparison(built):
     from types import SimpleNamespace

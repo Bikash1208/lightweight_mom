@@ -21,17 +21,17 @@ from ..phase8b.conventions import (
 class UnitCellFamily:
     family_id: str
     topology: str
-    parameter_schema: tuple          # PARAMETER_NAMES that actually vary across this family's cells
-    fixed_parameters: dict           # PARAMETER_NAMES held constant (value, not swept) in this family
-    material_stacks: tuple           # distinct {name, eps_r, tan_delta, thickness_mm} dicts observed
-    supported_periods_mm: tuple      # distinct (p_x_mm, p_y_mm) pairs actually present
-    supported_frequency_range_hz: tuple    # (min, max) across all entries of this topology
+    parameter_schema: tuple  # PARAMETER_NAMES that actually vary across this family's cells
+    fixed_parameters: dict  # PARAMETER_NAMES held constant (value, not swept) in this family
+    material_stacks: tuple  # distinct {name, eps_r, tan_delta, thickness_mm} dicts observed
+    supported_periods_mm: tuple  # distinct (p_x_mm, p_y_mm) pairs actually present
+    supported_frequency_range_hz: tuple  # (min, max) across all entries of this topology
     supported_polarizations: tuple
     supported_incidence: tuple
     solver_method: str
     validity_constraints: dict
     geometry_export_method: str
-    library_ids: tuple               # entries contributing to this family
+    library_ids: tuple  # entries contributing to this family
 
 
 def _varying_parameters(database):
@@ -62,7 +62,9 @@ def family_from_entries(topology, entries):
         v, f = _varying_parameters(e.database)
         varying_sets |= set(v)
         fixed_union.update(f)
-        material_stacks.add((e.substrate["name"], e.substrate["eps_r"], e.substrate["tan_delta"], e.substrate["thickness_mm"]))
+        material_stacks.add(
+            (e.substrate["name"], e.substrate["eps_r"], e.substrate["tan_delta"], e.substrate["thickness_mm"])
+        )
         periods.add((e.p_x_mm, e.p_y_mm))
 
     freq_min = min(e.frequency_min_hz for e in entries)

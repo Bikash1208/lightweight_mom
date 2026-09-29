@@ -15,7 +15,6 @@ resumed retry) rather than adding a new try/except around the solver to paper ov
 """
 
 from dataclasses import dataclass
-from pathlib import Path
 
 from .library_schema import LibraryConfig
 from .runner import run_sweep
@@ -25,7 +24,7 @@ from .sweep import ParameterAxis, SweepDefinition, ValidationPolicy
 @dataclass(frozen=True)
 class LibraryBuildResult:
     config: LibraryConfig
-    database: object            # database.Database
+    database: object  # database.Database
     computed: int
     reused: int
     checkpoint_path: object
@@ -68,7 +67,13 @@ def build_library_database(config: LibraryConfig, out_dir=None, *, resume=True, 
         )
 
     return LibraryBuildResult(
-        config, result.database, result.computed, result.reused,
-        result.checkpoint_path, result.json_path, result.csv_path,
-        n_ok_cells, n_invalid_cells,
+        config,
+        result.database,
+        result.computed,
+        result.reused,
+        result.checkpoint_path,
+        result.json_path,
+        result.csv_path,
+        n_ok_cells,
+        n_invalid_cells,
     )

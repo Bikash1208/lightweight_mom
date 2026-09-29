@@ -19,16 +19,26 @@ WEAK_NEIGHBOR_MM = (3.0, 3.0)
 
 # Sec. 17: moderate contrast -- 8 distinct values spanning ~1.8-3.8 mm (row-major, skipping centre).
 MODERATE_NEIGHBORS_MM = (
-    (1.8, 1.8), (2.2, 3.4), (3.8, 2.0),
-    (3.0, 1.8),             (2.0, 3.8),
-    (3.8, 3.8), (1.8, 2.6), (2.6, 3.0),
+    (1.8, 1.8),
+    (2.2, 3.4),
+    (3.8, 2.0),
+    (3.0, 1.8),
+    (2.0, 3.8),
+    (3.8, 3.8),
+    (1.8, 2.6),
+    (2.6, 3.0),
 )
 
 # Sec. 17: strong contrast -- the sweep's own extremes (1.0 mm / 4.4 mm) in every combination.
 STRONG_NEIGHBORS_MM = (
-    (1.0, 1.0), (4.4, 4.4), (1.0, 4.4),
-    (4.4, 1.0),             (1.0, 1.0),
-    (4.4, 4.4), (1.0, 4.4), (4.4, 1.0),
+    (1.0, 1.0),
+    (4.4, 4.4),
+    (1.0, 4.4),
+    (4.4, 1.0),
+    (1.0, 1.0),
+    (4.4, 4.4),
+    (1.0, 4.4),
+    (4.4, 1.0),
 )
 
 # Sec. 18: symmetric A-B-A / B-C-B / A-B-A arrangement.
@@ -37,11 +47,11 @@ SYMMETRIC_B_MM = (3.8, 3.8)
 
 # Sec. 19: the 5 x 5 outer ring (the 16 positions at Chebyshev distance 2 from centre), tiled from
 # a fixed 16-value list (cycles MODERATE_NEIGHBORS_MM/STRONG_NEIGHBORS_MM as appropriate).
-NOISE_FLOOR_RELATIVE = 1e-6   # Sec. 24: not an engineering choice -- measured solver self-
-                              # consistency floor (the homogeneous-supercell exact-match test
-                              # reproduces the isolated cell to ~1e-14 at this mesh/Floquet
-                              # resolution; 1e-6 is a generous margin above that floor, not a
-                              # judgement about what error is acceptable for synthesis).
+NOISE_FLOOR_RELATIVE = 1e-6  # Sec. 24: not an engineering choice -- measured solver self-
+# consistency floor (the homogeneous-supercell exact-match test
+# reproduces the isolated cell to ~1e-14 at this mesh/Floquet
+# resolution; 1e-6 is a generous margin above that floor, not a
+# judgement about what error is acceptable for synthesis).
 
 
 def _mm_to_m(pairs):
@@ -58,9 +68,16 @@ def build_3x3_grid(kind, center_lw_mm=CENTER_LW_MM):
         neighbors = STRONG_NEIGHBORS_MM
     elif kind == "symmetric":
         # A B A / B C B / A B A, read row-major with the centre C excluded: A,B,A, B,B, A,B,A
-        neighbors = (SYMMETRIC_A_MM, SYMMETRIC_B_MM, SYMMETRIC_A_MM,
-                     SYMMETRIC_B_MM, SYMMETRIC_B_MM,
-                     SYMMETRIC_A_MM, SYMMETRIC_B_MM, SYMMETRIC_A_MM)
+        neighbors = (
+            SYMMETRIC_A_MM,
+            SYMMETRIC_B_MM,
+            SYMMETRIC_A_MM,
+            SYMMETRIC_B_MM,
+            SYMMETRIC_B_MM,
+            SYMMETRIC_A_MM,
+            SYMMETRIC_B_MM,
+            SYMMETRIC_A_MM,
+        )
     else:
         raise ValueError(f"unknown 3x3 kind {kind!r}")
     flat = list(neighbors)
@@ -108,21 +125,33 @@ def compute_lpa_error(isolated_dipole, embedded_dipole):
     iso, emb = isolated_dipole.px, embedded_dipole.px
     complex_error = abs(emb - iso)
     magnitude_error = abs(abs(emb) - abs(iso))
-    phase_error = float(abs(wrapped_difference_deg(
-        float(principal_phase_deg(emb)), float(principal_phase_deg(iso)),
-    )))
+    phase_error = float(
+        abs(
+            wrapped_difference_deg(
+                float(principal_phase_deg(emb)),
+                float(principal_phase_deg(iso)),
+            )
+        )
+    )
     relative = complex_error / abs(iso) if abs(iso) > 0 else float("inf")
     return complex_error, magnitude_error, phase_error, relative
 
 
-def run_local_periodicity_suite(substrate, metal, period_m, frequency_hz,
-                                 mesh_cells_per_subcell=8, floquet_factor=2,
-                                 center_lw_mm=CENTER_LW_MM):
+def run_local_periodicity_suite(
+    substrate, metal, period_m, frequency_hz, mesh_cells_per_subcell=8, floquet_factor=2, center_lw_mm=CENTER_LW_MM
+):
     """Sec. 25's required matrix: 3x3 weak/moderate/strong/symmetric, 5x5 moderate/strong."""
     center_lw_m = tuple(v * 1e-3 for v in center_lw_mm)
     isolated = solve_isolated_cell(
-        period_m, period_m, center_lw_m[0], center_lw_m[1], substrate, metal, frequency_hz,
-        mesh_cells_per_subcell, floquet_factor * mesh_cells_per_subcell,
+        period_m,
+        period_m,
+        center_lw_m[0],
+        center_lw_m[1],
+        substrate,
+        metal,
+        frequency_hz,
+        mesh_cells_per_subcell,
+        floquet_factor * mesh_cells_per_subcell,
     )
 
     cases = []
@@ -139,16 +168,27 @@ def run_local_periodicity_suite(substrate, metal, period_m, frequency_hz,
     for name, n, grid in cases:
         supercell = build_supercell(n, period_m, period_m, substrate, metal, grid)
         embedded = solve_supercell_center(
-            supercell, center_lw_m, frequency_hz, mesh_cells_per_subcell,
+            supercell,
+            center_lw_m,
+            frequency_hz,
+            mesh_cells_per_subcell,
             floquet_factor * mesh_cells_per_subcell * n,
         )
         complex_error, magnitude_error, phase_error, relative = compute_lpa_error(isolated.dipole, embedded.dipole)
-        results.append(LpaResult(
-            name=name, n=n, isolated_px=isolated.dipole.px, embedded_px=embedded.dipole.px,
-            complex_error=complex_error, magnitude_error=magnitude_error, phase_error_deg=phase_error,
-            relative_complex_error=relative, n_unknowns_isolated=isolated.n_unknowns,
-            n_unknowns_embedded=embedded.n_unknowns,
-        ))
+        results.append(
+            LpaResult(
+                name=name,
+                n=n,
+                isolated_px=isolated.dipole.px,
+                embedded_px=embedded.dipole.px,
+                complex_error=complex_error,
+                magnitude_error=magnitude_error,
+                phase_error_deg=phase_error,
+                relative_complex_error=relative,
+                n_unknowns_isolated=isolated.n_unknowns,
+                n_unknowns_embedded=embedded.n_unknowns,
+            )
+        )
     return isolated, results
 
 
@@ -161,8 +201,7 @@ def run_local_periodicity_suite(substrate, metal, period_m, frequency_hz,
 SUBSTANTIAL_DEVIATION_RELATIVE = 0.5
 
 
-def classify_local_periodicity(results, noise_floor=NOISE_FLOOR_RELATIVE,
-                                substantial=SUBSTANTIAL_DEVIATION_RELATIVE):
+def classify_local_periodicity(results, noise_floor=NOISE_FLOOR_RELATIVE, substantial=SUBSTANTIAL_DEVIATION_RELATIVE):
     """Sec. 23-24: no project document or cited scientific basis defines an acceptable LPA error
     tolerance for the intended holographic synthesis task, so this function never invents an
     engineering percentage (Sec. 24's explicit prohibition on '<10%=valid'-style thresholds).

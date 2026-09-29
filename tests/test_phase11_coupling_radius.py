@@ -39,7 +39,7 @@ def test_run_coupling_radius_series_is_monotonic_in_size_and_deterministic():
         assert p.n_unknowns > 0
 
     points2 = cr.run_coupling_radius_series(CENTER, P, SUB, MET, F, sizes=(1, 3, 5))
-    assert [p.response for p in points] == [p.response for p in points2]   # deterministic, no ML
+    assert [p.response for p in points] == [p.response for p in points2]  # deterministic, no ML
 
 
 def test_compute_shell_increments_matches_direct_subtraction():

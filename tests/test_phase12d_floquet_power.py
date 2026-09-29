@@ -48,8 +48,14 @@ def test_uniform_supercell_reproduces_isolated_s11_exactly():
     green = LayeredGreenFunction(dp.SUBSTRATE, dp.DESIGN_FREQUENCY_HZ, backing="pec")
     result = floquet_order_powers(system.basis, currents, green, supercell.lattice, max_order=2 * n_cells)
 
-    sp = compute_s_parameters(dp.unit_cell_at(l_m), dp.DESIGN_FREQUENCY_HZ, MeshSettings(N, N, 2 * N),
-                               dp.REFERENCE_PLANES, warn_grating=False, warn_surface_wave=False)
+    sp = compute_s_parameters(
+        dp.unit_cell_at(l_m),
+        dp.DESIGN_FREQUENCY_HZ,
+        MeshSettings(N, N, 2 * N),
+        dp.REFERENCE_PLANES,
+        warn_grating=False,
+        warn_surface_wave=False,
+    )
     true_fraction = sp.magnitude("S11_xx") ** 2
     assert abs(result.fraction_at(0, 0) - true_fraction) < 1e-9
 

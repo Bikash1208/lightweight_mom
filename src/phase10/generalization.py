@@ -16,18 +16,25 @@ from dataclasses import dataclass
 from . import environment_geometry as eg
 from .grid_solver import solve_grid
 
-GRID_N = 7   # odd, >= 3 interior rings on each side so every interior cell has a full 3x3
-             # neighborhood strictly inside the solved grid (Sec. 30-32); n=7 keeps one solve
-             # under ~4 s (measured) while still giving a 5x5 = 25 interior test points.
-INTERIOR_RANGE = range(1, GRID_N - 1)   # indices 1..5 for n=7
+GRID_N = 7  # odd, >= 3 interior rings on each side so every interior cell has a full 3x3
+# neighborhood strictly inside the solved grid (Sec. 30-32); n=7 keeps one solve
+# under ~4 s (measured) while still giving a 5x5 = 25 interior test points.
+INTERIOR_RANGE = range(1, GRID_N - 1)  # indices 1..5 for n=7
 
 BOUNDARY_STUDY_STATUS = "NOT_FEASIBLE_WITHIN_INFINITE_PERIODIC_FRAMEWORK"
 
 
 def _interior_neighbors(grid_mm, i, j):
-    from .dataset import ALL_POSITIONS
-    offsets = {"N": (-1, 0), "S": (1, 0), "E": (0, 1), "W": (0, -1),
-               "NE": (-1, 1), "NW": (-1, -1), "SE": (1, 1), "SW": (1, -1)}
+    offsets = {
+        "N": (-1, 0),
+        "S": (1, 0),
+        "E": (0, 1),
+        "W": (0, -1),
+        "NE": (-1, 1),
+        "NW": (-1, -1),
+        "SE": (1, 1),
+        "SW": (1, -1),
+    }
     return {pos: grid_mm[i + di][j + dj] for pos, (di, dj) in offsets.items()}
 
 
@@ -38,7 +45,7 @@ class SpatialCase:
     center_lw_mm: tuple
     neighbors_lw_mm: dict
     px_mom: complex
-    px_surrogate: object   # complex, or "OUT_OF_VALIDATED_DOMAIN"
+    px_surrogate: object  # complex, or "OUT_OF_VALIDATED_DOMAIN"
 
 
 def _build_and_solve(grid_mm, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell, surrogate):
@@ -51,8 +58,17 @@ def _build_and_solve(grid_mm, period_m, substrate, metal, frequency_hz, mesh_cel
             neighbors_lw_mm = _interior_neighbors(grid_mm, i, j)
             px_mom = sg.dipole_at(i, j).px
             from .dataset import EnvironmentSample
-            fake_sample = EnvironmentSample(f"gen_{i}_{j}", "n/a", center_lw_mm, neighbors_lw_mm,
-                                             "generalization", frequency_hz, px_mom, "generalization")
+
+            fake_sample = EnvironmentSample(
+                f"gen_{i}_{j}",
+                "n/a",
+                center_lw_mm,
+                neighbors_lw_mm,
+                "generalization",
+                frequency_hz,
+                px_mom,
+                "generalization",
+            )
             px_surrogate = surrogate.predict(fake_sample)
             cases.append(SpatialCase(i, j, center_lw_mm, neighbors_lw_mm, px_mom, px_surrogate))
     return cases
@@ -61,6 +77,7 @@ def _build_and_solve(grid_mm, period_m, substrate, metal, frequency_hz, mesh_cel
 def build_gradient_grid_mm(l_min_mm=1.4, l_max_mm=4.2, w_fixed_mm=2.8):
     """Sec. 31: a smooth L gradient (small -> medium -> large) along x (columns), W held fixed."""
     import numpy as np
+
     values = np.round(np.linspace(l_min_mm, l_max_mm, GRID_N), 2)
     return [[(float(values[j]), w_fixed_mm) for j in range(GRID_N)] for _ in range(GRID_N)]
 
@@ -76,15 +93,15 @@ def build_abrupt_grid_mm(region_a_mm=(1.4, 1.4), region_b_mm=(4.2, 4.2), boundar
     return grid
 
 
-def run_gradient_test(period_m, substrate, metal, frequency_hz, surrogate, mesh_cells_per_subcell=8,
-                       **grid_kwargs):
+def run_gradient_test(period_m, substrate, metal, frequency_hz, surrogate, mesh_cells_per_subcell=8, **grid_kwargs):
     grid_mm = build_gradient_grid_mm(**grid_kwargs)
     cases = _build_and_solve(grid_mm, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell, surrogate)
     return grid_mm, cases
 
 
-def run_abrupt_discontinuity_test(period_m, substrate, metal, frequency_hz, surrogate,
-                                   mesh_cells_per_subcell=8, **grid_kwargs):
+def run_abrupt_discontinuity_test(
+    period_m, substrate, metal, frequency_hz, surrogate, mesh_cells_per_subcell=8, **grid_kwargs
+):
     grid_mm = build_abrupt_grid_mm(**grid_kwargs)
     cases = _build_and_solve(grid_mm, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell, surrogate)
     boundary_col = grid_kwargs.get("boundary_col", 3)

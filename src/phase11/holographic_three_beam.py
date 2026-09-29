@@ -18,8 +18,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from ..phase8b.object_wave import Beam, combine_beams
 from ..phase8b.holographic_modulation import phase_difference_hologram
+from ..phase8b.object_wave import Beam, combine_beams
 from ..phase8e.beam_reconstruction import evaluate_beam_reconstruction
 from ..phase8e.reference_field_input import spherical_feed_reference_field
 from ..phase10.environment_geometry import CENTER_CELLS_MM
@@ -40,14 +40,14 @@ def _representative_isolated_magnitude(period_m, substrate, metal, frequency_hz,
     |isolated-cell response| over this project's own 5 named center geometries."""
     mags = []
     for lw_mm in CENTER_CELLS_MM.values():
-        resp, _ = solve_isolated(period_m, lw_mm[0] * 1e-3, lw_mm[1] * 1e-3, substrate, metal,
-                                  frequency_hz, mesh_cells_per_subcell)
+        resp, _ = solve_isolated(
+            period_m, lw_mm[0] * 1e-3, lw_mm[1] * 1e-3, substrate, metal, frequency_hz, mesh_cells_per_subcell
+        )
         mags.append(abs(resp))
     return float(np.mean(mags))
 
 
-def build_holographic_target_grid(n, period_m, substrate, metal, frequency_hz, margin=1,
-                                   mesh_cells_per_subcell=8):
+def build_holographic_target_grid(n, period_m, substrate, metal, frequency_hz, margin=1, mesh_cells_per_subcell=8):
     """Sec. 24: reference wave + object wave -> per-cell required complex response, over the
     interior (n - 2*margin) x (n - 2*margin) region of an n x n aperture."""
     xs_1d = np.array([-n * period_m / 2 + (j + 0.5) * period_m for j in range(n)])
@@ -58,8 +58,7 @@ def build_holographic_target_grid(n, period_m, substrate, metal, frequency_hz, m
     ex_obj, ey_obj = combine_beams(x_grid, y_grid, THREE_BEAMS, frequency_hz)
     required_phase_deg = phase_difference_hologram(ref_field.Ex, ex_obj)
 
-    magnitude = _representative_isolated_magnitude(period_m, substrate, metal, frequency_hz,
-                                                     mesh_cells_per_subcell)
+    magnitude = _representative_isolated_magnitude(period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell)
     target_complex = magnitude * np.exp(1j * np.radians(required_phase_deg))
 
     targets = {}
@@ -69,16 +68,16 @@ def build_holographic_target_grid(n, period_m, substrate, metal, frequency_hz, m
     return targets
 
 
-def _isolated_response_table(period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell,
-                              candidate_lw_values_mm):
+def _isolated_response_table(period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell, candidate_lw_values_mm):
     """Every candidate (L, W)'s isolated-cell response is independent of which target cell it will
     be matched against, so it is computed ONCE here and reused for every cell (still zero fitting --
     it is exactly Baseline 1's own physical quantity from Phase 10, just not re-solved redundantly)."""
     table = {}
     for l_mm in candidate_lw_values_mm:
         for w_mm in candidate_lw_values_mm:
-            resp, _ = solve_isolated(period_m, l_mm * 1e-3, w_mm * 1e-3, substrate, metal,
-                                      frequency_hz, mesh_cells_per_subcell)
+            resp, _ = solve_isolated(
+                period_m, l_mm * 1e-3, w_mm * 1e-3, substrate, metal, frequency_hz, mesh_cells_per_subcell
+            )
             table[(l_mm, w_mm)] = resp
     return table
 
@@ -104,16 +103,23 @@ class ThreeBeamResult:
     far_field: object
 
 
-def run_three_beam_test(center_lw_mm, n, period_m, substrate, metal, frequency_hz, margin=1,
-                         mesh_cells_per_subcell=8, candidate_lw_values_mm=None):
+def run_three_beam_test(
+    center_lw_mm,
+    n,
+    period_m,
+    substrate,
+    metal,
+    frequency_hz,
+    margin=1,
+    mesh_cells_per_subcell=8,
+    candidate_lw_values_mm=None,
+):
     """Sec. 24's full pipeline: reference+object wave -> per-cell target -> deterministic
     geometry assignment -> ONE direct heterogeneous MoM solve of the assembled aperture -> far
     field -> beam-reconstruction metrics against the real three-beam target."""
-    targets = build_holographic_target_grid(n, period_m, substrate, metal, frequency_hz, margin,
-                                             mesh_cells_per_subcell)
+    targets = build_holographic_target_grid(n, period_m, substrate, metal, frequency_hz, margin, mesh_cells_per_subcell)
     values = candidate_lw_values_mm or _grid_values_mm()
-    response_table = _isolated_response_table(period_m, substrate, metal, frequency_hz,
-                                               mesh_cells_per_subcell, values)
+    response_table = _isolated_response_table(period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell, values)
     assigned = assign_geometry_by_isolated_search(targets, response_table)
 
     grid_mm = [[center_lw_mm] * n for _ in range(n)]

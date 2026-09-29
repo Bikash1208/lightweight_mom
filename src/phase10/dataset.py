@@ -27,7 +27,7 @@ MIRROR_EW = {"N": "N", "S": "S", "E": "W", "W": "E", "NE": "NW", "NW": "NE", "SE
 MIRROR_NS = {"N": "S", "S": "N", "E": "E", "W": "W", "NE": "SE", "SE": "NE", "NW": "SW", "SW": "NW"}
 MIRROR_180 = {"N": "S", "S": "N", "E": "W", "W": "E", "NE": "SW", "SW": "NE", "NW": "SE", "SE": "NW"}
 
-RANDOM_SEED = 1729   # fixed and recorded (Sec. 21/Rule 4's own spirit of reproducibility)
+RANDOM_SEED = 1729  # fixed and recorded (Sec. 21/Rule 4's own spirit of reproducibility)
 
 
 @dataclass(frozen=True)
@@ -35,11 +35,11 @@ class EnvironmentSample:
     sample_id: str
     center_name: str
     center_lw_mm: tuple
-    neighbors_lw_mm: dict     # position -> (L_mm, W_mm), all 8 positions present
+    neighbors_lw_mm: dict  # position -> (L_mm, W_mm), all 8 positions present
     category: str
     frequency_hz: float
     s_complex: complex
-    source: str               # "structured" | "random"
+    source: str  # "structured" | "random"
 
 
 def _grid_from_neighbors(center_lw_mm, neighbors_lw_mm):
@@ -59,46 +59,93 @@ def harvest_structured_samples(study_results, frequency_hz):
             for case_name, case in cases.items():
                 neighbors = {d: c for d in ALL_POSITIONS}
                 neighbors.update(case.cardinal_lw_mm)
-                samples.append(EnvironmentSample(
-                    f"{center_name}_{label}_{case_name}", center_name, c, neighbors,
-                    f"structured_{case_name}_{label}", frequency_hz, case.px, "structured",
-                ))
+                samples.append(
+                    EnvironmentSample(
+                        f"{center_name}_{label}_{case_name}",
+                        center_name,
+                        c,
+                        neighbors,
+                        f"structured_{case_name}_{label}",
+                        frequency_hz,
+                        case.px,
+                        "structured",
+                    )
+                )
         # D1 diagonal-single cases.
         for label, cases in r.diagonal_cases.items():
             for case_name, case in cases.items():
                 neighbors = {d: c for d in ALL_POSITIONS}
                 neighbors.update(case.diagonal_lw_mm)
-                samples.append(EnvironmentSample(
-                    f"{center_name}_{label}_{case_name}", center_name, c, neighbors,
-                    f"structured_{case_name}_{label}", frequency_hz, case.px, "structured",
-                ))
+                samples.append(
+                    EnvironmentSample(
+                        f"{center_name}_{label}_{case_name}",
+                        center_name,
+                        c,
+                        neighbors,
+                        f"structured_{case_name}_{label}",
+                        frequency_hz,
+                        case.px,
+                        "structured",
+                    )
+                )
         # 9-cell-uniform per contrast label.
         for label, px in r.nine_cell_true_px.items():
             contrast = r.contrast_values_mm[label]
             neighbors = {d: contrast for d in ALL_POSITIONS}
-            samples.append(EnvironmentSample(
-                f"{center_name}_9cell_uniform_{label}", center_name, c, neighbors,
-                f"structured_9cell_uniform_{label}", frequency_hz, px, "structured",
-            ))
+            samples.append(
+                EnvironmentSample(
+                    f"{center_name}_9cell_uniform_{label}",
+                    center_name,
+                    c,
+                    neighbors,
+                    f"structured_9cell_uniform_{label}",
+                    frequency_hz,
+                    px,
+                    "structured",
+                )
+            )
         # correlated environment (2 patterns).
         low_high = r.correlated
-        diag_a, card_b = {d: low_high.a_lw_mm for d in ("NE", "NW", "SE", "SW")}, {d: low_high.b_lw_mm for d in ("N", "E", "S", "W")}
+        diag_a, card_b = (
+            {d: low_high.a_lw_mm for d in ("NE", "NW", "SE", "SW")},
+            {d: low_high.b_lw_mm for d in ("N", "E", "S", "W")},
+        )
         neighbors1 = {**card_b, **diag_a}
-        samples.append(EnvironmentSample(
-            f"{center_name}_correlated_pattern1", center_name, c, neighbors1,
-            "structured_correlated", frequency_hz, low_high.pattern_1_px, "structured",
-        ))
-        diag_b, card_a = {d: low_high.b_lw_mm for d in ("NE", "NW", "SE", "SW")}, {d: low_high.a_lw_mm for d in ("N", "E", "S", "W")}
+        samples.append(
+            EnvironmentSample(
+                f"{center_name}_correlated_pattern1",
+                center_name,
+                c,
+                neighbors1,
+                "structured_correlated",
+                frequency_hz,
+                low_high.pattern_1_px,
+                "structured",
+            )
+        )
+        diag_b, card_a = (
+            {d: low_high.b_lw_mm for d in ("NE", "NW", "SE", "SW")},
+            {d: low_high.a_lw_mm for d in ("N", "E", "S", "W")},
+        )
         neighbors2 = {**card_a, **diag_b}
-        samples.append(EnvironmentSample(
-            f"{center_name}_correlated_pattern2", center_name, c, neighbors2,
-            "structured_correlated", frequency_hz, low_high.pattern_2_px, "structured",
-        ))
+        samples.append(
+            EnvironmentSample(
+                f"{center_name}_correlated_pattern2",
+                center_name,
+                c,
+                neighbors2,
+                "structured_correlated",
+                frequency_hz,
+                low_high.pattern_2_px,
+                "structured",
+            )
+        )
     return samples
 
 
-def generate_random_samples(centers_mm, n_samples, period_m, substrate, metal, frequency_hz,
-                             mesh_cells_per_subcell=8, seed=RANDOM_SEED):
+def generate_random_samples(
+    centers_mm, n_samples, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell=8, seed=RANDOM_SEED
+):
     """Sec. 19: fixed-seed (recorded, ``RANDOM_SEED``) combinatorial environments -- every one of
     the 8 neighbor positions independently drawn (uniformly, on the same validated 0.2 mm sweep
     grid), and the center drawn uniformly from the given center cells. Each is a genuine, freshly
@@ -111,17 +158,24 @@ def generate_random_samples(centers_mm, n_samples, period_m, substrate, metal, f
         center_name = center_names[rng.integers(0, len(center_names))]
         center_lw_mm = centers_mm[center_name]
         neighbors_lw_mm = {
-            d: (float(rng.choice(grid_values_mm)), float(rng.choice(grid_values_mm)))
-            for d in ALL_POSITIONS
+            d: (float(rng.choice(grid_values_mm)), float(rng.choice(grid_values_mm))) for d in ALL_POSITIONS
         }
         grid_mm = _grid_from_neighbors(center_lw_mm, neighbors_lw_mm)
         grid_m = eg.grid_to_m(grid_mm)
         sg = solve_grid(3, period_m, substrate, metal, grid_m, frequency_hz, mesh_cells_per_subcell)
         px = sg.dipole_at(1, 1).px
-        samples.append(EnvironmentSample(
-            f"random_{k:04d}", center_name, center_lw_mm, neighbors_lw_mm, "random_combinatorial",
-            frequency_hz, px, "random",
-        ))
+        samples.append(
+            EnvironmentSample(
+                f"random_{k:04d}",
+                center_name,
+                center_lw_mm,
+                neighbors_lw_mm,
+                "random_combinatorial",
+                frequency_hz,
+                px,
+                "random",
+            )
+        )
     return samples
 
 
@@ -146,17 +200,16 @@ def symmetry_canonical_key(sample: EnvironmentSample):
     return (sample.center_lw_mm, canonical)
 
 
-def assign_splits(samples, holdout_center_names=("C5",), val_fraction=0.15, test_fraction=0.15,
-                   seed=RANDOM_SEED):
+def assign_splits(samples, holdout_center_names=("C5",), val_fraction=0.15, test_fraction=0.15, seed=RANDOM_SEED):
     """Sec. 20-21. Two mechanisms, both applied:
-      1. Sec. 21's geometry-based holdout: every sample whose center cell is in
-         ``holdout_center_names`` is placed in the blind test set, unconditionally -- the model
-         never sees this center cell's environment responses during training, testing genuine
-         extrapolation to an unseen geometry region.
-      2. Rule 4's symmetry-safe split: the remaining samples are grouped by
-         ``symmetry_canonical_key`` and whole GROUPS (never individual samples) are assigned to
-         train/validation/blind_test, using a fixed-seed shuffle of the group list, so a group
-         cannot straddle two sets."""
+    1. Sec. 21's geometry-based holdout: every sample whose center cell is in
+       ``holdout_center_names`` is placed in the blind test set, unconditionally -- the model
+       never sees this center cell's environment responses during training, testing genuine
+       extrapolation to an unseen geometry region.
+    2. Rule 4's symmetry-safe split: the remaining samples are grouped by
+       ``symmetry_canonical_key`` and whole GROUPS (never individual samples) are assigned to
+       train/validation/blind_test, using a fixed-seed shuffle of the group list, so a group
+       cannot straddle two sets."""
     rng = np.random.default_rng(seed)
     assignment = {}
     holdout_ids, remaining = [], []
@@ -176,7 +229,7 @@ def assign_splits(samples, holdout_center_names=("C5",), val_fraction=0.15, test
     n_val = max(1, int(round(n_groups * val_fraction))) if n_groups > 0 else 0
     n_test = max(1, int(round(n_groups * test_fraction))) if n_groups > 0 else 0
     val_keys = set(group_keys[:n_val])
-    test_keys = set(group_keys[n_val:n_val + n_test])
+    test_keys = set(group_keys[n_val : n_val + n_test])
 
     for key in group_keys:
         split = "validation" if key in val_keys else ("blind_test" if key in test_keys else "train")

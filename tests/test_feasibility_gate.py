@@ -33,9 +33,14 @@ _N_GEOM, _N_FREQ = 4, 3
 
 def small_config():
     return LibraryConfig(
-        period_m=4.8e-3, substrate=_SUBSTRATE,
-        f_min_hz=11.0e9, f_max_hz=13.0e9, f_step_hz=1.0e9, f_design_hz=12.0e9,
-        l_values_mm=(1.0, 3.0), w_values_mm=(1.0, 3.0),
+        period_m=4.8e-3,
+        substrate=_SUBSTRATE,
+        f_min_hz=11.0e9,
+        f_max_hz=13.0e9,
+        f_step_hz=1.0e9,
+        f_design_hz=12.0e9,
+        l_values_mm=(1.0, 3.0),
+        w_values_mm=(1.0, 3.0),
     )
 
 
@@ -64,6 +69,7 @@ def test_gate_on_a_valid_small_library_reports_phase_source_unvalidated(built_li
 
 # ------------------------------------------------------------------------- Test 7: bad frequency
 
+
 def test_unsupported_frequency_fails_before_reaching_phase_source(built_library_dir):
     result = run_feasibility_gate(_cfg(built_library_dir, frequency_hz=20.0e9))
     assert result.status == "FREQUENCY_UNSUPPORTED"
@@ -84,6 +90,7 @@ def test_unsupported_polarization_is_rejected_not_substituted(built_library_dir)
 
 # ------------------------------------------------------------------------------- Test 14: HFSS
 
+
 def test_hfss_validation_is_never_claimed_performed(built_library_dir):
     for freq_hz in (12.0e9, 20.0e9):
         result = run_feasibility_gate(_cfg(built_library_dir, frequency_hz=freq_hz))
@@ -97,6 +104,7 @@ def test_feasibility_report_states_hfss_not_performed(built_library_dir):
 
 
 # ---------------------------------------------------------------- required-phase synthetic path
+
 
 def test_synthetic_required_phase_sufficient_case_reaches_matching_check(built_library_dir):
     result = run_feasibility_gate(_cfg(built_library_dir, frequency_hz=12.0e9))
@@ -113,6 +121,7 @@ def test_synthetic_required_phase_sufficient_case_reaches_matching_check(built_l
 
 # --------------------------------------------------------------------------- output file layout
 
+
 def test_run_and_write_phase8a_produces_required_files(built_library_dir, tmp_path):
     out_dir = tmp_path / "phase8a_out"
     result, written_dir = run_and_write_phase8a(_cfg(built_library_dir, frequency_hz=12.0e9), out_dir)
@@ -128,8 +137,19 @@ def test_run_and_write_phase8a_produces_required_files(built_library_dir, tmp_pa
 def test_feasibility_json_matches_sec41_schema_keys(built_library_dir, tmp_path):
     result, _ = run_and_write_phase8a(_cfg(built_library_dir, frequency_hz=12.0e9), tmp_path / "out")
     doc = build_feasibility_json(result, _cfg(built_library_dir))
-    for key in ("status", "library", "frequency", "phase_source", "phase_coverage",
-                "required_phase", "matching", "hfss_validation", "checks", "warnings", "errors"):
+    for key in (
+        "status",
+        "library",
+        "frequency",
+        "phase_source",
+        "phase_coverage",
+        "required_phase",
+        "matching",
+        "hfss_validation",
+        "checks",
+        "warnings",
+        "errors",
+    ):
         assert key in doc, key
     assert doc["hfss_validation"] == {"performed": False}
     assert doc["status"] == "PHASE_SOURCE_UNVALIDATED"
@@ -137,14 +157,27 @@ def test_feasibility_json_matches_sec41_schema_keys(built_library_dir, tmp_path)
 
 # ------------------------------------------------------------------------------------------- CLI
 
+
 def test_cli_runs_against_a_small_library_and_exits_with_the_gate_status_code(built_library_dir, tmp_path):
     out_dir = tmp_path / "cli_out"
     proc = subprocess.run(
-        [sys.executable, str(ROOT / "examples" / "run_phase8a_feasibility.py"),
-         "--library-dir", str(built_library_dir), "--frequency-ghz", "12.0",
-         "--expected-geometries", str(_N_GEOM), "--expected-frequency-points", str(_N_FREQ),
-         "--output-dir", str(out_dir)],
-        cwd=ROOT, capture_output=True, text=True,
+        [
+            sys.executable,
+            str(ROOT / "examples" / "run_phase8a_feasibility.py"),
+            "--library-dir",
+            str(built_library_dir),
+            "--frequency-ghz",
+            "12.0",
+            "--expected-geometries",
+            str(_N_GEOM),
+            "--expected-frequency-points",
+            str(_N_FREQ),
+            "--output-dir",
+            str(out_dir),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
     )
     assert proc.returncode == EXIT_CODES["PHASE_SOURCE_UNVALIDATED"], proc.stdout + proc.stderr
     assert "PHASE_SOURCE_UNVALIDATED" in proc.stdout
@@ -153,6 +186,7 @@ def test_cli_runs_against_a_small_library_and_exits_with_the_gate_status_code(bu
 
 
 # -------------------------------------------------------------- against the real production library
+
 
 @pytest.mark.skipif(
     not (DEFAULT_LIBRARY_DIR / "database" / "unit_cell_library.json").exists(),
@@ -163,4 +197,4 @@ def test_gate_against_the_real_production_library():
     assert result.checks["library_integrity"] == "PASS", result.errors
     assert result.library["geometry_count"] == 324
     assert result.status == "PHASE_SOURCE_UNVALIDATED"
-    assert result.library_phase_coverage["span_deg"] < 30.0   # the measured ~24.8 deg
+    assert result.library_phase_coverage["span_deg"] < 30.0  # the measured ~24.8 deg

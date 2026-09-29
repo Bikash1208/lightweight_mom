@@ -17,8 +17,9 @@ F = 12.5e9
 
 def _dummy_surrogate():
     cache = IsolatedReferenceCache(P, SUB, MET, 8)
-    return surr_mod.EnvironmentSurrogate(cache, np.zeros(surr_mod.N_FEATURES), np.zeros(surr_mod.N_FEATURES),
-                                          0.0, surr_mod.DomainSpec(frequency_hz=F))
+    return surr_mod.EnvironmentSurrogate(
+        cache, np.zeros(surr_mod.N_FEATURES), np.zeros(surr_mod.N_FEATURES), 0.0, surr_mod.DomainSpec(frequency_hz=F)
+    )
 
 
 def test_build_aperture_from_cases_uses_physical_subcell_positions():
@@ -28,7 +29,7 @@ def test_build_aperture_from_cases_uses_physical_subcell_positions():
     assert len(x) == len(cases)
     assert excluded == 0
     span = x.max() - x.min()
-    assert span > 0 and span < gen.GRID_N * P   # positions span less than the whole outer grid
+    assert span > 0 and span < gen.GRID_N * P  # positions span less than the whole outer grid
 
 
 def test_run_beam_validation_matches_identical_apertures_when_surrogate_equals_mom():
@@ -37,7 +38,7 @@ def test_run_beam_validation_matches_identical_apertures_when_surrogate_equals_m
     surrogate = _dummy_surrogate()
     grid_mm, cases = gen.run_gradient_test(P, SUB, MET, F, surrogate, mesh_cells_per_subcell=8)
     from src.phase10.generalization import SpatialCase
-    identical_cases = [SpatialCase(c.i, c.j, c.center_lw_mm, c.neighbors_lw_mm, c.px_mom, c.px_mom)
-                       for c in cases]
+
+    identical_cases = [SpatialCase(c.i, c.j, c.center_lw_mm, c.neighbors_lw_mm, c.px_mom, c.px_mom) for c in cases]
     result = bv.run_beam_validation(identical_cases, P, F)
     assert result["comparison"].complex_error_mean < 1e-20

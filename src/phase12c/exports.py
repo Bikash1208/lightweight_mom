@@ -41,12 +41,16 @@ def export_single_cells(output_dir, l_values_mm=SINGLE_CELL_L_MM, mesh_cells_per
     for l_mm in l_values_mm:
         cell = dp.unit_cell_at(l_mm * 1e-3)
         mesh = MeshSettings(mesh_cells_per_side, mesh_cells_per_side, floquet)
-        s = compute_s_parameters(cell, dp.DESIGN_FREQUENCY_HZ, mesh, dp.REFERENCE_PLANES,
-                                  warn_grating=False, warn_surface_wave=False)
+        s = compute_s_parameters(
+            cell, dp.DESIGN_FREQUENCY_HZ, mesh, dp.REFERENCE_PLANES, warn_grating=False, warn_surface_wave=False
+        )
         step_path = output_dir / f"single_cell_L{l_mm:.1f}mm.step"
         cad_export.export_unit_cell_step(cell, step_path)
-        results.append(SingleCellExport(l_mm, str(step_path), s.magnitude("S11_xx"), s.phase_deg("S11_xx"),
-                                         mesh_cells_per_side, floquet))
+        results.append(
+            SingleCellExport(
+                l_mm, str(step_path), s.magnitude("S11_xx"), s.phase_deg("S11_xx"), mesh_cells_per_side, floquet
+            )
+        )
     return tuple(results)
 
 
@@ -81,8 +85,11 @@ def export_supercells(output_dir, mesh_cells_per_subcell=MESH_CELLS_PER_SUBCELL)
         supercell = build_grounded_supercell(3, dp.PERIOD_M, dp.PERIOD_M, dp.SUBSTRATE, dp.METAL, grid_m)
         step_path = output_dir / f"{name}.step"
         res = cad_export.export_supercell_step(supercell, step_path)
-        results.append(SupercellExport(name, str(step_path), tuple(tuple(row) for row in grid_mm), 3,
-                                        len(res.metals), res.ground is not None))
+        results.append(
+            SupercellExport(
+                name, str(step_path), tuple(tuple(row) for row in grid_mm), 3, len(res.metals), res.ground is not None
+            )
+        )
     return tuple(results)
 
 
@@ -114,7 +121,7 @@ def write_export_manifest(single_cells, supercells, synthetic_hfss_path, output_
         "supercells": [asdict(r) for r in supercells],
         "synthetic_hfss_reference_test_csv": str(synthetic_hfss_path),
         "note": "No real HFSS results exist anywhere in this project; the synthetic CSV above is "
-                "a test fixture for the one-port ingestion path only (Sec. E).",
+        "a test fixture for the one-port ingestion path only (Sec. E).",
     }
     Path(output_path).write_text(json.dumps(manifest, indent=2))
     return output_path

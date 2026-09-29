@@ -8,7 +8,9 @@ from src.phase8d_rev import library_entry as le
 from src.phase8d_rev.query import UnitCellQuery, search_unit_cells
 from src.phase8d_rev.universal_database import UniversalDatabase
 
-pytestmark = pytest.mark.skipif(not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present")
+pytestmark = pytest.mark.skipif(
+    not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present"
+)
 
 
 @pytest.fixture
@@ -20,10 +22,17 @@ def udb(phase8c_full_database):
 
 
 def test_exact_query_matches_the_registered_benchmark(udb):
-    result = search_unit_cells(udb, UnitCellQuery(
-        topology="rectangular_patch", substrate_name="Rogers RT/Duroid 5880",
-        p_x_mm=4.8, p_y_mm=4.8, frequency_hz=12.5e9, polarization="x",
-    ))
+    result = search_unit_cells(
+        udb,
+        UnitCellQuery(
+            topology="rectangular_patch",
+            substrate_name="Rogers RT/Duroid 5880",
+            p_x_mm=4.8,
+            p_y_mm=4.8,
+            frequency_hz=12.5e9,
+            polarization="x",
+        ),
+    )
     assert result.status == "MATCH"
     assert len(result.matching_entries) == 1
 
@@ -59,8 +68,15 @@ def test_filter_trail_records_every_stage_in_order(udb):
     result = search_unit_cells(udb, UnitCellQuery(topology="rectangular_patch"))
     names = [name for name, _ in result.filter_trail]
     assert names == [
-        "initial", "topology", "material_stack", "frequency", "period", "polarization",
-        "incidence", "response_availability", "validity_status",
+        "initial",
+        "topology",
+        "material_stack",
+        "frequency",
+        "period",
+        "polarization",
+        "incidence",
+        "response_availability",
+        "validity_status",
     ]
 
 

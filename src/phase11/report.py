@@ -11,10 +11,12 @@ def render_phase11_report_md(result):
     lines.append(f"STEP export: **{d.step_export_status}**\n")
 
     lines.append("## No ML / no surrogate\n")
-    lines.append("Confirmed by construction: every response in this phase comes from a real solve of "
-                 "`Z I = V` (`reference_solver.solve_grid`/`solve_isolated`, the unmodified Phase 1-3 "
-                 "MoM machinery); no regression, neural network, random forest or learned mapping "
-                 "appears anywhere in `src/phase11/`.\n")
+    lines.append(
+        "Confirmed by construction: every response in this phase comes from a real solve of "
+        "`Z I = V` (`reference_solver.solve_grid`/`solve_isolated`, the unmodified Phase 1-3 "
+        "MoM machinery); no regression, neural network, random forest or learned mapping "
+        "appears anywhere in `src/phase11/`.\n"
+    )
 
     lines.append("## Coupling-radius series (Sec. 5-7)\n")
     for name, points in result["coupling_radius"].items():
@@ -30,21 +32,26 @@ def render_phase11_report_md(result):
 
     lines.append("## Convergence classification (Sec. 16, tolerances declared before evaluation)\n")
     for cr in result["convergence_results"]:
-        lines.append(f"- {cr.center_name}: status={cr.status}, last_increment_relative="
-                     f"{cr.last_increment_relative:.3e}, converged_at_n={cr.converged_at_n}")
+        lines.append(
+            f"- {cr.center_name}: status={cr.status}, last_increment_relative="
+            f"{cr.last_increment_relative:.3e}, converged_at_n={cr.converged_at_n}"
+        )
     lines.append(f"\nPer-center case: {result['classification'].per_center_case}")
-    lines.append(f"\nOverall case: **{result['classification'].overall_case}** -- {result['classification'].rationale}\n")
+    lines.append(
+        f"\nOverall case: **{result['classification'].overall_case}** -- {result['classification'].rationale}\n"
+    )
 
     lines.append("## Diagonal coupling (Sec. 9)\n")
     diag = result["diagonal_reproduction"]
-    lines.append(f"mean|diagonal|/mean|cardinal| = {diag['ratio']:.3f} "
-                 f"(Phase 10's own measured range: 25-70%)\n")
+    lines.append(f"mean|diagonal|/mean|cardinal| = {diag['ratio']:.3f} (Phase 10's own measured range: 25-70%)\n")
 
     lines.append("## Pattern study / Case D check (Sec. 10, 18)\n")
     for name, r in result["pattern_results"].items():
         lines.append(f"- {name}: |response|={abs(r.response):.3e}")
-    lines.append(f"\nPattern dependence detected: **{result['pattern_dependence_detected']}** "
-                 f"({result['pattern_comparisons']})\n")
+    lines.append(
+        f"\nPattern dependence detected: **{result['pattern_dependence_detected']}** "
+        f"({result['pattern_comparisons']})\n"
+    )
 
     lines.append("## Pairwise / higher-order interaction (Sec. 12-13)\n")
     for r in result["pairwise_results"]:
@@ -54,7 +61,9 @@ def render_phase11_report_md(result):
 
     lines.append("## Frequency dependence (Sec. 14)\n")
     for p in result["frequency_points"]:
-        lines.append(f"- {p.frequency_hz/1e9:.2f} GHz: max_shell_increment_relative={p.max_shell_increment_relative:.3e}")
+        lines.append(
+            f"- {p.frequency_hz / 1e9:.2f} GHz: max_shell_increment_relative={p.max_shell_increment_relative:.3e}"
+        )
     lines.append("")
 
     lines.append("## Polarization dependence (Sec. 15)\n")
@@ -67,8 +76,9 @@ def render_phase11_report_md(result):
     fit = result["decay_fit"]
     lines.append(f"Observed trend: {obs.candidate_trend}. Fit attempted: {fit.law}.")
     if fit.law != "NONE_FITTED":
-        lines.append(f"  fitted_params={fit.fitted_params}, r_squared={fit.r_squared:.3f}, "
-                     f"residual_rms={fit.residual_rms:.3e}")
+        lines.append(
+            f"  fitted_params={fit.fitted_params}, r_squared={fit.r_squared:.3f}, residual_rms={fit.residual_rms:.3e}"
+        )
     lines.append(f"  note: {fit.note}\n")
 
     lines.append("## Reduction (Sec. 19)\n")
@@ -76,8 +86,10 @@ def render_phase11_report_md(result):
 
     lines.append("## Inverse validation (Sec. 21-22)\n")
     for r in result["inverse_results"]:
-        lines.append(f"- target={r.target:.3e}: status={r.status}, relative_error="
-                     f"{r.mom_relative_error if r.mom_relative_error != float('inf') else 'inf'}")
+        lines.append(
+            f"- target={r.target:.3e}: status={r.status}, relative_error="
+            f"{r.mom_relative_error if r.mom_relative_error != float('inf') else 'inf'}"
+        )
     lines.append("")
 
     lines.append("## Beam-level validation (Sec. 23)\n")
@@ -87,8 +99,10 @@ def render_phase11_report_md(result):
 
     lines.append("## Three-beam holographic test (Sec. 24)\n")
     tb = result["three_beam_result"]
-    lines.append(f"pointing_error_deg={tb.metrics.pointing_error_deg}, "
-                 f"matched_peak_power_db={tb.metrics.matched_peak_power_db}\n")
+    lines.append(
+        f"pointing_error_deg={tb.metrics.pointing_error_deg}, "
+        f"matched_peak_power_db={tb.metrics.matched_peak_power_db}\n"
+    )
 
     lines.append("## HFSS status (Sec. 25-26)\n")
     lines.append(f"{d.hfss_status}\n")
@@ -102,11 +116,11 @@ def render_phase11_report_md(result):
     outcome_map = {
         "CASE_A_LOCAL": "Outcome A: a finite spatial neighborhood is sufficient.",
         "CASE_B_MODERATELY_NONLOCAL": "Outcome B (moderate form): a larger but still finite "
-                                       "neighborhood is required; isolated-cell inversion remains insufficient.",
+        "neighborhood is required; isolated-cell inversion remains insufficient.",
         "CASE_C_STRONGLY_NONLOCAL": "Outcome B (strong form): the metasurface exhibits significant "
-                                     "nonlocal interaction; isolated-cell inversion is fundamentally insufficient.",
+        "nonlocal interaction; isolated-cell inversion is fundamentally insufficient.",
         "CASE_D_PATTERN_DEPENDENT": "Outcome C: the response depends strongly on spatial pattern, "
-                                     "not just local statistics.",
+        "not just local statistics.",
     }
     lines.append(outcome_map.get(d.overall_case, "Outcome D: further solver validation is required.") + "\n")
 

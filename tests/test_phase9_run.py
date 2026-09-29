@@ -16,6 +16,7 @@ _LIBRARY_DIR = ROOT / "results" / "unit_cell_library"
 
 def _hash(path):
     import hashlib
+
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
@@ -28,7 +29,12 @@ def test_run_produces_all_required_output_files(tmp_path, phase8c_full_database)
     dir_9a, dir_9b = out / "phase9a_control_variable", out / "phase9b_local_periodicity"
     for name in ("hfss_reference_cells.csv", "s11_comparison.csv", "s21_comparison.csv", "architecture_audit.json"):
         assert (dir_9a / name).exists(), name
-    for name in ("supercell_definitions.csv", "supercell_results.csv", "lpa_error_metrics.csv", "locality_analysis.json"):
+    for name in (
+        "supercell_definitions.csv",
+        "supercell_results.csv",
+        "lpa_error_metrics.csv",
+        "locality_analysis.json",
+    ):
         assert (dir_9b / name).exists(), name
     assert len(list((dir_9a / "plots").glob("*.png"))) >= 10
     assert len(list((dir_9b / "plots").glob("*.png"))) >= 8
@@ -57,7 +63,8 @@ def test_run_never_unlocks_geometry_inversion(tmp_path, phase8c_full_database):
     result = run_phase9(tmp_path / "out", database=phase8c_full_database)
     assert result["decision"].geometry_inversion_unlocked is False
     assert result["decision"].final_status in (
-        "LOCAL_PERIODICITY_INVALIDATED", "NO_VALIDATED_FORMULATION",
+        "LOCAL_PERIODICITY_INVALIDATED",
+        "NO_VALIDATED_FORMULATION",
     )
 
 
@@ -86,7 +93,10 @@ def test_cli_runs_against_the_real_checkpoint(tmp_path):
     out_dir = tmp_path / "cli_out"
     proc = subprocess.run(
         [sys.executable, str(ROOT / "examples" / "run_phase9_validation.py"), "--output-dir", str(out_dir)],
-        cwd=ROOT, capture_output=True, text=True, timeout=180,
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=180,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "PHASE 9" in proc.stdout

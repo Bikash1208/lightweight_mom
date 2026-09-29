@@ -10,7 +10,13 @@ from src.sweep import FrequencyGrid
 from src.validation_cases import CASES, CASES_BY_ID, CATEGORIES, ValidationCase, _case
 
 REQUIRED_CATEGORIES = {
-    "non-resonant", "resonant", "narrow", "wide", "different lengths/widths", "rotated", "slot",
+    "non-resonant",
+    "resonant",
+    "narrow",
+    "wide",
+    "different lengths/widths",
+    "rotated",
+    "slot",
 }
 
 
@@ -18,7 +24,7 @@ def test_ten_cases_with_unique_ids():
     assert len(CASES) == 10
     ids = [c.case_id for c in CASES]
     assert len(set(ids)) == 10
-    assert CASES_BY_ID == {c.case_id: c for c in CASES}
+    assert {c.case_id: c for c in CASES} == CASES_BY_ID
 
 
 def test_every_case_is_well_typed():
@@ -35,7 +41,7 @@ def test_all_required_categories_present():
     """Every category the Phase 6 brief asks for (non-resonant, resonant, narrow, wide, several
     length/width pairs, rotated, slot/complement) has at least one case."""
     present = set(CATEGORIES)
-    assert REQUIRED_CATEGORIES <= present, f"missing categories: {REQUIRED_CATEGORIES - present}"
+    assert present >= REQUIRED_CATEGORIES, f"missing categories: {REQUIRED_CATEGORIES - present}"
 
 
 def test_rotated_cases_have_nonzero_rotation():
@@ -65,7 +71,9 @@ def test_different_length_width_pairs_are_actually_different():
     property, e.g. case09's slot happens to reuse case08's (5, 2) mm -- that overlap is fine, it
     is these four "different lengths/widths" cases that must be pairwise distinct)."""
     ids = ("case01_non_resonant_patch", "case04_wide_patch", "case05_small_square_patch", "case06_large_rect_patch")
-    pairs = {(CASES_BY_ID[i].config.unit_cell.geometry.length, CASES_BY_ID[i].config.unit_cell.geometry.width) for i in ids}
+    pairs = {
+        (CASES_BY_ID[i].config.unit_cell.geometry.length, CASES_BY_ID[i].config.unit_cell.geometry.width) for i in ids
+    }
     assert len(pairs) == len(ids)
 
 

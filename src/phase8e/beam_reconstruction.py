@@ -31,7 +31,7 @@ def far_field_pattern(x_m, y_m, aperture_field, frequency_hz, theta_deg, phi_deg
     a_flat = np.asarray(aperture_field, dtype=complex).ravel()
 
     shape = kx.shape
-    phase = np.outer(kx.ravel(), x_flat) + np.outer(ky.ravel(), y_flat)   # (Nf, Na), kx_i*x_j + ky_i*y_j
+    phase = np.outer(kx.ravel(), x_flat) + np.outer(ky.ravel(), y_flat)  # (Nf, Na), kx_i*x_j + ky_i*y_j
     field = (np.exp(1j * phase) @ a_flat) * dx_m * dy_m
     return field.reshape(shape)
 
@@ -57,23 +57,28 @@ def detect_local_maxima(power, theta_grid_deg, phi_grid_deg, min_relative_db=-20
             if v < peak_power * 10 ** (min_relative_db / 10.0):
                 continue
             neighbors = [
-                power[i - 1, j] if i > 0 else -np.inf, power[i + 1, j] if i + 1 < ny else -np.inf,
-                power[i, j - 1] if j > 0 else -np.inf, power[i, j + 1] if j + 1 < nx else -np.inf,
+                power[i - 1, j] if i > 0 else -np.inf,
+                power[i + 1, j] if i + 1 < ny else -np.inf,
+                power[i, j - 1] if j > 0 else -np.inf,
+                power[i, j + 1] if j + 1 < nx else -np.inf,
             ]
             if v >= max(neighbors):
-                peaks.append(DetectedPeak(
-                    float(theta_grid_deg[i, j]), float(phi_grid_deg[i, j]),
-                    float(10.0 * np.log10(v / peak_power)),
-                ))
+                peaks.append(
+                    DetectedPeak(
+                        float(theta_grid_deg[i, j]),
+                        float(phi_grid_deg[i, j]),
+                        float(10.0 * np.log10(v / peak_power)),
+                    )
+                )
     return sorted(peaks, key=lambda p: -p.relative_power_db)
 
 
 @dataclass(frozen=True)
 class BeamReconstructionMetrics:
     n_intended_beams: int
-    pointing_error_deg: tuple            # per intended beam, angular distance to nearest detected peak
-    matched_peak_power_db: tuple         # per intended beam, that peak's relative power [dB]
-    unwanted_peaks: tuple                # DetectedPeak objects not matched to any intended beam
+    pointing_error_deg: tuple  # per intended beam, angular distance to nearest detected peak
+    matched_peak_power_db: tuple  # per intended beam, that peak's relative power [dB]
+    unwanted_peaks: tuple  # DetectedPeak objects not matched to any intended beam
     highest_unwanted_relative_db: float | None
     detected_peaks: tuple
 
@@ -81,6 +86,7 @@ class BeamReconstructionMetrics:
 def _angular_distance_deg(theta1, phi1, theta2, phi2):
     """Great-circle-style angular distance between two (theta, phi) directions via their
     Cartesian unit vectors -- exact for any theta/phi, unlike a naive coordinate difference."""
+
     def unit(theta, phi):
         t, p = np.radians(theta), np.radians(phi)
         return np.array([np.sin(t) * np.cos(p), np.sin(t) * np.sin(p), np.cos(t)])
@@ -110,8 +116,10 @@ def evaluate_beam_reconstruction(far_field, theta_grid_deg, phi_grid_deg, intend
         matched_db.append(peaks[best].relative_power_db)
     unwanted = [p for i, p in enumerate(peaks) if i not in matched_indices]
     return BeamReconstructionMetrics(
-        n_intended_beams=len(intended_beams), pointing_error_deg=tuple(pointing_errors),
-        matched_peak_power_db=tuple(matched_db), unwanted_peaks=tuple(unwanted),
+        n_intended_beams=len(intended_beams),
+        pointing_error_deg=tuple(pointing_errors),
+        matched_peak_power_db=tuple(matched_db),
+        unwanted_peaks=tuple(unwanted),
         highest_unwanted_relative_db=(max(p.relative_power_db for p in unwanted) if unwanted else None),
         detected_peaks=tuple(peaks),
     )
@@ -139,7 +147,8 @@ def compare_continuous_vs_discrete(continuous_far_field, discrete_far_field):
         phase_err = np.abs(np.angle(c) - np.angle(d))
         phase_err = np.minimum(phase_err, 2 * np.pi - phase_err)
     return ReconstructionComparison(
-        complex_error_mean=float(np.mean(complex_err)), complex_error_max=float(np.max(complex_err)),
+        complex_error_mean=float(np.mean(complex_err)),
+        complex_error_max=float(np.max(complex_err)),
         amplitude_error_mean=float(np.mean(amp_err)),
         phase_error_deg_mean=float(np.degrees(np.nanmean(phase_err))),
     )

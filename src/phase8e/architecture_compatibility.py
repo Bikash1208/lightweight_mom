@@ -6,8 +6,8 @@ the ground-plane/architecture-classification/cross-polarization facts are not re
 from dataclasses import dataclass
 
 ARCHITECTURE_COMPATIBILITY_STATES = (
-    "ARCHITECTURE_COMPATIBLE_UNVALIDATED",   # topology does not rule it out; correspondence still unvalidated
-    "ARCHITECTURE_INCOMPATIBLE",              # topology structurally cannot satisfy the requirement
+    "ARCHITECTURE_COMPATIBLE_UNVALIDATED",  # topology does not rule it out; correspondence still unvalidated
+    "ARCHITECTURE_INCOMPATIBLE",  # topology structurally cannot satisfy the requirement
 )
 
 
@@ -24,7 +24,8 @@ def assess_formulation_a(topology_audit):
     `ABSENT` (Phase 8C, reused)."""
     incompatible = topology_audit.ground_plane != "PRESENT"
     return ArchitectureCompatibilityResult(
-        formulation="A", required_architecture=("grounded surface", "surface-wave excitation"),
+        formulation="A",
+        required_architecture=("grounded surface", "surface-wave excitation"),
         status="ARCHITECTURE_INCOMPATIBLE" if incompatible else "ARCHITECTURE_COMPATIBLE_UNVALIDATED",
         evidence=f"topology_audit.ground_plane = {topology_audit.ground_plane!r}: {topology_audit.ground_plane_evidence}",
     )
@@ -35,7 +36,8 @@ def assess_formulation_b(mean_power):
     r_total = mean_power["mean_R_co"] + mean_power["mean_R_cross"]
     compatible = r_total > 0.0
     return ArchitectureCompatibilityResult(
-        formulation="B", required_architecture=("reflective boundary (nonzero reflection response)",),
+        formulation="B",
+        required_architecture=("reflective boundary (nonzero reflection response)",),
         status="ARCHITECTURE_COMPATIBLE_UNVALIDATED" if compatible else "ARCHITECTURE_INCOMPATIBLE",
         evidence=f"library-mean reflected power (co+cross) = {r_total:.6g} (phase8c.power_balance.library_power_summary)",
     )
@@ -46,7 +48,8 @@ def assess_formulation_c(mean_power):
     t_total = mean_power["mean_T_co"] + mean_power["mean_T_cross"]
     compatible = t_total > 0.0
     return ArchitectureCompatibilityResult(
-        formulation="C", required_architecture=("transmissive boundary (nonzero transmission response)",),
+        formulation="C",
+        required_architecture=("transmissive boundary (nonzero transmission response)",),
         status="ARCHITECTURE_COMPATIBLE_UNVALIDATED" if compatible else "ARCHITECTURE_INCOMPATIBLE",
         evidence=f"library-mean transmitted power (co+cross) = {t_total:.6g} (phase8c.power_balance.library_power_summary)",
     )
@@ -59,11 +62,12 @@ def assess_formulation_d(mean_power, cross_pol_threshold=1e-6):
     r_cross, t_cross = mean_power["mean_R_cross"], mean_power["mean_T_cross"]
     negligible = max(r_cross, t_cross) < cross_pol_threshold
     return ArchitectureCompatibilityResult(
-        formulation="D", required_architecture=("polarization-converting (non-diagonal) scattering response",),
+        formulation="D",
+        required_architecture=("polarization-converting (non-diagonal) scattering response",),
         status="ARCHITECTURE_INCOMPATIBLE" if negligible else "ARCHITECTURE_COMPATIBLE_UNVALIDATED",
         evidence=f"library-mean cross-polarized power: R_cross={r_cross:.3g}, T_cross={t_cross:.3g} "
-                 f"(threshold {cross_pol_threshold:.0e}) -- this unrotated rectangular-patch family "
-                 "does not realize a measurable polarization-converting response.",
+        f"(threshold {cross_pol_threshold:.0e}) -- this unrotated rectangular-patch family "
+        "does not realize a measurable polarization-converting response.",
     )
 
 

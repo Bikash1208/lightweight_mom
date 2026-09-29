@@ -32,7 +32,7 @@ def test_ingest_g6_reproduces_addendum_band_edge_trend():
     row = dict(zip(comparison.frequency_ghz.tolist(), comparison.dphase_mode1_deg.tolist()))
     assert row[10.0] == pytest.approx(-9.6, abs=0.5)
     assert row[15.0] == pytest.approx(-0.8, abs=0.5)
-    assert abs(row[10.0]) > abs(row[15.0])   # monotonic improvement moving away from resonance
+    assert abs(row[10.0]) > abs(row[15.0])  # monotonic improvement moving away from resonance
 
 
 @pytest.mark.slow

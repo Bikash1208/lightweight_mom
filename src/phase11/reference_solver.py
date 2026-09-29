@@ -16,7 +16,7 @@ from ..excitation import PlaneWaveExcitation
 from ..phase9.dipole_extraction import local_dipole_moment
 from ..phase9.supercell_geometry import SupercellUnitCell, build_supercell
 
-FLOQUET_FACTOR = 2   # matches phase9.run.FLOQUET_FACTOR / phase10.grid_solver.FLOQUET_FACTOR
+FLOQUET_FACTOR = 2  # matches phase9.run.FLOQUET_FACTOR / phase10.grid_solver.FLOQUET_FACTOR
 
 
 @dataclass(frozen=True)
@@ -31,8 +31,12 @@ class SolvedGrid:
     def dipole_at(self, i, j):
         cx, cy = self.supercell.sub_cell_center(i, j)
         return local_dipole_moment(
-            self.basis, self.coeffs, cx, cy,
-            self.supercell.sub_period_x / 2, self.supercell.sub_period_y / 2,
+            self.basis,
+            self.coeffs,
+            cx,
+            cy,
+            self.supercell.sub_period_x / 2,
+            self.supercell.sub_period_y / 2,
         )
 
     def response_at(self, i, j):
@@ -43,8 +47,17 @@ class SolvedGrid:
         return d.px if self.polarization == "x" else d.py
 
 
-def solve_grid(n, period_m, substrate, metal, lw_grid_m, frequency_hz, mesh_cells_per_subcell=8,
-               floquet_factor=FLOQUET_FACTOR, polarization="x"):
+def solve_grid(
+    n,
+    period_m,
+    substrate,
+    metal,
+    lw_grid_m,
+    frequency_hz,
+    mesh_cells_per_subcell=8,
+    floquet_factor=FLOQUET_FACTOR,
+    polarization="x",
+):
     supercell = build_supercell(n, period_m, period_m, substrate, metal, lw_grid_m)
     mesh_cells = n * mesh_cells_per_subcell
     floquet_order = floquet_factor * mesh_cells
@@ -52,12 +65,20 @@ def solve_grid(n, period_m, substrate, metal, lw_grid_m, frequency_hz, mesh_cell
     mesh = MeshSettings(mesh_cells, mesh_cells, floquet_order)
     system = solver_mod.assemble_system(supercell, excitation, mesh)
     currents = solver_mod.solve(system.z, system.v)
-    return SolvedGrid(supercell, system.basis, currents, system.basis.n_unknowns,
-                       mesh_cells_per_subcell, polarization)
+    return SolvedGrid(supercell, system.basis, currents, system.basis.n_unknowns, mesh_cells_per_subcell, polarization)
 
 
-def solve_isolated(period_m, length_m, width_m, substrate, metal, frequency_hz,
-                    mesh_cells_per_side=8, floquet_factor=FLOQUET_FACTOR, polarization="x"):
+def solve_isolated(
+    period_m,
+    length_m,
+    width_m,
+    substrate,
+    metal,
+    frequency_hz,
+    mesh_cells_per_side=8,
+    floquet_factor=FLOQUET_FACTOR,
+    polarization="x",
+):
     """The n=1 (isolated periodic cell) reference, at a configurable polarization -- Phase 9's own
     ``solve_isolated_cell`` hardcodes x; reused conceptually, re-derived here only to add the
     polarization parameter (same physics, same solver calls)."""

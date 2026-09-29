@@ -42,13 +42,13 @@ from ..phase9.supercell_geometry import build_supercell
 from ..phase10 import environment_geometry as p10_eg
 from ..phase11 import patterns as p11_patterns
 
-PERIOD_M = 4.8e-3   # Phase 9/10/11's own period -- unchanged, this task is about mesh resolution
+PERIOD_M = 4.8e-3  # Phase 9/10/11's own period -- unchanged, this task is about mesh resolution
 SUBSTRATE = Substrate("Rogers RT/Duroid 5880", 2.2, 0.0009, 1.575e-3)
 METAL = Metal()
 DESIGN_FREQUENCY_HZ = 12.5e9
 
-REDUCED_CASE_D_N = 3   # Sec. 'Cost note': reduced from Phase 11's original PATTERN_N=7
-COUPLING_SIZES = (1, 3)   # Sec. 'Cost note': n=5+ not attempted at this mesh
+REDUCED_CASE_D_N = 3  # Sec. 'Cost note': reduced from Phase 11's original PATTERN_N=7
+COUPLING_SIZES = (1, 3)  # Sec. 'Cost note': n=5+ not attempted at this mesh
 
 
 def floquet_for(total_cells):
@@ -120,11 +120,17 @@ def recheck_phase10_c2_c3():
     floquet = floquet_for(n)
 
     def _cell(lw_mm):
-        return UnitCell(RectangularLattice(PERIOD_M, PERIOD_M),
-                         Geometry(kind="rectangle", length=lw_mm[0] * 1e-3, width=lw_mm[1] * 1e-3),
-                         SUBSTRATE, METAL)
+        return UnitCell(
+            RectangularLattice(PERIOD_M, PERIOD_M),
+            Geometry(kind="rectangle", length=lw_mm[0] * 1e-3, width=lw_mm[1] * 1e-3),
+            SUBSTRATE,
+            METAL,
+        )
 
-    mask_c2, mask_c3 = metal_mask_key(_cell(c2_lw), MeshSettings(n, n, floquet)), metal_mask_key(_cell(c3_lw), MeshSettings(n, n, floquet))
+    mask_c2, mask_c3 = (
+        metal_mask_key(_cell(c2_lw), MeshSettings(n, n, floquet)),
+        metal_mask_key(_cell(c3_lw), MeshSettings(n, n, floquet)),
+    )
     dip_c2, _, _ = _isolated(c2_lw[0] * 1e-3, c2_lw[1] * 1e-3, n, floquet)
     dip_c3, _, _ = _isolated(c3_lw[0] * 1e-3, c3_lw[1] * 1e-3, n, floquet)
     rel = abs(dip_c2.px - dip_c3.px) / abs(dip_c3.px) if abs(dip_c3.px) > 0 else float("inf")
@@ -143,7 +149,7 @@ class Phase9SpotCheck:
     relative_complex_error: float
     n_unknowns_isolated: int
     n_unknowns_embedded: int
-    earlier_relative_complex_error: float   # PHASE9_VALIDATION.md's own reported 3x3-strong figure
+    earlier_relative_complex_error: float  # PHASE9_VALIDATION.md's own reported 3x3-strong figure
 
 
 def recheck_phase9_strong_contrast(earlier_relative_complex_error=0.997, mesh_cells_per_subcell=None):
@@ -195,8 +201,11 @@ def recheck_phase11_case_d(n=REDUCED_CASE_D_N, mesh_cells_per_subcell=None):
     block_m = [[(l * 1e-3, w * 1e-3) for l, w in row] for row in block_mm]
     checker_dipole, _ = _supercell_center(n, checker_m, n_mesh, floquet)
     block_dipole, _ = _supercell_center(n, block_m, n_mesh, floquet)
-    rel = (abs(block_dipole.px - checker_dipole.px) / abs(checker_dipole.px)
-           if abs(checker_dipole.px) > 0 else float("inf"))
+    rel = (
+        abs(block_dipole.px - checker_dipole.px) / abs(checker_dipole.px)
+        if abs(checker_dipole.px) > 0
+        else float("inf")
+    )
     return CaseDRecheck(n_mesh, n, checker_dipole.px, block_dipole.px, rel, rel >= 0.5)
 
 
@@ -224,7 +233,11 @@ def recheck_phase11_coupling_radius(center_lw_mm=None, sizes=COUPLING_SIZES, mes
     opposite = (low, low) if abs(center_lw_mm[0] - high) < abs(center_lw_mm[0] - low) else (high, high)
     max_n = max(sizes)
     full_grid_mm = p11_patterns.checkerboard(max_n, a_mm=center_lw_mm, b_mm=opposite)
-    n_mesh = mesh_cells_per_subcell if mesh_cells_per_subcell is not None else aligned_cells_for([center_lw_mm[0], opposite[0]])
+    n_mesh = (
+        mesh_cells_per_subcell
+        if mesh_cells_per_subcell is not None
+        else aligned_cells_for([center_lw_mm[0], opposite[0]])
+    )
     points = []
     for n in sorted(sizes):
         grid_mm = truncate_centered(full_grid_mm, n)

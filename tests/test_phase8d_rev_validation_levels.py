@@ -12,8 +12,11 @@ from src.phase8d_rev.validation_levels import (
 
 def test_validation_levels_are_exactly_five_in_order():
     assert VALIDATION_LEVELS == (
-        "DATA_PRESENT", "NUMERICALLY_VALIDATED", "CROSS_SOLVER_VALIDATED",
-        "HFSS_VALIDATED", "EXPERIMENTALLY_VALIDATED",
+        "DATA_PRESENT",
+        "NUMERICALLY_VALIDATED",
+        "CROSS_SOLVER_VALIDATED",
+        "HFSS_VALIDATED",
+        "EXPERIMENTALLY_VALIDATED",
     )
 
 

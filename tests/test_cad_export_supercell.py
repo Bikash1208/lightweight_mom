@@ -6,10 +6,9 @@ import pytest
 cadquery = pytest.importorskip("cadquery")
 
 from src import cad_export
-from src.phase12c.grounded_supercell import build_grounded_supercell
-from src.phase9.supercell_geometry import build_supercell
 from src.materials import Metal, Substrate
-from src.periodic_bc import RectangularLattice
+from src.phase9.supercell_geometry import build_supercell
+from src.phase12c.grounded_supercell import build_grounded_supercell
 
 SUBSTRATE = Substrate("RT5880", 2.2, 0.0009, 1.575e-3)
 METAL = Metal()
@@ -43,7 +42,7 @@ def test_export_supercell_step_writes_a_valid_file(tmp_path):
     assert result.ground is not None
     imported = cadquery.importers.importStep(str(path))
     assert cad_export.solid_validity(imported)
-    assert len(imported.val().Solids()) == 1 + 9 + 1   # substrate + 9 metals + ground
+    assert len(imported.val().Solids()) == 1 + 9 + 1  # substrate + 9 metals + ground
 
 
 def test_export_supercell_step_ungrounded_has_no_ground_solid(tmp_path):

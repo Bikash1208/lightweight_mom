@@ -26,19 +26,15 @@ throughout -- measured to remain affordable (seconds, not minutes, at this modul
 mesh) through at least n=3; larger n's actual cost is measured, not assumed, before use (Sec. A).
 """
 
-import math
 from dataclasses import dataclass
 
 from ..basis_functions import MeshSettings
 from ..discretization import smallest_aligned_cells
 from ..phase import wrapped_difference_deg
-from ..sparameters import compute_s_parameters
 from ..phase9.local_periodicity import (
-    NOISE_FLOOR_RELATIVE,
-    SUBSTANTIAL_DEVIATION_RELATIVE,
-    classify_local_periodicity,
     compute_lpa_error,
 )
+from ..sparameters import compute_s_parameters
 from . import design_point as dp
 from .grounded_supercell import (
     build_grounded_supercell,
@@ -46,7 +42,7 @@ from .grounded_supercell import (
     solve_isolated_grounded_cell,
 )
 
-L_FAMILY_MM = tuple(round(1.6 + 0.8 * i, 6) for i in range(8))   # 1.6 .. 7.2 mm
+L_FAMILY_MM = tuple(round(1.6 + 0.8 * i, 6) for i in range(8))  # 1.6 .. 7.2 mm
 _FEATURES = [(l * 1e-3, 0.0) for l in L_FAMILY_MM]
 MESH_CELLS_PER_SUBCELL = smallest_aligned_cells(dp.PERIOD_M, _FEATURES, max_cells=200)
 if MESH_CELLS_PER_SUBCELL is None:
@@ -83,7 +79,12 @@ def build_reference_curve(mesh_cells_per_subcell=MESH_CELLS_PER_SUBCELL, l_value
         cell = dp.unit_cell_at(l_mm * 1e-3)
         mesh = MeshSettings(mesh_cells_per_subcell, mesh_cells_per_subcell, floquet)
         s = compute_s_parameters(
-            cell, dp.DESIGN_FREQUENCY_HZ, mesh, dp.REFERENCE_PLANES, warn_grating=False, warn_surface_wave=False,
+            cell,
+            dp.DESIGN_FREQUENCY_HZ,
+            mesh,
+            dp.REFERENCE_PLANES,
+            warn_grating=False,
+            warn_surface_wave=False,
         )
         n_unknowns = RooftopBasis(cell, mesh_cells_per_subcell, mesh_cells_per_subcell).n_unknowns
         points.append(CurvePoint(l_mm, s.magnitude("S11_xx"), s.phase_deg("S11_xx"), n_unknowns))
@@ -117,9 +118,9 @@ def classify_centers(curve):
 
 @dataclass(frozen=True)
 class NeighborStep:
-    direction: str          # "lower_l" | "higher_l"
+    direction: str  # "lower_l" | "higher_l"
     neighbor: CurvePoint
-    phase_step_deg: float   # wrapped, signed: neighbor.phase - center.phase
+    phase_step_deg: float  # wrapped, signed: neighbor.phase - center.phase
 
 
 def immediate_neighbor_steps(curve, center: CurvePoint):
@@ -133,7 +134,9 @@ def immediate_neighbor_steps(curve, center: CurvePoint):
         steps.append(NeighborStep("lower_l", lower, wrapped_difference_deg(lower.s11_phase_deg, center.s11_phase_deg)))
     if idx < len(curve) - 1:
         higher = curve[idx + 1]
-        steps.append(NeighborStep("higher_l", higher, wrapped_difference_deg(higher.s11_phase_deg, center.s11_phase_deg)))
+        steps.append(
+            NeighborStep("higher_l", higher, wrapped_difference_deg(higher.s11_phase_deg, center.s11_phase_deg))
+        )
     return tuple(steps)
 
 
@@ -188,13 +191,12 @@ class GradientCaseResult:
     magnitude_error: float
     phase_error_deg: float
     relative_complex_error: float
-    achieved_step_deg: float   # the driving neighbour phase step this case was built around
+    achieved_step_deg: float  # the driving neighbour phase step this case was built around
     n_unknowns_isolated: int
     n_unknowns_embedded: int
 
 
-def run_gradient_case(name, center_lw_mm, grid_mm, achieved_step_deg,
-                       mesh_cells_per_subcell=MESH_CELLS_PER_SUBCELL):
+def run_gradient_case(name, center_lw_mm, grid_mm, achieved_step_deg, mesh_cells_per_subcell=MESH_CELLS_PER_SUBCELL):
     """Solves the isolated reference and the 3x3 (or larger, for ``grid_mm`` of any odd size n)
     embedded case, and computes the LPA error via ``phase9.local_periodicity``'s own (reused,
     unmodified) metric."""
@@ -202,20 +204,39 @@ def run_gradient_case(name, center_lw_mm, grid_mm, achieved_step_deg,
     floquet = floquet_for(n * mesh_cells_per_subcell)
     center_l_m, center_w_m = center_lw_mm[0] * 1e-3, center_lw_mm[1] * 1e-3
     isolated = solve_isolated_grounded_cell(
-        dp.PERIOD_M, dp.PERIOD_M, center_l_m, center_w_m, dp.SUBSTRATE, dp.METAL,
-        dp.DESIGN_FREQUENCY_HZ, mesh_cells_per_subcell, floquet_for(mesh_cells_per_subcell),
+        dp.PERIOD_M,
+        dp.PERIOD_M,
+        center_l_m,
+        center_w_m,
+        dp.SUBSTRATE,
+        dp.METAL,
+        dp.DESIGN_FREQUENCY_HZ,
+        mesh_cells_per_subcell,
+        floquet_for(mesh_cells_per_subcell),
     )
     grid_m = _mm_grid_to_m(grid_mm)
     supercell = build_grounded_supercell(n, dp.PERIOD_M, dp.PERIOD_M, dp.SUBSTRATE, dp.METAL, grid_m)
     embedded = solve_grounded_supercell_center(
-        supercell, (center_l_m, center_w_m), dp.DESIGN_FREQUENCY_HZ, mesh_cells_per_subcell, floquet,
+        supercell,
+        (center_l_m, center_w_m),
+        dp.DESIGN_FREQUENCY_HZ,
+        mesh_cells_per_subcell,
+        floquet,
     )
     complex_error, magnitude_error, phase_error, relative = compute_lpa_error(isolated.dipole, embedded.dipole)
     return GradientCaseResult(
-        name=name, n=n, center_lw_mm=center_lw_mm, grid_mm=tuple(tuple(row) for row in grid_mm),
-        isolated_px=isolated.dipole.px, embedded_px=embedded.dipole.px, complex_error=complex_error,
-        magnitude_error=magnitude_error, phase_error_deg=phase_error, relative_complex_error=relative,
-        achieved_step_deg=achieved_step_deg, n_unknowns_isolated=isolated.n_unknowns,
+        name=name,
+        n=n,
+        center_lw_mm=center_lw_mm,
+        grid_mm=tuple(tuple(row) for row in grid_mm),
+        isolated_px=isolated.dipole.px,
+        embedded_px=embedded.dipole.px,
+        complex_error=complex_error,
+        magnitude_error=magnitude_error,
+        phase_error_deg=phase_error,
+        relative_complex_error=relative,
+        achieved_step_deg=achieved_step_deg,
+        n_unknowns_isolated=isolated.n_unknowns,
         n_unknowns_embedded=embedded.n_unknowns,
     )
 
@@ -244,7 +265,7 @@ def build_periodic_phase_gradient_supercell(curve, n_cells, mesh_cells_per_subce
     unwrapped = [ordered[0].s11_phase_deg]
     for prev, cur in zip(ordered, ordered[1:]):
         unwrapped.append(unwrapped[-1] + wrapped_difference_deg(cur.s11_phase_deg, prev.s11_phase_deg))
-    span = unwrapped[0] - unwrapped[-1]   # positive if phase decreases with L (this module's measured trend)
+    span = unwrapped[0] - unwrapped[-1]  # positive if phase decreases with L (this module's measured trend)
     achieved_span_deg = abs(span)
     is_full_2pi = achieved_span_deg >= 359.0
 
@@ -280,7 +301,9 @@ def run_periodic_supercell(n_cells, curve=None, mesh_cells_per_subcell=MESH_CELL
 
     curve = curve if curve is not None else build_reference_curve(mesh_cells_per_subcell)
     grid_mm, achieved_span_deg, is_full_2pi, targets = build_periodic_phase_gradient_supercell(
-        curve, n_cells, mesh_cells_per_subcell,
+        curve,
+        n_cells,
+        mesh_cells_per_subcell,
     )
     floquet = floquet_for(n_cells * mesh_cells_per_subcell)
     grid_m = _mm_grid_to_m(grid_mm)
@@ -298,8 +321,15 @@ def run_periodic_supercell(n_cells, curve=None, mesh_cells_per_subcell=MESH_CELL
         if l_mm not in isolated_cache:
             l_m = l_mm * 1e-3
             isolated_cache[l_mm] = solve_isolated_grounded_cell(
-                dp.PERIOD_M, dp.PERIOD_M, l_m, l_m, dp.SUBSTRATE, dp.METAL, dp.DESIGN_FREQUENCY_HZ,
-                mesh_cells_per_subcell, isolated_floquet,
+                dp.PERIOD_M,
+                dp.PERIOD_M,
+                l_m,
+                l_m,
+                dp.SUBSTRATE,
+                dp.METAL,
+                dp.DESIGN_FREQUENCY_HZ,
+                mesh_cells_per_subcell,
+                isolated_floquet,
             ).dipole.px
         return isolated_cache[l_mm]
 

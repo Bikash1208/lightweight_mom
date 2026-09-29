@@ -22,7 +22,7 @@ from pathlib import Path
 import numpy as np
 
 from ..phase import wrapped_difference_deg
-from ..phase9.hfss_reference import TouchstoneError, read_touchstone
+from ..phase9.hfss_reference import read_touchstone
 
 EXPORT_ROOT = Path(__file__).resolve().parent.parent.parent / "hfss_exports" / "phase12_grounded_8mm"
 TOUCHSTONE_PATH = EXPORT_ROOT / "hfss_results" / "unit_HFSSDesign1.s36p"
@@ -100,8 +100,7 @@ class SingleCellHfssComparison:
 
     @property
     def meets_tolerance(self):
-        return (self.max_abs_dphase_deg <= PHASE_TOLERANCE_DEG
-                and self.max_dmag_db <= MAGNITUDE_TOLERANCE_DB)
+        return self.max_abs_dphase_deg <= PHASE_TOLERANCE_DEG and self.max_dmag_db <= MAGNITUDE_TOLERANCE_DB
 
 
 def _load_mom_reference_rows(path=MOM_REFERENCE_CSV):
@@ -109,8 +108,13 @@ def _load_mom_reference_rows(path=MOM_REFERENCE_CSV):
         return list(csv.DictReader(fh))
 
 
-def compare_single_cell(case_id, touchstone_path=TOUCHSTONE_PATH, mom_csv_path=MOM_REFERENCE_CSV,
-                         top_port_name="FloquetPort1", bottom_port_name="FloquetPort2"):
+def compare_single_cell(
+    case_id,
+    touchstone_path=TOUCHSTONE_PATH,
+    mom_csv_path=MOM_REFERENCE_CSV,
+    top_port_name="FloquetPort1",
+    bottom_port_name="FloquetPort2",
+):
     """Real MoM-vs-HFSS comparison for one single-cell case: reads the Touchstone file, matches it
     against the MoM reference CSV's rows for ``case_id`` at the SAME (exact) frequencies, and
     reports mode1/mode2 self-reflection, cross-pol and top-to-bottom transmission -- reproducing
@@ -119,7 +123,7 @@ def compare_single_cell(case_id, touchstone_path=TOUCHSTONE_PATH, mom_csv_path=M
     net = read_touchstone(touchstone_path)
     groups = net.port_mode_groups()
     top = groups[top_port_name]
-    mode1_idx, mode2_idx = top[0] + 1, top[1] + 1   # 1-indexed, Touchstone convention
+    mode1_idx, mode2_idx = top[0] + 1, top[1] + 1  # 1-indexed, Touchstone convention
     bottom = groups.get(bottom_port_name)
 
     rows = [r for r in _load_mom_reference_rows(mom_csv_path) if r["case"] == case_id]
@@ -139,8 +143,10 @@ def compare_single_cell(case_id, touchstone_path=TOUCHSTONE_PATH, mom_csv_path=M
         mom_phase.append(float(row["S11_xx_ref5mm_phase_deg"]))
         s1 = net.s[idx, mode1_idx - 1, mode1_idx - 1]
         s2 = net.s[idx, mode2_idx - 1, mode2_idx - 1]
-        h1m.append(abs(s1)); h1p.append(float(np.degrees(np.angle(s1))))
-        h2m.append(abs(s2)); h2p.append(float(np.degrees(np.angle(s2))))
+        h1m.append(abs(s1))
+        h1p.append(float(np.degrees(np.angle(s1))))
+        h2m.append(abs(s2))
+        h2p.append(float(np.degrees(np.angle(s2))))
         xpol.append(abs(net.s[idx, mode2_idx - 1, mode1_idx - 1]))
         if bottom:
             t2b.append(abs(net.s[idx, bottom[0], mode1_idx - 1]))
@@ -153,13 +159,24 @@ def compare_single_cell(case_id, touchstone_path=TOUCHSTONE_PATH, mom_csv_path=M
     dphase2 = wrapped_difference_deg(h2p, mom_phase)
     dmag_db = 20.0 * np.log10(h1m / mom_mag)
     return SingleCellHfssComparison(
-        case_id, l_mm, freq_ghz, mom_mag, mom_phase, h1m, h1p, h2m, h2p,
-        dphase1, dphase2, dmag_db, np.asarray(xpol), np.asarray(t2b),
+        case_id,
+        l_mm,
+        freq_ghz,
+        mom_mag,
+        mom_phase,
+        h1m,
+        h1p,
+        h2m,
+        h2p,
+        dphase1,
+        dphase2,
+        dmag_db,
+        np.asarray(xpol),
+        np.asarray(t2b),
     )
 
 
-def reproduces_recorded_g1_comparison(comparison, recorded_csv_path=None, phase_tol_deg=1e-6,
-                                       mag_tol=1e-9):
+def reproduces_recorded_g1_comparison(comparison, recorded_csv_path=None, phase_tol_deg=1e-6, mag_tol=1e-9):
     """Sec. above: the brief requires this module's own, independently-built comparison to
     reproduce the already-measured G1 result it cites, not merely assert a new one. Compares
     against the pre-existing ``hfss_results/G1_comparison.csv`` this project's own maintainer
@@ -170,12 +187,15 @@ def reproduces_recorded_g1_comparison(comparison, recorded_csv_path=None, phase_
     if len(rows) != len(comparison.frequency_ghz):
         return False
     for row, dphase, dmag_db, xpol in zip(
-        rows, comparison.dphase_mode1_deg, comparison.dmag_mode1_db, comparison.hfss_crosspol_mag,
+        rows,
+        comparison.dphase_mode1_deg,
+        comparison.dmag_mode1_db,
+        comparison.hfss_crosspol_mag,
     ):
         if abs(dphase - float(row["dphase_mode1_deg"])) > phase_tol_deg:
             return False
         recorded_dmag_db = 20.0 * np.log10(1.0 + float(row["dmag_mode1"]) / float(row["mom_mag"]))
-        if abs(dmag_db - recorded_dmag_db) > 1e-3:   # csv stores linear dmag, not dB; coarser check
+        if abs(dmag_db - recorded_dmag_db) > 1e-3:  # csv stores linear dmag, not dB; coarser check
             return False
         if abs(xpol - float(row["hfss_crosspol_mag"])) > mag_tol:
             return False

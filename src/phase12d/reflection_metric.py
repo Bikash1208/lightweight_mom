@@ -47,14 +47,15 @@ def equivalent_reflection_xx(mean_current_x, substrate, frequency_hz, reference_
     ``compute_s_parameters`` (``tests/test_phase12d_reflection_metric.py``)."""
     green = LayeredGreenFunction(substrate, frequency_hz, backing=backing)
     mean_currents = np.zeros((1, 2, 2), dtype=complex)
-    mean_currents[0, 0, 0] = mean_current_x   # port 0 (only port, grounded), pol x, component x
+    mean_currents[0, 0, 0] = mean_current_x  # port 0 (only port, grounded), pol x, component x
     sparams = scattering_from_fields(green, reference_planes, mean_currents)
     s11xx = sparams.component("S11_xx")
     return EquivalentReflection(s11xx, abs(s11xx), float(np.degrees(np.angle(s11xx))))
 
 
-def equivalent_reflection_from_dipole_moment(dipole_px, period_m, substrate, frequency_hz,
-                                              reference_planes, backing="pec"):
+def equivalent_reflection_from_dipole_moment(
+    dipole_px, period_m, substrate, frequency_hz, reference_planes, backing="pec"
+):
     """As ``equivalent_reflection_xx``, but from a physical dipole moment [A.m] over the FULL cell
     footprint (Phase 9's ``dipole_extraction.local_dipole_moment`` with ``half_width = period/2``,
     the quantity Phase 9/12C's own gradient-case results (``isolated_px``/``embedded_px``) store):
@@ -64,22 +65,24 @@ def equivalent_reflection_from_dipole_moment(dipole_px, period_m, substrate, fre
     ``local_dipole_moment`` is itself a finite (48x48) Riemann-sum approximation of the same
     integral ``current_coefficients`` evaluates in closed form -- negligible next to this phase's
     5-10 deg / 0.5-1 dB tolerances, and reported as a known artifact, not hidden."""
-    return equivalent_reflection_xx(dipole_px / (period_m ** 2), substrate, frequency_hz,
-                                     reference_planes, backing)
+    return equivalent_reflection_xx(dipole_px / (period_m**2), substrate, frequency_hz, reference_planes, backing)
 
 
-def reflection_phase_amplitude_error(isolated_px, embedded_px, period_m, substrate, frequency_hz,
-                                      reference_planes, backing="pec"):
+def reflection_phase_amplitude_error(
+    isolated_px, embedded_px, period_m, substrate, frequency_hz, reference_planes, backing="pec"
+):
     """(phase_error_deg, magnitude_error_db) between the isolated and embedded centre-cell
     equivalent reflection coefficients -- the design-relevant error Task A reports alongside
     Phase 9's raw dipole-moment metric. Inputs are dipole moments [A.m] (Phase 9/12C convention),
     converted via ``equivalent_reflection_from_dipole_moment``."""
     from ..phase import wrapped_difference_deg
 
-    iso = equivalent_reflection_from_dipole_moment(isolated_px, period_m, substrate, frequency_hz,
-                                                    reference_planes, backing)
-    emb = equivalent_reflection_from_dipole_moment(embedded_px, period_m, substrate, frequency_hz,
-                                                    reference_planes, backing)
+    iso = equivalent_reflection_from_dipole_moment(
+        isolated_px, period_m, substrate, frequency_hz, reference_planes, backing
+    )
+    emb = equivalent_reflection_from_dipole_moment(
+        embedded_px, period_m, substrate, frequency_hz, reference_planes, backing
+    )
     phase_error = abs(wrapped_difference_deg(emb.phase_deg, iso.phase_deg))
     mag_db_error = abs(20.0 * np.log10(emb.magnitude / iso.magnitude))
     return phase_error, mag_db_error, iso, emb

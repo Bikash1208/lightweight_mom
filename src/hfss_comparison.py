@@ -30,9 +30,18 @@ from .validation_export import _DB_FLOOR, _db  # same dB definition/floor as the
 # Exact column order requested for the overlay CSV.
 HFSS_CSV_COLUMNS = (
     "frequency_GHz",
-    "S11xx_mag_dB", "S11yy_mag_dB", "S21xx_mag_dB", "S21yy_mag_dB",
-    "S11xx_phase_deg", "S11yy_phase_deg", "S21xx_phase_deg", "S21yy_phase_deg",
-    "S11xy_mag_dB", "S11yx_mag_dB", "S21xy_mag_dB", "S21yx_mag_dB",
+    "S11xx_mag_dB",
+    "S11yy_mag_dB",
+    "S21xx_mag_dB",
+    "S21yy_mag_dB",
+    "S11xx_phase_deg",
+    "S11yy_phase_deg",
+    "S21xx_phase_deg",
+    "S21yy_phase_deg",
+    "S11xy_mag_dB",
+    "S11yx_mag_dB",
+    "S21xy_mag_dB",
+    "S21yx_mag_dB",
 )
 
 _CO_POL = ("S11_xx", "S11_yy", "S21_xx", "S21_yy")
@@ -71,6 +80,7 @@ def load_case_artifacts(case_dir) -> CaseArtifacts:
 
 
 # ------------------------------------------------------------------------------- data extraction
+
 
 def _series(database, name):
     """(freq_ghz, mag, phase_deg) for one S-parameter component, straight from the stored
@@ -123,6 +133,7 @@ def write_hfss_comparison_csv(database: Database, path):
 
 # --------------------------------------------------------------------------------------- plots
 
+
 def _require_matplotlib():
     try:
         import matplotlib
@@ -170,37 +181,55 @@ def generate_hfss_plots(database: Database, plots_dir):
     }
 
     _single_panel(
-        plt, paths["s11_magnitude_db"], freq_ghz,
+        plt,
+        paths["s11_magnitude_db"],
+        freq_ghz,
         [("S11xx", _db(mags["S11_xx"]), "-"), ("S11yy", _db(mags["S11_yy"]), "--")],
-        "|S11| [dB]", "S11 magnitude: MoM reference (exp(+jwt), 20*log10|S|)",
+        "|S11| [dB]",
+        "S11 magnitude: MoM reference (exp(+jwt), 20*log10|S|)",
     )
     _single_panel(
-        plt, paths["s21_magnitude_db"], freq_ghz,
+        plt,
+        paths["s21_magnitude_db"],
+        freq_ghz,
         [("S21xx", _db(mags["S21_xx"]), "-"), ("S21yy", _db(mags["S21_yy"]), "--")],
-        "|S21| [dB]", "S21 magnitude: MoM reference (exp(+jwt), 20*log10|S|)",
+        "|S21| [dB]",
+        "S21 magnitude: MoM reference (exp(+jwt), 20*log10|S|)",
     )
     _single_panel(
-        plt, paths["s11_phase_deg"], freq_ghz,
+        plt,
+        paths["s11_phase_deg"],
+        freq_ghz,
         [("S11xx", phases["S11_xx"], "-"), ("S11yy", phases["S11_yy"], "--")],
-        "phase(S11) [deg]", "S11 phase: MoM reference (exp(+jwt), principal value)",
+        "phase(S11) [deg]",
+        "S11 phase: MoM reference (exp(+jwt), principal value)",
     )
     _single_panel(
-        plt, paths["s21_phase_deg"], freq_ghz,
+        plt,
+        paths["s21_phase_deg"],
+        freq_ghz,
         [("S21xx", phases["S21_xx"], "-"), ("S21yy", phases["S21_yy"], "--")],
-        "phase(S21) [deg]", "S21 phase: MoM reference (exp(+jwt), principal value)",
+        "phase(S21) [deg]",
+        "S21 phase: MoM reference (exp(+jwt), principal value)",
     )
     _single_panel(
-        plt, paths["cross_polarization_db"], freq_ghz,
+        plt,
+        paths["cross_polarization_db"],
+        freq_ghz,
         [
-            ("S11xy", _db(mags["S11_xy"]), "-"), ("S11yx", _db(mags["S11_yx"]), "--"),
-            ("S21xy", _db(mags["S21_xy"]), "-."), ("S21yx", _db(mags["S21_yx"]), ":"),
+            ("S11xy", _db(mags["S11_xy"]), "-"),
+            ("S11yx", _db(mags["S11_yx"]), "--"),
+            ("S21xy", _db(mags["S21_xy"]), "-."),
+            ("S21yx", _db(mags["S21_yx"]), ":"),
         ],
-        "magnitude [dB]", "Cross-polarization: MoM reference (20*log10|S|)",
+        "magnitude [dB]",
+        "Cross-polarization: MoM reference (20*log10|S|)",
     )
     return paths
 
 
 # ---------------------------------------------------------------------------------- HFSS_COMPARISON.md
+
 
 def render_hfss_comparison_md(artifacts: CaseArtifacts, csv_path, plot_paths):
     geo, sc = artifacts.geometry, artifacts.solver_config
@@ -251,12 +280,12 @@ boundary and sweep settings for this specific case).
 4. `hfss_s21_phase_deg.png`: `S21xx`, `S21yy` phase, degrees.
 5. `hfss_cross_polarization_db.png`: `S11xy`, `S11yx`, `S21xy`, `S21yx` magnitude, dB (demonstrates
    negligible cross-polarization for this unrotated rectangular patch: `{case_id}` has
-   `rotation_deg = {geo['geometry']['rotation_deg']:g}`, so cross-pol is expected at or near the
+   `rotation_deg = {geo["geometry"]["rotation_deg"]:g}`, so cross-pol is expected at or near the
    solver's own numerical noise floor, not a modelled physical effect).
 
 ## 4. Time convention: `exp(+j*omega*t)`
 
-This project uses **`exp(+j*omega*t)`** throughout (`{CONVENTIONS['time_dependence']}`,
+This project uses **`exp(+j*omega*t)`** throughout (`{CONVENTIONS["time_dependence"]}`,
 `database.CONVENTIONS`): a phasor `F` represents `Re{{F * exp(+j*omega*t)}}`; `exp(-j*k*z)`
 travels toward `+z`; a propagation delay is a **negative** phase; a lossy medium has
 `Im(eps) <= 0`. Full derivation: `CONVENTIONS.md`.
@@ -272,11 +301,11 @@ this project's stated convention (Sec. 4).
 ## 6. Reference-plane locations
 
 ```
-Port 1 (top)    z_top    = +{units.to_mm(rp['z_top_m']):.6g} mm = {rp['z_top_m']!r} m
-Port 2 (bottom) z_bottom = {units.to_mm(rp['z_bottom_m']):.6g} mm = {rp['z_bottom_m']!r} m
+Port 1 (top)    z_top    = +{units.to_mm(rp["z_top_m"]):.6g} mm = {rp["z_top_m"]!r} m
+Port 2 (bottom) z_bottom = {units.to_mm(rp["z_bottom_m"]):.6g} mm = {rp["z_bottom_m"]!r} m
 ```
 
-(`z_bottom = -(substrate.thickness + bottom_air_thickness)` = `-({units.to_mm(geo['substrate']['thickness_m']):.6g} + {units.to_mm(rp['bottom_air_thickness_m']):.6g})` mm, `S_PARAMETERS.md` Sec. 1.) Both planes
+(`z_bottom = -(substrate.thickness + bottom_air_thickness)` = `-({units.to_mm(geo["substrate"]["thickness_m"]):.6g} + {units.to_mm(rp["bottom_air_thickness_m"]):.6g})` mm, `S_PARAMETERS.md` Sec. 1.) Both planes
 are in air; only the specular `(0,0)` Floquet order is a port mode. Set your HFSS Floquet ports at
 these exact z-coordinates (or re-reference your HFSS result to them, e.g. via port de-embedding)
 before comparing phase -- a different reference plane shifts phase by `k0 * delta_z` and this
@@ -295,10 +324,10 @@ export's wrapped one without accounting for that difference.
 This export applies **no normalization, no arbitrary phase shift, no smoothing, no interpolation
 and no empirical correction or calibration** of any kind to the MoM data. Every value in
 `{csv_path.name}` and every point on the 5 plots is exactly what `mom_results.json` (Phase 6,
-itself an unmodified `Database.to_json` write, DATABASE.md) already stored for `{grid['count']}`
-frequency points from {units.to_ghz(grid['start_hz']):.4g} to {units.to_ghz(grid['stop_hz']):.4g} GHz
-in steps of {units.to_ghz(grid['step_hz']):.4g} GHz:
-`{', '.join(f'{units.to_ghz(f):.4g}' for f in grid['frequencies_hz'])}` GHz. Export your HFSS
+itself an unmodified `Database.to_json` write, DATABASE.md) already stored for `{grid["count"]}`
+frequency points from {units.to_ghz(grid["start_hz"]):.4g} to {units.to_ghz(grid["stop_hz"]):.4g} GHz
+in steps of {units.to_ghz(grid["step_hz"]):.4g} GHz:
+`{", ".join(f"{units.to_ghz(f):.4g}" for f in grid["frequencies_hz"])}` GHz. Export your HFSS
 sweep at these same frequency points, in the same units, using the same `20*log10(|S|)` dB
 definition, and overlay directly -- any difference you see is data for you to interpret, not
 something this project has tuned away (`VALIDATION_EXPORT.md` Sec. 7). One exception to the plain
@@ -308,12 +337,13 @@ ever applies to a cross-pol term that is already at the solver's numerical noise
 
 ## Files in this export
 
-- `{csv_path.name}` — the 5 plots' data, one row per frequency, columns: `{', '.join(HFSS_CSV_COLUMNS)}`.
-{chr(10).join(f'- `plots/{p.name}`' for p in plot_paths.values())}
+- `{csv_path.name}` — the 5 plots' data, one row per frequency, columns: `{", ".join(HFSS_CSV_COLUMNS)}`.
+{chr(10).join(f"- `plots/{p.name}`" for p in plot_paths.values())}
 """
 
 
 # --------------------------------------------------------------------------- orchestration
+
 
 @dataclass(frozen=True)
 class HfssComparisonResult:

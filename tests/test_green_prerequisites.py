@@ -11,8 +11,6 @@ which is the building block of every spectral-domain layered Green's function
 under exp(+j*omega*t). The kernel is defined *inside this test file only*.
 """
 
-import math
-
 import numpy as np
 import pytest
 
@@ -38,16 +36,17 @@ CASES = {
 
 # ----------------------------------------------------- kz grid symmetries
 
+
 @pytest.mark.parametrize("kx0, ky0", [(0.0, 0.0)])
 def test_kz_grid_symmetric_for_square_lattice_at_normal_incidence(kx0, ky0):
     lat = RectangularLattice(8e-3, 8e-3)
     m, n = lat.mode_grid(6)
     kx, ky = lat.transverse_wavenumbers(kx0, ky0, m, n)
     kz = normal_wavenumber(K_SUB, kx, ky)
-    assert np.allclose(kz, kz[::-1, :])       # m -> -m
-    assert np.allclose(kz, kz[:, ::-1])       # n -> -n
-    assert np.allclose(kz, kz.T)              # m <-> n (square lattice only)
-    assert kz[6, 6] == pytest.approx(K_SUB, rel=1e-14)   # (0,0) mode
+    assert np.allclose(kz, kz[::-1, :])  # m -> -m
+    assert np.allclose(kz, kz[:, ::-1])  # n -> -n
+    assert np.allclose(kz, kz.T)  # m <-> n (square lattice only)
+    assert kz[6, 6] == pytest.approx(K_SUB, rel=1e-14)  # (0,0) mode
 
 
 def test_kz_depends_only_on_transverse_magnitude():
@@ -60,7 +59,7 @@ def test_kz_depends_only_on_transverse_magnitude():
 
 
 def test_only_finitely_many_propagating_orders_and_they_are_lowest():
-    lat = RectangularLattice(8e-3, 8e-3)   # ~0.27*lambda0 at 10 GHz: only (0,0) radiates in air
+    lat = RectangularLattice(8e-3, 8e-3)  # ~0.27*lambda0 at 10 GHz: only (0,0) radiates in air
     m, n = lat.mode_grid(8)
     kx, ky = lat.transverse_wavenumbers(0.0, 0.0, m, n)
     kz = normal_wavenumber(K0, kx, ky)
@@ -71,6 +70,7 @@ def test_only_finitely_many_propagating_orders_and_they_are_lowest():
 
 
 # ------------------------------------------------ 1-D spectral kernel checks
+
 
 @pytest.mark.parametrize("name", CASES)
 def test_kernel_is_even_in_z(name):

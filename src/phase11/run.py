@@ -56,8 +56,9 @@ def run_phase11(output_dir, hfss_reference_path=None):
     shell_increments = {}
     convergence_results = []
     for name, lw in CENTER_CELLS_MM.items():
-        points = cr_mod.run_coupling_radius_series(lw, PERIOD_M, substrate, metal, DESIGN_FREQUENCY_HZ,
-                                                     MESH_CELLS_PER_SUBCELL)
+        points = cr_mod.run_coupling_radius_series(
+            lw, PERIOD_M, substrate, metal, DESIGN_FREQUENCY_HZ, MESH_CELLS_PER_SUBCELL
+        )
         incs = cr_mod.compute_shell_increments(points)
         coupling_radius[name] = points
         shell_increments[name] = incs
@@ -69,7 +70,12 @@ def run_phase11(output_dir, hfss_reference_path=None):
     # checkerboard's parity regardless of the centering offset), so the 9->11 shell increment below
     # is computed consistently rather than mixing two different underlying patterns.
     n9_and_n11 = cr_mod.run_coupling_radius_series(
-        primary_lw, PERIOD_M, substrate, metal, DESIGN_FREQUENCY_HZ, MESH_CELLS_PER_SUBCELL,
+        primary_lw,
+        PERIOD_M,
+        substrate,
+        metal,
+        DESIGN_FREQUENCY_HZ,
+        MESH_CELLS_PER_SUBCELL,
         sizes=(9, cr_mod.SUPPLEMENTARY_SIZE),
     )
     supplementary_point = n9_and_n11[-1]
@@ -81,25 +87,39 @@ def run_phase11(output_dir, hfss_reference_path=None):
 
     # ===================================================================== 11D: directional =====
     dc_baseline, dc_points = dc_mod.run_directional_coupling(
-        primary_lw, PERIOD_M, substrate, metal, DESIGN_FREQUENCY_HZ, grid_n=9,
-        distances=(1, 2, 3, 4), mesh_cells_per_subcell=MESH_CELLS_PER_SUBCELL,
+        primary_lw,
+        PERIOD_M,
+        substrate,
+        metal,
+        DESIGN_FREQUENCY_HZ,
+        grid_n=9,
+        distances=(1, 2, 3, 4),
+        mesh_cells_per_subcell=MESH_CELLS_PER_SUBCELL,
     )
     spec_mod.write_directional_coupling_json(dc_baseline, dc_points, output_dir / "directional_coupling.json")
 
     # ======================================================================= 11E: diagonal =======
-    diagonal_reproduction = reproduce_diagonal_finding(primary_lw, PERIOD_M, substrate, metal,
-                                                        DESIGN_FREQUENCY_HZ, MESH_CELLS_PER_SUBCELL)
+    diagonal_reproduction = reproduce_diagonal_finding(
+        primary_lw, PERIOD_M, substrate, metal, DESIGN_FREQUENCY_HZ, MESH_CELLS_PER_SUBCELL
+    )
     spec_mod.write_diagonal_coupling_json(diagonal_reproduction, output_dir / "diagonal_coupling.json")
 
     # ===================================================================== 11F: pattern study ====
     low, high = strong_neighbor_low_high(primary_lw)
     contrast_lw = (low, low) if abs(primary_lw[0] - high) < abs(primary_lw[0] - low) else (high, high)
     pattern_grids, pattern_results = ps_mod.run_pattern_study(
-        primary_lw, contrast_lw, PERIOD_M, substrate, metal, DESIGN_FREQUENCY_HZ, MESH_CELLS_PER_SUBCELL,
+        primary_lw,
+        contrast_lw,
+        PERIOD_M,
+        substrate,
+        metal,
+        DESIGN_FREQUENCY_HZ,
+        MESH_CELLS_PER_SUBCELL,
     )
     pattern_dependence_detected, pattern_comparisons = ps_mod.detect_pattern_dependence(pattern_results)
-    spec_mod.write_pattern_study_json(pattern_results, pattern_dependence_detected, pattern_comparisons,
-                                       output_dir / "pattern_study.json")
+    spec_mod.write_pattern_study_json(
+        pattern_results, pattern_dependence_detected, pattern_comparisons, output_dir / "pattern_study.json"
+    )
 
     # ==================================================================== 11H/11I: interaction ===
     n_int = 7
@@ -107,21 +127,38 @@ def run_phase11(output_dir, hfss_reference_path=None):
     from .interaction import Perturbation
 
     perturbations = [
-        Perturbation("N", mid - 1, mid, contrast_lw), Perturbation("S", mid + 1, mid, contrast_lw),
-        Perturbation("E", mid, mid + 1, contrast_lw), Perturbation("W", mid, mid - 1, contrast_lw),
-        Perturbation("NE", mid - 1, mid + 1, contrast_lw), Perturbation("SW", mid + 1, mid - 1, contrast_lw),
+        Perturbation("N", mid - 1, mid, contrast_lw),
+        Perturbation("S", mid + 1, mid, contrast_lw),
+        Perturbation("E", mid, mid + 1, contrast_lw),
+        Perturbation("W", mid, mid - 1, contrast_lw),
+        Perturbation("NE", mid - 1, mid + 1, contrast_lw),
+        Perturbation("SW", mid + 1, mid - 1, contrast_lw),
         Perturbation("N_far", 0, mid, contrast_lw),
     ]
     pair_names = [("N", "S"), ("N", "E"), ("NE", "SW"), ("N", "N_far")]
     r0, pairwise_results = inter_mod.run_pairwise_interaction(
-        primary_lw, perturbations, pair_names, n_int, PERIOD_M, substrate, metal, DESIGN_FREQUENCY_HZ,
+        primary_lw,
+        perturbations,
+        pair_names,
+        n_int,
+        PERIOD_M,
+        substrate,
+        metal,
+        DESIGN_FREQUENCY_HZ,
         MESH_CELLS_PER_SUBCELL,
     )
     spec_mod.write_pairwise_interaction_json(r0, pairwise_results, output_dir / "pairwise_interaction.json")
 
     higher_order_result = inter_mod.run_higher_order_interaction(
-        primary_lw, perturbations, ("N", "E", "S"), n_int, PERIOD_M, substrate, metal,
-        DESIGN_FREQUENCY_HZ, MESH_CELLS_PER_SUBCELL,
+        primary_lw,
+        perturbations,
+        ("N", "E", "S"),
+        n_int,
+        PERIOD_M,
+        substrate,
+        metal,
+        DESIGN_FREQUENCY_HZ,
+        MESH_CELLS_PER_SUBCELL,
     )
     spec_mod.write_higher_order_interaction_json(higher_order_result, output_dir / "higher_order_interaction.json")
 
@@ -132,8 +169,7 @@ def run_phase11(output_dir, hfss_reference_path=None):
     def _center_response(grid_mm):
         n = len(grid_mm)
         grid_m = [[(l * 1e-3, w * 1e-3) for (l, w) in row] for row in grid_mm]
-        sg = _solve_grid_direct(n, PERIOD_M, substrate, metal, grid_m, DESIGN_FREQUENCY_HZ,
-                                 MESH_CELLS_PER_SUBCELL)
+        sg = _solve_grid_direct(n, PERIOD_M, substrate, metal, grid_m, DESIGN_FREQUENCY_HZ, MESH_CELLS_PER_SUBCELL)
         m = n // 2
         return sg.response_at(m, m)
 
@@ -145,13 +181,15 @@ def run_phase11(output_dir, hfss_reference_path=None):
     }
 
     # ==================================================================== 11J: frequency study ===
-    frequency_points = freq_mod.run_frequency_study(PRIMARY_CENTER, primary_lw, PERIOD_M, substrate,
-                                                      metal, MESH_CELLS_PER_SUBCELL)
+    frequency_points = freq_mod.run_frequency_study(
+        PRIMARY_CENTER, primary_lw, PERIOD_M, substrate, metal, MESH_CELLS_PER_SUBCELL
+    )
     spec_mod.write_frequency_study_json(frequency_points, output_dir / "frequency_study.json")
 
     # ================================================================== 11K: polarization study ==
-    polarization_points = pol_mod.run_polarization_study(primary_lw, PERIOD_M, substrate, metal,
-                                                           DESIGN_FREQUENCY_HZ, MESH_CELLS_PER_SUBCELL)
+    polarization_points = pol_mod.run_polarization_study(
+        primary_lw, PERIOD_M, substrate, metal, DESIGN_FREQUENCY_HZ, MESH_CELLS_PER_SUBCELL
+    )
     spec_mod.write_polarization_study_json(polarization_points, output_dir / "polarization_study.json")
     circular_status = pol_mod.CIRCULAR_STATUS
 
@@ -180,15 +218,42 @@ def run_phase11(output_dir, hfss_reference_path=None):
     target_3 = complex(20.0 * max_ref, 0.0)
 
     inverse_results = [
-        inv_mod.invert_target_direct(target_1, env_grid_mm, mid_env, mid_env, PERIOD_M, substrate,
-                                      metal, DESIGN_FREQUENCY_HZ, MESH_CELLS_PER_SUBCELL,
-                                      candidate_lw_values_mm=[1.0, 1.4, 2.0, 2.8, 3.6, 4.2, 4.4]),
-        inv_mod.invert_target_direct(target_2, env_grid_mm, mid_env, mid_env, PERIOD_M, substrate,
-                                      metal, DESIGN_FREQUENCY_HZ, MESH_CELLS_PER_SUBCELL,
-                                      candidate_lw_values_mm=[1.0, 1.4, 2.0, 2.8, 3.6, 4.2, 4.4]),
-        inv_mod.invert_target_direct(target_3, env_grid_mm, mid_env, mid_env, PERIOD_M, substrate,
-                                      metal, DESIGN_FREQUENCY_HZ, MESH_CELLS_PER_SUBCELL,
-                                      candidate_lw_values_mm=[1.0, 1.4, 2.0, 2.8, 3.6, 4.2, 4.4]),
+        inv_mod.invert_target_direct(
+            target_1,
+            env_grid_mm,
+            mid_env,
+            mid_env,
+            PERIOD_M,
+            substrate,
+            metal,
+            DESIGN_FREQUENCY_HZ,
+            MESH_CELLS_PER_SUBCELL,
+            candidate_lw_values_mm=[1.0, 1.4, 2.0, 2.8, 3.6, 4.2, 4.4],
+        ),
+        inv_mod.invert_target_direct(
+            target_2,
+            env_grid_mm,
+            mid_env,
+            mid_env,
+            PERIOD_M,
+            substrate,
+            metal,
+            DESIGN_FREQUENCY_HZ,
+            MESH_CELLS_PER_SUBCELL,
+            candidate_lw_values_mm=[1.0, 1.4, 2.0, 2.8, 3.6, 4.2, 4.4],
+        ),
+        inv_mod.invert_target_direct(
+            target_3,
+            env_grid_mm,
+            mid_env,
+            mid_env,
+            PERIOD_M,
+            substrate,
+            metal,
+            DESIGN_FREQUENCY_HZ,
+            MESH_CELLS_PER_SUBCELL,
+            candidate_lw_values_mm=[1.0, 1.4, 2.0, 2.8, 3.6, 4.2, 4.4],
+        ),
     ]
     n_reached = sum(1 for r in inverse_results if r.status == inv_mod.FOUND)
     unreachable_rejected = any(r.status == inv_mod.TARGET_UNREACHABLE for r in inverse_results)
@@ -197,8 +262,9 @@ def run_phase11(output_dir, hfss_reference_path=None):
     beam_grids = bv.build_required_beam_cases(primary_lw, contrast_lw)
     beam_cases = {}
     for name, grid_mm in beam_grids.items():
-        result = bv.run_beam_case(name, grid_mm, PERIOD_M, substrate, metal, DESIGN_FREQUENCY_HZ,
-                                   MESH_CELLS_PER_SUBCELL)
+        result = bv.run_beam_case(
+            name, grid_mm, PERIOD_M, substrate, metal, DESIGN_FREQUENCY_HZ, MESH_CELLS_PER_SUBCELL
+        )
         beam_cases[name] = result
     spec_mod.write_beam_validation_json(
         {name: {"pointing_error_deg": list(c["metrics"].pointing_error_deg)} for name, c in beam_cases.items()},
@@ -206,8 +272,9 @@ def run_phase11(output_dir, hfss_reference_path=None):
     )
 
     # =============================================================== 11S: three-beam holographic =
-    three_beam_result = hb_mod.run_three_beam_test(primary_lw, 7, PERIOD_M, substrate, metal,
-                                                     DESIGN_FREQUENCY_HZ, mesh_cells_per_subcell=MESH_CELLS_PER_SUBCELL)
+    three_beam_result = hb_mod.run_three_beam_test(
+        primary_lw, 7, PERIOD_M, substrate, metal, DESIGN_FREQUENCY_HZ, mesh_cells_per_subcell=MESH_CELLS_PER_SUBCELL
+    )
 
     # ===================================================================== gates + status codes ==
     geometry_inversion_conditions = {
@@ -234,9 +301,14 @@ def run_phase11(output_dir, hfss_reference_path=None):
         "far_field_verification": True,
         "hfss_spot_validation": False,
     }
-    decision = gate_mod.decide(classification_result.overall_case, hfss_exists,
-                                n_reached >= len(inverse_results) - 1, reduction_decision.status,
-                                geometry_inversion_conditions, step_export_conditions)
+    decision = gate_mod.decide(
+        classification_result.overall_case,
+        hfss_exists,
+        n_reached >= len(inverse_results) - 1,
+        reduction_decision.status,
+        geometry_inversion_conditions,
+        step_export_conditions,
+    )
     spec_mod.write_phase11_summary_json(decision, output_dir / "phase11_summary.json")
     spec_mod.write_phase11_gate_status_json(decision, output_dir / "phase11_gate_status.json")
 
@@ -244,25 +316,35 @@ def run_phase11(output_dir, hfss_reference_path=None):
     try:
         p11_plots.plot_coupling_vs_distance(dc_points, plots_dir / "01_coupling_vs_distance.png")
         p11_plots.plot_shell_increment(shell_increments, plots_dir / "02_shell_increment.png")
-        p11_plots.plot_cardinal_vs_diagonal(diagonal_reproduction["cardinal_mean"],
-                                             diagonal_reproduction["diagonal_mean"],
-                                             plots_dir / "03_cardinal_vs_diagonal.png")
+        p11_plots.plot_cardinal_vs_diagonal(
+            diagonal_reproduction["cardinal_mean"],
+            diagonal_reproduction["diagonal_mean"],
+            plots_dir / "03_cardinal_vs_diagonal.png",
+        )
         p11_plots.plot_directional_map(dc_points, 1, plots_dir / "04_directional_map.png")
         p11_plots.plot_smooth_gradient(pattern_grids["smooth_gradient"], plots_dir / "05_smooth_gradient.png")
         p11_plots.plot_abrupt_boundary(pattern_grids["abrupt_boundary"], plots_dir / "06_abrupt_boundary.png")
         p11_plots.plot_alternating_pattern(pattern_grids["alternating"], plots_dir / "07_alternating_pattern.png")
         p11_plots.plot_checkerboard_pattern(pattern_grids["checkerboard"], plots_dir / "08_checkerboard_pattern.png")
         p11_plots.plot_frequency_dependence(frequency_points, plots_dir / "09_frequency_dependence.png")
-        p11_plots.plot_convergence_vs_neighborhood(coupling_radius[PRIMARY_CENTER],
-                                                     conv_mod.NOISE_FLOOR_RELATIVE,
-                                                     conv_mod.SUBSTANTIAL_DEVIATION_RELATIVE,
-                                                     plots_dir / "10_convergence_vs_neighborhood.png")
-        sg_for_plot, _ = bv.solve_aperture(pattern_grids["checkerboard"], PERIOD_M, substrate, metal,
-                                            DESIGN_FREQUENCY_HZ, MESH_CELLS_PER_SUBCELL)
-        p11_plots.plot_center_current_distribution(sg_for_plot, len(pattern_grids["checkerboard"]),
-                                                     plots_dir / "11_center_current_distribution.png")
-        p11_plots.plot_heterogeneous_far_field(beam_cases["checkerboard"]["far_field"], bv.THETA_GRID_DEG,
-                                                bv.PHI_GRID_DEG, plots_dir / "12_heterogeneous_far_field.png")
+        p11_plots.plot_convergence_vs_neighborhood(
+            coupling_radius[PRIMARY_CENTER],
+            conv_mod.NOISE_FLOOR_RELATIVE,
+            conv_mod.SUBSTANTIAL_DEVIATION_RELATIVE,
+            plots_dir / "10_convergence_vs_neighborhood.png",
+        )
+        sg_for_plot, _ = bv.solve_aperture(
+            pattern_grids["checkerboard"], PERIOD_M, substrate, metal, DESIGN_FREQUENCY_HZ, MESH_CELLS_PER_SUBCELL
+        )
+        p11_plots.plot_center_current_distribution(
+            sg_for_plot, len(pattern_grids["checkerboard"]), plots_dir / "11_center_current_distribution.png"
+        )
+        p11_plots.plot_heterogeneous_far_field(
+            beam_cases["checkerboard"]["far_field"],
+            bv.THETA_GRID_DEG,
+            bv.PHI_GRID_DEG,
+            plots_dir / "12_heterogeneous_far_field.png",
+        )
     except ImportError:
         pass
 
@@ -284,8 +366,8 @@ def run_phase11(output_dir, hfss_reference_path=None):
         "A numerical convergence criterion is defined before final classification.": True,
         "The required physical neighborhood is identified.": True,
         "Any reduction from full MoM is mathematically justified.": True,
-        "Reduced calculations agree with direct MoM within predefined tolerances.":
-            reduction_decision.status == red_mod.REDUCTION_VALIDATED,
+        "Reduced calculations agree with direct MoM within predefined tolerances.": reduction_decision.status
+        == red_mod.REDUCTION_VALIDATED,
         "Inverse candidates are verified using direct MoM.": True,
         "Unreachable targets are rejected.": unreachable_rejected,
         "Beam-level heterogeneous validation is completed.": True,
@@ -294,17 +376,29 @@ def run_phase11(output_dir, hfss_reference_path=None):
     }
 
     result = {
-        "output_dir": output_dir, "decision": decision, "hfss_exists": hfss_exists,
-        "coupling_radius": coupling_radius, "shell_increments": shell_increments,
-        "convergence_results": convergence_results, "classification": classification_result,
-        "diagonal_reproduction": diagonal_reproduction, "pattern_results": pattern_results,
-        "pattern_dependence_detected": pattern_dependence_detected, "pattern_comparisons": pattern_comparisons,
-        "smooth_vs_abrupt": smooth_vs_abrupt, "pairwise_results": pairwise_results,
-        "higher_order_result": higher_order_result, "frequency_points": frequency_points,
-        "polarization_points": polarization_points, "circular_status": circular_status,
-        "decay_observation": decay_observation, "decay_fit": decay_fit,
-        "reduction_decision": reduction_decision, "inverse_results": inverse_results,
-        "beam_cases": beam_cases, "three_beam_result": three_beam_result,
+        "output_dir": output_dir,
+        "decision": decision,
+        "hfss_exists": hfss_exists,
+        "coupling_radius": coupling_radius,
+        "shell_increments": shell_increments,
+        "convergence_results": convergence_results,
+        "classification": classification_result,
+        "diagonal_reproduction": diagonal_reproduction,
+        "pattern_results": pattern_results,
+        "pattern_dependence_detected": pattern_dependence_detected,
+        "pattern_comparisons": pattern_comparisons,
+        "smooth_vs_abrupt": smooth_vs_abrupt,
+        "pairwise_results": pairwise_results,
+        "higher_order_result": higher_order_result,
+        "frequency_points": frequency_points,
+        "polarization_points": polarization_points,
+        "circular_status": circular_status,
+        "decay_observation": decay_observation,
+        "decay_fit": decay_fit,
+        "reduction_decision": reduction_decision,
+        "inverse_results": inverse_results,
+        "beam_cases": beam_cases,
+        "three_beam_result": three_beam_result,
         "acceptance_criteria": acceptance_criteria,
     }
     (output_dir / "phase11_report.md").write_text(report_mod.render_phase11_report_md(result))

@@ -32,11 +32,14 @@ def library_complex_plane_summary(rows, component_name):
     states = distinct_complex_and_phase_states(rows)
     cov = candidate_coverage(rows, component_name)
     return LibraryComplexPlaneSummary(
-        component=component_name, n_geometries=states.n_geometries,
+        component=component_name,
+        n_geometries=states.n_geometries,
         n_distinct_complex_states=states.n_distinct_complex_states,
         n_distinct_phase_states=states.n_distinct_phase_states,
-        amplitude_min=cov.magnitude_min, amplitude_max=cov.magnitude_max,
-        phase_coverage_deg=cov.coverage_deg, phase_largest_gap_deg=cov.largest_gap_deg,
+        amplitude_min=cov.magnitude_min,
+        amplitude_max=cov.magnitude_max,
+        phase_coverage_deg=cov.coverage_deg,
+        phase_largest_gap_deg=cov.largest_gap_deg,
         phase_magnitude_correlation=cov.phase_magnitude_correlation,
     )
 
@@ -63,10 +66,12 @@ def phase_only_controllability(required_phase_deg, rows):
     errors = np.array([np.min(np.abs(wrapped_difference_deg(lib_phases, target))) for target in required])
     return PhaseOnlyControllability(
         n_required_points=int(required.size),
-        mean_phase_error_deg=float(np.mean(errors)), max_phase_error_deg=float(np.max(errors)),
-        uncontrolled_amplitude_min=float(lib_mags.min()), uncontrolled_amplitude_max=float(lib_mags.max()),
+        mean_phase_error_deg=float(np.mean(errors)),
+        max_phase_error_deg=float(np.max(errors)),
+        uncontrolled_amplitude_min=float(lib_mags.min()),
+        uncontrolled_amplitude_max=float(lib_mags.max()),
         note="phase-only formulation: amplitude at each required point is whatever the "
-             "phase-matched geometry happens to have, not separately controlled.",
+        "phase-matched geometry happens to have, not separately controlled.",
     )
 
 
@@ -97,7 +102,10 @@ def complex_plane_controllability(required_complex, rows):
         phase_errors.append(best.phase_error_deg)
     return ComplexPlaneControllability(
         n_required_points=int(required.size),
-        mean_complex_error=float(np.mean(complex_errors)), max_complex_error=float(np.max(complex_errors)),
-        mean_amplitude_error=float(np.mean(amp_errors)), max_amplitude_error=float(np.max(amp_errors)),
-        mean_phase_error_deg=float(np.mean(phase_errors)), max_phase_error_deg=float(np.max(phase_errors)),
+        mean_complex_error=float(np.mean(complex_errors)),
+        max_complex_error=float(np.max(complex_errors)),
+        mean_amplitude_error=float(np.mean(amp_errors)),
+        max_amplitude_error=float(np.max(amp_errors)),
+        mean_phase_error_deg=float(np.mean(phase_errors)),
+        max_phase_error_deg=float(np.max(phase_errors)),
     )

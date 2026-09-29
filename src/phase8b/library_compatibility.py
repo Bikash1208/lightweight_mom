@@ -24,25 +24,32 @@ class FormulationEvaluation:
     formulation_name: str
     required_quantity: str
     control_variable: cv.ControlVariable
-    library_compatibility: str        # LIBRARY_COMPATIBILITY_STATES
-    decision_trail: tuple             # ordered list of (question, answer) -- Sec. 28's tree, auditable
-    final_status: str                 # FINAL_STATES
+    library_compatibility: str  # LIBRARY_COMPATIBILITY_STATES
+    decision_trail: tuple  # ordered list of (question, answer) -- Sec. 28's tree, auditable
+    final_status: str  # FINAL_STATES
 
 
 def evaluate_formulation_a():
     """Sec. 28's decision tree for Formulation A (Fong et al. 2010 interference-modulation
     index, control variable = grounded surface reactance)."""
     trail = [("Does a holographic formulation exist?", "YES (Fong et al. 2010, source_registry.json fong2010)")]
-    trail.append(("Does it define a physical control variable?", "YES (surface reactance X(x,y) of a grounded structure)"))
+    trail.append(
+        ("Does it define a physical control variable?", "YES (surface reactance X(x,y) of a grounded structure)")
+    )
     zs = cv.investigate_surface_impedance()
     can_provide = zs.validated != "INVALID"
     trail.append(("Can the Phase 7 library provide that quantity?", "NO" if not can_provide else "YES"))
     if not can_provide:
         compatibility = "INCOMPATIBLE"
         status = "LIBRARY_CONTROL_VARIABLE_INCOMPATIBLE"
-        trail.append(("Result", "LIBRARY GAP: no ground plane (invalidates the standard "
-                                 "Zs<->Gamma relation) and no surface-wave dispersion solver "
-                                 "(cannot characterize the reference wave either)"))
+        trail.append(
+            (
+                "Result",
+                "LIBRARY GAP: no ground plane (invalidates the standard "
+                "Zs<->Gamma relation) and no surface-wave dispersion solver "
+                "(cannot characterize the reference wave either)",
+            )
+        )
     else:
         trail.append(("Is the relationship physically validated?", "NO"))
         compatibility = "UNVALIDATED"
@@ -50,8 +57,10 @@ def evaluate_formulation_a():
     return FormulationEvaluation(
         formulation_name="A: Fong et al. 2010 interference-modulation index (grounded holographic impedance surface)",
         required_quantity="surface reactance X(x,y) of a grounded, surface-wave-supporting structure",
-        control_variable=zs, library_compatibility=compatibility,
-        decision_trail=tuple(trail), final_status=status,
+        control_variable=zs,
+        library_compatibility=compatibility,
+        decision_trail=tuple(trail),
+        final_status=status,
     )
 
 
@@ -59,10 +68,18 @@ def evaluate_formulation_b():
     """Sec. 28's decision tree for Formulation B (phase-difference hologram, control variable =
     a normal-incidence co-polarized reflection/transmission phase -- the *kind* of quantity
     Phase 7 actually stores)."""
-    trail = [("Does a holographic formulation exist?", "YES (phase-difference/phase-conjugate hologram, "
-                                                          "standard reflectarray/transmitarray design equation)")]
-    trail.append(("Does it define a physical control variable?", "YES (normal-incidence co-pol reflection OR "
-                                                                    "transmission phase -- S11xx or S21xx)"))
+    trail = [
+        (
+            "Does a holographic formulation exist?",
+            "YES (phase-difference/phase-conjugate hologram, standard reflectarray/transmitarray design equation)",
+        )
+    ]
+    trail.append(
+        (
+            "Does it define a physical control variable?",
+            "YES (normal-incidence co-pol reflection OR transmission phase -- S11xx or S21xx)",
+        )
+    )
     s11 = cv.investigate_s11xx()
     s21 = cv.investigate_s21xx()
     # Both S11xx and S21xx are the *kind* of quantity (complex, phase-bearing, normal-incidence
@@ -70,17 +87,25 @@ def evaluate_formulation_b():
     # library "can provide" candidates -- but WHICH one is still an open architecture decision
     # (investigate_s11xx/investigate_s21xx both conclude INSUFFICIENT_EVIDENCE, not INVALID).
     can_provide = True
-    trail.append(("Can the Phase 7 library provide that quantity?", "YES (both S11xx and S21xx are stored in "
-                                                                       "full, req. 5) -- but which one is correct "
-                                                                       "is not yet decided"))
-    trail.append(("Is the relationship physically validated?", "NO (reflective-vs-transmissive architecture "
-                                                                  "undecided; S11xx/S21xx both INSUFFICIENT_EVIDENCE)"))
+    trail.append(
+        (
+            "Can the Phase 7 library provide that quantity?",
+            "YES (both S11xx and S21xx are stored in full, req. 5) -- but which one is correct is not yet decided",
+        )
+    )
+    trail.append(
+        (
+            "Is the relationship physically validated?",
+            "NO (reflective-vs-transmissive architecture undecided; S11xx/S21xx both INSUFFICIENT_EVIDENCE)",
+        )
+    )
     return FormulationEvaluation(
         formulation_name="B: phase-difference hologram (reflectarray/transmitarray-style)",
         required_quantity="normal-incidence co-polarized reflection or transmission phase (S11xx or S21xx)",
-        control_variable=s11,      # the currently spec-mandated (Phase 7) choice; s21 is the alternative
+        control_variable=s11,  # the currently spec-mandated (Phase 7) choice; s21 is the alternative
         library_compatibility="PARTIALLY_COMPATIBLE",
-        decision_trail=tuple(trail), final_status="PHASE_SOURCE_UNVALIDATED",
+        decision_trail=tuple(trail),
+        final_status="PHASE_SOURCE_UNVALIDATED",
     )
 
 

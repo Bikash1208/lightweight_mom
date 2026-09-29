@@ -8,10 +8,10 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..phase8c.data_source import DEFAULT_CHECKPOINT_JSON, load_full_database
 from ..feasibility_schema import DEFAULT_LIBRARY_DIR
-from .validation_levels import library_validation_status
+from ..phase8c.data_source import DEFAULT_CHECKPOINT_JSON, load_full_database
 from .record_schema import record_from_database
+from .validation_levels import library_validation_status
 
 BENCHMARK_LIBRARY_ID = "phase7_reference_validation_library_4p8mm"
 BENCHMARK_TOPOLOGY = "rectangular_patch"
@@ -28,10 +28,10 @@ class LibraryEntry:
     library_id: str
     topology: str
     role: str
-    database: object                 # database.Database, held read-only by reference
+    database: object  # database.Database, held read-only by reference
     p_x_mm: float
     p_y_mm: float
-    substrate: dict                  # name, eps_r, tan_delta, thickness_mm
+    substrate: dict  # name, eps_r, tan_delta, thickness_mm
     frequency_min_hz: float
     frequency_max_hz: float
     n_frequency_points: int
@@ -41,7 +41,7 @@ class LibraryEntry:
     configuration_hash: str | None
     source_type: str
     validation_status: str
-    backing: str = "air"             # "air" | "pec" (Phase 12A stack/backing tag, Sec. 4)
+    backing: str = "air"  # "air" | "pec" (Phase 12A stack/backing tag, Sec. 4)
 
     def __post_init__(self):
         if self.role not in ROLES:
@@ -58,9 +58,8 @@ class LibraryEntry:
         return sum(1 for c in self.database.cells if c.status == "ok")
 
     def matches_period(self, p_x_mm, p_y_mm, rtol=1e-9):
-        return (
-            abs(self.p_x_mm - p_x_mm) <= rtol * max(abs(p_x_mm), 1.0)
-            and abs(self.p_y_mm - p_y_mm) <= rtol * max(abs(p_y_mm), 1.0)
+        return abs(self.p_x_mm - p_x_mm) <= rtol * max(abs(p_x_mm), 1.0) and abs(self.p_y_mm - p_y_mm) <= rtol * max(
+            abs(p_y_mm), 1.0
         )
 
     def has_frequency(self, frequency_hz, rtol=1e-9):
@@ -71,9 +70,12 @@ class LibraryEntry:
         """One `record_schema.UnitCellRecord`, built from an exact (L, W, frequency) already in
         this entry's database -- KeyError if not present (Sec. 26: no interpolation)."""
         cell = next(
-            (c for c in self.database.cells
-             if abs(round(c.parameters["length_m"] * 1e3, 9) - L_mm) < 1e-6
-             and abs(round(c.parameters["width_m"] * 1e3, 9) - W_mm) < 1e-6),
+            (
+                c
+                for c in self.database.cells
+                if abs(round(c.parameters["length_m"] * 1e3, 9) - L_mm) < 1e-6
+                and abs(round(c.parameters["width_m"] * 1e3, 9) - W_mm) < 1e-6
+            ),
             None,
         )
         if cell is None or cell.status != "ok":
@@ -84,7 +86,8 @@ class LibraryEntry:
             raise KeyError(f"frequency {frequency_hz} Hz is not exact grid point of {self.library_id}")
         db_record = self.database.record(cell.index, matches[0])
         merged_extra = {
-            "solver_version": self.solver_version, "configuration_hash": self.configuration_hash,
+            "solver_version": self.solver_version,
+            "configuration_hash": self.configuration_hash,
             "source_type": self.source_type,
         }
         merged_extra.update(extra or {})
@@ -99,7 +102,8 @@ class LibraryEntry:
             raise KeyError(f"frequency {frequency_hz} Hz is not an exact grid point of {self.library_id}")
         idx = matches[0]
         merged_extra = {
-            "solver_version": self.solver_version, "configuration_hash": self.configuration_hash,
+            "solver_version": self.solver_version,
+            "configuration_hash": self.configuration_hash,
             "source_type": self.source_type,
         }
         merged_extra.update(extra or {})
@@ -108,7 +112,9 @@ class LibraryEntry:
             if cell.status != "ok":
                 continue
             db_record = self.database.record(cell.index, idx)
-            out.append(record_from_database(self.database, self.library_id, self.topology, cell, db_record, merged_extra))
+            out.append(
+                record_from_database(self.database, self.library_id, self.topology, cell, db_record, merged_extra)
+            )
         return out
 
 
@@ -125,21 +131,28 @@ def from_database(database, library_id, topology, role, manifest=None):
         raise ValueError(f"{library_id}: database has no records")
 
     return LibraryEntry(
-        library_id=library_id, topology=topology, role=role, database=database,
-        p_x_mm=float(lattice["period_x_m"] * 1e3), p_y_mm=float(lattice["period_y_m"] * 1e3),
+        library_id=library_id,
+        topology=topology,
+        role=role,
+        database=database,
+        p_x_mm=float(lattice["period_x_m"] * 1e3),
+        p_y_mm=float(lattice["period_y_m"] * 1e3),
         substrate={
             "name": substrate_ctx.get("name", "unavailable"),
             "eps_r": substrate_ctx.get("eps_r", float("nan")),
             "tan_delta": substrate_ctx.get("tan_delta", float("nan")),
-            "thickness_mm": float(substrate_ctx["thickness_m"] * 1e3) if "thickness_m" in substrate_ctx else float("nan"),
+            "thickness_mm": float(substrate_ctx["thickness_m"] * 1e3)
+            if "thickness_m" in substrate_ctx
+            else float("nan"),
         },
         # Phase 12A: absent in a context written before Phase 12A -- that was always "air"
         # (sweep.py's own unit_cell_from_context default), never a mix.
         backing=ctx.get("backing", "air"),
-        frequency_min_hz=float(freqs.min()), frequency_max_hz=float(freqs.max()),
+        frequency_min_hz=float(freqs.min()),
+        frequency_max_hz=float(freqs.max()),
         n_frequency_points=int(freqs.size),
-        polarizations_supported=("x", "y"),          # database.CONVENTIONS: both linear pols, both ports
-        incidence_supported=("normal",),               # phase8b.conventions.NORMAL_INCIDENCE_ONLY
+        polarizations_supported=("x", "y"),  # database.CONVENTIONS: both linear pols, both ports
+        incidence_supported=("normal",),  # phase8b.conventions.NORMAL_INCIDENCE_ONLY
         solver_version=(manifest or {}).get("solver_version"),
         configuration_hash=(manifest or {}).get("configuration_hash"),
         source_type="MoM",

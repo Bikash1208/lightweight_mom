@@ -18,9 +18,7 @@ import re
 _LENGTH_UNITS = {"m": 1.0, "cm": 1e-2, "mm": 1e-3, "um": 1e-6, "µm": 1e-6}
 _FREQUENCY_UNITS = {"Hz": 1.0, "kHz": 1e3, "MHz": 1e6, "GHz": 1e9, "THz": 1e12}
 
-_QUANTITY_RE = re.compile(
-    r"^\s*(?P<num>[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)\s*(?P<unit>\S*)\s*$"
-)
+_QUANTITY_RE = re.compile(r"^\s*(?P<num>[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)\s*(?P<unit>\S*)\s*$")
 
 
 def parse_quantity(value, unit_table, what):
@@ -43,8 +41,7 @@ def parse_quantity(value, unit_table, what):
             factor = unit_table[unit]
         else:
             raise ValueError(
-                f"{what}: unknown unit {unit!r} in {value!r}; "
-                f"accepted: {sorted(unit_table)} (case-sensitive)"
+                f"{what}: unknown unit {unit!r} in {value!r}; accepted: {sorted(unit_table)} (case-sensitive)"
             )
         result = float(match.group("num")) * factor
     else:
@@ -65,6 +62,7 @@ def parse_frequency(value, what="frequency"):
 
 
 # ---- explicit output-boundary conversions (SI -> display units and back) ----
+
 
 def from_mm(x_mm):
     return x_mm * 1e-3

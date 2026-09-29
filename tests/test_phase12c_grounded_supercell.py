@@ -61,15 +61,18 @@ def test_isolated_grounded_cell_has_no_bottom_field():
     """A sanity check that the isolated reference really is grounded (reuses the Phase 12A
     physics, not a new formulation): a longer patch shifts the dipole phase measurably relative
     to a shorter one at the same frequency (a real, physically expected reflectarray effect)."""
-    a = solve_isolated_grounded_cell(dp.PERIOD_M, dp.PERIOD_M, 2.0e-3, 2.0e-3, dp.SUBSTRATE, dp.METAL,
-                                      dp.DESIGN_FREQUENCY_HZ, 8, 16)
-    b = solve_isolated_grounded_cell(dp.PERIOD_M, dp.PERIOD_M, 4.0e-3, 4.0e-3, dp.SUBSTRATE, dp.METAL,
-                                      dp.DESIGN_FREQUENCY_HZ, 8, 16)
+    a = solve_isolated_grounded_cell(
+        dp.PERIOD_M, dp.PERIOD_M, 2.0e-3, 2.0e-3, dp.SUBSTRATE, dp.METAL, dp.DESIGN_FREQUENCY_HZ, 8, 16
+    )
+    b = solve_isolated_grounded_cell(
+        dp.PERIOD_M, dp.PERIOD_M, 4.0e-3, 4.0e-3, dp.SUBSTRATE, dp.METAL, dp.DESIGN_FREQUENCY_HZ, 8, 16
+    )
     assert a.dipole.px != b.dipole.px
 
 
 def test_mesh_convergence_check_reports_a_real_successive_difference():
-    result = supercell_mesh_convergence_check(4.0e-3, 3, 4, 8, dp.PERIOD_M, dp.SUBSTRATE, dp.METAL,
-                                               dp.DESIGN_FREQUENCY_HZ)
+    result = supercell_mesh_convergence_check(
+        4.0e-3, 3, 4, 8, dp.PERIOD_M, dp.SUBSTRATE, dp.METAL, dp.DESIGN_FREQUENCY_HZ
+    )
     assert result.relative_difference >= 0.0
     assert result.base_runtime_s > 0.0 and result.finer_runtime_s > 0.0

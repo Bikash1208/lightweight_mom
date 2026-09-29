@@ -28,9 +28,14 @@ _SUBSTRATE = {"name": "Rogers RT/Duroid 5880", "eps_r": 2.2, "tan_delta": 0.0009
 
 def small_config():
     return LibraryConfig(
-        period_m=4.8e-3, substrate=_SUBSTRATE,
-        f_min_hz=11.0e9, f_max_hz=13.0e9, f_step_hz=1.0e9, f_design_hz=12.0e9,
-        l_values_mm=(1.0, 2.4, 4.2), w_values_mm=(1.0, 2.4, 4.2),
+        period_m=4.8e-3,
+        substrate=_SUBSTRATE,
+        f_min_hz=11.0e9,
+        f_max_hz=13.0e9,
+        f_step_hz=1.0e9,
+        f_design_hz=12.0e9,
+        l_values_mm=(1.0, 2.4, 4.2),
+        w_values_mm=(1.0, 2.4, 4.2),
     )
 
 
@@ -51,7 +56,7 @@ def test_library_table_at_frequency_matches_number_of_ok_cells(small_library_doc
 def test_library_table_at_frequency_rejects_off_grid_frequency(small_library_doc):
     doc, _ = small_library_doc
     with pytest.raises(ValueError):
-        library_table_at_frequency(doc, 12.3456)   # not one of 11/12/13 GHz
+        library_table_at_frequency(doc, 12.3456)  # not one of 11/12/13 GHz
 
 
 def test_phase_density_reports_consistent_geometry_count(small_library_doc):
@@ -125,7 +130,7 @@ def test_recomputed_coverage_matches_the_stored_library_report_value():
 
     # Documented tolerance: LIBRARY_REPORT.md prints :.2f, so up to 0.005 deg of rounding.
     assert cov.coverage_deg == pytest.approx(stored_coverage_deg, abs=0.01)
-    assert cov.coverage_deg == pytest.approx(24.84, abs=0.5)   # brief Sec. 11's expected ballpark
+    assert cov.coverage_deg == pytest.approx(24.84, abs=0.5)  # brief Sec. 11's expected ballpark
 
 
 @pytest.mark.skipif(not _PRODUCTION_JSON.exists(), reason="Phase 7 production library not built")
@@ -142,4 +147,4 @@ def test_recomputed_largest_gap_matches_the_stored_library_report_value():
     stored_gap_deg = float(m.group(1))
 
     assert cov.largest_gap_deg == pytest.approx(stored_gap_deg, abs=0.01)
-    assert cov.largest_gap_deg == pytest.approx(335.16, abs=0.5)   # brief Sec. 11's expected ballpark
+    assert cov.largest_gap_deg == pytest.approx(335.16, abs=0.5)  # brief Sec. 11's expected ballpark

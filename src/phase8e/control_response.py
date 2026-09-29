@@ -17,9 +17,9 @@ from ..phase8b.holographic_modulation import (
 
 @dataclass(frozen=True)
 class ControlResponseResult:
-    formulation: str                  # "A" | "B" | "C" | "D"
-    value_kind: str                    # "complex_reactance" | "phase_deg" | "transfer_operator"
-    values: object                     # array (or dict of arrays for D)
+    formulation: str  # "A" | "B" | "C" | "D"
+    value_kind: str  # "complex_reactance" | "phase_deg" | "transfer_operator"
+    values: object  # array (or dict of arrays for D)
     required_quantity: str
     mathematical_derivation: str
     physical_meaning: str
@@ -36,7 +36,9 @@ def required_reactance_a(e_ref, e_obj, x_avg_ohm, modulation_index):
     psi = interference_modulation(e_ref, e_obj)
     values = reactance_from_modulation(psi, x_avg_ohm, modulation_index)
     return ControlResponseResult(
-        formulation="A", value_kind="complex_reactance", values=values,
+        formulation="A",
+        value_kind="complex_reactance",
+        values=values,
         required_quantity="surface reactance X(x,y) of a grounded modulated-impedance boundary",
         mathematical_derivation="Psi = Re{E_ref . conj(E_obj)}; X = X_avg(1 + M*Psi) (Fong et al. 2010)",
         physical_meaning="local reactive boundary-condition coefficient of a grounded surface",
@@ -52,7 +54,9 @@ def required_phase_b(e_ref, e_obj):
     """Candidate B: required reflection phase = wrap(arg(E_obj) - arg(E_ref))."""
     values = phase_difference_hologram(e_ref, e_obj)
     return ControlResponseResult(
-        formulation="B", value_kind="phase_deg", values=values,
+        formulation="B",
+        value_kind="phase_deg",
+        values=values,
         required_quantity="normal-incidence co-polarized reflection phase (arg(S11xx))",
         mathematical_derivation="required_phase = wrap(arg(E_obj) - arg(E_ref))",
         physical_meaning="phase shift the reflected wave must add to turn E_ref into E_obj locally",
@@ -68,7 +72,9 @@ def required_phase_c(e_ref, e_obj):
     """Candidate C: the identical kernel as B, claimed against the transmission phase instead."""
     values = phase_difference_hologram(e_ref, e_obj)
     return ControlResponseResult(
-        formulation="C", value_kind="phase_deg", values=values,
+        formulation="C",
+        value_kind="phase_deg",
+        values=values,
         required_quantity="normal-incidence co-polarized transmission phase (arg(S21xx))",
         mathematical_derivation="required_phase = wrap(arg(E_obj) - arg(E_ref))",
         physical_meaning="phase shift the transmitted wave must add to turn E_ref into E_obj locally",
@@ -99,10 +105,12 @@ def generalized_transfer_operator(ex_ref, ey_ref, ex_obj, ey_obj):
         Txy = ex_obj * np.conj(ey_ref) / denom
         Tyx = ey_obj * np.conj(ex_ref) / denom
         Tyy = ey_obj * np.conj(ey_ref) / denom
-    undefined = denom == 0.0   # E_ref vanishes: T is not defined there (never fabricated)
+    undefined = denom == 0.0  # E_ref vanishes: T is not defined there (never fabricated)
     values = {"Txx": Txx, "Txy": Txy, "Tyx": Tyx, "Tyy": Tyy, "undefined_mask": undefined}
     return ControlResponseResult(
-        formulation="D", value_kind="transfer_operator", values=values,
+        formulation="D",
+        value_kind="transfer_operator",
+        values=values,
         required_quantity="local 2x2 linear-basis transfer operator [[Sxx,Sxy],[Syx,Syy]]",
         mathematical_derivation="T = outer(E_obj, conj(E_ref)) / (E_ref^H . E_ref) (minimum-norm solution of E_obj = T.E_ref)",
         physical_meaning="local scattering operator relating incident (reference) to desired (object) field vectors",

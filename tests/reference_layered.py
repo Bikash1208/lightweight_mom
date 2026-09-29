@@ -75,28 +75,32 @@ def solve_current_sheet(kx, ky, J, f_hz, eps_c, h, branch_sign=1.0):
 
     # unknown order: [u0 TE, u0 TM, u1 TE, u1 TM, d1 TE, d1 TM, u2 TE, u2 TM]
     cols = [
-        (0, wave("TE", +1, kap0)), (0, wave("TM", +1, kap0)),   # region 0, up, ref z=0
-        (1, wave("TE", +1, kap1)), (1, wave("TM", +1, kap1)),   # region 1, up, ref z=0
-        (1, wave("TE", -1, kap1)), (1, wave("TM", -1, kap1)),   # region 1, down, ref z=0
-        (2, wave("TE", -1, kap0)), (2, wave("TM", -1, kap0)),   # region 2, down, ref z=-h
+        (0, wave("TE", +1, kap0)),
+        (0, wave("TM", +1, kap0)),  # region 0, up, ref z=0
+        (1, wave("TE", +1, kap1)),
+        (1, wave("TM", +1, kap1)),  # region 1, up, ref z=0
+        (1, wave("TE", -1, kap1)),
+        (1, wave("TM", -1, kap1)),  # region 1, down, ref z=0
+        (2, wave("TE", -1, kap0)),
+        (2, wave("TM", -1, kap0)),  # region 2, down, ref z=-h
     ]
-    up1 = np.exp(+1j * kap1 * h)     # up wave  exp(-j kap z) evaluated at z = -h
-    dn1 = np.exp(-1j * kap1 * h)     # down wave exp(+j kap z) evaluated at z = -h
+    up1 = np.exp(+1j * kap1 * h)  # up wave  exp(-j kap z) evaluated at z = -h
+    dn1 = np.exp(-1j * kap1 * h)  # down wave exp(+j kap z) evaluated at z = -h
 
     M = np.zeros((8, 8), dtype=complex)
     rhs = np.zeros(8, dtype=complex)
     for c, (region, (E, H)) in enumerate(cols):
         Et, Ht = E[:2], H[:2]
-        if c in (0, 1):                     # region 0 at z=0: +
+        if c in (0, 1):  # region 0 at z=0: +
             M[0:2, c] += Et
             M[2:4, c] += Ht
-        elif c in (2, 3, 4, 5):             # region 1 at z=0: - ;  at z=-h: phase factor
+        elif c in (2, 3, 4, 5):  # region 1 at z=0: - ;  at z=-h: phase factor
             M[0:2, c] -= Et
             M[2:4, c] -= Ht
             ph = up1 if c in (2, 3) else dn1
             M[4:6, c] += Et * ph
             M[6:8, c] += Ht * ph
-        else:                               # region 2 at z=-h: -
+        else:  # region 2 at z=-h: -
             M[4:6, c] -= Et
             M[6:8, c] -= Ht
     # z_hat x (H+ - H-) = J  ->  dHx = Jy, dHy = -Jx
@@ -128,8 +132,10 @@ def solve_current_sheet(kx, ky, J, f_hz, eps_c, h, branch_sign=1.0):
     regions = [0, 0, 1, 1, 1, 1, 2, 2]
     ss = [+1, +1, +1, +1, -1, -1, -1, -1]
     kaps = [kap0, kap0, kap1, kap1, kap1, kap1, kap0, kap0]
-    terms = [dict(region=regions[c], amp=amp[c], E=cols[c][1][0], H=cols[c][1][1],
-                  kap=kaps[c], s=ss[c], zref=zref[c]) for c in range(8)]
+    terms = [
+        dict(region=regions[c], amp=amp[c], E=cols[c][1][0], H=cols[c][1][1], kap=kaps[c], s=ss[c], zref=zref[c])
+        for c in range(8)
+    ]
 
     def fields(z, sheet_side="above"):
         return _field_function(terms, h, sheet_side)(z)
@@ -163,16 +169,20 @@ def solve_incident_fields(kx, ky, E_inc, f_hz, eps_c, h, port="top"):
     E_te, H_te = wave("TE", s_inc, kap0)
     E_tm, H_tm = wave("TM", s_inc, kap0)
     c_te = np.dot(E_inc, q)
-    c_tm = np.dot(E_inc, p) / (s_inc * kap0)          # p-component of the TM vector is s*kap
+    c_tm = np.dot(E_inc, p) / (s_inc * kap0)  # p-component of the TM vector is s*kap
     E_i = c_te * E_te + c_tm * E_tm
     H_i = c_te * H_te + c_tm * H_tm
     assert np.allclose(E_i, E_inc, atol=1e-12), "E_inc is not transverse to k_inc"
 
     cols = [
-        wave("TE", +1, kap0), wave("TM", +1, kap0),      # region 0, up-going (reflected or transmitted)
-        wave("TE", +1, kap1), wave("TM", +1, kap1),      # region 1 up
-        wave("TE", -1, kap1), wave("TM", -1, kap1),      # region 1 down
-        wave("TE", -1, kap0), wave("TM", -1, kap0),      # region 2, down-going (ref z=-h)
+        wave("TE", +1, kap0),
+        wave("TM", +1, kap0),  # region 0, up-going (reflected or transmitted)
+        wave("TE", +1, kap1),
+        wave("TM", +1, kap1),  # region 1 up
+        wave("TE", -1, kap1),
+        wave("TM", -1, kap1),  # region 1 down
+        wave("TE", -1, kap0),
+        wave("TM", -1, kap0),  # region 2, down-going (ref z=-h)
     ]
     up1, dn1 = np.exp(+1j * kap1 * h), np.exp(-1j * kap1 * h)
     M = np.zeros((8, 8), dtype=complex)
@@ -192,17 +202,19 @@ def solve_incident_fields(kx, ky, E_inc, f_hz, eps_c, h, port="top"):
             M[4:6, c] -= Et
             M[6:8, c] -= Ht
     if port == "top":
-        rhs[0:2], rhs[2:4] = -E_i[:2], -H_i[:2]          # incident term sits in region 0 at z = 0
+        rhs[0:2], rhs[2:4] = -E_i[:2], -H_i[:2]  # incident term sits in region 0 at z = 0
     else:
-        rhs[4:6], rhs[6:8] = +E_i[:2], +H_i[:2]          # incident term sits in region 2 at z = -h
+        rhs[4:6], rhs[6:8] = +E_i[:2], +H_i[:2]  # incident term sits in region 2 at z = -h
     amp = np.linalg.solve(M, rhs)
 
     zref = [0.0] * 6 + [-h, -h]
     regions = [0, 0, 1, 1, 1, 1, 2, 2]
     ss = [+1, +1, +1, +1, -1, -1, -1, -1]
     kaps = [kap0, kap0, kap1, kap1, kap1, kap1, kap0, kap0]
-    terms = [dict(region=regions[c], amp=amp[c], E=cols[c][0], H=cols[c][1],
-                  kap=kaps[c], s=ss[c], zref=zref[c]) for c in range(8)]
+    terms = [
+        dict(region=regions[c], amp=amp[c], E=cols[c][0], H=cols[c][1], kap=kaps[c], s=ss[c], zref=zref[c])
+        for c in range(8)
+    ]
     inc_region, inc_zref = (0, 0.0) if port == "top" else (2, -h)
     terms.append(dict(region=inc_region, amp=1.0, E=E_i, H=H_i, kap=kap0, s=s_inc, zref=inc_zref))
     return _field_function(terms, h)
@@ -248,21 +260,24 @@ def solve_current_sheet_grounded(kx, ky, J, f_hz, eps_c, h, branch_sign=1.0):
 
     # unknown order: [u0 TE, u0 TM, u1 TE, u1 TM, d1 TE, d1 TM]  (no region-2 unknowns)
     cols = [
-        (0, wave("TE", +1, kap0)), (0, wave("TM", +1, kap0)),   # region 0, up, ref z=0
-        (1, wave("TE", +1, kap1)), (1, wave("TM", +1, kap1)),   # region 1, up, ref z=0
-        (1, wave("TE", -1, kap1)), (1, wave("TM", -1, kap1)),   # region 1, down, ref z=0
+        (0, wave("TE", +1, kap0)),
+        (0, wave("TM", +1, kap0)),  # region 0, up, ref z=0
+        (1, wave("TE", +1, kap1)),
+        (1, wave("TM", +1, kap1)),  # region 1, up, ref z=0
+        (1, wave("TE", -1, kap1)),
+        (1, wave("TM", -1, kap1)),  # region 1, down, ref z=0
     ]
-    up1 = np.exp(+1j * kap1 * h)     # up wave  exp(-j kap z) evaluated at z = -h
-    dn1 = np.exp(-1j * kap1 * h)     # down wave exp(+j kap z) evaluated at z = -h
+    up1 = np.exp(+1j * kap1 * h)  # up wave  exp(-j kap z) evaluated at z = -h
+    dn1 = np.exp(-1j * kap1 * h)  # down wave exp(+j kap z) evaluated at z = -h
 
     M = np.zeros((6, 6), dtype=complex)
     rhs = np.zeros(6, dtype=complex)
     for c, (region, (E, H)) in enumerate(cols):
         Et, Ht = E[:2], H[:2]
-        if c in (0, 1):                     # region 0 at z=0: +
+        if c in (0, 1):  # region 0 at z=0: +
             M[0:2, c] += Et
             M[2:4, c] += Ht
-        else:                                # region 1: - at z=0; E_t(-h) = 0 (PEC ground)
+        else:  # region 1: - at z=0; E_t(-h) = 0 (PEC ground)
             M[0:2, c] -= Et
             M[2:4, c] -= Ht
             ph = up1 if c in (2, 3) else dn1
@@ -292,8 +307,10 @@ def solve_current_sheet_grounded(kx, ky, J, f_hz, eps_c, h, branch_sign=1.0):
     regions = [0, 0, 1, 1, 1, 1]
     ss = [+1, +1, +1, +1, -1, -1]
     kaps = [kap0, kap0, kap1, kap1, kap1, kap1]
-    terms = [dict(region=regions[c], amp=amp[c], E=cols[c][1][0], H=cols[c][1][1],
-                  kap=kaps[c], s=ss[c], zref=zref[c]) for c in range(6)]
+    terms = [
+        dict(region=regions[c], amp=amp[c], E=cols[c][1][0], H=cols[c][1][1], kap=kaps[c], s=ss[c], zref=zref[c])
+        for c in range(6)
+    ]
 
     def fields(z, sheet_side="above"):
         return _field_function(terms, h, sheet_side)(z)
@@ -319,7 +336,7 @@ def solve_incident_fields_grounded(kx, ky, E_inc, f_hz, eps_c, h):
         E = q.astype(complex) if pol == "TE" else (s * kap * p - kt * ZHAT)
         return E, np.cross(K, E) / (w * MU0)
 
-    s_inc = -1                    # top port only: incident wave travels -z
+    s_inc = -1  # top port only: incident wave travels -z
     E_te, H_te = wave("TE", s_inc, kap0)
     E_tm, H_tm = wave("TM", s_inc, kap0)
     c_te = np.dot(E_inc, q)
@@ -329,9 +346,12 @@ def solve_incident_fields_grounded(kx, ky, E_inc, f_hz, eps_c, h):
     assert np.allclose(E_i, E_inc, atol=1e-12), "E_inc is not transverse to k_inc"
 
     cols = [
-        wave("TE", +1, kap0), wave("TM", +1, kap0),      # region 0, up-going (reflected)
-        wave("TE", +1, kap1), wave("TM", +1, kap1),      # region 1 up
-        wave("TE", -1, kap1), wave("TM", -1, kap1),      # region 1 down
+        wave("TE", +1, kap0),
+        wave("TM", +1, kap0),  # region 0, up-going (reflected)
+        wave("TE", +1, kap1),
+        wave("TM", +1, kap1),  # region 1 up
+        wave("TE", -1, kap1),
+        wave("TM", -1, kap1),  # region 1 down
     ]
     up1, dn1 = np.exp(+1j * kap1 * h), np.exp(-1j * kap1 * h)
     M = np.zeros((6, 6), dtype=complex)
@@ -346,14 +366,16 @@ def solve_incident_fields_grounded(kx, ky, E_inc, f_hz, eps_c, h):
             M[2:4, c] -= Ht
             ph = up1 if c in (2, 3) else dn1
             M[4:6, c] += Et * ph
-    rhs[0:2], rhs[2:4] = -E_i[:2], -H_i[:2]      # incident term sits in region 0 at z = 0
+    rhs[0:2], rhs[2:4] = -E_i[:2], -H_i[:2]  # incident term sits in region 0 at z = 0
     amp = np.linalg.solve(M, rhs)
 
     zref = [0.0] * 6
     regions = [0, 0, 1, 1, 1, 1]
     ss = [+1, +1, +1, +1, -1, -1]
     kaps = [kap0, kap0, kap1, kap1, kap1, kap1]
-    terms = [dict(region=regions[c], amp=amp[c], E=cols[c][0], H=cols[c][1],
-                  kap=kaps[c], s=ss[c], zref=zref[c]) for c in range(6)]
+    terms = [
+        dict(region=regions[c], amp=amp[c], E=cols[c][0], H=cols[c][1], kap=kaps[c], s=ss[c], zref=zref[c])
+        for c in range(6)
+    ]
     terms.append(dict(region=0, amp=1.0, E=E_i, H=H_i, kap=kap0, s=s_inc, zref=0.0))
     return _field_function(terms, h)

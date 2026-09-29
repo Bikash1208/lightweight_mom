@@ -7,7 +7,9 @@ from src.phase8d_rev import library_entry as le
 from src.phase8d_rev.integrity import run_integrity_checks
 from src.phase8d_rev.universal_database import UniversalDatabase
 
-pytestmark = pytest.mark.skipif(not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present")
+pytestmark = pytest.mark.skipif(
+    not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present"
+)
 
 
 def test_udb01_all_324_geometries_recovered_unchanged(phase8c_full_database):

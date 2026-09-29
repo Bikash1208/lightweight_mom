@@ -26,7 +26,7 @@ from .phase_extraction import phase_coverage
 @dataclass(frozen=True)
 class RequiredPhaseResult:
     available: bool
-    status: str            # "HOLOGRAPHIC_FORMULATION_MISSING" (today) | "OK" (once implemented)
+    status: str  # "HOLOGRAPHIC_FORMULATION_MISSING" (today) | "OK" (once implemented)
     note: str
 
 
@@ -58,7 +58,7 @@ class RequiredPhaseStatistics:
     max_required_phase_deg: float
     circular_coverage_deg: float
     largest_gap_deg: float
-    mean_phase_deg: float          # circular mean (atan2 of mean sin/cos), not an arithmetic mean
+    mean_phase_deg: float  # circular mean (atan2 of mean sin/cos), not an arithmetic mean
 
 
 def required_phase_statistics(required_phase_deg):
@@ -69,9 +69,14 @@ def required_phase_statistics(required_phase_deg):
         raise ValueError("required_phase_statistics: empty input")
     table = [{"phase_deg": float(p)} for p in phases]
     cov = phase_coverage(table)
-    mean_deg = float(np.degrees(np.arctan2(
-        np.mean(np.sin(np.radians(phases))), np.mean(np.cos(np.radians(phases))),
-    )))
+    mean_deg = float(
+        np.degrees(
+            np.arctan2(
+                np.mean(np.sin(np.radians(phases))),
+                np.mean(np.cos(np.radians(phases))),
+            )
+        )
+    )
     return RequiredPhaseStatistics(
         n_samples=int(phases.size),
         min_required_phase_deg=cov.phase_min_deg,

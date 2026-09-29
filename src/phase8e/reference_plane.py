@@ -14,7 +14,7 @@ import numpy as np
 from ..frequency import free_space_wavenumber
 from ..periodic_bc import normal_wavenumber
 
-PATTERN_PLANE_Z_M = 0.0   # phase8b.conventions.COORDINATE_SYSTEM.pattern_plane; not re-derived here
+PATTERN_PLANE_Z_M = 0.0  # phase8b.conventions.COORDINATE_SYSTEM.pattern_plane; not re-derived here
 
 
 @dataclass(frozen=True)
@@ -22,7 +22,7 @@ class ReferencePlaneCompatibility:
     z_reference_m: float | None
     z_unit_cell_pattern_m: float
     delta_z_m: float | None
-    status: str                # "COMPATIBLE" | "BRIDGE_REFERENCE_PLANE_MISMATCH" | "UNKNOWN_REFERENCE_PLANE"
+    status: str  # "COMPATIBLE" | "BRIDGE_REFERENCE_PLANE_MISMATCH" | "UNKNOWN_REFERENCE_PLANE"
     required_transform: str
 
 
@@ -31,15 +31,21 @@ def check_reference_plane_compatibility(z_reference_m, rtol=1e-9):
     unknown -- e.g. a synthetic field with no stated height) against the pattern plane z=0."""
     if z_reference_m is None:
         return ReferencePlaneCompatibility(
-            None, PATTERN_PLANE_Z_M, None, "UNKNOWN_REFERENCE_PLANE",
+            None,
+            PATTERN_PLANE_Z_M,
+            None,
+            "UNKNOWN_REFERENCE_PLANE",
             "z_reference_m was not supplied with this reference field; compatibility cannot be assessed.",
         )
     delta_z = z_reference_m - PATTERN_PLANE_Z_M
     if abs(delta_z) <= rtol * max(abs(z_reference_m), 1.0):
         return ReferencePlaneCompatibility(z_reference_m, PATTERN_PLANE_Z_M, delta_z, "COMPATIBLE", "none required")
     return ReferencePlaneCompatibility(
-        z_reference_m, PATTERN_PLANE_Z_M, delta_z, "BRIDGE_REFERENCE_PLANE_MISMATCH",
-        f"angular-spectrum propagation by delta_z={delta_z*1e3:.6g} mm is required "
+        z_reference_m,
+        PATTERN_PLANE_Z_M,
+        delta_z,
+        "BRIDGE_REFERENCE_PLANE_MISMATCH",
+        f"angular-spectrum propagation by delta_z={delta_z * 1e3:.6g} mm is required "
         "(propagate_angular_spectrum) -- a scalar phase offset is not sufficient whenever "
         "evanescent content is present (spectral.reference_field_spectrum reports the fraction).",
     )

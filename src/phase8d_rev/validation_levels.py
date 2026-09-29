@@ -23,7 +23,7 @@ VALIDATION_LEVELS = (
 
 @dataclass(frozen=True)
 class Provenance:
-    source_type: str            # "MoM" | "HFSS" | "CST" | "measurement" | "other"
+    source_type: str  # "MoM" | "HFSS" | "CST" | "measurement" | "other"
     source_version: str | None
     solver_version: str | None
     configuration_hash: str | None
@@ -32,9 +32,7 @@ class Provenance:
 
     def __post_init__(self):
         if self.validation_status not in VALIDATION_LEVELS:
-            raise ValueError(
-                f"validation_status {self.validation_status!r} not in {VALIDATION_LEVELS}"
-            )
+            raise ValueError(f"validation_status {self.validation_status!r} not in {VALIDATION_LEVELS}")
 
 
 def record_validation_status(diagnostics):

@@ -8,9 +8,9 @@ from src.phase8b.distinct_states import analyze_distinct_states, write_distinct_
 
 _SYNTHETIC_TABLE = [
     {"L_mm": 1.0, "W_mm": 1.0, "phase_deg": 10.0},
-    {"L_mm": 1.2, "W_mm": 1.0, "phase_deg": 10.0},          # exact duplicate of the row above
+    {"L_mm": 1.2, "W_mm": 1.0, "phase_deg": 10.0},  # exact duplicate of the row above
     {"L_mm": 1.4, "W_mm": 1.0, "phase_deg": 20.0},
-    {"L_mm": 1.6, "W_mm": 1.0, "phase_deg": 20.0 + 1e-9},   # duplicate within DEDUP_EPS_DEG
+    {"L_mm": 1.6, "W_mm": 1.0, "phase_deg": 20.0 + 1e-9},  # duplicate within DEDUP_EPS_DEG
     {"L_mm": 1.8, "W_mm": 1.0, "phase_deg": 30.0},
 ]
 
@@ -18,14 +18,14 @@ _SYNTHETIC_TABLE = [
 def test_analyze_distinct_states_counts_duplicates_correctly():
     result = analyze_distinct_states(_SYNTHETIC_TABLE)
     assert result.n_geometries == 5
-    assert result.n_distinct_phase_states == 3   # {10, 20, 30}
+    assert result.n_distinct_phase_states == 3  # {10, 20, 30}
     assert result.n_duplicate_records == 2
 
 
 def test_geometric_diversity_and_phase_diversity_are_reported_separately():
     result = analyze_distinct_states(_SYNTHETIC_TABLE)
     assert result.n_geometries != result.n_distinct_phase_states
-    assert result.n_geometries == 5   # never conflated with the smaller phase-state count
+    assert result.n_geometries == 5  # never conflated with the smaller phase-state count
 
 
 def test_every_row_gets_an_equivalence_group_and_duplicates_share_one():
@@ -41,7 +41,7 @@ def test_write_distinct_state_csv(tmp_path):
     path = write_distinct_state_csv(result, tmp_path / "out.csv")
     text = path.read_text()
     assert text.splitlines()[0] == "L_mm,W_mm,phase_deg,equivalence_group"
-    assert len(text.splitlines()) == 6   # header + 5 rows
+    assert len(text.splitlines()) == 6  # header + 5 rows
 
 
 def test_analyze_distinct_states_rejects_empty_table():

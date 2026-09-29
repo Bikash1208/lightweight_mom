@@ -29,9 +29,6 @@ from src.validation_export import (
     _mag_phase,
     export_all_cases,
     export_case,
-    geometry_dict,
-    render_readme,
-    solver_config_dict,
 )
 
 # One ordinary case and one rotated + one slot case: enough to exercise every code path
@@ -42,8 +39,12 @@ CASE_ROTATED = CASES_BY_ID["case07_rotated_dipole"]
 CASE_SLOT = CASES_BY_ID["case09_slot_rectangular"]
 
 EXPECTED_FILES = {
-    "unit_cell.step", "geometry.json", "solver_config.json",
-    "mom_results.csv", "mom_results.json", "README.md",
+    "unit_cell.step",
+    "geometry.json",
+    "solver_config.json",
+    "mom_results.csv",
+    "mom_results.json",
+    "README.md",
 }
 EXPECTED_PLOTS = {"s11.png", "s21.png", "co_polarized.png", "cross_polarized.png"}
 
@@ -68,6 +69,7 @@ def slot_result(tmp_path_factory):
 
 # --------------------------------------------------------------------------- folder structure
 
+
 def test_export_case_returns_case_export_result(plain_result):
     assert isinstance(plain_result, CaseExportResult)
     assert plain_result.case is CASE_PLAIN
@@ -90,6 +92,7 @@ def test_step_file_is_a_valid_solid_model(plain_result):
 
 
 # --------------------------------------------------------------------------------- geometry.json
+
 
 def test_geometry_json_matches_config(plain_result):
     doc = json.loads(plain_result.geometry_json_path.read_text())
@@ -125,6 +128,7 @@ def test_slot_case_geometry_json_is_aperture_polarity(slot_result):
 
 # ----------------------------------------------------------------------------- solver_config.json
 
+
 def test_solver_config_json_matches_config(plain_result):
     doc = json.loads(plain_result.solver_config_json_path.read_text())
     cfg = CASE_PLAIN.config
@@ -143,6 +147,7 @@ def test_solver_config_json_matches_config(plain_result):
 
 
 # ------------------------------------------------------------------------- mom_results.json/csv
+
 
 def test_mom_results_match_an_independent_direct_solve(plain_result):
     """Solve the same case a second time, independently of `export_case`'s internal `_solve_case`
@@ -200,7 +205,7 @@ def test_mom_results_json_and_csv_numerically_reproducible_across_repeated_expor
         rows1 = list(csv.reader(fh))
     with open(r2.mom_results_csv_path, newline="", encoding="utf-8") as fh:
         rows2 = list(csv.reader(fh))
-    assert rows1[0] == rows2[0]                 # header identical
+    assert rows1[0] == rows2[0]  # header identical
     assert len(rows1) == len(rows2)
 
 
@@ -223,6 +228,7 @@ def test_step_geometric_content_reproducible_despite_timestamp(tmp_path):
 
 
 # --------------------------------------------------------------------------------------- plots
+
 
 def test_plot_files_are_nonempty_pngs(plain_result):
     for name in EXPECTED_PLOTS:
@@ -252,6 +258,7 @@ def test_db_helper_matches_20log10_and_floors_zero():
 
 
 # --------------------------------------------------------------------------------------- README
+
 
 def test_readme_contains_every_required_fact(plain_result):
     text = plain_result.readme_path.read_text()
@@ -318,6 +325,7 @@ def test_render_readme_and_solver_config_dict_agree_with_geometry_dict(plain_res
 
 
 # ---------------------------------------------------------------------------- export_all_cases
+
 
 def test_export_all_cases_writes_every_case(tmp_path):
     seen = []

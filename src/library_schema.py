@@ -14,7 +14,6 @@ the sweep; `phase_extraction.py`, `library_classifier.py`, `geometry_export.py`,
 `library_plots.py`, `library_validation.py` and `unit_cell_library.py` consume it.
 """
 
-import math
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -30,18 +29,18 @@ _AUTHORITATIVE_CONFIG_PATH = Path(__file__).resolve().parent.parent / "configs" 
 _AUTHORITATIVE_SUBSTRATE_NAME = "Rogers RT/Duroid 5880"
 _AUTHORITATIVE_EPS_R = 2.2
 _AUTHORITATIVE_TAN_DELTA = 0.0009
-_AUTHORITATIVE_THICKNESS_M = 1.575e-3   # matches the Phase 7 brief's locked h = 1.575 mm exactly
+_AUTHORITATIVE_THICKNESS_M = 1.575e-3  # matches the Phase 7 brief's locked h = 1.575 mm exactly
 
 # ----------------------------------------------------------------------------- locked sweep
 
-_PERIOD_M = 4.8e-3                # period_x = period_y, brief Sec. 1
+_PERIOD_M = 4.8e-3  # period_x = period_y, brief Sec. 1
 _F_MIN_HZ = 10.0e9
 _F_MAX_HZ = 15.0e9
-_F_STEP_HZ = 25.0e6               # (15 - 10) GHz / 200 steps = 25 MHz -> 201 points inclusive
+_F_STEP_HZ = 25.0e6  # (15 - 10) GHz / 200 steps = 25 MHz -> 201 points inclusive
 _F_DESIGN_HZ = 12.5e9
 _N_FREQ = 201
 
-_L_MIN_M, _L_MAX_M, _L_STEP_M = 1.0e-3, 4.4e-3, 0.2e-3    # 18 values
+_L_MIN_M, _L_MAX_M, _L_STEP_M = 1.0e-3, 4.4e-3, 0.2e-3  # 18 values
 _N_GEOM_PER_AXIS = 18
 
 
@@ -88,7 +87,7 @@ class LibraryConfig:
     never passed to `examples/build_unit_cell_library.py`."""
 
     period_m: float
-    substrate: dict            # name, eps_r, tan_delta, thickness_m
+    substrate: dict  # name, eps_r, tan_delta, thickness_m
     f_min_hz: float
     f_max_hz: float
     f_step_hz: float
@@ -112,8 +111,12 @@ class LibraryConfig:
                 "tan_delta": _AUTHORITATIVE_TAN_DELTA,
                 "thickness_m": _AUTHORITATIVE_THICKNESS_M,
             },
-            f_min_hz=_F_MIN_HZ, f_max_hz=_F_MAX_HZ, f_step_hz=_F_STEP_HZ, f_design_hz=_F_DESIGN_HZ,
-            l_values_mm=L_VALUES_MM, w_values_mm=W_VALUES_MM,
+            f_min_hz=_F_MIN_HZ,
+            f_max_hz=_F_MAX_HZ,
+            f_step_hz=_F_STEP_HZ,
+            f_design_hz=_F_DESIGN_HZ,
+            l_values_mm=L_VALUES_MM,
+            w_values_mm=W_VALUES_MM,
         )
 
     def __post_init__(self):
@@ -137,12 +140,19 @@ class LibraryConfig:
         """The shared (non-swept) `config_from_dict` mapping: lattice, substrate, mesh, planes,
         and a placeholder geometry (overwritten per cell by the sweep's length_m/width_m axes)."""
         return {
-            "period_x": self.period_m, "period_y": self.period_m,
+            "period_x": self.period_m,
+            "period_y": self.period_m,
             "substrate": {
-                "name": self.substrate["name"], "eps_r": self.substrate["eps_r"],
-                "tan_delta": self.substrate["tan_delta"], "thickness": self.substrate["thickness_m"],
+                "name": self.substrate["name"],
+                "eps_r": self.substrate["eps_r"],
+                "tan_delta": self.substrate["tan_delta"],
+                "thickness": self.substrate["thickness_m"],
             },
-            "geometry": {"type": "rectangle", "length": self.l_values_mm[0] * 1e-3, "width": self.w_values_mm[0] * 1e-3},
+            "geometry": {
+                "type": "rectangle",
+                "length": self.l_values_mm[0] * 1e-3,
+                "width": self.w_values_mm[0] * 1e-3,
+            },
             "excitation": {"frequency": self.f_design_hz},
             "mesh": dict(self.mesh),
             "reference_planes": dict(self.reference_planes),
@@ -163,17 +173,30 @@ class LibraryConfig:
 _S_FAMILIES = ("S11", "S21", "S12", "S22")
 _S_FIELDS = ("real", "imag", "mag", "mag_db", "phase_deg")
 
-LIBRARY_CSV_COLUMNS = (
-    ("cell_id", "L_mm", "W_mm", "f_GHz")
-    + tuple(f"{fam}_{field_}" for fam in _S_FAMILIES for field_ in _S_FIELDS)
+LIBRARY_CSV_COLUMNS = ("cell_id", "L_mm", "W_mm", "f_GHz") + tuple(
+    f"{fam}_{field_}" for fam in _S_FAMILIES for field_ in _S_FIELDS
 )
 
 # Req. 5's minimum per-record field list (JSON, one entry per (cell, frequency)); the JSON export
 # additionally nests re/im/mag/mag_db/phase_deg for readability instead of flattening them.
 LIBRARY_RECORD_FIELDS = (
-    "cell_id", "L_mm", "W_mm", "period_x_mm", "period_y_mm", "substrate_thickness_mm",
-    "epsilon_r", "tan_delta", "frequency_GHz", "S11", "S21", "S12", "S22",
-    "polarization_convention", "time_convention", "geometry_status", "solver_status",
+    "cell_id",
+    "L_mm",
+    "W_mm",
+    "period_x_mm",
+    "period_y_mm",
+    "substrate_thickness_mm",
+    "epsilon_r",
+    "tan_delta",
+    "frequency_GHz",
+    "S11",
+    "S21",
+    "S12",
+    "S22",
+    "polarization_convention",
+    "time_convention",
+    "geometry_status",
+    "solver_status",
 )
 
 # ----------------------------------------------------------------------------- classification

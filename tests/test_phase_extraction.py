@@ -26,9 +26,14 @@ _SUBSTRATE = {"name": "Rogers RT/Duroid 5880", "eps_r": 2.2, "tan_delta": 0.0009
 
 def small_config():
     return LibraryConfig(
-        period_m=4.8e-3, substrate=_SUBSTRATE,
-        f_min_hz=12.0e9, f_max_hz=13.0e9, f_step_hz=0.5e9, f_design_hz=12.5e9,
-        l_values_mm=(1.0, 2.4, 4.2), w_values_mm=(1.0, 2.4, 4.2),
+        period_m=4.8e-3,
+        substrate=_SUBSTRATE,
+        f_min_hz=12.0e9,
+        f_max_hz=13.0e9,
+        f_step_hz=0.5e9,
+        f_design_hz=12.5e9,
+        l_values_mm=(1.0, 2.4, 4.2),
+        w_values_mm=(1.0, 2.4, 4.2),
     )
 
 
@@ -39,6 +44,7 @@ def built():
 
 
 # ------------------------------------------------------------------------ design frequency index
+
 
 def test_design_frequency_index_is_exact_grid_point(built):
     cfg, database = built
@@ -54,6 +60,7 @@ def test_design_frequency_index_rejects_a_non_grid_frequency(built):
 
 # ------------------------------------------------------------------------------- extraction
 
+
 def test_extract_design_frequency_has_one_row_per_geometry(built):
     cfg, database = built
     rows = extract_design_frequency(database, cfg)
@@ -68,8 +75,11 @@ def test_extract_design_frequency_values_match_the_database_directly(built):
     rows = extract_design_frequency(database, cfg)
     idx = design_frequency_index(database, cfg.f_design_hz)
     row = next(r for r in rows if r.l_mm == 2.4 and r.w_mm == 2.4)
-    cell = next(c for c in database.cells
-                if abs(c.parameters["length_m"] - 2.4e-3) < 1e-12 and abs(c.parameters["width_m"] - 2.4e-3) < 1e-12)
+    cell = next(
+        c
+        for c in database.cells
+        if abs(c.parameters["length_m"] - 2.4e-3) < 1e-12 and abs(c.parameters["width_m"] - 2.4e-3) < 1e-12
+    )
     record = next(r for r in database.records_of(cell.index) if r.frequency_index == idx)
     assert row.s11["real"] == pytest.approx(record.component("S11_xx").real)
     assert row.s11["imag"] == pytest.approx(record.component("S11_xx").imag)
@@ -90,9 +100,14 @@ def test_extract_design_frequency_raises_on_incomplete_database(built):
     return a partial table."""
     _, database = built
     mismatched_cfg = LibraryConfig(
-        period_m=4.8e-3, substrate=_SUBSTRATE,
-        f_min_hz=12.0e9, f_max_hz=13.0e9, f_step_hz=0.5e9, f_design_hz=12.5e9,
-        l_values_mm=(1.0, 2.4, 3.6), w_values_mm=(1.0, 2.4, 3.6),   # 3.6 mm not in the built database
+        period_m=4.8e-3,
+        substrate=_SUBSTRATE,
+        f_min_hz=12.0e9,
+        f_max_hz=13.0e9,
+        f_step_hz=0.5e9,
+        f_design_hz=12.5e9,
+        l_values_mm=(1.0, 2.4, 3.6),
+        w_values_mm=(1.0, 2.4, 3.6),  # 3.6 mm not in the built database
     )
     with pytest.raises(ValueError, match="no cell for"):
         extract_design_frequency(database, mismatched_cfg)
@@ -100,18 +115,22 @@ def test_extract_design_frequency_raises_on_incomplete_database(built):
 
 # --------------------------------------------------------------------------------- phase source
 
+
 def test_resolve_phase_source_is_s11_xx_specification_mandated():
     res = resolve_phase_source()
     assert res.component == "S11_xx"
     assert res.status == "SPECIFICATION_MANDATED"
-    assert res.note   # non-empty, explains the ground-plane caveat
+    assert res.note  # non-empty, explains the ground-plane caveat
 
 
 # ------------------------------------------------------------------------------- coverage/gaps
 
+
 def _table(phases_deg):
-    return [{"L_mm": i, "W_mm": i, "phase_deg": p, "magnitude_db": -10.0, "S11_real": 0.0, "S11_imag": 0.0}
-            for i, p in enumerate(phases_deg)]
+    return [
+        {"L_mm": i, "W_mm": i, "phase_deg": p, "magnitude_db": -10.0, "S11_real": 0.0, "S11_imag": 0.0}
+        for i, p in enumerate(phases_deg)
+    ]
 
 
 def test_coverage_four_evenly_spaced_points_has_90deg_gaps_and_270_coverage():
@@ -149,8 +168,9 @@ def test_coverage_rejects_empty_table():
 
 # ------------------------------------------------------------------------------- collisions
 
+
 def test_collision_groups_finds_clustered_phases():
-    table = _table([10.0, 12.0, 100.0, -150.0])   # first two are within a 10-deg bin together
+    table = _table([10.0, 12.0, 100.0, -150.0])  # first two are within a 10-deg bin together
     groups = phase_collision_groups(table, bin_deg=10.0)
     assert len(groups) == 1
     assert groups[0]["n_candidates"] == 2

@@ -23,8 +23,10 @@ _LIB_CFG = library_schema.LibraryConfig.default()
 LIBRARY_PERIOD_M = _LIB_CFG.period_m
 LIBRARY_MESH = MeshSettings(**_LIB_CFG.mesh)
 LIBRARY_SUBSTRATE = Substrate(
-    name=_LIB_CFG.substrate["name"], eps_r=_LIB_CFG.substrate["eps_r"],
-    tan_delta=_LIB_CFG.substrate["tan_delta"], thickness=_LIB_CFG.substrate["thickness_m"],
+    name=_LIB_CFG.substrate["name"],
+    eps_r=_LIB_CFG.substrate["eps_r"],
+    tan_delta=_LIB_CFG.substrate["tan_delta"],
+    thickness=_LIB_CFG.substrate["thickness_m"],
 )
 LIBRARY_LATTICE = RectangularLattice(LIBRARY_PERIOD_M, LIBRARY_PERIOD_M)
 
@@ -86,6 +88,7 @@ def phase7_delivered_lookup_duplicate_count(checkpoint_path=DEFAULT_CHECKPOINT_J
 
 
 # ------------------------------------------------------------------- Phases 9-11's own mesh
+
 
 def phase9_strong_contrast_check():
     """The center (2.8, 2.8) mm vs. the 4 distinct strong-contrast corner values (1.0,1.0),

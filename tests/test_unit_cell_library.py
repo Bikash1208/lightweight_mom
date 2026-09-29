@@ -33,9 +33,14 @@ _SUBSTRATE = {"name": "Rogers RT/Duroid 5880", "eps_r": 2.2, "tan_delta": 0.0009
 
 def small_config():
     return LibraryConfig(
-        period_m=4.8e-3, substrate=_SUBSTRATE,
-        f_min_hz=11.0e9, f_max_hz=13.0e9, f_step_hz=1.0e9, f_design_hz=12.0e9,
-        l_values_mm=(1.0, 2.4, 4.2), w_values_mm=(1.0, 2.4, 4.2),
+        period_m=4.8e-3,
+        substrate=_SUBSTRATE,
+        f_min_hz=11.0e9,
+        f_max_hz=13.0e9,
+        f_step_hz=1.0e9,
+        f_design_hz=12.0e9,
+        l_values_mm=(1.0, 2.4, 4.2),
+        w_values_mm=(1.0, 2.4, 4.2),
     )
 
 
@@ -47,15 +52,32 @@ def built():
 
 # --------------------------------------------------------------------------- JSON / CSV export
 
+
 def test_library_json_has_required_top_level_fields(built, tmp_path):
     _, database = built
     path = write_library_json(database, tmp_path / "lib.json")
     doc = json.loads(path.read_text())
     assert doc["format"] == LIBRARY_FORMAT_NAME
     assert len(doc["cells"]) == 9
-    for field in ("cell_id", "L_mm", "W_mm", "period_x_mm", "period_y_mm", "substrate_thickness_mm",
-                  "epsilon_r", "tan_delta", "frequency_GHz", "S11", "S21", "S12", "S22",
-                  "polarization_convention", "time_convention", "geometry_status", "solver_status"):
+    for field in (
+        "cell_id",
+        "L_mm",
+        "W_mm",
+        "period_x_mm",
+        "period_y_mm",
+        "substrate_thickness_mm",
+        "epsilon_r",
+        "tan_delta",
+        "frequency_GHz",
+        "S11",
+        "S21",
+        "S12",
+        "S22",
+        "polarization_convention",
+        "time_convention",
+        "geometry_status",
+        "solver_status",
+    ):
         assert field in doc["cells"][0], field
 
 
@@ -100,6 +122,7 @@ def test_phase_lookup_filename_format():
 
 # --------------------------------------------------------------------------------------- manifest
 
+
 def test_manifest_has_every_required_field(built):
     cfg, database = built
     n_ok = sum(1 for c in database.cells if c.status == "ok")
@@ -110,10 +133,22 @@ def test_manifest_has_every_required_field(built):
 
     manifest = build_manifest(cfg, _Build(), resolve_phase_source(), deterministic_timestamp="2026-01-01T00:00:00Z")
     for field in (
-        "library_version", "creation_timestamp", "solver_version", "configuration_hash",
-        "number_of_cells", "number_of_successful_cells", "number_of_failed_cells",
-        "frequency_count", "frequency_min_GHz", "frequency_max_GHz", "design_frequency_GHz",
-        "period_x_mm", "period_y_mm", "substrate_thickness_mm", "phase_source", "time_convention",
+        "library_version",
+        "creation_timestamp",
+        "solver_version",
+        "configuration_hash",
+        "number_of_cells",
+        "number_of_successful_cells",
+        "number_of_failed_cells",
+        "frequency_count",
+        "frequency_min_GHz",
+        "frequency_max_GHz",
+        "design_frequency_GHz",
+        "period_x_mm",
+        "period_y_mm",
+        "substrate_thickness_mm",
+        "phase_source",
+        "time_convention",
         "polarization_convention",
     ):
         assert field in manifest, field
@@ -135,15 +170,21 @@ def test_manifest_configuration_hash_is_stable_and_sensitive():
     assert m1["configuration_hash"] == m2["configuration_hash"]
 
     cfg3 = LibraryConfig(
-        period_m=4.8e-3, substrate=_SUBSTRATE,
-        f_min_hz=11.0e9, f_max_hz=13.0e9, f_step_hz=1.0e9, f_design_hz=12.0e9,
-        l_values_mm=(1.0, 2.4, 4.0), w_values_mm=(1.0, 2.4, 4.2),   # one L value different
+        period_m=4.8e-3,
+        substrate=_SUBSTRATE,
+        f_min_hz=11.0e9,
+        f_max_hz=13.0e9,
+        f_step_hz=1.0e9,
+        f_design_hz=12.0e9,
+        l_values_mm=(1.0, 2.4, 4.0),
+        w_values_mm=(1.0, 2.4, 4.2),  # one L value different
     )
     m3 = build_manifest(cfg3, _Build(), resolve_phase_source(), "t")
     assert m3["configuration_hash"] != m1["configuration_hash"]
 
 
 # --------------------------------------------------------------------------------- query API
+
 
 @pytest.fixture(scope="module")
 def library_json(built, tmp_path_factory):
@@ -187,14 +228,14 @@ def test_find_phase_candidates_recovers_known_phase(library_json):
     proves the search actually works, not merely returns something."""
     lib = UnitCellLibrary.from_json(library_json)
     cell = lib.get_cell(2.4, 2.4)
-    own_phase = cell["S11"][1]["phase_deg"]   # index 1 <-> 12.0 GHz (11, 12, 13 GHz grid)
+    own_phase = cell["S11"][1]["phase_deg"]  # index 1 <-> 12.0 GHz (11, 12, 13 GHz grid)
     candidates = lib.find_phase_candidates(own_phase, 12.0, tolerance_deg=0.01)
     assert any(c.l_mm == 2.4 and c.w_mm == 2.4 for c in candidates)
 
 
 def test_find_phase_candidates_returns_all_not_one(library_json):
     lib = UnitCellLibrary.from_json(library_json)
-    candidates = lib.find_phase_candidates(0.0, 12.0, tolerance_deg=360.0)   # everything matches
+    candidates = lib.find_phase_candidates(0.0, 12.0, tolerance_deg=360.0)  # everything matches
     n_ok = sum(1 for c in lib._doc["cells"] if c["solver_status"] == "OK")
     assert len(candidates) == n_ok
 
@@ -219,12 +260,20 @@ def test_invert_phase_structure_when_found(library_json):
     own_phase = cell["S11"][1]["phase_deg"]
     result = lib.invert_phase(own_phase, 12.0)
     assert result != "NO_VALID_CANDIDATE"
-    for key in ("target_phase_deg", "selected_phase_deg", "phase_error_deg", "L_mm", "W_mm",
-                "response_magnitude_db", "cell_id"):
+    for key in (
+        "target_phase_deg",
+        "selected_phase_deg",
+        "phase_error_deg",
+        "L_mm",
+        "W_mm",
+        "response_magnitude_db",
+        "cell_id",
+    ):
         assert key in result
 
 
 # ---------------------------------------------------------------------------- full pipeline
+
 
 def test_build_full_library_end_to_end_directory_layout(tmp_path):
     cfg = small_config()

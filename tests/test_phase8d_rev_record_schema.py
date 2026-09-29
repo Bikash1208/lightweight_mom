@@ -5,7 +5,9 @@ import pytest
 from src.phase8c import data_source
 from src.phase8d_rev.record_schema import LINEAR_COMPONENT_NAMES, record_from_database
 
-pytestmark = pytest.mark.skipif(not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present")
+pytestmark = pytest.mark.skipif(
+    not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present"
+)
 
 
 def _first_ok_cell_and_record(database):

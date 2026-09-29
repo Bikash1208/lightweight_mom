@@ -10,11 +10,10 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from ..database import component_value
 from ..phase_extraction import phase_coverage
 from ..validation_export import _db
 
-DEDUP_EPS = 1e-9    # bit-level dedup of complex values (absolute, since |S|<=1)
+DEDUP_EPS = 1e-9  # bit-level dedup of complex values (absolute, since |S|<=1)
 DEDUP_EPS_DEG = 1e-6  # same tolerance Phase 8B's distinct_states.py uses for phase-only dedup
 
 
@@ -39,11 +38,17 @@ def extract_component_table(database, component_name, frequency_index):
         record = database.record(cell.index, frequency_index)
         z = record.component(component_name)
         mag = abs(z)
-        rows.append(ScatteringRow(
-            l_mm=round(cell.parameters["length_m"] * 1e3, 9), w_mm=round(cell.parameters["width_m"] * 1e3, 9),
-            real=float(z.real), imag=float(z.imag), mag=float(mag),
-            mag_db=float(_db(np.array([mag]))[0]), phase_deg=float(record.phase_deg(component_name)),
-        ))
+        rows.append(
+            ScatteringRow(
+                l_mm=round(cell.parameters["length_m"] * 1e3, 9),
+                w_mm=round(cell.parameters["width_m"] * 1e3, 9),
+                real=float(z.real),
+                imag=float(z.imag),
+                mag=float(mag),
+                mag_db=float(_db(np.array([mag]))[0]),
+                phase_deg=float(record.phase_deg(component_name)),
+            )
+        )
     if not rows:
         raise ValueError(f"extract_component_table: no successful cells for {component_name!r}")
     return rows
@@ -68,7 +73,9 @@ def distinct_complex_and_phase_states(rows, dedup_eps=DEDUP_EPS, dedup_eps_deg=D
     n_decimals_deg = max(0, -int(np.floor(np.log10(dedup_eps_deg))))
     phase_keys = {round(r.phase_deg, n_decimals_deg) for r in rows}
     return ComplexStateAnalysis(
-        n_geometries=n, n_distinct_complex_states=len(complex_keys), n_distinct_phase_states=len(phase_keys),
+        n_geometries=n,
+        n_distinct_complex_states=len(complex_keys),
+        n_distinct_phase_states=len(phase_keys),
     )
 
 
@@ -82,7 +89,7 @@ class CandidateCoverage:
     magnitude_max: float
     magnitude_median: float
     magnitude_std: float
-    phase_magnitude_correlation: float | None   # Pearson r of (phase_deg, mag) -- descriptive only
+    phase_magnitude_correlation: float | None  # Pearson r of (phase_deg, mag) -- descriptive only
 
 
 def candidate_coverage(rows, component_name):
@@ -94,10 +101,14 @@ def candidate_coverage(rows, component_name):
     if len(rows) >= 2 and np.std(mags) > 0 and np.std(phases) > 0:
         corr = float(np.corrcoef(phases, mags)[0, 1])
     return CandidateCoverage(
-        component=component_name, n_points=cov.n_points, coverage_deg=cov.coverage_deg,
+        component=component_name,
+        n_points=cov.n_points,
+        coverage_deg=cov.coverage_deg,
         largest_gap_deg=cov.largest_gap_deg,
-        magnitude_min=float(mags.min()), magnitude_max=float(mags.max()),
-        magnitude_median=float(np.median(mags)), magnitude_std=float(np.std(mags)),
+        magnitude_min=float(mags.min()),
+        magnitude_max=float(mags.max()),
+        magnitude_median=float(np.median(mags)),
+        magnitude_std=float(np.std(mags)),
         phase_magnitude_correlation=corr,
     )
 
@@ -110,8 +121,13 @@ def coverage_vs_frequency(database, component_name):
         rows = extract_component_table(database, component_name, i)
         cov = phase_coverage([{"phase_deg": r.phase_deg} for r in rows])
         mags = [r.mag for r in rows]
-        results.append({
-            "frequency_GHz": f / 1e9, "coverage_deg": cov.coverage_deg, "largest_gap_deg": cov.largest_gap_deg,
-            "magnitude_min": min(mags), "magnitude_max": max(mags),
-        })
+        results.append(
+            {
+                "frequency_GHz": f / 1e9,
+                "coverage_deg": cov.coverage_deg,
+                "largest_gap_deg": cov.largest_gap_deg,
+                "magnitude_min": min(mags),
+                "magnitude_max": max(mags),
+            }
+        )
     return results

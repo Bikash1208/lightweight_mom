@@ -5,9 +5,9 @@ from dataclasses import dataclass
 
 import numpy as np
 import pytest
-
 from reference_layered import solve_incident_plane_wave
-from src.basis_functions import MeshSettings, RooftopBasis
+
+from src.basis_functions import RooftopBasis
 from src.config import config_from_dict
 from src.constants import C0
 from src.excitation import PlaneWaveExcitation, ReferencePlanes, stack_tangential_field
@@ -41,9 +41,9 @@ class PolarizedStub:
     def e_field_direction(self):
         c, s = math.cos(self.theta), math.sin(self.theta)
         cp, sp = math.cos(self.phi), math.sin(self.phi)
-        if self.tm:            # E in the plane of incidence, perpendicular to k_inc
+        if self.tm:  # E in the plane of incidence, perpendicular to k_inc
             return np.array([c * cp, c * sp, s])
-        return np.array([-sp, cp, 0.0])     # TE: E perpendicular to the plane of incidence
+        return np.array([-sp, cp, 0.0])  # TE: E perpendicular to the plane of incidence
 
 
 def green(eps_r, tand, h):
@@ -74,7 +74,7 @@ def test_oblique_te_and_tm_stack_field_matches_field_matching(eps_r, tand, h, th
     kx, ky = exc.transverse_wavenumber
     e_dir = exc.e_field_direction
     k_inc = np.array([kx, ky, -g.k0 * math.cos(exc.theta)])
-    assert abs(e_dir @ k_inc) < 1e-9 * g.k0                       # the stub really is transverse
+    assert abs(e_dir @ k_inc) < 1e-9 * g.k0  # the stub really is transverse
     ref = solve_incident_plane_wave(kx, ky, e_dir, F, g.substrate.eps_complex, h)
     assert stack_tangential_field(g, exc) == pytest.approx(ref, rel=1e-11, abs=1e-13)
 
@@ -89,6 +89,7 @@ def test_plane_wave_excitation_te_oblique_matches_reference():
 
 
 # ------------------------------------------------------------- thin-film analytics
+
 
 def test_half_wave_slab_is_transparent_and_quarter_wave_slab_gives_two_over_one_plus_eps():
     """Lossless normal incidence. Half-wave slab: Gamma = 0, E(0) = E_inc. Quarter-wave slab:
@@ -112,7 +113,7 @@ def test_no_slab_limits():
 
 def test_thick_lossy_substrate_is_a_single_interface():
     """h -> infinity with loss: E(0) = 1 + r01, r01 = (1 - n)/(1 + n) at normal incidence."""
-    g = green(2.2, 0.05, 5.0)              # far-face round trip ~ exp(-78): negligible
+    g = green(2.2, 0.05, 5.0)  # far-face round trip ~ exp(-78): negligible
     n = g.substrate.refractive_index
     e = stack_tangential_field(g, PlaneWaveExcitation(F))
     assert e[0] == pytest.approx(1 + (1 - n) / (1 + n), rel=1e-12)
@@ -124,6 +125,7 @@ def test_frequency_mismatch_is_rejected():
 
 
 # ================================================================ excitation vector
+
 
 def make_basis(kind="rectangle", length=4e-3, width=2e-3):
     sub = Substrate("s", 2.2, 0.0009, 1.575e-3)
@@ -140,8 +142,8 @@ def test_normal_incidence_vector_is_area_times_stack_field_on_matching_rooftops(
     v = assemble_excitation_vector(b, e, 0.0, 0.0)
     comp = 0 if pol == "x" else 1
     same = b.direction == comp
-    assert v[same] == pytest.approx(b.dx * b.dy * e[comp], rel=1e-14)       # integral of f = dx*dy
-    assert np.all(v[~same] == 0.0)                                           # E has no cross component
+    assert v[same] == pytest.approx(b.dx * b.dy * e[comp], rel=1e-14)  # integral of f = dx*dy
+    assert np.all(v[~same] == 0.0)  # E has no cross component
     assert v.shape == (b.n_unknowns,)
 
 
@@ -157,7 +159,7 @@ def test_oblique_vector_carries_phase_and_sinc_amplitude():
     amp = b.dx * b.dy * np.sinc(kx0 * b.dx / (2 * math.pi)) ** 2 * np.sinc(ky0 * b.dy / (2 * math.pi))
     phase = np.exp(-1j * (kx0 * b.center_x[xs] + ky0 * b.center_y[xs]))
     assert v[xs] == pytest.approx(amp * phase * e[0], rel=1e-13)
-    assert np.all(np.abs(v[~xs]) < 1e-12 * np.abs(v[xs]).max())              # E_y = 0 for this TE wave
+    assert np.all(np.abs(v[~xs]) < 1e-12 * np.abs(v[xs]).max())  # E_y = 0 for this TE wave
 
 
 def test_vector_is_projection_of_the_incident_field_onto_the_basis():
@@ -182,11 +184,12 @@ def test_vector_is_projection_of_the_incident_field_onto_the_basis():
 
 # ============================================================== reference planes
 
+
 def test_reference_plane_positions_and_validation():
     rp = ReferencePlanes(10e-3, 5e-3, 1.575e-3)
     assert rp.z_top == 10e-3
     assert rp.z_bottom == pytest.approx(-(1.575e-3 + 5e-3), rel=1e-15)
-    assert ReferencePlanes(0.0, 0.0, 1e-3).z_bottom == -1e-3        # planes on the interfaces
+    assert ReferencePlanes(0.0, 0.0, 1e-3).z_bottom == -1e-3  # planes on the interfaces
     for bad in [(-1e-3, 0, 1e-3), (0, -1e-3, 1e-3), (0, 0, 0.0), (float("nan"), 0, 1e-3), ("1", 0, 1e-3)]:
         with pytest.raises(ValueError):
             ReferencePlanes(*bad)
@@ -194,7 +197,8 @@ def test_reference_plane_positions_and_validation():
 
 def config_dict(top, bottom):
     return {
-        "period_x": 8e-3, "period_y": 8e-3,
+        "period_x": 8e-3,
+        "period_y": 8e-3,
         "substrate": {"eps_r": 2.2, "tan_delta": 0.0009, "thickness": 1.575e-3},
         "geometry": {"type": "rectangle", "length": 4e-3, "width": 2e-3},
         "excitation": {"frequency": 10e9},
@@ -216,6 +220,7 @@ def test_reference_planes_do_not_change_Z_or_V_but_are_kept_explicit():
 
 
 # ============================================================ bottom-port excitation (Phase 4)
+
 
 @pytest.mark.parametrize("eps_r, tand, h", STACKS)
 @pytest.mark.parametrize("pol", ["x", "y"])
@@ -243,7 +248,7 @@ def test_bottom_port_normal_incidence_equals_the_slab_transmission_coefficient()
 def test_bottom_port_of_a_slab_free_stack_is_the_incident_wave_propagated_by_h():
     g = green(1.0, 0.0, 1.575e-3)
     e = stack_tangential_field(g, PlaneWaveExcitation(F), "bottom")
-    assert e == pytest.approx([np.exp(-1j * g.k0 * 1.575e-3), 0.0], rel=1e-12)   # travelling +z: exp(-jk0 h)
+    assert e == pytest.approx([np.exp(-1j * g.k0 * 1.575e-3), 0.0], rel=1e-12)  # travelling +z: exp(-jk0 h)
 
 
 def test_invalid_port_is_rejected():

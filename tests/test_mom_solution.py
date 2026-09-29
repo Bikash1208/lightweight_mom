@@ -4,6 +4,7 @@ import math
 
 import numpy as np
 import pytest
+from test_mom_excitation import PolarizedStub
 
 from src.basis_functions import MeshSettings
 from src.config import config_from_dict
@@ -13,7 +14,6 @@ from src.geometry import Geometry, UnitCell
 from src.materials import Metal, Substrate
 from src.periodic_bc import RectangularLattice
 from src.solver import assemble_system, build_system, solve
-from test_mom_excitation import PolarizedStub
 
 F = 10e9
 PX = PY = 8e-3
@@ -36,10 +36,12 @@ def mean_current(sys_, exc=None):
 
 # ==================================================================== analytic cases
 
-@pytest.mark.parametrize("eps_r, tand, h", [(1.0, 0.0, 1.575e-3), (2.2, 0.0009, 1.575e-3),
-                                             (10.2, 0.05, 3e-3), (2.2, 0.0, 5.05e-3)])
+
+@pytest.mark.parametrize(
+    "eps_r, tand, h", [(1.0, 0.0, 1.575e-3), (2.2, 0.0009, 1.575e-3), (10.2, 0.05, 3e-3), (2.2, 0.0, 5.05e-3)]
+)
 @pytest.mark.parametrize("pol", ["x", "y"])
-@pytest.mark.parametrize("nx, order", [(4, 2), (8, 4), (12, 17)])   # order >= nx/2: Z full rank
+@pytest.mark.parametrize("nx, order", [(4, 2), (8, 4), (12, 17)])  # order >= nx/2: Z full rank
 def test_full_pec_sheet_carries_2_over_eta0_for_any_substrate_mesh_and_order(eps_r, tand, h, pol, nx, order):
     """Full-cell PEC on the interface: total E vanishes on z = 0, so the air side sees a PEC mirror
     and J = 2 H_inc = 2 E0 / eta0, independent of the substrate behind the sheet. Uniform current is
@@ -51,7 +53,7 @@ def test_full_pec_sheet_carries_2_over_eta0_for_any_substrate_mesh_and_order(eps
     assert j[main] == pytest.approx(2 / ETA0, rel=1e-11)
     assert abs(j[other]) < 1e-12 / ETA0
     on_main = s.basis.direction == main
-    assert i[on_main] == pytest.approx(2 / ETA0, rel=1e-11)                # every rooftop, not just the mean
+    assert i[on_main] == pytest.approx(2 / ETA0, rel=1e-11)  # every rooftop, not just the mean
     assert np.all(np.abs(i[~on_main]) < 1e-11 / ETA0)
 
 
@@ -88,11 +90,13 @@ def test_full_pec_sheet_oblique_tm_current_is_2_over_eta0_independent_of_angle(t
 
 def test_no_metal_no_unknowns():
     from src.basis_functions import RooftopBasis
+
     with pytest.raises(ValueError):
         RooftopBasis(cell("patch", 1e-3, 1e-3), 8, 8)
 
 
 # ================================================================== PEC boundary condition
+
 
 def total_tangential_field(s, i, points, order):
     """E_inc(stack) + E_scat at z = 0 at ``points`` (normal incidence), Floquet sum to ``order``."""
@@ -159,13 +163,19 @@ def test_solution_has_no_normal_current_on_metal_boundary_and_no_current_in_gaps
     y = rng.uniform(-PY / 2, PY / 2, 4000)
     j = s.basis.evaluate(x, y, i)
     gap = ~c.is_metal(x, y)
-    far = gap & ~c.is_metal(x + 0.4 * s.basis.dx, y) & ~c.is_metal(x - 0.4 * s.basis.dx, y) \
-        & ~c.is_metal(x, y + 0.4 * s.basis.dy) & ~c.is_metal(x, y - 0.4 * s.basis.dy)
+    far = (
+        gap
+        & ~c.is_metal(x + 0.4 * s.basis.dx, y)
+        & ~c.is_metal(x - 0.4 * s.basis.dx, y)
+        & ~c.is_metal(x, y + 0.4 * s.basis.dy)
+        & ~c.is_metal(x, y - 0.4 * s.basis.dy)
+    )
     assert far.sum() > 100
     assert np.abs(j[far]).max() == 0.0
 
 
 # ============================================================= mesh / Floquet convergence
+
 
 def test_mean_current_converges_with_mesh_refinement():
     """Zeroth Floquet coefficient of the solved current (what the far field / S-parameters are built
@@ -176,7 +186,7 @@ def test_mean_current_converges_with_mesh_refinement():
         s = system(cell("rectangle", 6e-3, 2e-3), nx)
         j, _ = mean_current(s)
         vals.append(j[0])
-        assert abs(j[1]) < 1e-12 * abs(j[0])                    # y-symmetric cell: no cross-pol at k0
+        assert abs(j[1]) < 1e-12 * abs(j[0])  # y-symmetric cell: no cross-pol at k0
     d = [abs(vals[1] - vals[0]), abs(vals[2] - vals[1])]
     assert d[1] < d[0] and 1.5 < d[0] / d[1] < 3.0
     # extrapolated (first order) limit lies beyond the finest mesh and the finest is within ~10%
@@ -209,8 +219,10 @@ def test_mean_current_converges_with_floquet_order():
 
 # ========================================================================= symmetries
 
-@pytest.mark.parametrize("kind, length, width", [("rectangle", 6e-3, 2e-3), ("slot", 6e-3, 2e-3),
-                                                  ("dipole", 8e-3, 1e-3)])
+
+@pytest.mark.parametrize(
+    "kind, length, width", [("rectangle", 6e-3, 2e-3), ("slot", 6e-3, 2e-3), ("dipole", 8e-3, 1e-3)]
+)
 def test_x_polarized_solution_has_mirror_parity(kind, length, width):
     """Symmetric cell + uniform E_x: J_x even in x and y, J_y odd in x and in y."""
     c = cell(kind, length, width)
@@ -241,8 +253,8 @@ def test_rotating_cell_and_polarization_by_90_degrees_rotates_the_current(kind, 
     x = rng.uniform(-PX / 2 + 1e-6, PX / 2 - 1e-6, 400)
     y = rng.uniform(-PY / 2 + 1e-6, PY / 2 - 1e-6, 400)
     ja = sa.basis.evaluate(x, y, ia)
-    jb = sb.basis.evaluate(-y, x, ib)                                    # at R r
-    rotated = np.stack([-ja[:, 1], ja[:, 0]], axis=-1)                    # R J_A
+    jb = sb.basis.evaluate(-y, x, ib)  # at R r
+    rotated = np.stack([-ja[:, 1], ja[:, 0]], axis=-1)  # R J_A
     assert np.abs(jb - rotated).max() < 1e-8 * np.abs(ja).max()
 
 
@@ -258,6 +270,7 @@ def test_x_and_y_polarization_agree_for_a_square_symmetric_patch():
 
 # =================================================== residual / passivity / config route
 
+
 def test_solution_satisfies_the_linear_system_and_the_power_balance_identity():
     s = system(cell("rectangle", 6e-3, 2e-3), 16, 32)
     i = solve(s.z, s.v)
@@ -269,6 +282,7 @@ def test_solution_satisfies_the_linear_system_and_the_power_balance_identity():
 
 def test_config_route_builds_a_consistent_solvable_system():
     from test_mom_excitation import config_dict
+
     cfg = config_from_dict(config_dict(10e-3, 10e-3))
     s = build_system(cfg)
     i = solve(s.z, s.v)

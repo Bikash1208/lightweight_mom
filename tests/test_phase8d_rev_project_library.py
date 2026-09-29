@@ -8,7 +8,9 @@ from src.phase8d_rev.project_library import extract_project_library
 from src.phase8d_rev.query import UnitCellQuery
 from src.phase8d_rev.universal_database import UniversalDatabase
 
-pytestmark = pytest.mark.skipif(not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present")
+pytestmark = pytest.mark.skipif(
+    not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present"
+)
 
 
 @pytest.fixture

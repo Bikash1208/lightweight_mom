@@ -28,7 +28,7 @@ def test_degree_radian():
         ("25 um", 25e-6),
         ("25 µm", 25e-6),
         ("0.5 m", 0.5),
-        ("8e-3", 8e-3),        # what PyYAML gives for `8e-3`: bare number string => SI
+        ("8e-3", 8e-3),  # what PyYAML gives for `8e-3`: bare number string => SI
         ("  8.0E-3  ", 8e-3),
         ("-1.5 mm", -1.5e-3),
         (8e-3, 8e-3),
@@ -58,8 +58,22 @@ def test_parse_frequency(text, hertz):
 
 @pytest.mark.parametrize(
     "bad",
-    ["8 Mm", "8 MM", "8 furlong", "abc", "", "8 mm mm", True, None, float("nan"),
-     float("inf"), "nan", "inf", 1 + 2j, [8e-3]],
+    [
+        "8 Mm",
+        "8 MM",
+        "8 furlong",
+        "abc",
+        "",
+        "8 mm mm",
+        True,
+        None,
+        float("nan"),
+        float("inf"),
+        "nan",
+        "inf",
+        1 + 2j,
+        [8e-3],
+    ],
 )
 def test_parse_length_rejects(bad):
     with pytest.raises(ValueError):

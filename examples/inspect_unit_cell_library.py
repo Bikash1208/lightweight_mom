@@ -29,8 +29,10 @@ def main(argv):
         import json
 
         manifest = json.loads(manifest_path.read_text())
-        print(f"design frequency: {manifest['design_frequency_GHz']} GHz, "
-              f"phase_source: {manifest['phase_source']} ({manifest['phase_source_status']})")
+        print(
+            f"design frequency: {manifest['design_frequency_GHz']} GHz, "
+            f"phase_source: {manifest['phase_source']} ({manifest['phase_source_status']})"
+        )
         f_design = manifest["design_frequency_GHz"]
     else:
         f_design = 12.5
@@ -38,12 +40,16 @@ def main(argv):
     example_l, example_w = 2.4, 2.4
     cell = library.get_cell(example_l, example_w)
     if cell is not None:
-        print(f"\nget_cell(L={example_l}, W={example_w}): {cell['cell_id']} "
-              f"geometry_status={cell['geometry_status']} solver_status={cell['solver_status']}")
+        print(
+            f"\nget_cell(L={example_l}, W={example_w}): {cell['cell_id']} "
+            f"geometry_status={cell['geometry_status']} solver_status={cell['solver_status']}"
+        )
         try:
             resp = library.response(example_l, example_w, f_design)
-            print(f"response(L={example_l}, W={example_w}, f={f_design} GHz): "
-                  f"|S11xx|={resp['mag']:.4f} ({resp['mag_db']:.2f} dB), phase={resp['phase_deg']:.2f} deg")
+            print(
+                f"response(L={example_l}, W={example_w}, f={f_design} GHz): "
+                f"|S11xx|={resp['mag']:.4f} ({resp['mag_db']:.2f} dB), phase={resp['phase_deg']:.2f} deg"
+            )
         except (KeyError, ValueError) as e:
             print(f"response(...) unavailable: {e}")
 
@@ -52,8 +58,10 @@ def main(argv):
     if not candidates:
         print("  no candidates within the default tolerance")
     for c in candidates[:10]:
-        print(f"  L={c.l_mm:g} W={c.w_mm:g} mm  phase={c.phase_deg:.2f} deg  "
-              f"error={c.phase_error_deg:+.2f} deg  |S11xx|={c.magnitude_db:.2f} dB")
+        print(
+            f"  L={c.l_mm:g} W={c.w_mm:g} mm  phase={c.phase_deg:.2f} deg  "
+            f"error={c.phase_error_deg:+.2f} deg  |S11xx|={c.magnitude_db:.2f} dB"
+        )
 
     inversion = library.invert_phase(target_phase_deg, f_design)
     print(f"\ninvert_phase(target={target_phase_deg} deg, f={f_design} GHz): {inversion}")

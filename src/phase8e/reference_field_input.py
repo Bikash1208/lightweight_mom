@@ -33,16 +33,16 @@ from ..reference_field import validate_reference_field
 
 @dataclass(frozen=True)
 class ReferenceFieldGrid:
-    x_m: np.ndarray             # 2-D
-    y_m: np.ndarray             # 2-D
-    Ex: np.ndarray | None       # 2-D complex, or None if unavailable
+    x_m: np.ndarray  # 2-D
+    y_m: np.ndarray  # 2-D
+    Ex: np.ndarray | None  # 2-D complex, or None if unavailable
     Ey: np.ndarray | None
     amplitude_available: bool
-    source: str                  # "FILE:<path>" | "SYNTHETIC_DEMO_SPHERICAL_FEED" | "SYNTHETIC_DEMO_MONOPOLE" | "PHASE_ONLY_INPUT"
+    source: str  # "FILE:<path>" | "SYNTHETIC_DEMO_SPHERICAL_FEED" | "SYNTHETIC_DEMO_MONOPOLE" | "PHASE_ONLY_INPUT"
     dx_m: float | None
     dy_m: float | None
-    z_reference_m: float | None   # height of this field above the pattern plane z=0, if known
-    phase_deg: np.ndarray | None = None   # arg(Ex) if amplitude is available, else the supplied phase-only input
+    z_reference_m: float | None  # height of this field above the pattern plane z=0, if known
+    phase_deg: np.ndarray | None = None  # arg(Ex) if amplitude is available, else the supplied phase-only input
 
     def phase(self):
         """arg(E_ref) [deg], the one quantity every candidate formulation's phase-only path
@@ -68,7 +68,11 @@ def load_reference_field_from_csv(path, expected_frequency_ghz=None):
     with open(Path(path), newline="", encoding="utf-8") as fh:
         rows = list(csv.DictReader(fh))
     if expected_frequency_ghz is not None:
-        rows = [r for r in rows if abs(float(r["frequency_GHz"]) - expected_frequency_ghz) <= 1e-6 * max(abs(expected_frequency_ghz), 1.0)]
+        rows = [
+            r
+            for r in rows
+            if abs(float(r["frequency_GHz"]) - expected_frequency_ghz) <= 1e-6 * max(abs(expected_frequency_ghz), 1.0)
+        ]
 
     xs = sorted({round(float(r["x_mm"]), 9) for r in rows})
     ys = sorted({round(float(r["y_mm"]), 9) for r in rows})
@@ -85,9 +89,15 @@ def load_reference_field_from_csv(path, expected_frequency_ghz=None):
         raise ValueError(f"reference field file {path}: not a complete rectangular grid at the requested frequency")
 
     return ReferenceFieldGrid(
-        x_m=x_grid, y_m=y_grid, Ex=ex_grid, Ey=ey_grid, amplitude_available=True,
-        source=f"FILE:{path}", dx_m=(validation.dx_mm * 1e-3) if validation.dx_mm else None,
-        dy_m=(validation.dy_mm * 1e-3) if validation.dy_mm else None, z_reference_m=None,
+        x_m=x_grid,
+        y_m=y_grid,
+        Ex=ex_grid,
+        Ey=ey_grid,
+        amplitude_available=True,
+        source=f"FILE:{path}",
+        dx_m=(validation.dx_mm * 1e-3) if validation.dx_mm else None,
+        dy_m=(validation.dy_mm * 1e-3) if validation.dy_mm else None,
+        z_reference_m=None,
     )
 
 
@@ -111,7 +121,11 @@ def spherical_feed_reference_field(x_m, y_m, feed_height_m, frequency_hz, amplit
     r = np.sqrt(x_m**2 + y_m**2 + feed_height_m**2)
     ex = amplitude_at_1m / r * np.exp(-1j * k0 * r)
     return ReferenceFieldGrid(
-        x_m=x_m, y_m=y_m, Ex=ex, Ey=np.zeros_like(ex), amplitude_available=True,
+        x_m=x_m,
+        y_m=y_m,
+        Ex=ex,
+        Ey=np.zeros_like(ex),
+        amplitude_available=True,
         source="SYNTHETIC_DEMO_SPHERICAL_FEED",
         dx_m=float(x_m[0, 1] - x_m[0, 0]) if x_m.ndim == 2 and x_m.shape[1] > 1 else None,
         dy_m=float(y_m[1, 0] - y_m[0, 0]) if y_m.ndim == 2 and y_m.shape[0] > 1 else None,
@@ -125,11 +139,15 @@ def monopole_demo_reference_field(x_m, y_m, k_swg, amplitude_at_1m=1.0):
     x_m, y_m = np.asarray(x_m, dtype=float), np.asarray(y_m, dtype=float)
     ex = monopole_reference_field(x_m, y_m, k_swg, amplitude_at_1m)
     return ReferenceFieldGrid(
-        x_m=x_m, y_m=y_m, Ex=ex, Ey=np.zeros_like(ex), amplitude_available=True,
+        x_m=x_m,
+        y_m=y_m,
+        Ex=ex,
+        Ey=np.zeros_like(ex),
+        amplitude_available=True,
         source="SYNTHETIC_DEMO_MONOPOLE",
         dx_m=float(x_m[0, 1] - x_m[0, 0]) if x_m.ndim == 2 and x_m.shape[1] > 1 else None,
         dy_m=float(y_m[1, 0] - y_m[0, 0]) if y_m.ndim == 2 and y_m.shape[0] > 1 else None,
-        z_reference_m=0.0,   # a surface wave propagates *on* the surface, z=0 by construction
+        z_reference_m=0.0,  # a surface wave propagates *on* the surface, z=0 by construction
     )
 
 
@@ -140,6 +158,14 @@ def phase_only_reference_field(x_m, y_m, phase_deg):
     a fabricated unit-amplitude field)."""
     x_m, y_m, phase_deg = np.asarray(x_m, dtype=float), np.asarray(y_m, dtype=float), np.asarray(phase_deg, dtype=float)
     return ReferenceFieldGrid(
-        x_m=x_m, y_m=y_m, Ex=None, Ey=None, amplitude_available=False, source="PHASE_ONLY_INPUT",
-        dx_m=None, dy_m=None, z_reference_m=None, phase_deg=phase_deg,
+        x_m=x_m,
+        y_m=y_m,
+        Ex=None,
+        Ey=None,
+        amplitude_available=False,
+        source="PHASE_ONLY_INPUT",
+        dx_m=None,
+        dy_m=None,
+        z_reference_m=None,
+        phase_deg=phase_deg,
     )

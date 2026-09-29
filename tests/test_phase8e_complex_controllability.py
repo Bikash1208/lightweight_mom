@@ -12,7 +12,9 @@ from src.phase8e.complex_controllability import (
 )
 from src.phase_extraction import design_frequency_index
 
-pytestmark = pytest.mark.skipif(not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present")
+pytestmark = pytest.mark.skipif(
+    not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present"
+)
 
 
 @pytest.fixture

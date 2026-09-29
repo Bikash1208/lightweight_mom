@@ -1,8 +1,7 @@
 """Sec. 19, 28: reduction is only claimed valid for CASE_A_LOCAL; otherwise honestly reported as
 not attempted, never silently upgraded."""
 
-from src.phase11.classification import (CASE_A_LOCAL, CASE_B_MODERATELY_NONLOCAL,
-                                          CASE_C_STRONGLY_NONLOCAL)
+from src.phase11.classification import CASE_A_LOCAL, CASE_B_MODERATELY_NONLOCAL, CASE_C_STRONGLY_NONLOCAL
 from src.phase11.reduction import REDUCTION_NOT_ATTEMPTED, REDUCTION_VALIDATED, decide_reduction
 
 

@@ -22,6 +22,7 @@ def _row(l, w, real, imag):
 
 # ---------------------------------------------------------------------- Test: circular near-wrap
 
+
 def test_circular_coverage_treats_minus179_plus179_as_close_not_358_apart():
     rows = [_row(1, 1, *_polar(1.0, -179.0)), _row(1, 2, *_polar(1.0, 179.0))]
     cov = candidate_coverage(rows, "S11xx")
@@ -41,20 +42,22 @@ def _polar(mag, phase_deg):
 
 # ------------------------------------------------------------------------- Test: duplicate states
 
+
 def test_distinct_states_groups_bit_identical_complex_values_deterministically():
     rows = [_row(1, 1, 0.5, 0.1), _row(1.2, 1, 0.5, 0.1), _row(1.4, 1, 0.5, 0.2)]
     result = distinct_complex_and_phase_states(rows)
     assert result.n_geometries == 3
-    assert result.n_distinct_complex_states == 2   # first two are identical complex values
+    assert result.n_distinct_complex_states == 2  # first two are identical complex values
 
 
 # --------------------------------------------------------------- Test: phase/magnitude separation
 
+
 def test_same_phase_different_magnitude_are_not_the_same_complex_state():
     rows = [_row(1, 1, *_polar(0.5, 30.0)), _row(1.2, 1, *_polar(0.9, 30.0))]
     result = distinct_complex_and_phase_states(rows)
-    assert result.n_distinct_phase_states == 1     # same phase
-    assert result.n_distinct_complex_states == 2    # but different magnitude -> different complex state
+    assert result.n_distinct_phase_states == 1  # same phase
+    assert result.n_distinct_complex_states == 2  # but different magnitude -> different complex state
 
 
 def test_candidate_coverage_reports_magnitude_statistics_not_only_phase():
@@ -66,6 +69,7 @@ def test_candidate_coverage_reports_magnitude_statistics_not_only_phase():
 
 
 # -------------------------------------------------------------------------------- real-data tests
+
 
 def test_extract_component_table_real_s11_and_s21(phase8c_full_database):
     s11 = extract_component_table(phase8c_full_database, "S11_xx", 100)

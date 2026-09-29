@@ -24,9 +24,9 @@ MESH_FLOQUET_TOLERANCE = 0.02
 
 @dataclass(frozen=True)
 class GateResult:
-    status: str                          # GROUNDED_STACK_VALIDATED | GROUNDED_STACK_PARTIAL
+    status: str  # GROUNDED_STACK_VALIDATED | GROUNDED_STACK_PARTIAL
     reason: str
-    measured_phase_coverage_deg: float   # S11_xx circular coverage of the physics-sanity sweep
+    measured_phase_coverage_deg: float  # S11_xx circular coverage of the physics-sanity sweep
     hfss_status: str
     geometry_inversion_status: str
     step_export_status: str
@@ -63,11 +63,15 @@ def decide(max_analytic_error, floquet_error, mesh_error, any_surface_wave_in_ba
         )
     status = GROUNDED_STACK_VALIDATED if not reasons else GROUNDED_STACK_PARTIAL
     reason = (
-        "bare-slab closed form, surface-wave-pole avoidance and mesh/Floquet convergence all "
-        "passed within tolerance" if not reasons else "; ".join(reasons)
+        "bare-slab closed form, surface-wave-pole avoidance and mesh/Floquet convergence all passed within tolerance"
+        if not reasons
+        else "; ".join(reasons)
     )
     return GateResult(
-        status=status, reason=reason, measured_phase_coverage_deg=coverage_deg,
-        hfss_status=hfss_status(), geometry_inversion_status=GEOMETRY_INVERSION_LOCKED,
+        status=status,
+        reason=reason,
+        measured_phase_coverage_deg=coverage_deg,
+        hfss_status=hfss_status(),
+        geometry_inversion_status=GEOMETRY_INVERSION_LOCKED,
         step_export_status=STEP_EXPORT_LOCKED,
     )

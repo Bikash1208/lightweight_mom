@@ -17,8 +17,9 @@ def test_invert_target_direct_reaches_an_exactly_achievable_target():
     from src.phase11.reference_solver import solve_isolated
 
     target, _ = solve_isolated(P, CENTER[0] * 1e-3, CENTER[1] * 1e-3, SUB, MET, F, mesh_cells_per_side=8)
-    result = inv_mod.invert_target_direct(target, env, 1, 1, P, SUB, MET, F, mesh_cells_per_subcell=8,
-                                           candidate_lw_values_mm=[2.8])
+    result = inv_mod.invert_target_direct(
+        target, env, 1, 1, P, SUB, MET, F, mesh_cells_per_subcell=8, candidate_lw_values_mm=[2.8]
+    )
     assert result.status == inv_mod.FOUND
     assert result.best_candidate_lw_mm == (2.8, 2.8)
     assert result.mom_relative_error < 1e-6
@@ -26,8 +27,9 @@ def test_invert_target_direct_reaches_an_exactly_achievable_target():
 
 def test_invert_target_direct_rejects_an_absurd_target():
     env = pt.uniform(3, CENTER)
-    result = inv_mod.invert_target_direct(complex(1.0, 0.0), env, 1, 1, P, SUB, MET, F,
-                                           mesh_cells_per_subcell=8, candidate_lw_values_mm=[1.0, 2.8, 4.4])
+    result = inv_mod.invert_target_direct(
+        complex(1.0, 0.0), env, 1, 1, P, SUB, MET, F, mesh_cells_per_subcell=8, candidate_lw_values_mm=[1.0, 2.8, 4.4]
+    )
     assert result.status == inv_mod.TARGET_UNREACHABLE
 
 

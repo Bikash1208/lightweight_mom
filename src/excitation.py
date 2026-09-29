@@ -27,22 +27,22 @@ from dataclasses import dataclass
 import numpy as np
 
 from ._validate import finite_real
-from .green_function import LayeredGreenFunction, te_tm_unit_vectors
 from .frequency import (
     angular_frequency,
     free_space_wavelength,
     free_space_wavenumber,
     validate_frequency,
 )
+from .green_function import LayeredGreenFunction
 
 _POLARIZATIONS = {"x": (1.0, 0.0, 0.0), "y": (0.0, 1.0, 0.0)}
 
 
 @dataclass(frozen=True)
 class PlaneWaveExcitation:
-    frequency: float     # [Hz]
-    theta: float = 0.0   # [rad], 0 <= theta < pi/2
-    phi: float = 0.0     # [rad]
+    frequency: float  # [Hz]
+    theta: float = 0.0  # [rad], 0 <= theta < pi/2
+    phi: float = 0.0  # [rad]
     polarization: str = "x"
 
     def __post_init__(self):
@@ -52,9 +52,7 @@ class PlaneWaveExcitation:
         if not 0.0 <= self.theta < math.pi / 2:
             raise ValueError(f"theta must satisfy 0 <= theta < pi/2, got {self.theta}")
         if self.polarization not in _POLARIZATIONS:
-            raise ValueError(
-                f"polarization must be one of {sorted(_POLARIZATIONS)}, got {self.polarization!r}"
-            )
+            raise ValueError(f"polarization must be one of {sorted(_POLARIZATIONS)}, got {self.polarization!r}")
         k_hat = np.asarray(self.wavevector) / self.k0
         if abs(np.dot(self.e_field_direction, k_hat)) > 1e-12:
             raise ValueError(
@@ -111,20 +109,17 @@ class ReferencePlanes:
     location. Every existing call passes a real ``bottom_air_thickness`` and is unaffected.
     """
 
-    top_air_thickness: float             # [m] >= 0
-    bottom_air_thickness: float | None   # [m] >= 0, or None: no bottom port (grounded stack)
-    substrate_thickness: float           # [m] > 0
+    top_air_thickness: float  # [m] >= 0
+    bottom_air_thickness: float | None  # [m] >= 0, or None: no bottom port (grounded stack)
+    substrate_thickness: float  # [m] > 0
 
     def __post_init__(self):
-        object.__setattr__(
-            self, "top_air_thickness", finite_real("top_air_thickness", self.top_air_thickness)
-        )
-        object.__setattr__(
-            self, "substrate_thickness", finite_real("substrate_thickness", self.substrate_thickness)
-        )
+        object.__setattr__(self, "top_air_thickness", finite_real("top_air_thickness", self.top_air_thickness))
+        object.__setattr__(self, "substrate_thickness", finite_real("substrate_thickness", self.substrate_thickness))
         if self.bottom_air_thickness is not None:
             object.__setattr__(
-                self, "bottom_air_thickness",
+                self,
+                "bottom_air_thickness",
                 finite_real("bottom_air_thickness", self.bottom_air_thickness),
             )
             if self.bottom_air_thickness < 0.0:
@@ -142,8 +137,7 @@ class ReferencePlanes:
     def z_bottom(self):
         if self.bottom_air_thickness is None:
             raise ValueError(
-                "no bottom reference plane exists for a grounded stack "
-                "(ReferencePlanes.bottom_air_thickness is None)"
+                "no bottom reference plane exists for a grounded stack (ReferencePlanes.bottom_air_thickness is None)"
             )
         return -(self.substrate_thickness + self.bottom_air_thickness)
 
@@ -176,10 +170,7 @@ def stack_tangential_field(green: LayeredGreenFunction, excitation: PlaneWaveExc
     stack has no bottom port (``LayeredGreenFunction.stack_fields``).
     """
     if not np.isclose(green.frequency, excitation.frequency, rtol=1e-12, atol=0.0):
-        raise ValueError(
-            f"Green function frequency {green.frequency} != excitation frequency "
-            f"{excitation.frequency}"
-        )
+        raise ValueError(f"Green function frequency {green.frequency} != excitation frequency {excitation.frequency}")
     kx0, ky0 = excitation.transverse_wavenumber
     e_t = excitation.e_field_direction[:2].astype(complex)
     return green.stack_fields(kx0, ky0, e_t, 0.0, port)[0]

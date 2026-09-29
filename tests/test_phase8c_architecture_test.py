@@ -29,6 +29,6 @@ def test_formulation_a_reevaluation_is_unchanged_from_phase8b():
 
 def test_formulation_b_reevaluation_does_not_validate_by_resemblance_alone():
     result = formulation_b_reevaluation()
-    assert "REFLECTION_ARCHITECTURE_UNVALIDATED" == result["corresponds_to_reflection_phase"]
-    assert "TRANSMISSION_ARCHITECTURE_UNVALIDATED" == result["corresponds_to_transmission_phase"]
+    assert result["corresponds_to_reflection_phase"] == "REFLECTION_ARCHITECTURE_UNVALIDATED"
+    assert result["corresponds_to_transmission_phase"] == "TRANSMISSION_ARCHITECTURE_UNVALIDATED"
     assert "neither correspondence is validated" in result["note"]

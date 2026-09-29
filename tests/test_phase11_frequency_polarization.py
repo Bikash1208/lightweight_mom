@@ -12,8 +12,9 @@ CENTER = (2.8, 2.8)
 
 def test_frequency_study_covers_every_requested_frequency():
     freqs = (10.0e9, 12.5e9, 15.0e9)
-    results = freq_mod.run_frequency_study("C3", CENTER, P, SUB, MET, mesh_cells_per_subcell=8,
-                                            frequencies_hz=freqs, sizes=(1, 3))
+    results = freq_mod.run_frequency_study(
+        "C3", CENTER, P, SUB, MET, mesh_cells_per_subcell=8, frequencies_hz=freqs, sizes=(1, 3)
+    )
     assert [r.frequency_hz for r in results] == list(freqs)
     for r in results:
         assert set(r.responses_by_n.keys()) == {1, 3}
@@ -21,8 +22,7 @@ def test_frequency_study_covers_every_requested_frequency():
 
 
 def test_polarization_study_covers_x_and_y():
-    results = pol_mod.run_polarization_study(CENTER, P, SUB, MET, 12.5e9, mesh_cells_per_subcell=8,
-                                              sizes=(1, 3))
+    results = pol_mod.run_polarization_study(CENTER, P, SUB, MET, 12.5e9, mesh_cells_per_subcell=8, sizes=(1, 3))
     assert {r.polarization for r in results} == {"x", "y"}
 
 

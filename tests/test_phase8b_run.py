@@ -23,13 +23,23 @@ _HAS_PRODUCTION_LIBRARY = (DEFAULT_LIBRARY_DIR / "database" / "unit_cell_library
 def test_run_phase8b_produces_all_required_files(tmp_path):
     out_dir = tmp_path / "phase8b_out"
     result = run_phase8b(out_dir)
-    for name in ("repository_scientific_audit.md", "Holographic_Formulation.md",
-                 "holographic_specification.json", "control_variable_analysis.md",
-                 "source_registry.json", "phase_control_quantity.csv",
-                 "phase8b_distinct_state_analysis.csv"):
+    for name in (
+        "repository_scientific_audit.md",
+        "Holographic_Formulation.md",
+        "holographic_specification.json",
+        "control_variable_analysis.md",
+        "source_registry.json",
+        "phase_control_quantity.csv",
+        "phase8b_distinct_state_analysis.csv",
+    ):
         assert (out_dir / name).exists(), name
-    for name in ("object_wave_single_beam.png", "object_wave_multi_beam.png",
-                 "phase_gradient_test.png", "phase_control_quantity.png", "distinct_phase_states.png"):
+    for name in (
+        "object_wave_single_beam.png",
+        "object_wave_multi_beam.png",
+        "phase_gradient_test.png",
+        "phase_control_quantity.png",
+        "distinct_phase_states.png",
+    ):
         assert (out_dir / "plots" / name).exists(), name
 
 
@@ -66,7 +76,9 @@ def test_cli_runs_against_the_real_production_library(tmp_path):
     out_dir = tmp_path / "cli_out"
     proc = subprocess.run(
         [sys.executable, str(ROOT / "examples" / "run_phase8b_formulation.py"), "--output-dir", str(out_dir)],
-        cwd=ROOT, capture_output=True, text=True,
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "PHASE 8B" in proc.stdout

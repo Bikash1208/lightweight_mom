@@ -7,7 +7,9 @@ from src.phase8d_rev import library_entry as le
 from src.phase8d_rev.universal_database import UniversalDatabase
 from src.phase8e.candidate_library_period import assess_period_requirement
 
-pytestmark = pytest.mark.skipif(not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present")
+pytestmark = pytest.mark.skipif(
+    not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present"
+)
 
 
 @pytest.fixture

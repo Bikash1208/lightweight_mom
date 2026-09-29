@@ -1,6 +1,5 @@
 """Phase 8E end-to-end pipeline and CLI, against the real Phase 7 checkpoint."""
 
-import json
 import subprocess
 import sys
 from pathlib import Path
@@ -8,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from src.phase8c import data_source
-from src.phase8e.run import run_phase8e, print_final_report
+from src.phase8e.run import print_final_report, run_phase8e
 
 ROOT = Path(__file__).resolve().parent.parent
 _HAS_CHECKPOINT = data_source.DEFAULT_CHECKPOINT_JSON.exists()
@@ -18,6 +17,7 @@ _UNIVERSAL_DB_DIR = ROOT / "results" / "universal_database"
 
 def _hash(path):
     import hashlib
+
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
@@ -26,9 +26,15 @@ def test_run_produces_all_required_output_files(tmp_path, phase8c_full_database)
     result = run_phase8e(tmp_path / "out", database=phase8c_full_database)
     out = result["output_dir"]
     for name in (
-        "report.md", "formulation_candidates.json", "formulation_comparison.csv",
-        "control_variable_analysis.json", "reference_spectrum.csv", "object_spectrum.csv",
-        "required_response_map.csv", "library_response_map.csv", "reconstruction_metrics.json",
+        "report.md",
+        "formulation_candidates.json",
+        "formulation_comparison.csv",
+        "control_variable_analysis.json",
+        "reference_spectrum.csv",
+        "object_spectrum.csv",
+        "required_response_map.csv",
+        "library_response_map.csv",
+        "reconstruction_metrics.json",
         "required_library_specification.json",
     ):
         assert (out / name).exists(), name
@@ -56,7 +62,7 @@ def test_run_beam_reconstruction_identifies_all_three_demo_beams(tmp_path, phase
     hologram must actually place a detectable peak near each of the 3 demo beam directions."""
     result = run_phase8e(tmp_path / "out", database=phase8c_full_database)
     metrics = result["metrics_cont_b"]
-    assert all(e < 5.0 for e in metrics.pointing_error_deg)   # within the far-field grid's own 2 deg resolution
+    assert all(e < 5.0 for e in metrics.pointing_error_deg)  # within the far-field grid's own 2 deg resolution
 
 
 @pytest.mark.skipif(not _HAS_CHECKPOINT, reason="Phase 7 checkpoint not present")
@@ -90,7 +96,10 @@ def test_cli_runs_against_the_real_checkpoint(tmp_path):
     out_dir = tmp_path / "cli_out"
     proc = subprocess.run(
         [sys.executable, str(ROOT / "examples" / "run_phase8e_control_bridge.py"), "--output-dir", str(out_dir)],
-        cwd=ROOT, capture_output=True, text=True, timeout=180,
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=180,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "PHASE 8E" in proc.stdout

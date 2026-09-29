@@ -174,16 +174,12 @@ class LayeredGreenFunction:
         h = self.substrate.thickness
 
         with np.errstate(divide="ignore", invalid="ignore"):
-            sigma = np.where(
-                b == 0.0, 1j * h, -np.expm1(-2j * b * h) / (2.0 * np.where(b == 0.0, 1.0, b))
-            )
+            sigma = np.where(b == 0.0, 1j * h, -np.expm1(-2j * b * h) / (2.0 * np.where(b == 0.0, 1.0, b)))
         if self.backing == "air":
             d = a - b
             z_te = self.omega * MU0 * (1.0 + sigma * d) / (2.0 * a + sigma * d**2)
             d_tm = a - b / eps
-            z_tm = (
-                (a / (self.omega * EPS0)) * (a - b * sigma * d_tm) / (2.0 * a + eps * sigma * d_tm**2)
-            )
+            z_tm = (a / (self.omega * EPS0)) * (a - b * sigma * d_tm) / (2.0 * a + eps * sigma * d_tm**2)
         else:  # "pec": bottom-face load reflection Gamma_L = -1 (short circuit at z = -h)
             z_te = self.omega * MU0 * sigma / (1.0 + sigma * (a - b))
             aa, bb = a, b / eps
@@ -276,9 +272,9 @@ class LayeredGreenFunction:
         """Clipped local coordinates and masks for the three regions."""
         h = self.substrate.thickness
         return (
-            np.maximum(z, 0.0),               # z_up  >= 0
-            np.clip(z, -h, 0.0),              # z_sub in [-h, 0]
-            np.minimum(z, -h) + h,            # z_dn  <= 0  (distance below the bottom face)
+            np.maximum(z, 0.0),  # z_up  >= 0
+            np.clip(z, -h, 0.0),  # z_sub in [-h, 0]
+            np.minimum(z, -h) + h,  # z_dn  <= 0  (distance below the bottom face)
         )
 
     def _bottom_reflection(self, rho_natural):

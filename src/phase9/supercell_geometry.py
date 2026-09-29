@@ -32,7 +32,7 @@ class SupercellUnitCell:
     n: int
     sub_period_x: float
     sub_period_y: float
-    patches: tuple      # tuple[tuple[Geometry, ...], ...], shape (n, n)
+    patches: tuple  # tuple[tuple[Geometry, ...], ...], shape (n, n)
 
     def __post_init__(self):
         if self.n < 1:

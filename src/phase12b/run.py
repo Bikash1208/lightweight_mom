@@ -6,11 +6,11 @@ grounded period study (Task D). Writes every required output and prints a termin
 from dataclasses import dataclass
 from pathlib import Path
 
+from ..phase12a.sweep_study import convergence_study as phase12a_convergence_study
 from . import duplicate_audit, gate, period_study, plots, reassessment, specification
 from .report import render_phase12b_report_md
-from ..phase12a.sweep_study import convergence_study as phase12a_convergence_study
 
-NEW_PERIODS_MM = (8.0, 12.0)   # 4.8mm is "baseline from B" (brief's own words) -- reused, not redone
+NEW_PERIODS_MM = (8.0, 12.0)  # 4.8mm is "baseline from B" (brief's own words) -- reused, not redone
 
 
 @dataclass(frozen=True)
@@ -19,13 +19,13 @@ class Phase12bResult:
     aligned_family: tuple
     aligned_cells_family: int
     phase7_report: object
-    aligned_refinement: tuple      # (points, diffs)
-    floquet_convergence: tuple     # (points, diffs)
+    aligned_refinement: tuple  # (points, diffs)
+    floquet_convergence: tuple  # (points, diffs)
     aligned_sweep_points: tuple
     aligned_cells: int
     aligned_coverage_by_frequency: dict
     duplicate_audit: dict
-    period_results: dict           # period_mm -> {...}
+    period_results: dict  # period_mm -> {...}
     mesh_gate: object
     audit_gate: object
     period_gate: object
@@ -33,8 +33,12 @@ class Phase12bResult:
 
 
 def run_phase12b(
-    output_dir, l_values_mm=None, frequencies_hz=None, new_periods_mm=NEW_PERIODS_MM,
-    period_l_values_mm=None, aligned_refinement_cells=(24, 48, 96),
+    output_dir,
+    l_values_mm=None,
+    frequencies_hz=None,
+    new_periods_mm=NEW_PERIODS_MM,
+    period_l_values_mm=None,
+    aligned_refinement_cells=(24, 48, 96),
 ):
     """``l_values_mm``/``frequencies_hz``/``period_l_values_mm``/``aligned_refinement_cells``:
     reduced-scale overrides for tests; the production run (``examples/run_phase12b.py``) uses
@@ -50,13 +54,18 @@ def run_phase12b(
 
     # -------------------------------------------------------------------------- Task B
     aligned_refinement = reassessment.aligned_mesh_refinement_study(cells_list=aligned_refinement_cells)
-    floquet_orders = tuple(sorted({aligned_refinement_cells[-1], aligned_refinement_cells[-1] + 16, aligned_refinement_cells[-1] * 2}))
+    floquet_orders = tuple(
+        sorted({aligned_refinement_cells[-1], aligned_refinement_cells[-1] + 16, aligned_refinement_cells[-1] * 2})
+    )
     floquet_conv = reassessment.floquet_only_convergence(
-        cells=aligned_refinement_cells[-1], floquet_orders=floquet_orders,
+        cells=aligned_refinement_cells[-1],
+        floquet_orders=floquet_orders,
     )
     sweep_frequencies = frequencies_hz if frequencies_hz is not None else reassessment.SWEEP_FREQUENCIES_HZ
     aligned_sweep_points = reassessment.run_aligned_grounded_sweep(
-        l_values_mm=family, frequencies_hz=sweep_frequencies, cells=aligned_n_family,
+        l_values_mm=family,
+        frequencies_hz=sweep_frequencies,
+        cells=aligned_n_family,
     )
     aligned_coverage = reassessment.coverage_by_frequency(aligned_sweep_points)
 
@@ -81,7 +90,9 @@ def run_phase12b(
     )
     period_results = {
         4.8: {
-            "cells": aligned_n_family, "points": list(period4p8_points), "coverage": aligned_coverage,
+            "cells": aligned_n_family,
+            "points": list(period4p8_points),
+            "coverage": aligned_coverage,
             "resonant_length_mm": period_study.resonant_length_mm(period4p8_points, 12.5e9),
         }
     }
@@ -90,13 +101,19 @@ def run_phase12b(
         points, n = period_study.run_period_sweep(period_mm, l_values_mm=l_values, frequencies_hz=sweep_frequencies)
         cov = period_study.coverage_by_frequency(points)
         period_results[period_mm] = {
-            "cells": n, "points": list(points), "coverage": cov,
-            "resonant_length_mm": period_study.resonant_length_mm(points, sweep_frequencies[len(sweep_frequencies) // 2]),
+            "cells": n,
+            "points": list(points),
+            "coverage": cov,
+            "resonant_length_mm": period_study.resonant_length_mm(
+                points, sweep_frequencies[len(sweep_frequencies) // 2]
+            ),
         }
     for period_mm, r in period_results.items():
         rep_l = r["resonant_length_mm"]
         r["grating_surface_wave"] = period_study.grating_and_surface_wave_report(
-            period_mm, rep_l, frequencies_hz=sweep_frequencies,
+            period_mm,
+            rep_l,
+            frequencies_hz=sweep_frequencies,
         )
         if period_mm == 4.8:
             # 4.8mm's convergence is already thoroughly characterized by Task B's own aligned
@@ -106,40 +123,68 @@ def run_phase12b(
             r["convergence_points"], r["convergence_diffs"] = aligned_refinement[0], aligned_refinement[1]
         else:
             conv_points, conv_diffs = period_study.convergence_for_near_resonant_patch(
-                period_mm, rep_l, frequency_hz=sweep_frequencies[len(sweep_frequencies) // 2],
+                period_mm,
+                rep_l,
+                frequency_hz=sweep_frequencies[len(sweep_frequencies) // 2],
             )
             r["convergence_points"], r["convergence_diffs"] = conv_points, conv_diffs
 
     # -------------------------------------------------------------------------- gates
     mesh_gate = gate.decide_mesh_alignment(aligned_refinement[1][-1], floquet_conv[1][-1])
     audit_gate = gate.decide_audit(
-        audit["phase7_report"], audit["phase10_leakage"], audit["phase10_report"],
+        audit["phase7_report"],
+        audit["phase10_leakage"],
+        audit["phase10_report"],
     )
-    coverage_by_period = {p: r["coverage"][12.5e9].coverage_deg if 12.5e9 in r["coverage"]
-                           else next(iter(r["coverage"].values())).coverage_deg
-                           for p, r in period_results.items()}
+    coverage_by_period = {
+        p: r["coverage"][12.5e9].coverage_deg
+        if 12.5e9 in r["coverage"]
+        else next(iter(r["coverage"].values())).coverage_deg
+        for p, r in period_results.items()
+    }
     period_gate = gate.decide_period_study(coverage_by_period)
     hfss = gate.hfss_status()
 
     result = Phase12bResult(
-        output_dir=output_dir, aligned_family=tuple(family), aligned_cells_family=aligned_n_family,
-        phase7_report=phase7_report, aligned_refinement=aligned_refinement,
-        floquet_convergence=floquet_conv, aligned_sweep_points=tuple(aligned_sweep_points),
-        aligned_cells=aligned_n_family, aligned_coverage_by_frequency=aligned_coverage,
-        duplicate_audit=audit, period_results=period_results, mesh_gate=mesh_gate,
-        audit_gate=audit_gate, period_gate=period_gate, hfss_status=hfss,
+        output_dir=output_dir,
+        aligned_family=tuple(family),
+        aligned_cells_family=aligned_n_family,
+        phase7_report=phase7_report,
+        aligned_refinement=aligned_refinement,
+        floquet_convergence=floquet_conv,
+        aligned_sweep_points=tuple(aligned_sweep_points),
+        aligned_cells=aligned_n_family,
+        aligned_coverage_by_frequency=aligned_coverage,
+        duplicate_audit=audit,
+        period_results=period_results,
+        mesh_gate=mesh_gate,
+        audit_gate=audit_gate,
+        period_gate=period_gate,
+        hfss_status=hfss,
     )
 
     # -------------------------------------------------------------------------- outputs
-    specification.write_alignment_report_json(family, aligned_n_family, phase7_report, output_dir / "alignment_report.json")
+    specification.write_alignment_report_json(
+        family, aligned_n_family, phase7_report, output_dir / "alignment_report.json"
+    )
     specification.write_reassessment_json(
-        aligned_refinement[0], aligned_refinement[1], floquet_conv[0], floquet_conv[1],
-        aligned_sweep_points, aligned_coverage, output_dir / "reassessment.json",
+        aligned_refinement[0],
+        aligned_refinement[1],
+        floquet_conv[0],
+        floquet_conv[1],
+        aligned_sweep_points,
+        aligned_coverage,
+        output_dir / "reassessment.json",
     )
     specification.write_duplicate_audit_json(
-        audit["phase7_report"], audit["phase7_lookup_cross_check"], audit["phase9_report"],
-        audit["phase10_report"], audit["phase10_leakage"], audit["phase10_perturbation_report"],
-        audit["phase11_check"], output_dir / "duplicate_audit.json",
+        audit["phase7_report"],
+        audit["phase7_lookup_cross_check"],
+        audit["phase9_report"],
+        audit["phase10_report"],
+        audit["phase10_leakage"],
+        audit["phase10_perturbation_report"],
+        audit["phase11_check"],
+        output_dir / "duplicate_audit.json",
     )
     specification.write_period_study_json(period_results, output_dir / "period_study.json")
     specification.write_period_sweep_csv(period_results, output_dir / "period_sweep.csv")
@@ -148,8 +193,12 @@ def run_phase12b(
     try:
         unaligned_conv = phase12a_convergence_study()
         plots.generate_all_plots(
-            unaligned_conv, aligned_refinement[0], period_results, phase7_report,
-            audit["phase10_report"], plots_dir,
+            unaligned_conv,
+            aligned_refinement[0],
+            period_results,
+            phase7_report,
+            audit["phase10_report"],
+            plots_dir,
         )
     except ImportError:
         pass

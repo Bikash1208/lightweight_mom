@@ -64,7 +64,10 @@ DIAGNOSTIC_TYPES = {
 CONVENTIONS = {
     "time_dependence": "exp(+j*omega*t)",
     "units": {
-        "frequency": "Hz", "length": "m", "angle": "deg", "phase": "deg",
+        "frequency": "Hz",
+        "length": "m",
+        "angle": "deg",
+        "phase": "deg",
         "magnitude": "linear (|S|, not dB)",
     },
     "phase": "arg(S), principal value in (-180, 180] deg; a delay is a negative phase",
@@ -98,6 +101,7 @@ class DatabaseError(ValueError):
 
 # ----------------------------------------------------------------------- S-matrix accessors
 
+
 def _split_name(name):
     family, _, comp = name.partition("_")
     if family not in FAMILIES:
@@ -129,8 +133,7 @@ def component_value(s4, name):
     if comp in CIRCULAR_COMPONENTS:
         return complex(block_to_circular(block)[CIRCULAR_COMPONENTS[comp]])
     raise ValueError(
-        f"unknown component in {name!r}; linear {list(LINEAR_COMPONENTS)}, "
-        f"circular {list(CIRCULAR_COMPONENTS)}"
+        f"unknown component in {name!r}; linear {list(LINEAR_COMPONENTS)}, circular {list(CIRCULAR_COMPONENTS)}"
     )
 
 
@@ -171,16 +174,14 @@ class Record:
 
     cell_id: str
     frequency_index: int
-    frequency: float          # [Hz]
-    s: np.ndarray             # (4, 4) two_port, or (2, 2) one_port (S11 only): linear x/y basis
+    frequency: float  # [Hz]
+    s: np.ndarray  # (4, 4) two_port, or (2, 2) one_port (S11 only): linear x/y basis
     diagnostics: dict
     port_topology: str = "two_port"
 
     def __post_init__(self):
         if self.port_topology not in PORT_TOPOLOGIES:
-            raise DatabaseError(
-                f"port_topology must be one of {PORT_TOPOLOGIES}, got {self.port_topology!r}"
-            )
+            raise DatabaseError(f"port_topology must be one of {PORT_TOPOLOGIES}, got {self.port_topology!r}")
         s = np.array(self.s, dtype=complex)
         expected_shape = (2, 2) if self.port_topology == "one_port" else (4, 4)
         if s.shape != expected_shape or not np.all(np.isfinite(s)):
@@ -218,17 +219,15 @@ class Record:
 class CellEntry:
     index: int
     cell_id: str
-    parameters: dict           # PARAMETER_NAMES -> float
-    status: str                # 'ok' | 'invalid'
+    parameters: dict  # PARAMETER_NAMES -> float
+    status: str  # 'ok' | 'invalid'
     reason: str | None = None
-    validation: dict | None = None      # cell-level checks and refinement result (free-form, JSON-able)
+    validation: dict | None = None  # cell-level checks and refinement result (free-form, JSON-able)
 
 
 def _coerce_diagnostics(diag):
     if set(diag) != set(DIAGNOSTIC_TYPES):
-        raise DatabaseError(
-            f"diagnostics keys {sorted(diag)} differ from the schema {sorted(DIAGNOSTIC_TYPES)}"
-        )
+        raise DatabaseError(f"diagnostics keys {sorted(diag)} differ from the schema {sorted(DIAGNOSTIC_TYPES)}")
     out = {}
     for key, typ in DIAGNOSTIC_TYPES.items():
         v = diag[key]
@@ -442,9 +441,7 @@ class Database:
                         f"cell_id {cid!r} does not match its parameters and the metadata context "
                         f"(file edited, or produced by different code/settings)"
                     )
-                cells.append(
-                    CellEntry(int(c["index"]), cid, params, c["status"], c.get("reason"), c.get("validation"))
-                )
+                cells.append(CellEntry(int(c["index"]), cid, params, c["status"], c.get("reason"), c.get("validation")))
                 for r in c["records"]:
                     records.append(_record_from_json(cid, r))
             except (KeyError, TypeError) as e:
@@ -454,7 +451,7 @@ class Database:
     @classmethod
     def from_json(cls, path):
         try:
-            with open(path, "r", encoding="utf-8") as fh:
+            with open(path, encoding="utf-8") as fh:
                 doc = json.loads(fh.read(), parse_constant=_reject_constant)
         except json.JSONDecodeError as e:
             raise DatabaseError(f"{path}: invalid JSON: {e}") from None
@@ -495,7 +492,7 @@ class Database:
     @classmethod
     def from_csv(cls, path, metadata=None):
         try:
-            with open(path, "r", encoding="utf-8", newline="") as fh:
+            with open(path, encoding="utf-8", newline="") as fh:
                 rows = list(csv.reader(fh))
         except UnicodeDecodeError as e:
             raise DatabaseError(f"{path}: not a UTF-8 text file: {e}") from None
@@ -518,6 +515,7 @@ class Database:
 
 
 # ----------------------------------------------------------------------- (de)serialisation
+
 
 def _reject_constant(name):
     raise DatabaseError(f"non-finite JSON constant {name!r} is not allowed")
@@ -579,7 +577,7 @@ def _check_derived(name, z, mag, phase_deg):
 
 
 def _record_from_json(cid, r):
-    port_topology = r.get("port_topology", "two_port")   # absent: written before Phase 12A
+    port_topology = r.get("port_topology", "two_port")  # absent: written before Phase 12A
     families = ("S11",) if port_topology == "one_port" else FAMILIES
     s_mat = np.zeros((2, 2) if port_topology == "one_port" else (4, 4), dtype=complex)
     for fam in families:
@@ -590,7 +588,11 @@ def _record_from_json(cid, r):
             _check_derived(f"{fam}_{comp}", z, float(e["mag"]), float(e["phase_deg"]))
             s_mat[2 * out + row, 2 * inc + col] = z
     rec = Record(
-        cid, int(r["frequency_index"]), float(r["frequency_hz"]), s_mat, r["diagnostics"],
+        cid,
+        int(r["frequency_index"]),
+        float(r["frequency_hz"]),
+        s_mat,
+        r["diagnostics"],
         port_topology=port_topology,
     )
     for fam in families:

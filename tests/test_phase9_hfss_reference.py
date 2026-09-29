@@ -12,8 +12,7 @@ def test_load_hfss_reference_returns_none_when_file_absent(tmp_path):
 def test_load_hfss_reference_parses_a_valid_synthetic_test_file(tmp_path):
     path = tmp_path / "hfss.csv"
     path.write_text(
-        "cell_id,L_mm,W_mm,frequency_GHz,S11_real,S11_imag,S21_real,S21_imag\n"
-        "CELL-01,1.0,1.0,12.5,0.1,0.2,0.9,0.05\n"
+        "cell_id,L_mm,W_mm,frequency_GHz,S11_real,S11_imag,S21_real,S21_imag\nCELL-01,1.0,1.0,12.5,0.1,0.2,0.9,0.05\n"
     )
     records = load_hfss_reference(path)
     assert len(records) == 1
@@ -80,6 +79,7 @@ def test_read_touchstone_parses_wrapped_ma_file(tmp_path):
     assert net.port_labels == ("FloquetPort1:1", "FloquetPort1:2")
     assert net.s[0, 0, 0] == complex(1.0, 0.0)
     import numpy as np
+
     assert np.isclose(net.s[0, 1, 1], 0.5 * (np.cos(np.radians(90)) + 1j * np.sin(np.radians(90))))
 
 
@@ -96,7 +96,7 @@ def test_read_touchstone_rejects_bad_extension(tmp_path):
 
 def test_read_touchstone_rejects_truncated_data(tmp_path):
     path = tmp_path / "truncated.s2p"
-    path.write_text("# GHz S MA\n10.0 1.0 0.0 0.0 0.0 0.0\n")   # missing one pair of an s2p block
+    path.write_text("# GHz S MA\n10.0 1.0 0.0 0.0 0.0 0.0\n")  # missing one pair of an s2p block
     with pytest.raises(TouchstoneError):
         read_touchstone(path)
 

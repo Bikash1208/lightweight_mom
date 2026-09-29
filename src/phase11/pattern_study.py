@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from . import patterns as pt
 from .reference_solver import solve_grid
 
-PATTERN_N = 7   # Sec. 10's patterns are 5-7 cells wide in their own ASCII diagrams; 7x7 keeps every
-                # solve under ~4 s (measured) while giving each pattern a real, non-trivial extent.
+PATTERN_N = 7  # Sec. 10's patterns are 5-7 cells wide in their own ASCII diagrams; 7x7 keeps every
+# solve under ~4 s (measured) while giving each pattern a real, non-trivial extent.
 
 
 @dataclass(frozen=True)
@@ -29,8 +29,9 @@ def _solve(grid_mm, period_m, substrate, metal, frequency_hz, mesh_cells_per_sub
     return sg.response_at(mid, mid), sg.n_unknowns
 
 
-def run_pattern_study(center_lw_mm, contrast_lw_mm, period_m, substrate, metal, frequency_hz,
-                       mesh_cells_per_subcell=8, n=PATTERN_N):
+def run_pattern_study(
+    center_lw_mm, contrast_lw_mm, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell=8, n=PATTERN_N
+):
     """Sec. 10's required patterns, all at the SAME size/center/contrast pair so they are directly
     comparable to each other (only the spatial ARRANGEMENT differs, isolating Sec. 18 Case D)."""
     cases = {
@@ -44,8 +45,7 @@ def run_pattern_study(center_lw_mm, contrast_lw_mm, period_m, substrate, metal, 
     }
     results = {}
     for name, grid_mm in cases.items():
-        response, n_unknowns = _solve(grid_mm, period_m, substrate, metal, frequency_hz,
-                                       mesh_cells_per_subcell, n)
+        response, n_unknowns = _solve(grid_mm, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell, n)
         results[name] = PatternResult(name, response, n_unknowns)
     return cases, results
 

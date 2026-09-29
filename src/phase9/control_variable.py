@@ -13,16 +13,29 @@ from .error_metrics import compute_error_stats
 
 # Sec. 7's minimum validation subset (mm).
 REFERENCE_CELLS_MM = (
-    ("CELL-01", 1.0, 1.0), ("CELL-02", 1.0, 4.4), ("CELL-03", 4.4, 1.0), ("CELL-04", 4.4, 4.4),
-    ("CELL-05", 2.0, 2.0), ("CELL-06", 2.8, 2.8), ("CELL-07", 3.6, 2.0), ("CELL-08", 2.0, 3.6),
-    ("CELL-09", 3.2, 2.4), ("CELL-10", 2.4, 3.2),
+    ("CELL-01", 1.0, 1.0),
+    ("CELL-02", 1.0, 4.4),
+    ("CELL-03", 4.4, 1.0),
+    ("CELL-04", 4.4, 4.4),
+    ("CELL-05", 2.0, 2.0),
+    ("CELL-06", 2.8, 2.8),
+    ("CELL-07", 3.6, 2.0),
+    ("CELL-08", 2.0, 3.6),
+    ("CELL-09", 3.2, 2.4),
+    ("CELL-10", 2.4, 3.2),
 )
 
 # Sec. 11's minimum frequency set -- every value below is an exact point of Phase 7's 10-15 GHz /
 # 25 MHz grid (verified by test), so no interpolation is ever needed for this specific set.
 VALIDATION_FREQUENCIES_GHZ = (10.0, 11.0, 12.0, 12.5, 13.0, 14.0, 15.0)
 
-CONTROL_VARIABLE_STATES = ("VALIDATED", "PARTIALLY_VALIDATED", "INCONSISTENT", "UNVALIDATED", "ARCHITECTURE_INCOMPATIBLE")
+CONTROL_VARIABLE_STATES = (
+    "VALIDATED",
+    "PARTIALLY_VALIDATED",
+    "INCONSISTENT",
+    "UNVALIDATED",
+    "ARCHITECTURE_INCOMPATIBLE",
+)
 
 
 @dataclass(frozen=True)
@@ -45,8 +58,12 @@ def extract_solver_reference_data(database, cells_mm=REFERENCE_CELLS_MM, frequen
     rows = []
     for cell_id, l_mm, w_mm in cells_mm:
         cell = next(
-            (c for c in database.cells
-             if abs(c.parameters["length_m"] * 1e3 - l_mm) < 1e-6 and abs(c.parameters["width_m"] * 1e3 - w_mm) < 1e-6),
+            (
+                c
+                for c in database.cells
+                if abs(c.parameters["length_m"] * 1e3 - l_mm) < 1e-6
+                and abs(c.parameters["width_m"] * 1e3 - w_mm) < 1e-6
+            ),
             None,
         )
         if cell is None or cell.status != "ok":
@@ -57,10 +74,16 @@ def extract_solver_reference_data(database, cells_mm=REFERENCE_CELLS_MM, frequen
             if not matches:
                 raise KeyError(f"{f_ghz} GHz is not an exact grid point of this database")
             record = database.record(cell.index, matches[0])
-            rows.append(SolverReferenceRow(
-                cell_id=cell_id, l_mm=l_mm, w_mm=w_mm, frequency_ghz=f_ghz,
-                s11=record.component("S11_xx"), s21=record.component("S21_xx"),
-            ))
+            rows.append(
+                SolverReferenceRow(
+                    cell_id=cell_id,
+                    l_mm=l_mm,
+                    w_mm=w_mm,
+                    frequency_ghz=f_ghz,
+                    s11=record.component("S11_xx"),
+                    s21=record.component("S21_xx"),
+                )
+            )
     return rows
 
 
@@ -88,7 +111,8 @@ def architecture_audit(database, mean_power):
         "solver_incident_wave": PORT_DEFINITION.port1_incident_direction + " at " + PORT_DEFINITION.port1_plane,
         "solver_reflected_wave": "specular (0,0) Floquet order returning through port 1 (top reference plane)",
         "solver_transmitted_wave": "specular (0,0) Floquet order continuing through port 2 (bottom reference plane, "
-                                    + PORT_DEFINITION.port2_plane + ")",
+        + PORT_DEFINITION.port2_plane
+        + ")",
         "solver_holographic_surface_location": COORDINATE_SYSTEM.pattern_plane,
         "solver_port_modes": PORT_DEFINITION.modes,
         "solver_coordinate_system": COORDINATE_SYSTEM.z_convention,

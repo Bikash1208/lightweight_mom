@@ -6,11 +6,12 @@ import copy
 
 from src.config import config_from_dict
 from src.database import Database
-from src.sweep import ParameterAxis, RefinementPolicy, SweepDefinition, ValidationPolicy
 from src.runner import run_sweep
+from src.sweep import ParameterAxis, RefinementPolicy, SweepDefinition, ValidationPolicy
 
 BASE = {
-    "period_x": 4.8e-3, "period_y": 4.8e-3,
+    "period_x": 4.8e-3,
+    "period_y": 4.8e-3,
     "substrate": {"name": "RT5880", "eps_r": 2.2, "tan_delta": 0.0009, "thickness": 1.575e-3, "backing": "pec"},
     "geometry": {"type": "rectangle", "length": 2.0e-3, "width": 2.0e-3},
     "excitation": {"frequency": 12.5e9},
@@ -100,4 +101,4 @@ def test_diagnostics_reciprocity_and_passivity_for_grounded_cell(tmp_path):
     result = run_sweep(cfg, out_dir=tmp_path, definition=defn)
     diag = result.database.records[0].diagnostics
     assert diag["reciprocity_error"] < 1e-8
-    assert diag["passivity_min_eig"] > -1e-8   # lossy stack: strictly passive
+    assert diag["passivity_min_eig"] > -1e-8  # lossy stack: strictly passive

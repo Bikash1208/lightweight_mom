@@ -72,7 +72,7 @@ def test_both_s11_and_s21_validated_does_not_auto_select_either_one():
     gate_a = evaluate_gate_a(_all_true(GATE_A_CHECKLIST_KEYS))
     gate_b = evaluate_gate_b(_all_true(GATE_B_CHECKLIST_KEYS))
     decision = decide(gate_a, gate_b, "VALIDATED", "VALIDATED", "VALIDATED")
-    assert decision.selected_control is None   # Sec. 44: never select by convenience/smaller error
+    assert decision.selected_control is None  # Sec. 44: never select by convenience/smaller error
 
 
 def test_fully_validated_s11_and_open_gates_and_validated_lpa_unlocks_geometry_inversion():

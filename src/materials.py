@@ -27,9 +27,9 @@ class Substrate:
     """
 
     name: str
-    eps_r: float        # real relative permittivity, > 0
-    tan_delta: float    # loss tangent, >= 0
-    thickness: float    # [m], > 0
+    eps_r: float  # real relative permittivity, > 0
+    tan_delta: float  # loss tangent, >= 0
+    thickness: float  # [m], > 0
 
     def __post_init__(self):
         for name in ("eps_r", "tan_delta", "thickness"):
@@ -37,9 +37,7 @@ class Substrate:
         if self.eps_r <= 0.0:
             raise ValueError(f"eps_r must be > 0, got {self.eps_r}")
         if self.tan_delta < 0.0:
-            raise ValueError(
-                f"tan_delta must be >= 0 (passive medium), got {self.tan_delta}"
-            )
+            raise ValueError(f"tan_delta must be >= 0 (passive medium), got {self.tan_delta}")
         if self.thickness <= 0.0:
             raise ValueError(f"thickness must be > 0 m, got {self.thickness}")
 
@@ -71,6 +69,4 @@ class Metal:
 
     def __post_init__(self):
         if self.model != "pec":
-            raise ValueError(
-                f"metal model {self.model!r} is not supported in Phase 1; only 'pec'"
-            )
+            raise ValueError(f"metal model {self.model!r} is not supported in Phase 1; only 'pec'")

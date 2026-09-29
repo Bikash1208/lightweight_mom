@@ -5,7 +5,6 @@ from pathlib import Path
 
 from ..database import CONVENTIONS
 from ..phase8b import control_variable as cv
-from ..phase8b import library_compatibility as lib_compat
 from . import architecture_test as arch
 from . import compatibility_matrix as cm
 from . import data_source
@@ -13,7 +12,6 @@ from . import phase_only_test as pot
 from . import plots as p8c_plots
 from . import power_balance as pb
 from . import reciprocity_symmetry as rs
-from . import reference_plane_sensitivity as rps
 from . import scattering_analysis as sa
 from . import specification as spec
 from . import topology_audit as ta
@@ -77,14 +75,22 @@ def run_phase8c(output_dir, checkpoint_path=data_source.DEFAULT_CHECKPOINT_JSON,
     architecture_resolved = audit.architecture_classification != "UNRESOLVED"
     status = cm.final_status(
         architecture_resolved=architecture_resolved,
-        s11_investigation=s11_investigation, s21_investigation=s21_investigation,
+        s11_investigation=s11_investigation,
+        s21_investigation=s21_investigation,
         formulation_a_status=formulation_a["status"],
-        reciprocity_ok=reciprocity.reciprocal, propagating_modes_ok=mode_check["only_fundamental_mode_propagates"],
+        reciprocity_ok=reciprocity.reciprocal,
+        propagating_modes_ok=mode_check["only_fundamental_mode_propagates"],
     )
 
     matrix = cm.build_compatibility_matrix(
-        s11_investigation, s21_investigation, s11_coverage, s21_coverage,
-        reflection_test, transmission_test, s11_phase_only, s21_phase_only,
+        s11_investigation,
+        s21_investigation,
+        s11_coverage,
+        s21_coverage,
+        reflection_test,
+        transmission_test,
+        s11_phase_only,
+        s21_phase_only,
     )
 
     missing_evidence = [
@@ -98,42 +104,117 @@ def run_phase8c(output_dir, checkpoint_path=data_source.DEFAULT_CHECKPOINT_JSON,
     (output_dir / "unit_cell_topology_audit.md").write_text(ta.render_topology_audit_md(audit))
     (output_dir / "s_parameter_definition.md").write_text(ta.render_s_parameter_definition_md())
     report_md = render_control_quantity_analysis_md(
-        audit, power_summary, mode_check, s11_investigation, s21_investigation,
-        s11_coverage, s21_coverage, s11_states, s21_states, s11_phase_only, s21_phase_only,
-        reflection_test, transmission_test, formulation_a, formulation_b, reciprocity, symmetry,
-        matrix, status, missing_evidence,
+        audit,
+        power_summary,
+        mode_check,
+        s11_investigation,
+        s21_investigation,
+        s11_coverage,
+        s21_coverage,
+        s11_states,
+        s21_states,
+        s11_phase_only,
+        s21_phase_only,
+        reflection_test,
+        transmission_test,
+        formulation_a,
+        formulation_b,
+        reciprocity,
+        symmetry,
+        matrix,
+        status,
+        missing_evidence,
     )
     (output_dir / "control_quantity_analysis.md").write_text(report_md)
 
-    validation_doc = spec.build_control_quantity_validation(status, audit, s11_coverage, s21_coverage, s11_investigation, s21_investigation)
+    validation_doc = spec.build_control_quantity_validation(
+        status, audit, s11_coverage, s21_coverage, s11_investigation, s21_investigation
+    )
     spec.write_json(validation_doc, output_dir / "control_quantity_validation.json")
     spec.write_scattering_csv(s11_rows, s21_rows, output_dir / "unit_cell_scattering_12p5GHz.csv")
-    spec.write_control_quantity_candidates_csv([s11_coverage, s21_coverage], output_dir / "control_quantity_candidates.csv")
-    spec.write_phase_state_analysis_csv([("S11xx", s11_states), ("S21xx", s21_states)], output_dir / "phase_state_analysis.csv")
+    spec.write_control_quantity_candidates_csv(
+        [s11_coverage, s21_coverage], output_dir / "control_quantity_candidates.csv"
+    )
+    spec.write_phase_state_analysis_csv(
+        [("S11xx", s11_states), ("S21xx", s21_states)], output_dir / "phase_state_analysis.csv"
+    )
 
     try:
         if progress:
             progress("plotting...")
         p8c_plots.plot_topology_summary(audit, plots_dir / "01_unit_cell_topology.png")
-        p8c_plots.plot_representative_curve(database, REPRESENTATIVE_CELLS, "S11_xx", "mag", plots_dir / "02_representative_S11_magnitude.png")
-        p8c_plots.plot_representative_curve(database, REPRESENTATIVE_CELLS, "S11_xx", "phase", plots_dir / "03_representative_S11_phase.png")
-        p8c_plots.plot_representative_curve(database, REPRESENTATIVE_CELLS, "S21_xx", "mag", plots_dir / "04_representative_S21_magnitude.png")
-        p8c_plots.plot_representative_curve(database, REPRESENTATIVE_CELLS, "S21_xx", "phase", plots_dir / "05_representative_S21_phase.png")
-        p8c_plots.plot_library_map(s11_rows, l_values_mm, w_values_mm, lambda r: r.phase_deg, "phase(S11xx) [deg]",
-                                    "Library S11xx phase map", plots_dir / "06_library_S11_phase_map.png", -180, 180, "twilight")
-        p8c_plots.plot_library_map(s21_rows, l_values_mm, w_values_mm, lambda r: r.phase_deg, "phase(S21xx) [deg]",
-                                    "Library S21xx phase map", plots_dir / "07_library_S21_phase_map.png", -180, 180, "twilight")
-        p8c_plots.plot_library_map(s11_rows, l_values_mm, w_values_mm, lambda r: r.mag_db, "|S11xx| [dB]",
-                                    "Library S11xx magnitude map", plots_dir / "08_library_S11_magnitude_map.png")
-        p8c_plots.plot_library_map(s21_rows, l_values_mm, w_values_mm, lambda r: r.mag_db, "|S21xx| [dB]",
-                                    "Library S21xx magnitude map", plots_dir / "09_library_S21_magnitude_map.png")
+        p8c_plots.plot_representative_curve(
+            database, REPRESENTATIVE_CELLS, "S11_xx", "mag", plots_dir / "02_representative_S11_magnitude.png"
+        )
+        p8c_plots.plot_representative_curve(
+            database, REPRESENTATIVE_CELLS, "S11_xx", "phase", plots_dir / "03_representative_S11_phase.png"
+        )
+        p8c_plots.plot_representative_curve(
+            database, REPRESENTATIVE_CELLS, "S21_xx", "mag", plots_dir / "04_representative_S21_magnitude.png"
+        )
+        p8c_plots.plot_representative_curve(
+            database, REPRESENTATIVE_CELLS, "S21_xx", "phase", plots_dir / "05_representative_S21_phase.png"
+        )
+        p8c_plots.plot_library_map(
+            s11_rows,
+            l_values_mm,
+            w_values_mm,
+            lambda r: r.phase_deg,
+            "phase(S11xx) [deg]",
+            "Library S11xx phase map",
+            plots_dir / "06_library_S11_phase_map.png",
+            -180,
+            180,
+            "twilight",
+        )
+        p8c_plots.plot_library_map(
+            s21_rows,
+            l_values_mm,
+            w_values_mm,
+            lambda r: r.phase_deg,
+            "phase(S21xx) [deg]",
+            "Library S21xx phase map",
+            plots_dir / "07_library_S21_phase_map.png",
+            -180,
+            180,
+            "twilight",
+        )
+        p8c_plots.plot_library_map(
+            s11_rows,
+            l_values_mm,
+            w_values_mm,
+            lambda r: r.mag_db,
+            "|S11xx| [dB]",
+            "Library S11xx magnitude map",
+            plots_dir / "08_library_S11_magnitude_map.png",
+        )
+        p8c_plots.plot_library_map(
+            s21_rows,
+            l_values_mm,
+            w_values_mm,
+            lambda r: r.mag_db,
+            "|S21xx| [dB]",
+            "Library S21xx magnitude map",
+            plots_dir / "09_library_S21_magnitude_map.png",
+        )
         p8c_plots.plot_complex_plane(s11_rows, "S11xx", plots_dir / "10_S11_complex_plane.png")
         p8c_plots.plot_complex_plane(s21_rows, "S21xx", plots_dir / "11_S21_complex_plane.png")
         p8c_plots.plot_phase_vs_magnitude(s11_rows, "S11xx", plots_dir / "12_S11_phase_vs_magnitude.png")
         p8c_plots.plot_phase_vs_magnitude(s21_rows, "S21xx", plots_dir / "13_S21_phase_vs_magnitude.png")
         from ..phase_extraction import phase_coverage as _cov
-        p8c_plots.plot_phase_coverage(s11_rows, _cov([{"phase_deg": r.phase_deg} for r in s11_rows]), "S11xx", plots_dir / "14_S11_phase_coverage.png")
-        p8c_plots.plot_phase_coverage(s21_rows, _cov([{"phase_deg": r.phase_deg} for r in s21_rows]), "S21xx", plots_dir / "15_S21_phase_coverage.png")
+
+        p8c_plots.plot_phase_coverage(
+            s11_rows,
+            _cov([{"phase_deg": r.phase_deg} for r in s11_rows]),
+            "S11xx",
+            plots_dir / "14_S11_phase_coverage.png",
+        )
+        p8c_plots.plot_phase_coverage(
+            s21_rows,
+            _cov([{"phase_deg": r.phase_deg} for r in s21_rows]),
+            "S21xx",
+            plots_dir / "15_S21_phase_coverage.png",
+        )
         p8c_plots.plot_power_balance(power_summary, plots_dir / "16_power_balance.png")
         p8c_plots.plot_phase_state_distribution(s11_states, plots_dir / "17_phase_state_distribution_S11.png", "S11xx")
         p8c_plots.plot_phase_state_distribution(s21_states, plots_dir / "18_phase_state_distribution_S21.png", "S21xx")
@@ -141,14 +222,25 @@ def run_phase8c(output_dir, checkpoint_path=data_source.DEFAULT_CHECKPOINT_JSON,
         pass
 
     return {
-        "status": status, "audit": audit, "mode_check": mode_check, "power_summary": power_summary,
-        "s11_investigation": s11_investigation, "s21_investigation": s21_investigation,
-        "s11_coverage": s11_coverage, "s21_coverage": s21_coverage,
-        "s11_states": s11_states, "s21_states": s21_states,
-        "s11_phase_only": s11_phase_only, "s21_phase_only": s21_phase_only,
-        "reflection_test": reflection_test, "transmission_test": transmission_test,
-        "formulation_a": formulation_a, "formulation_b": formulation_b,
-        "reciprocity": reciprocity, "symmetry": symmetry, "matrix": matrix,
+        "status": status,
+        "audit": audit,
+        "mode_check": mode_check,
+        "power_summary": power_summary,
+        "s11_investigation": s11_investigation,
+        "s21_investigation": s21_investigation,
+        "s11_coverage": s11_coverage,
+        "s21_coverage": s21_coverage,
+        "s11_states": s11_states,
+        "s21_states": s21_states,
+        "s11_phase_only": s11_phase_only,
+        "s21_phase_only": s21_phase_only,
+        "reflection_test": reflection_test,
+        "transmission_test": transmission_test,
+        "formulation_a": formulation_a,
+        "formulation_b": formulation_b,
+        "reciprocity": reciprocity,
+        "symmetry": symmetry,
+        "matrix": matrix,
         "output_dir": output_dir,
     }
 
@@ -204,15 +296,19 @@ def print_final_report(result):
     print("-" * 60)
     print(f"Power conservation: mean(R+T)={result['power_summary']['mean_R_plus_T']:.4f}")
     print(f"Higher-order modes: {'none in band' if m['only_fundamental_mode_propagates'] else 'PRESENT in band'}")
-    print(f"Cross-polarization: R_cross={result['power_summary']['mean_R_cross']:.4f}, T_cross={result['power_summary']['mean_T_cross']:.4f}")
+    print(
+        f"Cross-polarization: R_cross={result['power_summary']['mean_R_cross']:.4f}, T_cross={result['power_summary']['mean_T_cross']:.4f}"
+    )
     print(f"Reciprocity: {'OK' if result['reciprocity'].reciprocal else 'FAILED'} ({result['reciprocity'].note})")
     print()
     print("-" * 60)
     print("PHASE 8B COMPATIBILITY")
     print("-" * 60)
     print(f"Formulation A: {result['formulation_a']['status']}")
-    print(f"Formulation B: reflection->{result['formulation_b']['corresponds_to_reflection_phase']}, "
-          f"transmission->{result['formulation_b']['corresponds_to_transmission_phase']}")
+    print(
+        f"Formulation B: reflection->{result['formulation_b']['corresponds_to_reflection_phase']}, "
+        f"transmission->{result['formulation_b']['corresponds_to_transmission_phase']}"
+    )
     print()
     print("-" * 60)
     print("LIBRARY ADEQUACY")

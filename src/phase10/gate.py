@@ -69,7 +69,7 @@ FINAL_STATUS_OPTIONS = (
 @dataclass(frozen=True)
 class GateResult:
     checklist: dict
-    status: str   # "OPEN" | "CLOSED"
+    status: str  # "OPEN" | "CLOSED"
 
 
 def _evaluate(keys, checklist, gate_name):
@@ -108,13 +108,21 @@ class Phase10Decision:
     gate_10e: GateResult
     surrogate_beats_baseline1: bool
     inverse_mostly_reachable: bool
-    beam_level_acceptable: object   # bool or None (not evaluated)
+    beam_level_acceptable: object  # bool or None (not evaluated)
     geometry_inversion_unlocked: bool
     final_status: str
 
 
-def decide(gate_10a, gate_10b, gate_10c, gate_10d, gate_10e, surrogate_beats_baseline1,
-           inverse_mostly_reachable, beam_level_acceptable):
+def decide(
+    gate_10a,
+    gate_10b,
+    gate_10c,
+    gate_10d,
+    gate_10e,
+    surrogate_beats_baseline1,
+    inverse_mostly_reachable,
+    beam_level_acceptable,
+):
     """Sec. 42: ALL FIVE gates must be OPEN for geometry inversion to unlock. Sec. 52's final
     status is chosen by walking the pipeline in order and reporting the FIRST point of failure,
     which is more informative than the generic `NO_VALIDATED_FORMULATION` catch-all (reserved for
@@ -128,14 +136,24 @@ def decide(gate_10a, gate_10b, gate_10c, gate_10d, gate_10e, surrogate_beats_bas
         final_status = "SURROGATE_INVALIDATED"
     elif gate_10d.status == "OPEN" and surrogate_beats_baseline1 and not inverse_mostly_reachable:
         final_status = "INVERSE_MODEL_INVALIDATED"
-    elif (gate_10e.status == "OPEN" and surrogate_beats_baseline1 and inverse_mostly_reachable
-          and beam_level_acceptable is False):
+    elif (
+        gate_10e.status == "OPEN"
+        and surrogate_beats_baseline1
+        and inverse_mostly_reachable
+        and beam_level_acceptable is False
+    ):
         final_status = "END_TO_END_MODEL_INVALIDATED"
     elif geometry_inversion_unlocked:
         final_status = "ENVIRONMENT_MODEL_VALIDATED"
-    elif (surrogate_beats_baseline1 and inverse_mostly_reachable and beam_level_acceptable
-          and gate_10b.status == "OPEN" and gate_10c.status == "OPEN"
-          and gate_10d.status == "OPEN" and gate_10e.status == "OPEN"):
+    elif (
+        surrogate_beats_baseline1
+        and inverse_mostly_reachable
+        and beam_level_acceptable
+        and gate_10b.status == "OPEN"
+        and gate_10c.status == "OPEN"
+        and gate_10d.status == "OPEN"
+        and gate_10e.status == "OPEN"
+    ):
         # Everything about the environment-aware forward/inverse/beam chain checks out; only
         # Gate 10A (the persistent, Phase-9-inherited lack of an HFSS/measurement control
         # variable) blocks the final unlock.
@@ -144,6 +162,14 @@ def decide(gate_10a, gate_10b, gate_10c, gate_10d, gate_10e, surrogate_beats_bas
         final_status = "NO_VALIDATED_FORMULATION"
 
     return Phase10Decision(
-        gate_10a, gate_10b, gate_10c, gate_10d, gate_10e, surrogate_beats_baseline1,
-        inverse_mostly_reachable, beam_level_acceptable, geometry_inversion_unlocked, final_status,
+        gate_10a,
+        gate_10b,
+        gate_10c,
+        gate_10d,
+        gate_10e,
+        surrogate_beats_baseline1,
+        inverse_mostly_reachable,
+        beam_level_acceptable,
+        geometry_inversion_unlocked,
+        final_status,
     )

@@ -10,10 +10,10 @@ import numpy as np
 
 from ..phase9.error_metrics import complex_error, magnitude_error, phase_error_deg
 
-RELATIVE_ERROR_EPSILON = 1e-15   # Sec. 25: explicitly documented denominator floor, used only to
-                                  # avoid a literal division by zero for a reference of exactly 0;
-                                  # far below any physically meaningful dipole-moment magnitude in
-                                  # this project (~1e-9 to 1e-8 A.m), so it never masks a real error.
+RELATIVE_ERROR_EPSILON = 1e-15  # Sec. 25: explicitly documented denominator floor, used only to
+# avoid a literal division by zero for a reference of exactly 0;
+# far below any physically meaningful dipole-moment magnitude in
+# this project (~1e-9 to 1e-8 A.m), so it never masks a real error.
 
 
 def relative_complex_error(pred, ref):
@@ -62,13 +62,22 @@ def compute_error_distribution(pred, ref):
     re_mean, _, re_p95, re_max = _stats(re)
     me_mean, _, me_p95, me_max = _stats(me)
     pe_mean, _, pe_p95, pe_max = _stats(pe)
-    rms = float(np.sqrt(np.mean(ce ** 2)))
+    rms = float(np.sqrt(np.mean(ce**2)))
 
     return ErrorDistributionReport(
         n=int(pred.size),
-        mean_complex_error=ce_mean, median_complex_error=ce_med, rms_complex_error=rms,
-        p95_complex_error=ce_p95, max_complex_error=ce_max,
-        mean_relative_error=re_mean, p95_relative_error=re_p95, max_relative_error=re_max,
-        mean_magnitude_error=me_mean, p95_magnitude_error=me_p95, max_magnitude_error=me_max,
-        mean_phase_error_deg=pe_mean, p95_phase_error_deg=pe_p95, max_phase_error_deg=pe_max,
+        mean_complex_error=ce_mean,
+        median_complex_error=ce_med,
+        rms_complex_error=rms,
+        p95_complex_error=ce_p95,
+        max_complex_error=ce_max,
+        mean_relative_error=re_mean,
+        p95_relative_error=re_p95,
+        max_relative_error=re_max,
+        mean_magnitude_error=me_mean,
+        p95_magnitude_error=me_p95,
+        max_magnitude_error=me_max,
+        mean_phase_error_deg=pe_mean,
+        p95_phase_error_deg=pe_p95,
+        max_phase_error_deg=pe_max,
     )

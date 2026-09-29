@@ -19,8 +19,7 @@ class LongRangeCase:
     n_unknowns: int
 
 
-def solve_5x5_homogeneous(center_lw_mm, period_m, substrate, metal, frequency_hz,
-                           mesh_cells_per_subcell=8):
+def solve_5x5_homogeneous(center_lw_mm, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell=8):
     """The n=5 zero-perturbation reference (Sec. 17's own baseline at the SAME mesh/Floquet
     resolution as the long-range test cases -- a 3x3 homogeneous solve is not numerically
     identical to a 5x5 homogeneous solve of the same infinite-periodic structure, so each grid
@@ -33,8 +32,9 @@ def solve_5x5_homogeneous(center_lw_mm, period_m, substrate, metal, frequency_hz
     return sg.dipole_at(2, 2).px
 
 
-def run_long_range_test(center_lw_mm, contrast_lw_mm, s0_5x5, period_m, substrate, metal,
-                         frequency_hz, mesh_cells_per_subcell=8):
+def run_long_range_test(
+    center_lw_mm, contrast_lw_mm, s0_5x5, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell=8
+):
     results = {}
     for d in LONG_RANGE_DIRECTIONS:
         grid_mm = eg.build_5x5_long_range_environment(center_lw_mm, {d: contrast_lw_mm})

@@ -35,6 +35,7 @@ def test_gate_closed_if_any_checklist_item_is_false():
 
 # --------------------------------------------------------------- Sec. 47 mandatory negative tests
 
+
 def test_negative_unvalidated_control_variable_keeps_geometry_inversion_locked():
     """Even with every OTHER gate open and every outcome favorable, an unvalidated (missing HFSS)
     control variable (Gate 10A CLOSED) must keep geometry inversion LOCKED."""
@@ -44,9 +45,16 @@ def test_negative_unvalidated_control_variable_keeps_geometry_inversion_locked()
     gate_d = _open_gate(gate_mod.GATE_10D_KEYS, gate_mod.evaluate_gate_10d)
     gate_e = _open_gate(gate_mod.GATE_10E_KEYS, gate_mod.evaluate_gate_10e)
 
-    decision = gate_mod.decide(gate_a, gate_b, gate_c, gate_d, gate_e,
-                                surrogate_beats_baseline1=True, inverse_mostly_reachable=True,
-                                beam_level_acceptable=True)
+    decision = gate_mod.decide(
+        gate_a,
+        gate_b,
+        gate_c,
+        gate_d,
+        gate_e,
+        surrogate_beats_baseline1=True,
+        inverse_mostly_reachable=True,
+        beam_level_acceptable=True,
+    )
     assert decision.geometry_inversion_unlocked is False
     assert decision.final_status != "ENVIRONMENT_MODEL_VALIDATED"
 
@@ -61,9 +69,16 @@ def test_negative_surrogate_that_fails_blind_test_keeps_geometry_inversion_locke
     gate_d = _open_gate(gate_mod.GATE_10D_KEYS, gate_mod.evaluate_gate_10d)
     gate_e = _open_gate(gate_mod.GATE_10E_KEYS, gate_mod.evaluate_gate_10e)
 
-    decision = gate_mod.decide(gate_a, gate_b, gate_c, gate_d, gate_e,
-                                surrogate_beats_baseline1=False, inverse_mostly_reachable=True,
-                                beam_level_acceptable=True)
+    decision = gate_mod.decide(
+        gate_a,
+        gate_b,
+        gate_c,
+        gate_d,
+        gate_e,
+        surrogate_beats_baseline1=False,
+        inverse_mostly_reachable=True,
+        beam_level_acceptable=True,
+    )
     assert decision.geometry_inversion_unlocked is False
     assert decision.final_status == "SURROGATE_INVALIDATED"
 
@@ -75,9 +90,16 @@ def test_fully_validated_chain_unlocks_geometry_inversion():
     gate_d = _open_gate(gate_mod.GATE_10D_KEYS, gate_mod.evaluate_gate_10d)
     gate_e = _open_gate(gate_mod.GATE_10E_KEYS, gate_mod.evaluate_gate_10e)
 
-    decision = gate_mod.decide(gate_a, gate_b, gate_c, gate_d, gate_e,
-                                surrogate_beats_baseline1=True, inverse_mostly_reachable=True,
-                                beam_level_acceptable=True)
+    decision = gate_mod.decide(
+        gate_a,
+        gate_b,
+        gate_c,
+        gate_d,
+        gate_e,
+        surrogate_beats_baseline1=True,
+        inverse_mostly_reachable=True,
+        beam_level_acceptable=True,
+    )
     assert decision.geometry_inversion_unlocked is True
     assert decision.final_status == "ENVIRONMENT_MODEL_VALIDATED"
 
@@ -90,9 +112,16 @@ def test_real_project_state_reports_no_validated_formulation_or_more_specific_fa
     gate_c = _open_gate(gate_mod.GATE_10C_KEYS, gate_mod.evaluate_gate_10c)
     gate_d = _open_gate(gate_mod.GATE_10D_KEYS, gate_mod.evaluate_gate_10d)
     gate_e = _open_gate(gate_mod.GATE_10E_KEYS, gate_mod.evaluate_gate_10e)
-    decision = gate_mod.decide(gate_a, gate_b, gate_c, gate_d, gate_e,
-                                surrogate_beats_baseline1=False, inverse_mostly_reachable=True,
-                                beam_level_acceptable=True)
+    decision = gate_mod.decide(
+        gate_a,
+        gate_b,
+        gate_c,
+        gate_d,
+        gate_e,
+        surrogate_beats_baseline1=False,
+        inverse_mostly_reachable=True,
+        beam_level_acceptable=True,
+    )
     assert decision.final_status in gate_mod.FINAL_STATUS_OPTIONS
     assert decision.final_status != "ENVIRONMENT_MODEL_VALIDATED"
     assert decision.geometry_inversion_unlocked is False

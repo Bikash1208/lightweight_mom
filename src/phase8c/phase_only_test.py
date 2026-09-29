@@ -20,7 +20,7 @@ class PhaseOnlyTestResult:
     magnitude_median: float
     magnitude_std: float
     threshold_available: bool
-    status: str          # "PHASE_ONLY_APPROXIMATION_JUSTIFIED" | "..._NOT_JUSTIFIED" | "..._UNRESOLVED"
+    status: str  # "PHASE_ONLY_APPROXIMATION_JUSTIFIED" | "..._NOT_JUSTIFIED" | "..._UNRESOLVED"
     note: str
 
 
@@ -43,6 +43,9 @@ def phase_only_justification_test(candidate_coverage):
     return PhaseOnlyTestResult(
         component=candidate_coverage.component,
         magnitude_range=(candidate_coverage.magnitude_min, candidate_coverage.magnitude_max),
-        magnitude_median=candidate_coverage.magnitude_median, magnitude_std=candidate_coverage.magnitude_std,
-        threshold_available=False, status="PHASE_ONLY_APPROXIMATION_UNRESOLVED", note=note,
+        magnitude_median=candidate_coverage.magnitude_median,
+        magnitude_std=candidate_coverage.magnitude_std,
+        threshold_available=False,
+        status="PHASE_ONLY_APPROXIMATION_UNRESOLVED",
+        note=note,
     )

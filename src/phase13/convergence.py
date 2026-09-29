@@ -56,19 +56,19 @@ class ConvergencePoint:
     floquet_order: int
     n_unknowns: int
     s11_mag: float
-    s11_phase_deg: float   # raw, on (-180, 180] -- NOT the unwrapped value used internally for the fit
+    s11_phase_deg: float  # raw, on (-180, 180] -- NOT the unwrapped value used internally for the fit
 
 
 @dataclass(frozen=True)
 class FitResult:
     status: str
-    value_inf: float | None       # extrapolated dx -> 0 value
+    value_inf: float | None  # extrapolated dx -> 0 value
     value_inf_error: float | None  # 1-sigma standard error from the fit's covariance
-    order: float | None            # fitted power p
-    finest_value: float | None     # the raw value at the finest resolution actually run (fallback)
-    coefficient: float | None = None   # fitted `a` in `v(dx) = v_inf + a*dx^p` -- lets a caller
-                                        # scale this SAME measured law to a different dx (e.g.
-                                        # `resonance_restatement.py`) without re-fitting
+    order: float | None  # fitted power p
+    finest_value: float | None  # the raw value at the finest resolution actually run (fallback)
+    coefficient: float | None = None  # fitted `a` in `v(dx) = v_inf + a*dx^p` -- lets a caller
+    # scale this SAME measured law to a different dx (e.g.
+    # `resonance_restatement.py`) without re-fitting
 
 
 @dataclass(frozen=True)
@@ -103,22 +103,28 @@ def _unwrap_to_match(result: "ConvergenceResult") -> float:
     return float(np.degrees(unwrapped[-1]))
 
 
-def solve_at_resolution(unit_cell, frequency_hz, planes, cells, floquet_order=None,
-                         warn_grating=False, warn_surface_wave=False):
+def solve_at_resolution(
+    unit_cell, frequency_hz, planes, cells, floquet_order=None, warn_grating=False, warn_surface_wave=False
+):
     """One aligned-mesh MoM solve (`cells_x = cells_y = cells`, `dx = P/cells`), reused verbatim
     from `sparameters.compute_s_parameters` -- the same function every other solve in this project
     uses. `floquet_order` defaults to `cells` (the addendum's own choice, generous relative to the
     `2*order+1 >= cells` minimum)."""
     floquet_order = cells if floquet_order is None else floquet_order
     mesh = MeshSettings(cells_x=cells, cells_y=cells, floquet_order=floquet_order)
-    sp = compute_s_parameters(unit_cell, frequency_hz, mesh, planes,
-                               warn_grating=warn_grating, warn_surface_wave=warn_surface_wave)
+    sp = compute_s_parameters(
+        unit_cell, frequency_hz, mesh, planes, warn_grating=warn_grating, warn_surface_wave=warn_surface_wave
+    )
     s11 = sp.s11[0, 0]
     period_x = unit_cell.lattice.period_x
     n_unknowns = RooftopBasis(unit_cell, cells, cells).n_unknowns
     return ConvergencePoint(
-        cells=cells, dx_m=period_x / cells, floquet_order=floquet_order, n_unknowns=n_unknowns,
-        s11_mag=float(abs(s11)), s11_phase_deg=float(np.degrees(np.angle(s11))),
+        cells=cells,
+        dx_m=period_x / cells,
+        floquet_order=floquet_order,
+        n_unknowns=n_unknowns,
+        s11_mag=float(abs(s11)),
+        s11_phase_deg=float(np.degrees(np.angle(s11))),
     )
 
 
@@ -169,8 +175,15 @@ def _fit_power_law(dx_values, values):
     return FitResult(STATUS_CONVERGED, float(v_inf), v_inf_err, float(p), finest_value, float(a))
 
 
-def richardson_extrapolate_s11xx(unit_cell, frequency_hz, planes, cell_counts=DEFAULT_CELL_COUNTS,
-                                  floquet_order_fn=None, warn_grating=False, warn_surface_wave=False):
+def richardson_extrapolate_s11xx(
+    unit_cell,
+    frequency_hz,
+    planes,
+    cell_counts=DEFAULT_CELL_COUNTS,
+    floquet_order_fn=None,
+    warn_grating=False,
+    warn_surface_wave=False,
+):
     """Solve at every resolution in `cell_counts`, fit and extrapolate phase and magnitude
     separately (`floquet_order_fn(cells)` overrides the default `floquet_order = cells`). Phase
     is unwrapped across the resolution sequence (coarse -> fine) before fitting, since the raw
@@ -178,8 +191,17 @@ def richardson_extrapolate_s11xx(unit_cell, frequency_hz, planes, cell_counts=DE
     points = []
     for cells in sorted(cell_counts):
         fo = floquet_order_fn(cells) if floquet_order_fn is not None else None
-        points.append(solve_at_resolution(unit_cell, frequency_hz, planes, cells, floquet_order=fo,
-                                           warn_grating=warn_grating, warn_surface_wave=warn_surface_wave))
+        points.append(
+            solve_at_resolution(
+                unit_cell,
+                frequency_hz,
+                planes,
+                cells,
+                floquet_order=fo,
+                warn_grating=warn_grating,
+                warn_surface_wave=warn_surface_wave,
+            )
+        )
     points = tuple(points)
 
     ordered = sorted(points, key=lambda p: -p.dx_m)  # coarse -> fine

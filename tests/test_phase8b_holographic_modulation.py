@@ -62,6 +62,6 @@ def test_phase_difference_hologram_from_phases_matches_complex_version():
 
 def test_phase_difference_hologram_result_is_always_wrapped():
     ref_deg = np.array([0.0])
-    obj_deg = np.array([540.0])   # 540 wraps to 180
+    obj_deg = np.array([540.0])  # 540 wraps to 180
     required = phase_difference_hologram_from_phases_deg(ref_deg, obj_deg)
     assert -180.0 < required[0] <= 180.0

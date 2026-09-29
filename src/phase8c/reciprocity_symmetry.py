@@ -15,8 +15,8 @@ from ..database import family_block
 @dataclass(frozen=True)
 class ReciprocityCheck:
     n_cells_checked: int
-    max_abs_error_co: float       # max |S21_xx - S12_xx|
-    max_abs_error_cross: float    # max |S21_yx - S12_xy| (transpose relation)
+    max_abs_error_co: float  # max |S21_xx - S12_xx|
+    max_abs_error_cross: float  # max |S21_yx - S12_xy| (transpose relation)
     reciprocal: bool
     tolerance: float
     note: str
@@ -40,15 +40,19 @@ def check_reciprocity(database, frequency_index, tolerance=1e-6):
         f"max|S21xx-S12xx|={max_co:.3e}, max|S21yx-S12xy|={max_cross:.3e} over "
         f"{len(errors_co)} cells -- consistent with `MOM_FORMULATION.md`'s claim that Z is "
         "complex-symmetric at normal incidence (S=S^T), within solver numerical precision."
-        if reciprocal else
-        f"max|S21xx-S12xx|={max_co:.3e}, max|S21yx-S12xy|={max_cross:.3e} EXCEEDS tolerance "
+        if reciprocal
+        else f"max|S21xx-S12xx|={max_co:.3e}, max|S21yx-S12xy|={max_cross:.3e} EXCEEDS tolerance "
         f"{tolerance:.1e} -- reciprocity does NOT hold to the expected precision; investigate "
         "numerical error, polarization basis, port convention, or a material-model mismatch "
         "before using this data (Sec. 31)."
     )
     return ReciprocityCheck(
-        n_cells_checked=len(errors_co), max_abs_error_co=max_co, max_abs_error_cross=max_cross,
-        reciprocal=reciprocal, tolerance=tolerance, note=note,
+        n_cells_checked=len(errors_co),
+        max_abs_error_co=max_co,
+        max_abs_error_cross=max_cross,
+        reciprocal=reciprocal,
+        tolerance=tolerance,
+        note=note,
     )
 
 

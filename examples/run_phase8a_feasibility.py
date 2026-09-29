@@ -33,7 +33,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     kwargs = {
-        "library_dir": args.library_dir, "polarization": args.polarization,
+        "library_dir": args.library_dir,
+        "polarization": args.polarization,
         "expected_n_geometries": args.expected_geometries,
         "expected_n_frequency_points": args.expected_frequency_points,
     }
@@ -44,7 +45,9 @@ def main(argv=None):
     config = FeasibilityConfig(**kwargs)
 
     result, output_dir = run_and_write_phase8a(
-        config, args.output_dir, reference_field_path=args.reference_field,
+        config,
+        args.output_dir,
+        reference_field_path=args.reference_field,
     )
 
     def pf(label, value):
@@ -65,7 +68,10 @@ def main(argv=None):
     pf("Library phase coverage:", f"{cov.get('span_deg', float('nan')):.1f} deg" if cov else "N/A")
     pf("Largest phase gap:", f"{cov.get('largest_gap_deg', float('nan')):.1f} deg" if cov else "N/A")
     rp = result.required_phase or {}
-    pf("Required phase coverage:", f"{rp.get('coverage_deg', float('nan')):.1f} deg" if rp.get("coverage_deg") is not None else "N/A")
+    pf(
+        "Required phase coverage:",
+        f"{rp.get('coverage_deg', float('nan')):.1f} deg" if rp.get("coverage_deg") is not None else "N/A",
+    )
     pf("Phase matching:", result.checks.get("phase_matching", "N/A"))
     m = result.matching or {}
     pf("Mean phase error:", f"{m.get('mean_error_deg'):.1f} deg" if m.get("mean_error_deg") is not None else "N/A")

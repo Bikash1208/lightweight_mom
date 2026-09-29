@@ -15,7 +15,9 @@ from src.phase9.error_metrics import compute_error_stats
 from src.phase9.hfss_reference import HfssRecord
 from src.phase_extraction import design_frequency_index
 
-pytestmark = pytest.mark.skipif(not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present")
+pytestmark = pytest.mark.skipif(
+    not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present"
+)
 
 
 def test_validation_frequencies_are_exact_grid_points(phase8c_full_database):
@@ -65,9 +67,9 @@ def test_classify_control_variable_detects_a_180_degree_sign_mismatch():
 
 
 def test_classify_control_variable_never_asserts_validated_without_a_sourced_tolerance():
-    stats = compute_error_stats([1.0 + 0j], [1.001 + 0j])   # a tiny, "obviously good" agreement
+    stats = compute_error_stats([1.0 + 0j], [1.001 + 0j])  # a tiny, "obviously good" agreement
     status, _ = classify_control_variable(stats)
-    assert status == "UNVALIDATED"   # still not VALIDATED -- no tolerance is defined anywhere
+    assert status == "UNVALIDATED"  # still not VALIDATED -- no tolerance is defined anywhere
 
 
 def test_compare_against_hfss_raises_if_a_solver_row_has_no_matching_hfss_record(phase8c_full_database):

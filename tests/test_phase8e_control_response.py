@@ -26,7 +26,7 @@ def test_required_phase_b_and_c_share_the_identical_numeric_kernel():
     b = required_phase_b(e_ref, e_obj)
     c = required_phase_c(e_ref, e_obj)
     assert np.allclose(b.values, c.values)
-    assert b.required_quantity != c.required_quantity   # different physical claim, same numbers
+    assert b.required_quantity != c.required_quantity  # different physical claim, same numbers
 
 
 def test_required_reactance_a_rejects_out_of_range_modulation_index():
@@ -66,5 +66,5 @@ def test_generalized_transfer_operator_flags_undefined_where_reference_vanishes(
     ex_obj = np.array([1.0 + 0j, 1.0 + 0j])
     ey_obj = np.array([0.0 + 0j, 0.0 + 0j])
     result = generalized_transfer_operator(ex_ref, ey_ref, ex_obj, ey_obj)
-    assert result.values["undefined_mask"][0] == True    # noqa: E712
-    assert result.values["undefined_mask"][1] == False   # noqa: E712
+    assert result.values["undefined_mask"][0] == True  # noqa: E712
+    assert result.values["undefined_mask"][1] == False  # noqa: E712

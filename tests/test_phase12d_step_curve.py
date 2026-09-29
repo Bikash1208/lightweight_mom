@@ -2,15 +2,15 @@
 exercising the whole pipeline: reference curve, center classification, 1-D/2-D step cases, and the
 design-relevant reflection-coefficient metric alongside Phase 9's dipole one."""
 
-from src.phase12c.locality_study import classify_centers
-from src.phase12d import step_curve as sc
 from src.discretization import feature_edges_aligned
 from src.phase12c import design_point as dp
+from src.phase12c.locality_study import classify_centers
+from src.phase12d import step_curve as sc
 
 
 def _small_family(mesh_cells_per_subcell):
     unit_mm = 2.0 * (dp.PERIOD_M * 1e3) / mesh_cells_per_subcell
-    max_k = int((dp.PERIOD_M * 1e3 * 0.9) // unit_mm)   # stay safely inside the period
+    max_k = int((dp.PERIOD_M * 1e3 * 0.9) // unit_mm)  # stay safely inside the period
     return tuple(round(unit_mm * k, 10) for k in range(2, max_k + 1))
 
 
@@ -39,8 +39,7 @@ def test_build_step_cases_produces_both_kinds_and_real_errors():
     family = _small_family(12)
     curve = sc.build_reference_curve(mesh_cells_per_subcell=12, l_values_mm=family)
     centers = classify_centers(curve)
-    cases = sc.build_step_cases(curve, [("off", centers.off_resonance)], max_k=1,
-                                 mesh_cells_per_subcell=12)
+    cases = sc.build_step_cases(curve, [("off", centers.off_resonance)], max_k=1, mesh_cells_per_subcell=12)
     kinds = {c.kind for c in cases}
     assert kinds == {"1d_row", "2d_gradient"}
     for c in cases:

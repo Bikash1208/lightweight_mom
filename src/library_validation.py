@@ -57,7 +57,11 @@ def select_hfss_validation_subset(config, table, classifications):
         quartile_indices = sorted({0, n // 4, n // 2, (3 * n) // 4, n - 1})
         for q in quartile_indices:
             row = by_phase[q]
-            add(row["L_mm"], row["W_mm"], f"phase-region representative (S11xx phase quartile sample, phase={row['phase_deg']:.1f} deg)")
+            add(
+                row["L_mm"],
+                row["W_mm"],
+                f"phase-region representative (S11xx phase quartile sample, phase={row['phase_deg']:.1f} deg)",
+            )
 
     cell_by_lw = {(c.l_mm, c.w_mm): c.cell_id for c in classifications}
     subset = [
@@ -79,6 +83,7 @@ def write_hfss_validation_subset_csv(subset, path):
 
 
 # ------------------------------------------------------------------------ internal consistency
+
 
 @dataclass(frozen=True)
 class ConsistencyReport:
@@ -107,8 +112,9 @@ def check_json_csv_consistency(json_path, csv_path, rtol=1e-9):
             n_json_records += 1
             row = by_key.get((cell["cell_id"], repr(f_ghz)))
             if row is None:
-                candidates = [r for r in csv_rows if r["cell_id"] == cell["cell_id"]
-                              and abs(float(r["f_GHz"]) - f_ghz) < 1e-6]
+                candidates = [
+                    r for r in csv_rows if r["cell_id"] == cell["cell_id"] and abs(float(r["f_GHz"]) - f_ghz) < 1e-6
+                ]
                 row = candidates[0] if candidates else None
             if row is None:
                 mismatches.append(f"{cell['cell_id']} @ {f_ghz:g} GHz: missing from CSV")
@@ -120,13 +126,13 @@ def check_json_csv_consistency(json_path, csv_path, rtol=1e-9):
                     got = float(row[f"{family}_{field_}"])
                     if abs(got - expected) > rtol * max(abs(expected), 1.0):
                         mismatches.append(
-                            f"{cell['cell_id']} @ {f_ghz:g} GHz: {family}_{field_} "
-                            f"JSON={expected!r} CSV={got!r}"
+                            f"{cell['cell_id']} @ {f_ghz:g} GHz: {family}_{field_} JSON={expected!r} CSV={got!r}"
                         )
     return ConsistencyReport(len(mismatches) == 0, n_json_records, len(csv_rows), tuple(mismatches))
 
 
 # ------------------------------------------------------------------------------------ report
+
 
 def render_library_validation_md(config, subset, consistency, build):
     lines = [

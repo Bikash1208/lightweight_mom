@@ -48,10 +48,13 @@ def write_database_schema_json(path):
 def render_database_schema_md():
     doc = build_database_schema_dict()
     lines = [
-        "# database_schema.md", "",
+        "# database_schema.md",
+        "",
         "Generated from the actual `phase8d_rev` dataclasses (`dataclasses.fields`), so this file "
-        "cannot drift from the code.", "",
-        "## UnitCellRecord (Sec. 7)", "",
+        "cannot drift from the code.",
+        "",
+        "## UnitCellRecord (Sec. 7)",
+        "",
     ]
     for name, typ in doc["record_schema"].items():
         lines.append(f"- `{name}`: `{typ}`")
@@ -59,12 +62,19 @@ def render_database_schema_md():
     for name, typ in doc["family_schema"].items():
         lines.append(f"- `{name}`: `{typ}`")
     lines += [
-        "", "## Validation levels (Sec. 23)", "",
-        ", ".join(f"`{v}`" for v in doc["validation_levels"]), "",
-        "## LibraryEntry roles (Sec. 3, 17)", "",
-        ", ".join(f"`{r}`" for r in doc["library_entry_roles"]), "",
-        "## Period/frequency/substrate/polarization/incidence are per-entry, not global", "",
-        doc["note"], "",
+        "",
+        "## Validation levels (Sec. 23)",
+        "",
+        ", ".join(f"`{v}`" for v in doc["validation_levels"]),
+        "",
+        "## LibraryEntry roles (Sec. 3, 17)",
+        "",
+        ", ".join(f"`{r}`" for r in doc["library_entry_roles"]),
+        "",
+        "## Period/frequency/substrate/polarization/incidence are per-entry, not global",
+        "",
+        doc["note"],
+        "",
     ]
     return "\n".join(lines) + "\n"
 
@@ -72,27 +82,38 @@ def render_database_schema_md():
 def render_query_spec_md():
     fields = _field_map(UnitCellQuery)
     lines = [
-        "# query_spec.md", "",
+        "# query_spec.md",
+        "",
         "`query.search_unit_cells(universal_db, query)` applies the following filters in this "
         "fixed order (Sec. 14); it never ranks surviving candidates by phase coverage or any other "
-        "controllability metric.", "",
-        "## UnitCellQuery fields", "",
+        "controllability metric.",
+        "",
+        "## UnitCellQuery fields",
+        "",
     ]
     for name, typ in fields.items():
         lines.append(f"- `{name}`: `{typ}` (`None` = unconstrained)")
     lines += [
-        "", "## Filter order", "",
-        "1. topology", "2. material_stack (substrate name/eps_r/tan_delta/thickness)",
+        "",
+        "## Filter order",
+        "",
+        "1. topology",
+        "2. material_stack (substrate name/eps_r/tan_delta/thickness)",
         "3. frequency (exact stored grid point only, no interpolation)",
-        "4. period (p_x_mm, p_y_mm)", "5. polarization", "6. incidence",
+        "4. period (p_x_mm, p_y_mm)",
+        "5. polarization",
+        "6. incidence",
         "7. response_availability (at least one OK-solved cell)",
-        "8. validity_status (>= min_validation_status, if given)", "",
-        "## Result", "",
-        "`QueryResult.status` is `\"MATCH\"` (with the surviving `LibraryEntry` objects) or "
-        "`\"DATABASE_COVERAGE_MISSING\"` (with `eliminated_at` naming the first filter stage that "
+        "8. validity_status (>= min_validation_status, if given)",
+        "",
+        "## Result",
+        "",
+        '`QueryResult.status` is `"MATCH"` (with the surviving `LibraryEntry` objects) or '
+        '`"DATABASE_COVERAGE_MISSING"` (with `eliminated_at` naming the first filter stage that '
         "reduced candidates to zero, and the full `filter_trail`). A missing result is turned into "
         "a `build_request.LibraryBuildRequest` -- never a fabricated, interpolated, or rescaled "
-        "match (Sec. 21).", "",
+        "match (Sec. 21).",
+        "",
     ]
     return "\n".join(lines) + "\n"
 
@@ -103,7 +124,7 @@ def build_library_build_request_schema_dict():
         "version": 1,
         "fields": _field_map(LibraryBuildRequest),
         "note": "Produced only by build_request.generate_build_request on a DATABASE_COVERAGE_MISSING "
-                "query result; never auto-submitted to a solver (Sec. 18: 'must NOT silently generate it').",
+        "query result; never auto-submitted to a solver (Sec. 18: 'must NOT silently generate it').",
     }
 
 

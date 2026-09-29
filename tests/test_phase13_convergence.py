@@ -57,7 +57,6 @@ def test_off_resonance_case_converges_well_within_the_finest_fixed_mesh():
     """Off-resonance (L = 2.0 mm, the same centre Phase 12D used): first-order error should be
     much smaller than at resonance, since there is no near-singular edge current there."""
     uc = dp.unit_cell_at(2.0e-3)
-    result = conv.richardson_extrapolate_s11xx(uc, 12.5e9, dp.REFERENCE_PLANES,
-                                                cell_counts=conv.FAST_CELL_COUNTS)
+    result = conv.richardson_extrapolate_s11xx(uc, 12.5e9, dp.REFERENCE_PLANES, cell_counts=conv.FAST_CELL_COUNTS)
     assert result.phase.status == conv.STATUS_CONVERGED
     assert result.is_converged_within(1.0)

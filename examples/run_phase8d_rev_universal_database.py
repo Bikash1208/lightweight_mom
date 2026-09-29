@@ -21,14 +21,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", default=str(ROOT / "results" / "universal_database"))
     parser.add_argument(
-        "--regression-suite-passed", action="store_true",
+        "--regression-suite-passed",
+        action="store_true",
         help="Set only after independently confirming `pytest` passes in full for this state of "
-             "the repository; used solely to fill in Sec. 31's last acceptance-criteria line.",
+        "the repository; used solely to fill in Sec. 31's last acceptance-criteria line.",
     )
     args = parser.parse_args()
 
     result = run_phase8d_rev(
-        args.output_dir, regression_suite_passed=args.regression_suite_passed,
+        args.output_dir,
+        regression_suite_passed=args.regression_suite_passed,
     )
     print_final_report(result)
     return 0 if result["overall_pass"] else 1

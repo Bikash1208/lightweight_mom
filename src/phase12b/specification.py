@@ -26,14 +26,22 @@ def write_alignment_report_json(family, aligned_n, duplicate_report, path):
 
 
 def write_reassessment_json(
-    aligned_points, aligned_diffs, floquet_points, floquet_diffs, sweep_points, coverage_by_frequency, path,
+    aligned_points,
+    aligned_diffs,
+    floquet_points,
+    floquet_diffs,
+    sweep_points,
+    coverage_by_frequency,
+    path,
 ):
     doc = {
         "aligned_mesh_refinement_study": {
-            "points": [asdict(p) for p in aligned_points], "diffs": list(aligned_diffs),
+            "points": [asdict(p) for p in aligned_points],
+            "diffs": list(aligned_diffs),
         },
         "floquet_only_convergence": {
-            "points": [asdict(p) for p in floquet_points], "diffs": list(floquet_diffs),
+            "points": [asdict(p) for p in floquet_points],
+            "diffs": list(floquet_diffs),
         },
         "aligned_sweep_points": [asdict(p) for p in sweep_points],
         "coverage_by_frequency": {
@@ -45,12 +53,19 @@ def write_reassessment_json(
 
 
 def write_duplicate_audit_json(
-    phase7_report, phase7_lookup_cross_check, phase9_report, phase10_report, phase10_leakage,
-    phase10_perturbation_report, phase11_check, path,
+    phase7_report,
+    phase7_lookup_cross_check,
+    phase9_report,
+    phase10_report,
+    phase10_leakage,
+    phase10_perturbation_report,
+    phase11_check,
+    path,
 ):
     doc = {
         "phase7_library": {
-            "n_geometries": phase7_report.n_geometries, "n_distinct": phase7_report.n_distinct,
+            "n_geometries": phase7_report.n_geometries,
+            "n_distinct": phase7_report.n_distinct,
             "n_duplicate_groups": phase7_report.n_duplicate_groups,
             "groups": [list(g) for g in phase7_report.groups],
         },
@@ -61,7 +76,9 @@ def write_duplicate_audit_json(
             "holdout_center_names": list(phase10_leakage["holdout_center_names"]),
             "leaks": [list(g) for g in phase10_leakage["leaks"]],
         },
-        "phase10_cross_center_perturbation_groups": [list(g) for g in phase10_perturbation_report["cross_center_groups"]],
+        "phase10_cross_center_perturbation_groups": [
+            list(g) for g in phase10_perturbation_report["cross_center_groups"]
+        ],
         "phase11_pattern_endpoints_identical": phase11_check,
     }
     return _write_json(doc, path)
@@ -97,11 +114,13 @@ def write_gate_status_json(mesh_gate, audit_gate, period_gate, path):
     doc = {
         "mesh_alignment": asdict(mesh_gate),
         "audit": {
-            "status": audit_gate.status, "reason": audit_gate.reason,
+            "status": audit_gate.status,
+            "reason": audit_gate.reason,
             "at_risk_findings": list(audit_gate.at_risk_findings),
         },
         "period_study": {
-            "status": period_gate.status, "reason": period_gate.reason,
+            "status": period_gate.status,
+            "reason": period_gate.reason,
             "coverage_by_period_deg": period_gate.coverage_by_period_deg,
         },
     }
@@ -114,8 +133,13 @@ def write_period_sweep_csv(period_results, path):
         writer.writerow(["period_mm", "length_width_mm", "frequency_hz", "s11_xx_mag", "s11_xx_phase_deg"])
         for period_mm, r in period_results.items():
             for p in sorted(r["points"], key=lambda p: (p.frequency_hz, p.length_width_mm)):
-                writer.writerow([
-                    repr(p.period_mm), repr(p.length_width_mm), repr(p.frequency_hz),
-                    repr(p.s11_xx_mag), repr(p.s11_xx_phase_deg),
-                ])
+                writer.writerow(
+                    [
+                        repr(p.period_mm),
+                        repr(p.length_width_mm),
+                        repr(p.frequency_hz),
+                        repr(p.s11_xx_mag),
+                        repr(p.s11_xx_phase_deg),
+                    ]
+                )
     return path

@@ -36,10 +36,11 @@ def textbook_impedances(g, kt):
     return par(Zte0, down(Zte0, Zte1)), par(Ztm0, down(Ztm0, Ztm1))
 
 
-REGIMES = [0.05, 0.3, 0.7, 0.95, 1.05, 1.3, 1.45, 2.5, 8.0]   # kt/k0 (k_sub/k0 = 1.483 lossless)
+REGIMES = [0.05, 0.3, 0.7, 0.95, 1.05, 1.3, 1.45, 2.5, 8.0]  # kt/k0 (k_sub/k0 = 1.483 lossless)
 
 
 # ============================================================ lossless substrate
+
 
 @pytest.mark.parametrize("kt_r", REGIMES)
 def test_lossless_matches_textbook_tl_formula(kt_r):
@@ -67,7 +68,7 @@ def test_free_space_sheet_radiates_minus_half_eta0_j():
     """Textbook result: a uniform current sheet in free space gives E = -(eta0/2) J."""
     g = gf(eps_r=1.0, tand=0.0)
     G = g.spectral_dyad(0.0, 0.0)
-    assert G == pytest.approx(-0.5 * ETA0 * np.eye(2), rel=1e-12)
+    assert pytest.approx(-0.5 * ETA0 * np.eye(2), rel=1e-12) == G
     assert G.imag == pytest.approx(0.0, abs=1e-9)
 
 
@@ -75,9 +76,7 @@ def test_zero_thickness_limit_is_free_space():
     g = gf(eps_r=4.0, tand=0.0, h=1e-12)
     ref = gf(eps_r=1.0, tand=0.0)
     for kt_r in (0.0, 0.5, 2.0):
-        assert g.spectral_dyad(kt_r * g.k0, 0.0) == pytest.approx(
-            ref.spectral_dyad(kt_r * g.k0, 0.0), rel=1e-9
-        )
+        assert g.spectral_dyad(kt_r * g.k0, 0.0) == pytest.approx(ref.spectral_dyad(kt_r * g.k0, 0.0), rel=1e-9)
 
 
 def test_lossless_real_part_only_from_radiating_harmonics():
@@ -108,6 +107,7 @@ def test_large_thickness_lossless_kernel_is_finite_away_from_poles():
 
 # =============================================================== lossy substrate
 
+
 @pytest.mark.parametrize("kt_r", REGIMES)
 @pytest.mark.parametrize("tand", [0.0009, 0.02, 0.3])
 def test_lossy_matches_textbook_tl_formula(kt_r, tand):
@@ -125,7 +125,7 @@ def test_lossy_is_passive_for_every_kt():
     kt = np.linspace(0.0, 30 * g.k0, 6001)
     z_te, z_tm = g.equivalent_impedances(kt, 0.0)
     assert np.all(z_te.real > 0.0)
-    assert np.all(z_tm.real >= 0.0)      # TM is exactly 0 at kt = k0 (kz_air = 0)
+    assert np.all(z_tm.real >= 0.0)  # TM is exactly 0 at kt = k0 (kz_air = 0)
     assert np.all(z_tm.real[np.abs(kt - g.k0) > 1e-6 * g.k0] > 0.0)
 
 
@@ -141,11 +141,13 @@ def test_lossy_dyad_is_positive_dissipation_operator_for_random_currents():
 
 def test_lossy_reduces_to_lossless_as_tand_goes_to_zero():
     g0 = gf(tand=0.0)
-    for kt_r in (0.3, 1.3, 3.0):      # avoid the lossless guided-mode poles
+    for kt_r in (0.3, 1.3, 3.0):  # avoid the lossless guided-mode poles
         kt = kt_r * g0.k0
         for tand in (1e-6, 1e-9, 1e-12):
             g1 = gf(tand=tand)
-            assert g1.spectral_dyad(kt, 0.3 * kt) == pytest.approx(g0.spectral_dyad(kt, 0.3 * kt), rel=10 * tand + 1e-12)
+            assert g1.spectral_dyad(kt, 0.3 * kt) == pytest.approx(
+                g0.spectral_dyad(kt, 0.3 * kt), rel=10 * tand + 1e-12
+            )
 
 
 def test_thick_lossy_substrate_becomes_parallel_of_two_half_spaces():
@@ -176,6 +178,7 @@ def test_lossy_center_value_against_normal_incidence_transmission_line():
 
 # ==================================================== kt = 0 and TE/TM degeneracy
 
+
 @pytest.mark.parametrize("eps_r, tand, h", [(2.2, 0.0, H), (2.2, 0.0009, H), (10.2, 0.05, 3e-3), (1.0, 0.0, H)])
 def test_te_tm_degenerate_at_normal_incidence(eps_r, tand, h):
     g = gf(eps_r, tand, h)
@@ -183,7 +186,7 @@ def test_te_tm_degenerate_at_normal_incidence(eps_r, tand, h):
     assert z_te == pytest.approx(z_tm, rel=1e-13)
     G = g.spectral_dyad(0.0, 0.0)
     assert G[0, 1] == 0.0 and G[1, 0] == 0.0
-    assert G[0, 0] == G[1, 1]                    # exactly isotropic (identity * scalar)
+    assert G[0, 0] == G[1, 1]  # exactly isotropic (identity * scalar)
     assert G[0, 0] == pytest.approx(-0.5 * (z_te + z_tm), rel=1e-13)
 
 
@@ -206,13 +209,13 @@ def test_kt_to_zero_limit_is_direction_independent_and_matches_kt_zero(angle):
         Gk = g.spectral_dyad(kt * math.cos(angle), kt * math.sin(angle))
         errs.append(np.linalg.norm(Gk - G0) / np.linalg.norm(G0))
     assert errs[0] < 1e-3 and errs[2] < 1e-7
-    assert errs[1] == pytest.approx(errs[0] / 100, rel=0.05)     # O(kt^2) approach
+    assert errs[1] == pytest.approx(errs[0] / 100, rel=0.05)  # O(kt^2) approach
 
 
 def test_kt_zero_threshold_is_seamless():
     """No jump between the exact-zero branch and the general formula just above it."""
     g = gf()
-    tiny = 1e-11 * g.k0                     # just above the isotropic-branch threshold
+    tiny = 1e-11 * g.k0  # just above the isotropic-branch threshold
     G_general = g.spectral_dyad(tiny * 0.6, tiny * 0.8)
     G_zero = g.spectral_dyad(0.0, 0.0)
     assert G_general == pytest.approx(G_zero, rel=1e-12)
@@ -243,6 +246,7 @@ def test_all_outputs_finite_on_normal_incidence_floquet_grid():
 
 # ============================================================ reciprocity / symmetry
 
+
 def random_k(g, n=40, seed=3, scale=8.0):
     rng = np.random.default_rng(seed)
     return rng.uniform(-scale * g.k0, scale * g.k0, n), rng.uniform(-scale * g.k0, scale * g.k0, n)
@@ -256,9 +260,9 @@ def test_dyad_is_complex_symmetric(tand):
     G = g.spectral_dyad(kx, ky)
     assert np.array_equal(G[..., 0, 1], G[..., 1, 0])
     assert np.allclose(G, np.swapaxes(G, -1, -2), rtol=0, atol=0)
-    assert np.any(np.abs(G[..., 0, 1]) > 0)              # not trivially diagonal
+    assert np.any(np.abs(G[..., 0, 1]) > 0)  # not trivially diagonal
     if tand > 0:
-        assert not np.allclose(G, np.conj(np.swapaxes(G, -1, -2)))   # genuinely non-Hermitian
+        assert not np.allclose(G, np.conj(np.swapaxes(G, -1, -2)))  # genuinely non-Hermitian
 
 
 @pytest.mark.parametrize("tand", [0.0, 0.0009])
@@ -272,7 +276,7 @@ def test_dyad_even_in_k(tand):
 def test_mirror_symmetry():
     g = gf()
     kx, ky = random_k(g)
-    G, Gm = g.spectral_dyad(kx, ky), g.spectral_dyad(-kx, ky)     # x -> -x mirror
+    G, Gm = g.spectral_dyad(kx, ky), g.spectral_dyad(-kx, ky)  # x -> -x mirror
     assert Gm[..., 0, 0] == pytest.approx(G[..., 0, 0], rel=1e-13)
     assert Gm[..., 1, 1] == pytest.approx(G[..., 1, 1], rel=1e-13)
     assert Gm[..., 0, 1] == pytest.approx(-G[..., 0, 1], rel=1e-13)
@@ -305,11 +309,11 @@ def test_floquet_grid_symmetries_at_normal_incidence():
     N = 7
     lat = RectangularLattice(8e-3, 8e-3)
     _, _, G = g.floquet_dyads(lat, 0.0, 0.0, N)
-    assert np.allclose(G, G[::-1, ::-1])                                   # (m,n) -> (-m,-n)
-    assert np.allclose(G[..., 0, 0], np.swapaxes(G[..., 1, 1], 0, 1))      # square lattice m<->n
+    assert np.allclose(G, G[::-1, ::-1])  # (m,n) -> (-m,-n)
+    assert np.allclose(G[..., 0, 0], np.swapaxes(G[..., 1, 1], 0, 1))  # square lattice m<->n
     assert np.allclose(G[..., 0, 1], np.swapaxes(G[..., 0, 1], 0, 1))
-    assert np.allclose(G[..., 0, 1], -G[::-1, :, 0, 1])                    # m -> -m flips G_xy
-    assert np.allclose(G[..., 0, 1], -G[:, ::-1, 0, 1])                    # n -> -n flips G_xy
+    assert np.allclose(G[..., 0, 1], -G[::-1, :, 0, 1])  # m -> -m flips G_xy
+    assert np.allclose(G[..., 0, 1], -G[:, ::-1, 0, 1])  # n -> -n flips G_xy
 
 
 def test_floquet_dyads_indexing_and_shapes():
@@ -325,6 +329,7 @@ def test_floquet_dyads_indexing_and_shapes():
 
 
 # ================================================================== kz branch
+
 
 @pytest.mark.parametrize("tand", [0.0, 0.0009, 0.3])
 def test_both_kz_on_decaying_branch_and_exponential_bounded(tand):
@@ -354,9 +359,9 @@ def test_air_cutoff_at_kt_equals_k0_is_finite_and_continuous():
         z2_te, z2_tm = g.equivalent_impedances(kt, 0.0)
         slopes.append((abs(z2_te - z_te) / a, abs(z2_tm) / a))
     slopes = np.array(slopes)
-    assert np.allclose(slopes[:, 0], slopes[0, 0], rtol=1e-2)     # TE deviation ~ |kz_air|
-    assert np.allclose(slopes[:, 1], slopes[0, 1], rtol=1e-2)     # TM -> 0 ~ |kz_air|
-    assert slopes[0, 0] * g.k0 < 1e2 * abs(z_te)                  # bounded slope
+    assert np.allclose(slopes[:, 0], slopes[0, 0], rtol=1e-2)  # TE deviation ~ |kz_air|
+    assert np.allclose(slopes[:, 1], slopes[0, 1], rtol=1e-2)  # TM -> 0 ~ |kz_air|
+    assert slopes[0, 0] * g.k0 < 1e2 * abs(z_te)  # bounded slope
 
 
 def test_substrate_cutoff_kz1_zero_is_finite_and_continuous():

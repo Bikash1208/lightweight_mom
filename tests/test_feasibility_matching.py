@@ -33,6 +33,7 @@ def test_match_required_phase_finds_exact_candidate():
 
 # --------------------------------------------------------- Test 9: correct circular phase error
 
+
 def test_circular_phase_error_near_the_wrap_boundary_is_short_not_long():
     # required=170, library phase available at -170: true difference is 20 deg the short way
     # around, not 340 deg the naive way.
@@ -44,12 +45,13 @@ def test_circular_phase_error_near_the_wrap_boundary_is_short_not_long():
 
 # --------------------------------------------------------------- Test 6: no extrapolation
 
+
 def test_phase_far_outside_library_range_is_unmatched_not_extrapolated():
     # The narrow library spans 60-85 deg; 250 deg is nowhere near it.
     results = match_required_phase([250.0], _NARROW_TABLE, tolerance_deg=5.0)
     assert results[0].matched is False
-    assert results[0].candidate_L_mm is not None   # nearest candidate is still *reported*...
-    assert abs(results[0].phase_error_deg) > 5.0     # ...but correctly rejected as out of tolerance
+    assert results[0].candidate_L_mm is not None  # nearest candidate is still *reported*...
+    assert abs(results[0].phase_error_deg) > 5.0  # ...but correctly rejected as out of tolerance
 
 
 def test_is_phase_coverage_sufficient_reports_unmatched_samples_explicitly():
@@ -61,8 +63,9 @@ def test_is_phase_coverage_sufficient_reports_unmatched_samples_explicitly():
 
 # ------------------------------------------------------------- Test 10: partial-phase feasible
 
+
 def test_required_phase_entirely_inside_narrow_library_region_is_sufficient():
-    required = [61.0, 68.0, 74.0, 79.0, 84.0]   # all inside the library's 60-85 deg span
+    required = [61.0, 68.0, 74.0, 79.0, 84.0]  # all inside the library's 60-85 deg span
     result = is_phase_coverage_sufficient(required, _NARROW_TABLE, tolerance_deg=2.0)
     assert result.sufficient is True
     assert result.n_unmatched == 0
@@ -71,10 +74,11 @@ def test_required_phase_entirely_inside_narrow_library_region_is_sufficient():
 
 # --------------------------------------------------------------- Test 11: full-range failure
 
+
 def test_required_phase_spanning_the_full_circle_is_insufficient():
     import numpy as np
 
-    required = list(np.linspace(-180.0, 180.0, 24, endpoint=False))   # a genuine 360 deg requirement
+    required = list(np.linspace(-180.0, 180.0, 24, endpoint=False))  # a genuine 360 deg requirement
     result = is_phase_coverage_sufficient(required, _NARROW_TABLE, tolerance_deg=5.0)
     assert result.sufficient is False
     assert result.n_unmatched > 0
@@ -88,4 +92,4 @@ def test_full_range_failure_matches_expected_phase_coverage_insufficient_scenari
     required = list(np.linspace(-180.0, 180.0, 36, endpoint=False))
     result = is_phase_coverage_sufficient(required, _NARROW_TABLE, tolerance_deg=5.0)
     assert not result.sufficient
-    assert result.n_unmatched >= result.n_required - 6   # only samples near 60-85 deg can match
+    assert result.n_unmatched >= result.n_required - 6  # only samples near 60-85 deg can match

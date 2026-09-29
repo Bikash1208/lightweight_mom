@@ -12,8 +12,8 @@ from src.frequency import (
 )
 from src.periodic_bc import normal_wavenumber
 
-
 # ---------------------------------------------------------------- frequency
+
 
 def test_known_wavelength_at_10ghz():
     assert free_space_wavelength(10e9) == pytest.approx(29.9792458e-3, rel=1e-15)
@@ -56,8 +56,9 @@ K0 = free_space_wavenumber(10e9)
     "k",
     [K0, 1.48 * K0, 1.48 * K0 * (1 - 0.0009j) ** 0.5, K0 * (1 - 0.3j)],
 )
-@pytest.mark.parametrize("kx, ky", [(0.0, 0.0), (0.3 * K0, 0.4 * K0), (0.9 * K0, 0.0),
-                                    (1.5 * K0, 0.7 * K0), (5 * K0, 5 * K0)])
+@pytest.mark.parametrize(
+    "kx, ky", [(0.0, 0.0), (0.3 * K0, 0.4 * K0), (0.9 * K0, 0.0), (1.5 * K0, 0.7 * K0), (5 * K0, 5 * K0)]
+)
 def test_dispersion_relation_and_branch(k, kx, ky):
     kz = normal_wavenumber(k, kx, ky)
     assert kz * kz + kx**2 + ky**2 == pytest.approx(k * k, rel=1e-12, abs=1e-9)

@@ -16,6 +16,7 @@ from src.phase8d_rev.schema_export import (
 def test_database_schema_dict_lists_every_unit_cell_record_field():
     doc = build_database_schema_dict()
     import dataclasses
+
     field_names = {f.name for f in dataclasses.fields(UnitCellRecord)}
     assert set(doc["record_schema"]) == field_names
 

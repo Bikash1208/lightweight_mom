@@ -59,7 +59,7 @@ class Phase11Decision:
     heterogeneous_mom_status: str
     coupling_status: str
     neighborhood_status: str
-    pattern_status: object       # PATTERN_DEPENDENT or None
+    pattern_status: object  # PATTERN_DEPENDENT or None
     reduction_status: str
     inverse_status: str
     hfss_status: str
@@ -87,21 +87,25 @@ def evaluate_step_export(geometry_inversion_status, conditions):
     return STEP_EXPORT_UNLOCKED if all(conditions[k] for k in STEP_EXPORT_CONDITION_KEYS) else STEP_EXPORT_LOCKED
 
 
-def decide(overall_case, hfss_exists, inverse_mostly_found, reduction_decision_status,
-           geometry_inversion_conditions, step_export_conditions):
+def decide(
+    overall_case,
+    hfss_exists,
+    inverse_mostly_found,
+    reduction_decision_status,
+    geometry_inversion_conditions,
+    step_export_conditions,
+):
     from .classification import CASE_A_LOCAL, CASE_D_PATTERN_DEPENDENT
     from .reduction import REDUCTION_VALIDATED as _REDUCTION_ATTEMPTED_AND_VALIDATED
 
-    heterogeneous_mom_status = HETEROGENEOUS_MOM_VALIDATED   # Sec. 5: the direct heterogeneous
-                                                              # reference calculation itself ran
-                                                              # successfully and reproducibly at
-                                                              # every requested size -- this status
-                                                              # is about the SOLVER's own operation,
-                                                              # not the coupling-extent finding.
+    heterogeneous_mom_status = HETEROGENEOUS_MOM_VALIDATED  # Sec. 5: the direct heterogeneous
+    # reference calculation itself ran
+    # successfully and reproducibly at
+    # every requested size -- this status
+    # is about the SOLVER's own operation,
+    # not the coupling-extent finding.
     coupling_status = COUPLING_LOCAL if overall_case == CASE_A_LOCAL else COUPLING_NONLOCAL
-    neighborhood_status = (
-        FINITE_NEIGHBORHOOD_FOUND if overall_case == CASE_A_LOCAL else LARGER_NEIGHBORHOOD_REQUIRED
-    )
+    neighborhood_status = FINITE_NEIGHBORHOOD_FOUND if overall_case == CASE_A_LOCAL else LARGER_NEIGHBORHOOD_REQUIRED
     pattern_status = PATTERN_DEPENDENT if overall_case == CASE_D_PATTERN_DEPENDENT else None
     hfss_status = HFSS_VALIDATED if hfss_exists else HFSS_NOT_AVAILABLE
     inverse_status = INVERSE_VALIDATED if inverse_mostly_found else INVERSE_INVALIDATED
@@ -110,7 +114,8 @@ def decide(overall_case, hfss_exists, inverse_mostly_found, reduction_decision_s
     # reported as REDUCTION_INVALIDATED here -- "not attempted because not yet justified" is not
     # the same claim as "attempted and validated," so it cannot be reported as REDUCTION_VALIDATED.
     reduction_status = (
-        REDUCTION_VALIDATED if reduction_decision_status == _REDUCTION_ATTEMPTED_AND_VALIDATED
+        REDUCTION_VALIDATED
+        if reduction_decision_status == _REDUCTION_ATTEMPTED_AND_VALIDATED
         else REDUCTION_INVALIDATED
     )
 
@@ -118,7 +123,16 @@ def decide(overall_case, hfss_exists, inverse_mostly_found, reduction_decision_s
     step_export_status = evaluate_step_export(geometry_inversion_status, step_export_conditions)
 
     return Phase11Decision(
-        heterogeneous_mom_status, coupling_status, neighborhood_status, pattern_status,
-        reduction_status, inverse_status, hfss_status, geometry_inversion_conditions,
-        geometry_inversion_status, step_export_conditions, step_export_status, overall_case,
+        heterogeneous_mom_status,
+        coupling_status,
+        neighborhood_status,
+        pattern_status,
+        reduction_status,
+        inverse_status,
+        hfss_status,
+        geometry_inversion_conditions,
+        geometry_inversion_status,
+        step_export_conditions,
+        step_export_status,
+        overall_case,
     )

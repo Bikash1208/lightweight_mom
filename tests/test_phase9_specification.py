@@ -4,7 +4,7 @@ import csv
 import json
 
 from src.phase9.control_variable import SolverReferenceRow
-from src.phase9.gate import decide, evaluate_gate_a, evaluate_gate_b, GATE_A_CHECKLIST_KEYS, GATE_B_CHECKLIST_KEYS
+from src.phase9.gate import GATE_A_CHECKLIST_KEYS, GATE_B_CHECKLIST_KEYS, decide, evaluate_gate_a, evaluate_gate_b
 from src.phase9.hfss_reference import HfssRecord
 from src.phase9.local_periodicity import LpaResult
 from src.phase9.specification import (

@@ -4,6 +4,7 @@
 import pytest
 
 from src.materials import Metal, Substrate
+from src.phase9.dipole_extraction import DipoleMoment
 from src.phase9.local_periodicity import (
     CENTER_LW_MM,
     SUBSTANTIAL_DEVIATION_RELATIVE,
@@ -13,7 +14,6 @@ from src.phase9.local_periodicity import (
     extend_to_5x5,
     run_local_periodicity_suite,
 )
-from src.phase9.dipole_extraction import DipoleMoment
 
 SUB = Substrate("Rogers RT/Duroid 5880", 2.2, 0.0009, 1.575e-3)
 MET = Metal()

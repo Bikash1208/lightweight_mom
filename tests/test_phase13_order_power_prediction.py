@@ -27,7 +27,7 @@ def test_uniform_array_predicts_all_power_in_specular():
     for m in range(-n, n + 1):
         c_m = np.sum(r * np.exp(1j * 2.0 * np.pi * m * j / n)) / n
         fractions[m] = abs(c_m) ** 2
-    assert fractions[0] == pytest.approx(r0.s11_mag ** 2, abs=1e-12)
+    assert fractions[0] == pytest.approx(r0.s11_mag**2, abs=1e-12)
     for m in range(-n, n + 1):
         if m % n != 0:
             assert fractions[m] < 1e-24

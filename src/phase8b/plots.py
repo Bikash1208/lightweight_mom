@@ -32,11 +32,17 @@ def plot_object_wave_single_beam(beam, frequency_hz, path):
     x, y = _grid()
     field = single_beam_object_field(x, y, beam, frequency_hz)
     fig, ax = plt.subplots(figsize=(6.6, 5.6))
-    mesh = ax.pcolormesh(x * 1e3, y * 1e3, np.degrees(np.angle(field)), shading="nearest", cmap="twilight", vmin=-180, vmax=180)
+    mesh = ax.pcolormesh(
+        x * 1e3, y * 1e3, np.degrees(np.angle(field)), shading="nearest", cmap="twilight", vmin=-180, vmax=180
+    )
     fig.colorbar(mesh, ax=ax, label="phase(E_obj) [deg]")
-    ax.set_xlabel("x [mm]"); ax.set_ylabel("y [mm]"); ax.set_aspect("equal")
+    ax.set_xlabel("x [mm]")
+    ax.set_ylabel("y [mm]")
+    ax.set_aspect("equal")
     ax.set_title(f"Single-beam object wave (theta={beam.theta_deg:g}, phi={beam.phi_deg:g} deg)")
-    fig.tight_layout(); fig.savefig(path, dpi=150, bbox_inches="tight"); plt.close(fig)
+    fig.tight_layout()
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
 
 
 def plot_object_wave_multi_beam(beams, frequency_hz, path):
@@ -47,11 +53,17 @@ def plot_object_wave_multi_beam(beams, frequency_hz, path):
     ex, ey = combine_beams(x, y, beams, frequency_hz)
     field = ex if beams[0].polarization == "x" else ey
     fig, ax = plt.subplots(figsize=(6.6, 5.6))
-    mesh = ax.pcolormesh(x * 1e3, y * 1e3, np.degrees(np.angle(field)), shading="nearest", cmap="twilight", vmin=-180, vmax=180)
+    mesh = ax.pcolormesh(
+        x * 1e3, y * 1e3, np.degrees(np.angle(field)), shading="nearest", cmap="twilight", vmin=-180, vmax=180
+    )
     fig.colorbar(mesh, ax=ax, label="phase(E_obj) [deg]")
-    ax.set_xlabel("x [mm]"); ax.set_ylabel("y [mm]"); ax.set_aspect("equal")
+    ax.set_xlabel("x [mm]")
+    ax.set_ylabel("y [mm]")
+    ax.set_aspect("equal")
     ax.set_title(f"Multi-beam object wave ({len(beams)} beams, field-level superposition)")
-    fig.tight_layout(); fig.savefig(path, dpi=150, bbox_inches="tight"); plt.close(fig)
+    fig.tight_layout()
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
 
 
 def plot_phase_gradient_test(frequency_hz, path):
@@ -67,10 +79,15 @@ def plot_phase_gradient_test(frequency_hz, path):
     for ax, (label, theta, phi) in zip(axes, cases):
         beam = Beam(theta_deg=theta, phi_deg=phi)
         field = single_beam_object_field(x, y, beam, frequency_hz)
-        ax.pcolormesh(x * 1e3, y * 1e3, np.degrees(np.angle(field)), shading="nearest", cmap="twilight", vmin=-180, vmax=180)
-        ax.set_title(label, fontsize=9); ax.set_aspect("equal")
+        ax.pcolormesh(
+            x * 1e3, y * 1e3, np.degrees(np.angle(field)), shading="nearest", cmap="twilight", vmin=-180, vmax=180
+        )
+        ax.set_title(label, fontsize=9)
+        ax.set_aspect("equal")
     fig.suptitle("Object-wave phase-gradient test (broadside + 4 azimuths, theta=30 deg)")
-    fig.tight_layout(); fig.savefig(path, dpi=150, bbox_inches="tight"); plt.close(fig)
+    fig.tight_layout()
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
 
 
 def plot_phase_control_quantity(evaluations, path):
@@ -84,9 +101,12 @@ def plot_phase_control_quantity(evaluations, path):
     ax.barh(names, [1] * len(rows), color=[colors[r.validated] for r in rows])
     for i, r in enumerate(rows):
         ax.text(0.02, i, r.validated, va="center", fontsize=9, color="white")
-    ax.set_xlim(0, 1); ax.set_xticks([])
+    ax.set_xlim(0, 1)
+    ax.set_xticks([])
     ax.set_title("Candidate physical control variables")
-    fig.tight_layout(); fig.savefig(path, dpi=150, bbox_inches="tight"); plt.close(fig)
+    fig.tight_layout()
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
 
 
 def plot_distinct_phase_states(analysis, path):
@@ -97,6 +117,9 @@ def plot_distinct_phase_states(analysis, path):
     sizes = sorted(group_sizes.values(), reverse=True)
     fig, ax = plt.subplots(figsize=(7.6, 4.4))
     ax.bar(range(1, len(sizes) + 1), sizes)
-    ax.set_xlabel("equivalence group (sorted by size)"); ax.set_ylabel("geometries sharing this phase state")
+    ax.set_xlabel("equivalence group (sorted by size)")
+    ax.set_ylabel("geometries sharing this phase state")
     ax.set_title(f"{analysis.n_geometries} geometries -> {analysis.n_distinct_phase_states} distinct phase states")
-    fig.tight_layout(); fig.savefig(path, dpi=150, bbox_inches="tight"); plt.close(fig)
+    fig.tight_layout()
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)

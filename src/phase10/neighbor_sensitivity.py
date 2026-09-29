@@ -15,13 +15,14 @@ CARDINALS = ("N", "E", "S", "W")
 class FiveCellCase:
     name: str
     description: str
-    cardinal_lw_mm: dict     # only the directions that differ from the center
+    cardinal_lw_mm: dict  # only the directions that differ from the center
     px: complex
     n_unknowns: int
 
 
-def _solve_case(name, description, center_lw_mm, cardinal_lw_mm, period_m, substrate, metal,
-                 frequency_hz, mesh_cells_per_subcell):
+def _solve_case(
+    name, description, center_lw_mm, cardinal_lw_mm, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell
+):
     grid_mm = eg.build_5cell_environment(center_lw_mm, cardinal_lw_mm)
     grid_m = eg.grid_to_m(grid_mm)
     sg = solve_grid(3, period_m, substrate, metal, grid_m, frequency_hz, mesh_cells_per_subcell)
@@ -29,8 +30,16 @@ def _solve_case(name, description, center_lw_mm, cardinal_lw_mm, period_m, subst
     return FiveCellCase(name, description, dict(cardinal_lw_mm), d.px, sg.n_unknowns)
 
 
-def run_five_cell_test_matrix(center_lw_mm, contrast_lw_mm, period_m, substrate, metal,
-                               frequency_hz, mesh_cells_per_subcell=8, asymmetric_lw_mm=None):
+def run_five_cell_test_matrix(
+    center_lw_mm,
+    contrast_lw_mm,
+    period_m,
+    substrate,
+    metal,
+    frequency_hz,
+    mesh_cells_per_subcell=8,
+    asymmetric_lw_mm=None,
+):
     """``contrast_lw_mm``: the single perturbed (L, W) applied to whichever direction(s) vary at
     this contrast level (Sec. 7-9's weak/moderate/strong value for this center, already resolved
     by ``environment_geometry.weak_neighbor``/``moderate_neighbor``/``strong_neighbor_low_high``).
@@ -41,8 +50,9 @@ def run_five_cell_test_matrix(center_lw_mm, contrast_lw_mm, period_m, substrate,
     cases = {}
 
     def solve(name, desc, card):
-        return _solve_case(name, desc, center_lw_mm, card, period_m, substrate, metal,
-                            frequency_hz, mesh_cells_per_subcell)
+        return _solve_case(
+            name, desc, center_lw_mm, card, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell
+        )
 
     # Test 5A: homogeneous baseline.
     cases["5A_homogeneous"] = solve("5A_homogeneous", "N=E=S=W=C", {})
@@ -67,8 +77,7 @@ def run_five_cell_test_matrix(center_lw_mm, contrast_lw_mm, period_m, substrate,
             "S": (large_lw, large_lw),
             "W": contrast_lw_mm,
         }
-    cases["5E_asymmetric"] = solve("5E_asymmetric", "N=small, E=moderate, S=large, W=moderate",
-                                    asymmetric_lw_mm)
+    cases["5E_asymmetric"] = solve("5E_asymmetric", "N=small, E=moderate, S=large, W=moderate", asymmetric_lw_mm)
     return cases
 
 
@@ -82,10 +91,7 @@ class NeighborContribution:
 def neighbor_contributions(cases):
     """Sec. 10: DeltaS_i = S(G_C, G_i) - S(G_C, G_C), one per cardinal direction."""
     s0 = cases["5A_homogeneous"].px
-    return {
-        d: NeighborContribution(d, cases[f"5B_{d}"].px - s0, abs(cases[f"5B_{d}"].px - s0))
-        for d in CARDINALS
-    }
+    return {d: NeighborContribution(d, cases[f"5B_{d}"].px - s0, abs(cases[f"5B_{d}"].px - s0)) for d in CARDINALS}
 
 
 @dataclass(frozen=True)
@@ -109,12 +115,16 @@ def nonlinearity_tests(cases):
         predicted = s0 + contributions[d1].delta_s + contributions[d2].delta_s
         measured = cases[case_name].px
         e_nl = abs(measured - predicted)
-        results.append(NonlinearityResult(combo, measured, predicted, e_nl,
-                                           e_nl / abs(s0) if abs(s0) > 0 else float("inf")))
+        results.append(
+            NonlinearityResult(combo, measured, predicted, e_nl, e_nl / abs(s0) if abs(s0) > 0 else float("inf"))
+        )
 
     predicted_all = s0 + sum((contributions[d].delta_s for d in CARDINALS), 0j)
     measured_all = cases["5D_all"].px
     e_nl_all = abs(measured_all - predicted_all)
-    results.append(NonlinearityResult("N+E+S+W", measured_all, predicted_all, e_nl_all,
-                                       e_nl_all / abs(s0) if abs(s0) > 0 else float("inf")))
+    results.append(
+        NonlinearityResult(
+            "N+E+S+W", measured_all, predicted_all, e_nl_all, e_nl_all / abs(s0) if abs(s0) > 0 else float("inf")
+        )
+    )
     return results

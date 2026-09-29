@@ -1,7 +1,5 @@
 """Impedance-matrix assembly: exact identities, symmetry/reciprocity, positivity, integration."""
 
-import math
-
 import numpy as np
 import pytest
 
@@ -38,6 +36,7 @@ class ConstantKernel:
 
 # ================================================= exactly solvable kernels (Parseval)
 
+
 def rooftop_gram(b):
     """Analytic <f_i, f_j> for rooftops (vector inner product): 2/3 self, 1/6 neighbours."""
     n = b.n_unknowns
@@ -71,7 +70,7 @@ def test_identity_kernel_reproduces_minus_the_analytic_gram_matrix():
         z = assemble_impedance_matrix(b, ConstantKernel(np.eye(2)), 0.0, 0.0, order)
         errs[order] = np.linalg.norm(z + gram) / np.linalg.norm(gram)
     assert errs[400] < 3e-3
-    assert 1.6 < errs[100] / errs[200] < 2.5 and 1.6 < errs[200] / errs[400] < 2.5   # ~ 1/M tail
+    assert 1.6 < errs[100] / errs[200] < 2.5 and 1.6 < errs[200] / errs[400] < 2.5  # ~ 1/M tail
     z = assemble_impedance_matrix(b, ConstantKernel(np.eye(2)), 0.0, 0.0, 400)
     assert np.allclose(z.imag, 0.0, atol=1e-18)
     assert abs(z[0, 0] + gram[0, 0]) < 1e-2 * gram[0, 0]
@@ -122,12 +121,13 @@ def test_chunked_assembly_is_identical(monkeypatch):
     c, g = make("slot", 6e-3, 2e-3)
     b = RooftopBasis(c, 8, 8)
     full = assemble_impedance_matrix(b, g, 0.0, 0.0, 6)
-    monkeypatch.setattr(mom_matrix, "_CHUNK_ELEMENTS", 500)      # forces many tiny chunks
+    monkeypatch.setattr(mom_matrix, "_CHUNK_ELEMENTS", 500)  # forces many tiny chunks
     chunked = assemble_impedance_matrix(b, g, 0.0, 0.0, 6)
     assert chunked == pytest.approx(full, rel=1e-12, abs=1e-25)
 
 
 # ============================================================ uniform-current identity
+
 
 @pytest.mark.parametrize("order", [0, 2, 9])
 @pytest.mark.parametrize("tand", [0.0, 0.0009])
@@ -157,14 +157,13 @@ def test_free_space_sheet_impedance_is_eta0_over_2():
     b = RooftopBasis(c, 8, 8)
     z = assemble_impedance_matrix(b, g, 0.0, 0.0, 3)
     ones = np.concatenate([np.ones(b.n_x), np.zeros(b.n_y)])
-    total = ones @ z @ ones                    # = A * (eta0/2), A = cell area (all rooftops overlap)
+    total = ones @ z @ ones  # = A * (eta0/2), A = cell area (all rooftops overlap)
     assert total == pytest.approx(PX * PY * ETA0 / 2, rel=1e-12)
 
 
 # =========================================================== symmetry / reciprocity
 
-CASES = [("rectangle", 6e-3, 2e-3), ("dipole", 8e-3, 1e-3), ("slot", 6e-3, 2e-3),
-         ("patch", 4e-3, 4e-3)]
+CASES = [("rectangle", 6e-3, 2e-3), ("dipole", 8e-3, 1e-3), ("slot", 6e-3, 2e-3), ("patch", 4e-3, 4e-3)]
 
 
 @pytest.mark.parametrize("kind, length, width", CASES)
@@ -175,7 +174,7 @@ def test_normal_incidence_matrix_is_complex_symmetric(kind, length, width, tand)
     z = assemble_impedance_matrix(b, g, 0.0, 0.0, 16)
     assert np.linalg.norm(z - z.T) <= 1e-12 * np.linalg.norm(z)
     if tand > 0:
-        assert np.linalg.norm(z - z.conj().T) > 1e-6 * np.linalg.norm(z)   # NOT Hermitian: lossy
+        assert np.linalg.norm(z - z.conj().T) > 1e-6 * np.linalg.norm(z)  # NOT Hermitian: lossy
 
 
 @pytest.mark.parametrize("kind, length, width", CASES[:3])
@@ -199,7 +198,7 @@ def test_dissipation_operator_is_positive_semidefinite(kind, length, width):
     herm = 0.5 * (z + z.conj().T)
     eig = np.linalg.eigvalsh(herm)
     assert eig.min() >= -1e-12 * eig.max()
-    assert eig.min() > 0.0                                    # lossy substrate: strictly positive
+    assert eig.min() > 0.0  # lossy substrate: strictly positive
     rng = np.random.default_rng(1)
     for _ in range(20):
         i = rng.normal(size=b.n_unknowns) + 1j * rng.normal(size=b.n_unknowns)
@@ -219,6 +218,7 @@ def test_lossless_dissipation_operator_has_rank_two():
 
 
 # ================================================== Green-function integration
+
 
 def spatial_domain_entries(b, g, rows, cols, n):
     """Independent evaluation (normal incidence): sample J on an n x n grid, obtain E by a direct
@@ -243,7 +243,7 @@ def spatial_domain_entries(b, g, rows, cols, n):
         e_j = np.zeros(b.n_unknowns, complex)
         e_j[j] = 1.0
         jf = b.evaluate(X, Y, e_j)
-        jt = np.stack([ex @ jf[..., c] @ ey.T / n**2 for c in (0, 1)], axis=-1)   # J~ = mean(J e^{+jk.r})
+        jt = np.stack([ex @ jf[..., c] @ ey.T / n**2 for c in (0, 1)], axis=-1)  # J~ = mean(J e^{+jk.r})
         et = np.einsum("mnij,mnj->mni", dyad, jt)
         field = np.stack([ex.conj().T @ et[..., c] @ ey.conj() for c in (0, 1)], axis=-1)
         for ii, i in enumerate(rows):
@@ -251,7 +251,9 @@ def spatial_domain_entries(b, g, rows, cols, n):
     return out
 
 
-@pytest.mark.parametrize("kind, length, width", [("rectangle", 4e-3, 2e-3), ("dipole", 8e-3, 1e-3), ("slot", 6e-3, 2e-3)])
+@pytest.mark.parametrize(
+    "kind, length, width", [("rectangle", 4e-3, 2e-3), ("dipole", 8e-3, 1e-3), ("slot", 6e-3, 2e-3)]
+)
 def test_assembly_agrees_with_independent_spatial_domain_evaluation(kind, length, width):
     """The physical Green's function, including G_xy coupling, wrapped (seam) rooftops and the
     metal-complement slot, gives the same Z entries whether the Floquet sum is done with the
@@ -270,6 +272,7 @@ def test_assembly_agrees_with_independent_spatial_domain_evaluation(kind, length
 
 
 # ================================================================ Floquet truncation
+
 
 def test_matrix_entries_converge_with_floquet_order():
     """Cauchy differences of Z entries shrink ~ 1/M^2 (as in the Green-function phase)."""

@@ -28,7 +28,7 @@ def test_propagate_angular_spectrum_round_trip_recovers_the_original_field():
     lin = np.linspace(-0.02, 0.02, n)
     x, y = np.meshgrid(lin, lin, indexing="xy")
     dx = float(lin[1] - lin[0])
-    field = np.exp(-0.5 * ((x / 0.01) ** 2 + (y / 0.01) ** 2)) + 0j   # smooth, mostly-propagating field
+    field = np.exp(-0.5 * ((x / 0.01) ** 2 + (y / 0.01) ** 2)) + 0j  # smooth, mostly-propagating field
 
     forward = propagate_angular_spectrum(field, dx, dx, FREQ_HZ, 0.005)
     back = propagate_angular_spectrum(forward, dx, dx, FREQ_HZ, -0.005)

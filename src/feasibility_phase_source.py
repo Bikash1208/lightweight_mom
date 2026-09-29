@@ -32,14 +32,14 @@ HOLOGRAPHIC_GENERATOR_IMPLEMENTED = False
 
 @dataclass(frozen=True)
 class PhaseSourceValidation:
-    quantity_required: str | None        # what a holographic generator would need; None = unknown
-    quantity_provided: str               # what the library's pinned phase source actually is
-    physically_equivalent: bool | None   # None = cannot be assessed (quantity_required unknown)
+    quantity_required: str | None  # what a holographic generator would need; None = unknown
+    quantity_provided: str  # what the library's pinned phase source actually is
+    physically_equivalent: bool | None  # None = cannot be assessed (quantity_required unknown)
     coordinate_convention_ok: bool | None
     polarization_convention_ok: bool | None
     sign_convention_ok: bool | None
     time_convention_ok: bool | None
-    status: str                          # "PHASE_SOURCE_UNVALIDATED" | "PHYSICALLY_VALIDATED"
+    status: str  # "PHASE_SOURCE_UNVALIDATED" | "PHYSICALLY_VALIDATED"
     note: str
 
 

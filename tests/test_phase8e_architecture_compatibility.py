@@ -6,7 +6,9 @@ from src.phase8c import data_source, power_balance, topology_audit
 from src.phase8e.architecture_compatibility import assess_all
 from src.phase_extraction import design_frequency_index
 
-pytestmark = pytest.mark.skipif(not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present")
+pytestmark = pytest.mark.skipif(
+    not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present"
+)
 
 
 def test_formulation_a_is_architecture_incompatible_no_ground_plane(phase8c_full_database):

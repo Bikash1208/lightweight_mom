@@ -48,7 +48,7 @@ from .feasibility_plots import (
     plot_phase_vs_lw,
 )
 from .feasibility_required_phase import compute_required_phase, required_phase_statistics
-from .feasibility_schema import EXIT_CODES, FeasibilityConfig, PROVIDED_POLARIZATION
+from .feasibility_schema import EXIT_CODES, PROVIDED_POLARIZATION, FeasibilityConfig
 from .feasibility_spatial import check_mapping_method_defined
 from .phase_extraction import phase_coverage
 from .reference_field import validate_beam_definition, validate_reference_field
@@ -72,30 +72,41 @@ class FeasibilityResult:
     required_phase: dict | None
     matching: dict | None
     hfss_validation: dict
-    table: list                  # phase-vs-geometry table @ the requested frequency, for reports/plots
-    freq_coverage: list          # coverage vs frequency, for reports/plots
+    table: list  # phase-vs-geometry table @ the requested frequency, for reports/plots
+    freq_coverage: list  # coverage vs frequency, for reports/plots
     match_results: list | None
 
 
 def _fail(status, errors, warnings=(), **partial):
     return FeasibilityResult(
-        status=status, exit_code=EXIT_CODES[status], checks=partial.pop("checks", {}),
-        warnings=tuple(warnings), errors=tuple(errors),
-        library=partial.pop("library", {}), frequency=partial.pop("frequency", {}),
+        status=status,
+        exit_code=EXIT_CODES[status],
+        checks=partial.pop("checks", {}),
+        warnings=tuple(warnings),
+        errors=tuple(errors),
+        library=partial.pop("library", {}),
+        frequency=partial.pop("frequency", {}),
         phase_source=partial.pop("phase_source", {}),
         library_phase_coverage=partial.pop("library_phase_coverage", {}),
         frequency_dependence=partial.pop("frequency_dependence", {}),
-        resonance=partial.pop("resonance", {}), grating=partial.pop("grating", {}),
+        resonance=partial.pop("resonance", {}),
+        grating=partial.pop("grating", {}),
         reference_field=partial.pop("reference_field", None),
-        required_phase=partial.pop("required_phase", None), matching=partial.pop("matching", None),
+        required_phase=partial.pop("required_phase", None),
+        matching=partial.pop("matching", None),
         hfss_validation={"performed": False},
-        table=partial.pop("table", []), freq_coverage=partial.pop("freq_coverage", []),
+        table=partial.pop("table", []),
+        freq_coverage=partial.pop("freq_coverage", []),
         match_results=partial.pop("match_results", None),
     )
 
 
 def run_feasibility_gate(
-    config: FeasibilityConfig, *, reference_field_path=None, beams=None, required_phase_deg=None,
+    config: FeasibilityConfig,
+    *,
+    reference_field_path=None,
+    beams=None,
+    required_phase_deg=None,
 ):
     """Runs Mode A (library-only) always; Mode B (design-specific) additionally whenever
     ``reference_field_path``/``beams`` are supplied. ``required_phase_deg``
@@ -112,9 +123,12 @@ def run_feasibility_gate(
     checks["library_integrity"] = "PASS" if integrity.ok else "FAIL"
     library_info = {
         "id": bundle.manifest.get("configuration_hash", "")[:16],
-        "geometry_count": integrity.n_cells, "successful_cells": integrity.n_ok_cells,
-        "failed_cells": integrity.n_failed_cells, "frequency_points": config.expected_n_frequency_points,
-        "period_x_mm": bundle.manifest["period_x_mm"], "period_y_mm": bundle.manifest["period_y_mm"],
+        "geometry_count": integrity.n_cells,
+        "successful_cells": integrity.n_ok_cells,
+        "failed_cells": integrity.n_failed_cells,
+        "frequency_points": config.expected_n_frequency_points,
+        "period_x_mm": bundle.manifest["period_x_mm"],
+        "period_y_mm": bundle.manifest["period_y_mm"],
         "step_files": integrity.n_step_files,
     }
     if not integrity.ok:
@@ -129,15 +143,22 @@ def run_feasibility_gate(
     freq_supported = (f_min_ghz <= f_request_ghz <= f_max_ghz) and on_grid
     checks["frequency_compatibility"] = "PASS" if freq_supported else "FAIL"
     frequency_info = {
-        "requested_GHz": f_request_ghz, "supported": bool(freq_supported), "exact_grid_point": bool(on_grid),
-        "library_min_GHz": f_min_ghz, "library_max_GHz": f_max_ghz,
+        "requested_GHz": f_request_ghz,
+        "supported": bool(freq_supported),
+        "exact_grid_point": bool(on_grid),
+        "library_min_GHz": f_min_ghz,
+        "library_max_GHz": f_max_ghz,
     }
     if not freq_supported:
         return _fail(
             "FREQUENCY_UNSUPPORTED",
-            [f"frequency {f_request_ghz} GHz is outside [{f_min_ghz}, {f_max_ghz}] GHz or not an "
-             "exact grid point; no interpolation is performed"],
-            checks=checks, library=library_info, frequency=frequency_info,
+            [
+                f"frequency {f_request_ghz} GHz is outside [{f_min_ghz}, {f_max_ghz}] GHz or not an "
+                "exact grid point; no interpolation is performed"
+            ],
+            checks=checks,
+            library=library_info,
+            frequency=frequency_info,
         )
 
     # --------------------------------------------------------------- 3. polarization support
@@ -146,10 +167,14 @@ def run_feasibility_gate(
     if not pol_supported:
         return _fail(
             "POLARIZATION_UNSUPPORTED",
-            [f"requested polarization {config.polarization!r} is not provided by this library "
-             f"(only {PROVIDED_POLARIZATION!r}, the co-polarized S11xx/S21xx component pinned by "
-             "Phase 7's phase-vs-geometry pipeline); no silent substitution is performed"],
-            checks=checks, library=library_info, frequency=frequency_info,
+            [
+                f"requested polarization {config.polarization!r} is not provided by this library "
+                f"(only {PROVIDED_POLARIZATION!r}, the co-polarized S11xx/S21xx component pinned by "
+                "Phase 7's phase-vs-geometry pipeline); no silent substitution is performed"
+            ],
+            checks=checks,
+            library=library_info,
+            frequency=frequency_info,
         )
 
     # ----------------------------------------------------------- 4. reference field (Mode B)
@@ -159,13 +184,20 @@ def run_feasibility_gate(
         ref_validation = validate_reference_field(reference_field_path, expected_frequency_ghz=f_request_ghz)
         checks["reference_field_validity"] = "PASS" if ref_validation.ok else "FAIL"
         reference_field_info = {
-            "ok": ref_validation.ok, "n_samples": ref_validation.n_samples,
-            "errors": list(ref_validation.errors), "dx_mm": ref_validation.dx_mm, "dy_mm": ref_validation.dy_mm,
+            "ok": ref_validation.ok,
+            "n_samples": ref_validation.n_samples,
+            "errors": list(ref_validation.errors),
+            "dx_mm": ref_validation.dx_mm,
+            "dy_mm": ref_validation.dy_mm,
         }
         if not ref_validation.ok:
             return _fail(
-                "REFERENCE_INVALID", list(ref_validation.errors), checks=checks,
-                library=library_info, frequency=frequency_info, reference_field=reference_field_info,
+                "REFERENCE_INVALID",
+                list(ref_validation.errors),
+                checks=checks,
+                library=library_info,
+                frequency=frequency_info,
+                reference_field=reference_field_info,
             )
     else:
         checks["reference_field_validity"] = "N/A (Mode A)"
@@ -175,8 +207,12 @@ def run_feasibility_gate(
             bv = validate_beam_definition(beam)
             if not bv.ok:
                 return _fail(
-                    "REFERENCE_INVALID", [f"beam[{i}]: {e}" for e in bv.errors], checks=checks,
-                    library=library_info, frequency=frequency_info, reference_field=reference_field_info,
+                    "REFERENCE_INVALID",
+                    [f"beam[{i}]: {e}" for e in bv.errors],
+                    checks=checks,
+                    library=library_info,
+                    frequency=frequency_info,
+                    reference_field=reference_field_info,
                 )
 
     # ---------------------------------------------------------- 5. phase-source validation
@@ -185,7 +221,8 @@ def run_feasibility_gate(
         "quantity": phase_source.quantity_provided,
         "quantity_required": phase_source.quantity_required,
         "validated_for_holographic_use": phase_source.status == "PHYSICALLY_VALIDATED",
-        "status": phase_source.status, "note": phase_source.note,
+        "status": phase_source.status,
+        "note": phase_source.note,
     }
     checks["phase_source_validation"] = "PASS" if phase_source.status == "PHYSICALLY_VALIDATED" else "FAIL"
 
@@ -197,10 +234,14 @@ def run_feasibility_gate(
     density = phase_density(table)
     n_usable = usable_geometry_count(table)
     library_coverage_info = {
-        "span_deg": coverage.coverage_deg, "largest_gap_deg": coverage.largest_gap_deg,
-        "naive_span_deg": coverage.naive_span_deg, "n_points": coverage.n_points,
-        "n_usable_geometries": n_usable, "n_distinct_phase_states": density.n_distinct_phase_states,
-        "smallest_gap_deg": density.smallest_gap_deg, "median_gap_deg": density.median_gap_deg,
+        "span_deg": coverage.coverage_deg,
+        "largest_gap_deg": coverage.largest_gap_deg,
+        "naive_span_deg": coverage.naive_span_deg,
+        "n_points": coverage.n_points,
+        "n_usable_geometries": n_usable,
+        "n_distinct_phase_states": density.n_distinct_phase_states,
+        "smallest_gap_deg": density.smallest_gap_deg,
+        "median_gap_deg": density.median_gap_deg,
         "phase_density_per_deg": density.phase_density_per_deg,
     }
 
@@ -208,39 +249,55 @@ def run_feasibility_gate(
     n_resonant, n_non_resonant, resonant_freqs_hz = resonance_summary(bundle.library_doc)
     coverage_vs_resonance = describe_coverage_vs_resonance(freq_coverage, n_resonant, resonant_freqs_hz)
     resonance_info = {
-        "n_resonant": n_resonant, "n_non_resonant": n_non_resonant,
+        "n_resonant": n_resonant,
+        "n_non_resonant": n_non_resonant,
         "resonance_frequencies_GHz": [f / 1e9 for f in resonant_freqs_hz],
         "coverage_vs_resonance": coverage_vs_resonance,
     }
     checks["resonance_analysis"] = "COMPUTED"
 
     grating = grating_check(
-        bundle.manifest["period_x_mm"] * 1e-3, bundle.manifest["period_y_mm"] * 1e-3, f_request_ghz * 1e9,
+        bundle.manifest["period_x_mm"] * 1e-3,
+        bundle.manifest["period_y_mm"] * 1e-3,
+        f_request_ghz * 1e9,
     )
     checks["grating_check"] = "WARNING" if grating.is_grating_risk else "PASS"
     grating_info = {
-        "period_m": grating.period_x_m, "frequency_hz": grating.frequency_hz,
-        "wavelength_m": grating.wavelength_m, "period_over_wavelength": grating.period_over_wavelength,
-        "grating_onset_hz": grating.grating_onset_hz, "is_grating_risk": grating.is_grating_risk,
+        "period_m": grating.period_x_m,
+        "frequency_hz": grating.frequency_hz,
+        "wavelength_m": grating.wavelength_m,
+        "period_over_wavelength": grating.period_over_wavelength,
+        "grating_onset_hz": grating.grating_onset_hz,
+        "is_grating_risk": grating.is_grating_risk,
     }
 
     if phase_source.status != "PHYSICALLY_VALIDATED":
         return _fail(
-            "PHASE_SOURCE_UNVALIDATED", [
+            "PHASE_SOURCE_UNVALIDATED",
+            [
                 "The current unit-cell scattering quantity has not yet been validated as the "
                 "physical phase-control quantity required by the holographic synthesis "
                 "formulation.",
             ],
             warnings=(
-                [f"even under the tentative {phase_source.quantity_provided} assumption, library "
-                 f"phase coverage at {f_request_ghz:g} GHz is only {coverage.coverage_deg:.2f} deg "
-                 "of 360 deg (largest gap "
-                 f"{coverage.largest_gap_deg:.2f} deg)"]
+                [
+                    f"even under the tentative {phase_source.quantity_provided} assumption, library "
+                    f"phase coverage at {f_request_ghz:g} GHz is only {coverage.coverage_deg:.2f} deg "
+                    "of 360 deg (largest gap "
+                    f"{coverage.largest_gap_deg:.2f} deg)"
+                ]
             ),
-            checks=checks, library=library_info, frequency=frequency_info,
-            phase_source=phase_source_info, library_phase_coverage=library_coverage_info,
-            frequency_dependence={"points": freq_coverage}, resonance=resonance_info,
-            grating=grating_info, reference_field=reference_field_info, table=table, freq_coverage=freq_coverage,
+            checks=checks,
+            library=library_info,
+            frequency=frequency_info,
+            phase_source=phase_source_info,
+            library_phase_coverage=library_coverage_info,
+            frequency_dependence={"points": freq_coverage},
+            resonance=resonance_info,
+            grating=grating_info,
+            reference_field=reference_field_info,
+            table=table,
+            freq_coverage=freq_coverage,
         )
 
     # ------------------------------------------------------- 6. spatial mapping (Mode B only)
@@ -250,11 +307,19 @@ def run_feasibility_gate(
         checks["grid_mapping_validity"] = "PASS" if mapping.defined else "FAIL"
         if not mapping.defined:
             return _fail(
-                "GRID_MAPPING_UNVALIDATED", [mapping.note], checks=checks,
-                library=library_info, frequency=frequency_info, phase_source=phase_source_info,
-                library_phase_coverage=library_coverage_info, frequency_dependence={"points": freq_coverage},
-                resonance=resonance_info, grating=grating_info, reference_field=reference_field_info,
-                table=table, freq_coverage=freq_coverage,
+                "GRID_MAPPING_UNVALIDATED",
+                [mapping.note],
+                checks=checks,
+                library=library_info,
+                frequency=frequency_info,
+                phase_source=phase_source_info,
+                library_phase_coverage=library_coverage_info,
+                frequency_dependence={"points": freq_coverage},
+                resonance=resonance_info,
+                grating=grating_info,
+                reference_field=reference_field_info,
+                table=table,
+                freq_coverage=freq_coverage,
             )
     else:
         checks["grid_mapping_validity"] = "N/A (Mode A)"
@@ -271,38 +336,60 @@ def run_feasibility_gate(
             checks["required_phase_available"] = "FAIL"
             return _fail(
                 "PHASE_SOURCE_UNVALIDATED",
-                [rp.note], checks=checks, library=library_info, frequency=frequency_info,
-                phase_source=phase_source_info, library_phase_coverage=library_coverage_info,
-                frequency_dependence={"points": freq_coverage}, resonance=resonance_info,
-                grating=grating_info, reference_field=reference_field_info,
-                required_phase=required_phase_info, table=table, freq_coverage=freq_coverage,
+                [rp.note],
+                checks=checks,
+                library=library_info,
+                frequency=frequency_info,
+                phase_source=phase_source_info,
+                library_phase_coverage=library_coverage_info,
+                frequency_dependence={"points": freq_coverage},
+                resonance=resonance_info,
+                grating=grating_info,
+                reference_field=reference_field_info,
+                required_phase=required_phase_info,
+                table=table,
+                freq_coverage=freq_coverage,
             )
     elif required_phase_deg is not None:
         # A caller (or a test) supplied an already-computed required-phase array directly,
         # bypassing the (currently nonexistent) generator -- see run_feasibility_gate's docstring.
         stats = required_phase_statistics(required_phase_deg)
         required_phase_info = {
-            "available": True, "coverage_deg": stats.circular_coverage_deg,
-            "largest_gap_deg": stats.largest_gap_deg, "n_samples": stats.n_samples,
+            "available": True,
+            "coverage_deg": stats.circular_coverage_deg,
+            "largest_gap_deg": stats.largest_gap_deg,
+            "n_samples": stats.n_samples,
         }
         sufficiency = is_phase_coverage_sufficient(required_phase_deg, table, config.phase_match_tolerance_deg)
         match_results = match_required_phase(required_phase_deg, table, config.phase_match_tolerance_deg)
         matching_info = {
-            "matched": sufficiency.n_matched, "unmatched": sufficiency.n_unmatched,
-            "mean_error_deg": sufficiency.mean_error_deg, "max_error_deg": sufficiency.max_error_deg,
+            "matched": sufficiency.n_matched,
+            "unmatched": sufficiency.n_unmatched,
+            "mean_error_deg": sufficiency.mean_error_deg,
+            "max_error_deg": sufficiency.max_error_deg,
         }
         checks["phase_matching"] = "PASS" if sufficiency.sufficient else "FAIL"
         if not sufficiency.sufficient:
             return _fail(
                 "PHASE_COVERAGE_INSUFFICIENT" if sufficiency.n_matched == 0 else "PHASE_MATCHING_INSUFFICIENT",
-                [f"{sufficiency.n_unmatched} of {sufficiency.n_required} required phase sample(s) "
-                 f"have no library candidate within {config.phase_match_tolerance_deg:g} deg"],
-                checks=checks, library=library_info, frequency=frequency_info,
-                phase_source=phase_source_info, library_phase_coverage=library_coverage_info,
-                frequency_dependence={"points": freq_coverage}, resonance=resonance_info,
-                grating=grating_info, reference_field=reference_field_info,
-                required_phase=required_phase_info, matching=matching_info,
-                table=table, freq_coverage=freq_coverage, match_results=match_results,
+                [
+                    f"{sufficiency.n_unmatched} of {sufficiency.n_required} required phase sample(s) "
+                    f"have no library candidate within {config.phase_match_tolerance_deg:g} deg"
+                ],
+                checks=checks,
+                library=library_info,
+                frequency=frequency_info,
+                phase_source=phase_source_info,
+                library_phase_coverage=library_coverage_info,
+                frequency_dependence={"points": freq_coverage},
+                resonance=resonance_info,
+                grating=grating_info,
+                reference_field=reference_field_info,
+                required_phase=required_phase_info,
+                matching=matching_info,
+                table=table,
+                freq_coverage=freq_coverage,
+                match_results=match_results,
             )
 
     # ------------------------------------------------------------------------- 9. grating risk
@@ -314,16 +401,30 @@ def run_feasibility_gate(
         status = "DESIGN_FEASIBLE"
 
     return FeasibilityResult(
-        status=status, exit_code=EXIT_CODES[status], checks=checks, warnings=tuple(warnings), errors=(),
-        library=library_info, frequency=frequency_info, phase_source=phase_source_info,
-        library_phase_coverage=library_coverage_info, frequency_dependence={"points": freq_coverage},
-        resonance=resonance_info, grating=grating_info, reference_field=reference_field_info,
-        required_phase=required_phase_info, matching=matching_info, hfss_validation={"performed": False},
-        table=table, freq_coverage=freq_coverage, match_results=match_results,
+        status=status,
+        exit_code=EXIT_CODES[status],
+        checks=checks,
+        warnings=tuple(warnings),
+        errors=(),
+        library=library_info,
+        frequency=frequency_info,
+        phase_source=phase_source_info,
+        library_phase_coverage=library_coverage_info,
+        frequency_dependence={"points": freq_coverage},
+        resonance=resonance_info,
+        grating=grating_info,
+        reference_field=reference_field_info,
+        required_phase=required_phase_info,
+        matching=matching_info,
+        hfss_validation={"performed": False},
+        table=table,
+        freq_coverage=freq_coverage,
+        match_results=match_results,
     )
 
 
 # --------------------------------------------------------------------------- machine-readable output
+
 
 def build_feasibility_json(result: FeasibilityResult, config: FeasibilityConfig):
     """Sec. 41's schema, populated entirely from ``result`` -- no example values hard-coded."""
@@ -337,10 +438,13 @@ def build_feasibility_json(result: FeasibilityResult, config: FeasibilityConfig)
             "largest_gap_deg": result.library_phase_coverage.get("largest_gap_deg"),
         },
         "required_phase": (
-            {"available": result.required_phase.get("available"),
-             "coverage_deg": result.required_phase.get("coverage_deg"),
-             "largest_gap_deg": result.required_phase.get("largest_gap_deg")}
-            if result.required_phase else {"available": False}
+            {
+                "available": result.required_phase.get("available"),
+                "coverage_deg": result.required_phase.get("coverage_deg"),
+                "largest_gap_deg": result.required_phase.get("largest_gap_deg"),
+            }
+            if result.required_phase
+            else {"available": False}
         ),
         "matching": result.matching or {"matched": 0, "unmatched": 0, "mean_error_deg": None, "max_error_deg": None},
         "hfss_validation": {"performed": False},
@@ -352,6 +456,7 @@ def build_feasibility_json(result: FeasibilityResult, config: FeasibilityConfig)
 
 
 # ------------------------------------------------------------------------------- human-readable report
+
 
 def render_feasibility_report_md(result: FeasibilityResult, config: FeasibilityConfig):
     lines = [
@@ -379,8 +484,12 @@ def render_feasibility_report_md(result: FeasibilityResult, config: FeasibilityC
         "",
         "## 4. Phase-control quantity",
         "",
-        (f"Provided by the library: `{result.phase_source.get('quantity')}` "
-         f"(status: `{result.phase_source.get('status')}`)." if result.phase_source else "Not evaluated."),
+        (
+            f"Provided by the library: `{result.phase_source.get('quantity')}` "
+            f"(status: `{result.phase_source.get('status')}`)."
+            if result.phase_source
+            else "Not evaluated."
+        ),
         "",
         result.phase_source.get("note", "") if result.phase_source else "",
         "",
@@ -422,8 +531,8 @@ def render_feasibility_report_md(result: FeasibilityResult, config: FeasibilityC
     lines += ["", "## 8. Reference-field compatibility", ""]
     lines.append(
         "Design-specific mode was not invoked for this run (no reference field supplied)."
-        if result.reference_field is None else
-        f"ok={result.reference_field.get('ok')}, n_samples={result.reference_field.get('n_samples')}."
+        if result.reference_field is None
+        else f"ok={result.reference_field.get('ok')}, n_samples={result.reference_field.get('n_samples')}."
     )
     lines += ["", "## 9. Required holographic phase", ""]
     if result.required_phase is None:
@@ -451,12 +560,18 @@ def render_feasibility_report_md(result: FeasibilityResult, config: FeasibilityC
     else:
         lines.append("Not evaluated.")
     lines += [
-        "", "## 13. HFSS validation status", "",
+        "",
+        "## 13. HFSS validation status",
+        "",
         "**HFSS validation: NOT PERFORMED.** MoM library internal self-consistency was checked "
         "(Sec. 3); this is not HFSS electromagnetic validation.",
-        "", "## 14. Final feasibility decision", "",
+        "",
+        "## 14. Final feasibility decision",
+        "",
         f"`{result.status}`.",
-        "", "## 15. Limitations", "",
+        "",
+        "## 15. Limitations",
+        "",
     ]
     lines += [f"- {e}" for e in result.errors] or ["- None beyond what is stated above."]
     lines += ["", "## 16. Recommended next scientific step", ""]
@@ -478,8 +593,13 @@ def render_feasibility_report_md(result: FeasibilityResult, config: FeasibilityC
 
 # --------------------------------------------------------------------------------- orchestration
 
+
 def run_and_write_phase8a(
-    config: FeasibilityConfig, output_dir, *, reference_field_path=None, beams=None,
+    config: FeasibilityConfig,
+    output_dir,
+    *,
+    reference_field_path=None,
+    beams=None,
     required_phase_deg=None,
 ):
     """Sec. 40's full output layout, written from one gate run."""
@@ -488,35 +608,48 @@ def run_and_write_phase8a(
     plots_dir.mkdir(parents=True, exist_ok=True)
 
     result = run_feasibility_gate(
-        config, reference_field_path=reference_field_path, beams=beams,
+        config,
+        reference_field_path=reference_field_path,
+        beams=beams,
         required_phase_deg=required_phase_deg,
     )
 
-    (output_dir / "feasibility.json").write_text(
-        json.dumps(build_feasibility_json(result, config), indent=1) + "\n"
-    )
+    (output_dir / "feasibility.json").write_text(json.dumps(build_feasibility_json(result, config), indent=1) + "\n")
     (output_dir / "feasibility_report.md").write_text(render_feasibility_report_md(result, config))
 
     if result.table:
-        _write_csv(output_dir / "library_phase_coverage.csv",
-                   ["L_mm", "W_mm", "phase_deg", "magnitude_db", "S11_real", "S11_imag"], result.table)
-        _write_csv(output_dir / "phase_vs_geometry.csv",
-                   ["L_mm", "W_mm", "phase_deg", "magnitude_db", "S11_real", "S11_imag"], result.table)
+        _write_csv(
+            output_dir / "library_phase_coverage.csv",
+            ["L_mm", "W_mm", "phase_deg", "magnitude_db", "S11_real", "S11_imag"],
+            result.table,
+        )
+        _write_csv(
+            output_dir / "phase_vs_geometry.csv",
+            ["L_mm", "W_mm", "phase_deg", "magnitude_db", "S11_real", "S11_imag"],
+            result.table,
+        )
     if result.freq_coverage:
-        _write_csv(output_dir / "phase_coverage_vs_frequency.csv",
-                   ["frequency_GHz", "coverage_deg", "largest_gap_deg", "phase_min_deg", "phase_max_deg"],
-                   result.freq_coverage)
+        _write_csv(
+            output_dir / "phase_coverage_vs_frequency.csv",
+            ["frequency_GHz", "coverage_deg", "largest_gap_deg", "phase_min_deg", "phase_max_deg"],
+            result.freq_coverage,
+        )
 
     try:
         if result.table:
             plot_phase_vs_lw(
                 result.table,
-                sorted({r["L_mm"] for r in result.table}), sorted({r["W_mm"] for r in result.table}),
-                result.frequency.get("requested_GHz", 0.0), plots_dir / "library_phase_vs_geometry.png",
+                sorted({r["L_mm"] for r in result.table}),
+                sorted({r["W_mm"] for r in result.table}),
+                result.frequency.get("requested_GHz", 0.0),
+                plots_dir / "library_phase_vs_geometry.png",
             )
             from .phase_extraction import phase_coverage as _cov
+
             plot_circular_phase_coverage(
-                result.table, _cov(result.table), result.frequency.get("requested_GHz", 0.0),
+                result.table,
+                _cov(result.table),
+                result.frequency.get("requested_GHz", 0.0),
                 plots_dir / "library_phase_coverage.png",
             )
         if result.freq_coverage:
@@ -524,7 +657,7 @@ def run_and_write_phase8a(
         if result.match_results:
             plot_matching_error(result.match_results, plots_dir / "phase_matching_error.png")
     except ImportError:
-        pass   # matplotlib not installed; JSON/CSV/report are still written (req: never claim a plot exists)
+        pass  # matplotlib not installed; JSON/CSV/report are still written (req: never claim a plot exists)
 
     return result, output_dir
 

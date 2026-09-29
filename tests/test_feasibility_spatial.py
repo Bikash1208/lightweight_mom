@@ -30,7 +30,7 @@ def test_mapping_method_is_not_defined_in_this_project():
 
 def test_estimate_max_aperture_is_a_floor_division_upper_bound():
     est = estimate_max_aperture(50.0, 50.0, 4.8, 4.8)
-    assert est.max_nx == 10   # floor(50/4.8) = 10
+    assert est.max_nx == 10  # floor(50/4.8) = 10
     assert est.max_ny == 10
 
 

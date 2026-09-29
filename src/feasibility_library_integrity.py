@@ -17,10 +17,10 @@ from .library_validation import check_json_csv_consistency
 class LibraryBundle:
     base_dir: Path
     manifest: dict
-    library_doc: dict            # unit_cell_library.json, parsed from disk
+    library_doc: dict  # unit_cell_library.json, parsed from disk
     json_path: Path
     csv_path: Path
-    step_files: frozenset        # file names present in geometry/
+    step_files: frozenset  # file names present in geometry/
 
 
 def load_library_bundle(library_dir):
@@ -49,7 +49,7 @@ class LibraryIntegrityResult:
     n_ok_cells: int
     n_failed_cells: int
     n_step_files: int
-    consistency: object           # library_validation.ConsistencyReport
+    consistency: object  # library_validation.ConsistencyReport
 
 
 def check_library_integrity(bundle, expected_n_geometries=324, expected_n_frequency_points=201):
@@ -113,7 +113,12 @@ def check_library_integrity(bundle, expected_n_geometries=324, expected_n_freque
         errors.append(f"unit_cell_library.json/.csv are inconsistent: {len(consistency.mismatches)} mismatch(es)")
 
     return LibraryIntegrityResult(
-        ok=len(errors) == 0, errors=tuple(errors), warnings=tuple(warnings),
-        n_cells=n_cells, n_ok_cells=len(ok_cells), n_failed_cells=len(failed_cells),
-        n_step_files=n_step_files, consistency=consistency,
+        ok=len(errors) == 0,
+        errors=tuple(errors),
+        warnings=tuple(warnings),
+        n_cells=n_cells,
+        n_ok_cells=len(ok_cells),
+        n_failed_cells=len(failed_cells),
+        n_step_files=n_step_files,
+        consistency=consistency,
     )

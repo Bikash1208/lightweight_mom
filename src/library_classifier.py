@@ -22,9 +22,9 @@ from .library_schema import PHASE_USABLE_MIN_MAG_DB, RESONANCE_MIN_PROMINENCE
 class ResonanceResult:
     is_resonant: bool
     resonance_frequency_hz: float | None
-    resonance_metric: float | None      # peak prominence (see _prominence), the actual criterion
+    resonance_metric: float | None  # peak prominence (see _prominence), the actual criterion
     peak_magnitude: float | None
-    criterion: str                      # human-readable, printed in reports/tests
+    criterion: str  # human-readable, printed in reports/tests
 
 
 def _prominence(mag, i):
@@ -95,10 +95,10 @@ class CellClassification:
     cell_id: str
     l_mm: float
     w_mm: float
-    geometry_status: str          # VALID | INVALID
-    solver_status: str            # OK | FAILED
+    geometry_status: str  # VALID | INVALID
+    solver_status: str  # OK | FAILED
     resonance: ResonanceResult | None
-    phase_status: str             # PHASE_USABLE | PHASE_UNUSABLE | UNCLASSIFIED
+    phase_status: str  # PHASE_USABLE | PHASE_UNUSABLE | UNCLASSIFIED
     grating: dict | None
 
 
@@ -107,8 +107,14 @@ def classify_cell(cell_entry, database, design_row, min_prominence=RESONANCE_MIN
     ``design_row``: this cell's `phase_extraction.DesignFrequencyRow` (for phase usability)."""
     if cell_entry.status != "ok":
         return CellClassification(
-            cell_entry.cell_id, design_row.l_mm, design_row.w_mm, "INVALID", "FAILED",
-            None, "UNCLASSIFIED", None,
+            cell_entry.cell_id,
+            design_row.l_mm,
+            design_row.w_mm,
+            "INVALID",
+            "FAILED",
+            None,
+            "UNCLASSIFIED",
+            None,
         )
 
     records = sorted(database.records_of(cell_entry.index), key=lambda r: r.frequency_index)
@@ -126,6 +132,12 @@ def classify_cell(cell_entry, database, design_row, min_prominence=RESONANCE_MIN
     phase_status = phase_usability(design_row.s11["mag_db"] if design_row.s11 is not None else None)
 
     return CellClassification(
-        cell_entry.cell_id, design_row.l_mm, design_row.w_mm, "VALID", solver_status,
-        resonance, phase_status, grating,
+        cell_entry.cell_id,
+        design_row.l_mm,
+        design_row.w_mm,
+        "VALID",
+        solver_status,
+        resonance,
+        phase_status,
+        grating,
     )

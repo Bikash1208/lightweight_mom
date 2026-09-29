@@ -56,7 +56,7 @@ def test_shipped_config_yaml_loads_and_converts_to_si():
 
 
 def test_pyyaml_reads_8e_minus_3_as_string_and_loader_copes():
-    assert isinstance(yaml.safe_load("x: 8e-3")["x"], str)     # documents the PyYAML gotcha
+    assert isinstance(yaml.safe_load("x: 8e-3")["x"], str)  # documents the PyYAML gotcha
     d = yaml.safe_load(
         "period_x: 8e-3\nperiod_y: 8e-3\n"
         "substrate: {eps_r: 2.2, tan_delta: 0.0009, thickness: 1.575e-3}\n"
@@ -72,8 +72,13 @@ def test_pyyaml_reads_8e_minus_3_as_string_and_loader_copes():
 
 
 def test_unit_suffixes_convert_at_input_boundary():
-    d = modified(period_x="8 mm", period_y="0.8 cm", substrate__thickness="1.575 mm",
-                 geometry__length="5000 um", excitation__frequency="10 GHz")
+    d = modified(
+        period_x="8 mm",
+        period_y="0.8 cm",
+        substrate__thickness="1.575 mm",
+        geometry__length="5000 um",
+        excitation__frequency="10 GHz",
+    )
     cfg = config_from_dict(d)
     assert cfg.unit_cell.lattice.period_x == pytest.approx(8e-3, rel=1e-14)
     assert cfg.unit_cell.lattice.period_y == pytest.approx(8e-3, rel=1e-14)
@@ -93,7 +98,7 @@ def test_reference_planes_accept_units_and_zero_thickness():
     d = modified(reference_planes__top_air_thickness="12 mm", reference_planes__bottom_air_thickness=0.0)
     rp = config_from_dict(d).reference_planes
     assert rp.z_top == pytest.approx(12e-3, rel=1e-14)
-    assert rp.z_bottom == pytest.approx(-1.575e-3, rel=1e-14)     # plane on the substrate bottom face
+    assert rp.z_bottom == pytest.approx(-1.575e-3, rel=1e-14)  # plane on the substrate bottom face
 
 
 def test_optional_fields_default_sensibly():

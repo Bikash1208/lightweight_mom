@@ -7,7 +7,7 @@ import numpy as np
 
 from src.phase8b.object_wave import transverse_wavenumber_deg
 from src.phase8c.scattering_analysis import ScatteringRow
-from src.phase8e.spectral import ObjectWaveSpectralPoint, ObjectWaveSpectrum
+from src.phase8e.candidate_library_period import PeriodRequirementAssessment
 from src.phase8e.specification import (
     write_library_response_map_csv,
     write_object_spectrum_csv,
@@ -15,7 +15,7 @@ from src.phase8e.specification import (
     write_required_library_specification_json,
     write_required_response_map_csv,
 )
-from src.phase8e.candidate_library_period import PeriodRequirementAssessment
+from src.phase8e.spectral import ObjectWaveSpectralPoint, ObjectWaveSpectrum
 
 
 def test_write_reference_spectrum_csv_row_count(tmp_path):
@@ -34,7 +34,7 @@ def test_write_object_spectrum_csv_one_row_per_beam(tmp_path):
     path = write_object_spectrum_csv(spectrum, tmp_path / "obj.csv")
     with open(path) as fh:
         rows = list(csv.reader(fh))
-    assert len(rows) == 2   # header + 1 beam
+    assert len(rows) == 2  # header + 1 beam
 
 
 def test_write_required_response_map_csv_combines_multiple_formulations(tmp_path):
@@ -45,7 +45,7 @@ def test_write_required_response_map_csv_combines_multiple_formulations(tmp_path
     )
     with open(path) as fh:
         rows = list(csv.reader(fh))
-    assert len(rows) == 1 + 8   # header + 4 points x 2 formulations
+    assert len(rows) == 1 + 8  # header + 4 points x 2 formulations
     assert {r[2] for r in rows[1:]} == {"B", "C"}
 
 
@@ -55,14 +55,16 @@ def test_write_library_response_map_csv_combines_components(tmp_path):
     path = write_library_response_map_csv([(rows_s11, "S11_xx"), (rows_s21, "S21_xx")], tmp_path / "lib.csv")
     with open(path) as fh:
         rows = list(csv.reader(fh))
-    assert len(rows) == 3   # header + 2 rows
+    assert len(rows) == 3  # header + 2 rows
     assert {r[2] for r in rows[1:]} == {"S11_xx", "S21_xx"}
 
 
 def test_write_required_library_specification_json_round_trips(tmp_path):
     assessment = PeriodRequirementAssessment(
-        registered_periods_mm=((4.8, 4.8),), candidate_periods_mm=(5.0, 4.0),
-        registered_period_matches_candidates=True, status="CURRENT_DATASET_LIMITATION",
+        registered_periods_mm=((4.8, 4.8),),
+        candidate_periods_mm=(5.0, 4.0),
+        registered_period_matches_candidates=True,
+        status="CURRENT_DATASET_LIMITATION",
         required_library_specification=None,
     )
     path = write_required_library_specification_json(assessment, tmp_path / "spec.json")

@@ -67,13 +67,9 @@ class Geometry:
         for name in ("length", "width", "center_x", "center_y", "rotation"):
             object.__setattr__(self, name, finite_real(name, getattr(self, name)))
         if self.length <= 0.0 or self.width <= 0.0:
-            raise ValueError(
-                f"length and width must be > 0, got length={self.length}, width={self.width}"
-            )
+            raise ValueError(f"length and width must be > 0, got length={self.length}, width={self.width}")
         if self.kind in _ELONGATED and self.length < self.width:
-            raise ValueError(
-                f"{self.kind} requires length >= width, got length={self.length}, width={self.width}"
-            )
+            raise ValueError(f"{self.kind} requires length >= width, got length={self.length}, width={self.width}")
 
     @property
     def polarity(self):
@@ -128,13 +124,9 @@ class UnitCell:
         px, py = self.lattice.period_x, self.lattice.period_y
         tol = _BOUNDS_RTOL * max(px, py)
         xy = self.geometry.corners()
-        if (
-            np.any(np.abs(xy[:, 0]) > px / 2 + tol)
-            or np.any(np.abs(xy[:, 1]) > py / 2 + tol)
-        ):
+        if np.any(np.abs(xy[:, 0]) > px / 2 + tol) or np.any(np.abs(xy[:, 1]) > py / 2 + tol):
             raise ValueError(
-                f"{self.geometry.kind} feature extends outside the unit cell "
-                f"(Px={px}, Py={py}); corners={xy.tolist()}"
+                f"{self.geometry.kind} feature extends outside the unit cell (Px={px}, Py={py}); corners={xy.tolist()}"
             )
         if self.metal_area <= _BOUNDS_RTOL * self.lattice.cell_area:
             raise ValueError("pattern leaves no metal in the unit cell")

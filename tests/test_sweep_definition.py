@@ -5,6 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from sweep_helpers import FREQ_8_12, config_dict, sweep_config
 
 import src.runner as runner
 from src.config import ConfigError, config_from_dict, load_config
@@ -23,12 +24,12 @@ from src.sweep import (
     plan_sweep,
     unit_cell_from_context,
 )
-from sweep_helpers import FREQ_8_12, config_dict, sweep_config
 
 ROOT = Path(__file__).resolve().parent.parent
 
 
 # ----------------------------------------------------------------- inclusive range / grid
+
 
 def test_range_includes_both_end_points_with_exact_spacing():
     f = inclusive_range(8e9, 12e9, 0.5e9)
@@ -93,6 +94,7 @@ def test_frequency_grid_is_frozen():
 
 # ---------------------------------------------------------------- geometry parameter axes
 
+
 @pytest.mark.parametrize(
     "name", ["period_x", "period_y", "rotation", "length", "type", "thickness", "eps_r", "frequency", "", "Length_m"]
 )
@@ -108,8 +110,15 @@ def test_parameter_names_are_the_five_geometry_fields():
 
 @pytest.mark.parametrize(
     "values, fragment",
-    [((), "no values"), ((1e-3, 1e-3), "duplicate"), ((1e-3, float("nan")), "finite"),
-     ((1e-3, float("inf")), "finite"), ((True,), "finite"), (("3 mm",), "finite"), ((None,), "finite")],
+    [
+        ((), "no values"),
+        ((1e-3, 1e-3), "duplicate"),
+        ((1e-3, float("nan")), "finite"),
+        ((1e-3, float("inf")), "finite"),
+        ((True,), "finite"),
+        (("3 mm",), "finite"),
+        ((None,), "finite"),
+    ],
 )
 def test_axis_rejects_bad_values(values, fragment):
     with pytest.raises(SweepError, match=fragment):
@@ -138,17 +147,29 @@ def test_definition_rejects_duplicate_axes_bad_policy_and_huge_products():
 
 def test_policy_validation():
     assert RefinementPolicy().enabled is False
-    for kwargs in ({"factor": 1}, {"factor": 2.5}, {"factor": True}, {"tolerance": 0.0}, {"tolerance": float("nan")},
-                   {"frequencies": "some"}, {"enabled": 1}):
+    for kwargs in (
+        {"factor": 1},
+        {"factor": 2.5},
+        {"factor": True},
+        {"tolerance": 0.0},
+        {"tolerance": float("nan")},
+        {"frequencies": "some"},
+        {"enabled": 1},
+    ):
         with pytest.raises(SweepError):
             RefinementPolicy(**kwargs)
-    for kwargs in ({"min_cells_per_wavelength": 0.0}, {"max_area_error": -0.1}, {"strict": "yes"},
-                   {"min_cells_per_wavelength": float("inf")}):
+    for kwargs in (
+        {"min_cells_per_wavelength": 0.0},
+        {"max_area_error": -0.1},
+        {"strict": "yes"},
+        {"min_cells_per_wavelength": float("inf")},
+    ):
         with pytest.raises(SweepError):
             ValidationPolicy(**kwargs)
 
 
 # ------------------------------------------------------------------------- planning cells
+
 
 def axes(**named):
     return tuple(ParameterAxis(k, tuple(v)) for k, v in named.items())
@@ -185,9 +206,16 @@ def test_cell_ids_are_deterministic_unique_and_sensitive_to_everything_that_matt
     ids = [c.cell_id for c in plan_sweep(sweep_config(), d).cells]
     assert ids == [c.cell_id for c in plan_sweep(sweep_config(), d).cells]
     assert len(set(ids)) == 3 and all(len(i) == 16 for i in ids)
-    for change in ({"mesh.cells_x": 8}, {"mesh.floquet_order": 33}, {"substrate.eps_r": 2.3},
-                   {"substrate.tan_delta": 0.001}, {"substrate.thickness": 1.6e-3}, {"period_x": 9e-3},
-                   {"reference_planes.top_air_thickness": 1e-3}, {"geometry.width": 1e-3}):
+    for change in (
+        {"mesh.cells_x": 8},
+        {"mesh.floquet_order": 33},
+        {"substrate.eps_r": 2.3},
+        {"substrate.tan_delta": 0.001},
+        {"substrate.thickness": 1.6e-3},
+        {"period_x": 9e-3},
+        {"reference_planes.top_air_thickness": 1e-3},
+        {"geometry.width": 1e-3},
+    ):
         other = [c.cell_id for c in plan_sweep(sweep_config(**change), d).cells]
         assert not set(other) & set(ids), change
 
@@ -200,7 +228,9 @@ def test_unit_cells_are_built_from_parameters_and_rebuildable_from_context():
     assert g.length == 3e-3 and g.width == 2e-3 and g.center_x == 0.5e-3
     assert g.rotation == pytest.approx(math.radians(30.0), rel=1e-15)
     again = unit_cell_from_context(plan.context, cell.parameters)
-    assert again.geometry == g and again.lattice == cell.unit_cell.lattice and again.substrate == cell.unit_cell.substrate
+    assert (
+        again.geometry == g and again.lattice == cell.unit_cell.lattice and again.substrate == cell.unit_cell.substrate
+    )
 
 
 def test_unswept_base_geometry_survives_the_degree_round_trip_to_1e15():
@@ -217,8 +247,18 @@ INVALID_CASES = [
     ("offset feature leaves the cell", {"center_x_m": (3e-3,)}, {}, "extends outside"),
     ("zero length", {"length_m": (0.0,)}, {}, "must be > 0"),
     ("negative width", {"width_m": (-1e-3,)}, {}, "must be > 0"),
-    ("dipole wider than long", {"width_m": (4e-3,)}, {"geometry.type": "dipole", "geometry.length": 3e-3}, "length >= width"),
-    ("slot wider than long", {"width_m": (4e-3,)}, {"geometry.type": "slot", "geometry.length": 3e-3}, "length >= width"),
+    (
+        "dipole wider than long",
+        {"width_m": (4e-3,)},
+        {"geometry.type": "dipole", "geometry.length": 3e-3},
+        "length >= width",
+    ),
+    (
+        "slot wider than long",
+        {"width_m": (4e-3,)},
+        {"geometry.type": "slot", "geometry.length": 3e-3},
+        "length >= width",
+    ),
     ("too small for the mesh", {"length_m": (0.2e-3,), "width_m": (0.2e-3,)}, {}, "no interior metal edges"),
 ]
 
@@ -232,7 +272,7 @@ def test_invalid_cells_are_reported_by_name_before_any_solve(monkeypatch, label,
     with pytest.raises(SweepError, match=fragment) as exc:
         runner.run_sweep(cfg, definition=d)
     assert "cell 0" in str(exc.value) and "1 of 1" in str(exc.value)
-    assert calls == []                                    # failed before the first solve
+    assert calls == []  # failed before the first solve
 
 
 def test_error_message_lists_the_offending_parameters_and_counts_all_invalid_cells():
@@ -272,23 +312,28 @@ def test_plan_without_definition_is_an_error():
 
 # ------------------------------------------------------------- strict a priori validation
 
+
 def test_strict_mode_fails_before_solving_when_the_mesh_is_too_coarse_for_the_wavelength():
     cfg = sweep_config()
     d = SweepDefinition(
-        frequency=FrequencyGrid(8e9, 12e9, 4e9), axes=axes(length_m=(3e-3,)),
+        frequency=FrequencyGrid(8e9, 12e9, 4e9),
+        axes=axes(length_m=(3e-3,)),
         validation=ValidationPolicy(min_cells_per_wavelength=60.0, strict=True),
     )
     with pytest.raises(SweepError, match="cells/wavelength"):
         plan_sweep(cfg, d)
-    relaxed = SweepDefinition(frequency=d.frequency, axes=d.axes, validation=ValidationPolicy(min_cells_per_wavelength=60.0))
-    assert plan_sweep(cfg, relaxed).n_solves == 2          # 8 and 12 GHz
+    relaxed = SweepDefinition(
+        frequency=d.frequency, axes=d.axes, validation=ValidationPolicy(min_cells_per_wavelength=60.0)
+    )
+    assert plan_sweep(cfg, relaxed).n_solves == 2  # 8 and 12 GHz
 
 
 def test_strict_mode_rejects_grating_frequencies_and_misaligned_features():
     cfg = sweep_config()
     f_c = C0 / 8e-3
-    grating = SweepDefinition(frequency=FrequencyGrid(f_c * 0.9, f_c * 1.1, f_c * 0.1),
-                              validation=ValidationPolicy(strict=True))
+    grating = SweepDefinition(
+        frequency=FrequencyGrid(f_c * 0.9, f_c * 1.1, f_c * 0.1), validation=ValidationPolicy(strict=True)
+    )
     with pytest.raises(SweepError, match="grating order"):
         plan_sweep(cfg, grating)
     misaligned = SweepDefinition(axes=axes(length_m=(5.3e-3,)), validation=ValidationPolicy(strict=True))
@@ -299,26 +344,33 @@ def test_strict_mode_rejects_grating_frequencies_and_misaligned_features():
 
 # ------------------------------------------------------------------- config file section
 
+
 def test_config_without_sweep_section_has_none_and_shipped_config_is_unchanged():
     assert config_from_dict(config_dict()).sweep is None
     assert load_config(ROOT / "configs" / "config.yaml").sweep is None
 
 
 def test_sweep_section_parses_units_ranges_lists_and_policy():
-    cfg = sweep_config({
-        "frequency": FREQ_8_12,
-        "parameters": {
-            "length": {"start": "3 mm", "stop": "5 mm", "step": "1 mm"},
-            "rotation_deg": [0, 45.5],
-            "width": {"values": ["1 mm", 2.0e-3]},
-        },
-        "on_invalid": "skip",
-        "validation": {"min_cells_per_wavelength": 12, "max_area_error": 0.1, "strict": True,
-                       "refinement": {"enabled": True, "factor": 3, "tolerance": 0.01, "frequencies": "all"}},
-    })
+    cfg = sweep_config(
+        {
+            "frequency": FREQ_8_12,
+            "parameters": {
+                "length": {"start": "3 mm", "stop": "5 mm", "step": "1 mm"},
+                "rotation_deg": [0, 45.5],
+                "width": {"values": ["1 mm", 2.0e-3]},
+            },
+            "on_invalid": "skip",
+            "validation": {
+                "min_cells_per_wavelength": 12,
+                "max_area_error": 0.1,
+                "strict": True,
+                "refinement": {"enabled": True, "factor": 3, "tolerance": 0.01, "frequencies": "all"},
+            },
+        }
+    )
     sw = cfg.sweep
     assert (sw.frequency.start, sw.frequency.stop, sw.frequency.step) == (8e9, 12e9, 1e9)
-    assert [a.name for a in sw.axes] == ["length_m", "rotation_deg", "width_m"]      # YAML order kept
+    assert [a.name for a in sw.axes] == ["length_m", "rotation_deg", "width_m"]  # YAML order kept
     assert sw.axes[0].values == pytest.approx((3e-3, 4e-3, 5e-3)) and sw.axes[1].values == (0.0, 45.5)
     assert sw.axes[2].values == (1e-3, 2e-3)
     assert sw.on_invalid == "skip" and sw.validation.strict is True
@@ -347,7 +399,10 @@ def test_frequency_only_and_parameter_only_sweeps():
         ({"parameters": {"period_x": [8e-3]}}, "unknown geometry parameter"),
         ({"parameters": {"type": ["dipole"]}}, "unknown geometry parameter"),
         ({"parameters": {"rotation": [0.0]}}, "unknown geometry parameter"),
-        ({"parameters": {"length": {"values": [3e-3], "start": 1e-3, "stop": 2e-3, "step": 1e-3}}}, "not both or neither"),
+        (
+            {"parameters": {"length": {"values": [3e-3], "start": 1e-3, "stop": 2e-3, "step": 1e-3}}},
+            "not both or neither",
+        ),
         ({"parameters": {"length": {}}}, "not both or neither"),
         ({"parameters": {"length": {"start": 1e-3, "stop": 2e-3}}}, "missing required"),
         ({"parameters": {"length": {"start": "3", "stop": "5", "step": "1"}}}, ">= 1.0 m"),

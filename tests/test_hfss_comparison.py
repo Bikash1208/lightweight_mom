@@ -56,6 +56,7 @@ def reference_db(case_dir):
 
 # --------------------------------------------------------------------------------- I/O contract
 
+
 def test_load_case_artifacts_reads_only_existing_exported_files(case_dir):
     artifacts = load_case_artifacts(case_dir)
     assert artifacts.geometry["case_id"] == CASE.case_id
@@ -74,8 +75,11 @@ def test_export_writes_exactly_the_requested_files(result):
     assert result.md_path.name == "HFSS_COMPARISON.md"
     assert result.csv_path.exists() and result.md_path.exists()
     expected_plot_names = {
-        "hfss_s11_magnitude_db.png", "hfss_s21_magnitude_db.png",
-        "hfss_s11_phase_deg.png", "hfss_s21_phase_deg.png", "hfss_cross_polarization_db.png",
+        "hfss_s11_magnitude_db.png",
+        "hfss_s21_magnitude_db.png",
+        "hfss_s11_phase_deg.png",
+        "hfss_s21_phase_deg.png",
+        "hfss_cross_polarization_db.png",
     }
     assert {p.name for p in result.plot_paths.values()} == expected_plot_names
     for p in result.plot_paths.values():
@@ -85,14 +89,28 @@ def test_export_writes_exactly_the_requested_files(result):
 
 # ------------------------------------------------------------------------------------- CSV content
 
+
 def test_csv_header_matches_exact_requested_columns(result):
     with open(result.csv_path, newline="", encoding="utf-8") as fh:
         header = next(csv.reader(fh))
-    assert tuple(header) == HFSS_CSV_COLUMNS == (
-        "frequency_GHz",
-        "S11xx_mag_dB", "S11yy_mag_dB", "S21xx_mag_dB", "S21yy_mag_dB",
-        "S11xx_phase_deg", "S11yy_phase_deg", "S21xx_phase_deg", "S21yy_phase_deg",
-        "S11xy_mag_dB", "S11yx_mag_dB", "S21xy_mag_dB", "S21yx_mag_dB",
+    assert (
+        tuple(header)
+        == HFSS_CSV_COLUMNS
+        == (
+            "frequency_GHz",
+            "S11xx_mag_dB",
+            "S11yy_mag_dB",
+            "S21xx_mag_dB",
+            "S21yy_mag_dB",
+            "S11xx_phase_deg",
+            "S11yy_phase_deg",
+            "S21xx_phase_deg",
+            "S21yy_phase_deg",
+            "S11xy_mag_dB",
+            "S11yx_mag_dB",
+            "S21xy_mag_dB",
+            "S21yx_mag_dB",
+        )
     )
 
 
@@ -129,8 +147,10 @@ def test_csv_values_match_independent_read_of_mom_results(result, reference_db):
             assert values[phase_col] == pytest.approx(phase_deg[i], abs=1e-9)
 
         for comp, mag_col in (
-            ("S11_xy", "S11xy_mag_dB"), ("S11_yx", "S11yx_mag_dB"),
-            ("S21_xy", "S21xy_mag_dB"), ("S21_yx", "S21yx_mag_dB"),
+            ("S11_xy", "S11xy_mag_dB"),
+            ("S11_yx", "S11yx_mag_dB"),
+            ("S21_xy", "S21xy_mag_dB"),
+            ("S21_yx", "S21yx_mag_dB"),
         ):
             _, s = reference_db.series(0, comp)
             expected_mag_db = 20.0 * math.log10(max(abs(s[i]), 10 ** (_DB_FLOOR / 20.0)))
@@ -152,6 +172,7 @@ def test_unrotated_patch_cross_pol_is_at_the_db_floor(result):
 
 # ---------------------------------------------------------------------------------- table helper
 
+
 def test_hfss_comparison_table_matches_database_series_directly(reference_db):
     table, mags, phases = hfss_comparison_table(reference_db)
     freqs_hz, s = reference_db.series(0, "S11_xx")
@@ -164,6 +185,7 @@ def test_hfss_comparison_table_matches_database_series_directly(reference_db):
 
 
 # ------------------------------------------------------------------------------------ README content
+
 
 def test_readme_states_every_required_fact(result):
     text = result.md_path.read_text()
@@ -193,6 +215,7 @@ def test_readme_frequency_list_matches_the_csv(result):
 
 
 # ------------------------------------------------------------------------- determinism / no invention
+
 
 def test_repeated_export_from_the_same_mom_results_is_numerically_identical(case_dir, tmp_path):
     """Re-running the Phase 6A export against the same, already-written mom_results.json (no

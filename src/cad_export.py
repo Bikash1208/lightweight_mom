@@ -148,10 +148,10 @@ class SolidProperties:
     independently recovered values for the consistency tests)."""
 
     n_solids: int
-    bbox_mm: tuple            # (xmin, xmax, ymin, ymax, zmin, zmax)
+    bbox_mm: tuple  # (xmin, xmax, ymin, ymax, zmin, zmax)
     volume_mm3: float
-    centroid_xy_mm: tuple     # bounding-box centre (x, y); equals the rotation centre for a solid
-                              # rotated about its own centroid, independent of the rotation angle
+    centroid_xy_mm: tuple  # bounding-box centre (x, y); equals the rotation centre for a solid
+    # rotated about its own centroid, independent of the rotation angle
 
     @classmethod
     def of(cls, solid):
@@ -167,7 +167,7 @@ class StepExportResult:
     metal_export_thickness_m: float
     substrate: SolidProperties
     metal: SolidProperties
-    ground: SolidProperties | None = None    # Phase 12A: only for backing="pec"
+    ground: SolidProperties | None = None  # Phase 12A: only for backing="pec"
 
 
 def export_unit_cell_step(unit_cell: UnitCell, path, metal_export_thickness_m=DEFAULT_METAL_EXPORT_THICKNESS_M):
@@ -183,8 +183,10 @@ def export_unit_cell_step(unit_cell: UnitCell, path, metal_export_thickness_m=DE
         asm.add(ground, name=_PART_GROUND, color=cq.Color(0.60, 0.60, 0.65, 1.0))
     asm.export(str(path), exportType="STEP")
     return StepExportResult(
-        str(path), _check_thickness(metal_export_thickness_m),
-        SolidProperties.of(substrate), SolidProperties.of(metal),
+        str(path),
+        _check_thickness(metal_export_thickness_m),
+        SolidProperties.of(substrate),
+        SolidProperties.of(metal),
         SolidProperties.of(ground) if ground is not None else None,
     )
 
@@ -216,7 +218,10 @@ def build_supercell_solids(supercell, metal_export_thickness_m=DEFAULT_METAL_EXP
                     f"build_supercell_solids: sub-cell ({i}, {j}) has polarity {geom.polarity!r}; "
                     f"only 'metal' (rectangle) sub-cell patches are supported"
                 )
-            cx_mm, cy_mm = units.to_mm(supercell.sub_cell_center(i, j)[0]), units.to_mm(supercell.sub_cell_center(i, j)[1])
+            cx_mm, cy_mm = (
+                units.to_mm(supercell.sub_cell_center(i, j)[0]),
+                units.to_mm(supercell.sub_cell_center(i, j)[1]),
+            )
             metals.append(_feature_solid(geom, t_mm, 0.0).translate((cx_mm, cy_mm, 0.0)))
     return substrate, tuple(metals)
 
@@ -240,7 +245,7 @@ class SupercellStepExportResult:
     path: str
     metal_export_thickness_m: float
     substrate: SolidProperties
-    metals: tuple                        # one SolidProperties per sub-cell patch, row-major (i, j)
+    metals: tuple  # one SolidProperties per sub-cell patch, row-major (i, j)
     ground: SolidProperties | None = None
 
 
@@ -257,7 +262,9 @@ def export_supercell_step(supercell, path, metal_export_thickness_m=DEFAULT_META
         asm.add(ground, name=_PART_GROUND, color=cq.Color(0.60, 0.60, 0.65, 1.0))
     asm.export(str(path), exportType="STEP")
     return SupercellStepExportResult(
-        str(path), _check_thickness(metal_export_thickness_m), SolidProperties.of(substrate),
+        str(path),
+        _check_thickness(metal_export_thickness_m),
+        SolidProperties.of(substrate),
         tuple(SolidProperties.of(m) for m in metals),
         SolidProperties.of(ground) if ground is not None else None,
     )
@@ -310,7 +317,11 @@ def import_and_summarize(path):
         else:
             raise ValueError(f"{path}: the two below-z=0 solids do not stack (substrate, ground)")
         return StepExportResult(
-            str(path), float("nan"), props(substrate), props(metal[0]), props(ground),
+            str(path),
+            float("nan"),
+            props(substrate),
+            props(metal[0]),
+            props(ground),
         )
     if len(solids) == 2 and len(metal) == 1 and len(below_z0) == 1:
         return StepExportResult(str(path), float("nan"), props(below_z0[0]), props(metal[0]))

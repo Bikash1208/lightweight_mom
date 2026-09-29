@@ -13,8 +13,14 @@ from .reference_solver import solve_grid
 
 DIRECTIONS = ("N", "S", "E", "W", "NE", "NW", "SE", "SW")
 _STEP = {
-    "N": (-1, 0), "S": (1, 0), "E": (0, 1), "W": (0, -1),
-    "NE": (-1, 1), "NW": (-1, -1), "SE": (1, 1), "SW": (1, -1),
+    "N": (-1, 0),
+    "S": (1, 0),
+    "E": (0, 1),
+    "W": (0, -1),
+    "NE": (-1, 1),
+    "NW": (-1, -1),
+    "SE": (1, 1),
+    "SW": (1, -1),
 }
 
 
@@ -31,8 +37,17 @@ class DirectionalPoint:
     delta_complex: complex
 
 
-def run_directional_coupling(center_lw_mm, period_m, substrate, metal, frequency_hz, grid_n,
-                              distances, mesh_cells_per_subcell=8, contrast_mm=None):
+def run_directional_coupling(
+    center_lw_mm,
+    period_m,
+    substrate,
+    metal,
+    frequency_hz,
+    grid_n,
+    distances,
+    mesh_cells_per_subcell=8,
+    contrast_mm=None,
+):
     """One perturbed-cell solve per (direction, distance) pair, plus one shared homogeneous
     baseline. ``grid_n`` must be large enough that ``mid +/- max(distances)`` stays in-bounds for
     every direction tested."""

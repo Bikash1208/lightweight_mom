@@ -21,9 +21,7 @@ from .green_function import LayeredGreenFunction
 _CHUNK_ELEMENTS = 2_000_000
 
 
-def assemble_impedance_matrix(
-    basis: RooftopBasis, green: LayeredGreenFunction, kx0, ky0, floquet_order
-):
+def assemble_impedance_matrix(basis: RooftopBasis, green: LayeredGreenFunction, kx0, ky0, floquet_order):
     """Z (n_unknowns x n_unknowns, complex), units ohm*m^2 (see MOM_FORMULATION.md)."""
     kx, ky, g = green.floquet_dyads(basis.lattice, kx0, ky0, floquet_order)
     kx, ky = kx.ravel(), ky.ravel()
@@ -34,7 +32,7 @@ def assemble_impedance_matrix(
     chunk = max(1, _CHUNK_ELEMENTS // nb)
     for s in range(0, kx.size, chunk):
         sl = slice(s, s + chunk)
-        phi = basis.fourier_transform(kx[sl], ky[sl])          # (nb, kc)
+        phi = basis.fourier_transform(kx[sl], ky[sl])  # (nb, kc)
         phi_x, phi_y = phi[:nxb], phi[nxb:]
         cx, cy = np.conj(phi_x), np.conj(phi_y)
         z[:nxb, :nxb] += (cx * gxx[sl]) @ phi_x.T

@@ -4,8 +4,10 @@ import warnings
 
 import numpy as np
 import pytest
+from sweep_helpers import config_dict
 
 from src.basis_functions import MeshSettings
+from src.config import config_from_dict
 from src.constants import C0
 from src.discretization import (
     cells_per_wavelength,
@@ -17,8 +19,6 @@ from src.discretization import (
     refinement_study,
 )
 from src.sparameters import compute_s_parameters
-from sweep_helpers import config_dict
-from src.config import config_from_dict
 
 
 def cell_and_planes(**overrides):
@@ -28,12 +28,13 @@ def cell_and_planes(**overrides):
 
 # --------------------------------------------------------------------------- cell checks
 
+
 def test_aligned_rectangle_has_zero_area_error_and_the_counted_number_of_unknowns():
     cell, _, mesh = cell_and_planes(**{"geometry.length": 3e-3, "geometry.width": 2e-3})
     chk = check_cell(cell, mesh, 0.05)
-    nx, ny = 6, 4                                        # 3 mm x 2 mm on a 0.5 mm mesh
+    nx, ny = 6, 4  # 3 mm x 2 mm on a 0.5 mm mesh
     assert chk["metal_area_error"] < 1e-14 and chk["area_ok"] is True
-    assert chk["n_unknowns"] == (nx - 1) * ny + nx * (ny - 1)      # interior x-edges + interior y-edges
+    assert chk["n_unknowns"] == (nx - 1) * ny + nx * (ny - 1)  # interior x-edges + interior y-edges
 
 
 def test_misaligned_rectangle_area_error_equals_the_independent_staircase_count():
@@ -42,7 +43,7 @@ def test_misaligned_rectangle_area_error_equals_the_independent_staircase_count(
     # centroids at odd multiples of 0.25 mm: |x| <= 2.65 keeps 10 columns (5.0 mm), width 2 mm exact
     assert chk["metal_area_error"] == pytest.approx((5.3e-3 - 5.0e-3) / 5.3e-3, rel=1e-12)
     assert chk["area_ok"] is False
-    assert check_cell(cell, mesh, 0.06)["area_ok"] is True           # the threshold is the only difference
+    assert check_cell(cell, mesh, 0.06)["area_ok"] is True  # the threshold is the only difference
 
 
 def test_slot_area_error_is_measured_on_the_metal_complement():
@@ -53,7 +54,9 @@ def test_slot_area_error_is_measured_on_the_metal_complement():
     mis, _, mesh = cell_and_planes(**{"geometry.type": "slot", "geometry.length": 5.3e-3, "geometry.width": 2e-3})
     metal_true = 64e-6 - 5.3e-3 * 2e-3
     metal_mesh = 64e-6 - 5.0e-3 * 2e-3
-    assert check_cell(mis, mesh, 1.0)["metal_area_error"] == pytest.approx(abs(metal_mesh - metal_true) / metal_true, rel=1e-9)
+    assert check_cell(mis, mesh, 1.0)["metal_area_error"] == pytest.approx(
+        abs(metal_mesh - metal_true) / metal_true, rel=1e-9
+    )
 
 
 def test_mesh_too_coarse_for_the_pattern_is_an_error_not_a_bare_slab():
@@ -63,6 +66,7 @@ def test_mesh_too_coarse_for_the_pattern_is_an_error_not_a_bare_slab():
 
 
 # ------------------------------------------------------------------- frequency checks
+
 
 def test_cells_per_wavelength_matches_the_definition_and_scales_correctly():
     cell, _, mesh = cell_and_planes()
@@ -131,11 +135,12 @@ def test_above_the_grating_onset_the_specular_matrix_is_passive_but_not_unitary(
     f = 1.15 * grating_onset_frequency(cell)
     m = compute_s_parameters(cell, f, mesh, planes, warn_grating=False).matrix()
     eig = np.linalg.eigvalsh(np.eye(4) - m.conj().T @ m)
-    assert eig.min() > -1e-9                                # never creates power
-    assert eig.max() > 1e-3                                 # but does lose some
+    assert eig.min() > -1e-9  # never creates power
+    assert eig.max() > 1e-3  # but does lose some
 
 
 # ---------------------------------------------------------------------- refinement study
+
 
 def test_max_abs_difference_definition():
     a = np.array([[1.0, 2.0j], [0.0, 1.0]])
@@ -180,7 +185,7 @@ def test_floquet_error_decreases_with_the_order_at_a_fixed_mesh():
         base = compute_s_parameters(cell, 10e9, mesh, planes).matrix()
         errors.append(refinement_study(cell, planes, mesh, 10e9, base, 2)[0])
     assert errors[0] > errors[1] > errors[2] > 0.0
-    assert errors[0] / errors[1] > 2.0 and errors[1] / errors[2] > 2.0       # measured ~ order^-2
+    assert errors[0] / errors[1] > 2.0 and errors[1] / errors[2] > 2.0  # measured ~ order^-2
 
 
 def test_mesh_error_decreases_with_the_mesh_at_a_fixed_floquet_to_mesh_ratio():
@@ -191,7 +196,7 @@ def test_mesh_error_decreases_with_the_mesh_at_a_fixed_floquet_to_mesh_ratio():
         base = compute_s_parameters(cell, 10e9, mesh, planes).matrix()
         errors.append(refinement_study(cell, planes, mesh, 10e9, base, 2)[1])
     assert errors[0] > errors[1] > 0.0
-    assert errors[0] / errors[1] > 1.3                                       # first order in the mesh size
+    assert errors[0] / errors[1] > 1.3  # first order in the mesh size
 
 
 @pytest.mark.parametrize("factor", [1, 0, -2, 2.0, 1.5, True, "2", None])

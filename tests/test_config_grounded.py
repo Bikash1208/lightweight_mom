@@ -7,7 +7,8 @@ import pytest
 from src.config import ConfigError, config_from_dict
 
 BASE = {
-    "period_x": 4.8e-3, "period_y": 4.8e-3,
+    "period_x": 4.8e-3,
+    "period_y": 4.8e-3,
     "substrate": {"name": "RT5880", "eps_r": 2.2, "tan_delta": 0.0009, "thickness": 1.575e-3},
     "geometry": {"type": "rectangle", "length": 2.0e-3, "width": 2.0e-3},
     "excitation": {"frequency": 12.5e9},
@@ -59,6 +60,6 @@ def test_invalid_backing_value_rejected():
 
 def test_backing_is_not_a_valid_substrate_key_typo_still_caught():
     data = copy.deepcopy(BASE)
-    data["substrate"]["backig"] = "pec"   # typo
+    data["substrate"]["backig"] = "pec"  # typo
     with pytest.raises(ConfigError, match="unknown key"):
         config_from_dict(data)

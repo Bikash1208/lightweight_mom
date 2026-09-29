@@ -52,9 +52,9 @@ PARAMETER_NAMES = ("length_m", "width_m", "center_x_m", "center_y_m", "rotation_
 ON_INVALID = ("error", "skip")
 REFINEMENT_FREQUENCIES = ("max", "all")
 
-MAX_POINTS = 100_000        # one axis / frequency grid
-MAX_CELLS = 1_000_000       # Cartesian product of the axes
-_RANGE_RTOL = 1e-9          # of the step, for "span is an integer number of steps"
+MAX_POINTS = 100_000  # one axis / frequency grid
+MAX_CELLS = 1_000_000  # Cartesian product of the axes
+_RANGE_RTOL = 1e-9  # of the step, for "span is an integer number of steps"
 
 
 class SweepError(ValueError):
@@ -62,6 +62,7 @@ class SweepError(ValueError):
 
 
 # ------------------------------------------------------------------------- ranges and grids
+
 
 def inclusive_range(start, stop, step, what="range"):
     """start, start+step, ..., stop  (both included); see the module docstring."""
@@ -91,9 +92,9 @@ def inclusive_range(start, stop, step, what="range"):
 
 @dataclass(frozen=True)
 class FrequencyGrid:
-    start: float   # [Hz]
-    stop: float    # [Hz]
-    step: float    # [Hz]; irrelevant (but must be > 0) when start == stop
+    start: float  # [Hz]
+    stop: float  # [Hz]
+    step: float  # [Hz]; irrelevant (but must be > 0) when start == stop
 
     def __post_init__(self):
         try:
@@ -105,7 +106,7 @@ class FrequencyGrid:
         object.__setattr__(self, "start", start)
         object.__setattr__(self, "stop", stop)
         object.__setattr__(self, "step", step)
-        inclusive_range(start, stop, step, "frequency")     # validates step > 0, multiple, size
+        inclusive_range(start, stop, step, "frequency")  # validates step > 0, multiple, size
 
     @classmethod
     def single(cls, frequency):
@@ -130,9 +131,7 @@ class ParameterAxis:
 
     def __post_init__(self):
         if self.name not in PARAMETER_NAMES:
-            raise SweepError(
-                f"unknown geometry parameter {self.name!r}; sweepable: {list(PARAMETER_NAMES)}"
-            )
+            raise SweepError(f"unknown geometry parameter {self.name!r}; sweepable: {list(PARAMETER_NAMES)}")
         try:
             vals = tuple(finite_real(f"{self.name} value", v) for v in self.values)
         except (ValueError, TypeError) as e:
@@ -151,6 +150,7 @@ class ParameterAxis:
 
 
 # ------------------------------------------------------------------------------- policies
+
 
 @dataclass(frozen=True)
 class RefinementPolicy:
@@ -177,8 +177,7 @@ class RefinementPolicy:
         object.__setattr__(self, "factor", int(self.factor))
         if self.frequencies not in REFINEMENT_FREQUENCIES:
             raise SweepError(
-                f"refinement.frequencies must be one of {list(REFINEMENT_FREQUENCIES)}, "
-                f"got {self.frequencies!r}"
+                f"refinement.frequencies must be one of {list(REFINEMENT_FREQUENCIES)}, got {self.frequencies!r}"
             )
 
 
@@ -197,7 +196,8 @@ class ValidationPolicy:
             raise SweepError(f"validation.strict must be a boolean, got {self.strict!r}")
         try:
             object.__setattr__(
-                self, "min_cells_per_wavelength",
+                self,
+                "min_cells_per_wavelength",
                 finite_real("min_cells_per_wavelength", self.min_cells_per_wavelength),
             )
             object.__setattr__(self, "max_area_error", finite_real("max_area_error", self.max_area_error))
@@ -213,15 +213,17 @@ class ValidationPolicy:
             "max_area_error": self.max_area_error,
             "strict": self.strict,
             "refinement": {
-                "enabled": r.enabled, "factor": r.factor,
-                "tolerance": r.tolerance, "frequencies": r.frequencies,
+                "enabled": r.enabled,
+                "factor": r.factor,
+                "tolerance": r.tolerance,
+                "frequencies": r.frequencies,
             },
         }
 
 
 @dataclass(frozen=True)
 class SweepDefinition:
-    frequency: FrequencyGrid | None = None      # None: the single excitation.frequency
+    frequency: FrequencyGrid | None = None  # None: the single excitation.frequency
     axes: tuple = ()
     on_invalid: str = "error"
     validation: ValidationPolicy = field(default_factory=ValidationPolicy)
@@ -239,6 +241,7 @@ class SweepDefinition:
 
 
 # ------------------------------------------------------------------ cells, context, planning
+
 
 def base_parameters(geometry):
     """The five sweepable parameters of a Geometry (I/O units: m and degrees)."""
@@ -274,8 +277,10 @@ def sweep_context(config):
         "geometry_kind": u.geometry.kind,
         "lattice": {"period_x_m": u.lattice.period_x, "period_y_m": u.lattice.period_y},
         "substrate": {
-            "name": u.substrate.name, "eps_r": u.substrate.eps_r,
-            "tan_delta": u.substrate.tan_delta, "thickness_m": u.substrate.thickness,
+            "name": u.substrate.name,
+            "eps_r": u.substrate.eps_r,
+            "tan_delta": u.substrate.tan_delta,
+            "thickness_m": u.substrate.thickness,
         },
         "metal": {"model": u.metal.model},
         # Phase 12A: which stack this was solved for. Included in the cell_id hash (below), so a
@@ -305,7 +310,9 @@ def unit_cell_from_context(context, parameters):
         lattice=RectangularLattice(lat["period_x_m"], lat["period_y_m"]),
         geometry=geometry_from_parameters(context["geometry_kind"], parameters),
         substrate=Substrate(
-            name=sub["name"], eps_r=sub["eps_r"], tan_delta=sub["tan_delta"],
+            name=sub["name"],
+            eps_r=sub["eps_r"],
+            tan_delta=sub["tan_delta"],
             thickness=sub["thickness_m"],
         ),
         metal=Metal(**context["metal"]),
@@ -318,15 +325,15 @@ class SweepCell:
     index: int
     cell_id: str
     parameters: dict
-    status: str                    # 'ok' | 'invalid'
-    reason: str | None = None      # why it is invalid
+    status: str  # 'ok' | 'invalid'
+    reason: str | None = None  # why it is invalid
     unit_cell: UnitCell | None = None
-    checks: dict | None = None     # frequency-independent a priori checks (discretization.check_cell)
+    checks: dict | None = None  # frequency-independent a priori checks (discretization.check_cell)
 
 
 @dataclass(frozen=True, eq=False)
 class SweepPlan:
-    config: object                 # the base SimulationConfig
+    config: object  # the base SimulationConfig
     definition: SweepDefinition
     frequencies: np.ndarray
     context: dict
@@ -427,14 +434,10 @@ def plan_sweep(config, definition=None, *, warn_duplicates=True):
                     break
         if failures:
             more = f" (+{len(failures) - 5} more)" if len(failures) > 5 else ""
-            raise SweepError(
-                f"strict validation failed for {len(failures)} check(s): "
-                f"{'; '.join(failures[:5])}{more}"
-            )
+            raise SweepError(f"strict validation failed for {len(failures)} check(s): {'; '.join(failures[:5])}{more}")
 
     duplicate_groups = duplicate_geometry_groups(
-        (cell.index, metal_mask_key(cell.unit_cell, config.mesh))
-        for cell in cells if cell.status == "ok"
+        (cell.index, metal_mask_key(cell.unit_cell, config.mesh)) for cell in cells if cell.status == "ok"
     )
     if warn_duplicates and duplicate_groups:
         n_extra = sum(len(g) - 1 for g in duplicate_groups)

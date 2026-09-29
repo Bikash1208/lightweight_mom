@@ -43,18 +43,6 @@ lwmom-app = "src.app.main:main"
 where = ["."]
 include = ["src*"]
 
-[tool.pytest.ini_options]
-# Superseded by pytest.ini (pytest reads both; pytest.ini's `[pytest]` section wins
-# when both exist -- kept here only so `pyproject.toml` alone documents the markers
-# for tooling that reads project metadata, e.g. IDEs). Single source of truth for
-# actually running tests remains pytest.ini.
-markers = [
-    "slow: real MoM solves expensive enough to exclude from the fast (<5 min) suite",
-    "cad: needs the optional cadquery/matplotlib extras",
-    "checkpoint: needs the ~470 MB Phase 7 unit-cell-library checkpoint on disk",
-    "hfss_data: needs real HFSS exports under hfss_exports/ (not regenerable without HFSS)",
-]
-
 [tool.ruff]
 line-length = 120
 target-version = "py311"

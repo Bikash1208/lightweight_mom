@@ -20,15 +20,20 @@ class DipoleMoment:
     py: complex
 
 
-def local_dipole_moment(basis, coeffs, region_center_x, region_center_y, half_width_x, half_width_y,
-                         kx0=0.0, ky0=0.0, n_samples=48):
+def local_dipole_moment(
+    basis, coeffs, region_center_x, region_center_y, half_width_x, half_width_y, kx0=0.0, ky0=0.0, n_samples=48
+):
     """Integral of J(x, y) over the axis-aligned rectangle
     [cx-hw, cx+hw] x [cy-hw, cy+hw], via `basis.evaluate` (reused, unmodified) on an
     ``n_samples`` x ``n_samples`` grid (a Riemann-sum approximation, refined by
     `test_dipole_extraction_matches_current_coefficients_at_kx_ky_zero`'s cross-check against the
     basis's own closed-form Fourier-transform integral)."""
-    lin_x = region_center_x + np.linspace(-half_width_x, half_width_x, n_samples, endpoint=False) + half_width_x / n_samples
-    lin_y = region_center_y + np.linspace(-half_width_y, half_width_y, n_samples, endpoint=False) + half_width_y / n_samples
+    lin_x = (
+        region_center_x + np.linspace(-half_width_x, half_width_x, n_samples, endpoint=False) + half_width_x / n_samples
+    )
+    lin_y = (
+        region_center_y + np.linspace(-half_width_y, half_width_y, n_samples, endpoint=False) + half_width_y / n_samples
+    )
     x, y = np.meshgrid(lin_x, lin_y, indexing="xy")
     j = basis.evaluate(x, y, coeffs, kx0, ky0)
     d_area = (2 * half_width_x / n_samples) * (2 * half_width_y / n_samples)

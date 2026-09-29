@@ -2,8 +2,8 @@
 
 import numpy as np
 import pytest
-
 from reference_layered import solve_current_sheet
+
 from src.green_function import LayeredGreenFunction
 from src.materials import Substrate
 
@@ -55,6 +55,7 @@ def test_dyad_matches_reference_for_various_thickness(name, thickness):
 
 
 # ------------------------------------------------------- energy conservation
+
 
 @pytest.mark.parametrize("name", SUBSTRATES)
 def test_energy_balance_source_equals_radiated_plus_dissipated(name):

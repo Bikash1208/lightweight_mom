@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 
 from .library_schema import RESONANCE_MIN_PROMINENCE
-from .validation_export import _DB_FLOOR, _db
+from .validation_export import _db
 
 
 def _require_matplotlib():
@@ -43,10 +43,7 @@ def select_representative_cells(config, n_per_axis=3):
 
 def _cell_for(database, l_mm, w_mm):
     for c in database.cells:
-        if (
-            abs(c.parameters["length_m"] - l_mm * 1e-3) < 1e-15
-            and abs(c.parameters["width_m"] - w_mm * 1e-3) < 1e-15
-        ):
+        if abs(c.parameters["length_m"] - l_mm * 1e-3) < 1e-15 and abs(c.parameters["width_m"] - w_mm * 1e-3) < 1e-15:
             return c
     raise ValueError(f"no cell for L={l_mm} mm, W={w_mm} mm")
 
@@ -74,8 +71,7 @@ def plot_s_parameter_curve(database, cells, family, quantity, path):
             ax.set_ylabel(f"phase({family}xx) [deg] (wrapped)")
             ax.set_ylim(-180, 180)
     ax.set_xlabel("frequency [GHz]")
-    ax.set_title(f"{family}xx {quantity}, representative cells "
-                 f"({', '.join(f'L={l:g}/W={w:g}' for l, w in cells)})")
+    ax.set_title(f"{family}xx {quantity}, representative cells ({', '.join(f'L={l:g}/W={w:g}' for l, w in cells)})")
     ax.grid(True, alpha=0.3)
     ax.legend(fontsize=7, ncol=2)
     fig.tight_layout()
@@ -126,15 +122,18 @@ def plot_phase_coverage_map(table, coverage, path, design_frequency_ghz):
     gap_start = np.radians(coverage.largest_gap_before_deg)
     gap_end = gap_start + np.radians(coverage.largest_gap_deg)
     theta_fill = np.linspace(gap_start, gap_end, 100)
-    fill = ax.fill_between(theta_fill, 0, 1, color="red", alpha=0.2, zorder=1,
-                            label=f"largest gap: {coverage.largest_gap_deg:.1f} deg")
+    fill = ax.fill_between(
+        theta_fill, 0, 1, color="red", alpha=0.2, zorder=1, label=f"largest gap: {coverage.largest_gap_deg:.1f} deg"
+    )
     ax.set_yticklabels([])
     fig.suptitle(f"Phase coverage at f_design = {design_frequency_ghz:g} GHz", y=0.97)
     fig.text(
-        0.5, 0.08,
+        0.5,
+        0.08,
         f"{coverage.n_points} cells  |  coverage = {coverage.coverage_deg:.1f} deg of 360 deg  |  "
         f"largest gap = {coverage.largest_gap_deg:.1f} deg",
-        ha="center", fontsize=9,
+        ha="center",
+        fontsize=9,
     )
     fig.legend(handles=[pts, fill], loc="lower center", bbox_to_anchor=(0.5, 0.005), ncol=1, fontsize=8)
     fig.tight_layout(rect=(0, 0.16, 1, 0.93))
@@ -169,7 +168,7 @@ def plot_resonance_map(classifications, config, path):
 _QUALITY_CODE = {
     ("INVALID", "FAILED"): 0,
     ("VALID", "FAILED"): 1,
-    ("VALID", "OK"): 2,          # further split by phase_status via colour below is skipped for clarity
+    ("VALID", "OK"): 2,  # further split by phase_status via colour below is skipped for clarity
 }
 _QUALITY_LABELS = ["INVALID/FAILED", "SOLVE FAILED", "OK (see phase_status separately)"]
 

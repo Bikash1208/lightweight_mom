@@ -13,8 +13,8 @@ def _fabricated_fit():
     5.9 deg correction) -- avoids a real 7-point Richardson solve just to test the scaling logic."""
     dx_0p2 = 0.2e-3
     order = 0.96
-    correction_at_0p2 = 5.91   # -174.65 - (-168.74)
-    a = correction_at_0p2 / dx_0p2 ** order
+    correction_at_0p2 = 5.91  # -174.65 - (-168.74)
+    a = correction_at_0p2 / dx_0p2**order
     return conv.FitResult(conv.STATUS_CONVERGED, -174.65, 0.5, order, -168.74, a)
 
 
@@ -44,8 +44,8 @@ def test_coarser_meshes_have_larger_scaled_correction():
     config_c = results["phase12c_design_point_config (single-cell library mesh)"].scaled_correction_deg
     locality_c = results["phase12c.locality_study (3x3/5x5 LPA suite mesh)"].scaled_correction_deg
     step_c = results["phase12d.step_curve (Task A step-size study mesh)"].scaled_correction_deg
-    assert locality_c > config_c   # 0.4mm coarser than 0.2mm
-    assert config_c < step_c < locality_c   # 0.2mm < 0.333mm < 0.4mm dx, monotonic in dx
+    assert locality_c > config_c  # 0.4mm coarser than 0.2mm
+    assert config_c < step_c < locality_c  # 0.2mm < 0.333mm < 0.4mm dx, monotonic in dx
 
 
 def test_not_converged_reference_fit_raises_rather_than_guessing():

@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 from src.basis_functions import MeshSettings
-from src.config import config_from_dict
 from src.excitation import ReferencePlanes
 from src.geometry import Geometry, UnitCell
 from src.green_function import LayeredGreenFunction
@@ -84,7 +83,7 @@ def test_bare_grounded_slab_is_lossless_unit_reflection():
 def test_scattering_from_fields_rejects_wrong_mean_currents_shape():
     green = LayeredGreenFunction(SUBSTRATE_LOSSLESS, F, backing="pec")
     with pytest.raises(ValueError, match="shape"):
-        scattering_from_fields(green, PLANES, np.zeros((2, 2, 2)))   # two-port shape, wrong here
+        scattering_from_fields(green, PLANES, np.zeros((2, 2, 2)))  # two-port shape, wrong here
 
 
 def test_check_planes_rejects_backing_planes_mismatch():
@@ -115,7 +114,7 @@ def test_to_record_only_contains_s11_for_grounded():
     s = compute_s_parameters(grounded_cell(SUBSTRATE_LOSSY), F, MESH, PLANES)
     rec = s.to_record()
     assert all(k.startswith("S11_") or k == "frequency_hz" for k in rec)
-    assert len(rec) == 1 + 4 * 2   # frequency_hz + 4 components * (mag, phase)
+    assert len(rec) == 1 + 4 * 2  # frequency_hz + 4 components * (mag, phase)
 
 
 def test_full_pec_patch_makes_the_ground_plane_irrelevant():
@@ -124,14 +123,18 @@ def test_full_pec_patch_makes_the_ground_plane_irrelevant():
     (S_PARAMETERS.md Sec. 7: S11 = -exp(-2j k0 z_top), a pure phase factor -- only the magnitude
     is backing-independent, which is what this checks)."""
     full_pec = UnitCell(
-        LATTICE, Geometry("rectangle", 4.8e-3 - 1e-9, 4.8e-3 - 1e-9), SUBSTRATE_LOSSLESS, Metal(),
+        LATTICE,
+        Geometry("rectangle", 4.8e-3 - 1e-9, 4.8e-3 - 1e-9),
+        SUBSTRATE_LOSSLESS,
+        Metal(),
         backing="pec",
     )
     s = compute_s_parameters(full_pec, F, MESH, PLANES)
-    assert abs(s.component("S11_xx")) == pytest.approx(1.0, abs=5e-2)   # staircase-limited mesh
+    assert abs(s.component("S11_xx")) == pytest.approx(1.0, abs=5e-2)  # staircase-limited mesh
 
 
 # --------------------------------------------------------------------- surface-wave diagnostic
+
 
 def test_surface_wave_interval_has_no_cutoff_structure():
     green = LayeredGreenFunction(SUBSTRATE_LOSSLESS, F, backing="pec")

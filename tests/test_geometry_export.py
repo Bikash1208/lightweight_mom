@@ -30,13 +30,18 @@ def _cell(length_mm, width_mm, period_mm=4.8, rotation_deg=0.0, center=(0.0, 0.0
     sub = Substrate(name="test", eps_r=2.2, tan_delta=0.0009, thickness=1.575e-3)
     lat = RectangularLattice(period_x=period_mm * 1e-3, period_y=period_mm * 1e-3)
     geo = Geometry(
-        kind="rectangle", length=length_mm * 1e-3, width=width_mm * 1e-3,
-        rotation=math.radians(rotation_deg), center_x=center[0] * 1e-3, center_y=center[1] * 1e-3,
+        kind="rectangle",
+        length=length_mm * 1e-3,
+        width=width_mm * 1e-3,
+        rotation=math.radians(rotation_deg),
+        center_x=center[0] * 1e-3,
+        center_y=center[1] * 1e-3,
     )
     return UnitCell(lattice=lat, geometry=geo, substrate=sub, metal=Metal())
 
 
 # ------------------------------------------------------------------------------- filenames
+
 
 def test_step_filename_format():
     assert step_filename(1.0, 1.0) == "UC_L1.0_W1.0.step"
@@ -45,6 +50,7 @@ def test_step_filename_format():
 
 
 # --------------------------------------------------------------------------- bounds checking
+
 
 def test_check_geometry_bounds_ok_for_a_centered_patch():
     uc = _cell(2.0, 2.0)
@@ -69,7 +75,7 @@ def test_check_geometry_bounds_rotated_patch_uses_rotated_bbox():
     c = s = math.sqrt(2.0) / 2.0
     expected_hx = (3.0 * c + 1.0 * s) / 2.0
     assert bounds.patch_x_max_mm == pytest.approx(expected_hx)
-    assert bounds.patch_x_max_mm != pytest.approx(1.5)   # not the unrotated half-length
+    assert bounds.patch_x_max_mm != pytest.approx(1.5)  # not the unrotated half-length
 
 
 def test_check_geometry_bounds_flags_a_too_large_patch():
@@ -80,17 +86,23 @@ def test_check_geometry_bounds_flags_a_too_large_patch():
     geo = Geometry(kind="rectangle", length=4.8e-3 - 1e-9, width=2.0e-3)  # just inside, still valid
     uc = UnitCell(lattice=lat, geometry=geo, substrate=sub, metal=Metal())
     bounds = check_geometry_bounds(uc)
-    assert bounds.l_in_range   # strictly < period_x holds numerically
+    assert bounds.l_in_range  # strictly < period_x holds numerically
 
 
 # -------------------------------------------------------------------------- full export/validation
 
+
 @pytest.fixture(scope="module")
 def small_export(tmp_path_factory):
     cfg = LibraryConfig(
-        period_m=4.8e-3, substrate=_SUBSTRATE,
-        f_min_hz=12.0e9, f_max_hz=13.0e9, f_step_hz=1.0e9, f_design_hz=12.5e9,
-        l_values_mm=(1.0, 2.4, 4.2), w_values_mm=(1.0, 2.4, 4.2),
+        period_m=4.8e-3,
+        substrate=_SUBSTRATE,
+        f_min_hz=12.0e9,
+        f_max_hz=13.0e9,
+        f_step_hz=1.0e9,
+        f_design_hz=12.5e9,
+        l_values_mm=(1.0, 2.4, 4.2),
+        w_values_mm=(1.0, 2.4, 4.2),
     )
     database = build_library_database(cfg, out_dir=None).database
     out = tmp_path_factory.mktemp("geom")
@@ -112,7 +124,7 @@ def test_every_exported_solid_is_topologically_valid(small_export):
     for r in results.values():
         imported = cadquery.importers.importStep(str(r.step_path))
         assert solid_validity(imported)
-        assert len(imported.val().Solids()) == 2   # Substrate + Metal
+        assert len(imported.val().Solids()) == 2  # Substrate + Metal
 
 
 def test_every_export_passes_its_own_bounds_check(small_export):

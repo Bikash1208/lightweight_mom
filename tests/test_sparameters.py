@@ -2,12 +2,12 @@
 
 import math
 import warnings
-from functools import lru_cache
+from functools import cache
 
 import numpy as np
 import pytest
-
 from reference_layered import solve_incident_fields
+
 from src.basis_functions import MeshSettings
 from src.config import config_from_dict
 from src.constants import C0, ETA0
@@ -17,7 +17,6 @@ from src.green_function import LayeredGreenFunction
 from src.materials import Metal, Substrate
 from src.periodic_bc import RectangularLattice
 from src.sparameters import (
-    SParameters,
     compute_s_parameters,
     decompose_air_fields,
     s_parameters_from_config,
@@ -29,7 +28,7 @@ F = 10e9
 K0 = 2 * math.pi * F / C0
 PX = PY = 8e-3
 H = 1.575e-3
-PLANES0 = ReferencePlanes(0.0, 0.0, H)          # planes on the substrate faces
+PLANES0 = ReferencePlanes(0.0, 0.0, H)  # planes on the substrate faces
 PLANES = ReferencePlanes(5e-3, 7e-3, H)
 
 
@@ -42,13 +41,15 @@ def green(tand=0.0, eps_r=2.2, h=H):
 
 
 def cell(kind, length, width, tand=0.0, eps_r=2.2, h=H, period=PX, **kw):
-    return UnitCell(RectangularLattice(period, period), Geometry(kind, length, width, **kw), sub(tand, eps_r, h), Metal())
+    return UnitCell(
+        RectangularLattice(period, period), Geometry(kind, length, width, **kw), sub(tand, eps_r, h), Metal()
+    )
 
 
 MESH = MeshSettings(16, 16, 64)
 
 
-@lru_cache(maxsize=None)
+@cache
 def solved(kind, length, width, tand=0.0, rotation_deg=0.0, planes=PLANES0, nx=16, order=64):
     c = cell(kind, length, width, tand, rotation=math.radians(rotation_deg))
     return compute_s_parameters(c, F, MeshSettings(nx, nx, order), planes)
@@ -70,11 +71,12 @@ def airy(n, h, z_top=0.0, z_bottom=None):
 
 # ============================================================ decomposition of waves
 
+
 def test_decompose_air_fields_recovers_up_and_down_going_plane_waves():
     e_up = np.array([0.7 - 0.2j, 0.1 + 0.4j])
     e_dn = np.array([-0.3 + 0.5j, 0.9j])
-    h_up = np.array([-e_up[1], e_up[0]]) / ETA0            # +z wave:  H = z x E / eta0
-    h_dn = -np.array([-e_dn[1], e_dn[0]]) / ETA0           # -z wave:  H = -z x E / eta0
+    h_up = np.array([-e_up[1], e_up[0]]) / ETA0  # +z wave:  H = z x E / eta0
+    h_dn = -np.array([-e_dn[1], e_dn[0]]) / ETA0  # -z wave:  H = -z x E / eta0
     up, dn = decompose_air_fields(e_up + e_dn, h_up + h_dn)
     assert up == pytest.approx(e_up, rel=1e-13) and dn == pytest.approx(e_dn, rel=1e-13)
     up, dn = decompose_air_fields(e_up, h_up)
@@ -82,12 +84,14 @@ def test_decompose_air_fields_recovers_up_and_down_going_plane_waves():
     up, dn = decompose_air_fields(e_dn, h_dn)
     assert dn == pytest.approx(e_dn) and np.abs(up).max() < 1e-15
     # batches
-    e = np.stack([e_up, e_dn]); h_ = np.stack([h_up, h_dn])
+    e = np.stack([e_up, e_dn])
+    h_ = np.stack([h_up, h_dn])
     up, dn = decompose_air_fields(e, h_)
     assert up.shape == dn.shape == (2, 2)
 
 
 # ================================================ no metal: dielectric slab -> Fresnel
+
 
 @pytest.mark.parametrize("tand", [0.0, 0.0009, 0.05])
 @pytest.mark.parametrize("planes", [PLANES0, PLANES, ReferencePlanes(0.0, 12e-3, H), ReferencePlanes(3e-3, 0.0, H)])
@@ -101,11 +105,11 @@ def test_bare_slab_equals_fresnel_airy_closed_form(tand, planes):
     for pol in (0, 1):
         assert s.s11[pol, pol] == pytest.approx(s11, rel=1e-12, abs=1e-14)
         assert s.s21[pol, pol] == pytest.approx(s21, rel=1e-12, abs=1e-14)
-        assert s.s12[pol, pol] == pytest.approx(s21, rel=1e-12, abs=1e-14)       # reciprocal
+        assert s.s12[pol, pol] == pytest.approx(s21, rel=1e-12, abs=1e-14)  # reciprocal
         assert s.s22[pol, pol] == pytest.approx(s22, rel=1e-12, abs=1e-14)
     for block in (s.s11, s.s12, s.s21, s.s22):
-        assert block[0, 1] == 0.0 and block[1, 0] == 0.0                         # no cross-pol
-        assert block[0, 0] == pytest.approx(block[1, 1], rel=1e-14)              # x and y identical
+        assert block[0, 1] == 0.0 and block[1, 0] == 0.0  # no cross-pol
+        assert block[0, 0] == pytest.approx(block[1, 1], rel=1e-14)  # x and y identical
     assert s.incoming_residual < 1e-12
 
 
@@ -128,7 +132,7 @@ def test_bare_slab_matches_independent_field_matching():
         (e1, h1), (e2, h2) = fields(planes.z_top), fields(planes.z_bottom)
         up1, dn1 = decompose_air_fields(e1, h1)
         _, dn2 = decompose_air_fields(e2, h2)
-        assert dn1[0] == pytest.approx(np.exp(1j * K0 * planes.z_top), rel=1e-12)          # unit at z = 0
+        assert dn1[0] == pytest.approx(np.exp(1j * K0 * planes.z_top), rel=1e-12)  # unit at z = 0
         assert s.s11[0, 0] == pytest.approx(up1[0] / dn1[0], rel=1e-10)
         assert s.s21[0, 0] == pytest.approx(dn2[0] / dn1[0], rel=1e-10)
         fields_b = solve_incident_fields(0.0, 0.0, np.array([1.0, 0.0, 0.0]), F, sb.eps_complex, H, "bottom")
@@ -145,7 +149,7 @@ def test_half_wave_slab_is_transparent_and_matched_at_the_faces():
     h = C0 / (F * n) / 2
     s = stack_s_parameters(green(0.0, h=h), ReferencePlanes(0.0, 0.0, h))
     assert abs(s.s11[0, 0]) < 1e-12
-    assert s.s21[0, 0] == pytest.approx(-1.0, abs=1e-12)     # exp(-j k0 n h) = exp(-j pi) = -1, referenced to the faces
+    assert s.s21[0, 0] == pytest.approx(-1.0, abs=1e-12)  # exp(-j k0 n h) = exp(-j pi) = -1, referenced to the faces
 
 
 def test_no_dielectric_no_metal_is_free_space():
@@ -158,6 +162,7 @@ def test_no_dielectric_no_metal_is_free_space():
 
 # ============================================================ full PEC sheet
 
+
 @pytest.mark.parametrize("tand", [0.0, 0.0009])
 @pytest.mark.parametrize("planes", [PLANES0, PLANES])
 @pytest.mark.parametrize("nx, order", [(4, 2), (8, 8), (16, 40)])
@@ -169,8 +174,8 @@ def test_full_pec_sheet_reflects_everything(tand, planes, nx, order):
     assert s.s11 == pytest.approx(-np.exp(-2j * K0 * planes.z_top) * np.eye(2), abs=1e-11)
     assert np.abs(s.s21).max() < 1e-11 and np.abs(s.s12).max() < 1e-11
     n = sub(tand).refractive_index
-    z_in = 1j * (1 / n) * np.tan(K0 * n * H)                    # short-circuited substrate line / eta0
-    gamma = (z_in - 1) / (z_in + 1)                              # reflection at the substrate's bottom face
+    z_in = 1j * (1 / n) * np.tan(K0 * n * H)  # short-circuited substrate line / eta0
+    gamma = (z_in - 1) / (z_in + 1)  # reflection at the substrate's bottom face
     expected = gamma * np.exp(+2j * K0 * (planes.z_bottom + H))
     assert s.s22 == pytest.approx(expected * np.eye(2), abs=1e-11)
     if tand == 0.0:
@@ -183,7 +188,9 @@ def test_full_pec_sheet_on_the_interface_gives_minus_one_exactly():
     assert s.component("S11_xx") == pytest.approx(-1.0, abs=1e-12)
     assert s.component("S11_yy") == pytest.approx(-1.0, abs=1e-12)
     assert abs(s.component("S11_yx")) < 1e-12
-    assert s.phase_deg("S11_xx") == pytest.approx(180.0, abs=1e-6) or s.phase_deg("S11_xx") == pytest.approx(-180.0, abs=1e-6)
+    assert s.phase_deg("S11_xx") == pytest.approx(180.0, abs=1e-6) or s.phase_deg("S11_xx") == pytest.approx(
+        -180.0, abs=1e-6
+    )
     assert s.magnitude_db("S21_xx") < -200.0 or s.magnitude("S21_xx") < 1e-11
 
 
@@ -192,7 +199,7 @@ def test_full_pec_sheet_on_the_interface_gives_minus_one_exactly():
 LOSSLESS_CELLS = [
     ("rectangle", 6e-3, 2e-3, 0.0),
     ("dipole", 6e-3, 1e-3, 30.0),
-    ("dipole", 8e-3, 1e-3, 0.0),            # wire spanning the cell
+    ("dipole", 8e-3, 1e-3, 0.0),  # wire spanning the cell
     ("slot", 6e-3, 1e-3, 0.0),
     ("slot", 6e-3, 2e-3, 60.0),
     ("patch", 4e-3, 4e-3, 0.0),
@@ -225,6 +232,7 @@ def test_lossy_structure_absorbs_and_never_creates_energy():
 
 # ==================================================================== reciprocity
 
+
 @pytest.mark.parametrize("kind, length, width, rot", [LOSSLESS_CELLS[1], LOSSLESS_CELLS[4], LOSSLESS_CELLS[0]])
 @pytest.mark.parametrize("tand", [0.0, 0.0009])
 def test_reciprocal_structure_has_symmetric_S_matrix(kind, length, width, rot, tand):
@@ -236,7 +244,7 @@ def test_reciprocal_structure_has_symmetric_S_matrix(kind, length, width, rot, t
     assert s.s12 == pytest.approx(s.s21.T, abs=1e-10)
     assert s.s11 == pytest.approx(s.s11.T, abs=1e-10)
     assert s.s22 == pytest.approx(s.s22.T, abs=1e-10)
-    if rot != 0.0:                                                   # the test is not vacuous
+    if rot != 0.0:  # the test is not vacuous
         assert abs(s.s11[0, 1]) > 1e-2 and abs(s.s21[0, 1]) > 1e-2
 
 
@@ -247,11 +255,12 @@ def test_reciprocity_holds_for_the_bare_slab_and_unequal_plane_offsets():
 
 # ===================================================================== symmetries
 
+
 def test_mirror_symmetric_cell_has_no_cross_polarization():
     s = solved("rectangle", 6e-3, 2e-3, 0.0009)
     for block in (s.s11, s.s12, s.s21, s.s22):
         assert abs(block[0, 1]) < 1e-12 and abs(block[1, 0]) < 1e-12
-    assert abs(s.s11[0, 0] - s.s11[1, 1]) > 1e-2                        # anisotropic co-pol
+    assert abs(s.s11[0, 0] - s.s11[1, 1]) > 1e-2  # anisotropic co-pol
 
 
 def test_x_and_y_agree_for_a_square_symmetric_patch():
@@ -273,6 +282,7 @@ def test_rotating_the_cell_by_90_degrees_rotates_the_polarization_basis(kind, le
 
 # ============================================================ reference-plane conventions
 
+
 def test_incident_amplitude_is_measured_at_the_reference_plane():
     """The amplitude the fields actually contain at the plane is exp(+j k0 z_top) (unit at z = 0, travelling -z)
     at port 1 and exp(+j k0 d_bottom) (unit at z = -h, travelling +z) at port 2."""
@@ -280,7 +290,7 @@ def test_incident_amplitude_is_measured_at_the_reference_plane():
     s = solved("dipole", 6e-3, 1e-3, 0.0, 30.0, planes)
     assert s.incident_amplitudes[0] == pytest.approx(np.exp(1j * K0 * planes.z_top) * np.ones(2), rel=1e-12)
     assert s.incident_amplitudes[1] == pytest.approx(np.exp(1j * K0 * 7e-3) * np.ones(2), rel=1e-12)
-    assert s.incoming_residual < 1e-10                 # nothing incoming except the specified wave
+    assert s.incoming_residual < 1e-10  # nothing incoming except the specified wave
 
 
 @pytest.mark.parametrize("kind, length, width, rot", [("dipole", 6e-3, 1e-3, 30.0), ("slot", 6e-3, 2e-3, 0.0)])
@@ -327,19 +337,20 @@ def test_exp_plus_jwt_convention_shows_as_negative_phase_slope_and_positive_grou
 
 # =============================================================== convergence & limits
 
+
 def test_S_parameters_converge_with_mesh_refinement():
     vals = [solved("dipole", 6e-3, 2e-3, 0.0009, 0.0, PLANES0, nx, 4 * nx) for nx in (8, 16, 32)]
     for name in ("S11_xx", "S21_xx"):
         v = [s.component(name) for s in vals]
         d = [abs(v[1] - v[0]), abs(v[2] - v[1])]
-        assert 1.6 < d[0] / d[1] < 2.2            # first order (same as the mean current: S is linear in it)
+        assert 1.6 < d[0] / d[1] < 2.2  # first order (same as the mean current: S is linear in it)
         assert d[1] < 1.5e-2
 
 
 def test_S_parameters_converge_with_floquet_order():
     vals = [solved("dipole", 6e-3, 2e-3, 0.0009, 0.0, PLANES0, 16, m).component("S11_xx") for m in (16, 32, 64, 128)]
     d = np.abs(np.diff(vals))
-    assert np.all(np.diff(d) < 0.0) and np.all(d[:-1] / d[1:] > 3.0)        # ~ 1/M^2 tail
+    assert np.all(np.diff(d) < 0.0) and np.all(d[:-1] / d[1:] > 3.0)  # ~ 1/M^2 tail
     assert d[-1] < 2e-4
 
 
@@ -355,6 +366,7 @@ def test_vanishing_metal_recovers_the_bare_slab():
 
 
 # ====================================================================== data model
+
 
 def test_storage_layout_names_and_records():
     s = solved("dipole", 6e-3, 1e-3, 0.0, 30.0, PLANES)
@@ -377,7 +389,7 @@ def test_storage_layout_names_and_records():
         with pytest.raises(ValueError):
             s.component(bad)
     with pytest.raises(AttributeError):
-        s.frequency = 1.0                                  # frozen
+        s.frequency = 1.0  # frozen
     assert s.planes == PLANES and s.k0 == pytest.approx(K0)
 
 
@@ -398,12 +410,13 @@ def test_input_validation_and_diagnostics():
         compute_s_parameters(big, F, MeshSettings(8, 8, 8), PLANES0)
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        compute_s_parameters(cell("patch", 4e-3, 4e-3), F, MeshSettings(8, 8, 8), PLANES0)   # no warning
+        compute_s_parameters(cell("patch", 4e-3, 4e-3), F, MeshSettings(8, 8, 8), PLANES0)  # no warning
 
 
 def test_config_route():
     d = {
-        "period_x": 8e-3, "period_y": 8e-3,
+        "period_x": 8e-3,
+        "period_y": 8e-3,
         "substrate": {"eps_r": 2.2, "tan_delta": 0.0009, "thickness": 1.575e-3},
         "geometry": {"type": "dipole", "length": 6e-3, "width": 1e-3, "rotation_deg": 30.0},
         "excitation": {"frequency": 10e9},

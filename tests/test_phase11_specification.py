@@ -3,8 +3,8 @@
 import json
 
 from src.phase11 import specification as spec_mod
-from src.phase11.convergence import ConvergenceResult
 from src.phase11.classification import classify_overall
+from src.phase11.convergence import ConvergenceResult
 from src.phase11.coupling_radius import CouplingRadiusPoint, ShellIncrement
 from src.phase11.interaction import PairwiseInteractionResult
 

@@ -74,13 +74,16 @@ class DomainSpec:
         if abs(sample.frequency_hz - self.frequency_hz) > 1.0:
             return False
         l, w = sample.center_lw_mm
-        if not (self.l_min_mm - 1e-9 <= l <= self.l_max_mm + 1e-9 and
-                self.w_min_mm - 1e-9 <= w <= self.w_max_mm + 1e-9):
+        if not (
+            self.l_min_mm - 1e-9 <= l <= self.l_max_mm + 1e-9 and self.w_min_mm - 1e-9 <= w <= self.w_max_mm + 1e-9
+        ):
             return False
         for pos in ALL_POSITIONS:
             nl, nw = sample.neighbors_lw_mm[pos]
-            if not (self.l_min_mm - 1e-9 <= nl <= self.l_max_mm + 1e-9 and
-                    self.w_min_mm - 1e-9 <= nw <= self.w_max_mm + 1e-9):
+            if not (
+                self.l_min_mm - 1e-9 <= nl <= self.l_max_mm + 1e-9
+                and self.w_min_mm - 1e-9 <= nw <= self.w_max_mm + 1e-9
+            ):
                 return False
         return True
 
@@ -97,6 +100,7 @@ class EnvironmentSurrogate:
     on-demand MoM solve (see ``isolated_reference.py``), not a training-data average, so it is
     exact and available for ANY center geometry in the validated continuous range, seen in
     training or not (Sec. 21)."""
+
     isolated_cache: IsolatedReferenceCache
     beta_re: np.ndarray
     beta_im: np.ndarray
@@ -114,17 +118,26 @@ class EnvironmentSurrogate:
         cache = self.isolated_cache
         return {
             "isolated_reference_config": {
-                "period_m": cache.period_m, "mesh_cells_per_subcell": cache.mesh_cells_per_subcell,
-                "substrate": {"name": cache.substrate.name, "eps_r": cache.substrate.eps_r,
-                              "tan_delta": cache.substrate.tan_delta, "thickness_m": cache.substrate.thickness},
+                "period_m": cache.period_m,
+                "mesh_cells_per_subcell": cache.mesh_cells_per_subcell,
+                "substrate": {
+                    "name": cache.substrate.name,
+                    "eps_r": cache.substrate.eps_r,
+                    "tan_delta": cache.substrate.tan_delta,
+                    "thickness_m": cache.substrate.thickness,
+                },
                 "metal_model": cache.metal.model,
             },
-            "beta_re": list(self.beta_re), "beta_im": list(self.beta_im),
+            "beta_re": list(self.beta_re),
+            "beta_im": list(self.beta_im),
             "ridge_lambda": self.ridge_lambda,
             "domain": {
-                "l_min_mm": self.domain.l_min_mm, "l_max_mm": self.domain.l_max_mm,
-                "w_min_mm": self.domain.w_min_mm, "w_max_mm": self.domain.w_max_mm,
-                "frequency_hz": self.domain.frequency_hz, "neighborhood": self.domain.neighborhood,
+                "l_min_mm": self.domain.l_min_mm,
+                "l_max_mm": self.domain.l_max_mm,
+                "w_min_mm": self.domain.w_min_mm,
+                "w_max_mm": self.domain.w_max_mm,
+                "frequency_hz": self.domain.frequency_hz,
+                "neighborhood": self.domain.neighborhood,
                 "polarization": self.domain.polarization,
             },
             "n_features": N_FEATURES,
@@ -137,24 +150,38 @@ class EnvironmentSurrogate:
 
         c = doc["isolated_reference_config"]
         sub = c["substrate"]
-        substrate = Substrate(sub["name"], sub["eps_r"], sub["tan_delta"], sub["thickness_m"])  # positional: (name, eps_r, tan_delta, thickness)
+        substrate = Substrate(
+            sub["name"], sub["eps_r"], sub["tan_delta"], sub["thickness_m"]
+        )  # positional: (name, eps_r, tan_delta, thickness)
         metal = Metal(c["metal_model"])
         cache = IsolatedReferenceCache(c["period_m"], substrate, metal, c["mesh_cells_per_subcell"])
         d = doc["domain"]
-        domain = DomainSpec(d["l_min_mm"], d["l_max_mm"], d["w_min_mm"], d["w_max_mm"],
-                             d["frequency_hz"], d["neighborhood"], d["polarization"])
+        domain = DomainSpec(
+            d["l_min_mm"],
+            d["l_max_mm"],
+            d["w_min_mm"],
+            d["w_max_mm"],
+            d["frequency_hz"],
+            d["neighborhood"],
+            d["polarization"],
+        )
         return cls(
-            cache, np.asarray(doc["beta_re"], dtype=float), np.asarray(doc["beta_im"], dtype=float),
-            doc["ridge_lambda"], domain,
+            cache,
+            np.asarray(doc["beta_re"], dtype=float),
+            np.asarray(doc["beta_im"], dtype=float),
+            doc["ridge_lambda"],
+            domain,
         )
 
     def save(self, path):
         from pathlib import Path
+
         Path(path).write_text(json.dumps(self.to_dict(), indent=1) + "\n")
 
     @classmethod
     def load(cls, path):
         from pathlib import Path
+
         return cls.from_dict(json.loads(Path(path).read_text()))
 
 
@@ -180,8 +207,7 @@ def _fit_for_lambda(train_samples, lam, frequency_hz, isolated_cache):
     return EnvironmentSurrogate(isolated_cache, beta_re, beta_im, lam, domain)
 
 
-def fit_surrogate(train_samples, validation_samples, frequency_hz, isolated_cache,
-                   ridge_candidates=RIDGE_CANDIDATES):
+def fit_surrogate(train_samples, validation_samples, frequency_hz, isolated_cache, ridge_candidates=RIDGE_CANDIDATES):
     """Sec. 20: the ridge strength is selected on the VALIDATION split (minimizing mean complex
     error there), never on the blind test set -- hyperparameter selection is exactly what the
     validation split exists for."""

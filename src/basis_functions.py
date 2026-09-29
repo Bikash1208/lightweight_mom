@@ -61,7 +61,7 @@ class MeshSettings:
 
     cells_x: int
     cells_y: int
-    floquet_order: int   # Floquet harmonics |m|, |n| <= floquet_order in the Z assembly
+    floquet_order: int  # Floquet harmonics |m|, |n| <= floquet_order in the Z assembly
 
     def __post_init__(self):
         _check_integer("cells_x", self.cells_x, 2)
@@ -91,7 +91,7 @@ class RooftopBasis:
         cell_x = -px / 2 + (np.arange(self.nx) + 0.5) * self.dx
         cell_y = -py / 2 + (np.arange(self.ny) + 0.5) * self.dy
         gx, gy = np.meshgrid(cell_x, cell_y, indexing="ij")
-        self.metal_mask = np.asarray(unit_cell.is_metal(gx, gy), dtype=bool)   # [i, j]
+        self.metal_mask = np.asarray(unit_cell.is_metal(gx, gy), dtype=bool)  # [i, j]
 
         # x-edge (i, j): between rectangles (i-1, j) and (i, j); y-edge: (i, j-1) and (i, j)
         active_x = self.metal_mask & np.roll(self.metal_mask, 1, axis=0)
@@ -100,10 +100,7 @@ class RooftopBasis:
         iy, jy = np.nonzero(active_y)
         self.n_x, self.n_y = ix.size, iy.size
         if self.n_x + self.n_y == 0:
-            raise ValueError(
-                "mesh has no interior metal edges (metal too small for this mesh): "
-                f"nx={nx}, ny={ny}"
-            )
+            raise ValueError(f"mesh has no interior metal edges (metal too small for this mesh): nx={nx}, ny={ny}")
         self.edge_index = np.concatenate([np.stack([ix, jx], 1), np.stack([iy, jy], 1)])
         self.direction = np.concatenate([np.zeros(self.n_x, int), np.ones(self.n_y, int)])
         self.center_x = np.concatenate([-px / 2 + ix * self.dx, cell_x[iy]])
@@ -159,18 +156,18 @@ class RooftopBasis:
 
         jx = np.zeros(xf.size, complex)
         jy = np.zeros(xf.size, complex)
-        used = np.flatnonzero(coeffs != 0.0)          # zero coefficients contribute nothing
+        used = np.flatnonzero(coeffs != 0.0)  # zero coefficients contribute nothing
         cx, cy = self.center_x[used, None], self.center_y[used, None]
         c_used, dir_used = coeffs[used], self.direction[used]
         is_x = (dir_used == 0)[:, None]
-        for sp in (-1, 0, 1):          # basis copies that can overlap the reference cell
+        for sp in (-1, 0, 1):  # basis copies that can overlap the reference cell
             for sq in (-1, 0, 1):
                 w = np.exp(-1j * (kx0 * sp * px + ky0 * sq * py))
                 u = (xf[None, :] - (cx + sp * px)) / self.dx
                 v = (yf[None, :] - (cy + sq * py)) / self.dy
                 tri_u = np.clip(1.0 - np.abs(u), 0.0, None)
                 tri_v = np.clip(1.0 - np.abs(v), 0.0, None)
-                pul_u = ((u >= -0.5) & (u < 0.5)).astype(float)   # pulse over one mesh width
+                pul_u = ((u >= -0.5) & (u < 0.5)).astype(float)  # pulse over one mesh width
                 pul_v = ((v >= -0.5) & (v < 0.5)).astype(float)
                 val = np.where(is_x, tri_u * pul_v, pul_u * tri_v)
                 contrib = w * (c_used[:, None] * val)

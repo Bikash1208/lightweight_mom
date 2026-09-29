@@ -41,23 +41,26 @@ from ..phase12c.locality_study import build_periodic_phase_gradient_supercell
 from ..phase12d.aperture_test import build_lookup_curve
 from ..phase12d.run import DEFAULT_APERTURE_L_FAMILY_MM, DEFAULT_APERTURE_MESH_CELLS_PER_SUBCELL
 
-TASK_B_JSON = (Path(__file__).resolve().parent.parent.parent / "results"
-               / "phase12d_local_periodicity" / "task_b.json")
+TASK_B_JSON = Path(__file__).resolve().parent.parent.parent / "results" / "phase12d_local_periodicity" / "task_b.json"
 
 
 @dataclass(frozen=True)
 class PredictedOrderPowers:
     n_cells: int
-    orders: tuple            # int, the supercell-lattice order index m (y is always 0 -- 1-D gradient)
-    predicted_fraction: np.ndarray   # same length/order as `orders`
-    row_l_mm: tuple           # the per-cell L sequence actually used (bit-identical to the MoM grid)
+    orders: tuple  # int, the supercell-lattice order index m (y is always 0 -- 1-D gradient)
+    predicted_fraction: np.ndarray  # same length/order as `orders`
+    row_l_mm: tuple  # the per-cell L sequence actually used (bit-identical to the MoM grid)
 
     def fraction_at(self, m):
         return float(self.predicted_fraction[self.orders.index(m)])
 
 
-def predict_order_powers(n_cells, mesh_cells_per_subcell=DEFAULT_APERTURE_MESH_CELLS_PER_SUBCELL,
-                          l_values_mm=DEFAULT_APERTURE_L_FAMILY_MM, max_order=None):
+def predict_order_powers(
+    n_cells,
+    mesh_cells_per_subcell=DEFAULT_APERTURE_MESH_CELLS_PER_SUBCELL,
+    l_values_mm=DEFAULT_APERTURE_L_FAMILY_MM,
+    max_order=None,
+):
     """The idealized (local-periodicity, no-coupling) prediction for the SAME N-cell gradient
     Phase 12D actually solved (reuses `build_lookup_curve` and
     `build_periodic_phase_gradient_supercell` unmodified, so `row_l_mm` reproduces Phase 12D's
@@ -67,10 +70,12 @@ def predict_order_powers(n_cells, mesh_cells_per_subcell=DEFAULT_APERTURE_MESH_C
     row_l_mm = tuple(l for (l, _) in grid_mm[0])
 
     lookup = {round(c.l_mm, 9): c for c in curve}
-    r = np.array([
-        lookup[round(l_mm, 9)].s11_mag * np.exp(1j * np.radians(lookup[round(l_mm, 9)].s11_phase_deg))
-        for l_mm in row_l_mm
-    ])
+    r = np.array(
+        [
+            lookup[round(l_mm, 9)].s11_mag * np.exp(1j * np.radians(lookup[round(l_mm, 9)].s11_phase_deg))
+            for l_mm in row_l_mm
+        ]
+    )
     n = len(r)
     max_order = n if max_order is None else max_order
     orders = tuple(range(-max_order, max_order + 1))
@@ -108,15 +113,17 @@ def compare_predicted_vs_measured(measured_task_b=None):
     for entry in data["results"]:
         n_cells = entry["n_cells"]
         predicted = predict_order_powers(n_cells, entry["mesh_cells_per_subcell"])
-        intended_m = entry["intended_order"][0]   # (m, 0); gradient is along x
+        intended_m = entry["intended_order"][0]  # (m, 0); gradient is along x
         pred_intended = predicted.fraction_at(intended_m)
         pred_specular = predicted.fraction_at(0)
-        verdicts.append(ModelVsDesignVerdict(
-            n_cells=n_cells,
-            predicted_intended_fraction=pred_intended,
-            measured_intended_fraction=entry["fraction_intended"],
-            absolute_difference=abs(pred_intended - entry["fraction_intended"]),
-            predicted_specular_fraction=pred_specular,
-            measured_specular_fraction=entry["fraction_specular"],
-        ))
+        verdicts.append(
+            ModelVsDesignVerdict(
+                n_cells=n_cells,
+                predicted_intended_fraction=pred_intended,
+                measured_intended_fraction=entry["fraction_intended"],
+                absolute_difference=abs(pred_intended - entry["fraction_intended"]),
+                predicted_specular_fraction=pred_specular,
+                measured_specular_fraction=entry["fraction_specular"],
+            )
+        )
     return tuple(verdicts)

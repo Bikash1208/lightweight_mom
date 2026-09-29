@@ -17,9 +17,9 @@ class ResponseMatch:
     W_mm: float
     library_id: str
     complex_value: complex
-    complex_error: float          # |required - candidate|
-    amplitude_error: float        # |  |required| - |candidate|  |
-    phase_error_deg: float        # circular wrapped difference, degrees
+    complex_error: float  # |required - candidate|
+    amplitude_error: float  # |  |required| - |candidate|  |
+    phase_error_deg: float  # circular wrapped difference, degrees
 
 
 def complex_distance(required, candidate):
@@ -36,11 +36,16 @@ def nearest_response_match(required_complex, candidates):
     matches = []
     for record_id, l_mm, w_mm, library_id, value in candidates:
         value = complex(value)
-        matches.append(ResponseMatch(
-            record_id=record_id, L_mm=l_mm, W_mm=w_mm, library_id=library_id,
-            complex_value=value,
-            complex_error=complex_distance(required, value),
-            amplitude_error=abs(abs(value) - req_mag),
-            phase_error_deg=float(abs(wrapped_difference_deg(float(principal_phase_deg(value)), req_phase))),
-        ))
+        matches.append(
+            ResponseMatch(
+                record_id=record_id,
+                L_mm=l_mm,
+                W_mm=w_mm,
+                library_id=library_id,
+                complex_value=value,
+                complex_error=complex_distance(required, value),
+                amplitude_error=abs(abs(value) - req_mag),
+                phase_error_deg=float(abs(wrapped_difference_deg(float(principal_phase_deg(value)), req_phase))),
+            )
+        )
     return sorted(matches, key=lambda m: m.complex_error)

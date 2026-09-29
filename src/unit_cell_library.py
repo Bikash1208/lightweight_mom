@@ -10,7 +10,7 @@ import hashlib
 import json
 import platform
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -36,12 +36,16 @@ TIME_CONVENTION = CONVENTIONS["time_dependence"]
 
 # ------------------------------------------------------------------------------ JSON / CSV export
 
+
 def _s_entry(record, name):
     z = record.component(name)
     mag = abs(z)
     return {
-        "real": float(z.real), "imag": float(z.imag), "mag": float(mag),
-        "mag_db": float(_db(np.array([mag]))[0]), "phase_deg": float(record.phase_deg(name)),
+        "real": float(z.real),
+        "imag": float(z.imag),
+        "mag": float(mag),
+        "mag_db": float(_db(np.array([mag]))[0]),
+        "phase_deg": float(record.phase_deg(name)),
     }
 
 
@@ -51,20 +55,33 @@ def _cell_doc(cell, database):
     geometry_status = "VALID" if cell.status == "ok" else "INVALID"
     if cell.status != "ok":
         return {
-            "cell_id": cell.cell_id, "L_mm": l_mm, "W_mm": w_mm,
-            "geometry_status": geometry_status, "solver_status": "FAILED",
+            "cell_id": cell.cell_id,
+            "L_mm": l_mm,
+            "W_mm": w_mm,
+            "geometry_status": geometry_status,
+            "solver_status": "FAILED",
             "invalid_reason": cell.reason,
-            "frequency_GHz": [], "S11": [], "S21": [], "S12": [], "S22": [],
+            "frequency_GHz": [],
+            "S11": [],
+            "S21": [],
+            "S12": [],
+            "S22": [],
         }
     records = sorted(database.records_of(cell.index), key=lambda r: r.frequency_index)
     ctx = database.metadata["context"]
     doc = {
-        "cell_id": cell.cell_id, "L_mm": l_mm, "W_mm": w_mm,
-        "period_x_mm": ctx["lattice"]["period_x_m"] * 1e3, "period_y_mm": ctx["lattice"]["period_y_m"] * 1e3,
+        "cell_id": cell.cell_id,
+        "L_mm": l_mm,
+        "W_mm": w_mm,
+        "period_x_mm": ctx["lattice"]["period_x_m"] * 1e3,
+        "period_y_mm": ctx["lattice"]["period_y_m"] * 1e3,
         "substrate_thickness_mm": ctx["substrate"]["thickness_m"] * 1e3,
-        "epsilon_r": ctx["substrate"]["eps_r"], "tan_delta": ctx["substrate"]["tan_delta"],
-        "polarization_convention": POLARIZATION_CONVENTION, "time_convention": TIME_CONVENTION,
-        "geometry_status": geometry_status, "solver_status": "OK",
+        "epsilon_r": ctx["substrate"]["eps_r"],
+        "tan_delta": ctx["substrate"]["tan_delta"],
+        "polarization_convention": POLARIZATION_CONVENTION,
+        "time_convention": TIME_CONVENTION,
+        "geometry_status": geometry_status,
+        "solver_status": "OK",
         "frequency_GHz": [r.frequency / 1e9 for r in records],
     }
     for fam in _S_FAMILIES:
@@ -76,7 +93,8 @@ def write_library_json(database, path):
     """`unit_cell_library.json` (req. 18): one entry per geometry (req. 5's fields, nested by
     frequency rather than flattened -- semantically the same data as the flat CSV)."""
     doc = {
-        "format": LIBRARY_FORMAT_NAME, "version": LIBRARY_FORMAT_VERSION,
+        "format": LIBRARY_FORMAT_NAME,
+        "version": LIBRARY_FORMAT_VERSION,
         "conventions": CONVENTIONS,
         "cells": [_cell_doc(c, database) for c in database.cells],
     }
@@ -115,21 +133,38 @@ def write_phase_lookup_csv(table, path):
         writer = csv.writer(fh, lineterminator="\n")
         writer.writerow(["L_mm", "W_mm", "phase_deg", "magnitude_db", "S11_real", "S11_imag"])
         for row in table:
-            writer.writerow([repr(row["L_mm"]), repr(row["W_mm"]), repr(row["phase_deg"]),
-                              repr(row["magnitude_db"]), repr(row["S11_real"]), repr(row["S11_imag"])])
+            writer.writerow(
+                [
+                    repr(row["L_mm"]),
+                    repr(row["W_mm"]),
+                    repr(row["phase_deg"]),
+                    repr(row["magnitude_db"]),
+                    repr(row["S11_real"]),
+                    repr(row["S11_imag"]),
+                ]
+            )
     return path
 
 
 # --------------------------------------------------------------------------------------- manifest
 
+
 def _configuration_hash(config: LibraryConfig):
-    payload = json.dumps({
-        "period_m": config.period_m, "substrate": config.substrate,
-        "f_min_hz": config.f_min_hz, "f_max_hz": config.f_max_hz, "f_step_hz": config.f_step_hz,
-        "f_design_hz": config.f_design_hz,
-        "l_values_mm": config.l_values_mm, "w_values_mm": config.w_values_mm,
-        "mesh": config.mesh, "reference_planes": config.reference_planes,
-    }, sort_keys=True)
+    payload = json.dumps(
+        {
+            "period_m": config.period_m,
+            "substrate": config.substrate,
+            "f_min_hz": config.f_min_hz,
+            "f_max_hz": config.f_max_hz,
+            "f_step_hz": config.f_step_hz,
+            "f_design_hz": config.f_design_hz,
+            "l_values_mm": config.l_values_mm,
+            "w_values_mm": config.w_values_mm,
+            "mesh": config.mesh,
+            "reference_planes": config.reference_planes,
+        },
+        sort_keys=True,
+    )
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
@@ -140,7 +175,7 @@ def build_manifest(config, build, phase_source, deterministic_timestamp=None):
     fixed value so manifest-generation tests do not depend on wall-clock time; the real build
     (examples/build_unit_cell_library.py) leaves it `None` and gets the real UTC time -- the one
     intentionally non-reproducible field, same as every other phase's file headers."""
-    timestamp = deterministic_timestamp or datetime.now(timezone.utc).isoformat()
+    timestamp = deterministic_timestamp or datetime.now(UTC).isoformat()
     return {
         "library_version": 1,
         "creation_timestamp": timestamp,
@@ -171,6 +206,7 @@ def write_manifest(manifest, path):
 
 
 # --------------------------------------------------------------------------------- query API
+
 
 @dataclass(frozen=True)
 class PhaseCandidate:
@@ -208,7 +244,9 @@ class UnitCellLibrary:
         if cell is None:
             raise KeyError(f"no cell at L={L_mm} mm, W={W_mm} mm in this library")
         if cell["solver_status"] != "OK":
-            raise ValueError(f"cell {cell['cell_id']} has solver_status={cell['solver_status']!r}, no response available")
+            raise ValueError(
+                f"cell {cell['cell_id']} has solver_status={cell['solver_status']!r}, no response available"
+            )
         freqs = cell["frequency_GHz"]
         matches = [i for i, f in enumerate(freqs) if abs(f - frequency_GHz) <= rtol * max(abs(frequency_GHz), 1.0)]
         if not matches:
@@ -237,10 +275,16 @@ class UnitCellLibrary:
             entry = cell[family][matches[0]]
             error = float(wrapped_difference_deg(entry["phase_deg"], target_phase_deg))
             if abs(error) <= tolerance_deg:
-                candidates.append(PhaseCandidate(
-                    cell["cell_id"], cell["L_mm"], cell["W_mm"],
-                    entry["phase_deg"], error, entry["mag_db"],
-                ))
+                candidates.append(
+                    PhaseCandidate(
+                        cell["cell_id"],
+                        cell["L_mm"],
+                        cell["W_mm"],
+                        entry["phase_deg"],
+                        error,
+                        entry["mag_db"],
+                    )
+                )
         return sorted(candidates, key=lambda c: abs(c.phase_error_deg))
 
     def invert_phase(self, target_phase_deg, frequency_GHz, family="S11"):
@@ -253,9 +297,13 @@ class UnitCellLibrary:
             return "NO_VALID_CANDIDATE"
         best = candidates[0]
         return {
-            "target_phase_deg": target_phase_deg, "selected_phase_deg": best.phase_deg,
-            "phase_error_deg": best.phase_error_deg, "L_mm": best.l_mm, "W_mm": best.w_mm,
-            "response_magnitude_db": best.magnitude_db, "cell_id": best.cell_id,
+            "target_phase_deg": target_phase_deg,
+            "selected_phase_deg": best.phase_deg,
+            "phase_error_deg": best.phase_error_deg,
+            "L_mm": best.l_mm,
+            "W_mm": best.w_mm,
+            "response_magnitude_db": best.magnitude_db,
+            "cell_id": best.cell_id,
         }
 
 
@@ -266,8 +314,10 @@ def phase_lookup_filename(f_design_hz):
 
 # ------------------------------------------------------------------------------------- report
 
-def render_library_report_md(config, build, coverage, collisions, classifications, geometry_exports,
-                               phase_source, manifest, consistency):
+
+def render_library_report_md(
+    config, build, coverage, collisions, classifications, geometry_exports, phase_source, manifest, consistency
+):
     n_resonant = sum(1 for c in classifications if c.resonance is not None and c.resonance.is_resonant)
     n_non_resonant = sum(1 for c in classifications if c.resonance is not None and not c.resonance.is_resonant)
     n_phase_usable = sum(1 for c in classifications if c.phase_status == "PHASE_USABLE")
@@ -286,16 +336,16 @@ def render_library_report_md(config, build, coverage, collisions, classification
         "",
         "## 1. Physical configuration",
         "",
-        f"- Period: {config.period_m*1e3:g} x {config.period_m*1e3:g} mm (square lattice).",
+        f"- Period: {config.period_m * 1e3:g} x {config.period_m * 1e3:g} mm (square lattice).",
         f"- Substrate: `{config.substrate['name']}` (authoritative source: `config.yaml`, this "
         f"project's own root config), eps_r = {config.substrate['eps_r']:g}, tan_delta = "
-        f"{config.substrate['tan_delta']:g}, thickness = {config.substrate['thickness_m']*1e3:g} mm.",
-        f"- Metal: PEC (`materials.py`, Phase 1's only supported model).",
+        f"{config.substrate['tan_delta']:g}, thickness = {config.substrate['thickness_m'] * 1e3:g} mm.",
+        "- Metal: PEC (`materials.py`, Phase 1's only supported model).",
         f"- Patch sweep: L, W in {{{config.l_values_mm[0]:g}, ..., {config.l_values_mm[-1]:g}}} mm, "
-        f"step {config.l_values_mm[1]-config.l_values_mm[0]:g} mm "
+        f"step {config.l_values_mm[1] - config.l_values_mm[0]:g} mm "
         f"({len(config.l_values_mm)} x {len(config.w_values_mm)} = {config.n_geometries} geometries).",
         f"- Mesh: {config.mesh['cells_x']}x{config.mesh['cells_y']} cells, Floquet order "
-        f"{config.mesh['floquet_order']} (accuracy trade-off documented in Sec. 16, \"Limitations\").",
+        f'{config.mesh["floquet_order"]} (accuracy trade-off documented in Sec. 16, "Limitations").',
         "",
         "## 2. Number of geometries",
         "",
@@ -306,9 +356,9 @@ def render_library_report_md(config, build, coverage, collisions, classification
         "",
         "## 3. Frequency range",
         "",
-        f"{config.f_min_hz/1e9:g} GHz to {config.f_max_hz/1e9:g} GHz, step {config.f_step_hz/1e6:g} MHz, "
+        f"{config.f_min_hz / 1e9:g} GHz to {config.f_max_hz / 1e9:g} GHz, step {config.f_step_hz / 1e6:g} MHz, "
         f"{manifest['frequency_count']} points inclusive; design frequency "
-        f"{config.f_design_hz/1e9:g} GHz is an exact grid point (verified, never interpolated).",
+        f"{config.f_design_hz / 1e9:g} GHz is an exact grid point (verified, never interpolated).",
         "",
         "## 4. Solver convention",
         "",
@@ -354,7 +404,7 @@ def render_library_report_md(config, build, coverage, collisions, classification
         "",
         "## 9. Phase coverage",
         "",
-        f"{coverage.n_points} successful cells at {config.f_design_hz/1e9:g} GHz: phase range "
+        f"{coverage.n_points} successful cells at {config.f_design_hz / 1e9:g} GHz: phase range "
         f"[{coverage.phase_min_deg:.2f}, {coverage.phase_max_deg:.2f}] deg (naive, non-circular "
         f"span {coverage.naive_span_deg:.2f} deg); circularly-aware coverage = "
         f"**{coverage.coverage_deg:.2f} deg of 360 deg**. See `plots/phase_coverage_map.png` and "
@@ -383,15 +433,20 @@ def render_library_report_md(config, build, coverage, collisions, classification
         f"{n_phase_unusable} unusable (`library_schema.PHASE_USABLE_MIN_MAG_DB`).",
         f"- Grating risk: GRATING_RISK if a non-specular Floquet order propagates at any "
         f"frequency in the sweep (`discretization.is_specular_only`, unmodified); onset "
-        f"frequency for this period = {onset_hz/1e9 if onset_hz else float('nan'):.2f} GHz. "
+        f"frequency for this period = {onset_hz / 1e9 if onset_hz else float('nan'):.2f} GHz. "
         f"{n_grating_risk} of {len(classifications)} cells flagged.",
         "- Every threshold above is a named constant in `library_schema.py`, documented there "
         "and exercised at its boundary in `tests/test_library_classifier.py`.",
         "",
         "## 13. Failed cells",
         "",
-        (f"{len(failed)} cell(s): " + "; ".join(f"{c.cell_id} (L={c.l_mm:g}, W={c.w_mm:g})" for c in failed[:20])
-         + (f" (+{len(failed)-20} more)" if len(failed) > 20 else "")) if failed else "None.",
+        (
+            f"{len(failed)} cell(s): "
+            + "; ".join(f"{c.cell_id} (L={c.l_mm:g}, W={c.w_mm:g})" for c in failed[:20])
+            + (f" (+{len(failed) - 20} more)" if len(failed) > 20 else "")
+        )
+        if failed
+        else "None.",
         "",
         "## 14. STEP export status",
         "",
@@ -408,10 +463,10 @@ def render_library_report_md(config, build, coverage, collisions, classification
         "",
         "## 16. Limitations",
         "",
-        "- No ground plane in the underlying solver (README \"Assumptions\"); S21 is not "
+        '- No ground plane in the underlying solver (README "Assumptions"); S21 is not '
         "negligible for these cells, unlike a typical grounded reflectarray element -- see Sec. "
         "8's phase-source discussion.",
-        "- Mesh (32x32 cells, Floquet order 32) is below this project's own \"2-4x cells\" "
+        '- Mesh (32x32 cells, Floquet order 32) is below this project\'s own "2-4x cells" '
         "practical accuracy guideline (`MOM_FORMULATION.md`) purely for build-time cost; every "
         "cell's a priori `metal_area_error`/`area_ok` (Phase 5, unmodified) is stored in "
         "`database/unit_cell_library.json`'s source `database.json` "
@@ -443,10 +498,11 @@ def render_library_report_md(config, build, coverage, collisions, classification
 
 # ------------------------------------------------------------------------------ orchestration
 
+
 @dataclass(frozen=True)
 class FullLibraryResult:
     base_dir: Path
-    build: object                # library_builder.LibraryBuildResult
+    build: object  # library_builder.LibraryBuildResult
     manifest: dict
     manifest_path: Path
     library_json_path: Path
@@ -461,8 +517,7 @@ class FullLibraryResult:
     consistency: object
 
 
-def build_full_library(config: LibraryConfig, base_dir, *, resume=True, progress=None,
-                        deterministic_timestamp=None):
+def build_full_library(config: LibraryConfig, base_dir, *, resume=True, progress=None, deterministic_timestamp=None):
     """The complete Phase 7 pipeline (req. 18's directory layout), end to end: solve (Phase 5,
     unmodified) -> phase extraction -> classification -> STEP export -> plots -> database/
     manifest/report files. Every step reads only what an earlier step already computed; nothing
@@ -501,7 +556,11 @@ def build_full_library(config: LibraryConfig, base_dir, *, resume=True, progress
 
     by_lw = {(r.l_mm, r.w_mm): r for r in rows}
     classifications = [
-        classify_cell(cell, database, by_lw[(round(cell.parameters["length_m"] * 1e3, 9), round(cell.parameters["width_m"] * 1e3, 9))])
+        classify_cell(
+            cell,
+            database,
+            by_lw[(round(cell.parameters["length_m"] * 1e3, 9), round(cell.parameters["width_m"] * 1e3, 9))],
+        )
         for cell in database.cells
     ]
 
@@ -524,12 +583,33 @@ def build_full_library(config: LibraryConfig, base_dir, *, resume=True, progress
     library_validation_path.write_text(render_library_validation_md(config, subset, consistency, build))
 
     library_report_path = reports_dir / "LIBRARY_REPORT.md"
-    library_report_path.write_text(render_library_report_md(
-        config, build, coverage, collisions, classifications, step_paths, phase_source, manifest, consistency,
-    ))
+    library_report_path.write_text(
+        render_library_report_md(
+            config,
+            build,
+            coverage,
+            collisions,
+            classifications,
+            step_paths,
+            phase_source,
+            manifest,
+            consistency,
+        )
+    )
 
     return FullLibraryResult(
-        base_dir, build, manifest, manifest_path, library_json_path, library_csv_path,
-        phase_lookup_path, step_paths, plot_paths, hfss_subset_path,
-        library_report_path, library_validation_path, coverage, consistency,
+        base_dir,
+        build,
+        manifest,
+        manifest_path,
+        library_json_path,
+        library_csv_path,
+        phase_lookup_path,
+        step_paths,
+        plot_paths,
+        hfss_subset_path,
+        library_report_path,
+        library_validation_path,
+        coverage,
+        consistency,
     )

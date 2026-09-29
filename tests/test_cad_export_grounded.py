@@ -13,7 +13,8 @@ from src.cad_export import (
 from src.config import config_from_dict
 
 BASE = {
-    "period_x": 4.8e-3, "period_y": 4.8e-3,
+    "period_x": 4.8e-3,
+    "period_y": 4.8e-3,
     "substrate": {"name": "RT5880", "eps_r": 2.2, "tan_delta": 0.0009, "thickness": 1.575e-3},
     "geometry": {"type": "rectangle", "length": 2.0e-3, "width": 2.0e-3},
     "excitation": {"frequency": 12.5e9},
@@ -48,8 +49,8 @@ def test_ground_solid_sits_flush_below_the_substrate():
 
     props = SolidProperties.of(ground)
     h_mm = 1.575
-    assert props.bbox_mm[5] == pytest.approx(-h_mm, abs=1e-9)   # zmax flush with substrate bottom
-    assert props.bbox_mm[4] < props.bbox_mm[5]                  # extends further down
+    assert props.bbox_mm[5] == pytest.approx(-h_mm, abs=1e-9)  # zmax flush with substrate bottom
+    assert props.bbox_mm[4] < props.bbox_mm[5]  # extends further down
 
 
 def test_export_and_reimport_grounded_step_recovers_three_solids(tmp_path):
@@ -61,9 +62,9 @@ def test_export_and_reimport_grounded_step_recovers_three_solids(tmp_path):
     summary = import_and_summarize(path)
     assert summary.ground is not None
     h_mm = 1.575
-    assert summary.substrate.bbox_mm[4] == pytest.approx(-h_mm, abs=1e-6)   # substrate zmin = -h
-    assert summary.ground.bbox_mm[5] == pytest.approx(-h_mm, abs=1e-6)      # ground zmax = -h
-    assert summary.metal.bbox_mm[4] == pytest.approx(0.0, abs=1e-6)         # metal zmin = 0
+    assert summary.substrate.bbox_mm[4] == pytest.approx(-h_mm, abs=1e-6)  # substrate zmin = -h
+    assert summary.ground.bbox_mm[5] == pytest.approx(-h_mm, abs=1e-6)  # ground zmax = -h
+    assert summary.metal.bbox_mm[4] == pytest.approx(0.0, abs=1e-6)  # metal zmin = 0
 
 
 def test_export_and_reimport_ungrounded_step_still_has_two_solids(tmp_path):

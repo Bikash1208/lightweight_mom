@@ -6,7 +6,6 @@ import math
 from dataclasses import dataclass
 
 from ..basis_functions import MeshSettings
-from ..constants import C0
 from ..discretization import (
     grating_onset_frequency,
     grating_onset_frequency_oblique,
@@ -26,7 +25,7 @@ SUBSTRATE_TAN_DELTA = 0.0009
 SUBSTRATE_THICKNESS_M = 1.575e-3
 FREQUENCIES_HZ = (10.0e9, 11.25e9, 12.5e9, 13.75e9, 15.0e9)
 DESIGN_FREQUENCY_HZ = 12.5e9
-FEED_ANGLES_DEG = (0.0, 15.0, 30.0, 45.0)   # a documented set (brief: "report, don't assume a feed angle")
+FEED_ANGLES_DEG = (0.0, 15.0, 30.0, 45.0)  # a documented set (brief: "report, don't assume a feed angle")
 
 # One data point per period: (L step, lower/upper fraction of P), chosen (not guessed) to keep
 # the aligned mesh and the point count computationally tractable while covering ~0.2P to ~0.94P
@@ -118,13 +117,16 @@ def resonant_length_mm(points, frequency_hz=DESIGN_FREQUENCY_HZ):
 class GratingSurfaceWaveReport:
     period_mm: float
     grating_onset_normal_hz: float
-    grating_onset_oblique_hz: dict          # feed_angle_deg -> onset Hz
-    specular_only_across_band: bool         # at normal incidence, whole FREQUENCIES_HZ band
-    surface_wave_margins: dict              # frequency_hz -> nearest_margin_over_k0 (min over any L)
+    grating_onset_oblique_hz: dict  # feed_angle_deg -> onset Hz
+    specular_only_across_band: bool  # at normal incidence, whole FREQUENCIES_HZ band
+    surface_wave_margins: dict  # frequency_hz -> nearest_margin_over_k0 (min over any L)
 
 
 def grating_and_surface_wave_report(
-    period_mm, representative_length_width_mm, frequencies_hz=FREQUENCIES_HZ, feed_angles_deg=FEED_ANGLES_DEG,
+    period_mm,
+    representative_length_width_mm,
+    frequencies_hz=FREQUENCIES_HZ,
+    feed_angles_deg=FEED_ANGLES_DEG,
 ):
     cell = _unit_cell(period_mm, representative_length_width_mm)
     onset_normal = grating_onset_frequency(cell)

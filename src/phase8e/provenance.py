@@ -41,7 +41,7 @@ def build_provenance_registry():
                 "(phase8b.conventions.SURFACE_WAVE_DISPERSION_IMPLEMENTED = False)",
             ),
             implementation_status="MATHEMATICALLY DEFINED, NUMERICALLY IMPLEMENTED "
-                                   "(phase8b.holographic_modulation), ARCHITECTURE INCOMPATIBLE",
+            "(phase8b.holographic_modulation), ARCHITECTURE INCOMPATIBLE",
         ),
         "B": FormulationProvenance(
             formulation_name="B: phase-difference hologram, reflection correspondence",
@@ -62,7 +62,7 @@ def build_provenance_registry():
             applicability="passive reflectarray-style phase holograms",
             incompatibilities=(),
             implementation_status="MATHEMATICALLY DEFINED, NUMERICALLY IMPLEMENTED, "
-                                   "ARCHITECTURE COMPATIBILITY UNVALIDATED (Phase 8B/8C)",
+            "ARCHITECTURE COMPATIBILITY UNVALIDATED (Phase 8B/8C)",
         ),
         "C": FormulationProvenance(
             formulation_name="C: phase-difference hologram, transmission correspondence",
@@ -82,7 +82,7 @@ def build_provenance_registry():
             applicability="passive transmitarray-style phase holograms",
             incompatibilities=(),
             implementation_status="MATHEMATICALLY DEFINED, NUMERICALLY IMPLEMENTED, "
-                                   "ARCHITECTURE COMPATIBILITY UNVALIDATED (Phase 8B/8C)",
+            "ARCHITECTURE COMPATIBILITY UNVALIDATED (Phase 8B/8C)",
         ),
         "D": FormulationProvenance(
             formulation_name="D: generalized (vector/matrix) local transfer operator",
@@ -112,6 +112,6 @@ def build_provenance_registry():
                 "itself is otherwise valid",
             ),
             implementation_status="MATHEMATICALLY DEFINED, NUMERICALLY IMPLEMENTED "
-                                   "(control_response.generalized_transfer_operator), LIBRARY DATA INSUFFICIENT",
+            "(control_response.generalized_transfer_operator), LIBRARY DATA INSUFFICIENT",
         ),
     }

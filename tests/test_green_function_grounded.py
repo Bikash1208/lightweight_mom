@@ -9,8 +9,8 @@ Two kinds of checks, matching the rigor of the existing ungrounded tests:
 
 import numpy as np
 import pytest
-
 from reference_layered import solve_current_sheet_grounded, solve_incident_fields_grounded
+
 from src.green_function import LayeredGreenFunction
 from src.materials import Substrate
 
@@ -25,6 +25,7 @@ def green(sub=LOSSLESS, f=F, backing="pec"):
 
 
 # --------------------------------------------------------------------- backward compatibility
+
 
 def test_default_backing_is_air():
     assert LayeredGreenFunction(LOSSLESS, F).backing == "air"
@@ -48,6 +49,7 @@ def test_invalid_backing_rejected():
 
 
 # --------------------------------------------------------------------------------- reflection
+
 
 @pytest.mark.parametrize("f", [10.0e9, 11.25e9, 12.5e9, 13.75e9, 15.0e9])
 def test_lossless_grounded_slab_is_totally_reflective(f):
@@ -73,6 +75,7 @@ def test_vanishing_thickness_shorts_the_top_interface():
 
 
 # ------------------------------------------------------------------------- ground-plane physics
+
 
 def test_bottom_port_does_not_exist():
     g = green(LOSSLESS, F)
@@ -112,6 +115,7 @@ def test_grounded_and_air_backed_impedances_differ():
 
 
 # ------------------------------------------------------------------------------------ passivity
+
 
 def test_passivity_holds_for_lossy_grounded_stack_across_kt():
     g = green(LOSSY, F)
@@ -162,7 +166,7 @@ def test_stack_fields_match_independent_reference(theta_deg, phi_deg, f, eps_r, 
         e_inc = np.array([1.0, 0.0, 0.0])
     else:
         p = np.array([kx, ky, 0.0]) / kt
-        e_inc = np.cross(np.array([0.0, 0.0, 1.0]), p)   # TE polarization
+        e_inc = np.cross(np.array([0.0, 0.0, 1.0]), p)  # TE polarization
     ref = solve_incident_fields_grounded(kx, ky, e_inc, f, sub.eps_complex, h)
     g = LayeredGreenFunction(sub, f, backing="pec")
     for z in (0.5 * h, 0.0, -0.3 * h, -h, -h - 0.5):

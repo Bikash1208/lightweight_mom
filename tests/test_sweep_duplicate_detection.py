@@ -5,11 +5,12 @@ import warnings
 import pytest
 
 from src.config import config_from_dict
-from src.sweep import ParameterAxis, SweepDefinition, plan_sweep
 from src.runner import run_sweep
+from src.sweep import ParameterAxis, SweepDefinition, plan_sweep
 
 BASE = {
-    "period_x": 4.8e-3, "period_y": 4.8e-3,
+    "period_x": 4.8e-3,
+    "period_y": 4.8e-3,
     "substrate": {"name": "RT5880", "eps_r": 2.2, "tan_delta": 0.0009, "thickness": 1.575e-3},
     "geometry": {"type": "rectangle", "length": 2.0e-3, "width": 2.0e-3},
     "excitation": {"frequency": 12.5e9},
@@ -32,7 +33,7 @@ def test_plan_detects_the_known_32x32_duplicate_pairs():
     with pytest.warns(UserWarning, match="mesh-identical"):
         plan = plan_sweep(cfg, defn)
     assert len(plan.mesh_duplicate_groups) == 2
-    assert plan.n_mesh_distinct == 3   # 5 cells, 2 duplicate pairs -> 3 distinct
+    assert plan.n_mesh_distinct == 3  # 5 cells, 2 duplicate pairs -> 3 distinct
 
 
 def test_no_duplicates_and_no_warning_on_the_aligned_48_cell_mesh():

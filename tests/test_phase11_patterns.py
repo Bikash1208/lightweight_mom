@@ -13,7 +13,7 @@ def test_single_perturbation_changes_exactly_one_cell():
     flat = [cell for row in grid for cell in row]
     assert flat.count((4.4, 4.4)) == 1
     assert flat.count((2.8, 2.8)) == 24
-    assert grid[2][2] == (4.4, 4.4)   # defaults to center
+    assert grid[2][2] == (4.4, 4.4)  # defaults to center
 
 
 def test_smooth_gradient_is_monotonic_along_x():
@@ -43,9 +43,9 @@ def test_checkerboard_and_alternating_are_identical():
 
 def test_strong_isolated_defect_uses_the_domain_extreme_farthest_from_center():
     grid = pt.strong_isolated_defect(5, (1.4, 1.4))
-    assert grid[2][2] == (4.4, 4.4)   # 4.4 is farther from 1.4 than 1.0 is
+    assert grid[2][2] == (4.4, 4.4)  # 4.4 is farther from 1.4 than 1.0 is
     grid2 = pt.strong_isolated_defect(5, (4.2, 4.2))
-    assert grid2[2][2] == (1.0, 1.0)   # 1.0 is farther from 4.2 than 4.4 is
+    assert grid2[2][2] == (1.0, 1.0)  # 1.0 is farther from 4.2 than 4.4 is
 
 
 def test_single_and_multi_cell_discontinuity_widths():
@@ -61,8 +61,11 @@ def test_all_pattern_values_stay_within_the_validated_domain():
     from src.phase10.environment_geometry import in_domain
 
     grids = [
-        pt.uniform(5, (2.8, 2.8)), pt.smooth_gradient(7), pt.abrupt_boundary(7),
-        pt.checkerboard(7), pt.strong_isolated_defect(5, (2.8, 2.8)),
+        pt.uniform(5, (2.8, 2.8)),
+        pt.smooth_gradient(7),
+        pt.abrupt_boundary(7),
+        pt.checkerboard(7),
+        pt.strong_isolated_defect(5, (2.8, 2.8)),
     ]
     for grid in grids:
         for row in grid:

@@ -4,7 +4,7 @@ import math
 
 import pytest
 
-from src.phase9.error_metrics import compute_error_stats, complex_error, magnitude_error, phase_error_deg
+from src.phase9.error_metrics import complex_error, compute_error_stats, magnitude_error, phase_error_deg
 
 
 def test_complex_error_is_plain_distance():

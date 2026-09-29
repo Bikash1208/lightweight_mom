@@ -36,8 +36,10 @@ def check_unique_record_identity(entry):
             dupes.append(key)
         seen.add(key)
     return _result(
-        "unique_record_identity", "no duplicate (cell_id, frequency_index) records",
-        not dupes, f"{len(dupes)} duplicate(s)" if dupes else f"{len(seen)} unique records",
+        "unique_record_identity",
+        "no duplicate (cell_id, frequency_index) records",
+        not dupes,
+        f"{len(dupes)} duplicate(s)" if dupes else f"{len(seen)} unique records",
     )
 
 
@@ -54,8 +56,10 @@ def check_valid_parameter_ranges(entry):
         if c.parameters["length_m"] <= 0.0 or c.parameters["width_m"] <= 0.0:
             bad.append((c.cell_id, "length_m/width_m", "non-positive"))
     return _result(
-        "valid_parameter_ranges", "every geometry parameter is finite and physically valid",
-        not bad, f"{len(bad)} violation(s)" if bad else f"{len(entry.database.cells)} cells OK",
+        "valid_parameter_ranges",
+        "every geometry parameter is finite and physically valid",
+        not bad,
+        f"{len(bad)} violation(s)" if bad else f"{len(entry.database.cells)} cells OK",
     )
 
 
@@ -70,8 +74,10 @@ def check_complete_frequency_grid(entry):
         if len(indices) != len(freqs):
             missing.append((c.cell_id, len(indices), len(freqs)))
     return _result(
-        "complete_frequency_grid", "every OK cell has a record at every frequency index",
-        not missing, f"{len(missing)} incomplete cell(s)" if missing else f"{len(freqs)} frequency points, all cells complete",
+        "complete_frequency_grid",
+        "every OK cell has a record at every frequency index",
+        not missing,
+        f"{len(missing)} incomplete cell(s)" if missing else f"{len(freqs)} frequency points, all cells complete",
     )
 
 
@@ -89,8 +95,10 @@ def check_complex_valued_response_integrity(entry):
             if not (np.isfinite(z.real) and np.isfinite(z.imag)):
                 bad.append((r.cell_id, r.frequency_index, name))
     return _result(
-        "complex_valued_response_integrity", "S-parameters are finite complex numbers",
-        not bad, f"{len(bad)} non-finite value(s)" if bad else f"{len(records)} records sampled, all finite",
+        "complex_valued_response_integrity",
+        "S-parameters are finite complex numbers",
+        not bad,
+        f"{len(bad)} non-finite value(s)" if bad else f"{len(records)} records sampled, all finite",
     )
 
 
@@ -104,8 +112,10 @@ def check_cross_polarization_preserved(entry):
         name in component_names("linear") for name in ("S11_xy", "S11_yx", "S21_xy", "S21_yx")
     )
     return _result(
-        "cross_polarization_preserved", "S_xy/S_yx components are present in the stored schema",
-        has_cross_fields, "cross-pol components present" if has_cross_fields else "cross-pol components missing",
+        "cross_polarization_preserved",
+        "S_xy/S_yx components are present in the stored schema",
+        has_cross_fields,
+        "cross-pol components present" if has_cross_fields else "cross-pol components missing",
     )
 
 
@@ -113,12 +123,14 @@ def check_missing_value_handling(entry):
     """A failed cell (status != 'ok') has no records and is never assigned a fabricated response
     -- `database.Database.__init__` already refuses a record for a non-'ok' cell; re-verified."""
     failed_with_records = [
-        c.cell_id for c in entry.database.cells
-        if c.status != "ok" and entry.database.records_of(c.index)
+        c.cell_id for c in entry.database.cells if c.status != "ok" and entry.database.records_of(c.index)
     ]
     return _result(
-        "missing_value_handling", "invalid/failed cells have no fabricated records",
-        not failed_with_records, f"{len(failed_with_records)} failed cell(s) with records" if failed_with_records
+        "missing_value_handling",
+        "invalid/failed cells have no fabricated records",
+        not failed_with_records,
+        f"{len(failed_with_records)} failed cell(s) with records"
+        if failed_with_records
         else f"{sum(1 for c in entry.database.cells if c.status != 'ok')} failed cell(s), 0 with records",
     )
 
@@ -126,12 +138,24 @@ def check_missing_value_handling(entry):
 def check_metadata_completeness(entry):
     """Identity/provenance fields Sec. 22 requires are all present (even if their value is
     honestly `None`/'unavailable' rather than absent as a key)."""
-    required = ("library_id", "topology", "p_x_mm", "p_y_mm", "substrate", "frequency_min_hz",
-                "frequency_max_hz", "solver_version", "configuration_hash", "validation_status")
+    required = (
+        "library_id",
+        "topology",
+        "p_x_mm",
+        "p_y_mm",
+        "substrate",
+        "frequency_min_hz",
+        "frequency_max_hz",
+        "solver_version",
+        "configuration_hash",
+        "validation_status",
+    )
     missing = [f for f in required if getattr(entry, f, "__ABSENT__") == "__ABSENT__"]
     return _result(
-        "metadata_completeness", "every Sec. 22 identity/provenance field is present on the entry",
-        not missing, f"missing: {missing}" if missing else "all fields present",
+        "metadata_completeness",
+        "every Sec. 22 identity/provenance field is present on the entry",
+        not missing,
+        f"missing: {missing}" if missing else "all fields present",
     )
 
 
@@ -142,8 +166,10 @@ def check_topology_material_period_polarization_consistency(entries):
     ids = [e.library_id for e in entries]
     dupes = len(ids) != len(set(ids))
     return _result(
-        "identity_consistency", "library_id is unique across all registered entries",
-        not dupes, f"{len(ids)} entries, {len(set(ids))} unique ids",
+        "identity_consistency",
+        "library_id is unique across all registered entries",
+        not dupes,
+        f"{len(ids)} entries, {len(set(ids))} unique ids",
     )
 
 
@@ -158,8 +184,10 @@ def check_database_hash(entry):
         h.update(r.cell_id.encode())
         h.update(np.asarray(r.s).tobytes())
     return _result(
-        "database_hash", "a deterministic content hash of this entry's solved data can be computed",
-        True, h.hexdigest()[:16],
+        "database_hash",
+        "a deterministic content hash of this entry's solved data can be computed",
+        True,
+        h.hexdigest()[:16],
     )
 
 
@@ -169,15 +197,20 @@ def check_round_trip_serialization(entry, tmp_path):
     records exactly."""
     from ..database import Database
 
-    small = Database(entry.database.metadata, entry.database.cells[:3],
-                      [r for r in entry.database.records if entry.database.cell(r.cell_id).index < 3])
+    small = Database(
+        entry.database.metadata,
+        entry.database.cells[:3],
+        [r for r in entry.database.records if entry.database.cell(r.cell_id).index < 3],
+    )
     path = tmp_path / "roundtrip.json"
     small.to_json(path)
     reloaded = Database.from_json(path)
     ok = small == reloaded
     return _result(
-        "round_trip_serialization", "a subset of this entry round-trips through JSON exactly",
-        ok, "exact round trip" if ok else "round trip mismatch",
+        "round_trip_serialization",
+        "a subset of this entry round-trips through JSON exactly",
+        ok,
+        "exact round trip" if ok else "round trip mismatch",
     )
 
 
@@ -189,9 +222,14 @@ def run_integrity_checks(universal_db, tmp_path=None):
     entries = universal_db.entries()
     for entry in entries:
         for fn in (
-            check_unique_record_identity, check_valid_parameter_ranges, check_complete_frequency_grid,
-            check_complex_valued_response_integrity, check_cross_polarization_preserved,
-            check_missing_value_handling, check_metadata_completeness, check_database_hash,
+            check_unique_record_identity,
+            check_valid_parameter_ranges,
+            check_complete_frequency_grid,
+            check_complex_valued_response_integrity,
+            check_cross_polarization_preserved,
+            check_missing_value_handling,
+            check_metadata_completeness,
+            check_database_hash,
         ):
             results.append((entry.library_id, fn(entry)))
         if tmp_path is not None:

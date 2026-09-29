@@ -54,8 +54,9 @@ class UniversalDatabase:
         return tuple(sorted({(e.p_x_mm, e.p_y_mm) for e in self.entries_for_topology(topology)}))
 
 
-def with_benchmark(checkpoint_path=_library_entry.DEFAULT_CHECKPOINT_JSON,
-                    library_dir=_library_entry.DEFAULT_LIBRARY_DIR):
+def with_benchmark(
+    checkpoint_path=_library_entry.DEFAULT_CHECKPOINT_JSON, library_dir=_library_entry.DEFAULT_LIBRARY_DIR
+):
     """A `UniversalDatabase` with exactly the existing, unmodified Phase 7 324-cell/4.8 mm library
     registered as its one `reference_validation_library` entry (Sec. 3, 20). This is the
     architecture's *benchmark* state, not its final state -- callers add further `LibraryEntry`

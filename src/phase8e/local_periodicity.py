@@ -13,9 +13,9 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class LocalPeriodicityAssessment:
     period_m: float
-    k_t_dominant_per_m: float | None       # dominant transverse wavenumber driving the modulation
-    cells_per_fringe: float | None          # (2*pi/k_t_dominant) / period, None if k_t_dominant is 0/None
-    status: str                             # always "LOCAL_PERIODICITY_UNVALIDATED"
+    k_t_dominant_per_m: float | None  # dominant transverse wavenumber driving the modulation
+    cells_per_fringe: float | None  # (2*pi/k_t_dominant) / period, None if k_t_dominant is 0/None
+    status: str  # always "LOCAL_PERIODICITY_UNVALIDATED"
     note: str
 
 
@@ -32,14 +32,18 @@ def assess_local_periodicity(period_m, k_t_dominant_per_m=None):
         fringe_period_m = 2.0 * math.pi / k_t_dominant_per_m
         cells_per_fringe = fringe_period_m / period_m
     return LocalPeriodicityAssessment(
-        period_m=period_m, k_t_dominant_per_m=k_t_dominant_per_m, cells_per_fringe=cells_per_fringe,
+        period_m=period_m,
+        k_t_dominant_per_m=k_t_dominant_per_m,
+        cells_per_fringe=cells_per_fringe,
         status="LOCAL_PERIODICITY_UNVALIDATED",
         note=(
             "No coupled-multi-cell or near-field-array solve exists in this project to validate "
-            "the local-periodic approximation; " +
-            (f"the fastest required spatial variation spans approximately "
-             f"{cells_per_fringe:.2f} unit cells per fringe (informative only, not a validity test)."
-             if cells_per_fringe is not None else
-             "no dominant transverse wavenumber was supplied to even compute the sampling-density number.")
+            "the local-periodic approximation; "
+            + (
+                f"the fastest required spatial variation spans approximately "
+                f"{cells_per_fringe:.2f} unit cells per fringe (informative only, not a validity test)."
+                if cells_per_fringe is not None
+                else "no dominant transverse wavenumber was supplied to even compute the sampling-density number."
+            )
         ),
     )

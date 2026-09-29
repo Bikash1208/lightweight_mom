@@ -16,8 +16,9 @@ def _require_matplotlib():
     return plt
 
 
-def plot_error_vs_step_size(step_cases, path, design_tol_deg=10.0, design_tol_db=1.0,
-                             strict_tol_deg=5.0, strict_tol_db=0.5):
+def plot_error_vs_step_size(
+    step_cases, path, design_tol_deg=10.0, design_tol_db=1.0, strict_tol_deg=5.0, strict_tol_db=0.5
+):
     """Task A: the design-relevant reflection-phase error vs the achieved neighbour phase step,
     one point per step case, with both stated tolerances marked."""
     plt = _require_matplotlib()
@@ -110,7 +111,9 @@ def generate_all_plots(step_cases, aperture_results, comparisons, output_dir):
     paths["error_vs_step_size"] = plot_error_vs_step_size(step_cases, output_dir / "error_vs_step_size.png")
     if aperture_results:
         paths["per_order_power"] = plot_per_order_power(aperture_results, output_dir / "per_order_power.png")
-        paths["per_cell_phase_error"] = plot_per_cell_phase_error(aperture_results, output_dir / "per_cell_phase_error.png")
+        paths["per_cell_phase_error"] = plot_per_cell_phase_error(
+            aperture_results, output_dir / "per_cell_phase_error.png"
+        )
     if comparisons:
         paths["hfss_vs_mom"] = plot_hfss_vs_mom(comparisons, output_dir / "hfss_vs_mom.png")
     return paths

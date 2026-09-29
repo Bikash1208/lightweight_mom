@@ -18,15 +18,15 @@ from ..excitation import ReferencePlanes
 from ..geometry import Geometry, UnitCell
 from ..materials import Metal, Substrate
 from ..periodic_bc import RectangularLattice
+from ..phase8c.data_source import DEFAULT_CHECKPOINT_JSON, load_full_database
 from ..phase_extraction import phase_coverage
 from ..sparameters import compute_s_parameters
-from ..phase8c.data_source import DEFAULT_CHECKPOINT_JSON, load_full_database
 
 # The same 18 L values (1.0-4.4 mm, 0.2 mm step) Phase 7 swept -- not re-invented (Sec.
 # "Physics sanity" of the brief: "e.g. L = W over the Phase 7 range, ~10-20 values").
 L_VALUES_MM = library_schema.L_VALUES_MM
 SWEEP_FREQUENCIES_HZ = (10.0e9, 11.25e9, 12.5e9, 13.75e9, 15.0e9)
-DESIGN_FREQUENCY_HZ = library_schema.LibraryConfig.default().f_design_hz   # 12.5 GHz, as Phase 7
+DESIGN_FREQUENCY_HZ = library_schema.LibraryConfig.default().f_design_hz  # 12.5 GHz, as Phase 7
 
 
 def _library_substrate():
@@ -60,7 +60,7 @@ class SweepPoint:
     frequency_hz: float
     s11_xx_mag: float
     s11_xx_phase_deg: float
-    s11_yx_mag: float           # cross-pol sanity check (should be ~0 for an unrotated square)
+    s11_yx_mag: float  # cross-pol sanity check (should be ~0 for an unrotated square)
 
 
 def run_grounded_patch_sweep(l_values_mm=L_VALUES_MM, frequencies_hz=SWEEP_FREQUENCIES_HZ):
@@ -72,9 +72,15 @@ def run_grounded_patch_sweep(l_values_mm=L_VALUES_MM, frequencies_hz=SWEEP_FREQU
         cell = grounded_library_cell(l_mm * 1e-3)
         for f in frequencies_hz:
             s = compute_s_parameters(cell, f, mesh, planes, warn_grating=False)
-            points.append(SweepPoint(
-                l_mm, f, s.magnitude("S11_xx"), s.phase_deg("S11_xx"), s.magnitude("S11_yx"),
-            ))
+            points.append(
+                SweepPoint(
+                    l_mm,
+                    f,
+                    s.magnitude("S11_xx"),
+                    s.phase_deg("S11_xx"),
+                    s.magnitude("S11_yx"),
+                )
+            )
     return tuple(points)
 
 
@@ -92,6 +98,7 @@ def coverage_by_frequency(points):
 
 # ------------------------------------------------------------- comparison with ungrounded Phase 7
 
+
 def ungrounded_phase7_coverage(checkpoint_path=DEFAULT_CHECKPOINT_JSON, frequency_hz=DESIGN_FREQUENCY_HZ):
     """S11_xx and S21_xx circular phase coverage of the real, already-built, unmodified Phase 7
     library at ``frequency_hz`` -- read directly from the checkpoint (``Database``, Phase 5
@@ -108,13 +115,11 @@ def ungrounded_phase7_coverage(checkpoint_path=DEFAULT_CHECKPOINT_JSON, frequenc
         raise ValueError(f"{frequency_hz} Hz is not an exact grid point of the Phase 7 library")
     result = {"status": "AVAILABLE", "frequency_hz": float(freqs[idx])}
     for name in ("S11_xx", "S21_xx"):
-        table = [
-            {"phase_deg": db.record(c.index, idx).phase_deg(name)}
-            for c in db.cells if c.status == "ok"
-        ]
+        table = [{"phase_deg": db.record(c.index, idx).phase_deg(name)} for c in db.cells if c.status == "ok"]
         cov = phase_coverage(table)
         result[name] = {
-            "coverage_deg": cov.coverage_deg, "largest_gap_deg": cov.largest_gap_deg,
+            "coverage_deg": cov.coverage_deg,
+            "largest_gap_deg": cov.largest_gap_deg,
             "n_points": cov.n_points,
         }
     return result
@@ -122,6 +127,7 @@ def ungrounded_phase7_coverage(checkpoint_path=DEFAULT_CHECKPOINT_JSON, frequenc
 
 # ---------------------------------------------------------------------- convergence (Sec. "mesh/
 # Floquet convergence study for one grounded patch")
+
 
 @dataclass(frozen=True)
 class ConvergencePoint:
@@ -150,7 +156,7 @@ def ungrounded_phase7_diagonal_table(checkpoint_path=DEFAULT_CHECKPOINT_JSON, fr
             continue
         l_mm, w_mm = c.parameters["length_m"] * 1e3, c.parameters["width_m"] * 1e3
         if abs(l_mm - w_mm) > 1e-9:
-            continue   # diagonal (L = W) only, to match the grounded sweep
+            continue  # diagonal (L = W) only, to match the grounded sweep
         rows.append({"L_mm": l_mm, "phase_deg": db.record(c.index, idx).phase_deg("S11_xx")})
     return rows
 

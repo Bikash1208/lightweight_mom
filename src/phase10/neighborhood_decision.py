@@ -22,6 +22,7 @@ class FiveCellPredictiveError:
     "N=E=S=W != C" case, which by construction leaves the diagonals at the center geometry) while
     the true environment also perturbs the 4 diagonals (``s_9cell_true``, the genuine 9-cell
     uniform reference)."""
+
     contrast_label: str
     s0: complex
     s_5cell_prediction: complex
@@ -33,7 +34,11 @@ class FiveCellPredictiveError:
 def five_cell_predictive_error(contrast_label, s0, s_5cell_prediction, s_9cell_true):
     err = abs(s_9cell_true - s_5cell_prediction)
     return FiveCellPredictiveError(
-        contrast_label, s0, s_5cell_prediction, s_9cell_true, err,
+        contrast_label,
+        s0,
+        s_5cell_prediction,
+        s_9cell_true,
+        err,
         err / abs(s0) if abs(s0) > 0 else float("inf"),
     )
 
@@ -52,9 +57,9 @@ def classify_per_contrast(predictive_error: FiveCellPredictiveError):
 
 @dataclass(frozen=True)
 class NeighborhoodDecision:
-    per_contrast: dict          # contrast_label -> FiveCellPredictiveError
+    per_contrast: dict  # contrast_label -> FiveCellPredictiveError
     per_contrast_classification: dict
-    long_range_relative: dict   # direction -> relative-to-s0 deviation at the tested contrast
+    long_range_relative: dict  # direction -> relative-to-s0 deviation at the tested contrast
     long_range_significant: bool
     final_decision: str
     rationale: str
@@ -66,16 +71,13 @@ def decide_neighborhood_size(predictive_errors_by_contrast, long_range_cases, s0
     tested contrast level, since a holographic surface can contain extreme environments
     (Sec. 26's own principle, applied here to the neighborhood-size decision as well) --
     consistent with, not weaker than, any individual contrast level's own classification."""
-    per_classification = {
-        label: classify_per_contrast(pe) for label, pe in predictive_errors_by_contrast.items()
-    }
+    per_classification = {label: classify_per_contrast(pe) for label, pe in predictive_errors_by_contrast.items()}
     worst_label = max(predictive_errors_by_contrast, key=lambda k: predictive_errors_by_contrast[k].relative_to_s0)
     worst = predictive_errors_by_contrast[worst_label]
     worst_classification = per_classification[worst_label]
 
     long_range_relative = {
-        d: (c.delta_s_abs / abs(s0_5x5) if abs(s0_5x5) > 0 else float("inf"))
-        for d, c in long_range_cases.items()
+        d: (c.delta_s_abs / abs(s0_5x5) if abs(s0_5x5) > 0 else float("inf")) for d, c in long_range_cases.items()
     }
     long_range_significant = any(v > NOISE_FLOOR_RELATIVE for v in long_range_relative.values())
 
@@ -102,15 +104,21 @@ def decide_neighborhood_size(predictive_errors_by_contrast, long_range_cases, s0
             f"({worst.relative_to_s0:.3e} of the baseline magnitude) exceeds the solver's "
             f"self-consistency floor, so the cardinal-only (5-cell) model is not sufficient; "
             f"distance-2 neighbor effects "
-            + ("were also measurable but the worst-case deviation did not reach the "
-               f"{SUBSTANTIAL_DEVIATION_RELATIVE:.1f} substantiality criterion, so a 3x3 (9-cell) "
-               "neighborhood is reported as the required (not merely convenient) size."
-               if long_range_significant else
-               "remained at or below the solver's noise floor, so a 3x3 (9-cell) neighborhood "
-               "is reported as sufficient beyond the immediate ring.")
+            + (
+                "were also measurable but the worst-case deviation did not reach the "
+                f"{SUBSTANTIAL_DEVIATION_RELATIVE:.1f} substantiality criterion, so a 3x3 (9-cell) "
+                "neighborhood is reported as the required (not merely convenient) size."
+                if long_range_significant
+                else "remained at or below the solver's noise floor, so a 3x3 (9-cell) neighborhood "
+                "is reported as sufficient beyond the immediate ring."
+            )
         )
 
     return NeighborhoodDecision(
-        predictive_errors_by_contrast, per_classification, long_range_relative,
-        long_range_significant, final, rationale,
+        predictive_errors_by_contrast,
+        per_classification,
+        long_range_relative,
+        long_range_significant,
+        final,
+        rationale,
     )

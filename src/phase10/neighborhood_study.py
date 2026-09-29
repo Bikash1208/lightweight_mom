@@ -48,23 +48,22 @@ class CenterStudyResult:
     center_name: str
     center_lw_mm: tuple
     contrast_values_mm: dict
-    five_cell_cases: dict            # label -> {case_name: FiveCellCase}
-    contributions: dict              # label -> {dir: NeighborContribution}
-    nonlinearity: dict                # label -> [NonlinearityResult]
-    diagonal_cases: dict              # label -> {case_name: DiagonalCase}
-    diagonal_contributions: dict      # label -> {dir: NeighborContribution}
-    cardinal_vs_diagonal: dict        # label -> CardinalVsDiagonal
-    nine_cell_true_px: dict           # label -> complex
-    predictive_errors: dict           # label -> FiveCellPredictiveError
-    correlated: object                # CorrelatedEnvironmentResult
+    five_cell_cases: dict  # label -> {case_name: FiveCellCase}
+    contributions: dict  # label -> {dir: NeighborContribution}
+    nonlinearity: dict  # label -> [NonlinearityResult]
+    diagonal_cases: dict  # label -> {case_name: DiagonalCase}
+    diagonal_contributions: dict  # label -> {dir: NeighborContribution}
+    cardinal_vs_diagonal: dict  # label -> CardinalVsDiagonal
+    nine_cell_true_px: dict  # label -> complex
+    predictive_errors: dict  # label -> FiveCellPredictiveError
+    correlated: object  # CorrelatedEnvironmentResult
     long_range_baseline_px: complex
-    long_range_cases: dict            # direction -> LongRangeCase
-    decision: object                  # NeighborhoodDecision
+    long_range_cases: dict  # direction -> LongRangeCase
+    decision: object  # NeighborhoodDecision
     discretization_floor_flags: dict  # label -> bool
 
 
-def run_center_study(center_name, center_lw_mm, period_m, substrate, metal, frequency_hz,
-                      mesh_cells_per_subcell=8):
+def run_center_study(center_name, center_lw_mm, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell=8):
     contrast_values = resolve_contrast_values(center_lw_mm)
 
     five_cell_cases, contributions, nonlinearity = {}, {}, {}
@@ -72,23 +71,26 @@ def run_center_study(center_name, center_lw_mm, period_m, substrate, metal, freq
     nine_cell_true, predictive_errors, floor_flags = {}, {}, {}
 
     for label, contrast_lw in contrast_values.items():
-        cases = ns.run_five_cell_test_matrix(center_lw_mm, contrast_lw, period_m, substrate, metal,
-                                              frequency_hz, mesh_cells_per_subcell)
+        cases = ns.run_five_cell_test_matrix(
+            center_lw_mm, contrast_lw, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell
+        )
         five_cell_cases[label] = cases
         contribs = ns.neighbor_contributions(cases)
         contributions[label] = contribs
         nonlinearity[label] = ns.nonlinearity_tests(cases)
 
         s0 = cases["5A_homogeneous"].px
-        d_cases = ds.run_diagonal_single_tests(center_lw_mm, contrast_lw, period_m, substrate, metal,
-                                                frequency_hz, mesh_cells_per_subcell)
+        d_cases = ds.run_diagonal_single_tests(
+            center_lw_mm, contrast_lw, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell
+        )
         diagonal_cases[label] = d_cases
         d_contribs = ds.diagonal_contributions(d_cases, s0)
         diagonal_contribs[label] = d_contribs
         cvd[label] = ds.compare_cardinal_vs_diagonal(label, contribs, d_contribs)
 
-        s9true, _ = ds.run_full_9cell_uniform(center_lw_mm, contrast_lw, period_m, substrate, metal,
-                                               frequency_hz, mesh_cells_per_subcell)
+        s9true, _ = ds.run_full_9cell_uniform(
+            center_lw_mm, contrast_lw, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell
+        )
         nine_cell_true[label] = s9true
         predictive_errors[label] = nd.five_cell_predictive_error(label, s0, cases["5D_all"].px, s9true)
         floor_flags[label] = _hits_discretization_floor(contribs) or _hits_discretization_floor(d_contribs)
@@ -97,29 +99,49 @@ def run_center_study(center_name, center_lw_mm, period_m, substrate, metal, freq
     # demanding, unambiguous pair of distinct geometries available).
     low, high = eg.strong_neighbor_low_high(center_lw_mm)
     correlated = ds.run_correlated_environment_test(
-        center_lw_mm, (low, low), (high, high), period_m, substrate, metal, frequency_hz,
+        center_lw_mm,
+        (low, low),
+        (high, high),
+        period_m,
+        substrate,
+        metal,
+        frequency_hz,
         mesh_cells_per_subcell,
     )
 
     # Sec. 17: long-range (2-period) test, using the "strong_low" contrast as the representative,
     # most-demanding perturbation (a documented scoping choice, not tested at every contrast level
     # to keep the per-center cost bounded).
-    lr_baseline = lr.solve_5x5_homogeneous(center_lw_mm, period_m, substrate, metal, frequency_hz,
-                                            mesh_cells_per_subcell)
-    lr_cases = lr.run_long_range_test(center_lw_mm, (low, low), lr_baseline, period_m, substrate,
-                                       metal, frequency_hz, mesh_cells_per_subcell)
+    lr_baseline = lr.solve_5x5_homogeneous(
+        center_lw_mm, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell
+    )
+    lr_cases = lr.run_long_range_test(
+        center_lw_mm, (low, low), lr_baseline, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell
+    )
 
     decision = nd.decide_neighborhood_size(predictive_errors, lr_cases, lr_baseline)
 
     return CenterStudyResult(
-        center_name, center_lw_mm, contrast_values, five_cell_cases, contributions, nonlinearity,
-        diagonal_cases, diagonal_contribs, cvd, nine_cell_true, predictive_errors, correlated,
-        lr_baseline, lr_cases, decision, floor_flags,
+        center_name,
+        center_lw_mm,
+        contrast_values,
+        five_cell_cases,
+        contributions,
+        nonlinearity,
+        diagonal_cases,
+        diagonal_contribs,
+        cvd,
+        nine_cell_true,
+        predictive_errors,
+        correlated,
+        lr_baseline,
+        lr_cases,
+        decision,
+        floor_flags,
     )
 
 
-def run_full_neighborhood_study(centers_mm, period_m, substrate, metal, frequency_hz,
-                                 mesh_cells_per_subcell=8):
+def run_full_neighborhood_study(centers_mm, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell=8):
     """Sec. 6: repeats ``run_center_study`` for every center cell given (default: all five of
     ``environment_geometry.CENTER_CELLS_MM``)."""
     return {

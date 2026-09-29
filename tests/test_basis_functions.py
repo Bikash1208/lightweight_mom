@@ -1,7 +1,5 @@
 """Rooftop basis: mesh, support, continuity, periodic wrap, transform."""
 
-import math
-
 import numpy as np
 import pytest
 
@@ -27,11 +25,18 @@ def unit_vector(basis, index):
 
 # ------------------------------------------------------------------ mesh / counts
 
+
 def test_mesh_settings_validation():
     MeshSettings(2, 2, 1)
-    MeshSettings(8, 8, 4)                       # 2*4 + 1 = 9 >= 8: minimum full-rank truncation
-    for kw in (dict(cells_x=1), dict(cells_y=0), dict(floquet_order=-1),
-               dict(cells_x=4.0), dict(cells_y=True), dict(floquet_order="3")):
+    MeshSettings(8, 8, 4)  # 2*4 + 1 = 9 >= 8: minimum full-rank truncation
+    for kw in (
+        dict(cells_x=1),
+        dict(cells_y=0),
+        dict(floquet_order=-1),
+        dict(cells_x=4.0),
+        dict(cells_y=True),
+        dict(floquet_order="3"),
+    ):
         args = dict(cells_x=4, cells_y=4, floquet_order=2)
         args.update(kw)
         with pytest.raises(ValueError):
@@ -43,7 +48,7 @@ def test_floquet_order_must_resolve_the_mesh():
     for cells, order in [(8, 3), (16, 7), (9, 3), (4, 0)]:
         with pytest.raises(ValueError, match="too small"):
             MeshSettings(cells, cells, order)
-    MeshSettings(9, 4, 4)                       # anisotropic: uses the larger of the two
+    MeshSettings(9, 4, 4)  # anisotropic: uses the larger of the two
     with pytest.raises(ValueError, match="too small"):
         MeshSettings(4, 20, 8)
 
@@ -61,10 +66,10 @@ def test_unknown_counts_for_aligned_rectangle():
 def test_ordering_x_directed_first_and_centers_on_mesh_lines():
     b = RooftopBasis(cell("rectangle", 4e-3, 2e-3), 8, 8)
     assert np.all(b.direction[: b.n_x] == 0) and np.all(b.direction[b.n_x :] == 1)
-    xm = (b.center_x[: b.n_x] + PX / 2) / b.dx           # x-directed: x on a mesh line (integer)
-    ym = (b.center_y[: b.n_x] + PY / 2) / b.dy - 0.5     # ... y at a cell centre (half-integer)
+    xm = (b.center_x[: b.n_x] + PX / 2) / b.dx  # x-directed: x on a mesh line (integer)
+    ym = (b.center_y[: b.n_x] + PY / 2) / b.dy - 0.5  # ... y at a cell centre (half-integer)
     assert np.allclose(xm, np.round(xm)) and np.allclose(ym, np.round(ym))
-    xm = (b.center_x[b.n_x :] + PX / 2) / b.dx - 0.5     # y-directed: swapped
+    xm = (b.center_x[b.n_x :] + PX / 2) / b.dx - 0.5  # y-directed: swapped
     ym = (b.center_y[b.n_x :] + PY / 2) / b.dy
     assert np.allclose(xm, np.round(xm)) and np.allclose(ym, np.round(ym))
 
@@ -80,7 +85,7 @@ def test_every_unknown_sits_between_two_metal_cells_and_none_elsewhere():
             normal = np.eye(2)[b.direction[k]]
             for sign in (-1.0, 1.0):
                 p = centre + sign * normal * step / 2
-                assert c.is_metal(*p)                       # both neighbouring cell centroids
+                assert c.is_metal(*p)  # both neighbouring cell centroids
         # and conversely: count all metal-metal edges by brute force (with periodic wrap)
         m = b.metal_mask
         expect_x = sum(m[i, j] and m[(i - 1) % 8, j] for i in range(8) for j in range(8))
@@ -108,14 +113,14 @@ def test_slot_is_represented_by_metal_complement():
 def test_isolated_patch_has_no_seam_edges_but_full_length_dipole_has():
     p = RooftopBasis(cell("patch", 4e-3, 4e-3), 8, 8)
     assert not np.any(np.isclose(p.center_x[: p.n_x], -PX / 2))
-    d = RooftopBasis(cell("dipole", 8e-3, 1e-3), 8, 8)     # spans the full period along x
+    d = RooftopBasis(cell("dipole", 8e-3, 1e-3), 8, 8)  # spans the full period along x
     assert np.any(np.isclose(d.center_x[: d.n_x], -PX / 2))
-    assert d.n_x == 8 and d.n_y == 0                        # one full row of 8 wrapped edges
+    assert d.n_x == 8 and d.n_y == 0  # one full row of 8 wrapped edges
 
 
 def test_metal_too_small_for_mesh_is_an_error():
     with pytest.raises(ValueError, match="no interior metal edges"):
-        RooftopBasis(cell("patch", 1e-3, 1e-3), 8, 8)       # a single metal cell has no interior edge
+        RooftopBasis(cell("patch", 1e-3, 1e-3), 8, 8)  # a single metal cell has no interior edge
 
 
 def test_wrong_length_coefficients_rejected():
@@ -128,13 +133,14 @@ def test_wrong_length_coefficients_rejected():
 
 # ------------------------------------------------------------------------- support
 
+
 @pytest.mark.parametrize("which", ["x", "y"])
 def test_single_rooftop_support_peak_and_linearity(which):
     b = RooftopBasis(cell("rectangle", 4e-3, 4e-3), 8, 8)
     k = 0 if which == "x" else b.n_x
     xc, yc = b.center_x[k], b.center_y[k]
-    nrm = 0 if which == "x" else 1          # axis along which the rooftop varies linearly
-    tgt = 1 - nrm                           # axis along which it is a pulse
+    nrm = 0 if which == "x" else 1  # axis along which the rooftop varies linearly
+    tgt = 1 - nrm  # axis along which it is a pulse
     d_norm = b.dx if which == "x" else b.dy
     d_tan = b.dy if which == "x" else b.dx
     e = unit_vector(b, k)
@@ -147,9 +153,9 @@ def test_single_rooftop_support_peak_and_linearity(which):
 
     comp = 0 if which == "x" else 1
     other = 1 - comp
-    assert J(0.0, 0.0)[comp] == pytest.approx(1.0, abs=1e-14)            # peak = 1 at the edge
+    assert J(0.0, 0.0)[comp] == pytest.approx(1.0, abs=1e-14)  # peak = 1 at the edge
     assert J(0.0, 0.0)[other] == 0.0
-    for frac in (0.25, 0.5, 0.75):                                         # linear ramps both sides
+    for frac in (0.25, 0.5, 0.75):  # linear ramps both sides
         assert J(frac * d_norm, 0.0)[comp] == pytest.approx(1 - frac, abs=1e-14)
         assert J(-frac * d_norm, 0.0)[comp] == pytest.approx(1 - frac, abs=1e-14)
     # support: |normal| < d_norm and |tangential| < d_tan / 2, zero outside
@@ -180,6 +186,7 @@ def test_support_is_exactly_two_mesh_cells():
 
 # ------------------------------------------------------------------ continuity
 
+
 def test_normal_component_continuous_across_every_mesh_line():
     """Divergence-conforming: J_x is continuous across x = const lines (J_y across y = const),
     for arbitrary coefficients; the tangential component may jump."""
@@ -187,7 +194,7 @@ def test_normal_component_continuous_across_every_mesh_line():
     rng = np.random.default_rng(2)
     coeffs = rng.normal(size=b.n_unknowns) + 1j * rng.normal(size=b.n_unknowns)
     eps = 1e-9
-    lipschitz_tol = 10 * eps / b.dx * np.abs(coeffs).max()     # |dJ| <= |c| * 2*eps/dx across the gap
+    lipschitz_tol = 10 * eps / b.dx * np.abs(coeffs).max()  # |dJ| <= |c| * 2*eps/dx across the gap
     y = rng.uniform(-PY / 2 + 0.1e-3, PY / 2 - 0.1e-3, 40)
     for line in range(1, 16):
         xl = -PX / 2 + line * b.dx
@@ -232,10 +239,11 @@ def test_rooftop_charge_is_piecewise_constant_and_neutral():
 
 # ----------------------------------------------------------- periodic wrap / Bloch
 
+
 @pytest.mark.parametrize("kx0, ky0", [(0.0, 0.0), (137.0, -95.0)])
 def test_bloch_periodicity_of_current(kx0, ky0):
     """J(r + P) = J(r) exp(-j k0.P) everywhere, including wrapped (seam) unknowns."""
-    b = RooftopBasis(cell("slot", 6e-3, 2e-3), 8, 8)       # metal touches every cell edge
+    b = RooftopBasis(cell("slot", 6e-3, 2e-3), 8, 8)  # metal touches every cell edge
     rng = np.random.default_rng(4)
     coeffs = rng.normal(size=b.n_unknowns) + 1j * rng.normal(size=b.n_unknowns)
     x = rng.uniform(-PX, PX, 300)
@@ -257,7 +265,7 @@ def test_current_flows_continuously_across_the_cell_boundary():
     inside = b.evaluate(np.full(5, PX / 2 - eps), y, coeffs, kx0, 0.0)[:, 0]
     across = b.evaluate(np.full(5, PX / 2 + eps), y, coeffs, kx0, 0.0)[:, 0]
     assert np.allclose(inside, across, rtol=0, atol=tol)
-    assert np.abs(inside).max() > 0.9                       # non-trivial: real current at the seam
+    assert np.abs(inside).max() > 0.9  # non-trivial: real current at the seam
     # Bloch relation on the far side: J(Px/2 + eps) = J(-Px/2 + eps) exp(-j kx0 Px)
     wrapped = b.evaluate(np.full(5, -PX / 2 + eps), y, coeffs, kx0, 0.0)[:, 0] * np.exp(-1j * kx0 * PX)
     assert np.allclose(across, wrapped, rtol=0, atol=tol)
@@ -299,6 +307,7 @@ def test_zero_normal_current_on_metal_boundary_for_any_coefficients():
 
 # --------------------------------------------------------------------- transform
 
+
 def numeric_transform(b, index, kx, ky, n=512):
     """Direct midpoint quadrature of integral f e^{+jk.r} dA over the cell (interior rooftops)."""
     x = -PX / 2 + (np.arange(n) + 0.5) * PX / n
@@ -336,7 +345,7 @@ def test_transform_of_bloch_extension_equals_unwrapped_transform(kx0, ky0):
     """The transform over ONE cell of the Bloch-periodic (wrapped) rooftop equals Phi(k_mn):
     validates fold + Bloch phases in `evaluate` against the closed form used in the assembly."""
     b = RooftopBasis(cell("slot", 6e-3, 2e-3), 8, 8)
-    seam = int(np.flatnonzero(np.isclose(b.center_x[: b.n_x], -PX / 2))[0])        # wrapped x-rooftop
+    seam = int(np.flatnonzero(np.isclose(b.center_x[: b.n_x], -PX / 2))[0])  # wrapped x-rooftop
     seam_y = b.n_x + int(np.flatnonzero(np.isclose(b.center_y[b.n_x :], -PY / 2))[0])
     n = 512
     x = -PX / 2 + (np.arange(n) + 0.5) * PX / n

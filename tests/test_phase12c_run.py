@@ -19,15 +19,22 @@ def reduced_result(tmp_path_factory):
         periodic_n_cells=4,
         coupling_sizes=(1, 3),
         spot_check_mesh_cells_per_subcell=4,
-        export_mesh_cells_per_side=8,   # 4 is too coarse to resolve L=1.6 mm (SINGLE_CELL_L_MM's
-                                         # smallest value) at P=8 mm -- see test_phase12c_exports.py
+        export_mesh_cells_per_side=8,  # 4 is too coarse to resolve L=1.6 mm (SINGLE_CELL_L_MM's
+        # smallest value) at P=8 mm -- see test_phase12c_exports.py
     )
 
 
 def test_reduced_run_produces_every_output_file(reduced_result):
     out = reduced_result.output_dir
-    for name in ("task_a.json", "task_b.json", "task_c.json", "task_d.json",
-                 "task_d_spot_check.csv", "phase12c_gate_status.json", "phase12c_report.md"):
+    for name in (
+        "task_a.json",
+        "task_b.json",
+        "task_c.json",
+        "task_d.json",
+        "task_d_spot_check.csv",
+        "phase12c_gate_status.json",
+        "phase12c_report.md",
+    ):
         assert (out / name).exists(), name
 
 

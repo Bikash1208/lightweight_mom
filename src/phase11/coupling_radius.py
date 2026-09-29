@@ -16,15 +16,15 @@ from dataclasses import dataclass
 from . import patterns as pt
 from .reference_solver import solve_grid
 
-SIZES = (1, 3, 5, 7, 9)          # Sec. 5: the main, full-per-center convergence series, run for
-                                  # every center cell.
-SUPPLEMENTARY_SIZE = 11          # Sec. 5's own "where computationally practical" qualifier: 11x11
-                                  # is run as a spot-check (primary center only, `run.py`) rather
-                                  # than in the routine per-center loop -- a single solve at this
-                                  # size was measured at ~13-38 s depending on system load, an
-                                  # order of magnitude more expensive than the rest of the series
-                                  # combined, and a disclosed scoping choice matching Phase 10's own
-                                  # documented cost/coverage trade-offs.
+SIZES = (1, 3, 5, 7, 9)  # Sec. 5: the main, full-per-center convergence series, run for
+# every center cell.
+SUPPLEMENTARY_SIZE = 11  # Sec. 5's own "where computationally practical" qualifier: 11x11
+# is run as a spot-check (primary center only, `run.py`) rather
+# than in the routine per-center loop -- a single solve at this
+# size was measured at ~13-38 s depending on system load, an
+# order of magnitude more expensive than the rest of the series
+# combined, and a disclosed scoping choice matching Phase 10's own
+# documented cost/coverage trade-offs.
 
 
 def build_growing_pattern_mm(center_lw_mm, max_n):
@@ -48,7 +48,7 @@ def truncate_centered(grid_mm, n):
     if n > max_n:
         raise ValueError(f"truncate_centered: n={n} exceeds the pattern size {max_n}")
     lo = (max_n - n) // 2
-    return [row[lo:lo + n] for row in grid_mm[lo:lo + n]]
+    return [row[lo : lo + n] for row in grid_mm[lo : lo + n]]
 
 
 @dataclass(frozen=True)
@@ -58,8 +58,9 @@ class CouplingRadiusPoint:
     n_unknowns: int
 
 
-def run_coupling_radius_series(center_lw_mm, period_m, substrate, metal, frequency_hz,
-                                mesh_cells_per_subcell=8, sizes=SIZES, polarization="x"):
+def run_coupling_radius_series(
+    center_lw_mm, period_m, substrate, metal, frequency_hz, mesh_cells_per_subcell=8, sizes=SIZES, polarization="x"
+):
     """Sec. 5-6: one `CouplingRadiusPoint` per requested size, all truncations of the SAME
     underlying pattern (``build_growing_pattern_mm``)."""
     max_n = max(sizes)
@@ -68,8 +69,9 @@ def run_coupling_radius_series(center_lw_mm, period_m, substrate, metal, frequen
     for n in sorted(sizes):
         grid_mm = truncate_centered(full_grid_mm, n)
         grid_m = [[(l * 1e-3, w * 1e-3) for (l, w) in row] for row in grid_mm]
-        sg = solve_grid(n, period_m, substrate, metal, grid_m, frequency_hz, mesh_cells_per_subcell,
-                         polarization=polarization)
+        sg = solve_grid(
+            n, period_m, substrate, metal, grid_m, frequency_hz, mesh_cells_per_subcell, polarization=polarization
+        )
         mid = n // 2
         points.append(CouplingRadiusPoint(n, sg.response_at(mid, mid), sg.n_unknowns))
     return points
@@ -80,7 +82,7 @@ class ShellIncrement:
     n_from: int
     n_to: int
     delta_complex: float
-    delta_relative: float   # relative to the R_(N-2) magnitude (the "before adding this shell" value)
+    delta_relative: float  # relative to the R_(N-2) magnitude (the "before adding this shell" value)
 
 
 def compute_shell_increments(points):

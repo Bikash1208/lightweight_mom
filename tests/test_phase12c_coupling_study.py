@@ -22,9 +22,9 @@ def test_gradient_pattern_center_is_exact():
 
 def test_checkerboard_pattern_matches_phase11_definition():
     grid = cs.build_checkerboard_pattern_mm(2.0, 6.0, 3)
-    assert grid[1][1] == (2.0, 2.0)          # centre keeps the centre value
-    assert grid[0][1] == (6.0, 6.0)          # cardinal neighbour is the contrast value
-    assert grid[0][0] == (2.0, 2.0)          # diagonal neighbour equals the centre (5-cell pattern)
+    assert grid[1][1] == (2.0, 2.0)  # centre keeps the centre value
+    assert grid[0][1] == (6.0, 6.0)  # cardinal neighbour is the contrast value
+    assert grid[0][0] == (2.0, 2.0)  # diagonal neighbour equals the centre (5-cell pattern)
 
 
 def test_coupling_radius_series_is_monotone_truncation_of_one_pattern():

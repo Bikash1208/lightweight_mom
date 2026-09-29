@@ -11,8 +11,8 @@ from .query import UnitCellQuery, search_unit_cells
 @dataclass(frozen=True)
 class ProjectLibrary:
     query: UnitCellQuery
-    source_library_ids: tuple      # LibraryEntry.library_id values this subset was extracted from
-    entries: tuple                 # the matching LibraryEntry objects themselves (read-only refs)
+    source_library_ids: tuple  # LibraryEntry.library_id values this subset was extracted from
+    entries: tuple  # the matching LibraryEntry objects themselves (read-only refs)
 
 
 def extract_project_library(universal_db, query: UnitCellQuery):
@@ -28,6 +28,7 @@ def extract_project_library(universal_db, query: UnitCellQuery):
             f"'{result.eliminated_at}'); use build_request.generate_build_request(result) instead"
         )
     return ProjectLibrary(
-        query=query, source_library_ids=tuple(e.library_id for e in result.matching_entries),
+        query=query,
+        source_library_ids=tuple(e.library_id for e in result.matching_entries),
         entries=result.matching_entries,
     )

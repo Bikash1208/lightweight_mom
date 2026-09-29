@@ -2,18 +2,15 @@
 sourced from this project's own authoritative `config.yaml` where the brief allows it; validation
 rejects an out-of-range sweep rather than silently truncating it."""
 
-import math
-
 import pytest
 import yaml
 
-from src.config import config_from_dict
 from src.library_schema import (
+    _AUTHORITATIVE_CONFIG_PATH,
     DEFAULT_MESH,
     L_VALUES_MM,
     W_VALUES_MM,
     LibraryConfig,
-    _AUTHORITATIVE_CONFIG_PATH,
 )
 
 ROOT_CONFIG = yaml.safe_load(_AUTHORITATIVE_CONFIG_PATH.read_text())
@@ -48,7 +45,7 @@ def test_frequency_grid_has_exactly_201_points_10_to_15_ghz():
     freqs = [cfg.f_min_hz + i * cfg.f_step_hz for i in range(n)]
     assert freqs[0] == pytest.approx(10.0e9)
     assert freqs[-1] == pytest.approx(15.0e9)
-    assert any(abs(f - 12.5e9) < 1.0 for f in freqs)   # exact grid point, not merely "close"
+    assert any(abs(f - 12.5e9) < 1.0 for f in freqs)  # exact grid point, not merely "close"
 
 
 def test_l_w_sweep_is_18_values_1p0_to_4p4_step_0p2():
@@ -98,8 +95,12 @@ def test_rejects_l_w_that_does_not_fit_the_period():
         LibraryConfig(
             period_m=4.8e-3,
             substrate={"name": "x", "eps_r": 2.2, "tan_delta": 0.0, "thickness_m": 1.575e-3},
-            f_min_hz=10.0e9, f_max_hz=15.0e9, f_step_hz=25.0e6, f_design_hz=12.5e9,
-            l_values_mm=(1.0, 5.0), w_values_mm=(1.0, 2.0),   # 5.0 mm >= 4.8 mm period
+            f_min_hz=10.0e9,
+            f_max_hz=15.0e9,
+            f_step_hz=25.0e6,
+            f_design_hz=12.5e9,
+            l_values_mm=(1.0, 5.0),
+            w_values_mm=(1.0, 2.0),  # 5.0 mm >= 4.8 mm period
         )
 
 
@@ -108,6 +109,10 @@ def test_rejects_design_frequency_outside_the_band():
         LibraryConfig(
             period_m=4.8e-3,
             substrate={"name": "x", "eps_r": 2.2, "tan_delta": 0.0, "thickness_m": 1.575e-3},
-            f_min_hz=10.0e9, f_max_hz=15.0e9, f_step_hz=25.0e6, f_design_hz=20.0e9,
-            l_values_mm=(1.0,), w_values_mm=(1.0,),
+            f_min_hz=10.0e9,
+            f_max_hz=15.0e9,
+            f_step_hz=25.0e6,
+            f_design_hz=20.0e9,
+            l_values_mm=(1.0,),
+            w_values_mm=(1.0,),
         )

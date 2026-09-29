@@ -59,15 +59,16 @@ class CheckpointError(RuntimeError):
 @dataclass(frozen=True, eq=False)
 class SweepResult:
     database: Database
-    computed: int          # (cell, frequency) results and refinement studies solved in this call
-    reused: int            # taken from the checkpoint
-    dropped: int           # unreadable checkpoint lines discarded (and recomputed if needed)
+    computed: int  # (cell, frequency) results and refinement studies solved in this call
+    reused: int  # taken from the checkpoint
+    dropped: int  # unreadable checkpoint lines discarded (and recomputed if needed)
     checkpoint_path: Path | None = None
     json_path: Path | None = None
     csv_path: Path | None = None
 
 
 # ------------------------------------------------------------------------------ keys
+
 
 def record_key(cell_id, frequency, policy):
     return short_hash(
@@ -96,6 +97,7 @@ def refinement_key(cell_id, frequencies, refinement):
 
 # ------------------------------------------------------------------------ checkpoint file
 
+
 def _matrix_to_json(m):
     m = np.asarray(m, dtype=complex)
     return {"re": m.real.tolist(), "im": m.imag.tolist()}
@@ -120,8 +122,12 @@ def _valid_entry(entry):
         shape = (2, 2) if port_topology == "one_port" else (4, 4)
         float(data["frequency_hz"])
         Record(
-            data["cell_id"], 0, data["frequency_hz"], _matrix_from_json(data["s"], shape),
-            data["diagnostics"], port_topology=port_topology,
+            data["cell_id"],
+            0,
+            data["frequency_hz"],
+            _matrix_from_json(data["s"], shape),
+            data["diagnostics"],
+            port_topology=port_topology,
         )
     elif kind == "refinement":
         float(data["floquet_error"])
@@ -137,14 +143,14 @@ class Checkpoint:
     def __init__(self, path, resume=True, sync=True):
         self.path = Path(path) if path is not None else None
         self.sync = sync
-        self.entries = {}          # key -> (type, data)
+        self.entries = {}  # key -> (type, data)
         self.dropped = 0
         self._fh = None
         if self.path is None:
             return
         if self.path.exists() and self.path.stat().st_size > 0:
-            self._read(load_entries=resume)     # raises CheckpointError for a foreign file
-        self._write_all()                       # header + valid entries (compaction), atomically
+            self._read(load_entries=resume)  # raises CheckpointError for a foreign file
+        self._write_all()  # header + valid entries (compaction), atomically
         self._fh = open(self.path, "a", encoding="utf-8", newline="\n")
 
     # -- file handling
@@ -167,7 +173,7 @@ class Checkpoint:
         return json.dumps({"type": kind, "key": key, "data": data}, allow_nan=False) + "\n"
 
     def _read(self, load_entries):
-        with open(self.path, "r", encoding="utf-8", errors="replace") as fh:
+        with open(self.path, encoding="utf-8", errors="replace") as fh:
             lines = fh.read().split("\n")
         try:
             head = json.loads(lines[0])
@@ -220,6 +226,7 @@ class Checkpoint:
 
 # ------------------------------------------------------------------------------- solving
 
+
 def _diagnostics(s, n_unknowns, chk, area_ok):
     """Reciprocity/passivity from the (2, 2) S11 block for a grounded (one-port) result, or the
     full (4, 4) matrix otherwise -- the same two properties (S = S^T; I - S^H S is PSD), just
@@ -244,8 +251,12 @@ def _diagnostics(s, n_unknowns, chk, area_ok):
 def _solve_record(plan, cell, frequency, policy):
     config = plan.config
     s = compute_s_parameters(
-        cell.unit_cell, float(frequency), config.mesh, config.reference_planes,
-        warn_grating=False, warn_surface_wave=False,
+        cell.unit_cell,
+        float(frequency),
+        config.mesh,
+        config.reference_planes,
+        warn_grating=False,
+        warn_surface_wave=False,
     )
     chk = check_frequency(cell.unit_cell, config.mesh, frequency, policy.min_cells_per_wavelength)
     return {
@@ -323,19 +334,24 @@ def run_sweep(config, out_dir=None, *, definition=None, resume=True, progress=No
                     computed += 1
                 else:
                     reused += 1
-                port_topology = data.get("port_topology", "two_port")   # Phase 12A; see _valid_entry
+                port_topology = data.get("port_topology", "two_port")  # Phase 12A; see _valid_entry
                 shape = (2, 2) if port_topology == "one_port" else (4, 4)
                 matrices.append(_matrix_from_json(data["s"], shape))
                 records.append(
                     Record(
-                        cell.cell_id, fi, float(f), matrices[-1], data["diagnostics"],
+                        cell.cell_id,
+                        fi,
+                        float(f),
+                        matrices[-1],
+                        data["diagnostics"],
                         port_topology=port_topology,
                     )
                 )
                 done += 1
                 if progress is not None:
-                    progress({"done": done, "total": total, "cell_index": cell.index,
-                              "frequency_index": fi, "reused": hit})
+                    progress(
+                        {"done": done, "total": total, "cell_index": cell.index, "frequency_index": fi, "reused": hit}
+                    )
 
             validation = dict(cell.checks)
             validation["refinement"] = None
@@ -347,9 +363,7 @@ def run_sweep(config, out_dir=None, *, definition=None, resume=True, progress=No
             if getattr(cell.unit_cell, "backing", "air") == "pec":
                 worst_f = float(plan.frequencies[-1])
                 green = LayeredGreenFunction(cell.unit_cell.substrate, worst_f, backing="pec")
-                validation["surface_wave"] = surface_wave_proximity(
-                    cell.unit_cell, green, config.mesh.floquet_order
-                )
+                validation["surface_wave"] = surface_wave_proximity(cell.unit_cell, green, config.mesh.floquet_order)
                 validation["surface_wave"]["frequency_hz"] = worst_f
             else:
                 validation["surface_wave"] = None
@@ -361,8 +375,12 @@ def run_sweep(config, out_dir=None, *, definition=None, resume=True, progress=No
                 if rdata is None:
                     errors = [
                         refinement_study(
-                            cell.unit_cell, config.reference_planes, config.mesh, plan.frequencies[i],
-                            matrices[i], ref.factor,
+                            cell.unit_cell,
+                            config.reference_planes,
+                            config.mesh,
+                            plan.frequencies[i],
+                            matrices[i],
+                            ref.factor,
                         )
                         for i in idx
                     ]
@@ -381,9 +399,7 @@ def run_sweep(config, out_dir=None, *, definition=None, resume=True, progress=No
                     "floquet_error": float(rdata["floquet_error"]),
                     "mesh_error": float(rdata["mesh_error"]),
                     "tolerance": ref.tolerance,
-                    "passed": bool(
-                        rdata["floquet_error"] <= ref.tolerance and rdata["mesh_error"] <= ref.tolerance
-                    ),
+                    "passed": bool(rdata["floquet_error"] <= ref.tolerance and rdata["mesh_error"] <= ref.tolerance),
                 }
             cells.append(CellEntry(cell.index, cell.cell_id, cell.parameters, "ok", None, validation))
         dropped = ckpt.dropped
@@ -405,6 +421,11 @@ def run_sweep(config, out_dir=None, *, definition=None, resume=True, progress=No
             writer(tmp)
             os.replace(tmp, path)
     return SweepResult(
-        database, computed, reused, dropped,
-        out / CHECKPOINT_NAME if out else None, json_path, csv_path,
+        database,
+        computed,
+        reused,
+        dropped,
+        out / CHECKPOINT_NAME if out else None,
+        json_path,
+        csv_path,
     )

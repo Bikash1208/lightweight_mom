@@ -1,7 +1,5 @@
 """Phase 8C Sec. 31-32, 55: numeric reciprocity and L/W-swap symmetry checks on real solved data."""
 
-import pytest
-
 from src.phase8c.reciprocity_symmetry import check_lw_swap_symmetry, check_reciprocity
 
 
@@ -32,8 +30,8 @@ def test_reciprocity_check_does_not_silently_correct_data():
 
         def record(self, index, freq_idx):
             s = np.zeros((4, 4), dtype=complex)
-            s[2, 0] = 0.5   # S21_xx
-            s[0, 2] = 0.9   # S12_xx -- deliberately NOT reciprocal
+            s[2, 0] = 0.5  # S21_xx
+            s[0, 2] = 0.9  # S12_xx -- deliberately NOT reciprocal
             return _FakeRecord(s)
 
     result = check_reciprocity(_FakeDB(), 0, tolerance=1e-6)
@@ -56,7 +54,7 @@ def test_lw_swap_symmetry_with_no_pairs_reports_explicitly():
             self.parameters = {"length_m": l_mm * 1e-3, "width_m": w_mm * 1e-3}
 
     class _FakeDB:
-        cells = [_FakeCell(0, 1.0, 2.0)]   # no (2.0, 1.0) counterpart
+        cells = [_FakeCell(0, 1.0, 2.0)]  # no (2.0, 1.0) counterpart
 
     result = check_lw_swap_symmetry(_FakeDB(), 0)
     assert result.n_pairs_checked == 0

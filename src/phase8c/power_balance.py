@@ -10,19 +10,18 @@ from dataclasses import dataclass
 import numpy as np
 
 from ..feasibility_grating import grating_check
-from ..polarization import co_cross_power
 
 
 @dataclass(frozen=True)
 class PowerBalance:
-    R_co: float          # |S11xx|^2
-    R_cross: float        # |S11yx|^2
-    T_co: float           # |S21xx|^2
-    T_cross: float        # |S21yx|^2
+    R_co: float  # |S11xx|^2
+    R_cross: float  # |S11yx|^2
+    T_co: float  # |S21xx|^2
+    T_cross: float  # |S21yx|^2
     R_total: float
     T_total: float
     R_plus_T: float
-    absorbed_fraction: float   # 1 - R_plus_T -- NOT claimed as "absorption" without the caveat below
+    absorbed_fraction: float  # 1 - R_plus_T -- NOT claimed as "absorption" without the caveat below
     note: str
 
 
@@ -46,9 +45,15 @@ def power_balance_for_record(record):
         "warning); see propagating_mode_check for that condition at this specific frequency."
     )
     return PowerBalance(
-        R_co=float(r_co), R_cross=float(r_cross), T_co=float(t_co), T_cross=float(t_cross),
-        R_total=float(r_total), T_total=float(t_total), R_plus_T=float(r_plus_t),
-        absorbed_fraction=float(1.0 - r_plus_t), note=note,
+        R_co=float(r_co),
+        R_cross=float(r_cross),
+        T_co=float(t_co),
+        T_cross=float(t_cross),
+        R_total=float(r_total),
+        T_total=float(t_total),
+        R_plus_T=float(r_plus_t),
+        absorbed_fraction=float(1.0 - r_plus_t),
+        note=note,
     )
 
 
@@ -57,7 +62,8 @@ def library_power_summary(database, frequency_index):
     feeds `topology_audit.audit_topology`'s architecture classification."""
     balances = [
         power_balance_for_record(database.record(cell.index, frequency_index))
-        for cell in database.cells if cell.status == "ok"
+        for cell in database.cells
+        if cell.status == "ok"
     ]
     if not balances:
         raise ValueError("library_power_summary: no successful cells")
@@ -81,15 +87,18 @@ def propagating_mode_check(unit_cell, frequencies_hz):
     results = [grating_check(lat.period_x, lat.period_y, f) for f in (min(frequencies_hz), max(frequencies_hz))]
     any_risk = any(r.is_grating_risk for r in results)
     return {
-        "period_x_m": lat.period_x, "period_y_m": lat.period_y,
+        "period_x_m": lat.period_x,
+        "period_y_m": lat.period_y,
         "grating_onset_hz": results[0].grating_onset_hz,
-        "band_min_hz": min(frequencies_hz), "band_max_hz": max(frequencies_hz),
+        "band_min_hz": min(frequencies_hz),
+        "band_max_hz": max(frequencies_hz),
         "only_fundamental_mode_propagates": not any_risk,
         "note": (
             "Only the fundamental (0,0) Floquet order propagates throughout the analyzed band "
-            f"(onset at {results[0].grating_onset_hz/1e9:.2f} GHz, far above it); S11/S21 fully "
-            "describe the specular scattered power." if not any_risk else
-            "A higher-order Floquet mode propagates within the analyzed band: S11/S21 alone do "
+            f"(onset at {results[0].grating_onset_hz / 1e9:.2f} GHz, far above it); S11/S21 fully "
+            "describe the specular scattered power."
+            if not any_risk
+            else "A higher-order Floquet mode propagates within the analyzed band: S11/S21 alone do "
             "NOT fully describe the scattered power; 1-R-T cannot be interpreted as absorption."
         ),
     }

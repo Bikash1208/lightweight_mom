@@ -19,8 +19,6 @@ already at this project's practical cost ceiling even at this reduced order (mea
 import time
 from dataclasses import dataclass
 
-import numpy as np
-
 from .. import solver as solver_mod
 from ..basis_functions import MeshSettings
 from ..excitation import PlaneWaveExcitation
@@ -33,7 +31,7 @@ from ..phase12c.locality_study import CurvePoint, build_periodic_phase_gradient_
 from .floquet_power import floquet_order_powers, intended_order_for_gradient
 from .reflection_metric import equivalent_reflection_from_dipole_moment
 
-APERTURE_FLOQUET_MARGIN = 8   # matches phase12c.spot_check's own Task-D convention
+APERTURE_FLOQUET_MARGIN = 8  # matches phase12c.spot_check's own Task-D convention
 
 
 def aperture_floquet_order(total_cells):
@@ -46,14 +44,15 @@ def build_lookup_curve(mesh_cells_per_subcell, l_values_mm):
     from ..basis_functions import RooftopBasis
     from ..sparameters import compute_s_parameters
 
-    floquet = 2 * mesh_cells_per_subcell   # isolated single-cell solves are cheap; use the fully
-                                            # validated convention (Phase 12C), not the reduced one.
+    floquet = 2 * mesh_cells_per_subcell  # isolated single-cell solves are cheap; use the fully
+    # validated convention (Phase 12C), not the reduced one.
     points = []
     for l_mm in l_values_mm:
         cell = dp.unit_cell_at(l_mm * 1e-3)
         mesh = MeshSettings(mesh_cells_per_subcell, mesh_cells_per_subcell, floquet)
-        s = compute_s_parameters(cell, dp.DESIGN_FREQUENCY_HZ, mesh, dp.REFERENCE_PLANES,
-                                  warn_grating=False, warn_surface_wave=False)
+        s = compute_s_parameters(
+            cell, dp.DESIGN_FREQUENCY_HZ, mesh, dp.REFERENCE_PLANES, warn_grating=False, warn_surface_wave=False
+        )
         n_unknowns = RooftopBasis(cell, mesh_cells_per_subcell, mesh_cells_per_subcell).n_unknowns
         points.append(CurvePoint(l_mm, s.magnitude("S11_xx"), s.phase_deg("S11_xx"), n_unknowns))
     return tuple(points)
@@ -63,8 +62,8 @@ def build_lookup_curve(mesh_cells_per_subcell, l_values_mm):
 class PerCellPhaseError:
     j: int
     l_mm: float
-    predicted_phase_deg: float     # lookup-table (isolated-cell) prediction
-    actual_phase_deg: float        # MoM full-supercell solve, per-cell equivalent reflection
+    predicted_phase_deg: float  # lookup-table (isolated-cell) prediction
+    actual_phase_deg: float  # MoM full-supercell solve, per-cell equivalent reflection
     phase_error_deg: float
 
 
@@ -82,10 +81,10 @@ class ApertureTestResult:
     fraction_intended: float
     fraction_specular: float
     total_propagating_fraction: float
-    spurious_orders: tuple         # ((m, n), fraction), every OTHER propagating order, sorted desc
+    spurious_orders: tuple  # ((m, n), fraction), every OTHER propagating order, sorted desc
     intended_order_phase_deg: float
-    predicted_intended_phase_deg: "float | None"   # generalized-Snell's-law prediction, if defined
-    per_cell_phase_errors: tuple   # PerCellPhaseError, one per column
+    predicted_intended_phase_deg: "float | None"  # generalized-Snell's-law prediction, if defined
+    per_cell_phase_errors: tuple  # PerCellPhaseError, one per column
 
 
 def run_aperture_test(n_cells, mesh_cells_per_subcell, l_values_mm):
@@ -97,7 +96,9 @@ def run_aperture_test(n_cells, mesh_cells_per_subcell, l_values_mm):
     t0 = time.perf_counter()
     curve = build_lookup_curve(mesh_cells_per_subcell, l_values_mm)
     grid_mm, achieved_span_deg, is_full_2pi, targets = build_periodic_phase_gradient_supercell(
-        curve, n_cells, mesh_cells_per_subcell,
+        curve,
+        n_cells,
+        mesh_cells_per_subcell,
     )
     grid_m = [[(l * 1e-3, l * 1e-3) for (l, _) in row] for row in grid_mm]
     supercell = build_grounded_supercell(n_cells, dp.PERIOD_M, dp.PERIOD_M, dp.SUBSTRATE, dp.METAL, grid_m)
@@ -110,7 +111,7 @@ def run_aperture_test(n_cells, mesh_cells_per_subcell, l_values_mm):
     currents = solver_mod.solve(system.z, system.v)
 
     green = LayeredGreenFunction(dp.SUBSTRATE, dp.DESIGN_FREQUENCY_HZ, backing="pec")
-    max_order = min(n_cells * 2, floquet)   # cover a few multiples of n_cells' own grating orders
+    max_order = min(n_cells * 2, floquet)  # cover a few multiples of n_cells' own grating orders
     power = floquet_order_powers(system.basis, currents, green, supercell.lattice, max_order)
 
     intended = intended_order_for_gradient(n_cells, gradient_axis="x")
@@ -135,7 +136,11 @@ def run_aperture_test(n_cells, mesh_cells_per_subcell, l_values_mm):
         cx = -dp.PERIOD_M * n_cells / 2 + (j + 0.5) * dp.PERIOD_M
         dipole = local_dipole_moment(system.basis, currents, cx, 0.0, dp.PERIOD_M / 2, dp.PERIOD_M / 2)
         actual = equivalent_reflection_from_dipole_moment(
-            dipole.px, dp.PERIOD_M, dp.SUBSTRATE, dp.DESIGN_FREQUENCY_HZ, dp.REFERENCE_PLANES,
+            dipole.px,
+            dp.PERIOD_M,
+            dp.SUBSTRATE,
+            dp.DESIGN_FREQUENCY_HZ,
+            dp.REFERENCE_PLANES,
         )
         predicted = next(c for c in curve if c.l_mm == l_mm)
         err = abs(wrapped_difference_deg(actual.phase_deg, predicted.s11_phase_deg))
@@ -143,11 +148,20 @@ def run_aperture_test(n_cells, mesh_cells_per_subcell, l_values_mm):
 
     runtime = time.perf_counter() - t0
     return ApertureTestResult(
-        n_cells=n_cells, mesh_cells_per_subcell=mesh_cells_per_subcell, floquet_order=floquet,
-        grid_mm=tuple(tuple(row) for row in grid_mm), achieved_span_deg=achieved_span_deg,
-        is_full_2pi=is_full_2pi, n_unknowns=system.basis.n_unknowns, runtime_s=runtime,
-        intended_order=intended, fraction_intended=fraction_intended, fraction_specular=fraction_specular,
-        total_propagating_fraction=power.total_propagating_fraction, spurious_orders=tuple(spurious),
-        intended_order_phase_deg=intended_phase, predicted_intended_phase_deg=None,
+        n_cells=n_cells,
+        mesh_cells_per_subcell=mesh_cells_per_subcell,
+        floquet_order=floquet,
+        grid_mm=tuple(tuple(row) for row in grid_mm),
+        achieved_span_deg=achieved_span_deg,
+        is_full_2pi=is_full_2pi,
+        n_unknowns=system.basis.n_unknowns,
+        runtime_s=runtime,
+        intended_order=intended,
+        fraction_intended=fraction_intended,
+        fraction_specular=fraction_specular,
+        total_propagating_fraction=power.total_propagating_fraction,
+        spurious_orders=tuple(spurious),
+        intended_order_phase_deg=intended_phase,
+        predicted_intended_phase_deg=None,
         per_cell_phase_errors=tuple(per_cell),
     )

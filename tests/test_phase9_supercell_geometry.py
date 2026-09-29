@@ -20,17 +20,17 @@ def test_build_supercell_period_equals_n_times_subperiod():
 
 
 def test_build_supercell_rejects_mismatched_period():
-    from src.periodic_bc import RectangularLattice
     from src.geometry import Geometry
+    from src.periodic_bc import RectangularLattice
 
     bad_lattice = RectangularLattice(3 * P, 3 * P)
     patches = tuple(tuple(Geometry(kind="rectangle", length=2.8e-3, width=2.8e-3) for _ in range(3)) for _ in range(3))
     with pytest.raises(ValueError):
-        SupercellUnitCell(bad_lattice, SUB, MET, 3, P, P * 1.1, patches)   # sub_period_y mismatched
+        SupercellUnitCell(bad_lattice, SUB, MET, 3, P, P * 1.1, patches)  # sub_period_y mismatched
 
 
 def test_build_supercell_rejects_patch_larger_than_its_subcell():
-    grid = [[(5.0e-3, 5.0e-3)] * 3 for _ in range(3)]   # subcell is 4.8mm; 5.0mm patch cannot fit
+    grid = [[(5.0e-3, 5.0e-3)] * 3 for _ in range(3)]  # subcell is 4.8mm; 5.0mm patch cannot fit
     with pytest.raises(ValueError):
         build_supercell(3, P, P, SUB, MET, grid)
 
@@ -44,7 +44,7 @@ def test_is_metal_identifies_the_correct_subcell_center():
     assert bool(sc.is_metal(np.array([0.0]), np.array([0.0]))[0])
     # centre of the corner (0,0) subcell must NOT be metal (only a tiny 0.5mm patch there)
     cx, cy = sc.sub_cell_center(0, 0)
-    corner_probe_x, corner_probe_y = cx + 1.5e-3, cy + 1.5e-3   # outside the tiny patch, inside the subcell
+    corner_probe_x, corner_probe_y = cx + 1.5e-3, cy + 1.5e-3  # outside the tiny patch, inside the subcell
     assert not bool(sc.is_metal(np.array([corner_probe_x]), np.array([corner_probe_y]))[0])
 
 
@@ -56,13 +56,15 @@ def test_metal_area_sums_every_subcell():
 
 def test_patches_must_be_centred_at_origin():
     from src.geometry import Geometry
-
     from src.periodic_bc import RectangularLattice
 
     lattice = RectangularLattice(3 * P, 3 * P)
     off_center = Geometry(kind="rectangle", length=1.0e-3, width=1.0e-3, center_x=1.0e-3)
     patches = tuple(
-        tuple(off_center if (i, j) == (0, 0) else Geometry(kind="rectangle", length=1.0e-3, width=1.0e-3) for j in range(3))
+        tuple(
+            off_center if (i, j) == (0, 0) else Geometry(kind="rectangle", length=1.0e-3, width=1.0e-3)
+            for j in range(3)
+        )
         for i in range(3)
     )
     with pytest.raises(ValueError):

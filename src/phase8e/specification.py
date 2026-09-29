@@ -51,11 +51,19 @@ def write_formulation_comparison_csv(rows, path):
     path = Path(path)
     with open(path, "w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh, lineterminator="\n")
-        writer.writerow([
-            "formulation", "required_quantity", "architecture_status", "reference_plane_status",
-            "family_exists", "mean_complex_error", "mean_amplitude_error", "mean_phase_error_deg",
-            "final_status",
-        ])
+        writer.writerow(
+            [
+                "formulation",
+                "required_quantity",
+                "architecture_status",
+                "reference_plane_status",
+                "family_exists",
+                "mean_complex_error",
+                "mean_amplitude_error",
+                "mean_phase_error_deg",
+                "final_status",
+            ]
+        )
         for r in rows:
             writer.writerow(r)
     return path
@@ -87,10 +95,21 @@ def write_object_spectrum_csv(object_spectrum, path):
     path = Path(path)
     with open(path, "w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh, lineterminator="\n")
-        writer.writerow(["theta_deg", "phi_deg", "kx_per_m", "ky_per_m", "kz_real_per_m", "kz_imag_per_m", "is_propagating"])
+        writer.writerow(
+            ["theta_deg", "phi_deg", "kx_per_m", "ky_per_m", "kz_real_per_m", "kz_imag_per_m", "is_propagating"]
+        )
         for p in object_spectrum.beams:
-            writer.writerow([p.theta_deg, p.phi_deg, repr(p.kx_per_m), repr(p.ky_per_m),
-                              repr(p.kz_per_m.real), repr(p.kz_per_m.imag), int(p.is_propagating)])
+            writer.writerow(
+                [
+                    p.theta_deg,
+                    p.phi_deg,
+                    repr(p.kx_per_m),
+                    repr(p.ky_per_m),
+                    repr(p.kz_per_m.real),
+                    repr(p.kz_per_m.imag),
+                    int(p.is_propagating),
+                ]
+            )
     return path
 
 
@@ -106,7 +125,9 @@ def write_required_response_map_csv(entries, path):
             is_complex = np.iscomplexobj(v_flat)
             for x, y, v in zip(x_flat, y_flat, v_flat):
                 if is_complex:
-                    writer.writerow([repr(x * 1e3), repr(y * 1e3), formulation, repr(float(v.real)), repr(float(v.imag))])
+                    writer.writerow(
+                        [repr(x * 1e3), repr(y * 1e3), formulation, repr(float(v.real)), repr(float(v.imag))]
+                    )
                 else:
                     writer.writerow([repr(x * 1e3), repr(y * 1e3), formulation, repr(float(v)), ""])
     return path
@@ -120,7 +141,17 @@ def write_library_response_map_csv(entries, path):
         writer.writerow(["L_mm", "W_mm", "component", "real", "imag", "mag", "phase_deg"])
         for rows, component_name in entries:
             for r in rows:
-                writer.writerow([repr(r.l_mm), repr(r.w_mm), component_name, repr(r.real), repr(r.imag), repr(r.mag), repr(r.phase_deg)])
+                writer.writerow(
+                    [
+                        repr(r.l_mm),
+                        repr(r.w_mm),
+                        component_name,
+                        repr(r.real),
+                        repr(r.imag),
+                        repr(r.mag),
+                        repr(r.phase_deg),
+                    ]
+                )
     return path
 
 

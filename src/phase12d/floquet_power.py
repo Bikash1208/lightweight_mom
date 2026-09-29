@@ -50,15 +50,15 @@ from ..sparameters import decompose_air_fields
 
 @dataclass(frozen=True)
 class FloquetPowerResult:
-    m: np.ndarray                  # (2N+1, 2N+1) int
-    n: np.ndarray                  # (2N+1, 2N+1) int
+    m: np.ndarray  # (2N+1, 2N+1) int
+    n: np.ndarray  # (2N+1, 2N+1) int
     kx: np.ndarray
     ky: np.ndarray
-    propagating: np.ndarray        # bool
-    fraction: np.ndarray           # P_mn / P_incident, real
-    e_reflected_x: np.ndarray      # (2N+1, 2N+1) complex: reflected E_x Floquet amplitude per
-                                    # order (the up-going field for order (0,0); phase of this is
-                                    # the "phase of the intended order" the brief asks for)
+    propagating: np.ndarray  # bool
+    fraction: np.ndarray  # P_mn / P_incident, real
+    e_reflected_x: np.ndarray  # (2N+1, 2N+1) complex: reflected E_x Floquet amplitude per
+    # order (the up-going field for order (0,0); phase of this is
+    # the "phase of the intended order" the brief asks for)
 
     @property
     def total_reflected_fraction(self):
@@ -92,14 +92,16 @@ def floquet_order_powers(basis, currents, green, lattice, max_order, incident_po
     kz = green.normal_wavenumbers(kx, ky)[0]
     propagating = kz.imag == 0.0
 
-    j = basis.current_coefficients(currents, kx, ky)   # (2N+1, 2N+1, 2)
+    j = basis.current_coefficients(currents, kx, ky)  # (2N+1, 2N+1, 2)
     e, h = green.sheet_fields(kx, ky, j, 0.0, sheet_side="above")
 
-    i0 = int(max_order)   # index of order (0, 0) in the (2*max_order+1) grid
-    pol_vec = np.array([1.0, 0.0], dtype=complex) if incident_polarization == "x" else np.array([0.0, 1.0], dtype=complex)
+    i0 = int(max_order)  # index of order (0, 0) in the (2*max_order+1) grid
+    pol_vec = (
+        np.array([1.0, 0.0], dtype=complex) if incident_polarization == "x" else np.array([0.0, 1.0], dtype=complex)
+    )
     e_stack, h_stack = green.stack_fields(0.0, 0.0, pol_vec, 0.0, port="top")
     up00, _ = decompose_air_fields(e[i0, i0] + e_stack, h[i0, i0] + h_stack)
-    h_up00 = np.array([-up00[1], up00[0]], dtype=complex) / ETA0   # H_up = z x E_up / eta0 (kt=0, exact)
+    h_up00 = np.array([-up00[1], up00[0]], dtype=complex) / ETA0  # H_up = z x E_up / eta0 (kt=0, exact)
 
     e = e.copy()
     h = h.copy()

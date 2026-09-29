@@ -23,9 +23,14 @@ _SUBSTRATE = {"name": "Rogers RT/Duroid 5880", "eps_r": 2.2, "tan_delta": 0.0009
 
 def small_config():
     return LibraryConfig(
-        period_m=4.8e-3, substrate=_SUBSTRATE,
-        f_min_hz=11.0e9, f_max_hz=13.0e9, f_step_hz=1.0e9, f_design_hz=12.0e9,
-        l_values_mm=(1.0, 3.0), w_values_mm=(1.0, 3.0),
+        period_m=4.8e-3,
+        substrate=_SUBSTRATE,
+        f_min_hz=11.0e9,
+        f_max_hz=13.0e9,
+        f_step_hz=1.0e9,
+        f_design_hz=12.0e9,
+        l_values_mm=(1.0, 3.0),
+        w_values_mm=(1.0, 3.0),
     )
 
 
@@ -64,6 +69,7 @@ def test_check_library_integrity_detects_wrong_expected_count(built_library_dir)
 
 
 # ------------------------------------------------------------------- Test 13: library corruption
+
 
 def test_corrupted_json_record_is_detected_as_library_invalid(built_library_dir, tmp_path):
     base, cfg = built_library_dir

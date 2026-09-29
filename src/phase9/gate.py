@@ -46,7 +46,7 @@ FINAL_STATUS_OPTIONS = (
 @dataclass(frozen=True)
 class GateResult:
     checklist: dict
-    status: str    # "OPEN" | "CLOSED"
+    status: str  # "OPEN" | "CLOSED"
 
 
 def evaluate_gate_a(checklist):
@@ -89,8 +89,7 @@ def decide(gate_a: GateResult, gate_b: GateResult, s11_status, s21_status, local
 
     lpa_ok = local_periodicity_status in ("VALIDATED", "PARTIALLY_VALIDATED")
     geometry_inversion_unlocked = (
-        gate_a.status == "OPEN" and gate_b.status == "OPEN"
-        and selected_control is not None and lpa_ok
+        gate_a.status == "OPEN" and gate_b.status == "OPEN" and selected_control is not None and lpa_ok
     )
 
     if local_periodicity_status == "INVALIDATED":
@@ -103,7 +102,12 @@ def decide(gate_a: GateResult, gate_b: GateResult, s11_status, s21_status, local
         final_status = "NO_VALIDATED_FORMULATION"
 
     return Phase9Decision(
-        gate_a=gate_a, gate_b=gate_b, s11_status=s11_status, s21_status=s21_status,
-        local_periodicity_status=local_periodicity_status, selected_control=selected_control,
-        geometry_inversion_unlocked=geometry_inversion_unlocked, final_status=final_status,
+        gate_a=gate_a,
+        gate_b=gate_b,
+        s11_status=s11_status,
+        s21_status=s21_status,
+        local_periodicity_status=local_periodicity_status,
+        selected_control=selected_control,
+        geometry_inversion_unlocked=geometry_inversion_unlocked,
+        final_status=final_status,
     )

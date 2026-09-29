@@ -33,8 +33,10 @@ def main(argv):
 
     n_freq = int(round((config.f_max_hz - config.f_min_hz) / config.f_step_hz)) + 1
     total = config.n_geometries * n_freq
-    print(f"Building unit-cell library: {config.n_geometries} geometries x {n_freq} frequencies "
-          f"= {total} solves -> {out_dir}")
+    print(
+        f"Building unit-cell library: {config.n_geometries} geometries x {n_freq} frequencies "
+        f"= {total} solves -> {out_dir}"
+    )
 
     t0 = time.time()
     last = [0]
@@ -45,16 +47,21 @@ def main(argv):
             elapsed = time.time() - t0
             rate = e["done"] / elapsed if elapsed > 0 else 0.0
             eta = (e["total"] - e["done"]) / rate if rate > 0 else float("nan")
-            print(f"  {e['done']}/{e['total']} ({100*e['done']/e['total']:.1f}%) "
-                  f"elapsed={elapsed:.0f}s eta={eta:.0f}s", flush=True)
+            print(
+                f"  {e['done']}/{e['total']} ({100 * e['done'] / e['total']:.1f}%) "
+                f"elapsed={elapsed:.0f}s eta={eta:.0f}s",
+                flush=True,
+            )
 
     result = build_full_library(config, out_dir, progress=progress)
 
     print(f"\ndone in {time.time() - t0:.0f}s")
     print(f"  {result.build.n_ok_cells} solved OK, {result.build.n_invalid_cells} invalid/skipped")
     print(f"  computed this run: {result.build.computed}, reused from checkpoint: {result.build.reused}")
-    print(f"  phase coverage: {result.coverage.coverage_deg:.2f} deg of 360 deg "
-          f"(largest gap {result.coverage.largest_gap_deg:.2f} deg)")
+    print(
+        f"  phase coverage: {result.coverage.coverage_deg:.2f} deg of 360 deg "
+        f"(largest gap {result.coverage.largest_gap_deg:.2f} deg)"
+    )
     print(f"  {len(result.step_paths)} STEP files, {len(result.plot_paths)} plots")
     print(f"  manifest: {result.manifest_path}")
     print(f"  report:   {result.library_report_path}")

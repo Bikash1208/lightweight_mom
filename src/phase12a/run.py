@@ -21,7 +21,7 @@ from .sweep_study import (
     ungrounded_phase7_diagonal_table,
 )
 
-CONVERGENCE_CENTER_LW_M = 2.8e-3   # C3, this project's own already-used center geometry
+CONVERGENCE_CENTER_LW_M = 2.8e-3  # C3, this project's own already-used center geometry
 
 
 @dataclass(frozen=True)
@@ -43,8 +43,11 @@ class Phase12aResult:
 
 
 def run_phase12a(
-    output_dir, l_values_mm=None, frequencies_hz=SWEEP_FREQUENCIES_HZ,
-    convergence_sizes=(8, 16, 32, 64), skip_ungrounded_comparison=False,
+    output_dir,
+    l_values_mm=None,
+    frequencies_hz=SWEEP_FREQUENCIES_HZ,
+    convergence_sizes=(8, 16, 32, 64),
+    skip_ungrounded_comparison=False,
 ):
     """``convergence_sizes``/``l_values_mm``/``frequencies_hz``/``skip_ungrounded_comparison``:
     reduced-scale overrides for tests (module docstring pattern of every later phase's own
@@ -85,39 +88,42 @@ def run_phase12a(
     any_sw_in_band = any(p.any_in_band for p in surface_wave_points)
 
     decision = gate.decide(
-        max_analytic_error, floquet_error, mesh_error, any_sw_in_band,
+        max_analytic_error,
+        floquet_error,
+        mesh_error,
+        any_sw_in_band,
         coverage[DESIGN_FREQUENCY_HZ].coverage_deg,
     )
 
     result = Phase12aResult(
-        output_dir=output_dir, sweep_points=sweep_points, coverage_by_frequency=coverage,
-        design_frequency_hz=DESIGN_FREQUENCY_HZ, ungrounded_comparison=ungrounded_comparison,
-        convergence_points=convergence_points, floquet_error=floquet_error, mesh_error=mesh_error,
-        mesh_floquet_tolerance=gate.MESH_FLOQUET_TOLERANCE, slab_check_points=slab_points,
-        max_analytic_error=max_analytic_error, thin_limit=thin_limit,
-        surface_wave_points=surface_wave_points, decision=decision,
+        output_dir=output_dir,
+        sweep_points=sweep_points,
+        coverage_by_frequency=coverage,
+        design_frequency_hz=DESIGN_FREQUENCY_HZ,
+        ungrounded_comparison=ungrounded_comparison,
+        convergence_points=convergence_points,
+        floquet_error=floquet_error,
+        mesh_error=mesh_error,
+        mesh_floquet_tolerance=gate.MESH_FLOQUET_TOLERANCE,
+        slab_check_points=slab_points,
+        max_analytic_error=max_analytic_error,
+        thin_limit=thin_limit,
+        surface_wave_points=surface_wave_points,
+        decision=decision,
     )
 
     specification.write_sweep_csv(sweep_points, output_dir / "sweep.csv")
     specification.write_sweep_json(sweep_points, coverage, output_dir / "sweep.json")
-    specification.write_ungrounded_comparison_json(
-        ungrounded_comparison, output_dir / "ungrounded_comparison.json"
-    )
-    specification.write_analytic_checks_json(
-        slab_points, thin_limit, output_dir / "analytic_checks.json"
-    )
+    specification.write_ungrounded_comparison_json(ungrounded_comparison, output_dir / "ungrounded_comparison.json")
+    specification.write_analytic_checks_json(slab_points, thin_limit, output_dir / "analytic_checks.json")
     specification.write_surface_wave_json(surface_wave_points, output_dir / "surface_wave_pole.json")
-    specification.write_convergence_json(
-        convergence_points, floquet_error, mesh_error, output_dir / "convergence.json"
-    )
+    specification.write_convergence_json(convergence_points, floquet_error, mesh_error, output_dir / "convergence.json")
     specification.write_gate_status_json(decision, output_dir / "phase12a_gate_status.json")
 
     try:
-        plots.generate_all_plots(
-            sweep_points, ungrounded_diagonal, DESIGN_FREQUENCY_HZ, convergence_points, plots_dir
-        )
+        plots.generate_all_plots(sweep_points, ungrounded_diagonal, DESIGN_FREQUENCY_HZ, convergence_points, plots_dir)
     except ImportError:
-        pass   # matplotlib optional, like every other phase's plotting step
+        pass  # matplotlib optional, like every other phase's plotting step
 
     (output_dir / "phase12a_report.md").write_text(render_phase12a_report_md(result))
 

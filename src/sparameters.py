@@ -33,9 +33,9 @@ from .green_function import LayeredGreenFunction
 from .mom_matrix import assemble_excitation_vector, assemble_impedance_matrix
 from .solver import solve
 
-PORTS = ("top", "bottom")       # port 1, port 2
-POLARIZATIONS = "xy"            # index 0, 1
-_COMPONENT_INDEX = {"xx": (0, 0), "yx": (1, 0), "xy": (0, 1), "yy": (1, 1)}   # (received, incident)
+PORTS = ("top", "bottom")  # port 1, port 2
+POLARIZATIONS = "xy"  # index 0, 1
+_COMPONENT_INDEX = {"xx": (0, 0), "yx": (1, 0), "xy": (0, 1), "yy": (1, 1)}  # (received, incident)
 _FAMILIES = ("S11", "S12", "S21", "S22")
 
 
@@ -76,9 +76,9 @@ class SParameters:
     s12: np.ndarray | None
     s21: np.ndarray | None
     s22: np.ndarray | None
-    incident_amplitudes: np.ndarray    # (n_ports, 2 pols): measured a at the reference plane
-    incoming_residual: float           # largest incoming-wave amplitude that must vanish, / |a|
-    mean_currents: np.ndarray          # (n_ports, 2 pols, 2): J~_00 [A/m] (zeros: no metal)
+    incident_amplitudes: np.ndarray  # (n_ports, 2 pols): measured a at the reference plane
+    incoming_residual: float  # largest incoming-wave amplitude that must vanish, / |a|
+    mean_currents: np.ndarray  # (n_ports, 2 pols, 2): J~_00 [A/m] (zeros: no metal)
 
     def __post_init__(self):
         undefined = (self.s12, self.s21, self.s22)
@@ -103,9 +103,7 @@ class SParameters:
         matrix exists -- use ``.s11`` directly.
         """
         if self.grounded:
-            raise ValueError(
-                "no 4x4 S-matrix exists for a grounded (one-port) stack (no port 2); use .s11"
-            )
+            raise ValueError("no 4x4 S-matrix exists for a grounded (one-port) stack (no port 2); use .s11")
         return np.block([[self.s11, self.s12], [self.s21, self.s22]])
 
     def component(self, name):
@@ -115,14 +113,11 @@ class SParameters:
         """
         family, _, comp = name.partition("_")
         if family not in _FAMILIES or comp not in _COMPONENT_INDEX:
-            raise ValueError(
-                f"unknown component {name!r}; use <{'|'.join(_FAMILIES)}>_<{'|'.join(_COMPONENT_INDEX)}>"
-            )
+            raise ValueError(f"unknown component {name!r}; use <{'|'.join(_FAMILIES)}>_<{'|'.join(_COMPONENT_INDEX)}>")
         block = getattr(self, family.lower())
         if block is None:
             raise ValueError(
-                f"{family} is undefined for a grounded (one-port) stack (no port 2 exists); "
-                f"only S11 is defined"
+                f"{family} is undefined for a grounded (one-port) stack (no port 2 exists); only S11 is defined"
             )
         return complex(block[_COMPONENT_INDEX[comp]])
 
@@ -176,15 +171,13 @@ class SParameters:
         if not np.isclose(new_planes.substrate_thickness, self.planes.substrate_thickness, rtol=1e-12):
             raise ValueError("substrate thickness differs between plane sets")
         if self.grounded != new_planes.grounded:
-            raise ValueError(
-                "cannot re-reference between a grounded (one-port) and an ungrounded (two-port) "
-                "plane set"
-            )
+            raise ValueError("cannot re-reference between a grounded (one-port) and an ungrounded (two-port) plane set")
         d1 = new_planes.z_top - self.planes.z_top
         k0 = self.k0
         if self.grounded:
             return replace(
-                self, planes=new_planes,
+                self,
+                planes=new_planes,
                 s11=self.s11 * np.exp(-2j * k0 * d1),
                 incident_amplitudes=self.incident_amplitudes * np.exp(1j * k0 * d1),
             )
@@ -228,17 +221,17 @@ def _scattering_from_fields_two_port(green, planes, mean_currents):
             incident = np.eye(2)[pol]
             e_stack, h_stack = green.stack_fields(0.0, 0.0, incident, z_planes, port)
             e_sheet, h_sheet = green.sheet_fields(0.0, 0.0, mean_currents[port_index, pol], z_planes)
-            up, down = decompose_air_fields(e_stack + e_sheet, h_stack + h_sheet)   # (plane, comp)
+            up, down = decompose_air_fields(e_stack + e_sheet, h_stack + h_sheet)  # (plane, comp)
 
-            if port == "top":       # incident wave = down-going at plane 1; nothing incoming at plane 2
+            if port == "top":  # incident wave = down-going at plane 1; nothing incoming at plane 2
                 a = down[0, pol]
                 incoming_should_vanish = np.concatenate([[down[0, 1 - pol]], up[1]])
-            else:                   # incident wave = up-going at plane 2; nothing incoming at plane 1
+            else:  # incident wave = up-going at plane 2; nothing incoming at plane 1
                 a = up[1, pol]
                 incoming_should_vanish = np.concatenate([[up[1, 1 - pol]], down[0]])
             amplitudes[port_index, pol] = a
             residual = max(residual, float(np.max(np.abs(incoming_should_vanish)) / abs(a)))
-            b1, b2 = up[0], down[1]         # outgoing: +z wave at plane 1, -z wave at plane 2
+            b1, b2 = up[0], down[1]  # outgoing: +z wave at plane 1, -z wave at plane 2
             s_blocks[f"S1{port_index + 1}"][:, pol] = b1 / a
             s_blocks[f"S2{port_index + 1}"][:, pol] = b2 / a
 
@@ -268,19 +261,22 @@ def _scattering_from_fields_grounded(green, planes, mean_currents):
         incident = np.eye(2)[pol]
         e_stack, h_stack = green.stack_fields(0.0, 0.0, incident, z_top, "top")
         e_sheet, h_sheet = green.sheet_fields(0.0, 0.0, mean_currents[0, pol], z_top)
-        up, down = decompose_air_fields(e_stack + e_sheet, h_stack + h_sheet)     # (comp,)
+        up, down = decompose_air_fields(e_stack + e_sheet, h_stack + h_sheet)  # (comp,)
 
-        a = down[pol]                       # incident wave = down-going at the top plane
-        incoming_should_vanish = np.array([down[1 - pol]])   # nothing incoming in the other pol
+        a = down[pol]  # incident wave = down-going at the top plane
+        incoming_should_vanish = np.array([down[1 - pol]])  # nothing incoming in the other pol
         amplitudes[0, pol] = a
         residual = max(residual, float(np.max(np.abs(incoming_should_vanish)) / abs(a)))
-        s11[:, pol] = up / a                # outgoing: +z wave at the top plane
+        s11[:, pol] = up / a  # outgoing: +z wave at the top plane
 
     return SParameters(
         frequency=green.frequency,
         planes=planes,
         grounded=True,
-        s11=s11, s12=None, s21=None, s22=None,
+        s11=s11,
+        s12=None,
+        s21=None,
+        s22=None,
         incident_amplitudes=amplitudes,
         incoming_residual=residual,
         mean_currents=mean_currents,
@@ -395,7 +391,11 @@ def _warn_if_surface_wave_near(unit_cell, green, floquet_order):
 
 
 def compute_s_parameters(
-    unit_cell: UnitCell, frequency, mesh: MeshSettings, planes: ReferencePlanes, warn_grating=True,
+    unit_cell: UnitCell,
+    frequency,
+    mesh: MeshSettings,
+    planes: ReferencePlanes,
+    warn_grating=True,
     warn_surface_wave=True,
 ):
     """MoM solve for both polarizations (and, for the default ungrounded stack, both ports),
@@ -441,6 +441,4 @@ def s_parameters_from_config(config):
     """``compute_s_parameters`` from a validated SimulationConfig (normal incidence, x and y both)."""
     if config.excitation.theta != 0.0:
         raise ValueError("S-parameter extraction supports normal incidence only")
-    return compute_s_parameters(
-        config.unit_cell, config.excitation.frequency, config.mesh, config.reference_planes
-    )
+    return compute_s_parameters(config.unit_cell, config.excitation.frequency, config.mesh, config.reference_planes)

@@ -15,15 +15,15 @@ from ..phase8d_rev.candidate_period import required_transverse_spatial_frequency
 
 @dataclass(frozen=True)
 class SpectralAnalysis:
-    kx_max_per_m: float           # Nyquist-limited spectral grid extent from the sample spacing
+    kx_max_per_m: float  # Nyquist-limited spectral grid extent from the sample spacing
     ky_max_per_m: float
     k0_per_m: float
-    dominant_kx_per_m: float      # transverse wavenumber of the peak spectral-power bin
+    dominant_kx_per_m: float  # transverse wavenumber of the peak spectral-power bin
     dominant_ky_per_m: float
     k_t_dominant_per_m: float
-    propagating_fraction: float   # power-weighted fraction of spectrum with kx^2+ky^2 <= k0^2
+    propagating_fraction: float  # power-weighted fraction of spectrum with kx^2+ky^2 <= k0^2
     evanescent_fraction: float
-    local_periodic_compatible: bool   # True iff essentially all power is propagating (kt <= k0)
+    local_periodic_compatible: bool  # True iff essentially all power is propagating (kt <= k0)
     note: str
 
 
@@ -61,13 +61,18 @@ def reference_field_spectrum(field, frequency_hz):
     k_t_dominant = float(np.hypot(dominant_kx, dominant_ky))
 
     return SpectralAnalysis(
-        kx_max_per_m=float(np.max(np.abs(kx))), ky_max_per_m=float(np.max(np.abs(ky))), k0_per_m=float(k0),
-        dominant_kx_per_m=dominant_kx, dominant_ky_per_m=dominant_ky, k_t_dominant_per_m=k_t_dominant,
-        propagating_fraction=propagating_fraction, evanescent_fraction=evanescent_fraction,
+        kx_max_per_m=float(np.max(np.abs(kx))),
+        ky_max_per_m=float(np.max(np.abs(ky))),
+        k0_per_m=float(k0),
+        dominant_kx_per_m=dominant_kx,
+        dominant_ky_per_m=dominant_ky,
+        k_t_dominant_per_m=k_t_dominant,
+        propagating_fraction=propagating_fraction,
+        evanescent_fraction=evanescent_fraction,
         local_periodic_compatible=bool(propagating_fraction > 0.99),
         note=(
-            f"{propagating_fraction*100:.4g}% of spectral power is propagating (kt <= k0); "
-            f"{evanescent_fraction*100:.4g}% is evanescent, reported, not discarded (Sec. 7)."
+            f"{propagating_fraction * 100:.4g}% of spectral power is propagating (kt <= k0); "
+            f"{evanescent_fraction * 100:.4g}% is evanescent, reported, not discarded (Sec. 7)."
         ),
     )
 
@@ -84,8 +89,8 @@ class ObjectWaveSpectralPoint:
 
 @dataclass(frozen=True)
 class ObjectWaveSpectrum:
-    beams: tuple                  # ObjectWaveSpectralPoint per beam
-    k_required_max_per_m: float | None   # Sec. 8: interference spatial frequency across beam pairs
+    beams: tuple  # ObjectWaveSpectralPoint per beam
+    k_required_max_per_m: float | None  # Sec. 8: interference spatial frequency across beam pairs
     all_beams_propagating: bool
 
 
@@ -106,9 +111,11 @@ def object_wave_spectrum(beams, frequency_hz):
     k_required_max = None
     if len(beams) >= 2:
         k_required_max = required_transverse_spatial_frequency_per_m(
-            tuple((b.theta_deg, b.phi_deg) for b in beams), frequency_hz,
+            tuple((b.theta_deg, b.phi_deg) for b in beams),
+            frequency_hz,
         )
     return ObjectWaveSpectrum(
-        beams=tuple(points), k_required_max_per_m=k_required_max,
+        beams=tuple(points),
+        k_required_max_per_m=k_required_max,
         all_beams_propagating=all(p.is_propagating for p in points),
     )

@@ -14,7 +14,6 @@ from src.library_builder import build_library_database, build_sweep_definition
 from src.library_schema import DEFAULT_MESH, LibraryConfig
 from src.materials import Metal, Substrate
 from src.periodic_bc import RectangularLattice
-from src.sweep import ParameterAxis
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -23,15 +22,21 @@ _SUBSTRATE = {"name": "Rogers RT/Duroid 5880", "eps_r": 2.2, "tan_delta": 0.0009
 
 def small_config(l_values_mm=(1.0, 2.4, 4.2), w_values_mm=(1.0, 2.4, 4.2), **overrides):
     kwargs = dict(
-        period_m=4.8e-3, substrate=_SUBSTRATE,
-        f_min_hz=12.0e9, f_max_hz=13.0e9, f_step_hz=0.5e9, f_design_hz=12.5e9,
-        l_values_mm=l_values_mm, w_values_mm=w_values_mm,
+        period_m=4.8e-3,
+        substrate=_SUBSTRATE,
+        f_min_hz=12.0e9,
+        f_max_hz=13.0e9,
+        f_step_hz=0.5e9,
+        f_design_hz=12.5e9,
+        l_values_mm=l_values_mm,
+        w_values_mm=w_values_mm,
     )
     kwargs.update(overrides)
     return LibraryConfig(**kwargs)
 
 
 # ------------------------------------------------------------------------- sweep construction
+
 
 def test_build_sweep_definition_is_length_width_cartesian_product():
     cfg = small_config()
@@ -40,8 +45,8 @@ def test_build_sweep_definition_is_length_width_cartesian_product():
     assert names == ["length_m", "width_m"]
     assert definition.axes[0].values == tuple(v * 1e-3 for v in cfg.l_values_mm)
     assert definition.axes[1].values == tuple(v * 1e-3 for v in cfg.w_values_mm)
-    assert definition.on_invalid == "skip"                 # req. 4: record, don't abort
-    assert definition.validation.strict is False            # high-area-error cells still solve
+    assert definition.on_invalid == "skip"  # req. 4: record, don't abort
+    assert definition.validation.strict is False  # high-area-error cells still solve
 
 
 def test_build_sweep_definition_frequency_grid():
@@ -54,13 +59,14 @@ def test_build_sweep_definition_frequency_grid():
 
 # ------------------------------------------------------------------------------- solve
 
+
 def test_build_library_database_solves_every_geometry():
     cfg = small_config()
     result = build_library_database(cfg, out_dir=None)
     assert result.n_ok_cells == 9
     assert result.n_invalid_cells == 0
     assert len(result.database.cells) == 9
-    assert len(result.database.records) == 9 * 3     # 3 frequencies
+    assert len(result.database.records) == 9 * 3  # 3 frequencies
 
 
 def test_every_ok_cell_solves_at_every_frequency():
@@ -80,6 +86,7 @@ def test_build_raises_if_geometry_count_does_not_match_config():
 
 
 # ---------------------------------------------------------------------------- reproducibility
+
 
 def test_two_builds_of_the_same_config_are_numerically_identical(tmp_path):
     """Req. 27: no random ordering, no hidden global state -- repeated builds of the same small
@@ -104,6 +111,7 @@ def test_resume_reuses_checkpoint_without_resolving(tmp_path):
 
 # ------------------------------------------------------------ mesh choice: documented pitfall
 
+
 def _rect_cell(length_mm, width_mm, cells, floquet_order):
     sub = Substrate(name="test", eps_r=2.2, tan_delta=0.0009, thickness=1.575e-3)
     lat = RectangularLattice(period_x=4.8e-3, period_y=4.8e-3)
@@ -122,7 +130,7 @@ def test_24x24_mesh_has_large_area_error_for_some_sweep_geometries():
     small staircase error."""
     uc, mesh = _rect_cell(1.0, 1.0, cells=24, floquet_order=32)
     chk = check_cell(uc, mesh, DEFAULT_MAX_AREA_ERROR)
-    assert chk["metal_area_error"] > 0.30    # measured ~44%, nowhere near an ordinary staircase
+    assert chk["metal_area_error"] > 0.30  # measured ~44%, nowhere near an ordinary staircase
 
 
 def test_32x32_mesh_has_no_such_pathology_for_the_same_geometry():

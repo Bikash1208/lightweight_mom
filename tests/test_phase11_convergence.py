@@ -7,11 +7,12 @@ from src.phase11.coupling_radius import ShellIncrement
 
 
 def test_reuses_phase9s_own_sourced_constants():
-    from src.phase11.convergence import NOISE_FLOOR_RELATIVE, SUBSTANTIAL_DEVIATION_RELATIVE
     from src.phase9.local_periodicity import NOISE_FLOOR_RELATIVE as p9_floor
     from src.phase9.local_periodicity import SUBSTANTIAL_DEVIATION_RELATIVE as p9_sub
-    assert NOISE_FLOOR_RELATIVE == p9_floor
-    assert SUBSTANTIAL_DEVIATION_RELATIVE == p9_sub
+    from src.phase11.convergence import NOISE_FLOOR_RELATIVE, SUBSTANTIAL_DEVIATION_RELATIVE
+
+    assert p9_floor == NOISE_FLOOR_RELATIVE
+    assert p9_sub == SUBSTANTIAL_DEVIATION_RELATIVE
 
 
 def test_converged_when_last_increment_at_noise_floor():

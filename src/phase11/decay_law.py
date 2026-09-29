@@ -15,7 +15,7 @@ class DecayObservation:
     distances: tuple
     magnitudes: tuple
     monotonically_decreasing: bool
-    candidate_trend: str   # "NONE_ASSESSED" | "APPROXIMATELY_MONOTONIC_DECAY" | "NON_MONOTONIC_NO_CLEAR_TREND"
+    candidate_trend: str  # "NONE_ASSESSED" | "APPROXIMATELY_MONOTONIC_DECAY" | "NON_MONOTONIC_NO_CLEAR_TREND"
 
 
 def observe_decay(distance_magnitude_pairs):
@@ -49,17 +49,27 @@ def fit_exponential_if_monotonic(observation: DecayObservation):
     established electromagnetic law -- only as a compact numerical summary of what was measured."""
     if observation.candidate_trend != "APPROXIMATELY_MONOTONIC_DECAY":
         return DecayFitReport(
-            "NONE_FITTED", {}, (min(observation.distances), max(observation.distances)),
-            float("nan"), float("nan"), observation.distances,
+            "NONE_FITTED",
+            {},
+            (min(observation.distances), max(observation.distances)),
+            float("nan"),
+            float("nan"),
+            observation.distances,
             "the data do not show a visibly monotonic trend; no decay law was fitted (Sec. 17).",
         )
     d = np.asarray(observation.distances, dtype=float)
     m = np.asarray(observation.magnitudes, dtype=float)
     positive = m > 0
     if positive.sum() < 2:
-        return DecayFitReport("NONE_FITTED", {}, (float(d.min()), float(d.max())), float("nan"),
-                               float("nan"), observation.distances,
-                               "fewer than 2 positive magnitude points; no fit attempted.")
+        return DecayFitReport(
+            "NONE_FITTED",
+            {},
+            (float(d.min()), float(d.max())),
+            float("nan"),
+            float("nan"),
+            observation.distances,
+            "fewer than 2 positive magnitude points; no fit attempted.",
+        )
     log_m = np.log(m[positive])
     d_fit = d[positive]
     slope, intercept = np.polyfit(d_fit, log_m, 1)
@@ -71,7 +81,11 @@ def fit_exponential_if_monotonic(observation: DecayObservation):
     length_scale = -1.0 / slope if slope != 0 else float("inf")
     failures = tuple(observation.distances[i] for i in range(len(m)) if not positive[i])
     return DecayFitReport(
-        "EXPONENTIAL_CANDIDATE_FIT", {"amplitude": float(np.exp(intercept)), "length_scale_cells": length_scale},
-        (float(d_fit.min()), float(d_fit.max())), residual_rms, r_squared, failures,
+        "EXPONENTIAL_CANDIDATE_FIT",
+        {"amplitude": float(np.exp(intercept)), "length_scale_cells": length_scale},
+        (float(d_fit.min()), float(d_fit.max())),
+        residual_rms,
+        r_squared,
+        failures,
         "a compact numerical summary of the measured trend, NOT an asserted electromagnetic decay law.",
     )

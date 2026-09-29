@@ -10,8 +10,7 @@ forest: `EXHAUSTIVE DISCRETE SEARCH` over the validated 18-value sweep grid, ful
 from dataclasses import dataclass
 
 from ..phase9.local_periodicity import SUBSTANTIAL_DEVIATION_RELATIVE
-from ..phase10.environment_geometry import (DOMAIN_L_MAX_MM, DOMAIN_L_MIN_MM, DOMAIN_STEP_MM,
-                                             grid_to_m)
+from ..phase10.environment_geometry import DOMAIN_L_MAX_MM, DOMAIN_L_MIN_MM, DOMAIN_STEP_MM, grid_to_m
 from .reference_solver import solve_grid, solve_isolated
 
 TARGET_UNREACHABLE = "TARGET_UNREACHABLE"
@@ -33,9 +32,19 @@ class InverseResult:
     status: str
 
 
-def invert_target_direct(target, environment_grid_mm, center_i, center_j, period_m, substrate, metal,
-                          frequency_hz, mesh_cells_per_subcell=8, candidate_lw_values_mm=None,
-                          substantial=SUBSTANTIAL_DEVIATION_RELATIVE):
+def invert_target_direct(
+    target,
+    environment_grid_mm,
+    center_i,
+    center_j,
+    period_m,
+    substrate,
+    metal,
+    frequency_hz,
+    mesh_cells_per_subcell=8,
+    candidate_lw_values_mm=None,
+    substantial=SUBSTANTIAL_DEVIATION_RELATIVE,
+):
     """``environment_grid_mm``: the FIXED surrounding pattern (the center cell's own current value
     is ignored/overwritten by each candidate). Ranks every candidate (L, W) on the sweep grid by
     its ISOLATED-CELL response distance to ``target`` (a pure, deterministic physics computation,
@@ -45,8 +54,9 @@ def invert_target_direct(target, environment_grid_mm, center_i, center_j, period
     best_lw, best_err, best_pred = None, float("inf"), None
     for l_mm in values:
         for w_mm in values:
-            pred, _ = solve_isolated(period_m, l_mm * 1e-3, w_mm * 1e-3, substrate, metal, frequency_hz,
-                                      mesh_cells_per_subcell)
+            pred, _ = solve_isolated(
+                period_m, l_mm * 1e-3, w_mm * 1e-3, substrate, metal, frequency_hz, mesh_cells_per_subcell
+            )
             err = abs(pred - target)
             if err < best_err:
                 best_err, best_lw, best_pred = err, (l_mm, w_mm), pred

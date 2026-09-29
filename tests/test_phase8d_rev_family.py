@@ -7,7 +7,9 @@ from src.phase8c import data_source
 from src.phase8d_rev import library_entry as le
 from src.phase8d_rev.family import family_from_entries
 
-pytestmark = pytest.mark.skipif(not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present")
+pytestmark = pytest.mark.skipif(
+    not data_source.DEFAULT_CHECKPOINT_JSON.exists(), reason="Phase 7 checkpoint not present"
+)
 
 
 def test_family_from_entries_rejects_empty_list():

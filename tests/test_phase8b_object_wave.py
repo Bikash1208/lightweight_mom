@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 from src.excitation import PlaneWaveExcitation
-from src.phase8b.object_wave import Beam, combine_beams, single_beam_object_field, transverse_wavenumber_deg
+from src.phase8b.object_wave import Beam, single_beam_object_field, transverse_wavenumber_deg
 
 F_HZ = 12.5e9
 
@@ -18,13 +18,16 @@ def test_transverse_wavenumber_matches_plane_wave_excitation():
     # for why general (theta, phi, polarization) triples cannot all go through that class.
     for theta_deg, phi_deg in [(0.0, 0.0), (30.0, 90.0), (30.0, 270.0), (45.0, 0.0)]:
         pol = "y" if phi_deg in (0.0, 180.0) or theta_deg == 0.0 else "x"
-        exc = PlaneWaveExcitation(frequency=F_HZ, theta=math.radians(theta_deg), phi=math.radians(phi_deg), polarization=pol)
+        exc = PlaneWaveExcitation(
+            frequency=F_HZ, theta=math.radians(theta_deg), phi=math.radians(phi_deg), polarization=pol
+        )
         expected = exc.transverse_wavenumber
         got = transverse_wavenumber_deg(F_HZ, theta_deg, phi_deg)
         assert got == pytest.approx(expected, abs=1e-9)
 
 
 # ------------------------------------------------------------------------------- Test 37: broadside
+
 
 def test_broadside_has_zero_transverse_phase_gradient():
     beam = Beam(theta_deg=0.0, phi_deg=0.0)
@@ -36,6 +39,7 @@ def test_broadside_has_zero_transverse_phase_gradient():
 
 
 # --------------------------------------------------------------------------------- Test 37: azimuth
+
 
 @pytest.mark.parametrize("phi_deg,axis", [(0.0, "x"), (90.0, "y"), (180.0, "x"), (270.0, "y")])
 def test_azimuth_orients_the_transverse_wavevector_correctly(phi_deg, axis):
@@ -55,17 +59,18 @@ def test_opposite_azimuths_reverse_the_phase_gradient_sign():
 
 # -------------------------------------------------------------------------------- Test 39: phase sign
 
+
 def test_phase_sign_matches_exp_minus_jkr_convention():
     # E(x,y) = exp(-j(kx0 x)); at x>0 with kx0>0 the phase should be NEGATIVE (a delay), matching
     # CONVENTIONS.md's "a delay is a negative phase" and the fixed exp(-j k.r) plane-wave rule.
-    beam = Beam(theta_deg=30.0, phi_deg=0.0)   # kx0 > 0
+    beam = Beam(theta_deg=30.0, phi_deg=0.0)  # kx0 > 0
     kx0, _ = transverse_wavenumber_deg(F_HZ, 30.0, 0.0)
     assert kx0 > 0.0
     x = np.array([0.0, 0.01])
     y = np.array([0.0, 0.0])
     field = single_beam_object_field(x, y, beam, F_HZ)
     phase = np.angle(field)
-    assert phase[1] < phase[0]   # phase decreases (more negative / more delayed) with increasing x
+    assert phase[1] < phase[0]  # phase decreases (more negative / more delayed) with increasing x
 
 
 def test_initial_phase_deg_enters_as_a_constant_additive_offset():
@@ -82,11 +87,12 @@ def test_initial_phase_deg_enters_as_a_constant_additive_offset():
 
 # ------------------------------------------------------------------------------------- dimensional
 
+
 def test_wavenumber_has_correct_units_and_magnitude():
     from src.constants import C0
 
     k0 = 2 * math.pi * F_HZ / C0
-    kx0, ky0 = transverse_wavenumber_deg(F_HZ, 90.0, 0.0)   # grazing: |k_t| = k0
+    kx0, ky0 = transverse_wavenumber_deg(F_HZ, 90.0, 0.0)  # grazing: |k_t| = k0
     assert math.hypot(kx0, ky0) == pytest.approx(k0, rel=1e-9)
 
 

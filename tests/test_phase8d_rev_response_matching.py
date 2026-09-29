@@ -26,11 +26,13 @@ def test_nearest_response_match_orders_by_complex_error_ascending():
 def test_nearest_response_match_reports_amplitude_and_phase_error_separately():
     # same magnitude, different phase -> zero amplitude error, nonzero phase error.
     required = 1.0 + 0j
-    candidates = [("same_mag_diff_phase", 1.0, 1.0, "lib", complex(math.cos(math.radians(90)), math.sin(math.radians(90))))]
+    candidates = [
+        ("same_mag_diff_phase", 1.0, 1.0, "lib", complex(math.cos(math.radians(90)), math.sin(math.radians(90))))
+    ]
     match = nearest_response_match(required, candidates)[0]
     assert math.isclose(match.amplitude_error, 0.0, abs_tol=1e-12)
     assert math.isclose(match.phase_error_deg, 90.0, abs_tol=1e-9)
-    assert match.complex_error > 0.0    # the complex distance is NOT zero even though amplitude matches
+    assert match.complex_error > 0.0  # the complex distance is NOT zero even though amplitude matches
 
 
 def test_nearest_response_match_returns_every_candidate_not_a_single_winner():

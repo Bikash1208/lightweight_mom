@@ -32,8 +32,8 @@ def test_floquet_wavenumber_spacing_and_symmetry_at_normal_incidence():
     kx, ky = LAT.transverse_wavenumbers(0.0, 0.0, m, m)
     assert np.allclose(np.diff(kx), LAT.reciprocal_x, rtol=1e-14)
     assert np.allclose(np.diff(ky), LAT.reciprocal_y, rtol=1e-14)
-    assert np.allclose(kx, -kx[::-1], atol=1e-9)   # kx_{-m} = -kx_m when kx0 = 0
-    assert kx[4] == 0.0 and ky[4] == 0.0            # (0,0) mode is the incident direction
+    assert np.allclose(kx, -kx[::-1], atol=1e-9)  # kx_{-m} = -kx_m when kx0 = 0
+    assert kx[4] == 0.0 and ky[4] == 0.0  # (0,0) mode is the incident direction
 
 
 def test_floquet_wavenumbers_oblique_offset():

@@ -42,7 +42,7 @@ class SimulationConfig:
     excitation: PlaneWaveExcitation
     mesh: MeshSettings
     reference_planes: ReferencePlanes
-    sweep: SweepDefinition | None = None      # optional 'sweep:' section (Phase 5)
+    sweep: SweepDefinition | None = None  # optional 'sweep:' section (Phase 5)
 
 
 def _mapping(data, name):
@@ -58,8 +58,7 @@ def _check_keys(section, data, required, optional=()):
     unknown = set(data) - set(required) - set(optional)
     if unknown:
         raise ConfigError(
-            f"'{section}': unknown key(s) {sorted(unknown)}; "
-            f"allowed: {sorted(set(required) | set(optional))}"
+            f"'{section}': unknown key(s) {sorted(unknown)}; allowed: {sorted(set(required) | set(optional))}"
         )
 
 
@@ -71,8 +70,7 @@ def _length(section, key, value):
         raise ConfigError(str(e)) from None
     if abs(v) >= MAX_PLAUSIBLE_LENGTH:
         raise ConfigError(
-            f"{what} = {v} m is >= {MAX_PLAUSIBLE_LENGTH} m; plain numbers are metres "
-            f"(write '8 mm' or 0.008, not 8)"
+            f"{what} = {v} m is >= {MAX_PLAUSIBLE_LENGTH} m; plain numbers are metres (write '8 mm' or 0.008, not 8)"
         )
     return v
 
@@ -92,8 +90,13 @@ def config_from_dict(data):
         "<root>",
         data,
         required=(
-            "period_x", "period_y", "substrate", "geometry", "excitation",
-            "mesh", "reference_planes",
+            "period_x",
+            "period_y",
+            "substrate",
+            "geometry",
+            "excitation",
+            "mesh",
+            "reference_planes",
         ),
         optional=("metal", "sweep"),
     )
@@ -108,9 +111,7 @@ def config_from_dict(data):
 
     # --- substrate ---------------------------------------------------------
     sub = _mapping(data["substrate"], "substrate")
-    _check_keys(
-        "substrate", sub, required=("eps_r", "tan_delta", "thickness"), optional=("name", "backing")
-    )
+    _check_keys("substrate", sub, required=("eps_r", "tan_delta", "thickness"), optional=("name", "backing"))
     substrate = _wrap(
         "substrate",
         Substrate,
@@ -164,9 +165,7 @@ def config_from_dict(data):
     )
     theta_deg = _number("excitation.theta_deg", exc.get("theta_deg", 0.0))
     if theta_deg != 0.0:
-        raise ConfigError(
-            "excitation.theta_deg: Phase 1 supports normal incidence only (theta_deg must be 0)"
-        )
+        raise ConfigError("excitation.theta_deg: Phase 1 supports normal incidence only (theta_deg must be 0)")
     try:
         frequency = units.parse_frequency(exc["frequency"], "excitation.frequency")
     except ValueError as e:
@@ -189,9 +188,7 @@ def config_from_dict(data):
     ref = _mapping(data["reference_planes"], "reference_planes")
     if backing == "air":
         _check_keys("reference_planes", ref, required=("top_air_thickness", "bottom_air_thickness"))
-        bottom_air_thickness = _length(
-            "reference_planes", "bottom_air_thickness", ref["bottom_air_thickness"]
-        )
+        bottom_air_thickness = _length("reference_planes", "bottom_air_thickness", ref["bottom_air_thickness"])
     else:  # "pec": there is no bottom port, so bottom_air_thickness is meaningless (Sec. 1)
         _check_keys("reference_planes", ref, required=("top_air_thickness",))
         bottom_air_thickness = None
@@ -206,7 +203,10 @@ def config_from_dict(data):
     sweep = _parse_sweep(data["sweep"]) if "sweep" in data else None
 
     return SimulationConfig(
-        unit_cell=unit_cell, excitation=excitation, mesh=mesh, reference_planes=reference_planes,
+        unit_cell=unit_cell,
+        excitation=excitation,
+        mesh=mesh,
+        reference_planes=reference_planes,
         sweep=sweep,
     )
 
@@ -228,8 +228,7 @@ def _sweep_value(section, key, kind, value):
 def _parse_axis(yaml_name, spec):
     if yaml_name not in _SWEEP_PARAMETERS:
         raise ConfigError(
-            f"'sweep.parameters': unknown geometry parameter {yaml_name!r}; "
-            f"sweepable: {sorted(_SWEEP_PARAMETERS)}"
+            f"'sweep.parameters': unknown geometry parameter {yaml_name!r}; sweepable: {sorted(_SWEEP_PARAMETERS)}"
         )
     name, kind = _SWEEP_PARAMETERS[yaml_name]
     section = f"sweep.parameters.{yaml_name}"
@@ -243,10 +242,14 @@ def _parse_axis(yaml_name, spec):
         _check_keys(section, spec, required=("values",))
         if not isinstance(spec["values"], list):
             raise ConfigError(f"'{section}.values' must be a list")
-        return _wrap(section, ParameterAxis, name, tuple(_sweep_value(section, "values", kind, v) for v in spec["values"]))
+        return _wrap(
+            section, ParameterAxis, name, tuple(_sweep_value(section, "values", kind, v) for v in spec["values"])
+        )
     _check_keys(section, spec, required=("start", "stop", "step"))
     return _wrap(
-        section, ParameterAxis.from_range, name,
+        section,
+        ParameterAxis.from_range,
+        name,
         *(_sweep_value(section, k, kind, spec[k]) for k in ("start", "stop", "step")),
     )
 
@@ -272,14 +275,18 @@ def _parse_sweep(data):
     if "validation" in sw:
         val = _mapping(sw["validation"], "sweep.validation")
         _check_keys(
-            "sweep.validation", val, required=(),
+            "sweep.validation",
+            val,
+            required=(),
             optional=("min_cells_per_wavelength", "max_area_error", "strict", "refinement"),
         )
         kwargs = {k: v for k, v in val.items() if k != "refinement"}
         if "refinement" in val:
             ref = _mapping(val["refinement"], "sweep.validation.refinement")
             _check_keys(
-                "sweep.validation.refinement", ref, required=(),
+                "sweep.validation.refinement",
+                ref,
+                required=(),
                 optional=("enabled", "factor", "tolerance", "frequencies"),
             )
             kwargs["refinement"] = _wrap("sweep.validation.refinement", RefinementPolicy, **ref)

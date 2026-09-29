@@ -4,8 +4,8 @@ import math
 
 import numpy as np
 import pytest
-
 from reference_layered import solve_current_sheet, solve_incident_fields
+
 from src.constants import ETA0
 from src.green_function import LayeredGreenFunction
 from src.materials import Substrate
@@ -34,6 +34,7 @@ def sz(e, h):
 
 
 # =============================================================== sheet fields
+
 
 @pytest.mark.parametrize("eps_r, tand, h", STACKS)
 def test_sheet_fields_match_independent_field_matching_everywhere(eps_r, tand, h):
@@ -65,7 +66,7 @@ def test_sheet_E_at_z0_is_the_spectral_dyad_and_boundary_conditions_hold(eps_r, 
         assert e_above == pytest.approx(g.spectral_dyad(kx, ky) @ j, rel=1e-11)
         assert e_above == pytest.approx(e_below, rel=1e-12)
         dh = h_above - h_below
-        assert np.array([-dh[1], dh[0]]) == pytest.approx(j, rel=1e-10)        # z x dH = J
+        assert np.array([-dh[1], dh[0]]) == pytest.approx(j, rel=1e-10)  # z x dH = J
         e_in, h_in = g.sheet_fields(kx, ky, j, -h, "above")
         e_out, h_out = g.sheet_fields(kx, ky, j, -h - 1e-12, "above")
         assert e_in == pytest.approx(e_out, rel=1e-9) and h_in == pytest.approx(h_out, rel=1e-9)
@@ -88,7 +89,7 @@ def test_normal_incidence_fields_are_isotropic_and_exactly_transverse_rotation_i
     # far above: outgoing plane wave, H = z x E / eta0
     e, hh = g.sheet_fields(0.0, 0.0, j, 5e-2)
     assert hh == pytest.approx(np.array([-e[1], e[0]]) / ETA0, rel=1e-12)
-    e, hh = g.sheet_fields(0.0, 0.0, j, -5e-2)                      # far below: H = -z x E / eta0
+    e, hh = g.sheet_fields(0.0, 0.0, j, -5e-2)  # far below: H = -z x E / eta0
     assert hh == pytest.approx(-np.array([-e[1], e[0]]) / ETA0, rel=1e-12)
 
 
@@ -104,7 +105,7 @@ def test_sheet_power_balance_through_the_fields_lossless():
         up = flux(1e-3)
         down = -flux(-H - 1e-3)
         assert up > 0.0 and down > 0.0
-        assert flux(0.05) == pytest.approx(up, rel=1e-10)                  # no loss, no evanescent power
+        assert flux(0.05) == pytest.approx(up, rel=1e-10)  # no loss, no evanescent power
         assert flux(-H - 0.05) == pytest.approx(-down, rel=1e-10)
         assert up + down == pytest.approx(p_src, rel=1e-10)
         # inside the lossless substrate the net upward flux is constant too
@@ -113,7 +114,7 @@ def test_sheet_power_balance_through_the_fields_lossless():
 
 def test_sheet_power_balance_lossy_includes_substrate_dissipation():
     sub, g = make(2.2, 0.05, H)
-    kx, ky = 0.0, 0.0            # normal incidence: E_z = 0, so E_t carries all the dissipation
+    kx, ky = 0.0, 0.0  # normal incidence: E_z = 0, so E_t carries all the dissipation
     j = np.array([1.0, 0.0])
     p_src = -0.5 * np.real(np.conj(j) @ g.sheet_fields(kx, ky, j, 0.0)[0])
     flux = lambda z: sz(*g.sheet_fields(kx, ky, j, z))
@@ -122,7 +123,9 @@ def test_sheet_power_balance_lossy_includes_substrate_dissipation():
     # dissipation (omega eps0/2)(-Im eps) integral |E|^2 dz  by quadrature of the fields
     z = np.linspace(-H, 0.0, 2001)
     e, _ = g.sheet_fields(kx * np.ones_like(z), ky * np.ones_like(z), j, z, "below")
-    p_diss = 0.5 * g.omega * 8.8541878128e-12 * (-sub.eps_complex.imag) * np.trapezoid(np.sum(np.abs(e) ** 2, axis=-1), z)
+    p_diss = (
+        0.5 * g.omega * 8.8541878128e-12 * (-sub.eps_complex.imag) * np.trapezoid(np.sum(np.abs(e) ** 2, axis=-1), z)
+    )
     assert up + down + p_diss == pytest.approx(p_src, rel=2e-6)
 
 
@@ -130,13 +133,13 @@ def test_evanescent_fields_decay_and_nothing_overflows():
     _, g = make(2.2, 0.0009, H)
     kt = 3.0 * g.k0
     j = np.array([1.0, 0.0])
-    z = np.array([1e-4, 1e-3, 1e-2, 3e-2])              # exp(-kt z) stays representable
+    z = np.array([1e-4, 1e-3, 1e-2, 3e-2])  # exp(-kt z) stays representable
     e, hh = g.sheet_fields(kt, 0.0, j, z)
     mag = np.linalg.norm(e, axis=-1)
     assert np.all(np.diff(mag) < 0.0) and np.all(np.isfinite(hh))
     e, _ = g.sheet_fields(kt, 0.0, j, -H - z)
     assert np.all(np.diff(np.linalg.norm(e, axis=-1)) < 0.0)
-    far, far_h = g.sheet_fields(kt, 0.0, j, np.array([1.0, 50.0]))      # underflows to 0, never inf/nan
+    far, far_h = g.sheet_fields(kt, 0.0, j, np.array([1.0, 50.0]))  # underflows to 0, never inf/nan
     assert np.all(np.isfinite(far)) and np.all(np.isfinite(far_h)) and np.all(np.abs(far) < 1e-30)
     # extreme spectral content and distance: still finite (all exponents are <= 0)
     for kt_big in (1e4, 1e6):
@@ -192,6 +195,7 @@ def test_shapes_broadcasting_and_argument_validation():
 
 
 # ============================================================== stack fields
+
 
 @pytest.mark.parametrize("eps_r, tand, h", STACKS)
 @pytest.mark.parametrize("port", ["top", "bottom"])

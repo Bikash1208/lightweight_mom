@@ -10,22 +10,22 @@ from src.excitation import PlaneWaveExcitation
 from src.materials import Substrate
 from src.periodic_bc import normal_wavenumber
 
-
 # ---------------------------------------------------------------- constants
+
 
 def test_speed_of_light_is_exact_si():
     assert constants.C0 == 299_792_458.0
 
 
 def test_vacuum_constants_are_mutually_consistent():
-    assert constants.EPS0 * constants.MU0 * constants.C0**2 == pytest.approx(1.0, rel=1e-15)
-    assert constants.ETA0 == pytest.approx(math.sqrt(constants.MU0 / constants.EPS0), rel=1e-14)
+    assert pytest.approx(1.0, rel=1e-15) == constants.EPS0 * constants.MU0 * constants.C0**2
+    assert pytest.approx(math.sqrt(constants.MU0 / constants.EPS0), rel=1e-14) == constants.ETA0
 
 
 def test_free_space_impedance_matches_codata_2018():
     # CODATA 2018: Z0 = 376.730 313 668(57) ohm
-    assert constants.ETA0 == pytest.approx(376.730313668, rel=1e-9)
-    assert constants.EPS0 == pytest.approx(8.8541878128e-12, rel=1e-10)
+    assert pytest.approx(376.730313668, rel=1e-9) == constants.ETA0
+    assert pytest.approx(8.8541878128e-12, rel=1e-10) == constants.EPS0
 
 
 def test_time_convention_is_documented():
@@ -33,6 +33,7 @@ def test_time_convention_is_documented():
 
 
 # ------------------------------------------------- physical meaning of signs
+
 
 def test_forward_wave_phase_front_moves_toward_plus_z():
     """With exp(+jwt), the phasor exp(-j*k*z) is a wave travelling toward +z."""
@@ -81,6 +82,7 @@ def test_evanescent_reflected_harmonic_decays_away_from_surface():
 
 # ------------------------------------------------------ incident wave geometry
 
+
 def test_normal_incidence_wavevector_points_toward_minus_z():
     e = PlaneWaveExcitation(frequency=10e9)
     kx, ky, kz = e.wavevector
@@ -93,7 +95,7 @@ def test_normal_incidence_wavevector_points_toward_minus_z():
 def test_oblique_wavevector_definition():
     """theta from the normal, phi from +x: kx0 = k0 sin(th) cos(ph), ky0 = k0 sin(th) sin(ph)."""
     th, ph = math.radians(30), math.radians(90)
-    e = PlaneWaveExcitation(10e9, theta=th, phi=ph, polarization="x")   # E = x_hat, k in y-z plane
+    e = PlaneWaveExcitation(10e9, theta=th, phi=ph, polarization="x")  # E = x_hat, k in y-z plane
     kx0, ky0 = e.transverse_wavenumber
     assert kx0 == pytest.approx(0.0, abs=1e-9)
     assert ky0 == pytest.approx(e.k0 * 0.5, rel=1e-14)
@@ -112,9 +114,13 @@ def test_polarization_must_be_transverse():
 @pytest.mark.parametrize(
     "kw",
     [
-        dict(frequency=0.0), dict(frequency=-1.0), dict(frequency=float("nan")),
-        dict(frequency=10e9, theta=-0.1), dict(frequency=10e9, theta=math.pi / 2),
-        dict(frequency=10e9, phi=float("inf")), dict(frequency=10e9, polarization="z"),
+        dict(frequency=0.0),
+        dict(frequency=-1.0),
+        dict(frequency=float("nan")),
+        dict(frequency=10e9, theta=-0.1),
+        dict(frequency=10e9, theta=math.pi / 2),
+        dict(frequency=10e9, phi=float("inf")),
+        dict(frequency=10e9, polarization="z"),
         dict(frequency=10e9, polarization="TE"),
     ],
 )

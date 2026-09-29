@@ -74,7 +74,7 @@ CIRCULAR_COMPONENTS = {"RR": (0, 0), "LR": (1, 0), "RL": (0, 1), "LL": (1, 1)}
 CO_COMPONENTS = {"linear": ("xx", "yy"), "circular": ("RR", "LL")}
 CROSS_COMPONENTS = {"linear": ("yx", "xy"), "circular": ("LR", "RL")}
 
-_BLOCK4 = np.kron(np.eye(2), CIRCULAR_BASIS)      # blockdiag(T, T) over (port1 x/y, port2 x/y)
+_BLOCK4 = np.kron(np.eye(2), CIRCULAR_BASIS)  # blockdiag(T, T) over (port1 x/y, port2 x/y)
 
 
 def _check_block(name, a, size):
@@ -140,6 +140,7 @@ def co_cross_power(block, basis):
 
 # ------------------------------------------------------------------ rotation / handedness
 
+
 def rotation_sense_about_z(e_xy):
     """+1 / -1 / 0: E(t) = Re{e exp(+j w t)} rotates counter-clockwise / clockwise seen from +z
     / does not rotate (linear). Sign of Im(e_x conj(e_y)), evaluated with a tolerance relative
@@ -172,7 +173,7 @@ def handedness(label, direction):
     whose transverse phasor is e_R (label 'R') or e_L (label 'L') travelling along ``direction``."""
     if label not in ("R", "L") or direction not in _DIRECTIONS:
         raise ValueError(f"label must be 'R' or 'L' and direction '+z' or '-z', got {label!r}, {direction!r}")
-    sense = rotation_sense_about_z(E_R if label == "R" else E_L)       # about +z
+    sense = rotation_sense_about_z(E_R if label == "R" else E_L)  # about +z
     about_propagation = sense if direction == "+z" else -sense
     return "RHCP" if about_propagation > 0 else "LHCP"
 
@@ -184,8 +185,12 @@ def component_handedness(name):
     fixed-basis label; only the propagation direction decides the physical handedness.
     """
     family, _, comp = name.partition("_")
-    if len(family) != 3 or family[0] != "S" or family[1:] not in ("11", "12", "21", "22") \
-            or comp not in CIRCULAR_COMPONENTS:
+    if (
+        len(family) != 3
+        or family[0] != "S"
+        or family[1:] not in ("11", "12", "21", "22")
+        or comp not in CIRCULAR_COMPONENTS
+    ):
         raise ValueError(f"expected a circular S-parameter name like 'S21_LR', got {name!r}")
     ports = {"1": "top", "2": "bottom"}
     out_port, in_port = ports[family[1]], ports[family[2]]

@@ -14,10 +14,10 @@ class _FakeRecord:
 
 def test_power_balance_matches_known_magnitudes_squared():
     s = np.zeros((4, 4), dtype=complex)
-    s[0, 0] = 0.6 + 0.0j    # S11_xx
-    s[1, 0] = 0.1 + 0.0j    # S11_yx
-    s[2, 0] = 0.8 + 0.0j    # S21_xx
-    s[3, 0] = 0.0 + 0.0j    # S21_yx
+    s[0, 0] = 0.6 + 0.0j  # S11_xx
+    s[1, 0] = 0.1 + 0.0j  # S11_yx
+    s[2, 0] = 0.8 + 0.0j  # S21_xx
+    s[3, 0] = 0.0 + 0.0j  # S21_yx
     result = pb.power_balance_for_record(_FakeRecord(s))
     assert result.R_co == pytest.approx(0.36)
     assert result.R_cross == pytest.approx(0.01)
@@ -35,6 +35,7 @@ def test_power_balance_note_warns_about_mode_dependence():
 
 
 # ------------------------------------------------------------------------------- Test: multi-mode
+
 
 def test_propagating_mode_check_reports_only_fundamental_for_locked_period():
     from src.geometry import Geometry, UnitCell
@@ -55,7 +56,7 @@ def test_propagating_mode_check_warns_when_higher_orders_exist():
     from src.materials import Metal, Substrate
     from src.periodic_bc import RectangularLattice
 
-    lattice = RectangularLattice(30.0e-3, 30.0e-3)   # large period -> low grating onset
+    lattice = RectangularLattice(30.0e-3, 30.0e-3)  # large period -> low grating onset
     substrate = Substrate(name="Rogers RT/Duroid 5880", eps_r=2.2, tan_delta=0.0009, thickness=1.575e-3)
     geometry = Geometry(kind="rectangle", length=1.0e-3, width=1.0e-3)
     unit_cell = UnitCell(lattice, geometry, substrate, Metal())

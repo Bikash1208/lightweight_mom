@@ -64,7 +64,7 @@ def test_summary_json_is_well_formed_and_matches_decision(reduced_run):
     out = reduced_run["output_dir"]
     doc = json.loads((out / "phase10_summary.json").read_text())
     assert doc["final_status"] == reduced_run["decision"].final_status
-    assert doc["gates"]["10A_control_variable"] == "CLOSED"   # no HFSS reference in this repo
+    assert doc["gates"]["10A_control_variable"] == "CLOSED"  # no HFSS reference in this repo
 
 
 def test_run_never_unlocks_geometry_inversion_without_hfss_data(reduced_run):

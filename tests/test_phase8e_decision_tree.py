@@ -37,8 +37,17 @@ def test_unvalidated_control_variable_blocks_geometry_inversion_even_if_everythi
 
 
 def test_fully_validated_chain_opens_the_gate():
-    d = evaluate_formulation_gate("B", "ARCHITECTURE_COMPATIBLE_UNVALIDATED", "COMPATIBLE", True, True, True, True,
-                                  formulation_validated=True, local_periodicity_acceptable=True)
+    d = evaluate_formulation_gate(
+        "B",
+        "ARCHITECTURE_COMPATIBLE_UNVALIDATED",
+        "COMPATIBLE",
+        True,
+        True,
+        True,
+        True,
+        formulation_validated=True,
+        local_periodicity_acceptable=True,
+    )
     assert d.geometry_inversion_permitted is True
     assert d.final_status == "CONTROL_VARIABLE_VALIDATED"
 
@@ -53,16 +62,29 @@ def test_default_formulation_validated_and_local_periodicity_are_false_matching_
 
 
 def test_overall_project_status_is_no_validated_formulation_unless_one_gate_is_fully_open():
-    blocked = evaluate_formulation_gate("B", "ARCHITECTURE_COMPATIBLE_UNVALIDATED", "COMPATIBLE", True, True, True, False)
+    blocked = evaluate_formulation_gate(
+        "B", "ARCHITECTURE_COMPATIBLE_UNVALIDATED", "COMPATIBLE", True, True, True, False
+    )
     assert overall_project_status([blocked]) == "NO_VALIDATED_FORMULATION"
 
-    open_gate = evaluate_formulation_gate("B", "ARCHITECTURE_COMPATIBLE_UNVALIDATED", "COMPATIBLE", True, True, True, True,
-                                           formulation_validated=True, local_periodicity_acceptable=True)
+    open_gate = evaluate_formulation_gate(
+        "B",
+        "ARCHITECTURE_COMPATIBLE_UNVALIDATED",
+        "COMPATIBLE",
+        True,
+        True,
+        True,
+        True,
+        formulation_validated=True,
+        local_periodicity_acceptable=True,
+    )
     assert overall_project_status([blocked, open_gate]) == "CONTROL_VARIABLE_VALIDATED"
 
 
 def test_gate_never_forces_a_positive_result_by_default_arguments():
     # every checkbox missing/false by default reasoning: a formulation that fails architecture
     # never accidentally reports geometry_inversion_permitted=True.
-    d = evaluate_formulation_gate("D", "ARCHITECTURE_INCOMPATIBLE", "UNKNOWN_REFERENCE_PLANE", False, False, False, False)
+    d = evaluate_formulation_gate(
+        "D", "ARCHITECTURE_INCOMPATIBLE", "UNKNOWN_REFERENCE_PLANE", False, False, False, False
+    )
     assert d.geometry_inversion_permitted is False

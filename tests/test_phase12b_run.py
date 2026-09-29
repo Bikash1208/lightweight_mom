@@ -20,8 +20,11 @@ REDUCED_PERIOD_L_MM = {8.0: (2.0, 4.0, 6.0)}
 def reduced_run(tmp_path_factory):
     out_dir = tmp_path_factory.mktemp("phase12b_reduced_run") / "out"
     return run_phase12b(
-        out_dir, l_values_mm=REDUCED_L_MM, frequencies_hz=REDUCED_FREQUENCIES_HZ,
-        new_periods_mm=(8.0,), period_l_values_mm=REDUCED_PERIOD_L_MM,
+        out_dir,
+        l_values_mm=REDUCED_L_MM,
+        frequencies_hz=REDUCED_FREQUENCIES_HZ,
+        new_periods_mm=(8.0,),
+        period_l_values_mm=REDUCED_PERIOD_L_MM,
         aligned_refinement_cells=(24, 48),
     )
 
@@ -29,8 +32,13 @@ def reduced_run(tmp_path_factory):
 def test_run_produces_all_required_top_level_outputs(reduced_run):
     out = reduced_run.output_dir
     required = (
-        "phase12b_report.md", "phase12b_gate_status.json", "alignment_report.json",
-        "reassessment.json", "duplicate_audit.json", "period_study.json", "period_sweep.csv",
+        "phase12b_report.md",
+        "phase12b_gate_status.json",
+        "alignment_report.json",
+        "reassessment.json",
+        "duplicate_audit.json",
+        "period_study.json",
+        "period_sweep.csv",
     )
     for name in required:
         assert (out / name).exists(), name
@@ -40,8 +48,10 @@ def test_run_produces_the_required_plots(reduced_run):
     out = reduced_run.output_dir
     plots = {p.name for p in (out / "plots").glob("*.png")}
     assert plots == {
-        "aligned_vs_unaligned_convergence.png", "phase_vs_length_per_period.png",
-        "coverage_vs_frequency_per_period.png", "magnitude_vs_length_per_period.png",
+        "aligned_vs_unaligned_convergence.png",
+        "phase_vs_length_per_period.png",
+        "coverage_vs_frequency_per_period.png",
+        "magnitude_vs_length_per_period.png",
         "duplicate_audit_table.png",
     }
 

@@ -30,26 +30,41 @@ def _exact_j00():
 def test_exact_floquet_coefficient_reproduces_s11_to_machine_precision():
     j00, uc, mesh = _exact_j00()
     eq = equivalent_reflection_xx(complex(j00), dp.SUBSTRATE, dp.DESIGN_FREQUENCY_HZ, dp.REFERENCE_PLANES)
-    sp = compute_s_parameters(uc, dp.DESIGN_FREQUENCY_HZ, mesh, dp.REFERENCE_PLANES,
-                               warn_grating=False, warn_surface_wave=False)
+    sp = compute_s_parameters(
+        uc, dp.DESIGN_FREQUENCY_HZ, mesh, dp.REFERENCE_PLANES, warn_grating=False, warn_surface_wave=False
+    )
     assert abs(eq.s11_xx - sp.component("S11_xx")) < 1e-12 * abs(sp.component("S11_xx"))
 
 
 def test_dipole_moment_conversion_matches_true_s11_within_riemann_sum_tolerance():
-    iso = solve_isolated_grounded_cell(dp.PERIOD_M, dp.PERIOD_M, L, L, dp.SUBSTRATE, dp.METAL,
-                                        dp.DESIGN_FREQUENCY_HZ, N, 2 * N)
-    eq = equivalent_reflection_from_dipole_moment(iso.dipole.px, dp.PERIOD_M, dp.SUBSTRATE,
-                                                   dp.DESIGN_FREQUENCY_HZ, dp.REFERENCE_PLANES)
-    sp = compute_s_parameters(dp.unit_cell_at(L), dp.DESIGN_FREQUENCY_HZ, MeshSettings(N, N, 2 * N),
-                               dp.REFERENCE_PLANES, warn_grating=False, warn_surface_wave=False)
-    assert abs(eq.magnitude - sp.magnitude("S11_xx")) < 0.01   # documented small Riemann-sum residual
+    iso = solve_isolated_grounded_cell(
+        dp.PERIOD_M, dp.PERIOD_M, L, L, dp.SUBSTRATE, dp.METAL, dp.DESIGN_FREQUENCY_HZ, N, 2 * N
+    )
+    eq = equivalent_reflection_from_dipole_moment(
+        iso.dipole.px, dp.PERIOD_M, dp.SUBSTRATE, dp.DESIGN_FREQUENCY_HZ, dp.REFERENCE_PLANES
+    )
+    sp = compute_s_parameters(
+        dp.unit_cell_at(L),
+        dp.DESIGN_FREQUENCY_HZ,
+        MeshSettings(N, N, 2 * N),
+        dp.REFERENCE_PLANES,
+        warn_grating=False,
+        warn_surface_wave=False,
+    )
+    assert abs(eq.magnitude - sp.magnitude("S11_xx")) < 0.01  # documented small Riemann-sum residual
     from src.phase import wrapped_difference_deg
+
     assert abs(wrapped_difference_deg(eq.phase_deg, sp.phase_deg("S11_xx"))) < 1.0
 
 
 def test_zero_deviation_gives_zero_error():
     phase_err, mag_db_err, iso, emb = reflection_phase_amplitude_error(
-        1e-4 + 2e-4j, 1e-4 + 2e-4j, dp.PERIOD_M, dp.SUBSTRATE, dp.DESIGN_FREQUENCY_HZ, dp.REFERENCE_PLANES,
+        1e-4 + 2e-4j,
+        1e-4 + 2e-4j,
+        dp.PERIOD_M,
+        dp.SUBSTRATE,
+        dp.DESIGN_FREQUENCY_HZ,
+        dp.REFERENCE_PLANES,
     )
     assert phase_err == 0.0
     assert mag_db_err == 0.0

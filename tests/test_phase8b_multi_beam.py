@@ -50,5 +50,9 @@ def test_combine_beams_scalar_requires_uniform_polarization():
     from src.phase8b.object_wave import combine_beams_scalar
 
     with pytest.raises(ValueError):
-        combine_beams_scalar(X, Y, [Beam(theta_deg=10.0, phi_deg=0.0, polarization="x"),
-                                     Beam(theta_deg=10.0, phi_deg=90.0, polarization="y")], F_HZ)
+        combine_beams_scalar(
+            X,
+            Y,
+            [Beam(theta_deg=10.0, phi_deg=0.0, polarization="x"), Beam(theta_deg=10.0, phi_deg=90.0, polarization="y")],
+            F_HZ,
+        )

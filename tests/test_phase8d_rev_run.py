@@ -20,8 +20,13 @@ def test_run_produces_all_required_output_files(tmp_path, phase8c_full_database)
     result = run_phase8d_rev(tmp_path / "out", database=phase8c_full_database, root_dir=tmp_path)
     out = result["output_dir"]
     for name in (
-        "database_schema.md", "database_schema.json", "universal_database_spec.md", "query_spec.md",
-        "library_build_request_schema.json", "validation_report.md", "benchmark_query_results.csv",
+        "database_schema.md",
+        "database_schema.json",
+        "universal_database_spec.md",
+        "query_spec.md",
+        "library_build_request_schema.json",
+        "validation_report.md",
+        "benchmark_query_results.csv",
         "database_integrity.json",
     ):
         assert (out / name).exists(), name
@@ -77,9 +82,16 @@ def test_regression_suite_criterion_is_false_unless_explicitly_confirmed(tmp_pat
 def test_cli_runs_against_the_real_checkpoint(tmp_path):
     out_dir = tmp_path / "cli_out"
     proc = subprocess.run(
-        [sys.executable, str(ROOT / "examples" / "run_phase8d_rev_universal_database.py"),
-         "--output-dir", str(out_dir)],
-        cwd=ROOT, capture_output=True, text=True, timeout=120,
+        [
+            sys.executable,
+            str(ROOT / "examples" / "run_phase8d_rev_universal_database.py"),
+            "--output-dir",
+            str(out_dir),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=120,
     )
     assert "PHASE 8D-REV" in proc.stdout
     assert "MATCH (324 geometries)" in proc.stdout

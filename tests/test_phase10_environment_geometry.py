@@ -27,14 +27,14 @@ def test_weak_neighbor_prefers_plus_direction_when_valid():
 
 
 def test_moderate_neighbor_falls_back_to_minus_near_the_upper_domain_edge():
-    result = eg.moderate_neighbor((4.2, 4.2))   # 4.2+0.6=4.8 is out of domain
+    result = eg.moderate_neighbor((4.2, 4.2))  # 4.2+0.6=4.8 is out of domain
     assert result.direction == "-"
     assert result.lw_mm == pytest.approx((3.6, 3.6))
 
 
 def test_perturbed_neighbor_raises_when_neither_direction_is_valid():
     with pytest.raises(ValueError):
-        eg.perturbed_neighbor((2.8, 2.8), 5.0)   # +-5mm leaves [1.0, 4.4] entirely
+        eg.perturbed_neighbor((2.8, 2.8), 5.0)  # +-5mm leaves [1.0, 4.4] entirely
 
 
 def test_strong_neighbor_extremes_are_center_independent():
@@ -45,16 +45,16 @@ def test_strong_neighbor_extremes_are_center_independent():
 
 def test_build_5cell_environment_leaves_diagonals_at_center():
     grid = eg.build_5cell_environment((2.8, 2.8), {"N": (3.0, 3.0)})
-    assert grid[0][0] == (2.8, 2.8)   # NW diagonal == center
-    assert grid[0][2] == (2.8, 2.8)   # NE diagonal == center
-    assert grid[0][1] == (3.0, 3.0)   # N cardinal == perturbed value
-    assert grid[1][1] == (2.8, 2.8)   # center
+    assert grid[0][0] == (2.8, 2.8)  # NW diagonal == center
+    assert grid[0][2] == (2.8, 2.8)  # NE diagonal == center
+    assert grid[0][1] == (3.0, 3.0)  # N cardinal == perturbed value
+    assert grid[1][1] == (2.8, 2.8)  # center
 
 
 def test_build_9cell_environment_allows_independent_diagonals():
     grid = eg.build_9cell_environment((2.8, 2.8), diagonal_mm={"NE": (4.4, 4.4)})
     assert grid[0][2] == (4.4, 4.4)
-    assert grid[0][0] == (2.8, 2.8)   # NW untouched, defaults to center
+    assert grid[0][0] == (2.8, 2.8)  # NW untouched, defaults to center
 
 
 def test_build_5x5_long_range_environment_only_touches_distance_two_cardinals():

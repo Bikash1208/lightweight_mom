@@ -16,7 +16,7 @@ from .excitation import stack_tangential_field
 from .green_function import LayeredGreenFunction
 from .mom_matrix import assemble_excitation_vector, assemble_impedance_matrix
 
-if TYPE_CHECKING:       # config imports the sweep machinery, which imports this module
+if TYPE_CHECKING:  # config imports the sweep machinery, which imports this module
     from .config import SimulationConfig
 
 
@@ -26,9 +26,9 @@ class MomSystem:
     green: LayeredGreenFunction
     kx0: float
     ky0: float
-    e_stack: np.ndarray      # tangential E of the unpatterned stack at z = 0, shape (2,)
-    z: np.ndarray            # (n, n)
-    v: np.ndarray            # (n,)
+    e_stack: np.ndarray  # tangential E of the unpatterned stack at z = 0, shape (2,)
+    z: np.ndarray  # (n, n)
+    v: np.ndarray  # (n,)
 
 
 def assemble_system(unit_cell, excitation, mesh) -> MomSystem:

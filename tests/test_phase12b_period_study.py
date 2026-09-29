@@ -4,8 +4,8 @@ import pytest
 
 from src.phase12b.period_study import (
     aligned_cells_for_period,
-    coverage_by_frequency,
     convergence_for_near_resonant_patch,
+    coverage_by_frequency,
     grating_and_surface_wave_report,
     l_family_for_period,
     resonant_length_mm,
@@ -21,7 +21,7 @@ def test_aligned_cells_for_period_matches_measurement(period_mm, expected_n):
 def test_l_family_spans_roughly_0p2_to_0p94_of_the_period():
     fam = l_family_for_period(8.0)
     assert fam[0] == pytest.approx(1.6, abs=0.01)
-    assert fam[-1] <= 8.0 * 0.94 + 0.2   # +0.2mm: rounded to the nearest 0.4mm step
+    assert fam[-1] <= 8.0 * 0.94 + 0.2  # +0.2mm: rounded to the nearest 0.4mm step
 
 
 def test_run_period_sweep_rejects_an_unaligned_cells_override():

@@ -27,10 +27,15 @@ _HAS_CHECKPOINT = data_source.DEFAULT_CHECKPOINT_JSON.exists()
 def test_run_phase8c_produces_all_required_files(tmp_path, phase8c_full_database):
     result = run_phase8c(tmp_path / "out", database=phase8c_full_database)
     out = result["output_dir"]
-    for name in ("unit_cell_topology_audit.md", "s_parameter_definition.md",
-                 "control_quantity_analysis.md", "control_quantity_validation.json",
-                 "unit_cell_scattering_12p5GHz.csv", "control_quantity_candidates.csv",
-                 "phase_state_analysis.csv"):
+    for name in (
+        "unit_cell_topology_audit.md",
+        "s_parameter_definition.md",
+        "control_quantity_analysis.md",
+        "control_quantity_validation.json",
+        "unit_cell_scattering_12p5GHz.csv",
+        "control_quantity_candidates.csv",
+        "phase_state_analysis.csv",
+    ):
         assert (out / name).exists(), name
     for i in range(1, 19):
         matches = list((out / "plots").glob(f"{i:02d}_*.png"))
@@ -72,7 +77,10 @@ def test_cli_runs_against_the_real_checkpoint(tmp_path):
     out_dir = tmp_path / "cli_out"
     proc = subprocess.run(
         [sys.executable, str(ROOT / "examples" / "run_phase8c_validation.py"), "--output-dir", str(out_dir)],
-        cwd=ROOT, capture_output=True, text=True, timeout=120,
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=120,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "PHASE 8C" in proc.stdout

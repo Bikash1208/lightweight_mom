@@ -22,7 +22,10 @@ def test_investigate_s21xx_is_insufficient_evidence():
     result = cv.investigate_s21xx()
     assert result.validated == "INSUFFICIENT_EVIDENCE"
     # Sec. 23's explicit prohibition must be honoured: larger magnitude alone is not a justification.
-    assert "not select S21 merely because" in result.justification or "not sufficient justification" in result.justification
+    assert (
+        "not select S21 merely because" in result.justification
+        or "not sufficient justification" in result.justification
+    )
 
 
 def test_investigate_surface_impedance_is_invalid_with_two_independent_reasons():

@@ -39,8 +39,9 @@ def load_full_database(checkpoint_path=DEFAULT_CHECKPOINT_JSON):
     return Database.from_json(checkpoint_path)
 
 
-def cross_check_against_delivered_library(database, design_frequency_ghz=12.5,
-                                           library_dir=DEFAULT_LIBRARY_DIR, n_sample=20, rtol=1e-9):
+def cross_check_against_delivered_library(
+    database, design_frequency_ghz=12.5, library_dir=DEFAULT_LIBRARY_DIR, n_sample=20, rtol=1e-9
+):
     """Sanity check (not a Phase 7 modification): a sample of this checkpoint's own S11_xx/S21_xx
     values at ``design_frequency_ghz`` must agree exactly with the delivered
     `unit_cell_library.json` -- proof this is genuinely the same solve Phase 7 delivered, not a
@@ -48,7 +49,9 @@ def cross_check_against_delivered_library(database, design_frequency_ghz=12.5,
     delivered = json.loads((Path(library_dir) / "database" / "unit_cell_library.json").read_text())
     by_lw = {(c["L_mm"], c["W_mm"]): c for c in delivered["cells"] if c["solver_status"] == "OK"}
     freqs = database.frequencies
-    f_idx = next((i for i, f in enumerate(freqs) if abs(f / 1e9 - design_frequency_ghz) <= rtol * design_frequency_ghz), None)
+    f_idx = next(
+        (i for i, f in enumerate(freqs) if abs(f / 1e9 - design_frequency_ghz) <= rtol * design_frequency_ghz), None
+    )
     if f_idx is None:
         raise ValueError(f"{design_frequency_ghz} GHz is not an exact grid point of this checkpoint")
 

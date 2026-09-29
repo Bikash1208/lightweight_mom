@@ -24,6 +24,7 @@ def grid_fill_fraction(c, n=1200):
 
 # ------------------------------------------------------------- construction
 
+
 def test_kinds_and_polarity():
     assert Geometry("rectangle", 5e-3, 2e-3).polarity == "metal"
     assert Geometry("patch", 3e-3, 3e-3).polarity == "metal"
@@ -39,8 +40,8 @@ def test_kinds_and_polarity():
         dict(kind="rectangle", length=1e-3, width=-1e-3),
         dict(kind="rectangle", length=float("nan"), width=1e-3),
         dict(kind="rectangle", length=1e-3, width=1e-3, rotation=float("inf")),
-        dict(kind="dipole", length=1e-3, width=2e-3),   # dipole must be elongated
-        dict(kind="slot", length=1e-3, width=2e-3),     # slot must be elongated
+        dict(kind="dipole", length=1e-3, width=2e-3),  # dipole must be elongated
+        dict(kind="slot", length=1e-3, width=2e-3),  # slot must be elongated
         dict(kind="rectangle", length="5e-3", width=1e-3),
     ],
 )
@@ -50,6 +51,7 @@ def test_geometry_rejects_invalid(kw):
 
 
 # ------------------------------------------------------------ shape maths
+
 
 def test_corners_unrotated():
     c = Geometry("rectangle", 5e-3, 2e-3).corners()
@@ -64,8 +66,7 @@ def test_corners_rotated_90_swap_extents():
 
 @pytest.mark.parametrize("rot_deg", [0, 17, 45, 90, 133, 270])
 def test_rotation_preserves_edge_lengths_and_centroid(rot_deg):
-    g = Geometry("rectangle", 5e-3, 2e-3, center_x=0.3e-3, center_y=-0.2e-3,
-                 rotation=math.radians(rot_deg))
+    g = Geometry("rectangle", 5e-3, 2e-3, center_x=0.3e-3, center_y=-0.2e-3, rotation=math.radians(rot_deg))
     c = g.corners()
     edges = np.linalg.norm(np.roll(c, -1, axis=0) - c, axis=1)
     assert edges == pytest.approx([5e-3, 2e-3, 5e-3, 2e-3], rel=1e-12)
@@ -103,26 +104,27 @@ def test_centered_unrotated_symmetry():
 
 # ---------------------------------------------------------- cell boundaries
 
+
 def test_feature_inside_cell_ok():
     cell("rectangle", 5e-3, 2e-3)
-    cell("rectangle", 5e-3, 2e-3, rotation=math.radians(30))   # bbox 5.33 x 4.0 mm
+    cell("rectangle", 5e-3, 2e-3, rotation=math.radians(30))  # bbox 5.33 x 4.0 mm
 
 
 def test_feature_touching_cell_edge_allowed():
-    c = cell("dipole", 8e-3, 1e-3)                # spans full period: continuous wire
+    c = cell("dipole", 8e-3, 1e-3)  # spans full period: continuous wire
     assert c.metal_area == pytest.approx(8e-6, rel=1e-14)
-    cell("rectangle", 8e-3, 8e-3)                 # fills cell exactly
-    cell("rectangle", 8e-3, 1e-3, rotation=math.pi)         # rotation rounding noise
+    cell("rectangle", 8e-3, 8e-3)  # fills cell exactly
+    cell("rectangle", 8e-3, 1e-3, rotation=math.pi)  # rotation rounding noise
     cell("rectangle", 8e-3, 1e-3, px=1e-3, py=8e-3, rotation=math.pi / 2)  # cos(pi/2) ~ 6e-17
 
 
 @pytest.mark.parametrize(
     "kw",
     [
-        dict(length=8.001e-3, width=1e-3),                          # too long
-        dict(length=5e-3, width=2e-3, center_x=3e-3),               # shifted out
+        dict(length=8.001e-3, width=1e-3),  # too long
+        dict(length=5e-3, width=2e-3, center_x=3e-3),  # shifted out
         dict(length=5e-3, width=2e-3, center_y=-3.5e-3),
-        dict(length=8e-3, width=1e-3, rotation=math.radians(10)),   # 4cos10+0.5sin10 = 4.03 mm > 4 mm
+        dict(length=8e-3, width=1e-3, rotation=math.radians(10)),  # 4cos10+0.5sin10 = 4.03 mm > 4 mm
         dict(length=5e-3, width=2e-3, rotation=math.pi / 2, center_x=3.5e-3),
     ],
 )
@@ -134,7 +136,7 @@ def test_feature_outside_cell_rejected(kw):
 def test_non_square_lattice_bounds():
     cell("rectangle", 5e-3, 2e-3, px=6e-3, py=3e-3)
     with pytest.raises(ValueError):
-        cell("rectangle", 5e-3, 4e-3, px=6e-3, py=3e-3)             # width > Py
+        cell("rectangle", 5e-3, 4e-3, px=6e-3, py=3e-3)  # width > Py
     with pytest.raises(ValueError):
         cell("rectangle", 5e-3, 2e-3, px=6e-3, py=3e-3, rotation=math.pi / 2)
 
@@ -145,6 +147,7 @@ def test_slot_covering_whole_cell_leaves_no_metal():
 
 
 # ------------------------------------------------------------ area / fill
+
 
 def test_metal_area_rectangle_and_slot_are_complementary():
     r = cell("rectangle", 5e-3, 2e-3)

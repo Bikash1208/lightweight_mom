@@ -26,14 +26,15 @@ def check_sampling_compatibility(reference_dx_mm, reference_dy_mm, period_x_mm, 
     """Sec. 30: identifies whether the reference-field sample spacing equals the unit-cell period
     -- never silently resamples either way."""
     identical = (
-        reference_dx_mm is not None and reference_dy_mm is not None
+        reference_dx_mm is not None
+        and reference_dy_mm is not None
         and abs(reference_dx_mm - period_x_mm) <= rtol * period_x_mm
         and abs(reference_dy_mm - period_y_mm) <= rtol * period_y_mm
     )
     note = (
         "Reference-field sampling matches the unit-cell period exactly."
-        if identical else
-        "Reference grid and MTS grid are non-identical. A validated spatial resampling/mapping "
+        if identical
+        else "Reference grid and MTS grid are non-identical. A validated spatial resampling/mapping "
         "method is required before final geometry generation."
     )
     return SamplingCompatibility(reference_dx_mm, reference_dy_mm, period_x_mm, period_y_mm, identical, note)
@@ -74,6 +75,7 @@ def estimate_max_aperture(reference_extent_x_mm, reference_extent_y_mm, period_x
     nx = int(math.floor(reference_extent_x_mm / period_x_mm))
     ny = int(math.floor(reference_extent_y_mm / period_y_mm))
     return ApertureEstimate(
-        nx, ny,
+        nx,
+        ny,
         f"floor(extent/period): Nx={nx}, Ny={ny} (upper bound only; final aperture selection is a later phase)",
     )

@@ -63,7 +63,7 @@ class ConvergencePoint:
 class FitResult:
     status: str
     value_inf: float | None  # extrapolated dx -> 0 value
-    value_inf_error: float | None  # 1-sigma standard error from the fit's covariance
+    value_inf_error: float | None  # see `_fit_power_law` -- NOT the fit's covariance (see there)
     order: float | None  # fitted power p
     finest_value: float | None  # the raw value at the finest resolution actually run (fallback)
     coefficient: float | None = None  # fitted `a` in `v(dx) = v_inf + a*dx^p` -- lets a caller
@@ -171,7 +171,15 @@ def _fit_power_law(dx_values, values):
     v_inf, a, p = popt
     if not np.all(np.isfinite(pcov)):
         return FitResult(STATUS_FIT_FAILED, None, None, None, finest_value)
-    v_inf_err = float(np.sqrt(max(pcov[0, 0], 0.0)))
+    # NOT `sqrt(pcov[0,0])`: PHASE13B review found that number (e.g. 0.0076 deg at G4) is not a
+    # credible uncertainty -- a 3-parameter fit to as few as 4 points (FAST_CELL_COUNTS) has only
+    # 1 degree of freedom, and curve_fit's covariance assumes the power-law form is exactly right,
+    # which understates error from model mismatch. Instead report the *size of the extrapolation
+    # correction itself* (|v_inf - finest measured value|): if refining the mesh already moved the
+    # answer this much, the remaining error from here to the true dx->0 limit is plausibly
+    # comparable -- a conservative, always-defined bound that needs no extra data (unlike a
+    # leave-one-out spread, which needs >= 5 points to still satisfy the >=4-point fit minimum).
+    v_inf_err = float(abs(v_inf - finest_value))
     return FitResult(STATUS_CONVERGED, float(v_inf), v_inf_err, float(p), finest_value, float(a))
 
 

@@ -143,8 +143,13 @@
           const tr = document.createElement("tr");
           const s21mag = r["S21_xx_mag"] !== undefined ? toDb(r["S21_xx_mag"]) : "--";
           const s21phase = r["S21_xx_phase_deg"] !== undefined ? r["S21_xx_phase_deg"].toFixed(2) : "--";
+          // richardson mode: S11_xx above is already the extrapolated value (backend override);
+          // show its phase error bar (the extrapolation-correction estimate, see convergence.py) next to it.
+          const conv = point.convergence;
+          const phaseErr = result.mode === "richardson" && conv && conv.phase.value_inf_error != null
+            ? ` &plusmn; ${conv.phase.value_inf_error.toFixed(3)}&deg;` : "";
           tr.innerHTML = `<td>${(r.frequency_hz / 1e9).toFixed(3)}</td><td>${toDb(r["S11_xx_mag"])}</td>` +
-            `<td>${r["S11_xx_phase_deg"].toFixed(2)}</td><td>${s21mag}</td><td>${s21phase}</td>`;
+            `<td>${r["S11_xx_phase_deg"].toFixed(2)}${phaseErr}</td><td>${s21mag}</td><td>${s21phase}</td>`;
           tbody.appendChild(tr);
         }
         LWMOM.renderLabels(document.getElementById("labels"), [...allLabels], [...allWarnings]);

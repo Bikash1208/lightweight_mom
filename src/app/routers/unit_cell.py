@@ -24,6 +24,13 @@ MESH_CONVERGED = "MESH_CONVERGED"
 MESH_NOT_CONVERGED = "MESH_NOT_CONVERGED"
 
 
+def _wrap_deg(angle_deg):
+    """Wrap onto (-180, 180], matching `SParameters.phase_deg`'s output convention -- the
+    Richardson fit runs on phase unwrapped across the mesh-resolution sequence, so `value_inf`
+    can land outside that range."""
+    return ((angle_deg + 180.0) % 360.0) - 180.0
+
+
 class UnitCellSolveRequest(BaseModel):
     config: dict
     frequencies_hz: "list[float] | None" = None
@@ -61,9 +68,18 @@ def _solve_one_point(sim_config, frequency_hz, mesh_mode, run_id):
     if diagnostics.surface_wave_margin is not None and diagnostics.surface_wave_margin.get("any_near_band"):
         warnings.append("frequency is close to a surface-wave onset for this stack")
 
+    record = result.to_record()
+    if mesh_mode == "richardson" and convergence.mesh_converged:
+        # PHASE13B review: the displayed/recorded S11_xx must be the extrapolated (dx->0) value,
+        # not the finest-fixed-mesh solve above (which only exists to get full diagnostics from a
+        # real solve object) -- richardson_extrapolate_s11xx only ever extrapolates S11_xx, so
+        # every other record entry (S11_xy/yx/yy, S21/S12/S22) is still the finest-mesh raw value.
+        record["S11_xx_mag"] = convergence.magnitude.value_inf
+        record["S11_xx_phase_deg"] = _wrap_deg(convergence.phase.value_inf)
+
     return {
         "frequency_hz": frequency_hz,
-        "record": result.to_record(),
+        "record": record,
         "diagnostics": diagnostics,
         "convergence": convergence,
         "labels": labels,

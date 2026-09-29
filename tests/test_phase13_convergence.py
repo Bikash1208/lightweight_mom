@@ -49,7 +49,11 @@ def test_power_law_fit_recovers_known_synthetic_law():
     assert fit.status == conv.STATUS_CONVERGED
     assert fit.value_inf == pytest.approx(true_inf, abs=1e-4)
     assert fit.order == pytest.approx(true_p, abs=1e-3)
-    assert fit.value_inf_error < 1e-3
+    # value_inf_error is |v_inf - finest measured value| (PHASE13B: curve_fit's covariance is not
+    # a credible uncertainty), not a fit-quality residual -- even for this exact synthetic law it
+    # is the size of the last step, not ~0.
+    finest_v = true_inf + true_a * dx[-1] ** true_p
+    assert fit.value_inf_error == pytest.approx(abs(true_inf - finest_v), abs=1e-4)
 
 
 @pytest.mark.slow
@@ -60,3 +64,6 @@ def test_off_resonance_case_converges_well_within_the_finest_fixed_mesh():
     result = conv.richardson_extrapolate_s11xx(uc, 12.5e9, dp.REFERENCE_PLANES, cell_counts=conv.FAST_CELL_COUNTS)
     assert result.phase.status == conv.STATUS_CONVERGED
     assert result.is_converged_within(1.0)
+    # PHASE13B: value_inf_error must be the extrapolation-correction size, defined even for the
+    # app's 4-point FAST_CELL_COUNTS family (where a leave-one-out spread would not be).
+    assert result.phase.value_inf_error == pytest.approx(abs(result.phase.value_inf - conv._unwrap_to_match(result)))

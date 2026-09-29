@@ -73,6 +73,38 @@ def test_solve_richardson_mode_reports_convergence_fit(client):
     assert any(label in ("MESH_CONVERGED", "MESH_NOT_CONVERGED") for label in point["labels"])
 
 
+def test_solve_richardson_mode_record_shows_the_extrapolated_value_not_the_finest_mesh(client):
+    """PHASE13B A1: at resonance (L=W=6mm, grounded, 12.5 GHz) the finest FAST_CELL_COUNTS mesh
+    (48 cells) and the dx->0 extrapolation differ by several degrees -- the displayed/recorded
+    S11_xx_phase_deg must be the extrapolated value, not silently the raw finest-mesh solve."""
+    resp = client.post(
+        "/api/unit_cell/solve",
+        json={
+            "config": _config(
+                period_x=8.0e-3,
+                period_y=8.0e-3,
+                substrate={**_SUBSTRATE, "backing": "pec"},
+                geometry={"type": "rectangle", "length": 6.0e-3, "width": 6.0e-3},
+                reference_planes={"top_air_thickness": 5.0e-3},
+            ),
+            "mesh_mode": "richardson",
+        },
+    )
+    job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+    assert job["status"] == "done", job
+    point = job["result"]["points"][0]
+    convergence = point["convergence"]
+    assert convergence["phase"]["status"] == "CONVERGED"
+    record_phase = point["record"]["S11_xx_phase_deg"]
+    finest_raw_phase = convergence["points"][-1]["s11_phase_deg"]
+    assert abs(record_phase - finest_raw_phase) > 1.0  # a real, non-trivial extrapolation correction
+    wrapped_inf = ((convergence["phase"]["value_inf"] + 180.0) % 360.0) - 180.0
+    assert record_phase == pytest.approx(wrapped_inf, abs=1e-6)
+    assert record_phase != pytest.approx(finest_raw_phase, abs=1.0)
+    assert convergence["phase"]["value_inf_error"] is not None
+    assert convergence["phase"]["value_inf_error"] > 0.0
+
+
 def test_solve_sweeps_multiple_frequencies(client):
     resp = client.post(
         "/api/unit_cell/solve",

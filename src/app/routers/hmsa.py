@@ -21,7 +21,10 @@ import numpy as np
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from pydantic import BaseModel
 
+from ...basis_functions import MeshSettings
 from ...dispersion.hfss_table import read_dispersion_csv
+from ...dispersion.mom_scaffold import square_patch_unit_cell
+from ...dispersion.sheet_model import build_dispersion_table_from_sheet_model
 from ...errors import LwmomError, config_invalid, library_frequency_unavailable, phase_unreachable
 from ...feasibility_coverage import library_table_at_frequency, phase_density
 from ...fields.fld_parser import read_fld
@@ -34,6 +37,7 @@ from ...fields.reference_field_grid import (
 from ...hologram.hmsa_synthesis import synthesize_formulation_a, synthesize_formulation_b
 from ...labels import FEED_REGION_MASKED, reference_field_frequency_mismatch
 from ...library_sweep import build_square_library_cells, write_square_library_json
+from ...materials import Metal, Substrate
 from ...phase8b.object_wave import Beam
 from ...reflectarray.designer import CellAssignment
 from ...unit_cell_library import UnitCellLibrary
@@ -479,5 +483,105 @@ def ensure_library(body: EnsureLibraryRequest, request: Request):
     key = config_hash({"kind": "hmsa_ensure_library", **body.model_dump()})
     job = request.app.state.jobs.submit(
         "hmsa_ensure_library", _run_ensure_library_job, body.model_dump(), library_id, cache_key=key
+    )
+    return job.to_dict()
+
+
+class EnsureDispersionRequest(BaseModel):
+    period_mm: float
+    eps_r: float
+    tan_delta: float
+    thickness_mm: float
+    frequency_hz: float
+    accuracy: Literal["fast", "accurate"] = "fast"
+
+
+def _auto_dispersion_id(body_dict):
+    mesh_cells = AUTO_LIBRARY_MESH_CELLS_BY_ACCURACY[body_dict["accuracy"]]
+    payload = {
+        "kind": "hmsa_auto_dispersion",
+        "l_fractions": _l_fractions_of_period(mesh_cells),
+        "mesh_cells": mesh_cells,
+        **body_dict,
+    }
+    return "autodisp_" + config_hash(payload)[:20]
+
+
+def _write_dispersion_csv(table, path):
+    import csv as _csv
+
+    with open(path, "w", newline="") as fh:
+        writer = _csv.writer(fh)
+        writer.writerow(["geometry_param", "beta_rad_per_m", "x_s_ohm"])
+        for s in table.samples:
+            writer.writerow([s.geometry_param, s.beta_rad_per_m, s.x_s_ohm])
+
+
+def _dispersion_x_s_range(table):
+    values = [s.x_s_ohm for s in table.samples if s.x_s_ohm is not None]
+    return (min(values), max(values)) if values else (None, None)
+
+
+def _dispersion_summary(table):
+    """PHASE14 Part B: X_avg/modulation depth set automatically from the table (centre of the
+    usable range, largest symmetric depth around that centre) -- the fixed "100 ohm / 0.3"
+    defaults this replaces were never validated against any real board."""
+    x_min, x_max = _dispersion_x_s_range(table)
+    if x_min is None or x_min <= 0 or x_max <= x_min:
+        return {"x_s_min_ohm": x_min, "x_s_max_ohm": x_max, "x_avg_ohm": None, "modulation_index": None}
+    x_avg = (x_min + x_max) / 2.0
+    modulation_index = (x_max - x_min) / (x_max + x_min)
+    return {
+        "x_s_min_ohm": x_min,
+        "x_s_max_ohm": x_max,
+        "x_avg_ohm": x_avg,
+        "modulation_index": min(modulation_index, 0.99),  # reactance_from_modulation requires < 1
+    }
+
+
+def _run_ensure_dispersion_job(job, body_dict, dispersion_id):
+    mesh_cells = AUTO_LIBRARY_MESH_CELLS_BY_ACCURACY[body_dict["accuracy"]]
+    l_fractions = _l_fractions_of_period(mesh_cells)
+    period_m = body_dict["period_mm"] * 1e-3
+    l_values_m = [period_m * f for f in l_fractions]
+    substrate = Substrate("user", body_dict["eps_r"], body_dict["tan_delta"], body_dict["thickness_mm"] * 1e-3)
+    metal = Metal()
+    mesh = MeshSettings(cells_x=mesh_cells, cells_y=mesh_cells, floquet_order=mesh_cells)
+
+    done = [0]
+
+    def unit_cell_at(l_m):
+        done[0] += 1
+        job.progress = done[0] / max(len(l_values_m), 1)
+        job.progress_message = f"{done[0]}/{len(l_values_m)} cell sizes solved"
+        return square_patch_unit_cell(period_m, substrate, metal, l_m)
+
+    table = build_dispersion_table_from_sheet_model(unit_cell_at, l_values_m, body_dict["frequency_hz"], mesh, period_m=period_m)
+
+    csv_path = upload_dir(dispersion_id) / "dispersion.csv"
+    _write_dispersion_csv(table, csv_path)
+    summary = _dispersion_summary(table)
+    return {"dispersion_id": dispersion_id, "n_geometries": len(table.samples), "already_built": False, **summary}
+
+
+@router.post("/ensure_dispersion")
+def ensure_dispersion(body: EnsureDispersionRequest, request: Request):
+    """PHASE14 Part B: the "Surface-wave (eigenmode)" design method's own auto-built unit-cell
+    data, the impedance-modulated-method counterpart to `ensure_library`. Builds (or reuses, via
+    the job cache and a deterministic on-disk path) a `dispersion.sheet_model` table for the
+    chosen board/frequency, written as a CSV in the same schema an uploaded HFSS table would use
+    (`dispersion.hfss_table.read_dispersion_csv`) -- so Formulation A's synthesis code needs no
+    changes at all to consume it: it's just another `dispersion_id`."""
+    dispersion_id = _auto_dispersion_id(body.model_dump())
+    csv_path = upload_dir(dispersion_id) / "dispersion.csv"
+    if csv_path.is_file():
+        table = read_dispersion_csv(csv_path, body.frequency_hz)
+        summary = _dispersion_summary(table)
+        result = {"dispersion_id": dispersion_id, "already_built": True, "n_geometries": len(table.samples), **summary}
+        job = request.app.state.jobs.submit("hmsa_ensure_dispersion", lambda job: result)
+        return job.to_dict()
+    key = config_hash({"kind": "hmsa_ensure_dispersion", **body.model_dump()})
+    job = request.app.state.jobs.submit(
+        "hmsa_ensure_dispersion", _run_ensure_dispersion_job, body.model_dump(), dispersion_id, cache_key=key
     )
     return job.to_dict()

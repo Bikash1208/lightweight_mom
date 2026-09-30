@@ -326,6 +326,51 @@ def test_formulation_a_rescales_to_beta_bar_by_default_when_the_table_has_it(cli
 
 
 @pytest.mark.slow
+def test_ensure_dispersion_builds_reuses_and_feeds_formulation_a(client):
+    """PHASE14 Part B: the "Surface-wave (eigenmode)" method's own auto-built dispersion table
+    (dispersion.sheet_model) -- built once, reused on repeat, and directly usable by Formulation A
+    with no separate upload step, using the X_avg/modulation depth it derives automatically."""
+    body = {"period_mm": 4.0, "eps_r": 2.2, "tan_delta": 0.0009, "thickness_mm": 1.575, "frequency_hz": 10.54e9}
+    resp1 = client.post("/api/hmsa/ensure_dispersion", json=body)
+    job1 = _wait_for_job(client, resp1.json()["id"], timeout=120.0)
+    assert job1["status"] == "done", job1
+    result1 = job1["result"]
+    assert result1["already_built"] is False
+    assert result1["n_geometries"] > 0
+    assert result1["x_avg_ohm"] is not None and result1["modulation_index"] is not None
+    assert 0.0 < result1["modulation_index"] < 1.0
+    dispersion_id = result1["dispersion_id"]
+
+    resp2 = client.post("/api/hmsa/ensure_dispersion", json=body)
+    job2 = _wait_for_job(client, resp2.json()["id"], timeout=30.0)
+    assert job2["status"] == "done", job2
+    assert job2["result"]["already_built"] is True
+    assert job2["result"]["dispersion_id"] == dispersion_id
+
+    with open(_EXAMPLE_FLD, "rb") as fh:
+        upload_resp = client.post(
+            "/api/hmsa/upload_field", files={"phase_file": ("efl_phase_EzZ_example.fld", fh, "text/plain")}
+        )
+    upload_id = upload_resp.json()["upload_id"]
+
+    synth_body = {
+        "upload_id": upload_id,
+        "formulation": "A",
+        "frequency_hz": 10.54e9,
+        "object_beams": [{"theta_deg": 20.0, "phi_deg": 0.0}],
+        "period_mm": 4.0,
+        "dispersion_id": dispersion_id,
+        "x_avg_ohm": result1["x_avg_ohm"],
+        "modulation_index": result1["modulation_index"],
+    }
+    synth_resp = client.post("/api/hmsa/synthesize", json=synth_body)
+    synth_job = _wait_for_job(client, synth_resp.json()["id"], timeout=120.0)
+    assert synth_job["status"] == "done", synth_job
+    assert "DISPERSION_FROM_SHEET_MODEL" not in synth_job["result"]["labels"]  # not a design label; it's the table's own provenance, not carried onto the synth result -- confirms no accidental mislabeling
+    assert any(label.startswith("REFERENCE_WAVE_RESCALED_TO_BETA_BAR(") for label in synth_job["result"]["labels"])
+
+
+@pytest.mark.slow
 def test_ensure_library_builds_once_and_reuses_on_repeat(client):
     """PHASE13C: the wizard never sends the user to a separate Library page -- /ensure_library
     must build a real square-patch library for a chosen board/frequency the first time, then

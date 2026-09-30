@@ -179,6 +179,8 @@
       <div class="card" id="results-card" style="display:none">
         <h3>Layout</h3>
         <img class="plot" id="layout-img" alt="Layout preview" />
+        <img class="plot" id="patch-layout-img" alt="Patch layout" style="display:none" />
+        <p id="patch-layout-link" style="display:none"><a id="patch-layout-a" href="#" download="patch_layout.png">Download patch layout (PNG)</a></p>
         <h3>Radiation pattern</h3>
         <img class="plot" id="pattern-img" alt="Radiation pattern (u-v map)" />
         <div id="cuts-imgs"></div>
@@ -695,6 +697,14 @@
     function renderSynthesisResults(result, methodDescription) {
       document.getElementById("results-card").style.display = "block";
       if (result.layout_png_url) document.getElementById("layout-img").src = result.layout_png_url;
+      {
+        const pl = document.getElementById("patch-layout-img");
+        const plLink = document.getElementById("patch-layout-link");
+        if (result.patch_layout_png_url) {
+          pl.src = result.patch_layout_png_url; pl.style.display = "";
+          document.getElementById("patch-layout-a").href = result.patch_layout_png_url; plLink.style.display = "";
+        } else { pl.style.display = "none"; plLink.style.display = "none"; }
+      }
       const list = document.getElementById("results-list");
       list.innerHTML = "";
       const addRow = (k, v) => {
@@ -745,7 +755,7 @@
         addRow("Achieved beam direction", `θ=${r.result.main_beam_theta_deg.toFixed(1)}°, φ=${r.result.main_beam_phi_deg.toFixed(1)}°`);
       }
 
-      // Only Formulation B (phase-lookup) currently carries an exportable per-cell L/W assignment.
+      // Both methods now carry an exportable per-cell L/W assignment (surface-wave: square patches).
       if (synthResult.assignments) {
         statusEl.textContent = "Building the layout export (CSV/JSON/DXF) and HFSS notes...";
         state.exportJobId = await runExport({ includeStep: false });

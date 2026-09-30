@@ -37,9 +37,10 @@ from ..phase8b.holographic_modulation import (
     phase_difference_hologram_from_phases_deg,
     reactance_from_modulation,
 )
-from ..phase8b.object_wave import combine_beams_scalar
 from ..phase8d_rev.response_matching import nearest_response_match
 from ..reflectarray.designer import PHASE_ERROR_UNREACHABLE_THRESHOLD_DEG
+from .polarization_compensation import combine_beams_with_polarization
+from .sector_multiplexing import sector_index_map
 
 
 @dataclass(frozen=True)
@@ -75,13 +76,47 @@ class HmsaDesign:
     # silently drops the reference wave's own phase, which must cancel it back out)
 
 
-def formulation_a_control_map(reference_field, object_beams, frequency_hz, x_avg_ohm, modulation_index):
+def _combined_object_field(
+    x_m, y_m, object_beams, frequency_hz, feed_xy_m=(0.0, 0.0), cp_phase_offset_deg=0.0, multiplexing="full_aperture"
+):
+    """PHASE15 Part A: the object-wave combination both formulations feed into their interference
+    kernel, now polarization-compensated (`hologram.polarization_compensation.
+    combine_beams_with_polarization`, replacing the old bare `phase8b.object_wave.combine_beams_scalar`
+    call) and optionally sector-multiplexed (paper eq. 17: `multiplexing="sectors"` restricts each
+    cell to its own nearest-azimuth beam, `sector_multiplexing.sector_index_map`; default
+    `"full_aperture"` is eq. 16, every beam superposed everywhere -- unchanged from pre-Phase-15).
+    `multiplexing="full_aperture"` with every beam left at its `desired_polarization="natural"`,
+    `oam_charge=0` defaults makes this call identical to the old `combine_beams_scalar` sum (see
+    `combine_beams_with_polarization`'s own docstring for why) -- the bit-identical-reproduction
+    invariant existing designs rely on."""
+    if multiplexing not in ("full_aperture", "sectors"):
+        raise ValueError(f"multiplexing must be 'full_aperture' or 'sectors', got {multiplexing!r}")
+    sector_owner_index = sector_index_map(x_m, y_m, feed_xy_m, object_beams) if multiplexing == "sectors" else None
+    return combine_beams_with_polarization(
+        x_m, y_m, object_beams, frequency_hz, feed_xy_m, cp_phase_offset_deg, sector_owner_index
+    )
+
+
+def formulation_a_control_map(
+    reference_field,
+    object_beams,
+    frequency_hz,
+    x_avg_ohm,
+    modulation_index,
+    feed_xy_m=(0.0, 0.0),
+    cp_phase_offset_deg=0.0,
+    multiplexing="full_aperture",
+):
     """Fong et al. 2010: X(x,y) = X_avg*(1 + M*Re{E_ref*conj(E_obj)}). Requires a COMPLEX
     reference field (amplitude available) -- see `_ensure_complex_reference` (PHASE13B B4) for the
-    phase-only fallback callers should apply before this."""
+    phase-only fallback callers should apply before this. `feed_xy_m`/`cp_phase_offset_deg`/
+    `multiplexing`: PHASE15 Part A, see `_combined_object_field`."""
     if not reference_field.amplitude_available:
         raise ValueError("Formulation A needs a complex reference field (amplitude available)")
-    e_obj = combine_beams_scalar(reference_field.x_m, reference_field.y_m, object_beams, frequency_hz)
+    e_obj = _combined_object_field(
+        reference_field.x_m, reference_field.y_m, object_beams, frequency_hz,
+        feed_xy_m, cp_phase_offset_deg, multiplexing,
+    )
     psi = interference_modulation(reference_field.Ex, e_obj)
     return reactance_from_modulation(psi, x_avg_ohm, modulation_index)
 
@@ -128,11 +163,22 @@ def _rescale_reference_to_beta_bar(cell_field, raw_reference_field, dispersion_t
     return rescaled, beta_bar, beta_slab, worst_case_error_deg
 
 
-def formulation_b_control_map(reference_field, object_beams, frequency_hz):
+def formulation_b_control_map(
+    reference_field,
+    object_beams,
+    frequency_hz,
+    feed_xy_m=(0.0, 0.0),
+    cp_phase_offset_deg=0.0,
+    multiplexing="full_aperture",
+):
     """Phase-difference hologram: required_phase(x,y) = wrap(arg(E_obj) - arg(E_ref)). Works with
     a phase-only reference field (the brief's own "the one case where a phase-only reference is
-    sufficient")."""
-    e_obj = combine_beams_scalar(reference_field.x_m, reference_field.y_m, object_beams, frequency_hz)
+    sufficient"). `feed_xy_m`/`cp_phase_offset_deg`/`multiplexing`: PHASE15 Part A, see
+    `_combined_object_field`."""
+    e_obj = _combined_object_field(
+        reference_field.x_m, reference_field.y_m, object_beams, frequency_hz,
+        feed_xy_m, cp_phase_offset_deg, multiplexing,
+    )
     obj_phase_deg = np.degrees(np.angle(e_obj))
     return phase_difference_hologram_from_phases_deg(reference_field.phase(), obj_phase_deg)
 
@@ -197,6 +243,9 @@ def synthesize_formulation_a(
     dispersion_table,
     period_m,
     rescale_to_beta_bar=True,
+    feed_xy_m=(0.0, 0.0),
+    cp_phase_offset_deg=0.0,
+    multiplexing="full_aperture",
 ):
     # PHASE13B A2: synthesize on the unit-cell-centre grid of the CHOSEN period, not one "cell"
     # per raw field sample (a 151x151, 2mm-pitch import would otherwise give 22801 "cells" instead
@@ -219,7 +268,10 @@ def synthesize_formulation_a(
     except ValueError:
         pass  # the dispersion table has no beta_rad_per_m column -- beta_bar is not computable at all
 
-    control_map = formulation_a_control_map(cell_field, object_beams, frequency_hz, x_avg_ohm, modulation_index)
+    control_map = formulation_a_control_map(
+        cell_field, object_beams, frequency_hz, x_avg_ohm, modulation_index,
+        feed_xy_m, cp_phase_offset_deg, multiplexing,
+    )
     cells = map_control_to_geometry_dispersion(cell_field.x_m, cell_field.y_m, control_map, dispersion_table)
 
     # PHASE14 Part C: an equivalent aperture field for pattern prediction -- NOT the same model as
@@ -256,12 +308,23 @@ def synthesize_formulation_a(
     )
 
 
-def synthesize_formulation_b(reference_field, object_beams, frequency_hz, library_candidates, period_m):
+def synthesize_formulation_b(
+    reference_field,
+    object_beams,
+    frequency_hz,
+    library_candidates,
+    period_m,
+    feed_xy_m=(0.0, 0.0),
+    cp_phase_offset_deg=0.0,
+    multiplexing="full_aperture",
+):
     # PHASE13B B4: B uses a normal-incidence S11-phase library -- a reflectarray control variable,
     # not the surface-wave one (dispersion/impedance) a monopole-fed hologram actually needs.
     # Recommended path is A; B is offered as a usable-today approximation, labelled accordingly.
     cell_field = resample_to_cell_grid(reference_field, period_m)
-    control_map = formulation_b_control_map(cell_field, object_beams, frequency_hz)
+    control_map = formulation_b_control_map(
+        cell_field, object_beams, frequency_hz, feed_xy_m, cp_phase_offset_deg, multiplexing
+    )
     cells = map_control_to_geometry_library(cell_field.x_m, cell_field.y_m, control_map, library_candidates)
 
     # The RADIATED field a modulated hologram actually produces is E_ref(x,y) * Modulation(x,y),

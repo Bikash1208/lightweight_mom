@@ -137,6 +137,56 @@ def test_synthesis_resamples_onto_the_cell_grid_not_the_raw_field_grid():
     assert design.x_m.shape == (2, 2)
 
 
+def test_formulation_b_natural_pencil_default_is_bit_identical_to_pre_phase15():
+    """PHASE15 Part A's compatibility invariant: leaving every beam at its new defaults
+    (`desired_polarization="natural"`, `oam_charge=0`) and `multiplexing="full_aperture"` must
+    reproduce exactly what `synthesize_formulation_b` computed before Part A existed."""
+    x, y = _grid()
+    ref = phase_only_reference_field(x, y, np.zeros_like(x))
+    beams = [Beam(theta_deg=15.0, phi_deg=30.0)]
+    candidates = [("c1", 2.0, 2.0, "lib", complex(1.0, 0.0))]
+    design_default = hs.synthesize_formulation_b(ref, beams, FREQ, candidates, period_m=8e-3)
+    design_explicit = hs.synthesize_formulation_b(
+        ref, beams, FREQ, candidates, period_m=8e-3,
+        feed_xy_m=(0.0, 0.0), cp_phase_offset_deg=0.0, multiplexing="full_aperture",
+    )
+    assert np.array_equal(design_default.control_map, design_explicit.control_map)
+    assert np.array_equal(design_default.aperture_field, design_explicit.aperture_field)
+
+
+def test_formulation_b_polarization_compensation_changes_the_control_map():
+    x, y = _grid()
+    ref = phase_only_reference_field(x, y, np.zeros_like(x))
+    natural = [Beam(theta_deg=15.0, phi_deg=0.0, desired_polarization="natural")]
+    rhcp = [Beam(theta_deg=15.0, phi_deg=0.0, desired_polarization="rhcp")]
+    candidates = [(f"c{i}", 1.0, 1.0, "lib", np.exp(1j * np.radians(i))) for i in range(-180, 180)]
+    d_natural = hs.synthesize_formulation_b(ref, natural, FREQ, candidates, period_m=8e-3)
+    d_rhcp = hs.synthesize_formulation_b(ref, rhcp, FREQ, candidates, period_m=8e-3)
+    assert not np.allclose(d_natural.control_map, d_rhcp.control_map)
+
+
+def test_formulation_b_sector_multiplexing_restricts_each_beam_to_its_own_region():
+    x, y = _grid(n=9, extent_m=0.03)
+    ref = phase_only_reference_field(x, y, np.zeros_like(x))
+    beams = [Beam(theta_deg=15.0, phi_deg=0.0), Beam(theta_deg=15.0, phi_deg=180.0)]
+    candidates = [(f"c{i}", 1.0, 1.0, "lib", np.exp(1j * np.radians(i))) for i in range(-180, 180)]
+    full = hs.synthesize_formulation_b(ref, beams, FREQ, candidates, period_m=8e-3, multiplexing="full_aperture")
+    sectors = hs.synthesize_formulation_b(ref, beams, FREQ, candidates, period_m=8e-3, multiplexing="sectors")
+    assert not np.allclose(full.control_map, sectors.control_map)
+
+
+def test_synthesize_formulation_a_accepts_feed_and_multiplexing_kwargs():
+    x, y = _grid()
+    ref = spherical_feed_reference_field(x, y, feed_height_m=0.05, frequency_hz=FREQ, amplitude_at_1m=0.05)
+    beams = [Beam(theta_deg=0.0, phi_deg=0.0, desired_polarization="hp")]
+    table = _dispersion_table()
+    design = hs.synthesize_formulation_a(
+        ref, beams, FREQ, x_avg_ohm=125.0, modulation_index=0.3, dispersion_table=table, period_m=8e-3,
+        feed_xy_m=(0.0, 0.0), cp_phase_offset_deg=0.0, multiplexing="full_aperture",
+    )
+    assert design.formulation == "A_impedance_modulation"
+
+
 def test_phase_error_stats_and_shortfall_label_for_formulation_b():
     x, y = _grid()
     ref = phase_only_reference_field(x, y, np.zeros_like(x))

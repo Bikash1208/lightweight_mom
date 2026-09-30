@@ -153,6 +153,55 @@ def write_layout_dxf(lw_grid_m, period_x_m, period_y_m, output_dir, basename="la
     return path
 
 
+def write_hfss_step(lw_grid_m, period_x_m, period_y_m, thickness_m, path, decimals=3, size_step_mm=None):
+    """HFSS-friendly full-array STEP: every coordinate/size rounded in millimetres (no
+    3.9999999999 values from m->mm float conversion), patches and ground as zero-thickness sheets
+    (the solver's own model; no 35 um solids that force tiny mesh elements), all patches in ONE
+    body ("Patches") so a single Perfect E assignment covers them. Optional `size_step_mm`
+    snaps patch sizes to a fabrication grid (fewer distinct geometries)."""
+    import cadquery as cq
+
+    def r(v):
+        return round(float(v), decimals) + 0.0
+
+    n_y = len(lw_grid_m)
+    n_x = len(lw_grid_m[0])
+    px, py = r(period_x_m * 1e3), r(period_y_m * 1e3)
+    h = r(thickness_m * 1e3)
+    lx, ly = r(n_x * px), r(n_y * py)
+    faces = []
+    for i, row in enumerate(lw_grid_m):
+        for j, (l_m, w_m) in enumerate(row):
+            l_mm, w_mm = l_m * 1e3, w_m * 1e3
+            if size_step_mm:
+                l_mm = round(l_mm / size_step_mm) * size_step_mm
+                w_mm = round(w_mm / size_step_mm) * size_step_mm
+            l_mm, w_mm = r(l_mm), r(w_mm)
+            if l_mm <= 0 or w_mm <= 0:
+                continue
+            cx = r(-lx / 2 + (j + 0.5) * px)
+            cy = r(-ly / 2 + (i + 0.5) * py)
+            x0, x1 = r(cx - l_mm / 2), r(cx + l_mm / 2)
+            y0, y1 = r(cy - w_mm / 2), r(cy + w_mm / 2)
+            wire = cq.Wire.makePolygon(
+                [cq.Vector(x0, y0, 0), cq.Vector(x1, y0, 0), cq.Vector(x1, y1, 0), cq.Vector(x0, y1, 0)], close=True
+            )
+            faces.append(cq.Face.makeFromWires(wire))
+    patches = cq.Compound.makeCompound(faces)
+    substrate = cq.Solid.makeBox(lx, ly, h, pnt=cq.Vector(r(-lx / 2), r(-ly / 2), -h))
+    gw = cq.Wire.makePolygon(
+        [cq.Vector(r(-lx / 2), r(-ly / 2), -h), cq.Vector(r(lx / 2), r(-ly / 2), -h),
+         cq.Vector(r(lx / 2), r(ly / 2), -h), cq.Vector(r(-lx / 2), r(ly / 2), -h)], close=True
+    )
+    ground = cq.Face.makeFromWires(gw)
+    asm = cq.Assembly()
+    asm.add(substrate, name="Substrate", color=cq.Color(0.85, 0.85, 0.86, 1.0))
+    asm.add(patches, name="Patches", color=cq.Color(0.91, 0.54, 0.23, 1.0))
+    asm.add(ground, name="Ground", color=cq.Color(0.60, 0.60, 0.65, 1.0))
+    asm.export(str(path), exportType="STEP")
+    return {"n_patches": len(faces), "board_mm": (lx, ly, h)}
+
+
 def export_array(
     lw_grid_m, period_x_m, period_y_m, substrate, metal, output_dir, metal_export_thickness_m=None, include_step=True
 ):
@@ -172,12 +221,12 @@ def export_array(
     if include_step:
         from .. import cad_export
 
-        supercell = build_grounded_supercell(n, period_x_m, period_y_m, substrate, metal, lw_grid_m)
         step_path = output_dir / "array.step"
         t0 = time.perf_counter()
         try:
-            kwargs = {} if metal_export_thickness_m is None else {"metal_export_thickness_m": metal_export_thickness_m}
-            cad_export.export_supercell_step(supercell, step_path, **kwargs)
+            # HFSS-clean geometry: mm values rounded to 1 um (no 3.99999999 float artefacts),
+            # zero-thickness patch/ground sheets (the solver's own model), one "Patches" body.
+            write_hfss_step(lw_grid_m, period_x_m, period_y_m, substrate.thickness, step_path)
         except ImportError as exc:
             raise cad_unavailable(exc, message="STEP export needs the optional 'cad' extra (cadquery)") from exc
         export_time = time.perf_counter() - t0

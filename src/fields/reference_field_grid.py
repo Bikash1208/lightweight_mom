@@ -243,6 +243,20 @@ def resample_to_cell_grid(reference_field, period_m):
     )
 
 
+def feed_position_from_nan_mask(x_m, y_m, nan_mask):
+    """PHASE15 Part A: "feed position (x0, y0) is taken from the reference field's NaN/singularity
+    location (default)" -- the centroid of the masked (NaN) cells, since a monopole/point-feed
+    reference field's own NaN sits exactly at the feed (`fld_to_reference_field_grid`'s module
+    docstring: "the single feed-point NaN, at the origin, by construction"). Returns `(0.0, 0.0)`
+    (this project's existing origin-centered feed convention, e.g. `phase8b.reference_wave.
+    monopole_reference_field`) if `nan_mask` has no True entries at all -- a synthetic or already-
+    masked field carries no singularity to detect, not an error."""
+    nan_mask = np.asarray(nan_mask, dtype=bool)
+    if not nan_mask.any():
+        return 0.0, 0.0
+    return float(np.mean(x_m[nan_mask])), float(np.mean(y_m[nan_mask]))
+
+
 def aliasing_warning(cells_per_fringe_value, minimum=RECOMMENDED_MIN_CELLS_PER_FRINGE):
     if cells_per_fringe_value >= minimum:
         return None

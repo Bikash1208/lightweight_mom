@@ -206,6 +206,9 @@ def _run_package_job(job, export_result, pattern_result, synthesize_result):
             layout_src = _download_url_to_path(synthesize_result.get("layout_png_url"))
             if layout_src is not None and layout_src.is_file():
                 zf.write(layout_src, "layout.png")
+            patch_src = _download_url_to_path(synthesize_result.get("patch_layout_png_url"))
+            if patch_src is not None and patch_src.is_file():
+                zf.write(patch_src, "patch_layout.png")
         zf.writestr("project_record.json", json.dumps(record, indent=2))
     return {"download_url": f"/api/files/{job.id}/{zip_path.name}"}
 

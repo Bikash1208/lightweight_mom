@@ -105,4 +105,52 @@ def pattern_cut_png(theta_deg, phi_deg, power_db, cut_phi_deg, path, title=None)
     ax.set_xlabel("θ (°)")
     ax.set_ylabel("relative power (dB)")
     ax.set_title(title or f"φ = {phi_row[j]:.0f}° cut")
+    finite = cut_db[np.isfinite(cut_db)]
+    if finite.size:
+        peak = float(np.max(finite))
+        ax.set_ylim(peak - 50.0, peak + 3.0)  # a pattern null (e.g. 0 at 90 deg) must not squash the plot
+    return _save_png(fig, path)
+
+
+_COPPER = "#E8893A"
+_COPPER_EDGE = "#C8651B"
+_SUBSTRATE = "#D9DADC"
+_SUBSTRATE_EDGE = "#B8B9BC"
+
+
+def patch_layout_png(cells_mm, period_mm, nx, ny, path, title=None, feed_xy_mm=(0.0, 0.0)):
+    """True-geometry board drawing (PHASE13D item 5): every patch at its real L x W and position,
+    bright copper on a light-grey substrate, feed point marked, mm axes, size legend.
+    `cells_mm`: iterable of (x_mm, y_mm, l_mm, w_mm) patch centres/sizes."""
+    from matplotlib.collections import PatchCollection
+    from matplotlib.patches import Rectangle
+
+    cells = [c for c in cells_mm if c[2] is not None and c[3] is not None]
+    xs = np.array([c[0] for c in cells]) if cells else np.zeros(1)
+    ys = np.array([c[1] for c in cells]) if cells else np.zeros(1)
+    half_x = nx * period_mm / 2.0
+    half_y = ny * period_mm / 2.0
+    cx = (xs.min() + xs.max()) / 2.0
+    cy = (ys.min() + ys.max()) / 2.0
+    fig, ax = plt.subplots(figsize=(8, 8), dpi=260)
+    fig.patch.set_facecolor("white")
+    ax.set_facecolor("white")
+    ax.add_patch(Rectangle((cx - half_x, cy - half_y), 2 * half_x, 2 * half_y,
+                           facecolor=_SUBSTRATE, edgecolor=_SUBSTRATE_EDGE, linewidth=0.8, zorder=0))
+    rects = [Rectangle((x - l / 2.0, y - w / 2.0), l, w) for x, y, l, w in cells]
+    ax.add_collection(PatchCollection(rects, facecolor=_COPPER, edgecolor=_COPPER_EDGE, linewidth=0.15, zorder=1))
+    if feed_xy_mm is not None:
+        ax.plot(feed_xy_mm[0], feed_xy_mm[1], "o", markersize=4, color=_ACCENT, zorder=3)
+    ax.set_xlim(cx - half_x - 2, cx + half_x + 2)
+    ax.set_ylim(cy - half_y - 2, cy + half_y + 2)
+    ax.set_aspect("equal")
+    ax.set_xlabel("x (mm)")
+    ax.set_ylabel("y (mm)")
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    if cells:
+        sizes = np.array([c[2] for c in cells])
+        ax.text(0.99, -0.07, f"Patch size {sizes.min():.2f}–{sizes.max():.2f} mm  ·  {len(cells)} patches  ·  pitch {period_mm:g} mm",
+                transform=ax.transAxes, ha="right", va="top", fontsize=8, color="#555")
+    ax.set_title(title or f"Patch layout — {nx} × {ny} cells, {period_mm:g} mm pitch", fontsize=10)
     return _save_png(fig, path)

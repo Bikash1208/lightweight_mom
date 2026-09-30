@@ -41,6 +41,14 @@ from ..frequency import free_space_wavenumber
 
 _POLARIZATION_VECTORS = {"x": np.array([1.0, 0.0]), "y": np.array([0.0, 1.0])}
 
+# PHASE15 Part A: the polarization-compensation label set for `desired_polarization`, distinct from
+# the legacy `polarization` field above (that one splits THIS module's own scalar object field into
+# an (Ex, Ey) pair, Sec. 18 -- a different physical quantity from `hologram.polarization_compensation`'s
+# p_hat_b, which projects onto the APERTURE CURRENT's local radial direction to build phi_ext,b,
+# see that module's docstring). "natural" (no compensation, phi_ext=1) is the default so a `Beam`
+# built without this field reproduces pre-Phase-15 hologram synthesis bit-identically.
+DESIRED_POLARIZATIONS = frozenset({"natural", "lhcp", "rhcp", "hp", "vp", "slant_p45", "slant_m45"})
+
 # `excitation.PlaneWaveExcitation` couples its transverse-wavenumber formula to a
 # polarization-perpendicularity check (it raises unless the requested x/y polarization is exactly
 # transverse to the propagation direction -- only true at theta=0 or at the two azimuths where
@@ -68,6 +76,10 @@ class Beam:
     weight: complex = 1.0
     initial_phase_deg: float = 0.0
     polarization: str = "x"
+    # PHASE15 Part A: independent of `polarization` above -- see `DESIRED_POLARIZATIONS`'s comment.
+    desired_polarization: str = "natural"
+    oam_charge: int = 0  # l_b: requested vortex OAM charge on top of `desired_polarization`'s own
+    # compensation (0 = "Pencil" beam type in the app's terms; nonzero = "Vortex, charge l_b").
 
     def __post_init__(self):
         if not (0.0 <= self.theta_deg <= 90.0):
@@ -76,6 +88,13 @@ class Beam:
             raise ValueError(f"phi_deg must be in [0, 360), got {self.phi_deg!r}")
         if self.polarization not in _POLARIZATION_VECTORS:
             raise ValueError(f"polarization must be one of {sorted(_POLARIZATION_VECTORS)}, got {self.polarization!r}")
+        if self.desired_polarization not in DESIRED_POLARIZATIONS:
+            raise ValueError(
+                f"desired_polarization must be one of {sorted(DESIRED_POLARIZATIONS)}, "
+                f"got {self.desired_polarization!r}"
+            )
+        if not isinstance(self.oam_charge, (int, np.integer)):
+            raise ValueError(f"oam_charge must be an integer, got {self.oam_charge!r}")
 
 
 def transverse_wavenumber_deg(frequency_hz, theta_deg, phi_deg):

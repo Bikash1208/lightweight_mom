@@ -47,7 +47,7 @@ from .. import library_registry
 from ..jobs import config_hash
 from ..jsonutil import to_jsonable
 from ..library_query import available_frequencies_hz, library_candidates_at_frequency
-from ..plots import layout_map_png, reference_phase_map_png
+from ..plots import layout_map_png, patch_layout_png, reference_phase_map_png
 from ..storage import job_output_dir, upload_dir
 
 # PHASE13C/13D: the wizard never sends the user to a separate Library page -- these are the fixed
@@ -243,6 +243,29 @@ def _layout_preview_url(job, x_m, y_m, value, label, title):
         return None
 
 
+def _patch_layout_url(job, assignments, x_m, period_mm, title_suffix=""):
+    """True-geometry copper/grey board drawing (PHASE13D item 5). Best-effort like the preview."""
+    try:
+        ny, nx = np.asarray(x_m).shape
+        cells = [(a.x_m * 1e3, a.y_m * 1e3, a.chosen_l_mm, a.chosen_w_mm) for a in assignments]
+        out_dir = job_output_dir(job.id)
+        title = f"Patch layout — {nx} × {ny} cells, {period_mm:g} mm pitch{title_suffix}"
+        path = patch_layout_png(cells, period_mm, nx, ny, out_dir / "patch_layout.png", title=title)
+        return f"/api/files/{job.id}/{path.name}"
+    except Exception:
+        return None
+
+
+def _geometry_param_to_mm(gp, period_mm):
+    """Formulation A's dispersion-table geometry parameter is the square patch side: metres for
+    the auto-built table (`ensure_dispersion`), millimetres for a typical HFSS upload. Anything
+    smaller than 0.1 is taken as metres."""
+    if gp is None:
+        return None
+    mm = gp * 1e3 if gp < 0.1 else gp
+    return mm if 0.0 < mm <= period_mm else None
+
+
 def _run_synthesize_job(job, body: dict):
     reference_field = _load_reference_field(body["upload_id"])
     reference_field, masked_cells = _mask_feed_region(reference_field)
@@ -286,12 +309,33 @@ def _run_synthesize_job(job, body: dict):
             job, design.x_m, design.y_m, design.control_map, "reactance (ohm)", "Impedance modulation"
         )
         aperture_field = design.aperture_field
+        # Surface-wave designs are square patches of the dispersion table's geometry parameter:
+        # carry the same per-cell L/W assignment shape Formulation B uses, so Export and the
+        # patch-layout drawing work for this method too.
+        assignments_a = None
+        sizes_mm = [_geometry_param_to_mm(c.geometry_param, body["period_mm"]) for c in design.cells]
+        if all(v is not None for v in sizes_mm):
+            assignments_a = tuple(
+                CellAssignment(
+                    i=c.i, j=c.j, x_m=c.x_m, y_m=c.y_m,
+                    required_phase_deg=c.control_value,
+                    chosen_l_mm=v, chosen_w_mm=v,
+                    achieved_phase_deg=c.achieved_value, phase_error_deg=c.phase_error_deg,
+                    library_id=body["dispersion_id"], phase_coverage_ok=c.reachable,
+                )
+                for c, v in zip(design.cells, sizes_mm, strict=True)
+            )
+        patch_layout_png_url = (
+            _patch_layout_url(job, assignments_a, design.x_m, body["period_mm"]) if assignments_a else None
+        )
         return {
             "formulation": design.formulation,
             "x_m": design.x_m,
             "y_m": design.y_m,
             "control_map": design.control_map,
             "cells": design.cells,
+            "assignments": assignments_a,
+            "patch_layout_png_url": patch_layout_png_url,
             "labels": design.labels + extra_labels,
             "unreachable_fraction": design.unreachable_fraction,
             "phase_error_stats": design.phase_error_stats,
@@ -354,7 +398,9 @@ def _run_synthesize_job(job, body: dict):
         layout_png_url = _layout_preview_url(
             job, design.x_m, design.y_m, achieved, "achieved phase (deg)", "Layout (achieved phase)"
         )
+        patch_layout_png_url = _patch_layout_url(job, assignments, design.x_m, body["period_mm"])
         return {
+            "patch_layout_png_url": patch_layout_png_url,
             "formulation": design.formulation,
             "x_m": design.x_m,
             "y_m": design.y_m,

@@ -105,9 +105,14 @@ failure never fails the real numeric result the user is waiting on.
 **The 3-step wizard** (`index.html`, the home page as of Part 3C) is a single-page flow across
 three `<section>` panels toggled by JS, not three separate HTML files — it calls the same
 `/api/hmsa/*`, `/api/pattern/*`, `/api/export/*` endpoints the old standalone `hmsa.html` (removed)
-and the "More tools" pages use. `POST /api/hmsa/ensure_library` is new: it hides the Library page
-from this flow entirely by building (or reusing, via both the job cache and the persisted
-`library_registry`) a small square-patch library for the chosen board/frequency automatically.
+and the "More tools" pages use. `POST /api/hmsa/ensure_library` hides the Library page from this
+flow entirely by building (or reusing, via both the job cache and the persisted `library_registry`)
+a small square-patch library for the chosen board/frequency automatically (the reflection-phase
+method's own unit-cell data). `POST /api/hmsa/ensure_dispersion` (Phase 14) is its counterpart for
+the surface-wave (eigenmode) method: builds a `dispersion.sheet_model` table for the same board and
+writes it as a CSV at a deterministic `upload_dir` path (cache hit = file already exists), in the
+exact schema an uploaded HFSS eigenmode table uses -- so Formulation A's synthesis code reads either
+source identically, with no branch on where the table came from.
 
 ## Diagnostics, errors, labels, manifests (Part 2, `src/logging_setup.py`/`errors.py`/`labels.py`/`manifest.py`)
 
@@ -135,7 +140,7 @@ from this flow entirely by building (or reusing, via both the job cache and the 
 
 ## Config-hash caching in practice
 
-`unit_cell.py`'s solve endpoint and `hmsa.py`'s `ensure_library` endpoint use
+`unit_cell.py`'s solve endpoint and `hmsa.py`'s `ensure_library`/`ensure_dispersion` endpoints use
 `cache_key=config_hash(...)`; other routers (library sweep, reflectarray design, HMSA synthesis,
 export) do not cache by config —
 re-submitting an identical reflectarray design, for instance, re-runs it. Caching wasn't extended

@@ -159,6 +159,80 @@ def test_one_beam_walkthrough_ends_in_a_valid_zip_with_the_beam_near_its_target(
 
 
 @pytest.mark.slow
+def test_eigenmode_method_reaches_far_more_cells_than_reflection_phase_on_the_walkthrough_case(client):
+    """PHASE14 "Done when": the walk-through case (1 beam, 4 mm cells, 10.54 GHz, RT/duroid 5880
+    1.575 mm) run with the eigenmode (sheet-model) method should show far fewer unreachable cells
+    than the reflection-phase method's own 4006/5476 -- report the actual numbers either way."""
+    upload = _upload(client)
+
+    # Reflection-phase (Formulation B), the walk-through's own reported baseline.
+    library_id = _ensure_library(client)
+    _, b_result = _synthesize(client, upload["upload_id"], library_id, [(20.0, 0.0)])
+    b_unreachable_fraction = b_result["unreachable_fraction"]
+
+    # Surface-wave (eigenmode / sheet-model), Formulation A -- auto-built dispersion table.
+    disp_resp = client.post(
+        "/api/hmsa/ensure_dispersion",
+        json={
+            "period_mm": 4.0,
+            "eps_r": 2.2,
+            "tan_delta": 0.0009,
+            "thickness_mm": 1.575,
+            "frequency_hz": _UPLOAD_FREQUENCY_HZ,
+        },
+    )
+    disp_job = _wait_for_job(client, disp_resp.json()["id"], timeout=120.0)
+    assert disp_job["status"] == "done", disp_job
+    disp_result = disp_job["result"]
+
+    a_resp = client.post(
+        "/api/hmsa/synthesize",
+        json={
+            "upload_id": upload["upload_id"],
+            "formulation": "A",
+            "frequency_hz": _UPLOAD_FREQUENCY_HZ,
+            "object_beams": [{"theta_deg": 20.0, "phi_deg": 0.0}],
+            "period_mm": 4.0,
+            "dispersion_id": disp_result["dispersion_id"],
+            "x_avg_ohm": disp_result["x_avg_ohm"],
+            "modulation_index": disp_result["modulation_index"],
+        },
+    )
+    a_job = _wait_for_job(client, a_resp.json()["id"], timeout=180.0)
+    assert a_job["status"] == "done", a_job
+    a_unreachable_fraction = a_job["result"]["unreachable_fraction"]
+
+    print(
+        f"\nunreachable fraction -- reflection-phase: {b_unreachable_fraction:.3f}, "
+        f"eigenmode/sheet-model: {a_unreachable_fraction:.3f}"
+    )
+    assert a_unreachable_fraction < b_unreachable_fraction
+
+    # PHASE14 Part C: Formulation A now carries an aperture field too, so Pattern prediction
+    # works for it (previously only Formulation B did) -- and shares the same obliquity-factor
+    # fix, so its SLL should be a real number, not a horizon-ring artifact.
+    a_synth_job_id = a_resp.json()["id"]
+    a_pattern_resp = client.post(
+        "/api/pattern/predict",
+        json={
+            "source_job_id": a_synth_job_id,
+            "frequency_hz": _UPLOAD_FREQUENCY_HZ,
+            "n_theta": 31,
+            "n_phi": 25,
+            "beams": [{"theta_deg": 20.0, "phi_deg": 0.0}],
+        },
+    )
+    a_pattern_job = _wait_for_job(client, a_pattern_resp.json()["id"])
+    assert a_pattern_job["status"] == "done", a_pattern_job
+    a_pattern_result = a_pattern_job["result"]["result"]
+    print(
+        f"eigenmode-method pattern -- beam: theta={a_pattern_result['main_beam_theta_deg']:.1f}, "
+        f"phi={a_pattern_result['main_beam_phi_deg']:.1f}, sll_db={a_pattern_result['sll_db']}"
+    )
+    assert a_pattern_result["main_beam_theta_deg"] == pytest.approx(20.0, abs=10.0)
+
+
+@pytest.mark.slow
 def test_two_beam_case_both_beams_present_in_the_pattern(client):
     upload = _upload(client)
     library_id = _ensure_library(client)

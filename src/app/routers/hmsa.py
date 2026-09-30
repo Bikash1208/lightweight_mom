@@ -5,11 +5,13 @@ formulations -- thin glue over `fields.fld_parser`/`fields.reference_field_grid`
 
 Two synchronous upload endpoints (parsing is fast -- no job queue needed) plus one job-queued
 synthesis endpoint (the object-wave combination + per-cell geometry lookup over the whole grid).
-Formulation B's result also carries a synthesized aperture field (achieved phase from the library
+Formulation B's result carries a synthesized aperture field (achieved phase from the library
 match) AND a reflectarray-shaped `assignments` list (PHASE13B B2), so it can chain into the
-Pattern AND Export pages exactly as a reflectarray design job does; Formulation A's achieved
-quantity is a surface reactance, not a phase or an L/W pair, so neither chaining is offered for it
-here (documented limitation, not silently wrong).
+Pattern AND Export pages exactly as a reflectarray design job does. Formulation A's result (PHASE14
+Part C) also carries a synthesized aperture field (a documented leaky-wave-perturbation
+approximation, `hologram.hmsa_synthesis.synthesize_formulation_a`'s own docstring) so it can chain
+into Pattern too -- but its achieved quantity is a surface reactance, not an L/W pair, so Export
+still isn't offered for it (a real geometry-inversion gap, not silently wrong).
 """
 
 import base64
@@ -283,6 +285,7 @@ def _run_synthesize_job(job, body: dict):
         layout_png_url = _layout_preview_url(
             job, design.x_m, design.y_m, design.control_map, "reactance (ohm)", "Impedance modulation"
         )
+        aperture_field = design.aperture_field
         return {
             "formulation": design.formulation,
             "x_m": design.x_m,
@@ -293,6 +296,11 @@ def _run_synthesize_job(job, body: dict):
             "unreachable_fraction": design.unreachable_fraction,
             "phase_error_stats": design.phase_error_stats,
             "masked_cells": masked_cells,
+            # PHASE14 Part C: Formulation A now carries a (documented-approximate) aperture field
+            # too, so Pattern prediction works for both methods -- previously only B did.
+            "aperture_field_real": aperture_field.real,
+            "aperture_field_imag": aperture_field.imag,
+            "period_mm": body["period_mm"],
             "layout_png_url": layout_png_url,
         }
 

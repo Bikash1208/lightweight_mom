@@ -108,6 +108,32 @@
         <button type="button" class="secondary" id="unlock-frequency-btn">Use a different frequency</button>
         <p class="status" id="frequency-mismatch-status"></p>
 
+        <h3>Design method</h3>
+        <div class="segmented" id="method-control">
+          <button type="button" data-method="eigenmode" class="active">Surface-wave (eigenmode)</button>
+          <button type="button" data-method="reflection">Reflection phase</button>
+        </div>
+        <p class="status" id="method-hint"></p>
+
+        <div id="eigenmode-fields">
+          <label>Unit-cell data
+            <div class="segmented" id="eigenmode-source-control">
+              <button type="button" data-source="auto" class="active">Compute automatically</button>
+              <button type="button" data-source="upload">Upload HFSS eigenmode table (CSV)</button>
+            </div>
+          </label>
+          <div id="eigenmode-upload-fields" style="display:none">
+            <label>HFSS eigenmode table <span class="unit">CSV: patch size (mm), beta (rad/m) or reactance (ohm), at one frequency</span>
+              <span class="file-picker">
+                <button type="button" class="secondary" id="dispersion-browse-btn" style="margin-top:0.35rem">choose a file</button>
+                <input type="file" id="dispersion-file-input" accept=".csv" style="display:none" />
+                <span id="dispersion-file-name" class="status"></span>
+              </span>
+            </label>
+          </div>
+          <p class="status" id="eigenmode-range-status"></p>
+        </div>
+
         <details class="advanced">
           <summary>Advanced</summary>
           <div class="card">
@@ -119,14 +145,6 @@
             </label>
             <p class="status">Accurate uses a finer mesh for the board's own unit-cell data (slower,
             less staircasing error); not a substitute for HFSS validation.</p>
-            <p id="method-explainer" class="status"></p>
-            <label>Dispersion table (optional: HFSS eigenmode export)
-              <span class="file-picker">
-                <button type="button" class="secondary" id="dispersion-browse-btn" style="margin-top:0.35rem">choose a file</button>
-                <input type="file" id="dispersion-file-input" accept=".csv" style="display:none" />
-                <span id="dispersion-file-name" class="status"></span>
-              </span>
-            </label>
             <div id="impedance-method-fields">
               <label>Mean reactance X&#772; <span class="unit">&Omega;</span>
                 <input type="number" step="any" id="x-avg-ohm" value="100" />
@@ -134,6 +152,8 @@
               <label>Modulation depth
                 <input type="number" step="any" id="modulation-index" value="0.3" min="0" max="1" />
               </label>
+              <p class="status">Set automatically from the unit-cell data (centre of the usable
+              range, largest symmetric depth) once it's ready; edit here to override.</p>
             </div>
             <label><input type="checkbox" id="rescale-beta-bar" checked style="width:auto;display:inline;margin-right:0.4rem" />
               Correct the reference wave to the board's own wavenumber (recommended)</label>
@@ -286,7 +306,7 @@
         document.getElementById("synthesis-frequency-ghz").value = freqGhz;
         if (state.apertureMm) document.getElementById("aperture-mm").value = state.apertureMm.toFixed(1);
         suggestCellSize();
-        refreshAchievableRange();
+        refreshMethodPreview();
       } catch (err) {
         if (!silent) { statusEl.textContent = err.message; statusEl.className = "status err"; }
       }
@@ -321,7 +341,7 @@
     function onBoardChanged() {
       analyzeReferenceField({ silent: true });
       suggestCellSize();
-      refreshAchievableRange();
+      refreshMethodPreview();
     }
     document.getElementById("substrate-preset").addEventListener("change", (ev) => {
       document.getElementById("custom-substrate-fields").style.display = ev.target.value === "custom" ? "block" : "none";
@@ -378,7 +398,7 @@
       } else {
         mismatchEl.textContent = "";
       }
-      refreshAchievableRange();
+      refreshMethodPreview();
     });
 
     // PHASE13D item 1: a target cells-per-fringe of 8 (mid-way through the recommended >= 6
@@ -393,7 +413,7 @@
       const suggestedMm = lambdaSwMm / _TARGET_CELLS_PER_FRINGE;
       el.textContent = `Suggested: ~${suggestedMm.toFixed(1)} mm (${_TARGET_CELLS_PER_FRINGE} cells per fringe at this board's measured wavenumber).`;
     }
-    document.getElementById("cell-size-mm").addEventListener("change", () => refreshAchievableRange());
+    document.getElementById("cell-size-mm").addEventListener("change", () => refreshMethodPreview());
 
     const accuracyControl = document.getElementById("accuracy-control");
     accuracyControl.addEventListener("click", (ev) => {
@@ -401,62 +421,136 @@
       if (!btn) return;
       accuracyControl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
-      refreshAchievableRange();
+      refreshMethodPreview();
     });
     function currentAccuracy() {
       return accuracyControl.querySelector("button.active")?.dataset.accuracy || "fast";
     }
 
-    // PHASE13D item 1: shows the phase-lookup method's achievable range as soon as board/cell
-    // size/frequency are known, not only after Step 3's synthesis runs -- this is exactly what
-    // ensure_library already computes, so this calls it early (a debounced background build; the
-    // result is cached and reused instantly when Step 3 actually runs).
-    let _achievableRangeToken = 0;
-    async function refreshAchievableRange() {
-      const el = document.getElementById("achievable-range-status");
-      const cellSizeMm = parseFloat(document.getElementById("cell-size-mm").value);
-      const freqGhz = parseFloat(document.getElementById("synthesis-frequency-ghz").value);
-      if (!Number.isFinite(cellSizeMm) || !Number.isFinite(freqGhz)) { el.textContent = ""; return; }
-      if (document.getElementById("dispersion-file-input").files.length > 0) { el.textContent = ""; return; }
-      const substrate = currentSubstrate();
-      const token = ++_achievableRangeToken;
-      el.textContent = "Checking the achievable phase range for this cell size...";
-      el.className = "status";
-      try {
-        const libJob = await LWMOM.postJson("/api/hmsa/ensure_library", {
-          period_mm: cellSizeMm, eps_r: substrate.eps_r, tan_delta: substrate.tan_delta,
-          thickness_mm: substrate.thickness_mm, frequency_hz: freqGhz * 1e9, accuracy: currentAccuracy(),
-        });
-        const done = await LWMOM.pollJob(libJob.id);
-        if (token !== _achievableRangeToken) return;  // superseded by a newer request
-        if (done.status !== "done" || done.result.phase_span_deg == null) { el.textContent = ""; return; }
-        const span = done.result.phase_span_deg;
-        const narrow = span < 180;
-        el.textContent = `Achievable phase range with the phase-lookup method: ~${span.toFixed(0)}°` +
-          (narrow ? " — narrow; consider a dispersion table (Advanced) or a larger cell." : ".");
-        el.className = narrow ? "status warn" : "status ok";
-      } catch (err) {
-        if (token === _achievableRangeToken) el.textContent = "";
-      }
-    }
-
+    // PHASE14 Part B: "Design method" -- Surface-wave (eigenmode, recommended for monopole-fed
+    // boards) vs Reflection phase (simpler, limited range with small cells). The eigenmode method
+    // has its own sub-choice: compute the board's own dispersion automatically (dispersion.
+    // sheet_model, via ensure_dispersion) or upload an HFSS eigenmode table.
+    const methodControl = document.getElementById("method-control");
+    const eigenmodeSourceControl = document.getElementById("eigenmode-source-control");
     const dispersionFileInput = document.getElementById("dispersion-file-input");
+    function currentMethod() {
+      return methodControl.querySelector("button.active")?.dataset.method || "eigenmode";
+    }
+    function currentEigenmodeSource() {
+      return eigenmodeSourceControl.querySelector("button.active")?.dataset.source || "auto";
+    }
+    function updateMethodVisibility() {
+      const eigenmode = currentMethod() === "eigenmode";
+      document.getElementById("eigenmode-fields").style.display = eigenmode ? "block" : "none";
+      document.getElementById("impedance-method-fields").style.display = eigenmode ? "block" : "none";
+      document.getElementById("method-hint").textContent = eigenmode
+        ? "Recommended for monopole-fed boards: the control variable is the board's own surface-wave impedance."
+        : "Simpler; limited phase range with small cells (a reflectarray-style control variable, "
+          + "not the surface-wave one a monopole-fed hologram actually needs).";
+      updateEigenmodeSourceVisibility();
+      refreshMethodPreview();
+    }
+    function updateEigenmodeSourceVisibility() {
+      const upload = currentMethod() === "eigenmode" && currentEigenmodeSource() === "upload";
+      document.getElementById("eigenmode-upload-fields").style.display = upload ? "block" : "none";
+    }
+    methodControl.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button");
+      if (!btn) return;
+      methodControl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      updateMethodVisibility();
+    });
+    eigenmodeSourceControl.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button");
+      if (!btn) return;
+      eigenmodeSourceControl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      updateEigenmodeSourceVisibility();
+      refreshMethodPreview();
+    });
     document.getElementById("dispersion-browse-btn").addEventListener("click", () => dispersionFileInput.click());
     dispersionFileInput.addEventListener("change", () => {
       document.getElementById("dispersion-file-name").textContent = dispersionFileInput.files[0]?.name || "";
-      updateMethodExplainer();
-      refreshAchievableRange();
+      refreshMethodPreview();
     });
-    function updateMethodExplainer() {
-      const el = document.getElementById("method-explainer");
-      const hasDispersion = dispersionFileInput.files.length > 0;
-      el.textContent = hasDispersion
-        ? "Using the impedance-modulated method (your uploaded dispersion table)."
-        : "No dispersion table uploaded — using the phase-lookup method instead (the impedance method needs one).";
-      // PHASE13D item 2: X-bar/modulation depth only mean anything for the impedance method
-      document.getElementById("impedance-method-fields").style.display = hasDispersion ? "block" : "none";
+
+    // PHASE13D/14 item: shows the chosen method's achievable range as soon as board/cell size/
+    // frequency are known, not only after Step 3's synthesis runs -- ensure_library/
+    // ensure_dispersion compute this either way, so this calls the relevant one early (a
+    // debounced background build; cached and reused instantly when Step 3 actually runs).
+    let _previewToken = 0;
+    async function refreshMethodPreview() {
+      const achievableEl = document.getElementById("achievable-range-status");
+      const eigenEl = document.getElementById("eigenmode-range-status");
+      achievableEl.textContent = "";
+      eigenEl.textContent = "";
+      const cellSizeMm = parseFloat(document.getElementById("cell-size-mm").value);
+      const freqGhz = parseFloat(document.getElementById("synthesis-frequency-ghz").value);
+      if (!Number.isFinite(cellSizeMm) || !Number.isFinite(freqGhz)) return;
+      const substrate = currentSubstrate();
+      const method = currentMethod();
+      const token = ++_previewToken;
+
+      if (method === "reflection") {
+        achievableEl.textContent = "Checking the achievable phase range for this cell size...";
+        achievableEl.className = "status";
+        try {
+          const libJob = await LWMOM.postJson("/api/hmsa/ensure_library", {
+            period_mm: cellSizeMm, eps_r: substrate.eps_r, tan_delta: substrate.tan_delta,
+            thickness_mm: substrate.thickness_mm, frequency_hz: freqGhz * 1e9, accuracy: currentAccuracy(),
+          });
+          const done = await LWMOM.pollJob(libJob.id);
+          if (token !== _previewToken) return;  // superseded by a newer request
+          if (done.status !== "done" || done.result.phase_span_deg == null) return;
+          const span = done.result.phase_span_deg;
+          const narrow = span < 180;
+          achievableEl.textContent = `Achievable phase range with the phase-lookup method: ~${span.toFixed(0)}°` +
+            (narrow ? " — narrow; consider the surface-wave (eigenmode) method or a larger cell." : ".");
+          achievableEl.className = narrow ? "status warn" : "status ok";
+        } catch (err) {
+          if (token === _previewToken) achievableEl.textContent = "";
+        }
+        return;
+      }
+
+      if (currentEigenmodeSource() === "upload") {
+        eigenEl.textContent = dispersionFileInput.files.length
+          ? "" : 'Upload an HFSS eigenmode table above, or switch to "Compute automatically."';
+        return;
+      }
+      eigenEl.textContent = "Computing the board's own surface-wave dispersion...";
+      eigenEl.className = "status";
+      try {
+        const dispJob = await LWMOM.postJson("/api/hmsa/ensure_dispersion", {
+          period_mm: cellSizeMm, eps_r: substrate.eps_r, tan_delta: substrate.tan_delta,
+          thickness_mm: substrate.thickness_mm, frequency_hz: freqGhz * 1e9, accuracy: currentAccuracy(),
+        });
+        const done = await LWMOM.pollJob(dispJob.id, {
+          onTick: (j) => {
+            if (token === _previewToken) {
+              eigenEl.textContent = `Computing the board's own surface-wave dispersion: ${j.progress_message || "..."}`;
+            }
+          },
+        });
+        if (token !== _previewToken) return;
+        if (done.status !== "done") {
+          eigenEl.textContent = done.error ? done.error.message : done.status;
+          eigenEl.className = "status err";
+          return;
+        }
+        if (done.result.x_avg_ohm != null) document.getElementById("x-avg-ohm").value = done.result.x_avg_ohm.toFixed(1);
+        if (done.result.modulation_index != null) document.getElementById("modulation-index").value = done.result.modulation_index.toFixed(3);
+        eigenEl.textContent = done.result.x_s_min_ohm != null
+          ? `Surface reactance range: ${done.result.x_s_min_ohm.toFixed(0)}–${done.result.x_s_max_ohm.toFixed(0)} Ω across the auto-built patch sizes.`
+          : "";
+        eigenEl.className = "status ok";
+      } catch (err) {
+        if (token === _previewToken) { eigenEl.textContent = err.message; eigenEl.className = "status err"; }
+      }
     }
-    updateMethodExplainer();
+    updateMethodVisibility();
 
     document.getElementById("to-step-3-btn").addEventListener("click", async () => {
       const statusEl = document.getElementById("step2-status");
@@ -467,11 +561,16 @@
     });
 
     // ---------------------------------------------------------------- Step 3
+    function currentMethodDescription() {
+      if (currentMethod() === "reflection") return "reflection-phase";
+      return currentEigenmodeSource() === "upload" ? "surface-wave (your HFSS table)" : "surface-wave (computed automatically)";
+    }
+
     function renderRunSummary() {
       const el = document.getElementById("run-summary");
       const cellSizeMm = parseFloat(document.getElementById("cell-size-mm").value);
       const apertureMm = state.apertureMm;
-      const method = dispersionFileInput.files.length > 0 ? "impedance-modulated" : "phase-lookup";
+      const method = currentMethodDescription();
       const nBeams = state.beams.length;
       const nCellsSide = apertureMm && cellSizeMm ? Math.round(apertureMm / cellSizeMm) : null;
       const cellsText = nCellsSide ? `~${nCellsSide}x${nCellsSide} cells` : "the array";
@@ -489,21 +588,10 @@
       const cellSizeMm = parseFloat(document.getElementById("cell-size-mm").value);
       const frequencyHz = parseFloat(document.getElementById("synthesis-frequency-ghz").value) * 1e9;
       const rescale = document.getElementById("rescale-beta-bar").checked;
-      const dispersionFile = dispersionFileInput.files[0];
       const accuracy = currentAccuracy();
+      const method = currentMethod();
 
       try {
-        statusEl.textContent = "Preparing the board's unit-cell data...";
-        const libJob = await LWMOM.postJson("/api/hmsa/ensure_library", {
-          period_mm: cellSizeMm, eps_r: substrate.eps_r, tan_delta: substrate.tan_delta,
-          thickness_mm: substrate.thickness_mm, frequency_hz: frequencyHz, accuracy: accuracy,
-        });
-        const libDone = await LWMOM.pollJob(libJob.id, {
-          onTick: (j) => { statusEl.textContent = `Preparing the board's unit-cell data: ${j.progress_message || "..."}`; },
-        });
-        if (libDone.status !== "done") throw new Error(libDone.error ? libDone.error.message : "could not prepare the board's unit-cell data");
-        const libraryId = libDone.result.library_id;
-
         const body = {
           upload_id: state.uploadId,
           frequency_hz: frequencyHz,
@@ -513,7 +601,22 @@
           })),
           period_mm: cellSizeMm,
         };
-        if (dispersionFile) {
+
+        if (method === "reflection") {
+          statusEl.textContent = "Preparing the board's unit-cell data...";
+          const libJob = await LWMOM.postJson("/api/hmsa/ensure_library", {
+            period_mm: cellSizeMm, eps_r: substrate.eps_r, tan_delta: substrate.tan_delta,
+            thickness_mm: substrate.thickness_mm, frequency_hz: frequencyHz, accuracy: accuracy,
+          });
+          const libDone = await LWMOM.pollJob(libJob.id, {
+            onTick: (j) => { statusEl.textContent = `Preparing the board's unit-cell data: ${j.progress_message || "..."}`; },
+          });
+          if (libDone.status !== "done") throw new Error(libDone.error ? libDone.error.message : "could not prepare the board's unit-cell data");
+          body.formulation = "B";
+          body.library_id = libDone.result.library_id;
+        } else if (currentEigenmodeSource() === "upload") {
+          const dispersionFile = dispersionFileInput.files[0];
+          if (!dispersionFile) throw new Error('Choose an HFSS eigenmode table CSV, or switch to "Compute automatically."');
           statusEl.textContent = "Uploading dispersion table...";
           const dispForm = new FormData();
           dispForm.append("csv_file", dispersionFile);
@@ -525,8 +628,20 @@
           body.modulation_index = parseFloat(document.getElementById("modulation-index").value);
           body.rescale_to_beta_bar = rescale;
         } else {
-          body.formulation = "B";
-          body.library_id = libraryId;
+          statusEl.textContent = "Preparing the board's own surface-wave dispersion...";
+          const dispJob = await LWMOM.postJson("/api/hmsa/ensure_dispersion", {
+            period_mm: cellSizeMm, eps_r: substrate.eps_r, tan_delta: substrate.tan_delta,
+            thickness_mm: substrate.thickness_mm, frequency_hz: frequencyHz, accuracy: accuracy,
+          });
+          const dispDone = await LWMOM.pollJob(dispJob.id, {
+            onTick: (j) => { statusEl.textContent = `Preparing the board's own surface-wave dispersion: ${j.progress_message || "..."}`; },
+          });
+          if (dispDone.status !== "done") throw new Error(dispDone.error ? dispDone.error.message : "could not prepare the board's own surface-wave dispersion");
+          body.formulation = "A";
+          body.dispersion_id = dispDone.result.dispersion_id;
+          body.x_avg_ohm = parseFloat(document.getElementById("x-avg-ohm").value);
+          body.modulation_index = parseFloat(document.getElementById("modulation-index").value);
+          body.rescale_to_beta_bar = rescale;
         }
 
         statusEl.textContent = "Synthesizing...";
@@ -553,7 +668,7 @@
             }
           });
         }
-        renderSynthesisResults(job.result);
+        renderSynthesisResults(job.result, currentMethodDescription());
         renderUnreachableExplanation(job.result, cellSizeMm);
         await runPatternAndExport(job.result);
         statusEl.textContent = "Done.";
@@ -577,7 +692,7 @@
         `Step 2) to use the impedance method instead, or increase the cell size (fewer cells per fringe).`;
     }
 
-    function renderSynthesisResults(result) {
+    function renderSynthesisResults(result, methodDescription) {
       document.getElementById("results-card").style.display = "block";
       if (result.layout_png_url) document.getElementById("layout-img").src = result.layout_png_url;
       const list = document.getElementById("results-list");
@@ -587,6 +702,7 @@
         li.innerHTML = `<span class="k">${k}</span><span>${v}</span>`;
         list.appendChild(li);
       };
+      if (methodDescription) addRow("Design method", methodDescription);
       addRow("Cells used", result.cells.length);
       if (result.phase_error_stats) {
         const s = result.phase_error_stats;

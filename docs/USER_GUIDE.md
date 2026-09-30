@@ -34,37 +34,46 @@ targeting 8 cells per surface-wave fringe at this board's own measured wavenumbe
 is shown read-only, taken from the uploaded file's own extent — there is no cropping/resizing
 logic, so this is informational, not editable (an honest scope reduction from what was asked for).
 Frequency is pre-filled from Step 1 and locked; "Use a different frequency" unlocks it, and a
-mismatch against Step 1's frequency is flagged. As soon as board, cell size and frequency are all
-set, a line shows the phase-lookup method's achievable phase range for that combination (built via
-the same auto-library call Step 3 would make, cached) — a narrow range (well under 360°) is common
-for small cells and is flagged, not hidden.
+mismatch against Step 1's frequency is flagged.
+
+**Design method** (Phase 14): **Surface-wave (eigenmode)** — recommended for monopole-fed boards,
+the default — or **Reflection phase** — simpler, but with a limited phase range at small cell
+sizes (Part 3D's own finding: ~33-36° of range with 4 mm cells on RT/duroid 5880, most cells
+clipping to the smallest or largest patch). The eigenmode method has its own choice of unit-cell
+data: *Compute automatically* (default — builds a real surface-wave dispersion table for this
+board from this project's own MoM, via a homogenized patch-admittance model; `docs/phases/
+PHASE14_EIGENMODE.md`) or *Upload an HFSS eigenmode table* (CSV: patch size, beta or reactance, at
+one frequency). As soon as board, cell size and frequency are set, a preview line shows the chosen
+method's achievable range — the phase range (reflection) or the surface-reactance range across the
+auto-built patch sizes (eigenmode) — while it computes in the background (a few seconds, cached
+after the first time for a given board).
+
+For the eigenmode method, the mean reactance X̄ and modulation depth are set automatically from the
+table (the centre of the usable range, the largest symmetric depth) — editable under Advanced.
 
 **Advanced** (collapsed): an **Accuracy** control (Fast/Accurate — Accurate uses a finer mesh for
 the board's own unit-cell data; slower, less staircasing error, not a substitute for HFSS
-validation, not Richardson extrapolation). Upload an HFSS eigenmode dispersion table (CSV) to use
-the impedance-modulated method (Formulation A, Fong et al.) — the recommended path when you have
-real dispersion data; its own fields (mean reactance X̄, modulation depth) only appear once a table
-is uploaded. Without one, the wizard falls back to the phase-lookup method (Formulation B, a
-reflectarray-style control variable standing in for the surface-wave one a monopole-fed hologram
-actually needs — labelled `EXPERIMENTAL`, with a reason shown in Step 3) and says so in one
-sentence. Also here: whether to rescale the reference wave to the board's own guided wavenumber β̄
-(on by default — using the raw bare-slab wave as-is accumulates a phase error across the aperture,
-reported if you turn this off).
+validation, not Richardson extrapolation) and whether to rescale the reference wave to the board's
+own guided wavenumber β̄ (on by default — using the raw bare-slab wave as-is accumulates a phase
+error across the aperture, reported if you turn this off).
 
-The unit-cell data synthesis needs is built automatically the first time you run Step 3 for a given
-board/frequency (a small square-patch library, mesh-aligned and cached — later runs with the same
-board reuse it instantly). You never visit a separate library page.
+The unit-cell data either method needs is built automatically the first time it's needed for a given
+board/frequency (cached — later runs with the same board reuse it instantly). You never visit a
+separate library page.
 
 ### Step 3 — Pattern & export
 
 A one-line summary (beam count, board, cell size, method) appears before you run. "Design antenna"
-chains: builds/reuses the board's unit-cell library → synthesizes the hologram → predicts the
-far-field pattern → builds the layout export (CSV/JSON/DXF) and HFSS notes. Shows the layout
-preview, the radiation pattern (a 2-D u–v map in dB, one principal cut per requested beam),
-directivity, side-lobe level, achieved beam direction, and how many cells couldn't reach their
-required value (with the mean/max phase error) — if that's more than 20% of the cells, a plain
-sentence explains why (the phase-lookup method's limited range at small cell sizes) and what to do
-about it (a dispersion table, or a larger cell).
+chains: builds/reuses the board's unit-cell data (library or dispersion table, whichever the chosen
+method needs) → synthesizes the hologram → predicts the far-field pattern → builds the layout
+export (CSV/JSON/DXF) and HFSS notes. Shows the layout preview, the radiation pattern (a 2-D u–v
+map in dB, one principal cut per requested beam), directivity, side-lobe level, achieved beam
+direction, which design method and data source were used, and (reflection-phase method only) how
+many cells couldn't reach their required value (with the mean/max phase error) — if that's more
+than 20% of the cells, a plain sentence explains why (the phase-lookup method's limited range at
+small cell sizes) and what to do about it (switch to the eigenmode method, or use a larger cell).
+On the walk-through's own case, the eigenmode method reaches all 5476 cells vs. the reflection-phase
+method's 4006 unreachable (`docs/phases/PHASE14_EIGENMODE.md`).
 
 STEP (CAD) is a separate, explicit "Build STEP (CAD)" action — it can take minutes and produce a
 file well over 100 MB for a large array, so it no longer runs automatically as part of the chain
@@ -74,9 +83,11 @@ runtimes, log-log interpolated — labelled "estimated," never claimed as measur
 built it, every plot, and a project record) into one zip; the individual files are also linked
 separately.
 
-Export requires a real per-cell L×W assignment, which only Formulation B (phase-lookup)
-currently produces — Formulation A's achieved quantity is a surface reactance, not a geometry pair,
-so it doesn't chain into Export (Pattern still works for both).
+Export requires a real per-cell L×W assignment, which only Formulation B (reflection-phase)
+currently produces — Formulation A's (eigenmode/impedance) achieved quantity is a surface
+reactance, not a geometry pair, so it doesn't chain into Export. Pattern prediction works for both
+methods (Phase 14 Part C added an aperture field for the eigenmode method too, a documented
+leaky-wave-perturbation approximation).
 
 ## More tools
 

@@ -11,7 +11,7 @@ Guidance for Claude when working in this repository.
 geometry → periodic MoM (Z I = V) → surface current → fields → S11/S21 → unit-cell database → holographic synthesis
 ```
 
-Status: Phases 1–11, 12A, 12B, 12C, 12D and 13 done. Phase 13 curated the repo to production-push grade (git,
+Status: Phases 1–11, 12A, 12B, 12C, 12D, 13 and 14 done. Phase 13 curated the repo to production-push grade (git,
 `pyproject.toml`, `docs/` layout, logging/diagnostics/error-taxonomy/validation-labels/run-manifest, ruff, CI) and
 built a local web app (FastAPI backend, static HTML/vanilla-JS frontend) that produces reflectarray/HMSA designs NOW,
 labelled honestly, rather than waiting on the open questions below. A live UI review (`docs/briefs/
@@ -24,6 +24,13 @@ walk-through (`docs/briefs/PHASE13D_POLISH_AND_PHYSICS.md`) then made `src/dispe
 surface-wave eigenmode search real (validated against the analytic bare-slab TM0), fixed a two-cause pattern
 side-lobe bug (a missing obliquity factor, and `detect_local_maxima` not wrapping the periodic phi axis), made STEP
 export opt-in with estimated progress, and added a real DXF export — see `docs/phases/PHASE13_WEBAPP.md` "Part 3D".
+Phase 14 (`docs/phases/PHASE14_EIGENMODE.md`) then built a real surface-wave dispersion source: a direct MoM
+eigenmode search over the periodic array's own Z(kx,ky) was tried and found not to resolve a loading-dependent mode
+at any affordable mesh size (kept as a documented research item, `src/dispersion/mom_scaffold.py`); the working
+replacement (`src/dispersion/sheet_model.py`) extracts a patch-sheet admittance from the already-validated
+normal-incidence S11 and solves the closed-form transverse-resonance condition for beta. The app now offers a
+"Design method" choice (surface-wave/eigenmode vs. reflection-phase) in Step 2; on the walk-through case the
+eigenmode method reaches all 5476 cells vs. reflection-phase's 4006 unreachable.
 Holographic synthesis, geometry inversion and full-array STEP export remain recorded as **LOCKED** scientific
 findings (see `README.md` "Before Phase 13's app is trusted for a real design → still open") even though the app now
 produces designs/exports anyway per the user's explicit Phase 13 decision — every such output carries these labels.

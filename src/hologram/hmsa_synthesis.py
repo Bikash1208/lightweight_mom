@@ -221,6 +221,28 @@ def synthesize_formulation_a(
 
     control_map = formulation_a_control_map(cell_field, object_beams, frequency_hz, x_avg_ohm, modulation_index)
     cells = map_control_to_geometry_dispersion(cell_field.x_m, cell_field.y_m, control_map, dispersion_table)
+
+    # PHASE14 Part C: an equivalent aperture field for pattern prediction -- NOT the same model as
+    # Formulation B's (a reflectarray-style phase-front reconstruction), since this surface
+    # radiates by a different mechanism (leaky-wave scattering off the reactance MODULATION, not a
+    # re-reflected phase front). Fong et al.'s own derivation is a first-order (small modulation
+    # depth) perturbation result: only the AC part of the surface admittance -- proportional to
+    # `X_avg*M*Psi`, i.e. to `X(x,y)/X_avg - 1` -- couples the bound surface wave to radiation; the
+    # DC part (X_avg itself) stays purely reactive and non-radiating by design. To that same first
+    # order, the locally radiated field is proportional to the exciting surface wave times that
+    # admittance perturbation: `E_radiated(x,y) ~ E_ref(x,y) * (X_achieved(x,y)/X_avg - 1)`, using
+    # the ACHIEVED (dispersion-table-matched, quantization-error-included) reactance per cell --
+    # the real design's expected radiated field, not the idealized continuous target (mirroring
+    # exactly how Formulation B uses the achieved, not the ideal, phase). This is a documented
+    # approximation (a rigorous leaky-wave/full-wave radiation calculation is out of scope here),
+    # not a claim of the same fidelity as a full leaky-wave analysis.
+    achieved_x_ohm = np.array(
+        [c.achieved_value if c.achieved_value is not None else x_avg_ohm for c in cells]
+    ).reshape(cell_field.x_m.shape)
+    psi_achieved = achieved_x_ohm / x_avg_ohm - 1.0
+    ref_complex = cell_field.Ex if cell_field.amplitude_available else np.exp(1j * np.radians(cell_field.phase()))
+    aperture_field = ref_complex * psi_achieved
+
     return _finish_design(
         "A_impedance_modulation",
         reference_field,
@@ -230,7 +252,7 @@ def synthesize_formulation_a(
         cells,
         period_m,
         extra_labels=tuple(extra_labels),
-        aperture_field=None,  # A's achieved quantity is a surface reactance, not a phase
+        aperture_field=aperture_field,
     )
 
 

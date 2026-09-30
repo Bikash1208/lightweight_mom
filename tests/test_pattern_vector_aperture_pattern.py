@@ -81,6 +81,27 @@ def test_aperture_current_from_scalar_is_radial():
     assert np.allclose(jy, np.sin(phi_prime))
 
 
+def test_leakage_decay_default_off_is_unaffected():
+    x, y, _ = _board(n=5, extent_m=0.02)
+    scalar = np.ones_like(x, dtype=complex)
+    jx0, jy0 = aperture_current_from_scalar(x, y, scalar)
+    jx1, jy1 = aperture_current_from_scalar(x, y, scalar, leakage_alpha_per_m=0.0)
+    assert np.array_equal(jx0, jx1)
+    assert np.array_equal(jy0, jy1)
+
+
+def test_leakage_decay_tapers_amplitude_with_radius():
+    x, y, _ = _board(n=5, extent_m=0.02)
+    scalar = np.ones_like(x, dtype=complex)
+    jx, jy = aperture_current_from_scalar(x, y, scalar, leakage_alpha_per_m=50.0)
+    rho = np.hypot(x, y)
+    magnitude = np.hypot(np.abs(jx), np.abs(jy))
+    assert np.allclose(magnitude, np.exp(-50.0 * rho))
+    # strictly decreasing with radius (a genuine taper, not a constant scale)
+    order = np.argsort(rho.ravel())
+    assert np.all(np.diff(magnitude.ravel()[order]) <= 1e-12)
+
+
 # ============================================================ brief's Part B validation cases
 
 

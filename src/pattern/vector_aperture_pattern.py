@@ -81,15 +81,26 @@ from ..polarization import amplitudes_to_circular, handedness
 _SQRT_HALF = 2.0**-0.5
 
 
-def aperture_current_from_scalar(x_m, y_m, scalar_current, feed_xy_m=(0.0, 0.0)):
-    """`J = rho_hat(x,y) * scalar_current(x,y)` -- Part B's VECTORIZATION of the scalar aperture
-    current magnitude Part A/PHASE14 already compute (`hmsa_synthesis`'s `aperture_field`, already
-    documented there as `~ J_s`), about `feed_xy_m` (Part C: the assigned feed for a multi-feed
-    design). Returns `(Jx, Jy)`, same shape as `x_m`."""
+def aperture_current_from_scalar(x_m, y_m, scalar_current, feed_xy_m=(0.0, 0.0), leakage_alpha_per_m=0.0):
+    """`J = rho_hat(x,y) * scalar_current(x,y) * exp(-alpha*rho)` -- Part B's VECTORIZATION of the
+    scalar aperture current magnitude Part A/PHASE14 already compute (`hmsa_synthesis`'s
+    `aperture_field`, already documented there as `~ J_s`), about `feed_xy_m` (Part C: the assigned
+    feed for a multi-feed design). `leakage_alpha_per_m` (the brief's Part B: "an exponential
+    leakage decay e^{-alpha*rho}, alpha from the paper's eq. 11-12 form") is an OPTIONAL extra
+    amplitude taper representing a leaky-wave aperture's own power loss along its radial extent --
+    default 0 (off, `exp(0)=1` identically, no change to any pre-existing caller) since this
+    project's own dispersion model (`dispersion.sheet_model`) does not itself derive an alpha value
+    (Fong 2010/the paper's eq. 11-12 do, from the unit cell's own loss/coupling, which this
+    project's sheet-admittance model does not currently extract) -- a caller who has an independent
+    alpha estimate may supply it, documented as exactly that, not a value this project computes.
+    Returns `(Jx, Jy)`, same shape as `x_m`."""
     x_m, y_m = np.asarray(x_m, dtype=float), np.asarray(y_m, dtype=float)
     x0, y0 = feed_xy_m
+    rho = np.hypot(x_m - x0, y_m - y0)
     phi_prime = np.arctan2(y_m - y0, x_m - x0)
     scalar_current = np.asarray(scalar_current, dtype=complex)
+    if leakage_alpha_per_m:
+        scalar_current = scalar_current * np.exp(-leakage_alpha_per_m * rho)
     return scalar_current * np.cos(phi_prime), scalar_current * np.sin(phi_prime)
 
 
@@ -244,6 +255,8 @@ def _directivity_estimate(power, theta_grid_deg):
 class VortexMeasurement:
     null_depth_db: float  # field power AT the beam direction, relative to the pattern's own peak
     winding_number: float  # net phase winding (cycles) around the beam direction, in the co-pol component
+    ring_alpha_deg: np.ndarray  # the sample ring's own parameter (0-360deg), for plotting
+    ring_phase_deg: np.ndarray  # unwrapped phase (deg) of the co-pol component around the ring
 
 
 def measure_vortex_winding(
@@ -294,4 +307,7 @@ def measure_vortex_winding(
     field_b = copol_component(np.array([e_theta_b]), np.array([e_phi_b]), desired_polarization)[0]
     peak = pattern_peak_power if pattern_peak_power is not None else np.max(np.abs(field_ring) ** 2)
     null_depth_db = 10.0 * np.log10(np.abs(field_b) ** 2 / peak) if peak > 0.0 else float("-inf")
-    return VortexMeasurement(null_depth_db=null_depth_db, winding_number=float(winding))
+    return VortexMeasurement(
+        null_depth_db=null_depth_db, winding_number=float(winding),
+        ring_alpha_deg=np.degrees(alpha), ring_phase_deg=np.degrees(np.unwrap(phases)),
+    )

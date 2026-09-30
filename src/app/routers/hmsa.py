@@ -24,6 +24,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from pydantic import BaseModel
 
 from ...basis_functions import MeshSettings
+from ...dispersion.analytic_tm0 import tm0_beta
 from ...dispersion.hfss_table import read_dispersion_csv
 from ...dispersion.mom_scaffold import square_patch_unit_cell
 from ...dispersion.sheet_model import build_dispersion_table_from_sheet_model
@@ -33,11 +34,18 @@ from ...fields.fld_parser import read_fld
 from ...fields.reference_field_grid import (
     check_grid_regularity,
     compare_beta_to_tm0,
+    feed_position_from_nan_mask,
     fld_to_reference_field_grid,
     radial_beta_profile,
 )
 from ...hologram.hmsa_synthesis import synthesize_formulation_a, synthesize_formulation_b
-from ...labels import FEED_REGION_MASKED, reference_field_frequency_mismatch
+from ...hologram.multi_feed import (
+    FeedSpec,
+    feed_xy_m_for_beams,
+    segmented_reference_field_and_regions,
+    superposed_reference_field,
+)
+from ...labels import FEED_REGION_MASKED, feed_position_auto_detected, reference_field_frequency_mismatch
 from ...library_sweep import build_square_library_cells, write_square_library_json
 from ...materials import Metal, Substrate
 from ...phase8b.object_wave import Beam
@@ -168,10 +176,32 @@ class ObjectBeamSpec(BaseModel):
     weight_imag: float = 0.0
     initial_phase_deg: float = 0.0
     polarization: str = "x"
+    # PHASE15 Part A/D: desired_polarization/oam_charge map directly onto phase8b.object_wave.Beam's
+    # OWN same-named fields (default "natural"/0 -- today's uncompensated behaviour, unchanged for
+    # any caller that omits these, e.g. every pre-Phase-15 request body). "polarization" above is
+    # the pre-existing, unrelated field (Sec. 18's Ex/Ey split) and is untouched.
+    desired_polarization: str = "natural"
+    oam_charge: int = 0
+    feed_index: int = 0  # PHASE15 Part C: which entry of HmsaSynthesizeRequest.feeds this beam's
+    # current is radial about (ignored for a single-feed design, body.feeds is None)
+
+
+class FeedSpecRequest(BaseModel):
+    """PHASE15 Part C: one feed of a multi-feed design -- `upload_id` (an `.fld` already analyzed
+    via `/api/hmsa/upload_field`) for a real measured feed, or omitted for an analytic TM0
+    cylindrical reference about `(x_mm, y_mm)` (needs the board's own eps_r/thickness, already
+    known from the request's substrate-independent synthesize call -- PHASE15 Part C's
+    `HmsaSynthesizeRequest` carries them only when `feeds` is given, see its own docstring)."""
+
+    x_mm: float
+    y_mm: float
+    amplitude_real: float = 1.0
+    amplitude_imag: float = 0.0
+    upload_id: "str | None" = None
 
 
 class HmsaSynthesizeRequest(BaseModel):
-    upload_id: str
+    upload_id: "str | None" = None  # None only when `feeds` is given (PHASE15 Part C)
     formulation: str  # "A" | "B"
     frequency_hz: float
     object_beams: "list[ObjectBeamSpec]"
@@ -181,6 +211,16 @@ class HmsaSynthesizeRequest(BaseModel):
     x_avg_ohm: "float | None" = None  # formulation A
     modulation_index: "float | None" = None  # formulation A
     rescale_to_beta_bar: bool = True  # formulation A (PHASE13B B3); on by default per the brief
+    # PHASE15 Part A
+    cp_phase_offset_deg: float = 0.0
+    multiplexing: str = "full_aperture"  # "full_aperture" | "sectors"
+    feed_x_mm: "float | None" = None  # explicit feed-position override; None -> auto-detect from
+    feed_y_mm: "float | None" = None  # the uploaded field's own NaN/singularity (Part A's default)
+    # PHASE15 Part C: multi-feed. None (default) is the ordinary single-`upload_id` path, unchanged.
+    feeds: "list[FeedSpecRequest] | None" = None
+    multi_feed_strategy: str = "superposition"  # "superposition" | "segmentation"
+    multi_feed_eps_r: "float | None" = None  # needed only for an analytic-TM0 feed (no upload_id)
+    multi_feed_thickness_mm: "float | None" = None
 
 
 def _load_reference_field(upload_id):
@@ -232,6 +272,64 @@ def _mask_feed_region(reference_field):
     return replace(reference_field, phase_deg=filled), masked_indices
 
 
+def _resolve_feed_xy_m(body, raw_reference_field, raw_nan_mask):
+    """PHASE15 Part A: "Feed position (x0, y0) is taken from the reference field's NaN/singularity
+    location (default) or entered." Explicit `feed_x_mm`/`feed_y_mm` wins; otherwise
+    `feed_position_from_nan_mask` on the RAW (pre-fill) field, matching where the actual monopole
+    sits. Returns `(x0_m, y0_m, label_or_None)`."""
+    if body["feed_x_mm"] is not None and body["feed_y_mm"] is not None:
+        return body["feed_x_mm"] * 1e-3, body["feed_y_mm"] * 1e-3, None
+    x0_m, y0_m = feed_position_from_nan_mask(raw_reference_field.x_m, raw_reference_field.y_m, raw_nan_mask)
+    label = feed_position_auto_detected(x0_m * 1e3, y0_m * 1e3) if raw_nan_mask.any() else None
+    return x0_m, y0_m, label
+
+
+def _resolve_multi_feed(body, frequency_hz):
+    """PHASE15 Part C: builds the combined `ReferenceFieldGrid` (superposed or segmented) plus the
+    per-beam `(x0_sequence, y0_sequence)` `feed_xy_m` `synthesize_formulation_a/b` needs, from
+    `HmsaSynthesizeRequest.feeds`. Returns `(reference_field, feed_xy_m, feeds_mm, extra_labels)`.
+    `x_m`/`y_m` for the combined field are taken from the FIRST feed that carries an uploaded
+    field (real grid extent); if no feed has an upload, a grid must come from elsewhere -- this
+    project's only real reference-field export is phase-only per-feed, so at least one upload is
+    required in that case (raised as `config_invalid`, not a silent synthetic grid guess)."""
+    feed_specs = []
+    k_swg = None
+    uploaded_grid = None
+    for f in body["feeds"]:
+        rf = None
+        if f["upload_id"] is not None:
+            rf = _load_reference_field(f["upload_id"])
+            rf, _masked = _mask_feed_region(rf)
+            if uploaded_grid is None:
+                uploaded_grid = (rf.x_m, rf.y_m)
+        feed_specs.append(
+            FeedSpec(x_m=f["x_mm"] * 1e-3, y_m=f["y_mm"] * 1e-3, amplitude=complex(f["amplitude_real"], f["amplitude_imag"]), reference_field=rf)
+        )
+    if any(fs.reference_field is None for fs in feed_specs):
+        if body["multi_feed_eps_r"] is None or body["multi_feed_thickness_mm"] is None:
+            raise config_invalid(
+                message="a feed with no upload_id needs multi_feed_eps_r/multi_feed_thickness_mm "
+                "for its analytic TM0 reference"
+            )
+        k_swg = tm0_beta(frequency_hz, body["multi_feed_eps_r"], body["multi_feed_thickness_mm"] * 1e-3)
+    if uploaded_grid is None:
+        raise config_invalid(message="multi-feed synthesis needs at least one feed with an uploaded reference field")
+    x_m, y_m = uploaded_grid
+
+    if body["multi_feed_strategy"] == "superposition":
+        combined = superposed_reference_field(feed_specs, x_m, y_m, k_swg)
+    elif body["multi_feed_strategy"] == "segmentation":
+        combined, _owner = segmented_reference_field_and_regions(feed_specs, x_m, y_m, k_swg)
+    else:
+        raise config_invalid(message=f"multi_feed_strategy must be 'superposition' or 'segmentation', got {body['multi_feed_strategy']!r}")
+
+    feed_indices = [b["feed_index"] for b in body["object_beams"]]
+    feed_xy_m = feed_xy_m_for_beams(feed_specs, feed_indices)
+    feeds_mm = [(fs.x_m * 1e3, fs.y_m * 1e3) for fs in feed_specs]
+    extra_labels = (f"MULTI_FEED_{body['multi_feed_strategy'].upper()}({len(feed_specs)} feeds)",)
+    return combined, feed_xy_m, feeds_mm, extra_labels
+
+
 def _layout_preview_url(job, x_m, y_m, value, label, title):
     """13C Step 3's "hologram/layout preview" PNG. Best-effort: a plotting failure must never
     fail a real synthesis result the user is waiting on."""
@@ -267,17 +365,35 @@ def _geometry_param_to_mm(gp, period_mm):
 
 
 def _run_synthesize_job(job, body: dict):
-    reference_field = _load_reference_field(body["upload_id"])
-    reference_field, masked_cells = _mask_feed_region(reference_field)
-    extra_labels = (FEED_REGION_MASKED,) if masked_cells else ()
-    upload_frequency_hz = _uploaded_frequency_hz(body["upload_id"])
-    if upload_frequency_hz is not None and not np.isclose(
-        upload_frequency_hz, body["frequency_hz"], rtol=_FREQUENCY_MISMATCH_RTOL
-    ):
-        # PHASE13B A3(b): the review found synthesis silently accepted a frequency that didn't
-        # match the uploaded field's own (10.54 GHz field, 12.5 GHz synthesis -> 100% unreachable,
-        # no explanation) -- carry the mismatch forward as a loud label rather than a silent no-op.
-        extra_labels = (*extra_labels, reference_field_frequency_mismatch(upload_frequency_hz, body["frequency_hz"]))
+    extra_labels = ()
+    masked_cells = []
+    feeds_mm = None
+
+    if body["feeds"] is not None:
+        reference_field, feed_xy_m, feeds_mm, multi_feed_labels = _resolve_multi_feed(body, body["frequency_hz"])
+        extra_labels = (*extra_labels, *multi_feed_labels)
+    else:
+        if body["upload_id"] is None:
+            raise config_invalid(message="synthesize needs either upload_id or feeds")
+        raw_reference_field = _load_reference_field(body["upload_id"])
+        raw_nan_mask = np.isnan(raw_reference_field.phase())
+        reference_field, masked_cells = _mask_feed_region(raw_reference_field)
+        if masked_cells:
+            extra_labels = (*extra_labels, FEED_REGION_MASKED)
+        upload_frequency_hz = _uploaded_frequency_hz(body["upload_id"])
+        if upload_frequency_hz is not None and not np.isclose(
+            upload_frequency_hz, body["frequency_hz"], rtol=_FREQUENCY_MISMATCH_RTOL
+        ):
+            # PHASE13B A3(b): the review found synthesis silently accepted a frequency that didn't
+            # match the uploaded field's own (10.54 GHz field, 12.5 GHz synthesis -> 100% unreachable,
+            # no explanation) -- carry the mismatch forward as a loud label rather than a silent no-op.
+            extra_labels = (*extra_labels, reference_field_frequency_mismatch(upload_frequency_hz, body["frequency_hz"]))
+        x0_m, y0_m, feed_label = _resolve_feed_xy_m(body, raw_reference_field, raw_nan_mask)
+        feed_xy_m = (x0_m, y0_m)
+        feeds_mm = [(x0_m * 1e3, y0_m * 1e3)]
+        if feed_label is not None:
+            extra_labels = (*extra_labels, feed_label)
+
     beams = [
         Beam(
             theta_deg=b["theta_deg"],
@@ -285,6 +401,8 @@ def _run_synthesize_job(job, body: dict):
             weight=complex(b["weight_real"], b["weight_imag"]),
             initial_phase_deg=b["initial_phase_deg"],
             polarization=b["polarization"],
+            desired_polarization=b["desired_polarization"],
+            oam_charge=b["oam_charge"],
         )
         for b in body["object_beams"]
     ]
@@ -304,6 +422,9 @@ def _run_synthesize_job(job, body: dict):
             dispersion_table,
             period_m,
             rescale_to_beta_bar=body["rescale_to_beta_bar"],
+            feed_xy_m=feed_xy_m,
+            cp_phase_offset_deg=body["cp_phase_offset_deg"],
+            multiplexing=body["multiplexing"],
         )
         layout_png_url = _layout_preview_url(
             job, design.x_m, design.y_m, design.control_map, "reactance (ohm)", "Impedance modulation"
@@ -346,6 +467,7 @@ def _run_synthesize_job(job, body: dict):
             "aperture_field_imag": aperture_field.imag,
             "period_mm": body["period_mm"],
             "layout_png_url": layout_png_url,
+            "feeds_mm": feeds_mm,  # PHASE15 Part C: feed marker(s), for Export/Pattern
         }
 
     if body["formulation"] == "B":
@@ -362,7 +484,10 @@ def _run_synthesize_job(job, body: dict):
                 f"library {body['library_id']!r} has no record at {body['frequency_hz'] / 1e9:g} GHz; "
                 f"available: {available_ghz} GHz"
             )
-        design = synthesize_formulation_b(reference_field, beams, body["frequency_hz"], candidates, period_m)
+        design = synthesize_formulation_b(
+            reference_field, beams, body["frequency_hz"], candidates, period_m,
+            feed_xy_m=feed_xy_m, cp_phase_offset_deg=body["cp_phase_offset_deg"], multiplexing=body["multiplexing"],
+        )
 
         if any(c.achieved_value is None for c in design.cells):
             # PHASE13B A5: never hand Pattern prediction a placeholder (achieved_value defaulting
@@ -415,6 +540,7 @@ def _run_synthesize_job(job, body: dict):
             "aperture_field_real": aperture_field.real,
             "aperture_field_imag": aperture_field.imag,
             "layout_png_url": layout_png_url,
+            "feeds_mm": feeds_mm,  # PHASE15 Part C: feed marker(s), for Export/Pattern
         }
 
     raise config_invalid(message=f"formulation must be 'A' or 'B', got {body['formulation']!r}")

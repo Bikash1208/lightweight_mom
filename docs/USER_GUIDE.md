@@ -4,7 +4,9 @@
 Everything below runs locally; nothing leaves the machine. A real walk-through's own screenshots
 are checked into `docs/screenshots/`; fresh ones after Part 3D's fixes were not captured — no
 browser or screenshot tool was available in the session that made those fixes (see
-`docs/phases/PHASE13_WEBAPP.md` "Known limitations").
+`docs/phases/PHASE13_WEBAPP.md` "Known limitations"). Phase 15's own screenshots (`phase15_*.png`)
+ARE fresh, from a real walk-through of the Phase 15 UI (polarization/beam-type columns, Advanced's
+new sections, Step 3's per-beam table) run against the live app in a real browser.
 
 The home page is a 3-step HMSA (holographic metasurface antenna) designer wizard — the app's main
 flow. Everything else (single unit-cell solves, a standalone reflectarray designer, full-wave
@@ -25,8 +27,38 @@ interpolated and reported (`FEED_REGION_MASKED`), never silently dropped.
 
 ### Step 2 — Beams & board
 
+![Beam table with Polarization and Beam type columns](screenshots/phase15_step2_polarization_beam_type.png)
+
 **Beams**: 1–4 object-beam directions (θ, φ in degrees) with a relative power in dB (converted to
-a field-amplitude weight internally — power ratio = amplitude²).
+a field-amplitude weight internally — power ratio = amplitude²), plus (Phase 15 Part A) a
+**Polarization** and a **Beam type**:
+
+- **Polarization**: Natural (no compensation — this board's monopole feed has a *radial* surface
+  current, so "Natural" radiates a **vortex**, not a pencil beam, at that direction; see the "Why"
+  note under the beam table and Step 3's measurement of it), Horizontal, Vertical, Slant ±45°,
+  LHCP, RHCP. Choosing anything other than Natural adds a per-beam hologram compensation term so
+  the aperture radiates a genuine pencil beam of that polarization instead (derived in
+  `docs/phases/PHASE15_POLARIZATION_VORTEX.md`).
+- **Beam type**: Pencil (the default for a new row) or Vortex, with an OAM charge field that
+  appears once Vortex is selected — deliberately requests an orbital-angular-momentum beam instead
+  of (or on top of) the polarization choice.
+
+**Advanced** also gains (Phase 15):
+
+![Advanced: Multiplexing, Feeds, Leakage decay, Pattern model](screenshots/phase15_step2_advanced_multiplexing_feeds.png)
+
+- **Multiplexing** (2+ beams): Full aperture (default — every beam's hologram term is superposed
+  everywhere) or Sectors (each beam owns its own wedge of the board, nearest to its own φ).
+- **Feeds** (Part C, "multipole" support): Single (from Step 1's own uploaded file, the default) or
+  Multiple — add feed rows (position, amplitude, phase; each optionally with its own uploaded
+  `.fld`, or an analytic surface-wave model using the board's own εr/thickness otherwise), a
+  Superposition/Segmentation combination strategy, and a per-beam "Feed" column that appears in the
+  beam table once 2+ feeds exist.
+- **Leakage decay**: an optional exponential amplitude taper `e^(-αρ)` along the aperture (off by
+  default; you supply α — this project does not derive it from the board's own data).
+- **Pattern model** (used in Step 3): Vector (default) — the real polarization/vortex-aware model,
+  via this board's own layered Green's function — or Scalar (legacy), the pre-Phase-15 model kept
+  for comparison (no polarization information).
 
 **Board**: a substrate preset (Rogers RT/duroid 5880, RO4003C, FR-4, or Custom εr/loss
 tangent/thickness) and a cell size (a suggested value appears once Step 1's field is analyzed,
@@ -88,6 +120,21 @@ currently produces — Formulation A's (eigenmode/impedance) achieved quantity i
 reactance, not a geometry pair, so it doesn't chain into Export. Pattern prediction works for both
 methods (Phase 14 Part C added an aperture field for the eigenmode method too, a documented
 leaky-wave-perturbation approximation).
+
+**Phase 15 Part D — per-beam results (vector pattern model).** With Pattern model left at Vector
+(the default), Step 3 also shows co-pol/cross-pol u–v maps (for the first beam's own polarization,
+if it has one) and a **per-beam results table**: direction, polarization requested, beam type
+requested, XPD (dB), null depth (dB) and phase winding number at that direction — measured against
+the actual computed pattern, not assumed — plus a plain-language note and a phase-around-beam-axis
+plot (a straight line for a pencil beam, a full sawtooth cycle per unit of winding for a vortex).
+
+![Per-beam results: a compensated beam (clean pencil) next to a deliberately-requested vortex](screenshots/phase15_step3_per_beam_results.png)
+
+In the screenshot above, beam 1 (RHCP, Pencil) measures a clean 19.8 dB XPD pencil beam with ~0 dB
+null depth and ~0 winding at its own direction; beam 2 (Horizontal, Vortex charge 1, same
+direction) measures a genuine −30 dB null with winding ≈ +1.0 — the vortex is requested and then
+independently *measured*, matching the design. Scalar (legacy) skips all of this (`per_beam` is
+empty) and reproduces the pre-Phase-15 pattern exactly.
 
 ## More tools
 
@@ -206,3 +253,11 @@ excluded from git — `docs/DEVELOPING.md`); the others need your own export.
   sweep's own progress callback does not check it at all yet.
 - **The export package's `project_record.json` captures results, not full inputs** — enough to
   inspect what a run produced, not to resume editing the original beam/board form.
+- **(Phase 15) Multi-feed pattern prediction uses only the first feed's position** for the
+  aperture current's own radial direction (ρ̂) — exact for a single-feed design (every feed marker
+  the Advanced "Feeds" section defaults to); a full per-region ρ̂ model for multi-feed pattern
+  PREDICTION specifically is not implemented (synthesis itself already assigns each beam its own
+  feed correctly, Part A/C). See `docs/phases/PHASE15_POLARIZATION_VORTEX.md`.
+- **(Phase 15) Explicit feed-position override has no Step 2 UI control** — the backend accepts
+  `feed_x_mm`/`feed_y_mm` (`/api/hmsa/synthesize`), but the app always auto-detects from the
+  uploaded field's own NaN/singularity; script against the API directly if you need to override it.

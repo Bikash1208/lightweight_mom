@@ -76,9 +76,13 @@
           </div>
         </label>
         <table id="beams-table">
-          <thead><tr><th>Beam</th><th>&theta; (&deg;)</th><th>&phi; (&deg;)</th><th>Relative power (dB)</th></tr></thead>
+          <thead><tr><th>Beam</th><th>&theta; (&deg;)</th><th>&phi; (&deg;)</th><th>Relative power (dB)</th>
+          <th>Polarization</th><th>Beam type</th></tr></thead>
           <tbody></tbody>
         </table>
+        <p class="status">"Natural" keeps the monopole's own radial surface current uncompensated
+        &mdash; on this board that radiates a vortex (doughnut), not a pencil beam, at that
+        direction (see Step 3). Pick a polarization to get a genuine pencil beam there instead.</p>
 
         <h3>Board</h3>
         <label>Substrate
@@ -157,6 +161,62 @@
             </div>
             <label><input type="checkbox" id="rescale-beta-bar" checked style="width:auto;display:inline;margin-right:0.4rem" />
               Correct the reference wave to the board's own wavenumber (recommended)</label>
+
+            <h3>Multiplexing</h3>
+            <label>How the beams share the aperture (2+ beams)
+              <div class="segmented" id="multiplexing-control">
+                <button type="button" data-multiplexing="full_aperture" class="active">Full aperture</button>
+                <button type="button" data-multiplexing="sectors">Sectors</button>
+              </div>
+            </label>
+            <p class="status">Full aperture: every beam's hologram is superposed everywhere
+            (the default). Sectors: each beam owns its own wedge of the board (nearest to its own
+            &phi;) &mdash; typically higher gain per beam, fewer simultaneous beams per cell.</p>
+
+            <h3>Feeds</h3>
+            <label>Feed count
+              <div class="segmented" id="feed-count-control">
+                <button type="button" data-n="1" class="active">Single (from Step 1's file)</button>
+                <button type="button" data-n="2">Multiple</button>
+              </div>
+            </label>
+            <div id="multi-feed-fields" style="display:none">
+              <table id="feeds-table">
+                <thead><tr><th>Feed</th><th>x (mm)</th><th>y (mm)</th><th>Amplitude</th><th>Phase (&deg;)</th><th>Source</th></tr></thead>
+                <tbody></tbody>
+              </table>
+              <button type="button" class="secondary" id="add-feed-btn">Add feed</button>
+              <label>Combination strategy
+                <div class="segmented" id="multi-feed-strategy-control">
+                  <button type="button" data-strategy="superposition" class="active">Superposition</button>
+                  <button type="button" data-strategy="segmentation">Segmentation</button>
+                </div>
+              </label>
+              <p class="status">Superposition sums every feed's field (paper eq. 5) &mdash; simple,
+              but typically costs some aperture efficiency vs. a single feed. Segmentation gives
+              each feed its own region of the board instead. Assign each beam to a feed with the
+              "Feed" column in the beam table above (added automatically once 2+ feeds exist).</p>
+              <p class="status">A feed with no uploaded file uses an analytic surface-wave model
+              (needs the board's own &epsilon;r/thickness, already set above).</p>
+            </div>
+
+            <h3>Leakage decay</h3>
+            <label><input type="checkbox" id="leakage-decay-enabled" style="width:auto;display:inline;margin-right:0.4rem" />
+              Apply an exponential amplitude taper along the aperture</label>
+            <div id="leakage-decay-fields" style="display:none">
+              <label>&alpha; <span class="unit">1/m, e^(-&alpha;&rho|) &mdash; you supply this (not computed by this project)</span>
+                <input type="number" step="any" id="leakage-alpha" value="0" />
+              </label>
+            </div>
+
+            <h3>Pattern model (Step 3)</h3>
+            <div class="segmented" id="pattern-model-control">
+              <button type="button" data-model="vector" class="active">Vector (default)</button>
+              <button type="button" data-model="scalar">Scalar (legacy)</button>
+            </div>
+            <p class="status">Vector uses this board's own layered Green's function and shows
+            polarization/vortex &mdash; what HFSS actually shows. Scalar is the pre-Phase-15 model
+            (no polarization information), kept for comparison.</p>
           </div>
         </details>
 
@@ -183,8 +243,19 @@
         <p id="patch-layout-link" style="display:none"><a id="patch-layout-a" href="#" download="patch_layout.png">Download patch layout (PNG)</a></p>
         <h3>Radiation pattern</h3>
         <img class="plot" id="pattern-img" alt="Radiation pattern (u-v map)" />
+        <div id="copol-crosspol-imgs" style="display:none">
+          <img class="plot" id="copol-img" alt="Co-polar pattern" />
+          <img class="plot" id="crosspol-img" alt="Cross-polar pattern" />
+        </div>
         <div id="cuts-imgs"></div>
         <ul class="result-list" id="results-list"></ul>
+        <h3 id="per-beam-heading" style="display:none">Per-beam results</h3>
+        <table id="per-beam-table" style="display:none">
+          <thead><tr><th>Beam</th><th>Direction</th><th>Polarization requested</th><th>Beam type requested</th>
+          <th>XPD (dB)</th><th>Null depth (dB)</th><th>Winding</th><th>Note</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div id="per-beam-phase-imgs"></div>
       </div>
 
       <div class="card" id="export-card" style="display:none">
@@ -208,7 +279,11 @@
       apertureMm: null,
       betaMeasured: null,
       dispersionId: null,
-      beams: [{ theta_deg: 20, phi_deg: 0, power_db: 0 }],
+      // PHASE15 Part D: a new beam row defaults to Horizontal/Pencil (a UI convenience default --
+      // the backend's own default, left unsent, is "natural"/Pencil, which is what keeps an old
+      // saved request bit-identical; see hologram.polarization_compensation's own docstring).
+      beams: [{ theta_deg: 20, phi_deg: 0, power_db: 0, desired_polarization: "hp", oam_charge: 0, feed_index: 0 }],
+      feeds: [],  // PHASE15 Part C: empty = single feed from Step 1's own uploaded file
       synthesizeJobId: null,
       synthesizeResult: null,
       patternJobId: null,
@@ -353,18 +428,56 @@
       document.getElementById(id).addEventListener("change", onBoardChanged);
     });
 
+    // PHASE15 Part A/D: app-facing polarization labels -> the backend's Beam.desired_polarization
+    // values (hologram.polarization_compensation.DESIRED_POLARIZATIONS via object_wave.Beam).
+    const POLARIZATION_OPTIONS = [
+      ["natural", "Natural (no compensation)"],
+      ["hp", "Horizontal"],
+      ["vp", "Vertical"],
+      ["slant_p45", "Slant +45°"],
+      ["slant_m45", "Slant −45°"],
+      ["lhcp", "LHCP"],
+      ["rhcp", "RHCP"],
+    ];
+
     function renderBeamsTable(n) {
-      state.beams = Array.from({ length: n }, (_, i) => state.beams[i] || { theta_deg: 20, phi_deg: i * 180, power_db: 0 });
+      state.beams = Array.from({ length: n }, (_, i) => state.beams[i] || {
+        theta_deg: 20, phi_deg: i * 180, power_db: 0, desired_polarization: "hp", oam_charge: 0, feed_index: 0,
+      });
       const tbody = document.querySelector("#beams-table tbody");
       tbody.innerHTML = "";
+      const showFeedCol = state.feeds.length > 1;
+      document.querySelectorAll("#beams-table .feed-col").forEach((el) => { el.style.display = showFeedCol ? "" : "none"; });
       state.beams.forEach((b, i) => {
         const tr = document.createElement("tr");
+        const polOptions = POLARIZATION_OPTIONS.map(
+          ([v, label]) => `<option value="${v}" ${v === b.desired_polarization ? "selected" : ""}>${label}</option>`
+        ).join("");
+        const isVortex = b.oam_charge !== 0;
+        const feedOptions = state.feeds.length
+          ? state.feeds.map((_f, fi) => `<option value="${fi}" ${fi === b.feed_index ? "selected" : ""}>${fi + 1}</option>`).join("")
+          : `<option value="0">1</option>`;
         tr.innerHTML =
           `<td>${i + 1}</td>` +
           `<td><input type="number" step="any" class="beam-theta" value="${b.theta_deg}" /></td>` +
           `<td><input type="number" step="any" class="beam-phi" value="${b.phi_deg}" /></td>` +
-          `<td><input type="number" step="any" class="beam-power" value="${b.power_db}" /></td>`;
+          `<td><input type="number" step="any" class="beam-power" value="${b.power_db}" /></td>` +
+          `<td><select class="beam-polarization">${polOptions}</select></td>` +
+          `<td><div class="segmented beam-type-control">` +
+            `<button type="button" data-type="pencil" class="${isVortex ? "" : "active"}">Pencil</button>` +
+            `<button type="button" data-type="vortex" class="${isVortex ? "active" : ""}">Vortex</button>` +
+          `</div>` +
+          `<input type="number" step="1" class="beam-oam-charge" value="${b.oam_charge || 1}" style="width:4rem;display:${isVortex ? "inline-block" : "none"}" /></td>` +
+          `<td class="feed-col" style="display:${showFeedCol ? "" : "none"}"><select class="beam-feed-index">${feedOptions}</select></td>`;
         tbody.appendChild(tr);
+        tr.querySelector(".beam-type-control").addEventListener("click", (ev) => {
+          const btn = ev.target.closest("button");
+          if (!btn) return;
+          tr.querySelectorAll(".beam-type-control button").forEach((x) => x.classList.remove("active"));
+          btn.classList.add("active");
+          const chargeInput = tr.querySelector(".beam-oam-charge");
+          chargeInput.style.display = btn.dataset.type === "vortex" ? "inline-block" : "none";
+        });
       });
     }
     renderBeamsTable(1);
@@ -373,16 +486,23 @@
       if (!btn) return;
       document.querySelectorAll("#n-beams-control button").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
+      state.beams = readBeamsFromTable();
       renderBeamsTable(parseInt(btn.dataset.n, 10));
     });
 
     function readBeamsFromTable() {
       const rows = document.querySelectorAll("#beams-table tbody tr");
-      return Array.from(rows).map((tr) => ({
-        theta_deg: parseFloat(tr.querySelector(".beam-theta").value),
-        phi_deg: parseFloat(tr.querySelector(".beam-phi").value),
-        power_db: parseFloat(tr.querySelector(".beam-power").value),
-      }));
+      return Array.from(rows).map((tr) => {
+        const isVortex = tr.querySelector(".beam-type-control button[data-type='vortex']").classList.contains("active");
+        return {
+          theta_deg: parseFloat(tr.querySelector(".beam-theta").value),
+          phi_deg: parseFloat(tr.querySelector(".beam-phi").value),
+          power_db: parseFloat(tr.querySelector(".beam-power").value),
+          desired_polarization: tr.querySelector(".beam-polarization").value,
+          oam_charge: isVortex ? parseInt(tr.querySelector(".beam-oam-charge").value, 10) || 0 : 0,
+          feed_index: parseInt(tr.querySelector(".beam-feed-index").value, 10) || 0,
+        };
+      });
     }
 
     document.getElementById("unlock-frequency-btn").addEventListener("click", () => {
@@ -554,6 +674,124 @@
     }
     updateMethodVisibility();
 
+    // ---------------------------------------------------- PHASE15 Part A: multiplexing
+    const multiplexingControl = document.getElementById("multiplexing-control");
+    multiplexingControl.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button");
+      if (!btn) return;
+      multiplexingControl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+    });
+    function currentMultiplexing() {
+      return multiplexingControl.querySelector("button.active")?.dataset.multiplexing || "full_aperture";
+    }
+
+    // ---------------------------------------------------- PHASE15 Part C: feeds
+    function renderFeedsTable() {
+      const tbody = document.querySelector("#feeds-table tbody");
+      tbody.innerHTML = "";
+      state.feeds.forEach((f, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          `<td>${i + 1}</td>` +
+          `<td><input type="number" step="any" class="feed-x" value="${f.x_mm}" /></td>` +
+          `<td><input type="number" step="any" class="feed-y" value="${f.y_mm}" /></td>` +
+          `<td><input type="number" step="any" class="feed-amp" value="${f.amplitude}" min="0" /></td>` +
+          `<td><input type="number" step="any" class="feed-phase" value="${f.phase_deg}" /></td>` +
+          `<td>${f.uploadId ? "Uploaded file" : "Analytic (board model)"} ` +
+            `<button type="button" class="secondary feed-upload-btn" style="margin-top:0">Upload .fld</button>` +
+            `<input type="file" class="feed-upload-input" accept=".fld" style="display:none" /></td>`;
+        tbody.appendChild(tr);
+        const fileInput = tr.querySelector(".feed-upload-input");
+        tr.querySelector(".feed-upload-btn").addEventListener("click", () => fileInput.click());
+        fileInput.addEventListener("change", async () => {
+          const file = fileInput.files[0];
+          if (!file) return;
+          const form = new FormData();
+          form.append("phase_file", file);
+          try {
+            const data = await LWMOM.postForm("/api/hmsa/upload_field", form);
+            state.feeds[i].uploadId = data.upload_id;
+            renderFeedsTable();
+          } catch (err) {
+            alert(`Could not upload this feed's file: ${err.message}`);
+          }
+        });
+      });
+    }
+    document.getElementById("add-feed-btn").addEventListener("click", () => {
+      state.beams = readBeamsFromTable();  // preserve the user's own edits before re-rendering
+      state.feeds.push({ x_mm: 0, y_mm: 0, amplitude: 1, phase_deg: 0, uploadId: null });
+      renderFeedsTable();
+      renderBeamsTable(state.beams.length);
+    });
+    const feedCountControl = document.getElementById("feed-count-control");
+    feedCountControl.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button");
+      if (!btn) return;
+      feedCountControl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.beams = readBeamsFromTable();  // preserve the user's own edits before re-rendering
+      const multi = btn.dataset.n === "2";
+      document.getElementById("multi-feed-fields").style.display = multi ? "block" : "none";
+      if (multi && state.feeds.length < 2) {
+        state.feeds = [
+          { x_mm: -10, y_mm: 0, amplitude: 1, phase_deg: 0, uploadId: null },
+          { x_mm: 10, y_mm: 0, amplitude: 1, phase_deg: 0, uploadId: null },
+        ];
+        renderFeedsTable();
+      } else if (!multi) {
+        state.feeds = [];
+      }
+      renderBeamsTable(state.beams.length);
+    });
+    function readFeedsFromTable() {
+      const rows = document.querySelectorAll("#feeds-table tbody tr");
+      return Array.from(rows).map((tr, i) => {
+        const ampMag = parseFloat(tr.querySelector(".feed-amp").value);
+        const phaseRad = (parseFloat(tr.querySelector(".feed-phase").value) * Math.PI) / 180.0;
+        return {
+          x_mm: parseFloat(tr.querySelector(".feed-x").value),
+          y_mm: parseFloat(tr.querySelector(".feed-y").value),
+          amplitude_real: ampMag * Math.cos(phaseRad),
+          amplitude_imag: ampMag * Math.sin(phaseRad),
+          upload_id: state.feeds[i]?.uploadId || null,
+        };
+      });
+    }
+    const multiFeedStrategyControl = document.getElementById("multi-feed-strategy-control");
+    multiFeedStrategyControl.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button");
+      if (!btn) return;
+      multiFeedStrategyControl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+    });
+    function currentMultiFeedStrategy() {
+      return multiFeedStrategyControl.querySelector("button.active")?.dataset.strategy || "superposition";
+    }
+
+    // ---------------------------------------------------- PHASE15 Part B: leakage decay
+    document.getElementById("leakage-decay-enabled").addEventListener("change", (ev) => {
+      document.getElementById("leakage-decay-fields").style.display = ev.target.checked ? "block" : "none";
+    });
+    function currentLeakageAlpha() {
+      return document.getElementById("leakage-decay-enabled").checked
+        ? parseFloat(document.getElementById("leakage-alpha").value) || 0.0
+        : 0.0;
+    }
+
+    // ---------------------------------------------------- PHASE15 Part B: pattern model
+    const patternModelControl = document.getElementById("pattern-model-control");
+    patternModelControl.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button");
+      if (!btn) return;
+      patternModelControl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+    });
+    function currentPatternModel() {
+      return patternModelControl.querySelector("button.active")?.dataset.model || "vector";
+    }
+
     document.getElementById("to-step-3-btn").addEventListener("click", async () => {
       const statusEl = document.getElementById("step2-status");
       state.beams = readBeamsFromTable();
@@ -600,9 +838,18 @@
           object_beams: state.beams.map((b) => ({
             theta_deg: b.theta_deg, phi_deg: b.phi_deg,
             weight_real: Math.sqrt(Math.pow(10, b.power_db / 10)), weight_imag: 0.0,
+            desired_polarization: b.desired_polarization, oam_charge: b.oam_charge, feed_index: b.feed_index,
           })),
           period_mm: cellSizeMm,
+          multiplexing: currentMultiplexing(),
         };
+        if (state.feeds.length > 1) {
+          body.feeds = readFeedsFromTable();
+          body.multi_feed_strategy = currentMultiFeedStrategy();
+          body.multi_feed_eps_r = substrate.eps_r;
+          body.multi_feed_thickness_mm = substrate.thickness_mm;
+          delete body.upload_id;  // PHASE15 Part C: the combined field comes from body.feeds instead
+        }
 
         if (method === "reflection") {
           statusEl.textContent = "Preparing the board's unit-cell data...";
@@ -724,11 +971,23 @@
     async function runPatternAndExport(synthResult) {
       const statusEl = document.getElementById("run-status");
       statusEl.textContent = "Predicting the radiation pattern...";
+      const substrate = currentSubstrate();
+      const patternModel = currentPatternModel();
       const patternBody = {
         source_job_id: state.synthesizeJobId,
         frequency_hz: parseFloat(document.getElementById("synthesis-frequency-ghz").value) * 1e9,
-        beams: state.beams.map((b) => ({ theta_deg: b.theta_deg, phi_deg: b.phi_deg })),
+        beams: state.beams.map((b) => ({
+          theta_deg: b.theta_deg, phi_deg: b.phi_deg,
+          desired_polarization: b.desired_polarization, oam_charge: b.oam_charge,
+        })),
+        pattern_model: patternModel,
       };
+      if (patternModel === "vector") {
+        patternBody.eps_r = substrate.eps_r;
+        patternBody.tan_delta = substrate.tan_delta;
+        patternBody.thickness_mm = substrate.thickness_mm;
+        patternBody.leakage_alpha_per_m = currentLeakageAlpha();
+      }
       const patternSubmitted = await LWMOM.postJson("/api/pattern/predict", patternBody);
       state.patternJobId = patternSubmitted.id;
       const patternJob = await LWMOM.pollJob(patternSubmitted.id, {
@@ -737,6 +996,14 @@
       if (patternJob.status === "done") {
         const r = patternJob.result;
         if (r.pattern_uv_png_url) document.getElementById("pattern-img").src = r.pattern_uv_png_url;
+        const copolBlockEl = document.getElementById("copol-crosspol-imgs");
+        if (r.pattern_uv_copol_png_url && r.pattern_uv_crosspol_png_url) {
+          document.getElementById("copol-img").src = r.pattern_uv_copol_png_url;
+          document.getElementById("crosspol-img").src = r.pattern_uv_crosspol_png_url;
+          copolBlockEl.style.display = "block";
+        } else {
+          copolBlockEl.style.display = "none";
+        }
         const cutsEl = document.getElementById("cuts-imgs");
         cutsEl.innerHTML = "";
         (r.pattern_cut_png_urls || []).forEach((url) => {
@@ -750,9 +1017,46 @@
           li.innerHTML = `<span class="k">${k}</span><span>${v}</span>`;
           list.appendChild(li);
         };
-        addRow("Directivity", `${r.result.directivity_estimate_dbi.toFixed(1)} dBi`);
-        addRow("Side-lobe level", `${r.result.sll_db.toFixed(1)} dB`);
-        addRow("Achieved beam direction", `θ=${r.result.main_beam_theta_deg.toFixed(1)}°, φ=${r.result.main_beam_phi_deg.toFixed(1)}°`);
+        if (r.result.directivity_estimate_dbi != null) addRow("Directivity", `${r.result.directivity_estimate_dbi.toFixed(1)} dBi`);
+        if (r.result.sll_db != null) addRow("Side-lobe level", `${r.result.sll_db.toFixed(1)} dB`);
+        if (r.result.main_beam_theta_deg != null) {
+          addRow("Achieved beam direction", `θ=${r.result.main_beam_theta_deg.toFixed(1)}°, φ=${r.result.main_beam_phi_deg.toFixed(1)}°`);
+        }
+
+        // PHASE15 Part D: per-beam breakdown table (vector model only -- the scalar model has no
+        // polarization/vortex information to report, r.per_beam is [] there).
+        const perBeamHeading = document.getElementById("per-beam-heading");
+        const perBeamTable = document.getElementById("per-beam-table");
+        const perBeamPhaseEl = document.getElementById("per-beam-phase-imgs");
+        const perBeamTbody = perBeamTable.querySelector("tbody");
+        perBeamTbody.innerHTML = "";
+        perBeamPhaseEl.innerHTML = "";
+        if (r.per_beam && r.per_beam.length) {
+          perBeamHeading.style.display = "block";
+          perBeamTable.style.display = "table";
+          r.per_beam.forEach((entry, i) => {
+            const tr = document.createElement("tr");
+            const polLabel = POLARIZATION_OPTIONS.find(([v]) => v === entry.desired_polarization)?.[1] || entry.desired_polarization;
+            tr.innerHTML =
+              `<td>${i + 1}</td>` +
+              `<td>θ=${entry.theta_deg.toFixed(1)}°, φ=${entry.phi_deg.toFixed(1)}°</td>` +
+              `<td>${polLabel}</td>` +
+              `<td>${entry.beam_type_requested}</td>` +
+              `<td>${entry.xpd_db != null ? entry.xpd_db.toFixed(1) : "—"}</td>` +
+              `<td>${entry.null_depth_db.toFixed(1)}</td>` +
+              `<td>${entry.winding_number.toFixed(2)}</td>` +
+              `<td>${entry.note}</td>`;
+            perBeamTbody.appendChild(tr);
+            if (entry.phase_ring_png_url) {
+              const img = document.createElement("img");
+              img.className = "plot"; img.src = entry.phase_ring_png_url;
+              perBeamPhaseEl.appendChild(img);
+            }
+          });
+        } else {
+          perBeamHeading.style.display = "none";
+          perBeamTable.style.display = "none";
+        }
       }
 
       // Both methods now carry an exportable per-cell L/W assignment (surface-wave: square patches).

@@ -113,12 +113,16 @@ def _run_export_job(job, source_result, params):
     metal = Metal()
     period_m = params["period_mm"] * 1e-3
     out_dir = job_output_dir(job.id)
+    # PHASE15 Part C: mark each feed location in the STEP/README, if the source design recorded
+    # one (every pre-Phase-15 synthesize result has no "feeds_mm" key -- .get(...) keeps this
+    # export byte-for-byte unaffected for those).
+    feeds_mm = source_result.get("feeds_mm")
     if params["include_step"]:
         n = len(lw_grid_m)
         with _StepProgressEstimator(job, estimate_step_export_seconds(n), n):
-            result = export_array(lw_grid_m, period_m, period_m, substrate, metal, out_dir, include_step=True)
+            result = export_array(lw_grid_m, period_m, period_m, substrate, metal, out_dir, include_step=True, feeds_mm=feeds_mm)
     else:
-        result = export_array(lw_grid_m, period_m, period_m, substrate, metal, out_dir, include_step=False)
+        result = export_array(lw_grid_m, period_m, period_m, substrate, metal, out_dir, include_step=False, feeds_mm=feeds_mm)
 
     def _download(path):
         if path is None:

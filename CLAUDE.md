@@ -11,7 +11,7 @@ Guidance for Claude when working in this repository.
 geometry → periodic MoM (Z I = V) → surface current → fields → S11/S21 → unit-cell database → holographic synthesis
 ```
 
-Status: Phases 1–11, 12A, 12B, 12C, 12D, 13 and 14 done. Phase 13 curated the repo to production-push grade (git,
+Status: Phases 1–11, 12A, 12B, 12C, 12D, 13, 14 and 15 done. Phase 13 curated the repo to production-push grade (git,
 `pyproject.toml`, `docs/` layout, logging/diagnostics/error-taxonomy/validation-labels/run-manifest, ruff, CI) and
 built a local web app (FastAPI backend, static HTML/vanilla-JS frontend) that produces reflectarray/HMSA designs NOW,
 labelled honestly, rather than waiting on the open questions below. A live UI review (`docs/briefs/
@@ -31,6 +31,15 @@ replacement (`src/dispersion/sheet_model.py`) extracts a patch-sheet admittance 
 normal-incidence S11 and solves the closed-form transverse-resonance condition for beta. The app now offers a
 "Design method" choice (surface-wave/eigenmode vs. reflection-phase) in Step 2; on the walk-through case the
 eigenmode method reaches all 5476 cells vs. reflection-phase's 4006 unreachable.
+Phase 15 (`docs/phases/PHASE15_POLARIZATION_VORTEX.md`) fixed a root-cause physics gap the user found in HFSS: every
+monopole-fed design radiated a vortex (doughnut) beam because the feed's radial surface current, decomposed into
+circular polarization, carries an OAM term the app's scalar pattern model couldn't see. Added a per-beam
+polarization-compensation term in hologram synthesis (Beam.desired_polarization/oam_charge — natural/LHCP/RHCP/HP/
+VP/slant, plus deliberate OAM vortex requests; `src/hologram/polarization_compensation.py`), a genuine VECTOR
+far-field model via this project's own layered Green's function (`src/pattern/vector_aperture_pattern.py`, replacing
+the scalar Fourier-transform model for HMSA — measures null depth + phase winding, not just assumes vortex vs
+pencil), multi-feed ("multipole") reference-field construction (superposition/segmentation,
+`src/hologram/multi_feed.py`), and the corresponding Step 2/3 app UI, verified live in a real browser.
 Holographic synthesis, geometry inversion and full-array STEP export remain recorded as **LOCKED** scientific
 findings (see `README.md` "Before Phase 13's app is trusted for a real design → still open") even though the app now
 produces designs/exports anyway per the user's explicit Phase 13 decision — every such output carries these labels.

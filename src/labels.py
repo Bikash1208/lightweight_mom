@@ -24,6 +24,10 @@ REFERENCE_AMPLITUDE_ASSUMED_UNIFORM = "REFERENCE_AMPLITUDE_ASSUMED_UNIFORM"
 FEED_REGION_MASKED = "FEED_REGION_MASKED"
 GEOMETRY_INVERSION_LOCKED = "GEOMETRY_INVERSION_LOCKED"
 STEP_EXPORT_LOCKED = "STEP_EXPORT_LOCKED"
+VECTOR_PATTERN_MODEL = "VECTOR_PATTERN_MODEL"  # PHASE15 Part B: far field via the layered Green's
+# function (reciprocity), not the scalar free-space Fourier transform
+SCALAR_PATTERN_MODEL_LEGACY = "SCALAR_PATTERN_MODEL_LEGACY"  # PHASE15 Part B: the pre-Phase-15
+# scalar model, kept for comparison/regression -- no polarization/vortex information
 
 
 def hfss_residual_at_resonance(residual_deg):
@@ -57,6 +61,12 @@ def reference_wave_not_rescaled(worst_case_error_deg):
     is the accumulated phase error ~ |beta_bar - beta_slab|*r_max this could cost at the aperture
     edge."""
     return f"REFERENCE_WAVE_NOT_RESCALED(~{worst_case_error_deg:.0f}deg accumulated error possible)"
+
+
+def feed_position_auto_detected(x_mm, y_mm):
+    """PHASE15 Part A: the feed position used for polarization compensation was taken from the
+    uploaded reference field's own NaN/singularity location, not entered by the user."""
+    return f"FEED_POSITION_AUTO_DETECTED({x_mm:.1f}mm,{y_mm:.1f}mm)"
 
 
 def reference_field_frequency_mismatch(upload_frequency_hz, synthesis_frequency_hz):

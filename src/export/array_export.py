@@ -47,6 +47,27 @@ PHASE14_EIGENMODE.md`) against a real HFSS eigenmode solve, for one representati
 - Record beta (or the effective index n_eff = beta/k0) at the same patch size and frequency this
   project's own table used, and compare via the CSV upload path (Step 2 Advanced, "Upload an HFSS
   eigenmode table") or `dispersion.hfss_table.read_dispersion_csv` directly.
+
+## Checking polarization and vortex/OAM (Phase 15) against HFSS
+
+This project's own vector pattern model (`pattern.vector_aperture_pattern`,
+`docs/phases/PHASE15_POLARIZATION_VORTEX.md`) predicts polarization and OAM winding from this same
+board's own current; to check a real far-field solve against it:
+
+- **Polarization / axial ratio / XPD**: HFSS's Far Field Report supports Ludwig-3 co/cross-pol
+  directly ("rE_CoPolar"/"rE_XPolar" report quantities, or "Realized Gain" split by the same), and
+  circular components as "rE_RHCP"/"rE_LHCP" (or "RealizedGainRHCP"/"RealizedGainLHCP") -- plot
+  either against theta/phi and compare peak direction, XPD (co/cross ratio in dB) and axial ratio
+  against this project's own per-beam table (Step 3, or `pattern.vector_aperture_pattern.
+  copol_component`/`circular_components` directly).
+- **Vortex / OAM**: plot the PHASE (not magnitude) of "rE_RHCP" or "rE_LHCP" on a small circle
+  around the beam direction (a theta/phi or u/v cut a few degrees wide, centered on the beam) --
+  a flat phase is a pencil beam; N full 360 deg cycles around that circle is an OAM vortex of
+  charge N, the same measurement `pattern.vector_aperture_pattern.measure_vortex_winding` makes on
+  this project's own predicted pattern. A deep on-axis null in that same RHCP/LHCP magnitude (tens
+  of dB below the pattern's own peak) is the other half of the same signature -- "Natural"
+  polarization on this monopole-fed board is EXPECTED to show both (the vortex this phase's brief
+  is about); a compensated polarization (HP/VP/slant/RHCP/LHCP, Part A) is designed to show neither.
 """
 
 

@@ -112,6 +112,20 @@ def pattern_cut_png(theta_deg, phi_deg, power_db, cut_phi_deg, path, title=None)
     return _save_png(fig, path)
 
 
+def vortex_phase_ring_png(alpha_deg, phase_deg, winding_number, path, title=None):
+    """PHASE15 Part B: phase of the beam's own co-pol component around a small ring encircling its
+    direction (`pattern.vector_aperture_pattern.measure_vortex_winding`'s own ring) -- a straight
+    line means a pencil beam (no singularity inside), a `winding_number` full cycles of sawtooth
+    means a vortex of that OAM charge. `alpha_deg`/`phase_deg`: same length 1-D arrays, the ring
+    parameter and the unwrapped phase at each sample."""
+    fig, ax = _new_fig(figsize=(5.5, 3.5))
+    ax.plot(alpha_deg, phase_deg, color=_ACCENT, linewidth=1.6, marker=".", markersize=3)
+    ax.set_xlabel("angle around the beam direction (°)")
+    ax.set_ylabel("phase (°)")
+    ax.set_title(title or f"Phase around beam axis -- winding {winding_number:+.1f}")
+    return _save_png(fig, path)
+
+
 _COPPER = "#E8893A"
 _COPPER_EDGE = "#C8651B"
 _SUBSTRATE = "#D9DADC"

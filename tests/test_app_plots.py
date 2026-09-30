@@ -55,3 +55,10 @@ def test_pattern_cut_png(tmp_path):
     power_db = -np.abs(theta_grid - 20.0)
     path = plots.pattern_cut_png(theta_grid, phi_grid, power_db, cut_phi_deg=0.0, path=tmp_path / "cut.png")
     _assert_real_png(path)
+
+
+def test_vortex_phase_ring_png(tmp_path):
+    alpha_deg = np.linspace(0.0, 360.0, 72, endpoint=False)
+    phase_deg = np.degrees(np.radians(alpha_deg))  # a winding=+1 sawtooth
+    path = plots.vortex_phase_ring_png(alpha_deg, phase_deg, winding_number=1.0, path=tmp_path / "vortex.png")
+    _assert_real_png(path)

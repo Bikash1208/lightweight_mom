@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..errors import cad_unavailable
-from ..phase12c.grounded_supercell import build_grounded_supercell
 
 _HFSS_README_TEMPLATE = """\
 # HFSS setup notes for this export (lessons from Phase 12, PHASE12D_ADDENDUM.md)
@@ -97,11 +96,18 @@ def write_layout_files(lw_grid_m, output_dir, basename="layout"):
     return csv_path, json_path
 
 
-def write_hfss_readme(output_dir, basename="HFSS_README"):
+def write_hfss_readme(output_dir, basename="HFSS_README", feeds_mm=None):
+    """`feeds_mm` (PHASE15 Part C, multi-feed): an optional iterable of `(x_mm, y_mm)` feed
+    positions, appended as a note -- `None` (default, every pre-Phase-15 call site) reproduces the
+    template byte-identically."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / f"{basename}.md"
-    path.write_text(_HFSS_README_TEMPLATE)
+    text = _HFSS_README_TEMPLATE
+    if feeds_mm:
+        lines = "\n".join(f"- Feed {i}: ({x:.3f}, {y:.3f}) mm" for i, (x, y) in enumerate(feeds_mm))
+        text += f"\n## Feed locations (PHASE15 Part C, multi-feed)\n\n{lines}\n"
+    path.write_text(text)
     return path
 
 
@@ -153,12 +159,23 @@ def write_layout_dxf(lw_grid_m, period_x_m, period_y_m, output_dir, basename="la
     return path
 
 
-def write_hfss_step(lw_grid_m, period_x_m, period_y_m, thickness_m, path, decimals=3, size_step_mm=None):
+_FEED_MARKER_RADIUS_MM = 0.3  # small enough to never overlap a real patch, visible enough to find
+
+
+def write_hfss_step(
+    lw_grid_m, period_x_m, period_y_m, thickness_m, path, decimals=3, size_step_mm=None, feeds_mm=None
+):
     """HFSS-friendly full-array STEP: every coordinate/size rounded in millimetres (no
     3.9999999999 values from m->mm float conversion), patches and ground as zero-thickness sheets
     (the solver's own model; no 35 um solids that force tiny mesh elements), all patches in ONE
     body ("Patches") so a single Perfect E assignment covers them. Optional `size_step_mm`
-    snaps patch sizes to a fabrication grid (fewer distinct geometries)."""
+    snaps patch sizes to a fabrication grid (fewer distinct geometries). `feeds_mm` (PHASE15 Part
+    C, multi-feed): an optional iterable of `(x_mm, y_mm)` feed positions -- `None` (default,
+    every pre-Phase-15 call site) adds no "Feeds" body, reproducing the export byte-identically;
+    given, each feed gets a small flat marker disk (`_FEED_MARKER_RADIUS_MM`) at z=0 in its own
+    body, so a feed's location is visible/selectable in HFSS without guessing from a coordinate
+    note alone (the brief: "a small marker sheet or a note... with coordinates" -- this module
+    does both, the note in `write_hfss_readme`)."""
     import cadquery as cq
 
     def r(v):
@@ -198,35 +215,43 @@ def write_hfss_step(lw_grid_m, period_x_m, period_y_m, thickness_m, path, decima
     asm.add(substrate, name="Substrate", color=cq.Color(0.85, 0.85, 0.86, 1.0))
     asm.add(patches, name="Patches", color=cq.Color(0.91, 0.54, 0.23, 1.0))
     asm.add(ground, name="Ground", color=cq.Color(0.60, 0.60, 0.65, 1.0))
+    if feeds_mm:
+        markers = [
+            cq.Face.makeFromWires(cq.Wire.makeCircle(_FEED_MARKER_RADIUS_MM, cq.Vector(r(fx), r(fy), 0), cq.Vector(0, 0, 1)))
+            for fx, fy in feeds_mm
+        ]
+        asm.add(cq.Compound.makeCompound(markers), name="Feeds", color=cq.Color(0.0, 0.7, 0.2, 1.0))
     asm.export(str(path), exportType="STEP")
     return {"n_patches": len(faces), "board_mm": (lx, ly, h)}
 
 
 def export_array(
-    lw_grid_m, period_x_m, period_y_m, substrate, metal, output_dir, metal_export_thickness_m=None, include_step=True
+    lw_grid_m, period_x_m, period_y_m, substrate, metal, output_dir, metal_export_thickness_m=None,
+    include_step=True, feeds_mm=None,
 ):
     """Writes layout CSV/JSON, an HFSS-ready README, and (if `include_step` and the `cad` extra is
     installed) a full-array STEP file. Raises `errors.LwmomError` (`CAD_UNAVAILABLE`) only if
     `include_step=True` and cadquery is missing -- layout/README are always written first, so a
-    partial result is never silently lost."""
+    partial result is never silently lost. `feeds_mm` (PHASE15 Part C): optional `(x_mm, y_mm)`
+    feed positions, passed through to `write_hfss_readme`/`write_hfss_step`; `None` (default)
+    reproduces every pre-Phase-15 export byte-identically."""
     import time
 
     n = _validate_square(lw_grid_m)
     output_dir = Path(output_dir)
     csv_path, json_path = write_layout_files(lw_grid_m, output_dir)
     dxf_path = write_layout_dxf(lw_grid_m, period_x_m, period_y_m, output_dir)
-    readme_path = write_hfss_readme(output_dir)
+    readme_path = write_hfss_readme(output_dir, feeds_mm=feeds_mm)
 
     step_path, file_size, export_time = None, None, None
     if include_step:
-        from .. import cad_export
 
         step_path = output_dir / "array.step"
         t0 = time.perf_counter()
         try:
             # HFSS-clean geometry: mm values rounded to 1 um (no 3.99999999 float artefacts),
             # zero-thickness patch/ground sheets (the solver's own model), one "Patches" body.
-            write_hfss_step(lw_grid_m, period_x_m, period_y_m, substrate.thickness, step_path)
+            write_hfss_step(lw_grid_m, period_x_m, period_y_m, substrate.thickness, step_path, feeds_mm=feeds_mm)
         except ImportError as exc:
             raise cad_unavailable(exc, message="STEP export needs the optional 'cad' extra (cadquery)") from exc
         export_time = time.perf_counter() - t0

@@ -84,6 +84,12 @@ DISPERSION_MOM_NO_CLEAR_MODE = ErrorCode(
     "Try a different geometry_param, direction, or mesh; or import an HFSS eigenmode table instead "
     "(dispersion.hfss_table.read_dispersion_csv, label DISPERSION_FROM_HFSS).",
 )
+DISPERSION_SHEET_MODEL_NO_ROOT = ErrorCode(
+    "DISPERSION_SHEET_MODEL_NO_ROOT",
+    "The homogenized sheet-admittance transverse-resonance equation has no bound-mode root for this cell/frequency.",
+    "This patch size may be too close to the cell boundary (mesh-limited) or past this model's usable "
+    "range; try a different geometry_param, a finer mesh, or import an HFSS eigenmode table instead.",
+)
 
 ALL_ERROR_CODES = (
     CONFIG_INVALID,
@@ -98,6 +104,7 @@ ALL_ERROR_CODES = (
     IMPEDANCE_UNREACHABLE,
     LIBRARY_FREQUENCY_UNAVAILABLE,
     DISPERSION_MOM_NO_CLEAR_MODE,
+    DISPERSION_SHEET_MODEL_NO_ROOT,
 )
 
 
@@ -180,3 +187,7 @@ def library_frequency_unavailable(message=None):
 
 def dispersion_mom_no_clear_mode(message=None):
     return LwmomError(DISPERSION_MOM_NO_CLEAR_MODE, message=message)
+
+
+def dispersion_sheet_model_no_root(message=None):
+    return LwmomError(DISPERSION_SHEET_MODEL_NO_ROOT, message=message)

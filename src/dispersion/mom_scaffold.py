@@ -1,42 +1,43 @@
-"""Part 3D: a MoM surface-wave-eigenmode capability, real -- this module used to be a scaffold
-only (see git history); PHASE13D_POLISH_AND_PHYSICS.md asks for the real thing since it's "the
-most valuable physics item left."
+"""Part 3D / Phase 14 Part A (research item, kept for the record -- NOT the production dispersion
+source; see `sheet_model.py` for that): a direct MoM surface-wave-eigenmode search over the
+periodic array's own Z(kx, ky), and why it does not deliver a patch-loading-dependent dispersion
+curve at any mesh size this project can afford to run interactively.
 
-**The physics**: a surface-wave eigenmode of the periodic grounded unit cell is a solution of this
-project's own Z(kx, ky) I = 0 (source-free) system at a REAL (kx, ky) with kt = sqrt(kx^2+ky^2) > k0
-(bound, non-radiating -- `CONVENTIONS.md`'s `Im(kz) <= 0` branch choice already fixes the right
-analytic continuation for kt > k0, since `Im(kz)` there is already negative/decaying by the
-existing branch rule; no new sign convention needed). At such a point `Z` is (numerically) singular.
-`Z` is assembled from `green.floquet_dyads`, whose (m, n) = (0, 0) term is the layered medium's own
-spectral Green's dyad `LayeredGreenFunction.spectral_dyad` evaluated *exactly* at (kx0, ky0) -- and
-that dyad has a REAL POLE at the bare grounded slab's own TM0 propagation constant (a textbook
-transverse-resonance result; `dispersion.analytic_tm0` is its closed form). That pole enters `Z`
-additively through the (0, 0) Floquet term, so **the largest singular value of Z(kt) blows up right
-at the surface-wave pole** -- confirmed numerically (see `tests/test_dispersion_mom.py`): scanning
-`svd(Z(kt))[0]` (not the smallest singular value / a raw `det`, both far noisier for a matrix this
-size) across `sparameters.surface_wave_interval` shows a sharp, well-separated peak whose location
-matches `analytic_tm0.tm0_beta` to <0.001 rad/m for a lightly-loaded cell, and shifts away from the
-bare value as the patch loads the surface harder (a real, physical loading effect, not fitting
-noise). This is the found beta; `find_surface_wave_mode` reports it, plus an equivalent surface
-reactance derived from it (below), plus a `prominence` (peak / scan-median) so a flat, ambiguous
-scan is refused rather than silently trusted -- "no silent fallbacks" (`errors.py`).
+**The physics attempted**: a surface-wave eigenmode of the periodic grounded unit cell is (in
+principle) a solution of this project's own Z(kx, ky) I = 0 (source-free) system at a REAL
+(kx, ky) with kt = sqrt(kx^2+ky^2) > k0 (bound, non-radiating -- `CONVENTIONS.md`'s `Im(kz) <= 0`
+branch choice already fixes the right analytic continuation for kt > k0, no new sign convention
+needed). `find_surface_wave_mode` below scans the largest singular value of the assembled Z(kt)
+across `sparameters.surface_wave_interval` and refines the peak -- **and that peak is real and
+well-validated, but it is always the BARE-SLAB Green's-function pole, not a loaded-array mode**.
 
-**Surface reactance**: `DispersionTable` (from `hfss_table.py`, reused here) needs both
-`beta_rad_per_m` and `x_s_ohm` per geometry sample (`hologram/hmsa_synthesis.py`'s Formulation A
-looks both up). There is no separate "reactance solve" here -- X_s is *defined* from the found beta
-via the same transverse-resonance circuit the bare-slab TM0 pole itself satisfies: the loaded cell's
-pole condition is `Y_TM,bare(beta) + Y_s = 0` (a shunt sheet admittance `Y_s` added at the patch
-plane, in parallel with the bare slab's own TM admittance, transverse-resonating at the LOADED
-beta rather than the bare one) -- so `Y_s = -Y_TM,bare(beta_loaded)`, i.e. `X_s = -1/Im(Y_s)`, using
-`green.equivalent_impedances` (no patch) at the *found, loaded* beta. This is the standard
-equivalent-sheet-impedance picture (Sievenpiper 1999; Fong et al. 2010) applied self-consistently
-to this project's own full-wave pole, not a separate approximation.
+**Why, and how this was found (Phase 14's own investigation)**: `Z` is assembled from
+`green.floquet_dyads`, whose (m, n) = (0, 0) term is the layered medium's own spectral Green's dyad
+`LayeredGreenFunction.spectral_dyad` evaluated *exactly* at (kx0, ky0) -- and that dyad has a REAL
+POLE at the bare grounded slab's own TM0 propagation constant (`dispersion.analytic_tm0`'s closed
+form), *independent of any patch pattern*, since the dyad is a property of the layered medium
+alone. That pole enters `Z` additively, so `svd(Z(kt))[0]` spikes there regardless of loading. Phase
+14 tested this explicitly at patch fill fractions 0.05-0.92 and two mesh resolutions (8x8/floquet 5
+and, to rule out a resolution artifact, 16x16/floquet 10, n_unknowns=264): **the peak's location is
+identical to `analytic_tm0.tm0_beta` to numerical precision at every loading tested, and the
+smallest singular value of Z(kt) -- where a genuine loaded-array eigenvalue, det(Z)=0, would show
+up -- stays completely flat across the whole Brillouin zone, at every loading, at both mesh sizes**.
+There is no numerically resolvable secondary feature to find at accessible mesh sizes; the original
+claim in this docstring (removed) that the peak "shifts away from the bare value as the patch loads
+the surface harder" was an over-read of one, as it turned out non-representative, weak-loading data
+point, corrected here. Locating a periodic loaded structure's own eigenmode immediately next to a
+Green's-function pole is a known hard problem in the numerical-electromagnetics literature (usually
+addressed with complex-plane contour-integral eigensolvers, e.g. Beyn's algorithm, not a real-axis
+scalar scan) -- genuinely out of scope for this project to solve from scratch.
 
-**Validation, per the original scaffold's requirement 3**: `tests/test_dispersion_mom.py` checks a
-lightly-loaded (small-patch) grounded cell's found beta against `analytic_tm0.tm0_beta` before
-trusting this on a real patterned cell -- required before this label may read anything but
-`EXPERIMENTAL`; it keeps that label regardless (a young numerical method, one board/frequency
-combination's worth of validation), per `labels.EXPERIMENTAL`'s own definition.
+**What's still real and kept**: `find_surface_wave_mode` correctly and robustly finds the bare-slab
+TM0 pole (validated to <0.001 rad/m against `analytic_tm0.tm0_beta`, `tests/test_dispersion_mom.py`)
+-- useful as a MoM-based cross-check of the analytic bare-slab value on a real, discretized cell,
+and as the honest starting point for a future, more capable eigensolver. It is NOT used to build a
+per-geometry dispersion table for Formulation A; `sheet_model.py`'s homogenized-sheet-admittance
+model does that instead, using a completely different (and validated) technique that never needs to
+resolve a pole-adjacent eigenvalue at all. `square_patch_unit_cell` below is still shared with that
+module (a plain geometry helper, unrelated to the failed part).
 """
 
 import math

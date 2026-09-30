@@ -194,15 +194,17 @@ otherwise. New pieces the wizard needed that didn't exist in Part 3:
 - **`POST /api/hmsa/ensure_library`**: the wizard never sends the user to a separate Library page.
   Builds (or reuses, both across requests via the job cache and across app restarts via the
   persisted library registry) a small square-patch (L=W only) library for the chosen board and
-  frequency automatically. Uses a fixed 6-point L family and a fixed 32-cell mesh — not an
-  alignment search (`discretization.smallest_aligned_cells` could need an unboundedly large mesh
-  for an arbitrary period/L combination) and not a resonance search. **Known consequence, measured
-  while building the walkthrough test**: for a board/frequency combination whose resonance falls
-  between two of those 6 points, phase coverage can be poor (the app's own
+  frequency automatically. Used a fixed 6-point L family and a fixed 32-cell mesh in this Part —
+  not an alignment search (`discretization.smallest_aligned_cells` could need an unboundedly large
+  mesh for an arbitrary period/L combination) and not a resonance search. **Known consequence,
+  measured while building the walkthrough test**: for a board/frequency combination whose
+  resonance falls between two of those 6 points, phase coverage can be poor (the app's own
   `PHASE_COVERAGE_SHORTFALL` label fires) — e.g. an 8 mm period at 10.54 GHz showed mean/RMS/max
   phase error 33°/41°/82° with 686 of 1369 cells unreachable in one run. This is reported honestly
-  (the label is the point), not hidden, but a denser or resonance-aware auto-built library would
-  give real designs a better starting point — a documented follow-up, not attempted here.
+  (the label is the point), not hidden. **Part 3D (below) made this denser and mesh-aligned by
+  construction** — the underlying limited *range* of the phase-lookup method itself (not the
+  library's resolution within that range) is what Phase 14 addresses with a genuinely different
+  control variable.
 - **`POST /api/export/package`**: bundles a completed export job's STEP/layout/README, an optional
   pattern job's plots, and a `project_record.json` (the export/pattern RESULTS, not the full
   original request bodies — the app does not currently persist those anywhere a later request
@@ -218,16 +220,103 @@ otherwise. New pieces the wizard needed that didn't exist in Part 3:
 - **Aperture size is shown read-only**, pre-filled from the uploaded field's own extent — 13C asked
   for it "editable," but no cropping/resizing logic exists for the reference field or the synthesis
   grid; claiming it was freely editable would have been a UI that didn't do what it said.
-- **No fast/accurate (mesh-extrapolated) toggle for the auto-built library** — every auto-built cell
-  uses the same fixed mesh `ensure_library` always has; Richardson-extrapolated library cells would
-  need ~4x the solves per L value, not implemented.
+- **No fast/accurate toggle for the auto-built library** (Part 3D added one — a finer-mesh tier,
+  not Richardson extrapolation, which the auto-library builder still does not support for a
+  multi-size sweep).
 - **DXF export was never built** (`ezdxf` is not a project dependency, despite an old docstring
-  claiming otherwise, now corrected) — STEP + CSV/JSON layout only.
+  claiming otherwise, now corrected) — STEP + CSV/JSON layout only. (Part 3D added a real,
+  hand-written DXF export, no new dependency.)
 - **Screenshots of each step (light/dark) were not captured** — 13C's "Tests & done-when" asks for
   them saved to `docs/screenshots/`; no browser or screenshot tool was available in this session
   either (same constraint Part 3 itself recorded — see "Verified against the app" above). The
   `curl`/`urllib`-driven live-server methodology substituted for it, as it did in Part 3, and caught
-  the aperture-field bug above.
+  the aperture-field bug above. (Part 3D's own brief was itself written from a real human
+  walk-through with real screenshots, now checked into `docs/screenshots/` — see Part 3D below for
+  what the fixes changed and what's still unverified visually.)
+
+## Part 3D — live walk-through findings, fixed (`docs/briefs/PHASE13D_POLISH_AND_PHYSICS.md`)
+
+A real human walk-through (light mode, 800 px pane; the exact case used throughout this section:
+monopole field, 151x151, 2 mm grid, β=224.96 rad/m, 10.54 GHz; RT/duroid 5880, 1.575 mm; 1 beam
+θ=20°, φ=0°; 4 mm cells) found real screenshots (`docs/screenshots/`, checked into git) and a
+punch list of physics bugs and wording problems. Fixed, in the order the brief asked for:
+
+**1. The MoM surface-wave dispersion capability is real now, not a scaffold.**
+`src/dispersion/mom_scaffold.py` (kept its filename; the module itself is no longer a scaffold)
+finds the periodic grounded cell's real TM surface-wave pole by scanning the largest singular
+value of the assembled Z(kt) across `sparameters.surface_wave_interval` — a sharp, well-separated
+peak (the bare-slab Green's-function pole enters additively through the (0,0) Floquet harmonic, so
+it drives `||Z||` to a genuine spike, not the smallest-singular-value dip the original scaffold's
+plan expected and this session's own experimentation found unreliable). Validated against
+`analytic_tm0.tm0_beta`: **224.9792 rad/m found vs. 224.9797 analytic (0.0005 rad/m off) for a
+lightly-loaded cell**, `tests/test_dispersion_mom.py`. Derives an equivalent surface reactance from
+the found β via the transverse-resonance circuit (`Y_s = -Y_TM,bare(β_loaded)`) and builds a
+`DispersionTable` in the same shape `hfss_table.py` produces, so Formulation A can use either
+source interchangeably. Still labelled `EXPERIMENTAL` (young, self-validated on one board) —
+**Phase 14 replaces this module with a purpose-built eigenmode solver** (Brillouin-zone-aware,
+isotropy-checked, mesh-convergence-checked) per its own brief; this module was Part 3D's
+scoped-down, "prove the physics works" version, not the final one.
+
+**2. Pattern side-lobe level was wrong for two independent reasons.** The bare aperture radiation
+integral (`phase8e.beam_reconstruction.far_field_pattern`) has no element/obliquity factor by
+design (its own docstring: "not new radiation-integral physics"); for a tangential aperture field
+on an infinite PEC ground plane (this stack) the standard result carries a `cos(theta)` factor —
+without it, power didn't fall off toward grazing incidence, showing an unphysical bright ring near
+the horizon. Separately, `detect_local_maxima` didn't wrap the periodic phi axis at its array
+boundary, so a beam sitting exactly on the phi=0 grid line had its phi=(360-step) neighbour read as
+`-inf` instead of the true (very high) main-lobe value one grid step away — a false "sidelobe" one
+grid step from the real peak. Together: the walk-through's own case went from a reported SLL of
+**-1.5 dB (wrong) to -10.9 dB**, matching the true first sidelobe visible on the φ=0 cut.
+`tests/test_pattern_aperture_pattern.py` has synthetic regression tests for each cause separately;
+`tests/test_app_wizard_walkthrough.py` asserts `sll_db < -5.0` on the walk-through's own case.
+
+**3. STEP export is opt-in, not automatic, and reports estimated progress.** It was always built
+as part of the same synthesis chain the pattern prediction ran in — for the walk-through's 5476
+cells that took 126 s and produced a 103 MB file, with the UI showing "Done." (from the pattern
+step) before it actually finished. Now: `export.array_export.write_layout_dxf` (new, see item 4)
+and CSV/JSON/README build automatically and fast; STEP is a separate "Build STEP (CAD)" action with
+its own status line. While it runs, `app/routers/export.py`'s `_StepProgressEstimator` ticks a
+percentage from Phase 12D's own measured runtimes (N=6/8/12 ≈ 7/18.5/124 s), log-log interpolated —
+labelled "estimated" everywhere it's shown, never claimed as measured.
+
+**4. Zip contents.** `export.array_export.write_layout_dxf` is a real, hand-written DXF R12 file
+(`LINE` entities only, valid since R12; no new dependency — `ezdxf` still isn't one) of the patch
+layer, always generated alongside CSV/JSON/README. Separately, `export/package`'s zip silently
+never got the layout PNG: `_run_package_job` read `layout_png_url` from the *export* job's own
+result, which never had that key (the layout preview is generated by the *synthesis* job) — fixed
+by adding an optional `synthesize_job_id` to `ExportPackageRequest`. `tests/
+test_app_wizard_walkthrough.py`'s zip-contents assertion now requires `layout.dxf` and
+`layout.png` alongside what it already checked.
+
+**5. Auto-library: denser and mesh-aligned by construction.** The old 6-point L family (fractions
+0.15, 0.30, ..., 0.90 of the period) was not a multiple of the mesh pitch (`2 / cells`), so it
+carried staircasing error on top of being sparse. The new family (13 points, step 0.0625) is a
+multiple of `2 / AUTO_LIBRARY_MESH_CELLS_BY_ACCURACY[accuracy]` by construction — no
+`smallest_aligned_cells` search needed. `ensure_library` also gained an `accuracy: "fast" |
+"accurate"` field (a finer 48-cell mesh, not Richardson extrapolation, which the multi-size
+sweep still doesn't support) and now reports `phase_span_deg`/`resolution_deg` so Step 2 can show
+the achievable range before the user commits to a synthesis run. **This did not fix the walk-
+through's underlying complaint**: the phase-lookup method's achievable range is a property of the
+control variable itself (reflection phase at small electrical size), not the library's sampling
+density — the walk-through case still shows ~36° of range and ~74% of cells unreachable with 4 mm
+cells on this board, same order of magnitude as before. Phase 14's eigenmode/impedance method is
+the actual fix; Part 3D's job was to stop hiding the range problem and stop adding staircasing
+error on top of it, not to solve it.
+
+**Wording** (`src/app/static/`, all pages): brand name "HMSA Designer" in every page's title/header
+(the Python package stays `lwmom`); every " -- " in visible UI text became "; " or an em dash;
+bracket-style units (`[GHz]`, `[deg]`) became bare suffixes or "(°)"; plot titles/axes in
+`app/plots.py` now read "φ = 0° cut" / "θ (°)"; the magnitude and dispersion file inputs use the
+same styled button (`.file-picker` in `style.css`) as the phase dropzone instead of the browser's
+native grey button; the Step 1 TM0 line now names the actual substrate (`substrateDisplayName()`)
+and re-runs silently whenever Step 2's board changes; Step 2 hides the impedance-method-only
+fields (mean reactance/modulation depth) when no dispersion table is uploaded, suggests a cell size
+from the board's own measured wavenumber (`cells_per_fringe`'s relation run in reverse), and shows
+the achievable phase-lookup range as soon as board/cell size/frequency are set; Step 3 shows a
+one-line design summary before running, is titled "Design antenna," explains *why* when more than
+20% of cells can't reach their required value (a plain sentence naming the cause and the fix, not
+just the `PHASE_COVERAGE_SHORTFALL` label), and gives the "Experimental." chip a specific reason
+in the phase-lookup-method context; the stepper has real top margin now.
 
 ## Validation labels actually produced by the app
 

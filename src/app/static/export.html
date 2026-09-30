@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Export -- lwmom</title>
+  <title>Export — HMSA Designer</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header>
-    <h1><a href="/">lwmom</a></h1>
+    <h1><a href="/">HMSA Designer</a></h1>
     <nav>
       <a href="/">Home</a>
       <a href="/more_tools.html">More tools</a>
@@ -17,9 +17,9 @@
   <main>
     <div class="card">
       <h2>Export</h2>
-      <p>Full-array STEP (grounded designs only -- a square N x N array, the underlying
-      supercell builder's own limitation), layout CSV/JSON, and an HFSS-ready README with the
-      Phase 12 setup lessons baked in.</p>
+      <p>Full-array STEP (grounded designs only: a square N x N array, the underlying supercell
+      builder's own limitation), layout CSV/JSON/DXF, and an HFSS-ready README with the Phase 12
+      setup lessons baked in.</p>
       <form id="form">
         <label>Design job id (from the Reflectarray or HMSA page)
           <input type="text" name="source_job_id" id="source-job-id" required />
@@ -83,6 +83,7 @@
           ["STEP file", result.step_download_url],
           ["Layout CSV", result.layout_csv_download_url],
           ["Layout JSON", result.layout_json_download_url],
+          ["Layout DXF", result.layout_dxf_download_url],
           ["HFSS README", result.readme_download_url],
         ]) {
           if (!url) continue;

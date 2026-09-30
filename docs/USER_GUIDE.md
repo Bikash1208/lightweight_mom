@@ -1,8 +1,9 @@
-# User guide — the local web app
+# User guide — the local web app ("HMSA Designer"; `lwmom` is the Python package)
 
 `make app` (or `lwmom-app`) starts the backend and opens `http://127.0.0.1:8000` in your browser.
-Everything below runs locally; nothing leaves the machine. No screenshots are included here — no
-browser was available in either session that wrote this guide to capture any (see
+Everything below runs locally; nothing leaves the machine. A real walk-through's own screenshots
+are checked into `docs/screenshots/`; fresh ones after Part 3D's fixes were not captured — no
+browser or screenshot tool was available in the session that made those fixes (see
 `docs/phases/PHASE13_WEBAPP.md` "Known limitations").
 
 The home page is a 3-step HMSA (holographic metasurface antenna) designer wizard — the app's main
@@ -13,12 +14,13 @@ verification, HFSS comparison) lives one click away under **More tools**.
 
 ### Step 1 — Reference wave
 
-Upload an HFSS field-calculator `.fld` phase export (magnitude optional — drag-and-drop or
+Upload an HFSS field-calculator `.fld` phase export (phase; magnitude optional — drag-and-drop or
 "choose a file"), and the frequency it was exported at (the file itself doesn't record this).
 "Analyze" shows immediately: a PNG of the reference phase map, and a plain-language summary line
-comparing the field's own measured surface-wave wavenumber against the analytic bare-slab TM0
-value for the substrate you'll pick in Step 2 (a sanity check, never a requirement — a mismatch is
-shown as a warning, not blocked). The one documented feed-point NaN a real export carries is
+naming the actual substrate you'll pick in Step 2 and comparing the field's own measured
+surface-wave wavenumber against that substrate's analytic bare-slab TM0 value (a sanity check,
+never a requirement — a mismatch is shown as a warning, not blocked; this line re-checks itself
+whenever Step 2's board changes). The one documented feed-point NaN a real export carries is
 interpolated and reported (`FEED_REGION_MASKED`), never silently dropped.
 
 ### Step 2 — Beams & board
@@ -27,36 +29,52 @@ interpolated and reported (`FEED_REGION_MASKED`), never silently dropped.
 a field-amplitude weight internally — power ratio = amplitude²).
 
 **Board**: a substrate preset (Rogers RT/duroid 5880, RO4003C, FR-4, or Custom εr/loss
-tangent/thickness) and a cell size. Aperture size is shown read-only, taken from the uploaded
-file's own extent — there is no cropping/resizing logic, so this is informational, not editable
-(an honest scope reduction from what was asked for). Frequency is pre-filled from Step 1 and
-locked; "Use a different frequency" unlocks it, and a mismatch against Step 1's frequency is
-flagged.
+tangent/thickness) and a cell size (a suggested value appears once Step 1's field is analyzed,
+targeting 8 cells per surface-wave fringe at this board's own measured wavenumber). Aperture size
+is shown read-only, taken from the uploaded file's own extent — there is no cropping/resizing
+logic, so this is informational, not editable (an honest scope reduction from what was asked for).
+Frequency is pre-filled from Step 1 and locked; "Use a different frequency" unlocks it, and a
+mismatch against Step 1's frequency is flagged. As soon as board, cell size and frequency are all
+set, a line shows the phase-lookup method's achievable phase range for that combination (built via
+the same auto-library call Step 3 would make, cached) — a narrow range (well under 360°) is common
+for small cells and is flagged, not hidden.
 
-**Advanced** (collapsed): upload an HFSS eigenmode dispersion table (CSV) to use the
-impedance-modulated method (Formulation A, Fong et al.) — the recommended path when you have real
-dispersion data. Without one, the wizard falls back to the phase-lookup method (Formulation B, a
+**Advanced** (collapsed): an **Accuracy** control (Fast/Accurate — Accurate uses a finer mesh for
+the board's own unit-cell data; slower, less staircasing error, not a substitute for HFSS
+validation, not Richardson extrapolation). Upload an HFSS eigenmode dispersion table (CSV) to use
+the impedance-modulated method (Formulation A, Fong et al.) — the recommended path when you have
+real dispersion data; its own fields (mean reactance X̄, modulation depth) only appear once a table
+is uploaded. Without one, the wizard falls back to the phase-lookup method (Formulation B, a
 reflectarray-style control variable standing in for the surface-wave one a monopole-fed hologram
-actually needs — labelled `EXPERIMENTAL`) and says so in one sentence. Also here: mean reactance
-X̄, modulation depth, and whether to rescale the reference wave to the board's own guided
-wavenumber β̄ (on by default — using the raw bare-slab wave as-is accumulates a phase error across
-the aperture, reported if you turn this off).
+actually needs — labelled `EXPERIMENTAL`, with a reason shown in Step 3) and says so in one
+sentence. Also here: whether to rescale the reference wave to the board's own guided wavenumber β̄
+(on by default — using the raw bare-slab wave as-is accumulates a phase error across the aperture,
+reported if you turn this off).
 
 The unit-cell data synthesis needs is built automatically the first time you run Step 3 for a given
-board/frequency (a small square-patch library, cached — later runs with the same board reuse it
-instantly). You never visit a separate library page.
+board/frequency (a small square-patch library, mesh-aligned and cached — later runs with the same
+board reuse it instantly). You never visit a separate library page.
 
 ### Step 3 — Pattern & export
 
-"Run synthesis" chains: builds/reuses the board's unit-cell library → synthesizes the hologram →
-predicts the far-field pattern → exports the array. Shows the layout preview, the radiation
-pattern (a 2-D u–v map in dB, one principal cut per requested beam), directivity, side-lobe level,
-achieved beam direction, and how many cells couldn't reach their required value (with the
-mean/max phase error). **Download package** bundles the STEP file, layout CSV/JSON, HFSS setup
-notes, every plot, and a project record into one zip; the individual files are also linked
+A one-line summary (beam count, board, cell size, method) appears before you run. "Design antenna"
+chains: builds/reuses the board's unit-cell library → synthesizes the hologram → predicts the
+far-field pattern → builds the layout export (CSV/JSON/DXF) and HFSS notes. Shows the layout
+preview, the radiation pattern (a 2-D u–v map in dB, one principal cut per requested beam),
+directivity, side-lobe level, achieved beam direction, and how many cells couldn't reach their
+required value (with the mean/max phase error) — if that's more than 20% of the cells, a plain
+sentence explains why (the phase-lookup method's limited range at small cell sizes) and what to do
+about it (a dispersion table, or a larger cell).
+
+STEP (CAD) is a separate, explicit "Build STEP (CAD)" action — it can take minutes and produce a
+file well over 100 MB for a large array, so it no longer runs automatically as part of the chain
+above; its own status line shows an estimated progress percentage (from Phase 12D's own measured
+runtimes, log-log interpolated — labelled "estimated," never claimed as measured) while it runs.
+**Download package** bundles whatever's been built (layout CSV/JSON/DXF, HFSS notes, STEP if you
+built it, every plot, and a project record) into one zip; the individual files are also linked
 separately.
 
-Export/STEP requires a real per-cell L×W assignment, which only Formulation B (phase-lookup)
+Export requires a real per-cell L×W assignment, which only Formulation B (phase-lookup)
 currently produces — Formulation A's achieved quantity is a surface reactance, not a geometry pair,
 so it doesn't chain into Export (Pattern still works for both).
 
@@ -138,12 +156,14 @@ between the largest measured point and that limit require an explicit "run anywa
 
 ### Export
 
-Chains off a completed Reflectarray OR HMSA (Formulation B) design's cell assignments to produce a
-full-array STEP file, layout CSV/JSON, and an HFSS-ready README (Floquet-port mode count,
-PEC-vs-copper, zero-thickness-vs-drawn-thickness lessons from Phase 12). Grounded designs only, and
-the array must be square (N×N) — the underlying supercell builder's own limitation, inherited
-unmodified. No DXF export (an old docstring claimed otherwise; `ezdxf` was never a dependency and
-no code reads or writes one).
+Chains off a completed Reflectarray OR HMSA (Formulation B) design's cell assignments to produce
+layout CSV/JSON/DXF and an HFSS-ready README (Floquet-port mode count, PEC-vs-copper,
+zero-thickness-vs-drawn-thickness lessons from Phase 12) immediately, plus an optional full-array
+STEP file (a separate, explicit action — can take minutes and produce a large file, with an
+estimated-progress status line while it builds). Grounded designs only, and the array must be
+square (N×N) — the underlying supercell builder's own limitation, inherited unmodified. The DXF is
+a real, hand-written file (no new dependency — `ezdxf` still isn't one) of the patch layer only
+(rectangles on one layer), not a full multi-layer PCB/Gerber export.
 
 ### HFSS compare
 
@@ -159,11 +179,14 @@ excluded from git — `docs/DEVELOPING.md`); the others need your own export.
 - **Plots exist for the wizard's own flow only.** The "More tools" pages still show tables, not
   the server-rendered charts the original brief called for; large results are capped (e.g. a
   library sweep's cell table).
-- **The wizard's auto-built library uses a fixed 6-point square-patch family and a fixed mesh** —
-  not alignment-searched, not resonance-searched. For a board/frequency combination whose
-  resonance falls between two of those points, phase coverage can be poor (the app's own
-  `PHASE_COVERAGE_SHORTFALL` label fires honestly when this happens — it is not hidden, but a
-  denser or resonance-aware library would give better designs).
+- **The wizard's auto-built library uses a 13-point square-patch family, mesh-aligned by
+  construction** — denser and free of staircasing error compared to Part 3C's original 6 points,
+  but still not resonance-searched. More fundamentally, the phase-lookup method's *achievable
+  range* at small cell sizes is a property of the control variable itself (reflection phase, not
+  surface impedance) — density and alignment don't fix that; Step 2 now shows the achievable range
+  up front so this is visible before you commit to a run, and the `PHASE_COVERAGE_SHORTFALL` label
+  (plus a plain-sentence explanation in Step 3 when over 20% of cells are affected) still fires
+  honestly when it happens.
 - **No run manifest or diagnostic-bundle download**, despite `src/manifest.py` existing and being
   tested — no router currently attaches one to a job or exposes it for download.
 - **Job results are held in memory for the process's lifetime** — no eviction; a long session with

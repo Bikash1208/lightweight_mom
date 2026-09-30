@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Verify -- lwmom</title>
+  <title>Verify — HMSA Designer</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header>
-    <h1><a href="/">lwmom</a></h1>
+    <h1><a href="/">HMSA Designer</a></h1>
     <nav>
       <a href="/">Home</a>
       <a href="/more_tools.html">More tools</a>
@@ -19,7 +19,7 @@
       <h2>Verify</h2>
       <p>Runs a real full-supercell MoM solve of an N-cell periodic gradient and compares its
       per-order power against the idealized lookup-table prediction (Part 0's own comparison). A
-      real solve, not an estimate -- costed and gated before it runs (Phase 12D's own measured
+      real solve, not an estimate — costed and gated before it runs (Phase 12D's own measured
       runtimes: N=6 ~7s, N=8 ~18.5s, N=12 ~124s; larger sizes are extrapolated, and anything
       beyond N=20 is refused outright as untrustworthy extrapolation).</p>
       <form id="cost-form">
@@ -67,7 +67,7 @@
         const runtime = cost.estimated_runtime_s !== null ? `${cost.estimated_runtime_s.toFixed(1)}s` : "n/a";
         const kind = cost.is_measured ? "measured" : cost.is_extrapolated ? "extrapolated" : "n/a";
         document.getElementById("cost-summary").innerHTML =
-          `<p>Estimated runtime: ${runtime} (${kind}). Refused: ${cost.refused}${cost.refusal_reason ? " -- " + cost.refusal_reason : ""}</p>`;
+          `<p>Estimated runtime: ${runtime} (${kind}). Refused: ${cost.refused}${cost.refusal_reason ? " — " + cost.refusal_reason : ""}</p>`;
         document.getElementById("run-btn").style.display = cost.refused ? "none" : "inline-block";
         document.getElementById("force-run-btn").style.display = cost.refused ? "inline-block" : "none";
       } catch (err) {

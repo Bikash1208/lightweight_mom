@@ -74,12 +74,19 @@ const LWMOM = (() => {
     HFSS_VALIDATED_OFF_RESONANCE: () => "Validated against HFSS off resonance.",
   };
 
+  // PHASE13D item 2 ("Words"): label params are formatted in Python (labels.py) with a bare
+  // "deg" suffix (e.g. "162deg") -- the raw code stays exactly that (title tooltip, matching
+  // labels.py 1:1), but the visible text gets the degree sign like every other angle in the UI.
+  function _formatLabelParam(param) {
+    return param == null ? param : param.replace(/deg/g, "°");
+  }
+
   function describeLabel(raw) {
     const m = /^([A-Z0-9_]+)(?:\((.*)\))?$/.exec(raw || "");
     if (!m) return raw;
     const [, code, param] = m;
     const fn = LABEL_DESCRIPTIONS[code];
-    return fn ? fn(param) : raw;
+    return fn ? fn(_formatLabelParam(param)) : raw;
   }
 
   function renderLabels(container, labels, warnings) {

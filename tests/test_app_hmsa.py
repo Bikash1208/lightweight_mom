@@ -335,15 +335,33 @@ def test_ensure_library_builds_once_and_reuses_on_repeat(client):
     job1 = _wait_for_job(client, resp1.json()["id"], timeout=120.0)
     assert job1["status"] == "done", job1
     assert job1["result"]["already_built"] is False
-    assert job1["result"]["n_geometries"] == 6
+    assert job1["result"]["n_geometries"] == 13  # PHASE13D: denser, mesh-aligned auto-library
     library_id = job1["result"]["library_id"]
 
     lib_resp = client.get(f"/api/library/{library_id}")
     assert lib_resp.status_code == 200
-    assert lib_resp.json()["n_cells"] == 6
+    assert lib_resp.json()["n_cells"] == 13
 
     resp2 = client.post("/api/hmsa/ensure_library", json=body)
     job2 = _wait_for_job(client, resp2.json()["id"], timeout=30.0)
     assert job2["status"] == "done", job2
     assert job2["result"]["already_built"] is True
     assert job2["result"]["library_id"] == library_id
+    # PHASE13D: the achievable phase-lookup range is reported (both the fresh-build and the
+    # already-built fast paths), so Step 2 can show it before synthesis runs.
+    assert job1["result"]["phase_span_deg"] > 0
+    assert job2["result"]["phase_span_deg"] == job1["result"]["phase_span_deg"]
+
+
+@pytest.mark.slow
+def test_ensure_library_accurate_tier_builds_a_separate_finer_library(client):
+    """PHASE13D item 2 ("Words"): the Advanced "Accuracy" control -- "accurate" must be a
+    genuinely different (finer-mesh) library, not just a relabeled fast one."""
+    body_fast = {"period_mm": 8.0, "eps_r": 2.2, "tan_delta": 0.0009, "thickness_mm": 1.575, "frequency_hz": 12.5e9}
+    body_accurate = {**body_fast, "accuracy": "accurate"}
+    resp_fast = client.post("/api/hmsa/ensure_library", json=body_fast)
+    job_fast = _wait_for_job(client, resp_fast.json()["id"], timeout=120.0)
+    resp_accurate = client.post("/api/hmsa/ensure_library", json=body_accurate)
+    job_accurate = _wait_for_job(client, resp_accurate.json()["id"], timeout=120.0)
+    assert job_fast["status"] == "done" and job_accurate["status"] == "done"
+    assert job_fast["result"]["library_id"] != job_accurate["result"]["library_id"]

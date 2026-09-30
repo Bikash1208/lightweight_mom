@@ -19,7 +19,11 @@ PHASE13B_UI_REVIEW_FIXES.md`) then a redesign brief (`docs/briefs/PHASE13C_REDES
 3-step HMSA wizard (home page) plus a "More tools" page for the rest, added server-rendered PNG plots for the
 wizard's own flow (still tables elsewhere — a documented, narrower scope gap now, see
 `docs/phases/PHASE13_WEBAPP.md` "Part 3B/3C"), and fixed several correctness bugs the review found, including one
-real physics bug (Formulation B's predicted aperture field was missing the reference-wave phasor).
+real physics bug (Formulation B's predicted aperture field was missing the reference-wave phasor). A second live
+walk-through (`docs/briefs/PHASE13D_POLISH_AND_PHYSICS.md`) then made `src/dispersion/mom_scaffold.py`'s
+surface-wave eigenmode search real (validated against the analytic bare-slab TM0), fixed a two-cause pattern
+side-lobe bug (a missing obliquity factor, and `detect_local_maxima` not wrapping the periodic phi axis), made STEP
+export opt-in with estimated progress, and added a real DXF export — see `docs/phases/PHASE13_WEBAPP.md` "Part 3D".
 Holographic synthesis, geometry inversion and full-array STEP export remain recorded as **LOCKED** scientific
 findings (see `README.md` "Before Phase 13's app is trusted for a real design → still open") even though the app now
 produces designs/exports anyway per the user's explicit Phase 13 decision — every such output carries these labels.

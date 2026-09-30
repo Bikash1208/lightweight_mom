@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>More tools -- lwmom</title>
+  <title>More tools — HMSA Designer</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header>
-    <h1><a href="/">lwmom</a></h1>
+    <h1><a href="/">HMSA Designer</a></h1>
     <nav>
       <a href="/">Home</a>
       <a href="/more_tools.html" class="active">More tools</a>
@@ -18,14 +18,14 @@
     <div class="card">
       <h2>More tools</h2>
       <p>The 3-step designer on the Home page covers the main HMSA workflow end to end. These
-      pages are the lower-level building blocks it uses internally -- useful for a reflectarray
+      pages are the lower-level building blocks it uses internally: useful for a reflectarray
       (not HMSA) design, for inspecting a single unit cell or library directly, or for checking a
       design against a full-wave solve or measured HFSS data.</p>
     </div>
     <div class="tools-grid">
       <a class="tool-card" href="/unit_cell.html">
         <h3>Unit cell</h3>
-        <p>Solve one patch geometry directly: S11/S21, diagnostics, STEP export.</p>
+        <p>Check one cell's reflection, plus diagnostics and STEP export.</p>
       </a>
       <a class="tool-card" href="/library.html">
         <h3>Unit-cell library</h3>
@@ -49,14 +49,14 @@
       </a>
       <a class="tool-card" href="/hfss_compare.html">
         <h3>HFSS comparison</h3>
-        <p>Overlay a Touchstone (.sNp) export against a MoM solve.</p>
+        <p>Compare an HFSS export against this project's own solver.</p>
       </a>
     </div>
     <div class="card">
       <h3>Diagnostics &amp; logs</h3>
       <p>Every job's request/run details are written to <code>~/.lwmom/logs/lwmom.log</code>
       (JSON lines, filterable by the job ID shown in its status line/URL). There's no dedicated
-      page for browsing them yet -- see <code>docs/DEVELOPING.md</code> "Reading a diagnostic
+      page for browsing them yet: see <code>docs/DEVELOPING.md</code> "Reading a diagnostic
       bundle".</p>
     </div>
   </main>

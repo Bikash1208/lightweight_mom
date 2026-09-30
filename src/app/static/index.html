@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>lwmom -- HMSA designer</title>
+  <title>HMSA Designer</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header>
-    <h1><a href="/">lwmom</a></h1>
+    <h1><a href="/">HMSA Designer</a></h1>
     <nav>
       <a href="/" class="active">Home</a>
       <a href="/more_tools.html">More tools</a>
@@ -28,8 +28,8 @@
     <section id="step-1" class="step-panel">
       <div class="card">
         <h2>1. Reference wave</h2>
-        <p>Upload the monopole reference-field export from HFSS (field calculator, phase --
-        magnitude is optional). This is the surface wave your board will hologram against.</p>
+        <p>Upload the monopole reference-field export from HFSS (field calculator, phase; magnitude
+        optional). We use it as the reference wave.</p>
 
         <div class="dropzone" id="dropzone">
           Drag a <code>.fld</code> file here, or
@@ -37,11 +37,15 @@
           <input type="file" id="phase-file-input" accept=".fld" style="display:none" />
           <div id="phase-file-name" class="status"></div>
         </div>
-        <label>Magnitude file (optional) <span class="unit">-- .fld, same grid</span>
-          <input type="file" id="magnitude-file-input" accept=".fld" />
+        <label>Magnitude file (optional) <span class="unit">.fld, same grid</span>
+          <span class="file-picker">
+            <button type="button" class="secondary" id="magnitude-browse-btn" style="margin-top:0.35rem">choose a file</button>
+            <input type="file" id="magnitude-file-input" accept=".fld" style="display:none" />
+            <span id="magnitude-file-name" class="status"></span>
+          </span>
         </label>
 
-        <label>Frequency this file was exported at <span class="unit">[GHz]</span>
+        <label>Frequency this file was exported at <span class="unit">GHz</span>
           <input type="number" step="any" id="upload-frequency-ghz" placeholder="e.g. 10.54" required />
         </label>
         <p class="status" id="upload-status"></p>
@@ -72,7 +76,7 @@
           </div>
         </label>
         <table id="beams-table">
-          <thead><tr><th>Beam</th><th>&theta; [deg]</th><th>&phi; [deg]</th><th>Relative power [dB]</th></tr></thead>
+          <thead><tr><th>Beam</th><th>&theta; (&deg;)</th><th>&phi; (&deg;)</th><th>Relative power (dB)</th></tr></thead>
           <tbody></tbody>
         </table>
 
@@ -88,15 +92,17 @@
         <div id="custom-substrate-fields" style="display:none">
           <label>&epsilon;r <input type="number" step="any" id="substrate-eps-r" value="2.2" /></label>
           <label>Loss tangent <input type="number" step="any" id="substrate-tan-delta" value="0.0009" /></label>
-          <label>Thickness [mm] <input type="number" step="any" id="substrate-thickness-mm" value="1.575" /></label>
+          <label>Thickness <span class="unit">mm</span> <input type="number" step="any" id="substrate-thickness-mm" value="1.575" /></label>
         </div>
-        <label>Cell size <span class="unit">[mm]</span>
+        <label>Cell size <span class="unit">mm</span>
           <input type="number" step="any" id="cell-size-mm" value="8.0" required />
         </label>
-        <label>Aperture size <span class="unit">-- from your uploaded file, [mm]</span>
+        <p class="status" id="cell-size-suggestion"></p>
+        <p class="status" id="achievable-range-status"></p>
+        <label>Aperture size <span class="unit">mm, from your uploaded file</span>
           <input type="number" id="aperture-mm" disabled />
         </label>
-        <label>Frequency <span class="unit">[GHz]</span>
+        <label>Frequency <span class="unit">GHz</span>
           <input type="number" step="any" id="synthesis-frequency-ghz" disabled />
         </label>
         <button type="button" class="secondary" id="unlock-frequency-btn">Use a different frequency</button>
@@ -105,16 +111,30 @@
         <details class="advanced">
           <summary>Advanced</summary>
           <div class="card">
+            <label>Accuracy
+              <div class="segmented" id="accuracy-control">
+                <button type="button" data-accuracy="fast" class="active">Fast</button>
+                <button type="button" data-accuracy="accurate">Accurate</button>
+              </div>
+            </label>
+            <p class="status">Accurate uses a finer mesh for the board's own unit-cell data (slower,
+            less staircasing error); not a substitute for HFSS validation.</p>
             <p id="method-explainer" class="status"></p>
-            <label>Dispersion table (optional -- HFSS eigenmode export)
-              <input type="file" id="dispersion-file-input" accept=".csv" />
+            <label>Dispersion table (optional: HFSS eigenmode export)
+              <span class="file-picker">
+                <button type="button" class="secondary" id="dispersion-browse-btn" style="margin-top:0.35rem">choose a file</button>
+                <input type="file" id="dispersion-file-input" accept=".csv" style="display:none" />
+                <span id="dispersion-file-name" class="status"></span>
+              </span>
             </label>
-            <label>Mean reactance X&#772; <span class="unit">[ohm]</span>
-              <input type="number" step="any" id="x-avg-ohm" value="100" />
-            </label>
-            <label>Modulation depth
-              <input type="number" step="any" id="modulation-index" value="0.3" min="0" max="1" />
-            </label>
+            <div id="impedance-method-fields">
+              <label>Mean reactance X&#772; <span class="unit">&Omega;</span>
+                <input type="number" step="any" id="x-avg-ohm" value="100" />
+              </label>
+              <label>Modulation depth
+                <input type="number" step="any" id="modulation-index" value="0.3" min="0" max="1" />
+              </label>
+            </div>
             <label><input type="checkbox" id="rescale-beta-bar" checked style="width:auto;display:inline;margin-right:0.4rem" />
               Correct the reference wave to the board's own wavenumber (recommended)</label>
           </div>
@@ -129,8 +149,10 @@
     <section id="step-3" class="step-panel" style="display:none">
       <div class="card">
         <h2>3. Pattern &amp; export</h2>
-        <button type="button" id="run-btn">Run synthesis</button>
+        <p class="status" id="run-summary"></p>
+        <button type="button" id="run-btn">Design antenna</button>
         <p class="status" id="run-status"></p>
+        <p class="status warn" id="unreachable-explanation" style="display:none"></p>
         <div id="labels" class="labels"></div>
       </div>
 
@@ -146,6 +168,10 @@
       <div class="card" id="export-card" style="display:none">
         <h3>Export</h3>
         <button type="button" id="download-package-btn">Download package (.zip)</button>
+        <p class="status">Layout (CSV/JSON/DXF) and HFSS setup notes are ready below as soon as
+        synthesis finishes. STEP (CAD) is a separate, optional step &mdash; it can take minutes and
+        produce a large file (100+ MB for a big array).</p>
+        <button type="button" class="secondary" id="build-step-btn">Build STEP (CAD)</button>
         <p class="status" id="export-status"></p>
         <ul class="result-list" id="export-links"></ul>
       </div>
@@ -158,6 +184,7 @@
       uploadId: null,
       uploadFrequencyHz: null,
       apertureMm: null,
+      betaMeasured: null,
       dispersionId: null,
       beams: [{ theta_deg: 20, phi_deg: 0, power_db: 0 }],
       synthesizeJobId: null,
@@ -191,24 +218,38 @@
       }
     });
 
-    document.getElementById("upload-btn").addEventListener("click", async () => {
+    const magnitudeFileInput = document.getElementById("magnitude-file-input");
+    document.getElementById("magnitude-browse-btn").addEventListener("click", () => magnitudeFileInput.click());
+    magnitudeFileInput.addEventListener("change", () => {
+      document.getElementById("magnitude-file-name").textContent = magnitudeFileInput.files[0]?.name || "";
+    });
+
+    // PHASE13D item 2: re-runs on Step 1's own "Analyze" click AND, silently, whenever Step 2's
+    // board changes after a file has already been analyzed -- "re-check when the board changes
+    // in Step 2" -- since the TM0 comparison line names a specific substrate.
+    async function analyzeReferenceField({ silent = false } = {}) {
       const statusEl = document.getElementById("upload-status");
       const phaseFile = phaseFileInput.files[0];
       const freqGhz = parseFloat(document.getElementById("upload-frequency-ghz").value);
-      if (!phaseFile) { statusEl.textContent = "Choose a .fld file first."; statusEl.className = "status err"; return; }
-      if (!Number.isFinite(freqGhz)) { statusEl.textContent = "Enter the frequency this file was exported at."; statusEl.className = "status err"; return; }
+      if (!phaseFile) {
+        if (!silent) { statusEl.textContent = "Choose a .fld file first."; statusEl.className = "status err"; }
+        return;
+      }
+      if (!Number.isFinite(freqGhz)) {
+        if (!silent) { statusEl.textContent = "Enter the frequency this file was exported at."; statusEl.className = "status err"; }
+        return;
+      }
 
       const substrate = currentSubstrate();
       const form = new FormData();
       form.append("phase_file", phaseFile);
-      const magFile = document.getElementById("magnitude-file-input").files[0];
+      const magFile = magnitudeFileInput.files[0];
       if (magFile) form.append("magnitude_file", magFile);
       form.append("eps_r", substrate.eps_r);
       form.append("thickness_mm", substrate.thickness_mm);
       form.append("frequency_hz", freqGhz * 1e9);
 
-      statusEl.textContent = "Analyzing...";
-      statusEl.className = "status";
+      if (!silent) { statusEl.textContent = "Analyzing..."; statusEl.className = "status"; }
       try {
         const data = await LWMOM.postForm("/api/hmsa/upload_field", form);
         state.uploadId = data.upload_id;
@@ -216,6 +257,7 @@
         if (data.regularity && data.regularity.dx_m) {
           state.apertureMm = (data.regularity.nx - 1) * data.regularity.dx_m * 1e3;
         }
+        if (data.tm0_comparison) state.betaMeasured = data.tm0_comparison.beta_measured;
         statusEl.textContent = "";
         document.getElementById("upload-result").style.display = "block";
         if (data.phase_map_png_base64) {
@@ -229,7 +271,7 @@
           const matches = t.relative_difference < 0.05;
           tmEl.textContent =
             `Cylindrical surface wave from the centre · β = ${t.beta_measured.toFixed(0)} rad/m · ` +
-            `${matches ? "matches" : "differs from"} the bare substrate at ${freqGhz} GHz ${matches ? "✓" : "⚠"}`;
+            `${matches ? "matches" : "differs from"} ${substrateDisplayName()} at ${freqGhz} GHz ${matches ? "✓" : "⚠"}`;
           tmEl.className = matches ? "status ok" : "status warn";
         } else {
           tmEl.textContent = "";
@@ -243,11 +285,14 @@
         // pre-fill Step 2 from what Step 1 just established
         document.getElementById("synthesis-frequency-ghz").value = freqGhz;
         if (state.apertureMm) document.getElementById("aperture-mm").value = state.apertureMm.toFixed(1);
+        suggestCellSize();
+        refreshAchievableRange();
       } catch (err) {
-        statusEl.textContent = err.message;
-        statusEl.className = "status err";
+        if (!silent) { statusEl.textContent = err.message; statusEl.className = "status err"; }
       }
-    });
+    }
+
+    document.getElementById("upload-btn").addEventListener("click", () => analyzeReferenceField());
 
     document.getElementById("to-step-2-btn").addEventListener("click", () => showStep(2));
 
@@ -264,8 +309,26 @@
       const opt = preset.selectedOptions[0];
       return { eps_r: parseFloat(opt.dataset.eps), tan_delta: parseFloat(opt.dataset.tand), thickness_mm: parseFloat(opt.dataset.t) };
     }
+    function substrateDisplayName() {
+      const preset = document.getElementById("substrate-preset");
+      if (preset.value !== "custom") return preset.selectedOptions[0].textContent;
+      const s = currentSubstrate();
+      return `Custom (εr=${s.eps_r}, ${s.thickness_mm} mm)`;
+    }
+
+    // PHASE13D item 2: re-check the TM0 comparison line (it names a specific substrate) and the
+    // achievable phase-lookup range whenever the board changes.
+    function onBoardChanged() {
+      analyzeReferenceField({ silent: true });
+      suggestCellSize();
+      refreshAchievableRange();
+    }
     document.getElementById("substrate-preset").addEventListener("change", (ev) => {
       document.getElementById("custom-substrate-fields").style.display = ev.target.value === "custom" ? "block" : "none";
+      onBoardChanged();
+    });
+    ["substrate-eps-r", "substrate-tan-delta", "substrate-thickness-mm"].forEach((id) => {
+      document.getElementById(id).addEventListener("change", onBoardChanged);
     });
 
     function renderBeamsTable(n) {
@@ -310,22 +373,88 @@
       const mismatchEl = document.getElementById("frequency-mismatch-status");
       const current = parseFloat(el.value) * 1e9;
       if (state.uploadFrequencyHz && Math.abs(current - state.uploadFrequencyHz) > 1e-3 * state.uploadFrequencyHz) {
-        mismatchEl.textContent = "This differs from the frequency the reference file was exported at -- results may be inaccurate.";
+        mismatchEl.textContent = "This differs from the frequency the reference file was exported at — results may be inaccurate.";
         mismatchEl.className = "status warn";
       } else {
         mismatchEl.textContent = "";
       }
+      refreshAchievableRange();
     });
 
-    document.getElementById("dispersion-file-input").addEventListener("change", () => {
+    // PHASE13D item 1: a target cells-per-fringe of 8 (mid-way through the recommended >= 6
+    // range) suggests a cell size directly from Step 1's own measured beta -- lambda_sw / 8,
+    // lambda_sw = 2*pi/beta (fields.reference_field_grid.cells_per_fringe's own relation, run in
+    // reverse here on a value the backend already computed and returned).
+    const _TARGET_CELLS_PER_FRINGE = 8;
+    function suggestCellSize() {
+      const el = document.getElementById("cell-size-suggestion");
+      if (!state.betaMeasured) { el.textContent = ""; return; }
+      const lambdaSwMm = (2 * Math.PI / state.betaMeasured) * 1e3;
+      const suggestedMm = lambdaSwMm / _TARGET_CELLS_PER_FRINGE;
+      el.textContent = `Suggested: ~${suggestedMm.toFixed(1)} mm (${_TARGET_CELLS_PER_FRINGE} cells per fringe at this board's measured wavenumber).`;
+    }
+    document.getElementById("cell-size-mm").addEventListener("change", () => refreshAchievableRange());
+
+    const accuracyControl = document.getElementById("accuracy-control");
+    accuracyControl.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button");
+      if (!btn) return;
+      accuracyControl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      refreshAchievableRange();
+    });
+    function currentAccuracy() {
+      return accuracyControl.querySelector("button.active")?.dataset.accuracy || "fast";
+    }
+
+    // PHASE13D item 1: shows the phase-lookup method's achievable range as soon as board/cell
+    // size/frequency are known, not only after Step 3's synthesis runs -- this is exactly what
+    // ensure_library already computes, so this calls it early (a debounced background build; the
+    // result is cached and reused instantly when Step 3 actually runs).
+    let _achievableRangeToken = 0;
+    async function refreshAchievableRange() {
+      const el = document.getElementById("achievable-range-status");
+      const cellSizeMm = parseFloat(document.getElementById("cell-size-mm").value);
+      const freqGhz = parseFloat(document.getElementById("synthesis-frequency-ghz").value);
+      if (!Number.isFinite(cellSizeMm) || !Number.isFinite(freqGhz)) { el.textContent = ""; return; }
+      if (document.getElementById("dispersion-file-input").files.length > 0) { el.textContent = ""; return; }
+      const substrate = currentSubstrate();
+      const token = ++_achievableRangeToken;
+      el.textContent = "Checking the achievable phase range for this cell size...";
+      el.className = "status";
+      try {
+        const libJob = await LWMOM.postJson("/api/hmsa/ensure_library", {
+          period_mm: cellSizeMm, eps_r: substrate.eps_r, tan_delta: substrate.tan_delta,
+          thickness_mm: substrate.thickness_mm, frequency_hz: freqGhz * 1e9, accuracy: currentAccuracy(),
+        });
+        const done = await LWMOM.pollJob(libJob.id);
+        if (token !== _achievableRangeToken) return;  // superseded by a newer request
+        if (done.status !== "done" || done.result.phase_span_deg == null) { el.textContent = ""; return; }
+        const span = done.result.phase_span_deg;
+        const narrow = span < 180;
+        el.textContent = `Achievable phase range with the phase-lookup method: ~${span.toFixed(0)}°` +
+          (narrow ? " — narrow; consider a dispersion table (Advanced) or a larger cell." : ".");
+        el.className = narrow ? "status warn" : "status ok";
+      } catch (err) {
+        if (token === _achievableRangeToken) el.textContent = "";
+      }
+    }
+
+    const dispersionFileInput = document.getElementById("dispersion-file-input");
+    document.getElementById("dispersion-browse-btn").addEventListener("click", () => dispersionFileInput.click());
+    dispersionFileInput.addEventListener("change", () => {
+      document.getElementById("dispersion-file-name").textContent = dispersionFileInput.files[0]?.name || "";
       updateMethodExplainer();
+      refreshAchievableRange();
     });
     function updateMethodExplainer() {
       const el = document.getElementById("method-explainer");
-      const hasDispersion = document.getElementById("dispersion-file-input").files.length > 0;
+      const hasDispersion = dispersionFileInput.files.length > 0;
       el.textContent = hasDispersion
         ? "Using the impedance-modulated method (your uploaded dispersion table)."
-        : "No dispersion table uploaded -- using the phase-lookup method instead (the impedance method needs one).";
+        : "No dispersion table uploaded — using the phase-lookup method instead (the impedance method needs one).";
+      // PHASE13D item 2: X-bar/modulation depth only mean anything for the impedance method
+      document.getElementById("impedance-method-fields").style.display = hasDispersion ? "block" : "none";
     }
     updateMethodExplainer();
 
@@ -333,24 +462,41 @@
       const statusEl = document.getElementById("step2-status");
       state.beams = readBeamsFromTable();
       statusEl.textContent = "";
+      renderRunSummary();
       showStep(3);
     });
 
     // ---------------------------------------------------------------- Step 3
+    function renderRunSummary() {
+      const el = document.getElementById("run-summary");
+      const cellSizeMm = parseFloat(document.getElementById("cell-size-mm").value);
+      const apertureMm = state.apertureMm;
+      const method = dispersionFileInput.files.length > 0 ? "impedance-modulated" : "phase-lookup";
+      const nBeams = state.beams.length;
+      const nCellsSide = apertureMm && cellSizeMm ? Math.round(apertureMm / cellSizeMm) : null;
+      const cellsText = nCellsSide ? `~${nCellsSide}x${nCellsSide} cells` : "the array";
+      el.textContent =
+        `${nBeams} beam${nBeams === 1 ? "" : "s"}, ${substrateDisplayName()}, ${cellSizeMm} mm cells (${cellsText}), ` +
+        `${method} method. The board's own unit-cell data is built once per board/cell size and reused after that; ` +
+        `synthesis, pattern and layout are typically well under a minute after it.`;
+    }
+
     document.getElementById("run-btn").addEventListener("click", async () => {
       const statusEl = document.getElementById("run-status");
       statusEl.className = "status";
+      document.getElementById("unreachable-explanation").style.display = "none";
       const substrate = currentSubstrate();
       const cellSizeMm = parseFloat(document.getElementById("cell-size-mm").value);
       const frequencyHz = parseFloat(document.getElementById("synthesis-frequency-ghz").value) * 1e9;
       const rescale = document.getElementById("rescale-beta-bar").checked;
-      const dispersionFile = document.getElementById("dispersion-file-input").files[0];
+      const dispersionFile = dispersionFileInput.files[0];
+      const accuracy = currentAccuracy();
 
       try {
         statusEl.textContent = "Preparing the board's unit-cell data...";
         const libJob = await LWMOM.postJson("/api/hmsa/ensure_library", {
           period_mm: cellSizeMm, eps_r: substrate.eps_r, tan_delta: substrate.tan_delta,
-          thickness_mm: substrate.thickness_mm, frequency_hz: frequencyHz,
+          thickness_mm: substrate.thickness_mm, frequency_hz: frequencyHz, accuracy: accuracy,
         });
         const libDone = await LWMOM.pollJob(libJob.id, {
           onTick: (j) => { statusEl.textContent = `Preparing the board's unit-cell data: ${j.progress_message || "..."}`; },
@@ -394,17 +540,42 @@
           statusEl.className = "status err";
           return;
         }
+        state.synthesizeResult = job.result;
+        const labelsEl = document.getElementById("labels");
+        LWMOM.renderLabels(labelsEl, job.result.labels, []);
+        // PHASE13D item 2: the generic "Experimental." chip needs a reason in this specific
+        // context (Formulation B is a reflectarray-style control variable standing in for the
+        // surface-wave one a monopole-fed hologram actually needs).
+        if (body.formulation === "B") {
+          labelsEl.querySelectorAll(".label").forEach((span) => {
+            if (span.title === "EXPERIMENTAL") {
+              span.textContent = "Experimental — the phase-lookup method is experimental for surface-wave holograms.";
+            }
+          });
+        }
+        renderSynthesisResults(job.result);
+        renderUnreachableExplanation(job.result, cellSizeMm);
+        await runPatternAndExport(job.result);
         statusEl.textContent = "Done.";
         statusEl.className = "status ok";
-        state.synthesizeResult = job.result;
-        LWMOM.renderLabels(document.getElementById("labels"), job.result.labels, []);
-        renderSynthesisResults(job.result);
-        await runPatternAndExport(job.result);
       } catch (err) {
         statusEl.textContent = err.message;
         statusEl.className = "status err";
       }
     });
+
+    // PHASE13D item 1: "In Step 3, when > 20% of cells are unreachable, show one plain sentence
+    // explaining the cause and the fix."
+    function renderUnreachableExplanation(result, cellSizeMm) {
+      const el = document.getElementById("unreachable-explanation");
+      const s = result.phase_error_stats;
+      if (!s || s.n_cells === 0 || s.n_unreachable / s.n_cells <= 0.2) { el.style.display = "none"; return; }
+      el.style.display = "block";
+      el.textContent =
+        `Small cells give only limited phase range with the phase-lookup method, so ${s.n_unreachable} of ` +
+        `${s.n_cells} cells here can't reach their needed value. Upload an HFSS dispersion table (Advanced, ` +
+        `Step 2) to use the impedance method instead, or increase the cell size (fewer cells per fringe).`;
+    }
 
     function renderSynthesisResults(result) {
       document.getElementById("results-card").style.display = "block";
@@ -457,35 +628,75 @@
         addRow("Side-lobe level", `${r.result.sll_db.toFixed(1)} dB`);
         addRow("Achieved beam direction", `θ=${r.result.main_beam_theta_deg.toFixed(1)}°, φ=${r.result.main_beam_phi_deg.toFixed(1)}°`);
       }
-      statusEl.textContent = "Done.";
 
       // Only Formulation B (phase-lookup) currently carries an exportable per-cell L/W assignment.
       if (synthResult.assignments) {
-        const substrate = currentSubstrate();
-        const exportSubmitted = await LWMOM.postJson("/api/export/array", {
-          source_job_id: state.synthesizeJobId,
-          period_mm: parseFloat(document.getElementById("cell-size-mm").value),
-          eps_r: substrate.eps_r, tan_delta: substrate.tan_delta, thickness_mm: substrate.thickness_mm,
-          include_step: true,
-        });
-        state.exportJobId = exportSubmitted.id;
-        const exportJob = await LWMOM.pollJob(exportSubmitted.id);
-        if (exportJob.status === "done") {
-          document.getElementById("export-card").style.display = "block";
-          const links = document.getElementById("export-links");
-          links.innerHTML = "";
-          const addLink = (label, url) => {
-            if (!url) return;
-            const li = document.createElement("li");
-            li.innerHTML = `<span class="k">${label}</span><a href="${url}">Download</a>`;
-            links.appendChild(li);
-          };
-          addLink("Board CAD (STEP)", exportJob.result.step_download_url);
-          addLink("Layout (CSV)", exportJob.result.layout_csv_download_url);
-          addLink("HFSS setup notes", exportJob.result.readme_download_url);
+        statusEl.textContent = "Building the layout export (CSV/JSON/DXF) and HFSS notes...";
+        state.exportJobId = await runExport({ includeStep: false });
+        if (state.exportJobId) {
+          statusEl.textContent = "Predicting the radiation pattern: done.";
+          renderExportLinks(await LWMOM.pollJob(state.exportJobId));
         }
       }
     }
+
+    // PHASE13D item 3: STEP (CAD) is a separate, explicit action -- it can take minutes and
+    // produce a 100+ MB file; the layout/README (fast) are no longer gated behind it, and
+    // "Done." is no longer shown before this class of export finishes (it's simply not run
+    // automatically any more).
+    async function runExport({ includeStep }) {
+      const substrate = currentSubstrate();
+      const exportSubmitted = await LWMOM.postJson("/api/export/array", {
+        source_job_id: state.synthesizeJobId,
+        period_mm: parseFloat(document.getElementById("cell-size-mm").value),
+        eps_r: substrate.eps_r, tan_delta: substrate.tan_delta, thickness_mm: substrate.thickness_mm,
+        include_step: includeStep,
+      });
+      return exportSubmitted.id;
+    }
+
+    function renderExportLinks(exportJob) {
+      if (exportJob.status !== "done") return;
+      document.getElementById("export-card").style.display = "block";
+      const links = document.getElementById("export-links");
+      links.innerHTML = "";
+      const addLink = (label, url) => {
+        if (!url) return;
+        const li = document.createElement("li");
+        li.innerHTML = `<span class="k">${label}</span><a href="${url}">Download</a>`;
+        links.appendChild(li);
+      };
+      addLink("Board CAD (STEP)", exportJob.result.step_download_url);
+      addLink("Layout (CSV)", exportJob.result.layout_csv_download_url);
+      addLink("Layout (DXF)", exportJob.result.layout_dxf_download_url);
+      addLink("HFSS setup notes", exportJob.result.readme_download_url);
+    }
+
+    document.getElementById("build-step-btn").addEventListener("click", async () => {
+      const statusEl = document.getElementById("export-status");
+      if (!state.synthesizeResult || !state.synthesizeResult.assignments) {
+        statusEl.textContent = "Run synthesis first (STEP needs a completed design).";
+        statusEl.className = "status err";
+        return;
+      }
+      statusEl.textContent = "Building STEP (CAD)...";
+      statusEl.className = "status";
+      try {
+        const jobId = await runExport({ includeStep: true });
+        const job = await LWMOM.pollJob(jobId, {
+          onTick: (j) => { statusEl.textContent = j.progress_message || "Building STEP (CAD)..."; },
+        });
+        if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
+        state.exportJobId = jobId;
+        renderExportLinks(job);
+        const sizeMb = job.result.file_size_bytes ? (job.result.file_size_bytes / 1e6).toFixed(1) + " MB" : "";
+        statusEl.textContent = `STEP built${sizeMb ? " (" + sizeMb + ")" : ""}.`;
+        statusEl.className = "status ok";
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status err";
+      }
+    });
 
     document.getElementById("download-package-btn").addEventListener("click", async () => {
       const statusEl = document.getElementById("export-status");
@@ -495,6 +706,7 @@
       try {
         const body = { export_job_id: state.exportJobId };
         if (state.patternJobId) body.pattern_job_id = state.patternJobId;
+        if (state.synthesizeJobId) body.synthesize_job_id = state.synthesizeJobId;
         const submitted = await LWMOM.postJson("/api/export/package", body);
         const job = await LWMOM.pollJob(submitted.id);
         if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);

@@ -15,6 +15,7 @@ here (documented limitation, not silently wrong).
 import base64
 import json
 import uuid
+from typing import Literal
 
 import numpy as np
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
@@ -44,18 +45,22 @@ from ..plots import layout_map_png, reference_phase_map_png
 from ..storage import job_output_dir, upload_dir
 
 # PHASE13C/13D: the wizard never sends the user to a separate Library page -- these are the fixed
-# square-patch geometry family and mesh the auto-built board library always uses. A reasonable
-# interactive-speed mesh. Mesh-aligned BY CONSTRUCTION (not a search, so no risk of
-# `smallest_aligned_cells` needing an unboundedly large mesh): a centred feature of length L on an
-# `AUTO_LIBRARY_MESH_CELLS`-cell mesh over `period` has both edges on mesh lines iff
-# `L / period == k / (AUTO_LIBRARY_MESH_CELLS / 2)` for integer k (`discretization.
-# feature_edges_aligned`'s condition, solved for L) -- i.e. every fraction below is a multiple of
-# `2 / AUTO_LIBRARY_MESH_CELLS`. PHASE13D_POLISH_AND_PHYSICS.md's live walk-through found the old
-# 6-point family (step 0.15, NOT a multiple of 2/32 -- unaligned, so subject to staircasing error
-# on top of being sparse) too sparse: 4006/5476 cells unreachable at a 4 mm cell size. This family
-# is aligned and denser (13 points, step 0.0625).
-AUTO_LIBRARY_MESH_CELLS = 32
-AUTO_LIBRARY_L_FRACTIONS_OF_PERIOD = tuple(k / (AUTO_LIBRARY_MESH_CELLS / 2) for k in range(2, 15))
+# square-patch geometry family and mesh the auto-built board library always uses. Mesh-aligned BY
+# CONSTRUCTION (not a search, so no risk of `smallest_aligned_cells` needing an unboundedly large
+# mesh): a centred feature of length L on an N-cell mesh over `period` has both edges on mesh
+# lines iff `L / period == k / (N / 2)` for integer k (`discretization.feature_edges_aligned`'s
+# condition, solved for L) -- i.e. every fraction is a multiple of `2 / N`.
+# PHASE13D_POLISH_AND_PHYSICS.md's live walk-through found the old 6-point family (step 0.15, NOT
+# a multiple of 2/32 -- unaligned, so subject to staircasing error on top of being sparse) too
+# sparse: 4006/5476 cells unreachable at a 4 mm cell size. Both tiers below are aligned and denser
+# (13 points, step 0.0625); "accurate" also uses a finer mesh (less staircasing error per solve --
+# NOT Richardson extrapolation, which the auto-library builder does not currently support; an
+# honest speed/resolution tradeoff, not claimed to be more than that).
+AUTO_LIBRARY_MESH_CELLS_BY_ACCURACY = {"fast": 32, "accurate": 48}
+
+
+def _l_fractions_of_period(mesh_cells):
+    return tuple(k / (mesh_cells / 2) for k in range(2, 15))
 
 # PHASE13B A3: relative tolerance before an upload-vs-synthesis frequency difference is labeled a
 # mismatch -- generous enough to absorb GHz/Hz round-trip and user-typed rounding, not a physics
@@ -374,20 +379,25 @@ class EnsureLibraryRequest(BaseModel):
     tan_delta: float
     thickness_mm: float
     frequency_hz: float
+    accuracy: Literal["fast", "accurate"] = "fast"  # PHASE13D item 2 ("Words"): the Advanced
+    # accuracy control the brief asked for.
 
 
 def _auto_library_id(body_dict):
+    mesh_cells = AUTO_LIBRARY_MESH_CELLS_BY_ACCURACY[body_dict["accuracy"]]
     payload = {
         "kind": "hmsa_auto_library",
-        "l_fractions": AUTO_LIBRARY_L_FRACTIONS_OF_PERIOD,
-        "mesh_cells": AUTO_LIBRARY_MESH_CELLS,
+        "l_fractions": _l_fractions_of_period(mesh_cells),
+        "mesh_cells": mesh_cells,
         **body_dict,
     }
     return "auto_" + config_hash(payload)[:20]
 
 
 def _run_ensure_library_job(job, body_dict, library_id):
-    l_values_mm = tuple(round(body_dict["period_mm"] * f, 6) for f in AUTO_LIBRARY_L_FRACTIONS_OF_PERIOD)
+    mesh_cells = AUTO_LIBRARY_MESH_CELLS_BY_ACCURACY[body_dict["accuracy"]]
+    l_fractions = _l_fractions_of_period(mesh_cells)
+    l_values_mm = tuple(round(body_dict["period_mm"] * f, 6) for f in l_fractions)
     base_config = {
         "period_x": body_dict["period_mm"] * 1e-3,
         "period_y": body_dict["period_mm"] * 1e-3,
@@ -401,9 +411,9 @@ def _run_ensure_library_job(job, body_dict, library_id):
         "geometry": {"type": "rectangle", "length": l_values_mm[0], "width": l_values_mm[0]},  # placeholder
         "excitation": {"frequency": body_dict["frequency_hz"]},  # placeholder
         "mesh": {
-            "cells_x": AUTO_LIBRARY_MESH_CELLS,
-            "cells_y": AUTO_LIBRARY_MESH_CELLS,
-            "floquet_order": AUTO_LIBRARY_MESH_CELLS,
+            "cells_x": mesh_cells,
+            "cells_y": mesh_cells,
+            "floquet_order": mesh_cells,
         },
         "reference_planes": {"top_air_thickness": 5.0e-3},
     }

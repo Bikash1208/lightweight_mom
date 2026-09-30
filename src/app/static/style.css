@@ -205,6 +205,14 @@ details.advanced .card { box-shadow: none; margin-top: 0.75rem; margin-bottom: 0
 
 .dropzone.dragover { border-color: var(--accent); background: var(--bg); }
 
+/* PHASE13D item 2: a styled stand-in for the browser's native grey "Choose File" button, for
+   optional single-file inputs (magnitude/dispersion uploads) that don't need a full dropzone. */
+.file-picker { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.file-picker .status { margin-top: 0; }
+
+/* stepper top margin (PHASE13D: it sat tight under the header) */
+.stepper { margin-top: 1.25rem; }
+
 .labels { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
 
 .label {

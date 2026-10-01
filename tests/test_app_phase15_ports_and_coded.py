@@ -1,0 +1,269 @@
+"""Phase 15 Part C gap-fill / Part E: the app's API surface for multi-port sub-apertures and the
+Coded (1-bit/N-bit) design method -- end to end through the real HTTP app, matching
+`test_app_phase15_polarization_vortex.py`'s own fixtures/conventions."""
+
+import time
+import uuid
+
+import pytest
+
+fastapi = pytest.importorskip("fastapi")
+from fastapi.testclient import TestClient  # noqa: E402
+
+from src.app.main import create_app  # noqa: E402
+
+_SUBSTRATE = {"name": "Rogers RT/Duroid 5880", "eps_r": 2.2, "tan_delta": 0.0009, "thickness": 1.575e-3}
+_SMALL_MESH = {"cells_x": 8, "cells_y": 8, "floquet_order": 8}
+_FREQ_HZ = 10.54e9
+
+
+@pytest.fixture
+def client(tmp_path, monkeypatch):
+    monkeypatch.setenv("LWMOM_APP_DATA_DIR", str(tmp_path / "lwmom_data"))
+    return TestClient(create_app())
+
+
+def _wait_for_job(client, job_id, timeout=60.0):
+    deadline = time.time() + timeout
+    while True:
+        resp = client.get(f"/api/jobs/{job_id}")
+        job = resp.json()
+        if job["status"] in ("done", "failed", "cancelled"):
+            return job
+        if time.time() > deadline:
+            raise TimeoutError(f"job {job_id} did not finish in {timeout}s: {job}")
+        time.sleep(0.05)
+
+
+@pytest.fixture
+def grounded_library(client):
+    library_id = f"test-phase15-ports-{uuid.uuid4().hex[:8]}"
+    body = {
+        "library_id": library_id,
+        "base_config": {
+            "period_x": 8.0e-3, "period_y": 8.0e-3,
+            "substrate": {**_SUBSTRATE, "backing": "pec"},
+            "geometry": {"type": "rectangle", "length": 2.0e-3, "width": 2.0e-3},
+            "excitation": {"frequency": _FREQ_HZ},
+            "mesh": _SMALL_MESH,
+            "reference_planes": {"top_air_thickness": 5.0e-3},
+        },
+        "l_values_mm": [2.0, 3.0, 4.0, 5.0, 6.0],
+        "w_values_mm": [2.0, 3.0, 4.0, 5.0, 6.0],
+        "f_min_hz": _FREQ_HZ, "f_max_hz": _FREQ_HZ, "f_step_hz": 1.0e9, "f_design_hz": _FREQ_HZ,
+    }
+    resp = client.post("/api/library/sweep", json=body)
+    job = _wait_for_job(client, resp.json()["id"])
+    assert job["status"] == "done", job
+    return library_id
+
+
+# =================================================================================== Ports (Part C)
+
+
+def _synthesize_ports_1xn(client, grounded_library):
+    body = {
+        "formulation": "B",
+        "frequency_hz": _FREQ_HZ,
+        "period_mm": 8.0,
+        "layout": {"preset": "1xn", "n": 2, "cell_side_mm": 40.0, "gap_mm": 0.0},
+        "ports": [
+            {"beams": [{"theta_deg": 20.0, "phi_deg": 0.0}]},
+            {"beams": [{"theta_deg": 20.0, "phi_deg": 180.0}]},
+        ],
+        "library_id": grounded_library,
+        "port_eps_r": _SUBSTRATE["eps_r"],
+        "port_thickness_mm": _SUBSTRATE["thickness"] * 1e3,
+    }
+    resp = client.post("/api/hmsa/synthesize_ports", json=body)
+    return _wait_for_job(client, resp.json()["id"], timeout=60.0)
+
+
+def test_synthesize_ports_1xn_layout_end_to_end(client, grounded_library):
+    job = _synthesize_ports_1xn(client, grounded_library)
+    assert job["status"] == "done", job
+    result = job["result"]
+    assert len(result["ports"]) == 2
+    assert "MULTI_PORT_SHARED_METHOD" in result["labels"]
+    assert "PORT_ISOLATION_NOT_FULL_WAVE" in result["labels"]
+    assert len(result["isolation"]) == 1  # 2 ports -> 1 pair
+    assert len(result["feeds_mm"]) == 2
+    assert result["lw_grid_m"] is not None
+
+
+def test_synthesize_ports_rejects_mismatched_beam_count(client, grounded_library):
+    body = {
+        "formulation": "B", "frequency_hz": _FREQ_HZ, "period_mm": 8.0,
+        "layout": {"preset": "1xn", "n": 2, "cell_side_mm": 40.0},
+        "ports": [{"beams": [{"theta_deg": 20.0, "phi_deg": 0.0}]}],  # only 1, layout has 2
+        "library_id": grounded_library,
+        "port_eps_r": _SUBSTRATE["eps_r"], "port_thickness_mm": _SUBSTRATE["thickness"] * 1e3,
+    }
+    resp = client.post("/api/hmsa/synthesize_ports", json=body)
+    job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+    assert job["status"] == "failed", job
+
+
+def test_export_chains_off_a_ports_synthesis_job(client, grounded_library):
+    synth_job = _synthesize_ports_1xn(client, grounded_library)
+    assert synth_job["status"] == "done", synth_job
+    export_body = {
+        "source_job_id": synth_job["id"], "period_mm": 8.0,
+        "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
+        "thickness_mm": _SUBSTRATE["thickness"] * 1e3, "include_step": False,
+    }
+    resp = client.post("/api/export/array", json=export_body)
+    job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+    assert job["status"] == "done", job
+    assert job["result"]["layout_csv_download_url"]
+    readme = client.get(job["result"]["readme_download_url"])
+    assert "Port 0: monopole at" in readme.text
+    assert "S-parameter matrix" in readme.text
+
+
+# ================================================================================== Coded (Part E)
+
+
+def _upload_example_field(client):
+    from pathlib import Path
+
+    example = Path(__file__).resolve().parent.parent / "inputs" / "reference_fields" / "efl_phase_EzZ_example.fld"
+    with open(example, "rb") as fh:
+        resp = client.post("/api/hmsa/upload_field", files={"phase_file": ("efl_phase_EzZ_example.fld", fh, "text/plain")})
+    return resp.json()["upload_id"]
+
+
+def _synthesize_coded_one_bit_square_only(client, grounded_library):
+    upload_id = _upload_example_field(client)
+    body = {
+        "upload_id": upload_id,
+        "frequency_hz": _FREQ_HZ,
+        "period_mm": 8.0,
+        "object_beams": [{"theta_deg": 20.0, "phi_deg": 0.0}],
+        "n_bits": 1,
+        "library_id": grounded_library,
+        "two_state": {"source": "square_only"},
+    }
+    resp = client.post("/api/hmsa/synthesize_coded", json=body)
+    return _wait_for_job(client, resp.json()["id"], timeout=60.0)
+
+
+def test_synthesize_coded_one_bit_square_only(client, grounded_library):
+    job = _synthesize_coded_one_bit_square_only(client, grounded_library)
+    assert job["status"] == "done", job
+    result = job["result"]
+    assert result["n_bits"] == 1
+    assert result["two_state"]["state_0"]["geometry"]["kind"] == "rectangle"
+    assert result["two_state"]["state_1"]["geometry"]["kind"] == "rectangle"
+    assert "CODED_DESIGN_METHOD" in result["labels"]
+    assert any(label.startswith("TWO_STATE_PHASE_SEPARATION(") for label in result["labels"])
+    assert result["lw_grid_m"] is not None
+
+
+def test_export_chains_off_a_one_bit_coded_job(client, grounded_library):
+    synth_job = _synthesize_coded_one_bit_square_only(client, grounded_library)
+    assert synth_job["status"] == "done", synth_job
+    export_body = {
+        "source_job_id": synth_job["id"], "period_mm": 8.0,
+        "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
+        "thickness_mm": _SUBSTRATE["thickness"] * 1e3, "include_step": False,
+    }
+    resp = client.post("/api/export/array", json=export_body)
+    job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+    assert job["status"] == "done", job
+    assert job["result"]["layout_csv_download_url"]
+
+
+def test_synthesize_coded_uploaded_two_state(client):
+    upload_id = _upload_example_field(client)
+    body = {
+        "upload_id": upload_id,
+        "frequency_hz": _FREQ_HZ,
+        "period_mm": 8.0,
+        "object_beams": [{"theta_deg": 0.0, "phi_deg": 0.0}],
+        "n_bits": 1,
+        "two_state": {
+            "source": "uploaded", "uploaded_label_0": "full patch", "uploaded_value_0_real": 1.0,
+            "uploaded_value_0_imag": 0.0, "uploaded_label_1": "slotted patch",
+            "uploaded_value_1_real": -0.98, "uploaded_value_1_imag": 0.0,
+        },
+    }
+    resp = client.post("/api/hmsa/synthesize_coded", json=body)
+    job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+    assert job["status"] == "done", job
+    result = job["result"]
+    assert result["two_state"]["state_0"]["label"] == "full patch"
+    assert result["two_state"]["warning"] is None  # ~180deg separation
+
+
+def test_synthesize_coded_n_bit_matches_against_continuous_library(client, grounded_library):
+    upload_id = _upload_example_field(client)
+    body = {
+        "upload_id": upload_id,
+        "frequency_hz": _FREQ_HZ,
+        "period_mm": 8.0,
+        "object_beams": [{"theta_deg": 20.0, "phi_deg": 0.0}],
+        "n_bits": 2,
+        "library_id": grounded_library,
+    }
+    resp = client.post("/api/hmsa/synthesize_coded", json=body)
+    job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+    assert job["status"] == "done", job
+    result = job["result"]
+    assert result["n_bits"] == 2
+    assert result["assignments"] is not None
+    assert result["lw_grid_m"] is None
+
+
+@pytest.mark.slow
+def test_ensure_annular_slot_library_builds_a_real_library(client):
+    body = {
+        "period_mm": 6.0, "eps_r": 2.2, "tan_delta": 0.0009, "thickness_mm": 1.575,
+        "frequency_hz": 12.5e9, "a_mm": 4.0, "b_mm": 4.0, "r_mm": 1.0, "accuracy": "fast",
+    }
+    resp = client.post("/api/hmsa/ensure_annular_slot_library", json=body)
+    job = _wait_for_job(client, resp.json()["id"], timeout=300.0)
+    assert job["status"] == "done", job
+    assert job["result"]["n_geometries"] == 8
+
+
+@pytest.mark.slow
+def test_synthesize_coded_square_and_annular_two_state(client, grounded_library):
+    annular_body = {
+        "period_mm": 8.0, "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
+        "thickness_mm": _SUBSTRATE["thickness"] * 1e3, "frequency_hz": _FREQ_HZ,
+        "a_mm": 4.0, "b_mm": 4.0, "r_mm": 1.0, "accuracy": "fast",
+    }
+    resp = client.post("/api/hmsa/ensure_annular_slot_library", json=annular_body)
+    annular_job = _wait_for_job(client, resp.json()["id"], timeout=300.0)
+    assert annular_job["status"] == "done", annular_job
+    annular_library_id = annular_job["result"]["annular_slot_library_id"]
+
+    upload_id = _upload_example_field(client)
+    body = {
+        "upload_id": upload_id,
+        "frequency_hz": _FREQ_HZ,
+        "period_mm": 8.0,
+        "object_beams": [{"theta_deg": 20.0, "phi_deg": 0.0}],
+        "n_bits": 1,
+        "library_id": grounded_library,
+        "two_state": {"source": "square_and_annular", "annular_slot_library_id": annular_library_id},
+    }
+    resp = client.post("/api/hmsa/synthesize_coded", json=body)
+    job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+    assert job["status"] == "done", job
+    result = job["result"]
+
+    # also search the square library ALONE, as a baseline
+    square_only_body = {**body, "two_state": {"source": "square_only"}}
+    resp2 = client.post("/api/hmsa/synthesize_coded", json=square_only_body)
+    job2 = _wait_for_job(client, resp2.json()["id"], timeout=60.0)
+    assert job2["status"] == "done", job2
+
+    # adding the annular-slot candidates to the search pool can never make the best achievable
+    # separation WORSE (a real, measured property of a brute-force best-of-N search over a
+    # superset) -- whether the winning pair actually includes an annular cell this time is a real
+    # library-dependent outcome, not asserted either way.
+    combined_sep = result["two_state"]["achieved_separation_deg"]
+    square_only_sep = job2["result"]["two_state"]["achieved_separation_deg"]
+    assert combined_sep >= square_only_sep - 1e-9

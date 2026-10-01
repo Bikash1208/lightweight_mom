@@ -37,6 +37,13 @@ from ...fields.reference_field_grid import (
     feed_position_from_nan_mask,
     fld_to_reference_field_grid,
     radial_beta_profile,
+    resample_to_cell_grid,
+)
+from ...green_function import LayeredGreenFunction
+from ...hologram.coded_synthesis import (
+    continuous_reference_aperture_field,
+    synthesize_coded_n_bit,
+    synthesize_coded_one_bit,
 )
 from ...hologram.hmsa_synthesis import synthesize_formulation_a, synthesize_formulation_b
 from ...hologram.multi_feed import (
@@ -45,9 +52,33 @@ from ...hologram.multi_feed import (
     segmented_reference_field_and_regions,
     superposed_reference_field,
 )
-from ...labels import FEED_REGION_MASKED, feed_position_auto_detected, reference_field_frequency_mismatch
-from ...library_sweep import build_square_library_cells, write_square_library_json
+from ...hologram.multi_port_synthesis import combined_board_lw_grid_m, synthesize_ports
+from ...hologram.ports import custom_layout, layout_preset_1xn, layout_preset_2x2_plus_1_large
+from ...hologram.two_state_cells import (
+    best_separated_pair,
+    candidates_from_annular_slot_library,
+    candidates_from_square_library,
+    separation_warning,
+    two_state_from_values,
+)
+from ...labels import (
+    FEED_REGION_MASKED,
+    MULTI_PORT_SHARED_METHOD,
+    PORT_ISOLATION_NOT_FULL_WAVE,
+    feed_position_auto_detected,
+    isolation_edge_distance,
+    quantization_loss_db,
+    reference_field_frequency_mismatch,
+    two_state_phase_separation,
+)
+from ...library_sweep import (
+    build_annular_slot_library_cells,
+    build_square_library_cells,
+    write_annular_slot_library_json,
+    write_square_library_json,
+)
 from ...materials import Metal, Substrate
+from ...pattern.vector_aperture_pattern import aperture_current_from_scalar, compute_vector_pattern
 from ...phase8b.object_wave import Beam
 from ...reflectarray.designer import CellAssignment
 from ...unit_cell_library import UnitCellLibrary
@@ -764,4 +795,576 @@ def ensure_dispersion(body: EnsureDispersionRequest, request: Request):
     job = request.app.state.jobs.submit(
         "hmsa_ensure_dispersion", _run_ensure_dispersion_job, body.model_dump(), dispersion_id, cache_key=key
     )
+    return job.to_dict()
+
+
+# ============================================================================================
+# PHASE15 Part C (gap-fill) / Part D: multi-port sub-apertures
+# ============================================================================================
+
+
+class PortBeamSpec(BaseModel):
+    """A beam within ONE port's own beam list -- no `feed_index` (unlike `ObjectBeamSpec`): a
+    port's beams are always radial about that SAME port's own feed, by definition of "sub-
+    aperture"."""
+
+    theta_deg: float
+    phi_deg: float
+    weight_real: float = 1.0
+    weight_imag: float = 0.0
+    initial_phase_deg: float = 0.0
+    desired_polarization: str = "natural"
+    oam_charge: int = 0
+
+
+class PortSpec(BaseModel):
+    beams: "list[PortBeamSpec]"
+
+
+class PortLayoutRequest(BaseModel):
+    """`preset`: `"2x2_plus_1_large"` (Mishra's own layout, needs `small_side_mm`),
+    `"1xn"` (needs `n`/`cell_side_mm`), or `"custom"` (needs `regions_mm`, each either
+    `[x_min,x_max,y_min,y_max]` or `[x_min,x_max,y_min,y_max,feed_x,feed_y]`, millimetres)."""
+
+    preset: str
+    small_side_mm: "float | None" = None
+    n: "int | None" = None
+    cell_side_mm: "float | None" = None
+    gap_mm: float = 0.0
+    regions_mm: "list[list[float]] | None" = None
+
+
+class HmsaSynthesizePortsRequest(BaseModel):
+    """PHASE15 Part C gap-fill: N independent sub-aperture syntheses (`hologram.
+    multi_port_synthesis.synthesize_ports`) sharing one formulation/library (`MULTI_PORT_SHARED_METHOD`
+    -- a documented scope reduction, see the phase doc). Every port's feed is analytic (TM0 about
+    that port's own centre, `port_eps_r`/`port_thickness_mm`) -- no per-port `.fld` upload in this
+    first API version."""
+
+    formulation: str  # "A" | "B"
+    frequency_hz: float
+    period_mm: float
+    layout: PortLayoutRequest
+    ports: "list[PortSpec]"
+    library_id: "str | None" = None
+    dispersion_id: "str | None" = None
+    x_avg_ohm: "float | None" = None
+    modulation_index: "float | None" = None
+    rescale_to_beta_bar: bool = True
+    cp_phase_offset_deg: float = 0.0
+    port_eps_r: float
+    port_thickness_mm: float
+    min_lambda_sw: float = 1.0
+
+
+def _build_port_regions(layout: dict):
+    preset = layout["preset"]
+    if preset == "2x2_plus_1_large":
+        if layout["small_side_mm"] is None:
+            raise config_invalid(message="layout preset '2x2_plus_1_large' needs small_side_mm")
+        return layout_preset_2x2_plus_1_large(layout["small_side_mm"] * 1e-3, gap_m=layout["gap_mm"] * 1e-3)
+    if preset == "1xn":
+        if layout["n"] is None or layout["cell_side_mm"] is None:
+            raise config_invalid(message="layout preset '1xn' needs n and cell_side_mm")
+        return layout_preset_1xn(layout["n"], layout["cell_side_mm"] * 1e-3, gap_m=layout["gap_mm"] * 1e-3)
+    if preset == "custom":
+        if not layout["regions_mm"]:
+            raise config_invalid(message="layout preset 'custom' needs regions_mm")
+        rects_m = [tuple(v * 1e-3 for v in r) for r in layout["regions_mm"]]
+        return custom_layout(rects_m)
+    raise config_invalid(message=f"unknown layout preset {preset!r}; expected '2x2_plus_1_large', '1xn', or 'custom'")
+
+
+def _port_cell_to_m(formulation, period_mm):
+    """Returns a `GeometryCell -> (length_m, width_m) | None` function for
+    `multi_port_synthesis.combined_board_lw_grid_m`, matching Formulation A/B's own geometry-
+    parameter convention (`_geometry_param_to_mm` for A, plain L_mm/W_mm for B)."""
+
+    def cell_m(cell):
+        if formulation == "B":
+            if cell.geometry_param is None:
+                return None
+            w_mm = cell.geometry_param_w if cell.geometry_param_w is not None else cell.geometry_param
+            return cell.geometry_param * 1e-3, w_mm * 1e-3
+        mm = _geometry_param_to_mm(cell.geometry_param, period_mm)
+        return (mm * 1e-3, mm * 1e-3) if mm is not None else None
+
+    return cell_m
+
+
+def _run_synthesize_ports_job(job, body: dict):
+    regions = _build_port_regions(body["layout"])
+    if len(body["ports"]) != len(regions):
+        raise config_invalid(
+            message=f"layout '{body['layout']['preset']}' has {len(regions)} port(s) but "
+            f"{len(body['ports'])} port beam list(s) were given"
+        )
+    port_beams = {}
+    for region, port in zip(regions, body["ports"], strict=True):
+        port_beams[region.port_id] = [
+            Beam(
+                theta_deg=b["theta_deg"], phi_deg=b["phi_deg"],
+                weight=complex(b["weight_real"], b["weight_imag"]), initial_phase_deg=b["initial_phase_deg"],
+                desired_polarization=b["desired_polarization"], oam_charge=b["oam_charge"],
+            )
+            for b in port["beams"]
+        ]
+
+    period_m = body["period_mm"] * 1e-3
+    k_swg = tm0_beta(body["frequency_hz"], body["port_eps_r"], body["port_thickness_mm"] * 1e-3)
+
+    if body["formulation"] == "A":
+        if body["dispersion_id"] is None or body["x_avg_ohm"] is None or body["modulation_index"] is None:
+            raise config_invalid(message="formulation A needs dispersion_id, x_avg_ohm and modulation_index")
+        dispersion_table = read_dispersion_csv(upload_dir(body["dispersion_id"]) / "dispersion.csv", body["frequency_hz"])
+
+        def per_port(ref, beams, feed_xy_m):
+            return synthesize_formulation_a(
+                ref, beams, body["frequency_hz"], body["x_avg_ohm"], body["modulation_index"],
+                dispersion_table, period_m, rescale_to_beta_bar=body["rescale_to_beta_bar"],
+                feed_xy_m=feed_xy_m, cp_phase_offset_deg=body["cp_phase_offset_deg"],
+            )
+    elif body["formulation"] == "B":
+        if body["library_id"] is None:
+            raise config_invalid(message="formulation B needs library_id")
+        lib = UnitCellLibrary.from_json(library_registry.resolve_path(body["library_id"]))
+        candidates = library_candidates_at_frequency(lib, body["library_id"], body["frequency_hz"])
+        if not candidates:
+            raise library_frequency_unavailable(
+                f"library {body['library_id']!r} has no record at {body['frequency_hz'] / 1e9:g} GHz"
+            )
+
+        def per_port(ref, beams, feed_xy_m):
+            return synthesize_formulation_b(
+                ref, beams, body["frequency_hz"], candidates, period_m,
+                feed_xy_m=feed_xy_m, cp_phase_offset_deg=body["cp_phase_offset_deg"],
+            )
+    else:
+        raise config_invalid(message=f"formulation must be 'A' or 'B', got {body['formulation']!r}")
+
+    multi = synthesize_ports(
+        regions, port_beams, per_port, period_m, k_swg=k_swg, min_lambda_sw=body["min_lambda_sw"]
+    )
+
+    isolation = []
+    for flag in multi.isolation_flags:
+        entry = {
+            "port_a": flag.port_a, "port_b": flag.port_b, "gap_mm": flag.gap_m * 1e3,
+            "gap_lambda_sw": flag.gap_lambda_sw, "flagged": flag.flagged,
+            "guard_row_suggestion_mm": flag.guard_row_suggestion_m * 1e3 if flag.guard_row_suggestion_m else None,
+        }
+        isolation.append(entry)
+    isolation_labels = tuple(
+        isolation_edge_distance(f.port_a, f.port_b, f.gap_lambda_sw) for f in multi.isolation_flags if f.flagged
+    )
+
+    board = combined_board_lw_grid_m(multi, _port_cell_to_m(body["formulation"], body["period_mm"]))
+    patch_layout_png_url = None
+    try:
+        cells_mm = []
+        for i, row in enumerate(board.lw_grid_m):
+            for j, (l_m, w_m) in enumerate(row):
+                if l_m <= 0.0 or w_m <= 0.0:
+                    continue
+                cx, cy = board.cell_center_m(i, j)
+                cells_mm.append((cx * 1e3, cy * 1e3, l_m * 1e3, w_m * 1e3))
+        out_dir = job_output_dir(job.id)
+        n_y, n_x = len(board.lw_grid_m), len(board.lw_grid_m[0])
+        path = patch_layout_png(
+            cells_mm, body["period_mm"], n_x, n_y, out_dir / "patch_layout.png",
+            title=f"Multi-port board — {len(multi.ports)} ports, {n_x} × {n_y} cells", feed_xy_mm=None,
+        )
+        patch_layout_png_url = f"/api/files/{job.id}/{path.name}"
+    except Exception:
+        patch_layout_png_url = None
+
+    ports_result = []
+    for p in multi.ports:
+        ports_result.append(
+            {
+                "port_id": p.port_id,
+                "feed_x_mm": p.feed_xy_m[0] * 1e3,
+                "feed_y_mm": p.feed_xy_m[1] * 1e3,
+                "x_min_mm": p.region.x_min_m * 1e3, "x_max_mm": p.region.x_max_m * 1e3,
+                "y_min_mm": p.region.y_min_m * 1e3, "y_max_mm": p.region.y_max_m * 1e3,
+                "unreachable_fraction": p.design.unreachable_fraction,
+                "labels": p.design.labels,
+                "n_cells": len(p.design.cells),
+                "x_m": p.design.x_m,
+                "y_m": p.design.y_m,
+                "aperture_field_real": p.design.aperture_field.real if p.design.aperture_field is not None else None,
+                "aperture_field_imag": p.design.aperture_field.imag if p.design.aperture_field is not None else None,
+            }
+        )
+
+    return {
+        "ports": ports_result,
+        "isolation": isolation,
+        "labels": (MULTI_PORT_SHARED_METHOD, PORT_ISOLATION_NOT_FULL_WAVE, *isolation_labels),
+        "formulation": body["formulation"],
+        "period_mm": body["period_mm"],
+        "patch_layout_png_url": patch_layout_png_url,
+        "board_width_mm": board.width_m * 1e3,
+        "board_height_mm": board.height_m * 1e3,
+        "feeds_mm": [(p.feed_xy_m[0] * 1e3, p.feed_xy_m[1] * 1e3) for p in multi.ports],
+        "lw_grid_m": board.lw_grid_m,
+    }
+
+
+@router.post("/synthesize_ports")
+def synthesize_ports_endpoint(body: HmsaSynthesizePortsRequest, request: Request):
+    if body.formulation == "B" and body.library_id is not None:
+        try:
+            library_registry.resolve_path(body.library_id)
+        except KeyError as exc:
+            raise HTTPException(404, str(exc)) from exc
+    job = request.app.state.jobs.submit("hmsa_synthesize_ports", _run_synthesize_ports_job, body.model_dump())
+    return job.to_dict()
+
+
+# ============================================================================================
+# PHASE15 Part E / Part D: the Coded (1-bit / N-bit) design method
+# ============================================================================================
+
+
+class EnsureAnnularSlotLibraryRequest(BaseModel):
+    """PHASE15 Part E: a small real R-sweep (`library_sweep.build_annular_slot_library_cells`),
+    `a_mm`/`b_mm`/`r_mm` fixed, `R` swept over a handful of values between `r_mm` and the largest
+    radius that still fits the patch -- so the Coded method's "best-separated pair" search has a
+    real, solved family of annular-slot candidates to search, the same way the square-patch
+    library already does for plain patches."""
+
+    period_mm: float
+    eps_r: float
+    tan_delta: float
+    thickness_mm: float
+    frequency_hz: float
+    a_mm: float
+    b_mm: float
+    r_mm: float
+    accuracy: Literal["fast", "accurate"] = "fast"
+
+
+_ANNULAR_SLOT_R_SWEEP_POINTS = 8
+
+
+def _annular_slot_r_values_mm(a_mm, b_mm, r_mm):
+    r_hard_max = min(a_mm, b_mm) / 2.0
+    r_max = r_hard_max * 0.95  # a small safety margin inside AnnularSlotPatch's own R<=min(a,b)/2
+    r_min = min(r_mm * 1.3, r_max - 1e-6)
+    if r_min >= r_max:
+        raise config_invalid(message=f"r_mm={r_mm:g} leaves no room for an outer radius R below {r_hard_max:g}")
+    n = _ANNULAR_SLOT_R_SWEEP_POINTS
+    return [round(r_min + i * (r_max - r_min) / (n - 1), 6) for i in range(n)]
+
+
+def _auto_annular_slot_library_id(body_dict):
+    payload = {"kind": "hmsa_auto_annular_slot_library", **body_dict}
+    return "auto_annular_" + config_hash(payload)[:20]
+
+
+def _run_ensure_annular_slot_library_job(job, body_dict, library_id):
+    mesh_cells = AUTO_LIBRARY_MESH_CELLS_BY_ACCURACY[body_dict["accuracy"]]
+    r_values_mm = _annular_slot_r_values_mm(body_dict["a_mm"], body_dict["b_mm"], body_dict["r_mm"])
+    base_config = {
+        "period_x": body_dict["period_mm"] * 1e-3,
+        "period_y": body_dict["period_mm"] * 1e-3,
+        "substrate": {
+            "name": "user", "eps_r": body_dict["eps_r"], "tan_delta": body_dict["tan_delta"],
+            "thickness": body_dict["thickness_mm"] * 1e-3, "backing": "pec",
+        },
+        "geometry": {
+            "type": "patch_annular_slot", "a": body_dict["a_mm"] * 1e-3, "b": body_dict["b_mm"] * 1e-3,
+            "R": r_values_mm[0] * 1e-3, "r": body_dict["r_mm"] * 1e-3,
+        },  # placeholder, overwritten per R
+        "excitation": {"frequency": body_dict["frequency_hz"]},  # placeholder
+        "mesh": {"cells_x": mesh_cells, "cells_y": mesh_cells, "floquet_order": mesh_cells},
+        "reference_planes": {"top_air_thickness": 5.0e-3},
+    }
+
+    def _progress(event):
+        job.progress = event["done"] / max(event["total"], 1)
+        job.progress_message = f"{event['done']}/{event['total']} slot radii solved"
+
+    cells = build_annular_slot_library_cells(
+        base_config, body_dict["a_mm"], body_dict["b_mm"], body_dict["r_mm"], r_values_mm,
+        body_dict["frequency_hz"], progress=_progress,
+    )
+    out_dir = job_output_dir(job.id)
+    path = write_annular_slot_library_json(cells, out_dir / "annular_slot_library.json")
+    library_registry.register(
+        library_id, path,
+        meta={
+            "kind": "annular_slot", "period_mm": body_dict["period_mm"], "backing": "pec",
+            "a_mm": body_dict["a_mm"], "b_mm": body_dict["b_mm"], "r_mm": body_dict["r_mm"],
+            "n_geometries": len(cells), "auto_built": True, "frequency_hz": body_dict["frequency_hz"],
+        },
+    )
+    return {"annular_slot_library_id": library_id, "n_geometries": len(cells), "r_values_mm": r_values_mm, "already_built": False}
+
+
+@router.post("/ensure_annular_slot_library")
+def ensure_annular_slot_library(body: EnsureAnnularSlotLibraryRequest, request: Request):
+    library_id = _auto_annular_slot_library_id(body.model_dump())
+    try:
+        library_registry.resolve_path(library_id)
+        job = request.app.state.jobs.submit(
+            "hmsa_ensure_annular_slot_library", lambda job: {"annular_slot_library_id": library_id, "already_built": True}
+        )
+        return job.to_dict()
+    except KeyError:
+        pass
+    key = config_hash({"kind": "hmsa_ensure_annular_slot_library", **body.model_dump()})
+    job = request.app.state.jobs.submit(
+        "hmsa_ensure_annular_slot_library", _run_ensure_annular_slot_library_job, body.model_dump(),
+        library_id, cache_key=key,
+    )
+    return job.to_dict()
+
+
+class TwoStateSourceRequest(BaseModel):
+    """PHASE15 Part E's three two-state-cell options: (a) `"square_only"` -- the best-separated
+    pair within one square-patch library (`library_id`); (b) `"square_and_annular"` -- the
+    best-separated pair across a square-patch library AND an annular-slot one
+    (`annular_slot_library_id`, from `/ensure_annular_slot_library`) -- Mishra's own full-patch-vs-
+    annular-slot pairing; (c) `"uploaded"` -- two HFSS-measured complex values given directly."""
+
+    source: str = "square_and_annular"
+    annular_slot_library_id: "str | None" = None
+    uploaded_label_0: str = "state 0"
+    uploaded_value_0_real: "float | None" = None
+    uploaded_value_0_imag: "float | None" = None
+    uploaded_label_1: str = "state 1"
+    uploaded_value_1_real: "float | None" = None
+    uploaded_value_1_imag: "float | None" = None
+
+
+def _resolve_two_state_choice(two_state: dict, library_id, frequency_hz):
+    source = two_state["source"]
+    if source == "uploaded":
+        for key in ("uploaded_value_0_real", "uploaded_value_0_imag", "uploaded_value_1_real", "uploaded_value_1_imag"):
+            if two_state[key] is None:
+                raise config_invalid(message=f"two_state source 'uploaded' needs {key}")
+        return two_state_from_values(
+            two_state["uploaded_label_0"], complex(two_state["uploaded_value_0_real"], two_state["uploaded_value_0_imag"]),
+            two_state["uploaded_label_1"], complex(two_state["uploaded_value_1_real"], two_state["uploaded_value_1_imag"]),
+        )
+    if library_id is None:
+        raise config_invalid(message=f"two_state source {source!r} needs library_id (a square-patch library)")
+    lib = UnitCellLibrary.from_json(library_registry.resolve_path(library_id))
+    candidates = candidates_from_square_library(library_candidates_at_frequency(lib, library_id, frequency_hz))
+    if source == "square_only":
+        return best_separated_pair(candidates)
+    if source == "square_and_annular":
+        if two_state["annular_slot_library_id"] is None:
+            raise config_invalid(message="two_state source 'square_and_annular' needs annular_slot_library_id")
+        annular_path = library_registry.resolve_path(two_state["annular_slot_library_id"])
+        annular_cells = json.loads(annular_path.read_text())["cells"]
+        annular_candidates = candidates_from_annular_slot_library(annular_cells, frequency_hz / 1e9)
+        return best_separated_pair(candidates + annular_candidates)
+    raise config_invalid(message=f"unknown two_state source {source!r}")
+
+
+class HmsaSynthesizeCodedRequest(BaseModel):
+    """PHASE15 Part E: the Coded design method. Reuses the single-aperture reference-field
+    resolution (`upload_id` or `feeds`) and beam spec exactly as `/synthesize` does -- only the
+    control-map/geometry-mapping step differs (`hologram.coded_synthesis`)."""
+
+    upload_id: "str | None" = None
+    feeds: "list[FeedSpecRequest] | None" = None
+    multi_feed_strategy: str = "superposition"
+    multi_feed_eps_r: "float | None" = None
+    multi_feed_thickness_mm: "float | None" = None
+    frequency_hz: float
+    period_mm: float
+    object_beams: "list[ObjectBeamSpec]"
+    n_bits: int = 1
+    library_id: "str | None" = None  # required for n_bits > 1; also used by two_state sources
+    two_state: TwoStateSourceRequest = TwoStateSourceRequest()
+    cp_phase_offset_deg: float = 0.0
+    feed_x_mm: "float | None" = None
+    feed_y_mm: "float | None" = None
+    # PHASE15 Part E: substrate params for an immediate quantization-loss measurement (Part B's own
+    # vector model) against the continuous (unquantized) design -- optional; omitted means "not
+    # computed" (never a fabricated/assumed loss number).
+    eps_r: "float | None" = None
+    tan_delta: "float | None" = None
+    thickness_mm: "float | None" = None
+
+
+def _two_state_geometry_to_cell_m(geometry):
+    """A `two_state_cells.TwoStateCell.geometry` dict (millimetres) -> the `(length_m, width_m)` /
+    annular-slot-dict cell entry `export.array_export`'s mixed-cell writers expect (metres), or
+    `None` if this state carries no exportable geometry at all (the "uploaded" two-state source,
+    `two_state_cells.two_state_from_values` with no `geometry_0`/`geometry_1` given -- an
+    HFSS-measured reflection coefficient with no physical cell shape recorded in this app; Export
+    then correctly refuses with "no geometry" rather than this function fabricating one)."""
+    if geometry.get("kind") == "annular_slot":
+        return {
+            "kind": "annular_slot", "a_m": geometry["a_mm"] * 1e-3, "b_m": geometry["b_mm"] * 1e-3,
+            "R_m": geometry["R_mm"] * 1e-3, "r_m": geometry["r_mm"] * 1e-3,
+        }
+    if "L_mm" in geometry and "W_mm" in geometry:
+        return (geometry["L_mm"] * 1e-3, geometry["W_mm"] * 1e-3)
+    return None
+
+
+def _run_synthesize_coded_job(job, body: dict):
+    extra_labels = ("CODED_DESIGN_METHOD",)
+    feeds_mm = None
+    if body["feeds"] is not None:
+        reference_field, feed_xy_m, feeds_mm, multi_feed_labels = _resolve_multi_feed(body, body["frequency_hz"])
+        extra_labels = (*extra_labels, *multi_feed_labels)
+    else:
+        if body["upload_id"] is None:
+            raise config_invalid(message="synthesize_coded needs either upload_id or feeds")
+        raw_reference_field = _load_reference_field(body["upload_id"])
+        raw_nan_mask = np.isnan(raw_reference_field.phase())
+        reference_field, _masked = _mask_feed_region(raw_reference_field)
+        x0_m, y0_m, feed_label = _resolve_feed_xy_m(body, raw_reference_field, raw_nan_mask)
+        feed_xy_m = (x0_m, y0_m)
+        feeds_mm = [(x0_m * 1e3, y0_m * 1e3)]
+        if feed_label is not None:
+            extra_labels = (*extra_labels, feed_label)
+
+    beams = [
+        Beam(
+            theta_deg=b["theta_deg"], phi_deg=b["phi_deg"], weight=complex(b["weight_real"], b["weight_imag"]),
+            initial_phase_deg=b["initial_phase_deg"], desired_polarization=b["desired_polarization"],
+            oam_charge=b["oam_charge"],
+        )
+        for b in body["object_beams"]
+    ]
+    period_m = body["period_mm"] * 1e-3
+    n_bits = body["n_bits"]
+
+    if n_bits == 1:
+        choice = _resolve_two_state_choice(body["two_state"], body["library_id"], body["frequency_hz"])
+        design = synthesize_coded_one_bit(
+            reference_field, beams, body["frequency_hz"], choice, period_m,
+            feed_xy_m=feed_xy_m, cp_phase_offset_deg=body["cp_phase_offset_deg"],
+        )
+        warning = separation_warning(choice)
+        state_labels = (two_state_phase_separation(choice.achieved_separation_deg, n_bits=1),)
+        two_state_info = {
+            "state_0": {"label": choice.state_0.label, "geometry": choice.state_0.geometry,
+                        "phase_deg": float(np.degrees(np.angle(choice.state_0.value)))},
+            "state_1": {"label": choice.state_1.label, "geometry": choice.state_1.geometry,
+                        "phase_deg": float(np.degrees(np.angle(choice.state_1.value)))},
+            "achieved_separation_deg": choice.achieved_separation_deg,
+            "warning": warning,
+        }
+        ny, nx = design.x_m.shape
+        lw_grid_m = [[None] * nx for _ in range(ny)]
+        for c in design.cells:
+            state = choice.state_0 if int(c.geometry_param) == 0 else choice.state_1
+            lw_grid_m[c.i][c.j] = _two_state_geometry_to_cell_m(state.geometry)
+    else:
+        if body["library_id"] is None:
+            raise config_invalid(message="n_bits > 1 needs library_id (a continuous phase library)")
+        lib = UnitCellLibrary.from_json(library_registry.resolve_path(body["library_id"]))
+        candidates = library_candidates_at_frequency(lib, body["library_id"], body["frequency_hz"])
+        if not candidates:
+            raise library_frequency_unavailable(
+                f"library {body['library_id']!r} has no record at {body['frequency_hz'] / 1e9:g} GHz"
+            )
+        design = synthesize_coded_n_bit(
+            reference_field, beams, body["frequency_hz"], n_bits, candidates, period_m,
+            feed_xy_m=feed_xy_m, cp_phase_offset_deg=body["cp_phase_offset_deg"],
+        )
+        state_labels = ()
+        two_state_info = None
+        lw_grid_m = None  # Export for N>1 reuses the existing Formulation-B-shaped `assignments`
+
+    assignments = None
+    if n_bits > 1:
+        assignments = tuple(
+            CellAssignment(
+                i=c.i, j=c.j, x_m=c.x_m, y_m=c.y_m, required_phase_deg=c.control_value,
+                chosen_l_mm=c.geometry_param, chosen_w_mm=c.geometry_param_w,
+                achieved_phase_deg=c.achieved_value, phase_error_deg=c.phase_error_deg,
+                library_id=body["library_id"], phase_coverage_ok=c.reachable,
+            )
+            for c in design.cells
+        )
+
+    cell_field = resample_to_cell_grid(reference_field, period_m)
+    continuous_field = continuous_reference_aperture_field(cell_field, design.continuous_phase_deg)
+
+    quantization_loss_label = None
+    if body["eps_r"] is not None and body["tan_delta"] is not None and body["thickness_mm"] is not None:
+        # Part E: "report quantization loss against the continuous design" -- a REAL measurement
+        # via the same vector pattern model Part B already validated, not a textbook bound.
+        try:
+            substrate = Substrate("user", body["eps_r"], body["tan_delta"], body["thickness_mm"] * 1e-3)
+            green = LayeredGreenFunction(substrate, body["frequency_hz"], backing="pec")
+            dx = float(design.x_m[0, 1] - design.x_m[0, 0])
+            dy = float(design.y_m[1, 0] - design.y_m[0, 0])
+            jx_q, jy_q = aperture_current_from_scalar(design.x_m, design.y_m, design.aperture_field, feed_xy_m=feed_xy_m)
+            jx_c, jy_c = aperture_current_from_scalar(design.x_m, design.y_m, continuous_field, feed_xy_m=feed_xy_m)
+            pat_q = compute_vector_pattern(design.x_m, design.y_m, jx_q, jy_q, body["frequency_hz"], green, dx, dy)
+            pat_c = compute_vector_pattern(design.x_m, design.y_m, jx_c, jy_c, body["frequency_hz"], green, dx, dy)
+            loss_db = pat_c.directivity_estimate_dbi - pat_q.directivity_estimate_dbi
+            quantization_loss_label = quantization_loss_db(loss_db, n_bits)
+        except Exception:
+            quantization_loss_label = None
+
+    patch_layout_png_url = None
+    try:
+        out_dir = job_output_dir(job.id)
+        ny, nx = design.x_m.shape
+        if n_bits == 1:
+            cells_mm = []
+            for c in design.cells:
+                state = choice.state_0 if int(c.geometry_param) == 0 else choice.state_1
+                geom = state.geometry
+                if geom.get("kind") == "annular_slot":
+                    cells_mm.append((c.x_m * 1e3, c.y_m * 1e3, geom["a_mm"], geom["b_mm"], geom["R_mm"], geom["r_mm"]))
+                else:
+                    cells_mm.append((c.x_m * 1e3, c.y_m * 1e3, geom.get("L_mm"), geom.get("W_mm")))
+        else:
+            cells_mm = [
+                (c.x_m * 1e3, c.y_m * 1e3, c.geometry_param, c.geometry_param_w or c.geometry_param)
+                for c in design.cells
+            ]
+        path = patch_layout_png(
+            cells_mm, body["period_mm"], nx, ny, out_dir / "patch_layout.png",
+            title=f"Coded design — {nx} × {ny} cells, {n_bits}-bit", feed_xy_mm=(feed_xy_m[0] * 1e3, feed_xy_m[1] * 1e3),
+        )
+        patch_layout_png_url = f"/api/files/{job.id}/{path.name}"
+    except Exception:
+        patch_layout_png_url = None
+
+    return {
+        "n_bits": n_bits,
+        "x_m": design.x_m,
+        "y_m": design.y_m,
+        "period_mm": body["period_mm"],
+        "continuous_phase_deg": design.continuous_phase_deg,
+        "quantized_phase_deg": design.quantized_phase_deg,
+        "level_map": design.level_map,
+        "cells": design.cells,
+        "assignments": assignments,
+        "two_state": two_state_info,
+        "labels": extra_labels + state_labels + ((quantization_loss_label,) if quantization_loss_label else ()),
+        "aperture_field_real": design.aperture_field.real,
+        "aperture_field_imag": design.aperture_field.imag,
+        "continuous_aperture_field_real": continuous_field.real if continuous_field is not None else None,
+        "continuous_aperture_field_imag": continuous_field.imag if continuous_field is not None else None,
+        "patch_layout_png_url": patch_layout_png_url,
+        "feeds_mm": feeds_mm,
+        "lw_grid_m": lw_grid_m,  # n_bits==1 only -- the two-state export path reads this directly
+        # (1-bit states may be a rectangle OR an annular-slot dict; `assignments` above (n_bits>1
+        # only) is rectangle-only, the existing reflectarray-shaped export path)
+    }
+
+
+@router.post("/synthesize_coded")
+def synthesize_coded_endpoint(body: HmsaSynthesizeCodedRequest, request: Request):
+    if body.library_id is not None:
+        try:
+            library_registry.resolve_path(body.library_id)
+        except KeyError as exc:
+            raise HTTPException(404, str(exc)) from exc
+    job = request.app.state.jobs.submit("hmsa_synthesize_coded", _run_synthesize_coded_job, body.model_dump())
     return job.to_dict()

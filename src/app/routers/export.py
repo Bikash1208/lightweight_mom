@@ -16,7 +16,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 from ...errors import config_invalid
-from ...export.array_export import export_array
+from ...export.array_export import export_array, export_multi_port_array
 from ...materials import Metal, Substrate
 from ..jobs import JobStatus
 from ..jsonutil import to_jsonable
@@ -103,10 +103,20 @@ def _lw_grid_from_assignments(assignments, nx, ny):
     return grid
 
 
+def _download(job_id, path):
+    if path is None:
+        return None
+    return f"/api/files/{job_id}/{Path(path).name}"
+
+
+def _check_lw_grid_complete(lw_grid_m):
+    for i, row in enumerate(lw_grid_m):
+        for j, cell in enumerate(row):
+            if cell is None:
+                raise config_invalid(message=f"cell ({i},{j}) has no geometry -- cannot export an incomplete array")
+
+
 def _run_export_job(job, source_result, params):
-    assignments = source_result["assignments"]
-    ny, nx = source_result["x_m"].shape
-    lw_grid_m = _lw_grid_from_assignments(assignments, nx, ny)
     substrate = Substrate(
         name="user", eps_r=params["eps_r"], tan_delta=params["tan_delta"], thickness=params["thickness_mm"] * 1e-3
     )
@@ -117,28 +127,63 @@ def _run_export_job(job, source_result, params):
     # one (every pre-Phase-15 synthesize result has no "feeds_mm" key -- .get(...) keeps this
     # export byte-for-byte unaffected for those).
     feeds_mm = source_result.get("feeds_mm")
+
+    if source_result.get("assignments") is not None:
+        assignments = source_result["assignments"]
+        ny, nx = source_result["x_m"].shape
+        lw_grid_m = _lw_grid_from_assignments(assignments, nx, ny)
+        if params["include_step"]:
+            n = len(lw_grid_m)
+            with _StepProgressEstimator(job, estimate_step_export_seconds(n), n):
+                result = export_array(lw_grid_m, period_m, period_m, substrate, metal, out_dir, include_step=True, feeds_mm=feeds_mm)
+        else:
+            result = export_array(lw_grid_m, period_m, period_m, substrate, metal, out_dir, include_step=False, feeds_mm=feeds_mm)
+        return {
+            "n_cells_per_side": result.n_cells_per_side,
+            "total_cells": result.total_cells,
+            "file_size_bytes": result.file_size_bytes,
+            "export_time_s": result.export_time_s,
+            "step_download_url": _download(job.id, result.step_path),
+            "layout_csv_download_url": _download(job.id, result.layout_csv_path),
+            "layout_json_download_url": _download(job.id, result.layout_json_path),
+            "layout_dxf_download_url": _download(job.id, result.layout_dxf_path),
+            "readme_download_url": _download(job.id, result.readme_path),
+        }
+
+    # PHASE15 Part C/E: a multi-port board (possibly non-square, `"ports"` present) or a 1-bit
+    # Coded design (possibly mixing plain-rectangle and annular-slot cells) -- both hand back a
+    # ready-made `lw_grid_m` directly (metres, mixed-cell-safe) rather than `assignments`
+    # (reflectarray-shaped, rectangle-only); `export_multi_port_array` handles either.
+    lw_grid_m = source_result.get("lw_grid_m")
+    if lw_grid_m is None:
+        raise config_invalid(message="source job produced neither 'assignments' nor 'lw_grid_m' -- cannot export")
+    _check_lw_grid_complete(lw_grid_m)
+    ports_info = None
+    if "ports" in source_result:
+        ports_info = [(p["port_id"], p["feed_x_mm"], p["feed_y_mm"]) for p in source_result["ports"]]
+    n = max(len(lw_grid_m), len(lw_grid_m[0]) if lw_grid_m else 0)
     if params["include_step"]:
-        n = len(lw_grid_m)
         with _StepProgressEstimator(job, estimate_step_export_seconds(n), n):
-            result = export_array(lw_grid_m, period_m, period_m, substrate, metal, out_dir, include_step=True, feeds_mm=feeds_mm)
+            result = export_multi_port_array(
+                lw_grid_m, period_m, period_m, substrate, metal, out_dir, include_step=True,
+                feeds_mm=feeds_mm, ports_info=ports_info,
+            )
     else:
-        result = export_array(lw_grid_m, period_m, period_m, substrate, metal, out_dir, include_step=False, feeds_mm=feeds_mm)
-
-    def _download(path):
-        if path is None:
-            return None
-        return f"/api/files/{job.id}/{Path(path).name}"
-
+        result = export_multi_port_array(
+            lw_grid_m, period_m, period_m, substrate, metal, out_dir, include_step=False,
+            feeds_mm=feeds_mm, ports_info=ports_info,
+        )
     return {
-        "n_cells_per_side": result.n_cells_per_side,
+        "n_cells_x": result.n_cells_x,
+        "n_cells_y": result.n_cells_y,
         "total_cells": result.total_cells,
         "file_size_bytes": result.file_size_bytes,
         "export_time_s": result.export_time_s,
-        "step_download_url": _download(result.step_path),
-        "layout_csv_download_url": _download(result.layout_csv_path),
-        "layout_json_download_url": _download(result.layout_json_path),
-        "layout_dxf_download_url": _download(result.layout_dxf_path),
-        "readme_download_url": _download(result.readme_path),
+        "step_download_url": _download(job.id, result.step_path),
+        "layout_csv_download_url": _download(job.id, result.layout_csv_path),
+        "layout_json_download_url": _download(job.id, result.layout_json_path),
+        "layout_dxf_download_url": _download(job.id, result.layout_dxf_path),
+        "readme_download_url": _download(job.id, result.readme_path),
     }
 
 
@@ -149,7 +194,8 @@ def export_reflectarray(body: ExportRequest, request: Request):
         raise HTTPException(404, f"job {body.source_job_id!r} not found")
     if source.status != JobStatus.DONE:
         raise HTTPException(409, f"source job {body.source_job_id!r} is {source.status.value}, not done")
-    if "assignments" not in (source.result or {}):
+    result = source.result or {}
+    if result.get("assignments") is None and result.get("lw_grid_m") is None:
         raise HTTPException(422, f"source job {body.source_job_id!r} did not produce cell assignments")
 
     job = request.app.state.jobs.submit("array_export", _run_export_job, source.result, body.model_dump())

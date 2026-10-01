@@ -103,7 +103,7 @@ def combined_board_lw_grid_m(multi_port: MultiPortDesign, cell_m_fn):
     the COMBINED DRAWING, not a claim that the physical layout is seamless at every port boundary.
     A grid cell inside no port's rectangle (a `gap_m` guard row) is `(0.0, 0.0)` ("no patch").
 
-    Returns `(lw_grid_m, width_m, height_m)`.
+    Returns a `CombinedBoard`.
     """
     period_m = multi_port.period_m
     x_min = min(p.region.x_min_m for p in multi_port.ports)
@@ -128,4 +128,26 @@ def combined_board_lw_grid_m(multi_port: MultiPortDesign, cell_m_fn):
                 cell_value = cell_m_fn(cells[idx])
             row.append(cell_value if cell_value is not None else (0.0, 0.0))
         grid.append(row)
-    return grid, (x_max - x_min), (y_max - y_min)
+    return CombinedBoard(
+        lw_grid_m=grid, width_m=(x_max - x_min), height_m=(y_max - y_min),
+        x_min_m=x_min, y_min_m=y_min, period_x_m=px, period_y_m=py,
+    )
+
+
+@dataclass(frozen=True)
+class CombinedBoard:
+    lw_grid_m: list
+    width_m: float
+    height_m: float
+    x_min_m: float
+    y_min_m: float
+    period_x_m: float  # the ACTUAL per-cell pitch used (board width / n_x -- close to but not
+    period_y_m: float  # necessarily exactly `period_m`, since n_x/n_y are rounded integers)
+
+    def cell_center_m(self, i, j):
+        """The (x_m, y_m) centre this module's own corner-indexed lattice places grid cell
+        `(i, j)` at -- the SAME convention `export.array_export.write_hfss_step`/
+        `app.plots.patch_layout_png` need to draw each cell at its true board position."""
+        cx = self.x_min_m + (j + 0.5) * self.period_x_m
+        cy = self.y_min_m + (i + 0.5) * self.period_y_m
+        return cx, cy

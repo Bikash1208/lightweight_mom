@@ -116,22 +116,26 @@ def test_combined_board_lw_grid_covers_the_whole_board_rectangle():
     regions = layout_preset_1xn(2, 0.02)
     beams = {0: [Beam(theta_deg=0.0, phi_deg=0.0)], 1: [Beam(theta_deg=0.0, phi_deg=0.0)]}
     multi = synthesize_ports(regions, beams, _per_port, period_m=PERIOD_M, k_swg=K_SWG)
-    grid, width_m, height_m = combined_board_lw_grid_m(multi, _cell_m)
-    assert width_m == pytest.approx(0.04)
-    assert height_m == pytest.approx(0.02)
-    n_y, n_x = len(grid), len(grid[0])
-    assert n_x == round(width_m / PERIOD_M)
-    assert n_y == round(height_m / PERIOD_M)
+    board = combined_board_lw_grid_m(multi, _cell_m)
+    assert board.width_m == pytest.approx(0.04)
+    assert board.height_m == pytest.approx(0.02)
+    n_y, n_x = len(board.lw_grid_m), len(board.lw_grid_m[0])
+    assert n_x == round(board.width_m / PERIOD_M)
+    assert n_y == round(board.height_m / PERIOD_M)
     # every cell is populated with a real (non-None) (length_m, width_m) pair -- the 1xN preset
     # tiles exactly, with gap_m=0, so no combined-grid cell should fall outside every port
-    for row in grid:
+    for row in board.lw_grid_m:
         for length_m, width_m_ in row:
             assert length_m > 0.0 and width_m_ > 0.0
+    # cell_center_m reconstructs a cell's true board position, matching this module's own lattice
+    cx, cy = board.cell_center_m(0, 0)
+    assert cx == pytest.approx(board.x_min_m + board.period_x_m / 2.0)
+    assert cy == pytest.approx(board.y_min_m + board.period_y_m / 2.0)
 
 
 def test_combined_board_lw_grid_marks_gap_cells_as_no_patch():
     regions = layout_preset_1xn(2, 0.02, gap_m=0.006)  # 3 periods of guard gap between the ports
     beams = {0: [Beam(theta_deg=0.0, phi_deg=0.0)], 1: [Beam(theta_deg=0.0, phi_deg=0.0)]}
     multi = synthesize_ports(regions, beams, _per_port, period_m=PERIOD_M, k_swg=K_SWG)
-    grid, _width_m, _height_m = combined_board_lw_grid_m(multi, _cell_m)
-    assert any(cell == (0.0, 0.0) for row in grid for cell in row)
+    board = combined_board_lw_grid_m(multi, _cell_m)
+    assert any(cell == (0.0, 0.0) for row in board.lw_grid_m for cell in row)

@@ -156,6 +156,69 @@ optional `feeds_mm` parameter — a small marker disk per feed in a "Feeds" STEP
 coordinates note in the README (the brief: "a small marker sheet or a note... with coordinates" —
 this does both). `None` (default) reproduces every pre-Phase-15 export unaffected.
 
+## Part C (gap-fill) — multi-port sub-apertures (`src/hologram/ports.py`, `multi_port_synthesis.py`)
+
+The brief's own Part C asked for more than the single-shared-hologram multi-feed support above:
+Mishra, Barad, Sarkar's own methodology (IEEE TVT 2026, `docs/references/
+Mishra_TVT2026_multiport_1bit_OCMA.pdf`) is five coaxial monopoles, each feeding its OWN rectangular
+sub-aperture (not several feeds illuminating one shared board) — ports 1-4 are 5λ×5λ single-beam
+sub-apertures, port 5 a 10λ×10λ quad-beam one.
+
+**Design: N independent single-aperture syntheses, not new synthesis machinery.** A
+`ports.PortRegion` is just an axis-aligned rectangle (global coordinates) plus its own feed
+position. `multi_port_synthesis.synthesize_ports` crops a native grid to each region, builds that
+port's own reference field (`hologram.multi_feed.superposed_reference_field` on a single-feed list
+— a port's own field IS exactly that function's "one feed" case, reused unmodified), and calls the
+SAME `hologram.hmsa_synthesis.synthesize_formulation_a/b` every single-aperture design already uses,
+with that port's own feed and beam list. Part A's own `feed_xy_m` parameter already makes one
+synthesis call radial about an arbitrary feed — a port needs no new hologram formula at all.
+
+**Documented scope reduction**: every port of one multi-port design shares the SAME formulation and
+dispersion table/phase library (`MULTI_PORT_SHARED_METHOD`) — the brief's "each with ... its own
+method" is not implemented as a genuinely independent per-port formulation choice in this version.
+Each port DOES get its own feed, beam list, and polarization compensation (every other part of
+Part A/B is fully per-port).
+
+**Layout presets** (`ports.layout_preset_2x2_plus_1_large`, `layout_preset_1xn`, `custom_layout`):
+Mishra's own 2×2-plus-one-large-port layout tiles exactly (no gap) when `gap_m=0`; `gap_m` shrinks
+every port's rectangle by `gap_m/2` on every edge (a uniform margin, not only at shared seams — the
+simpler of two possible rules, documented as such).
+
+**Isolation** (`isolation_estimate`): a first-order, explicitly-NOT-full-wave estimate — the
+Euclidean edge-to-edge gap between every pair of ports' rectangles, in units of the board's own
+surface-wave wavelength `lambda_sw = 2*pi/k_swg`, flagged below `min_lambda_sw` (default 1.0) with a
+guard-row suggestion (how much MORE gap would reach the threshold). `PORT_ISOLATION_NOT_FULL_WAVE`
+is attached whenever this runs, and the HFSS README's new "Multi-port isolation" section says
+plainly that a real isolation number needs the full S-parameter matrix of one lumped/coax port per
+monopole — this project reports no isolation number of its own.
+
+**Aperture efficiency per port** (`pattern.vector_aperture_pattern.aperture_efficiency_estimate`):
+`directivity_estimate_dbi / (4*pi*area/lambda^2)`, the standard maximum directivity of a uniformly-
+illuminated aperture of that port's own physical area (Balanis) — reported per port, from that
+port's own measured `compute_vector_pattern` directivity, never assumed.
+
+**Export**: `export.array_export.export_multi_port_array` (a `write_hfss_step`/`write_layout_files`/
+a new rectangle-safe `write_layout_dxf_rect` orchestration, parallel to `export_array` but without
+its square-board assumption — Mishra's own 5-port board is 4×2 small-ports wide, not square) builds
+ONE combined board from every port's own solved cells, snapped onto one shared corner-indexed
+lattice (`multi_port_synthesis.combined_board_lw_grid_m`); since each port's own grid is centred
+independently within its own rectangle (this project's existing single-aperture convention), two
+neighbouring ports do not necessarily share one exact lattice phase at their shared seam — nearest-
+cell snapping absorbs that sub-period (<= one period) mismatch for the combined drawing only, a
+documented limitation, not a claim of a seamless physical layout at every boundary. The README's new
+"Multi-port isolation" section lists one port per monopole and names the S-matrix to check.
+`export.array_export.write_layout_files`'s JSON also had a latent `total_cells = n*n` bug fixed here
+(silently wrong for any non-square grid, which no pre-Phase-15 caller could ever trigger since every
+one of them was already square — a true no-op fix for every existing export).
+
+**Validation** (`tests/test_phase15_mishra_validation.py`, `@pytest.mark.slow`): Mishra's own 5-port
+layout, qualitatively, on a small synthetic board (this project has no measurement of the paper's
+own unit cell, so no gain-agreement claim is made) — beams (15°,0°), (30°,90°), (45°,180°),
+(60°,270°) from ports 0-3 and all four from port 4, LHCP requested throughout: every port's own
+vector-model pattern peaks within a qualitative tolerance of its commanded direction, with LHCP
+measured (not assumed) as the dominant circular component, and the quad-beam port shows elevated
+power at all four commanded directions.
+
 ## Part D — the app
 
 Step 2's beam table gains Polarization and Beam type columns (UI default for a NEW row: Horizontal/

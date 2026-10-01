@@ -99,3 +99,49 @@ def test_export_array_threads_feeds_mm_through(tmp_path):
     assert result.step_path is not None
     readme_text = pathlib.Path(result.readme_path).read_text()
     assert "Feed 0: (-4.000, 0.000) mm" in readme_text
+
+
+# ============================================================== PHASE15 Part C: multi-port export
+
+
+def _rect_grid(n_y, n_x, length_m=2.0e-3, width_m=2.0e-3):
+    return [[(length_m, width_m) for _ in range(n_x)] for _ in range(n_y)]
+
+
+def test_write_layout_dxf_rect_accepts_a_non_square_grid(tmp_path):
+    path = ae.write_layout_dxf_rect(_rect_grid(2, 4), 8.0e-3, 8.0e-3, tmp_path)
+    assert path.exists()
+    assert "PATCHES" in path.read_text()
+
+
+def test_write_layout_dxf_still_rejects_non_square():
+    with pytest.raises(ValueError, match="square"):
+        ae.write_layout_dxf([[(2e-3, 2e-3)] * 4, [(2e-3, 2e-3)] * 3], 8e-3, 8e-3, pathlib.Path("/tmp"))
+
+
+def test_readme_with_ports_info_names_one_port_per_monopole_and_the_s_matrix(tmp_path):
+    text = ae.write_hfss_readme(
+        tmp_path, feeds_mm=[(-2.0, 0.0), (2.0, 0.0)], ports_info=[(0, -2.0, 0.0), (1, 2.0, 0.0)]
+    ).read_text()
+    assert "Port 0: monopole at (-2.000, 0.000) mm" in text
+    assert "S-parameter matrix" in text
+
+
+@pytest.mark.cad
+def test_export_multi_port_array_handles_a_rectangular_board(tmp_path):
+    substrate = Substrate("RT5880", eps_r=2.2, tan_delta=0.0009, thickness=1.575e-3)
+    metal = Metal("pec")
+    grid = _rect_grid(2, 4)  # 2 rows x 4 columns: a rectangular, non-square board
+    result = ae.export_multi_port_array(
+        grid, 8.0e-3, 8.0e-3, substrate, metal, tmp_path,
+        feeds_mm=[(-12.0, 0.0), (12.0, 0.0)], ports_info=[(0, -12.0, 0.0), (1, 12.0, 0.0)],
+    )
+    assert result.n_cells_x == 4
+    assert result.n_cells_y == 2
+    assert result.total_cells == 8
+    assert result.step_path is not None
+    assert result.file_size_bytes > 0
+    readme_text = pathlib.Path(result.readme_path).read_text()
+    assert "Port 0: monopole at (-12.000, 0.000) mm" in readme_text
+    layout = json.loads(pathlib.Path(result.layout_json_path).read_text())
+    assert len(layout["cells"]) == 8

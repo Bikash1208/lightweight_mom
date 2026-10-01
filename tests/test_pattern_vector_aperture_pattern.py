@@ -14,6 +14,7 @@ from src.hologram.polarization_compensation import polarization_compensation_ter
 from src.materials import Substrate
 from src.pattern.vector_aperture_pattern import (
     aperture_current_from_scalar,
+    aperture_efficiency_estimate,
     circular_components,
     compute_vector_pattern,
     copol_component,
@@ -277,3 +278,30 @@ def test_case_5_design1_qualitative_reproduction():
             f"beam {beam.desired_polarization} at ({beam.theta_deg},{beam.phi_deg}): "
             f"expected a pencil-like peak, got a {m.null_depth_db:.1f}dB null"
         )
+
+
+# ============================================================ PHASE15 Part C: aperture efficiency
+
+
+def test_aperture_efficiency_estimate_is_one_at_the_uniform_illumination_limit():
+    from src.frequency import free_space_wavelength
+
+    freq_hz = 10e9
+    wavelength_m = free_space_wavelength(freq_hz)
+    area_m2 = (5 * wavelength_m) ** 2
+    max_directivity = 4.0 * np.pi * area_m2 / wavelength_m**2
+    max_directivity_dbi = 10.0 * np.log10(max_directivity)
+    efficiency, reported_max_dbi = aperture_efficiency_estimate(max_directivity_dbi, area_m2, freq_hz)
+    assert efficiency == pytest.approx(1.0, rel=1e-9)
+    assert reported_max_dbi == pytest.approx(max_directivity_dbi)
+
+
+def test_aperture_efficiency_estimate_is_half_at_3db_below_max():
+    from src.frequency import free_space_wavelength
+
+    freq_hz = 10e9
+    wavelength_m = free_space_wavelength(freq_hz)
+    area_m2 = (5 * wavelength_m) ** 2
+    _efficiency_at_max, max_dbi = aperture_efficiency_estimate(0.0, area_m2, freq_hz)
+    efficiency, _ = aperture_efficiency_estimate(max_dbi - 3.0103, area_m2, freq_hz)
+    assert efficiency == pytest.approx(0.5, rel=1e-3)

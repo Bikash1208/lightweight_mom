@@ -1,0 +1,131 @@
+"""Phase 15 Part C (gap-fill): runs N independent single-aperture HMSA syntheses
+(`hologram.hmsa_synthesis.synthesize_formulation_a/b`, UNMODIFIED), one per `ports.PortRegion` --
+see `ports.py`'s module docstring for why a port needs no new synthesis machinery of its own, only
+its own cropped native grid, feed and beam list.
+
+**Scope reduction, documented (not hidden)**: every port of one multi-port design shares the SAME
+formulation and the same dispersion table / phase library (`per_port_synthesize`, below, is one
+callable bound once by the caller) -- the brief's own "each [port] with ... its own method" is not
+implemented as a genuinely independent per-port formulation choice in this first version. Each
+port DOES get its own feed position, own beam list, and its own polarization compensation (every
+other part of Part A/B is fully per-port)."""
+
+from dataclasses import dataclass
+
+import numpy as np
+
+from .ports import IsolationFlag, PortRegion, isolation_estimate
+
+
+def port_native_grid(region: PortRegion, resolution_m):
+    """A grid spanning `region` at `resolution_m` pitch (finer than the eventual unit-cell period
+    -- `synthesize_formulation_a/b`'s own `resample_to_cell_grid` resamples this down to the
+    chosen period, exactly as it already does for a real imported `.fld`)."""
+    if resolution_m <= 0.0:
+        raise ValueError(f"resolution_m must be > 0, got {resolution_m!r}")
+    nx = max(4, round(region.width_m / resolution_m))
+    ny = max(4, round(region.height_m / resolution_m))
+    x = np.linspace(region.x_min_m, region.x_max_m, nx)
+    y = np.linspace(region.y_min_m, region.y_max_m, ny)
+    return np.meshgrid(x, y, indexing="xy")
+
+
+def port_reference_field(region: PortRegion, resolution_m, k_swg=None, uploaded_field=None):
+    """This port's own reference field, on its own native grid: either the standard analytic
+    monopole about `region`'s own feed, or an uploaded field resampled onto this port's grid --
+    reusing `hologram.multi_feed.superposed_reference_field` on a single-feed list (a port's own
+    field IS exactly that function's "one feed" case; no new interpolation code is written here)."""
+    from .multi_feed import FeedSpec, superposed_reference_field
+
+    x_m, y_m = port_native_grid(region, resolution_m)
+    feed = FeedSpec(region.feed_x_m, region.feed_y_m, amplitude=1.0, reference_field=uploaded_field)
+    return superposed_reference_field([feed], x_m, y_m, k_swg)
+
+
+@dataclass(frozen=True)
+class PortSynthesisResult:
+    port_id: int
+    region: PortRegion
+    design: object  # hologram.hmsa_synthesis.HmsaDesign
+    feed_xy_m: tuple
+
+
+@dataclass(frozen=True)
+class MultiPortDesign:
+    ports: "tuple[PortSynthesisResult, ...]"
+    isolation_flags: "tuple[IsolationFlag, ...]"
+    period_m: float
+
+
+def synthesize_ports(
+    port_regions, port_beams, per_port_synthesize, period_m, resolution_m=None, k_swg=None,
+    uploaded_fields=None, min_lambda_sw=1.0,
+):
+    """`port_beams`: `{port_id: [Beam, ...]}`. `per_port_synthesize(reference_field, beams,
+    feed_xy_m) -> HmsaDesign`: a caller-supplied partial application of `synthesize_formulation_a`
+    or `_b` with every formulation-specific argument (dispersion table / library candidates /
+    X_avg / modulation index / etc.) already bound -- see module docstring for why this keeps the
+    SAME formulation across every port. `uploaded_fields`: optional `{port_id: ReferenceFieldGrid}`.
+    `k_swg`: needed both for an analytic (non-uploaded) port feed AND for the isolation estimate's
+    own lambda_sw; `None` skips the isolation estimate entirely (returns `()`) rather than guess."""
+    if not port_regions:
+        raise ValueError("synthesize_ports: at least one port region is required")
+    resolution_m = resolution_m if resolution_m is not None else period_m / 4.0
+    uploaded_fields = uploaded_fields or {}
+    results = []
+    for region in port_regions:
+        beams = port_beams.get(region.port_id)
+        if not beams:
+            raise ValueError(f"port {region.port_id}: at least one beam is required")
+        ref_field = port_reference_field(region, resolution_m, k_swg, uploaded_fields.get(region.port_id))
+        feed_xy_m = (region.feed_x_m, region.feed_y_m)
+        design = per_port_synthesize(ref_field, beams, feed_xy_m)
+        results.append(PortSynthesisResult(region.port_id, region, design, feed_xy_m))
+    isolation_flags = isolation_estimate(port_regions, k_swg, min_lambda_sw) if k_swg else ()
+    return MultiPortDesign(tuple(results), isolation_flags, period_m)
+
+
+def combined_board_lw_grid_m(multi_port: MultiPortDesign, cell_m_fn):
+    """Assembles ONE rectangular `(length_m, width_m)` nested-list grid spanning the union of
+    every port's own rectangle, on ONE shared `period_m` lattice indexed from the board's own
+    corner (the convention `export.array_export.write_hfss_step` assumes) -- for EXPORT/
+    VISUALIZATION only; each port's own synthesis result (`MultiPortDesign.ports`) is reported to
+    the user separately and is NOT re-gridded.
+
+    `cell_m_fn(GeometryCell) -> (length_m, width_m) | None` converts one solved cell to its
+    export geometry (`None` for an unreachable cell -- rendered as "no patch").
+
+    Each combined-grid cell's geometry is the NEAREST solved cell (by centre distance) of
+    whichever port's own rectangle contains that grid cell's centre: a port's own grid is centred
+    independently within its own rectangle (`ports.py`'s own docstring), so two neighbouring
+    ports do not necessarily share one exact lattice phase at the seam between them -- nearest-cell
+    snapping absorbs that sub-period mismatch, a documented, bounded (<= one period) limitation of
+    the COMBINED DRAWING, not a claim that the physical layout is seamless at every port boundary.
+    A grid cell inside no port's rectangle (a `gap_m` guard row) is `(0.0, 0.0)` ("no patch").
+
+    Returns `(lw_grid_m, width_m, height_m)`.
+    """
+    period_m = multi_port.period_m
+    x_min = min(p.region.x_min_m for p in multi_port.ports)
+    x_max = max(p.region.x_max_m for p in multi_port.ports)
+    y_min = min(p.region.y_min_m for p in multi_port.ports)
+    y_max = max(p.region.y_max_m for p in multi_port.ports)
+    n_x = max(1, round((x_max - x_min) / period_m))
+    n_y = max(1, round((y_max - y_min) / period_m))
+    px, py = (x_max - x_min) / n_x, (y_max - y_min) / n_y
+
+    grid = []
+    for i in range(n_y):
+        cy = y_min + (i + 0.5) * py
+        row = []
+        for j in range(n_x):
+            cx = x_min + (j + 0.5) * px
+            owner = next((p for p in multi_port.ports if p.region.contains(cx, cy)), None)
+            cell_value = None
+            if owner is not None and owner.design.cells:
+                cells = owner.design.cells
+                idx = int(np.argmin([(c.x_m - cx) ** 2 + (c.y_m - cy) ** 2 for c in cells]))
+                cell_value = cell_m_fn(cells[idx])
+            row.append(cell_value if cell_value is not None else (0.0, 0.0))
+        grid.append(row)
+    return grid, (x_max - x_min), (y_max - y_min)

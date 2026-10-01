@@ -251,6 +251,23 @@ def _directivity_estimate(power, theta_grid_deg):
     return 10.0 * np.log10(4.0 * np.pi * power.max() / integral)
 
 
+def aperture_efficiency_estimate(directivity_dbi, area_m2, frequency_hz):
+    """Phase 15 Part C: `directivity / D_max`, `D_max = 4*pi*area/lambda^2` the standard maximum
+    directivity of a uniformly-illuminated aperture of physical area `area_m2` (Balanis, "Antenna
+    Theory," aperture antennas chapter) -- used to report a per-port aperture efficiency (Mishra's
+    own brief: "Aperture efficiency per port"). Returns `(efficiency_fraction, max_directivity_dbi)`;
+    `efficiency_fraction` can exceed 1 for a design whose OWN `_directivity_estimate` (hemisphere-
+    only, no back-radiation notion -- see that function's docstring) overstates directivity, which
+    is reported as-is rather than clamped (an honest symptom of that approximation, not hidden)."""
+    from ..frequency import free_space_wavelength
+
+    wavelength_m = free_space_wavelength(frequency_hz)
+    max_directivity = 4.0 * np.pi * area_m2 / wavelength_m**2
+    max_directivity_dbi = 10.0 * np.log10(max_directivity)
+    efficiency = 10.0 ** ((directivity_dbi - max_directivity_dbi) / 10.0)
+    return float(efficiency), float(max_directivity_dbi)
+
+
 @dataclass(frozen=True)
 class VortexMeasurement:
     null_depth_db: float  # field power AT the beam direction, relative to the pattern's own peak

@@ -28,6 +28,17 @@ VECTOR_PATTERN_MODEL = "VECTOR_PATTERN_MODEL"  # PHASE15 Part B: far field via t
 # function (reciprocity), not the scalar free-space Fourier transform
 SCALAR_PATTERN_MODEL_LEGACY = "SCALAR_PATTERN_MODEL_LEGACY"  # PHASE15 Part B: the pre-Phase-15
 # scalar model, kept for comparison/regression -- no polarization/vortex information
+MULTI_PORT_SHARED_METHOD = "MULTI_PORT_SHARED_METHOD"  # PHASE15 Part C: every port of one
+# multi-port design shares the same formulation and dispersion table / phase library -- a
+# documented scope reduction, not a genuinely independent per-port method choice
+PORT_ISOLATION_NOT_FULL_WAVE = "PORT_ISOLATION_NOT_FULL_WAVE"  # PHASE15 Part C: the inter-port
+# isolation estimate is a first-order edge-distance-vs-surface-wavelength heuristic, not a
+# full-wave (HFSS) S-parameter result
+CODED_DESIGN_METHOD = "CODED_DESIGN_METHOD"  # PHASE15 Part E: 1-bit/N-bit phase quantization
+# (Mishra TVT 2026), rather than a continuous reflection-phase or impedance-modulation hologram
+ANNULAR_SLOT_PATCH_GEOMETRY = "ANNULAR_SLOT_PATCH_GEOMETRY"  # PHASE15 Part E: the second unit-cell
+# geometry type (a square/rectangular patch with a concentric annular slot), solved by this
+# project's own MoM the same way the square patch is
 
 
 def hfss_residual_at_resonance(residual_deg):
@@ -61,6 +72,28 @@ def reference_wave_not_rescaled(worst_case_error_deg):
     is the accumulated phase error ~ |beta_bar - beta_slab|*r_max this could cost at the aperture
     edge."""
     return f"REFERENCE_WAVE_NOT_RESCALED(~{worst_case_error_deg:.0f}deg accumulated error possible)"
+
+
+def isolation_edge_distance(port_a, port_b, gap_lambda_sw):
+    """PHASE15 Part C: two ports' sub-apertures sit closer than the recommended guard-row
+    distance (`hologram.ports.isolation_estimate`'s `min_lambda_sw`), reported in units of the
+    board's own surface-wave wavelength."""
+    return f"PORT_EDGE_DISTANCE_TIGHT(port{port_a}-port{port_b},{gap_lambda_sw:.2f}lambda_sw)"
+
+
+def quantization_loss_db(loss_db, n_bits):
+    """PHASE15 Part E: the directivity lost at the main beam by quantizing the continuous
+    coded-method phase to `n_bits` bits (Mishra's own 1-bit case, or a finer N-bit one), relative
+    to the same aperture's continuous-phase design -- measured on this project's own vector
+    pattern model, never assumed from a textbook bound."""
+    return f"QUANTIZATION_LOSS({loss_db:.2f}dB,{n_bits}bit)"
+
+
+def two_state_phase_separation(achieved_deg, n_bits=1):
+    """PHASE15 Part E: the achieved reflection-phase separation between this design's two (or
+    2^n_bits) coded states, as actually measured from the chosen cell pair/library -- reported
+    honestly even when far from the ideal 360/2^n_bits deg spacing (never assumed)."""
+    return f"TWO_STATE_PHASE_SEPARATION({achieved_deg:.1f}deg,{n_bits}bit)"
 
 
 def feed_position_auto_detected(x_mm, y_mm):

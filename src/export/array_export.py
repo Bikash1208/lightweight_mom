@@ -100,7 +100,7 @@ def write_layout_files(lw_grid_m, output_dir, basename="layout"):
     written, independent of whether STEP export (needs the optional `cad` extra) succeeds."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    n = len(lw_grid_m)
+    n_y = len(lw_grid_m)
     rows = []
     for i, row in enumerate(lw_grid_m):
         for j, (length_m, width_m) in enumerate(row):
@@ -113,14 +113,24 @@ def write_layout_files(lw_grid_m, output_dir, basename="layout"):
         writer.writerows(rows)
 
     json_path = output_dir / f"{basename}.json"
-    json_path.write_text(json.dumps({"n_cells_per_side": n, "total_cells": n * n, "cells": rows}, indent=2))
+    # PHASE15 Part C: `total_cells` is now `len(rows)` (= n_x*n_y) rather than the old `n*n`,
+    # which was silently WRONG for a non-square (n_x != n_y) grid -- a bug no square-only caller
+    # could ever trigger (n*n == n_x*n_y when n_x == n_y, so this is a no-op for every pre-Phase-15
+    # export). `n_cells_per_side` is kept (same name, same value) for backward compatibility.
+    json_path.write_text(
+        json.dumps({"n_cells_per_side": n_y, "total_cells": len(rows), "cells": rows}, indent=2)
+    )
     return csv_path, json_path
 
 
-def write_hfss_readme(output_dir, basename="HFSS_README", feeds_mm=None):
+def write_hfss_readme(output_dir, basename="HFSS_README", feeds_mm=None, ports_info=None):
     """`feeds_mm` (PHASE15 Part C, multi-feed): an optional iterable of `(x_mm, y_mm)` feed
     positions, appended as a note -- `None` (default, every pre-Phase-15 call site) reproduces the
-    template byte-identically."""
+    template byte-identically. `ports_info` (PHASE15 Part C, multi-port): an optional iterable of
+    `(port_id, x_mm, y_mm)` -- when given, appends a note naming one coax/lumped port per monopole
+    and the S-parameter matrix to check for isolation (Mishra's own brief: "> 32 dB measured" --
+    this project reports no isolation number of its own, only which S-parameters to look at; see
+    `hologram.ports.isolation_estimate` for the first-order edge-distance flag it computes instead)."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / f"{basename}.md"
@@ -128,6 +138,18 @@ def write_hfss_readme(output_dir, basename="HFSS_README", feeds_mm=None):
     if feeds_mm:
         lines = "\n".join(f"- Feed {i}: ({x:.3f}, {y:.3f}) mm" for i, (x, y) in enumerate(feeds_mm))
         text += f"\n## Feed locations (PHASE15 Part C, multi-feed)\n\n{lines}\n"
+    if ports_info:
+        port_lines = "\n".join(f"- Port {pid}: monopole at ({x:.3f}, {y:.3f}) mm" for pid, x, y in ports_info)
+        n = len(list(ports_info))
+        text += (
+            f"\n## Multi-port isolation (PHASE15 Part C)\n\n"
+            f"Assign one coax (or lumped) port to each monopole feed below, then solve the full "
+            f"{n}x{n} S-parameter matrix -- the off-diagonal terms S_ij (i != j) are the inter-port "
+            f"isolation this project's own `hologram.ports.isolation_estimate` cannot compute (it "
+            f"only flags tight edge-to-edge DISTANCE between sub-apertures, in surface-wave "
+            f"wavelengths, as a first-order heuristic; a true isolation number needs exactly this "
+            f"full-wave solve).\n\n{port_lines}\n"
+        )
     path.write_text(text)
     return path
 
@@ -143,20 +165,16 @@ def _rectangle_lines_mm(cx_mm, cy_mm, length_mm, width_mm):
     return [(corners[k], corners[(k + 1) % 4]) for k in range(4)]
 
 
-def write_layout_dxf(lw_grid_m, period_x_m, period_y_m, output_dir, basename="layout"):
-    """PHASE13D item 4: a lightweight DXF of the patch layer (millimetres, layer ``PATCHES``) -- a
-    PCB fab wants this or a Gerber, not a 100 MB STEP (PHASE13D_POLISH_AND_PHYSICS.md). Hand-written
-    DXF R12 (``LINE`` entities only -- valid in every DXF reader since R12, unlike ``LWPOLYLINE``
-    which needs R14+): no new dependency (`ezdxf` was never added -- see this module's own history).
-    Same cell-centre convention as `phase9.supercell_geometry.SupercellUnitCell.sub_cell_center`
-    (row i = y-index, column j = x-index), so the drawing lines up with the STEP/CSV export of the
-    same design.
-    """
-    n = _validate_square(lw_grid_m)
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+def _layout_dxf_text(lw_grid_m, period_x_m, period_y_m):
+    """The DXF entity text for `write_layout_dxf`'s board -- factored out so
+    `write_layout_dxf_rect` (PHASE15 Part C: a non-square multi-port board) can reuse it without
+    `_validate_square`'s square-only assumption. Generalizes `n` (one shared cell count) into
+    independent `n_x`/`n_y` (same formula, reduces to the original when `n_x == n_y`)."""
+    n_y = len(lw_grid_m)
+    n_x = len(lw_grid_m[0]) if n_y else 0
     px_mm, py_mm = period_x_m * 1e3, period_y_m * 1e3
-    sub_px_mm, sub_py_mm = px_mm / n, py_mm / n
+    sub_px_mm = px_mm / n_x if n_x else px_mm
+    sub_py_mm = py_mm / n_y if n_y else py_mm
 
     lines = []
     for i, row in enumerate(lw_grid_m):
@@ -174,9 +192,34 @@ def write_layout_dxf(lw_grid_m, period_x_m, period_y_m, output_dir, basename="la
             "11", f"{x2:.6f}", "21", f"{y2:.6f}", "31", "0.0",
         ]
     parts += ["0", "ENDSEC", "0", "EOF"]
+    return "\n".join(parts) + "\n"
 
+
+def write_layout_dxf(lw_grid_m, period_x_m, period_y_m, output_dir, basename="layout"):
+    """PHASE13D item 4: a lightweight DXF of the patch layer (millimetres, layer ``PATCHES``) -- a
+    PCB fab wants this or a Gerber, not a 100 MB STEP (PHASE13D_POLISH_AND_PHYSICS.md). Hand-written
+    DXF R12 (``LINE`` entities only -- valid in every DXF reader since R12, unlike ``LWPOLYLINE``
+    which needs R14+): no new dependency (`ezdxf` was never added -- see this module's own history).
+    Same cell-centre convention as `phase9.supercell_geometry.SupercellUnitCell.sub_cell_center`
+    (row i = y-index, column j = x-index), so the drawing lines up with the STEP/CSV export of the
+    same design.
+    """
+    _validate_square(lw_grid_m)
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / f"{basename}.dxf"
-    path.write_text("\n".join(parts) + "\n")
+    path.write_text(_layout_dxf_text(lw_grid_m, period_x_m, period_y_m))
+    return path
+
+
+def write_layout_dxf_rect(lw_grid_m, period_x_m, period_y_m, output_dir, basename="layout"):
+    """PHASE15 Part C: `write_layout_dxf` without the single-aperture square-board assumption --
+    a multi-port board (Mishra's own 5-port layout is 4*s wide by 2*s tall) is rectangular, not
+    square, so `_validate_square` does not apply; otherwise identical (same DXF text helper)."""
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    path = output_dir / f"{basename}.dxf"
+    path.write_text(_layout_dxf_text(lw_grid_m, period_x_m, period_y_m))
     return path
 
 
@@ -287,6 +330,68 @@ def export_array(
         readme_path=str(readme_path),
         n_cells_per_side=n,
         total_cells=n * n,
+        file_size_bytes=file_size,
+        export_time_s=export_time,
+    )
+
+
+@dataclass(frozen=True)
+class MultiPortExportResult:
+    """`export_array`'s `ArrayExportResult`, generalized to a RECTANGULAR (not necessarily square)
+    multi-port board -- `n_cells_x`/`n_cells_y` replace `n_cells_per_side`/`total_cells = n*n`,
+    which assume a square board (PHASE15 Part C)."""
+
+    step_path: "str | None"
+    layout_csv_path: str
+    layout_json_path: str
+    layout_dxf_path: str
+    readme_path: str
+    n_cells_x: int
+    n_cells_y: int
+    total_cells: int
+    file_size_bytes: "int | None"
+    export_time_s: "float | None"
+
+
+def export_multi_port_array(
+    lw_grid_m, period_x_m, period_y_m, substrate, metal, output_dir, include_step=True,
+    feeds_mm=None, ports_info=None,
+):
+    """`export_array`, for a multi-port board that need not be square (PHASE15 Part C): ONE STEP
+    with all sub-apertures (`write_hfss_step` already supports a rectangular `n_x != n_y` grid --
+    only `write_layout_dxf`'s square assumption needed a rectangular counterpart,
+    `write_layout_dxf_rect`), one marker per feed, and an HFSS README naming one port per monopole
+    and the S-matrix to check (`ports_info`)."""
+    import time
+
+    n_y = len(lw_grid_m)
+    n_x = len(lw_grid_m[0]) if n_y else 0
+    output_dir = Path(output_dir)
+    csv_path, json_path = write_layout_files(lw_grid_m, output_dir)
+    dxf_path = write_layout_dxf_rect(lw_grid_m, period_x_m, period_y_m, output_dir)
+    readme_path = write_hfss_readme(output_dir, feeds_mm=feeds_mm, ports_info=ports_info)
+
+    step_path, file_size, export_time = None, None, None
+    if include_step:
+        step_path = output_dir / "array.step"
+        t0 = time.perf_counter()
+        try:
+            write_hfss_step(lw_grid_m, period_x_m, period_y_m, substrate.thickness, step_path, feeds_mm=feeds_mm)
+        except ImportError as exc:
+            raise cad_unavailable(exc, message="STEP export needs the optional 'cad' extra (cadquery)") from exc
+        export_time = time.perf_counter() - t0
+        file_size = step_path.stat().st_size
+        step_path = str(step_path)
+
+    return MultiPortExportResult(
+        step_path=step_path,
+        layout_csv_path=str(csv_path),
+        layout_json_path=str(json_path),
+        layout_dxf_path=str(dxf_path),
+        readme_path=str(readme_path),
+        n_cells_x=n_x,
+        n_cells_y=n_y,
+        total_cells=n_x * n_y,
         file_size_bytes=file_size,
         export_time_s=export_time,
     )

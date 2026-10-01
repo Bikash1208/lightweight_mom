@@ -56,6 +56,28 @@ class PatternRequest(BaseModel):
     tan_delta: "float | None" = None
     thickness_mm: "float | None" = None
     leakage_alpha_per_m: float = 0.0  # PHASE15 Part B: off (0) by default
+    # PHASE15 Part C gap-fill: a multi-port synthesis job's result has no top-level x_m/aperture_field
+    # of its own (`"ports"` is a LIST of per-port results instead) -- `port_index` selects which
+    # port's own current this pattern call predicts from. `None` (default) is the ordinary
+    # single-aperture path, completely unaffected.
+    port_index: "int | None" = None
+
+
+def _port_source_result(source_result, port_index):
+    if port_index is None:
+        return source_result
+    ports = source_result.get("ports")
+    if not ports:
+        raise config_invalid(message="source job has no per-port results (not a multi-port synthesis job)")
+    if not (0 <= port_index < len(ports)):
+        raise config_invalid(message=f"port_index {port_index} out of range (0..{len(ports) - 1})")
+    port = ports[port_index]
+    return {
+        "x_m": port["x_m"], "y_m": port["y_m"],
+        "aperture_field_real": port["aperture_field_real"], "aperture_field_imag": port["aperture_field_imag"],
+        "period_mm": source_result["period_mm"],
+        "feeds_mm": [(port["feed_x_mm"], port["feed_y_mm"])],
+    }
 
 
 def _run_scalar_pattern_job(job, source_result, frequency_hz, theta_max_deg, n_theta, n_phi, beams):
@@ -244,19 +266,24 @@ def predict(body: PatternRequest, request: Request):
         raise HTTPException(404, f"job {body.source_job_id!r} not found")
     if source.status != JobStatus.DONE:
         raise HTTPException(409, f"source job {body.source_job_id!r} is {source.status.value}, not done")
-    if "aperture_field_real" not in (source.result or {}):
+    source_result = source.result or {}
+    if "aperture_field_real" not in source_result and "ports" not in source_result:
         raise HTTPException(422, f"source job {body.source_job_id!r} did not produce an aperture field")
+    try:
+        result = _port_source_result(source_result, body.port_index)
+    except Exception as exc:
+        raise HTTPException(422, str(exc)) from exc
 
     beams = body.model_dump()["beams"]
     if body.pattern_model == "scalar":
         job = request.app.state.jobs.submit(
             "pattern_predict", _run_scalar_pattern_job,
-            source.result, body.frequency_hz, body.theta_max_deg, body.n_theta, body.n_phi, beams,
+            result, body.frequency_hz, body.theta_max_deg, body.n_theta, body.n_phi, beams,
         )
     elif body.pattern_model == "vector":
         job = request.app.state.jobs.submit(
             "pattern_predict", _run_vector_pattern_job,
-            source.result, body.frequency_hz, body.theta_max_deg, body.n_theta, body.n_phi, beams,
+            result, body.frequency_hz, body.theta_max_deg, body.n_theta, body.n_phi, beams,
             body.eps_r, body.tan_delta, body.thickness_mm, body.leakage_alpha_per_m,
         )
     else:

@@ -267,3 +267,35 @@ def test_synthesize_coded_square_and_annular_two_state(client, grounded_library)
     combined_sep = result["two_state"]["achieved_separation_deg"]
     square_only_sep = job2["result"]["two_state"]["achieved_separation_deg"]
     assert combined_sep >= square_only_sep - 1e-9
+
+
+# ============================================================= per-port pattern prediction (Part C)
+
+
+def test_pattern_predict_with_port_index(client, grounded_library):
+    synth_job = _synthesize_ports_1xn(client, grounded_library)
+    assert synth_job["status"] == "done", synth_job
+    pattern_body = {
+        "source_job_id": synth_job["id"], "frequency_hz": _FREQ_HZ, "pattern_model": "vector",
+        "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
+        "thickness_mm": _SUBSTRATE["thickness"] * 1e3,
+        "beams": [{"theta_deg": 20.0, "phi_deg": 0.0}], "port_index": 0,
+        "n_theta": 31, "n_phi": 37,
+    }
+    resp = client.post("/api/pattern/predict", json=pattern_body)
+    job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+    assert job["status"] == "done", job
+    assert job["result"]["result"]["directivity_estimate_dbi"] is not None
+    assert len(job["result"]["per_beam"]) == 1
+
+
+def test_pattern_predict_rejects_out_of_range_port_index(client, grounded_library):
+    synth_job = _synthesize_ports_1xn(client, grounded_library)
+    assert synth_job["status"] == "done", synth_job
+    pattern_body = {
+        "source_job_id": synth_job["id"], "frequency_hz": _FREQ_HZ, "pattern_model": "vector",
+        "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
+        "thickness_mm": _SUBSTRATE["thickness"] * 1e3, "port_index": 99,
+    }
+    resp = client.post("/api/pattern/predict", json=pattern_body)
+    assert resp.status_code == 422

@@ -103,9 +103,29 @@ def test_only_geometry_parameters_are_sweepable(name):
         ParameterAxis(name, (1e-3,))
 
 
-def test_parameter_names_are_the_five_geometry_fields():
-    assert PARAMETER_NAMES == ("length_m", "width_m", "center_x_m", "center_y_m", "rotation_deg")
-    assert set(base_parameters(config_from_dict(config_dict()).unit_cell.geometry)) == set(PARAMETER_NAMES)
+def test_parameter_names_are_the_five_rectangle_fields_plus_the_four_annular_slot_fields():
+    # PHASE15 Part E: PARAMETER_NAMES is the UNION of both geometry families' own sweepable
+    # parameter names (ParameterAxis itself has no notion of "which geometry kind" -- see
+    # sweep.py's own module docstring/comments); a single geometry's own `base_parameters()` only
+    # ever returns ITS OWN family's subset, matched by `geometry_from_parameters`'s dispatch.
+    assert set(PARAMETER_NAMES) == {
+        "length_m", "width_m", "center_x_m", "center_y_m", "rotation_deg", "a_m", "b_m", "R_m", "r_m",
+    }
+    assert set(base_parameters(config_from_dict(config_dict()).unit_cell.geometry)) == {
+        "length_m", "width_m", "center_x_m", "center_y_m", "rotation_deg",
+    }
+
+
+def test_annular_slot_geometry_round_trips_through_base_and_from_parameters():
+    from src.geometry import AnnularSlotPatch
+    from src.sweep import geometry_from_parameters
+
+    geo = AnnularSlotPatch(a=4e-3, b=4e-3, R=1.5e-3, r=1.0e-3)
+    params = base_parameters(geo)
+    assert set(params) == {"a_m", "b_m", "R_m", "r_m", "center_x_m", "center_y_m", "rotation_deg"}
+    rebuilt = geometry_from_parameters(AnnularSlotPatch.kind, params)
+    assert isinstance(rebuilt, AnnularSlotPatch)
+    assert rebuilt == geo
 
 
 @pytest.mark.parametrize(

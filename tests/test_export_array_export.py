@@ -127,6 +127,48 @@ def test_readme_with_ports_info_names_one_port_per_monopole_and_the_s_matrix(tmp
     assert "S-parameter matrix" in text
 
 
+# ===================================================== PHASE15 Part E: annular-slot coded cells
+
+
+def _mixed_grid():
+    annular = {"kind": "annular_slot", "a_m": 2e-3, "b_m": 2e-3, "R_m": 0.7e-3, "r_m": 0.4e-3}
+    plain = (2e-3, 2e-3)
+    return [[plain, annular], [annular, plain]]
+
+
+def test_write_layout_files_reports_kind_and_slot_radii(tmp_path):
+    csv_path, json_path = ae.write_layout_files(_mixed_grid(), tmp_path)
+    text = csv_path.read_text()
+    assert "kind" in text.splitlines()[0]
+    assert "annular_slot" in text and "rectangle" in text
+    layout = json.loads(json_path.read_text())
+    kinds = {c["kind"] for c in layout["cells"]}
+    assert kinds == {"rectangle", "annular_slot"}
+    annular_cell = next(c for c in layout["cells"] if c["kind"] == "annular_slot")
+    assert annular_cell["R_m"] == pytest.approx(0.7e-3)
+    assert annular_cell["r_m"] == pytest.approx(0.4e-3)
+
+
+def test_write_layout_dxf_rect_draws_circles_for_annular_slot_cells(tmp_path):
+    path = ae.write_layout_dxf_rect(_mixed_grid(), 4e-3, 4e-3, tmp_path)
+    text = path.read_text()
+    assert text.count("CIRCLE") == 4  # 2 annular cells x (outer + inner) circle each
+
+
+@pytest.mark.cad
+def test_write_hfss_step_builds_extra_faces_for_annular_slot_cells(tmp_path):
+    substrate_thickness_m = 1.575e-3
+    rect_only = tmp_path / "rect_only.step"
+    mixed = tmp_path / "mixed.step"
+    rect_grid = [[(2e-3, 2e-3), (2e-3, 2e-3)], [(2e-3, 2e-3), (2e-3, 2e-3)]]
+    info_rect = ae.write_hfss_step(rect_grid, 4e-3, 4e-3, substrate_thickness_m, rect_only)
+    info_mixed = ae.write_hfss_step(_mixed_grid(), 4e-3, 4e-3, substrate_thickness_m, mixed)
+    assert info_rect["n_patches"] == 4
+    # 2 plain patches (1 face each) + 2 annular-slot cells (2 faces each: outer ring + inner disk)
+    assert info_mixed["n_patches"] == 6
+    assert mixed.stat().st_size > rect_only.stat().st_size
+
+
 @pytest.mark.cad
 def test_export_multi_port_array_handles_a_rectangular_board(tmp_path):
     substrate = Substrate("RT5880", eps_r=2.2, tan_delta=0.0009, thickness=1.575e-3)

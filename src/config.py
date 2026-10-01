@@ -17,7 +17,7 @@ import yaml
 from . import units
 from .basis_functions import MeshSettings
 from .excitation import PlaneWaveExcitation, ReferencePlanes
-from .geometry import Geometry, UnitCell
+from .geometry import AnnularSlotPatch, Geometry, UnitCell
 from .materials import Metal, Substrate
 from .periodic_bc import RectangularLattice
 from .sweep import (
@@ -136,22 +136,45 @@ def config_from_dict(data):
 
     # --- geometry ----------------------------------------------------------
     geo = _mapping(data["geometry"], "geometry")
-    _check_keys(
-        "geometry",
-        geo,
-        required=("type", "length", "width"),
-        optional=("center_x", "center_y", "rotation_deg"),
-    )
-    geometry = _wrap(
-        "geometry",
-        Geometry,
-        kind=geo["type"],
-        length=_length("geometry", "length", geo["length"]),
-        width=_length("geometry", "width", geo["width"]),
-        center_x=_length("geometry", "center_x", geo.get("center_x", 0.0)),
-        center_y=_length("geometry", "center_y", geo.get("center_y", 0.0)),
-        rotation=units.from_deg(_number("geometry.rotation_deg", geo.get("rotation_deg", 0.0))),
-    )
+    if geo.get("type") == AnnularSlotPatch.kind:
+        # PHASE15 Part E: the "patch with annular slot" two-state coded-method cell -- a,b,R,r
+        # replace length/width (a different, four-parameter shape family); built as an
+        # `AnnularSlotPatch` (NOT `Geometry`) rather than overloading `type` to still mean
+        # `Geometry.kind` -- `UnitCell`/the MoM solve accept either via duck typing (geometry.py).
+        _check_keys(
+            "geometry",
+            geo,
+            required=("type", "a", "b", "R", "r"),
+            optional=("center_x", "center_y", "rotation_deg"),
+        )
+        geometry = _wrap(
+            "geometry",
+            AnnularSlotPatch,
+            a=_length("geometry", "a", geo["a"]),
+            b=_length("geometry", "b", geo["b"]),
+            R=_length("geometry", "R", geo["R"]),
+            r=_length("geometry", "r", geo["r"]),
+            center_x=_length("geometry", "center_x", geo.get("center_x", 0.0)),
+            center_y=_length("geometry", "center_y", geo.get("center_y", 0.0)),
+            rotation=units.from_deg(_number("geometry.rotation_deg", geo.get("rotation_deg", 0.0))),
+        )
+    else:
+        _check_keys(
+            "geometry",
+            geo,
+            required=("type", "length", "width"),
+            optional=("center_x", "center_y", "rotation_deg"),
+        )
+        geometry = _wrap(
+            "geometry",
+            Geometry,
+            kind=geo["type"],
+            length=_length("geometry", "length", geo["length"]),
+            width=_length("geometry", "width", geo["width"]),
+            center_x=_length("geometry", "center_x", geo.get("center_x", 0.0)),
+            center_y=_length("geometry", "center_y", geo.get("center_y", 0.0)),
+            rotation=units.from_deg(_number("geometry.rotation_deg", geo.get("rotation_deg", 0.0))),
+        )
 
     unit_cell = _wrap("unit_cell", UnitCell, lattice, geometry, substrate, metal, backing=backing)
 

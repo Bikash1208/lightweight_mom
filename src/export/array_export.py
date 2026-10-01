@@ -95,20 +95,48 @@ def _validate_square(lw_grid_m):
     return n
 
 
+def _is_annular_slot_cell(cell):
+    """PHASE15 Part E: a cell entry is either the original plain `(length_m, width_m)` tuple (a
+    square/rectangular patch) or a dict `{"kind": "annular_slot", "a_m", "b_m", "R_m", "r_m"}` (a
+    patch with a concentric annular slot, Mishra's own two-state coded cell) -- dispatched by type
+    throughout this module rather than widening the tuple shape, so every pre-Phase-15 call site
+    (which only ever passes 2-tuples) is completely unaffected."""
+    return isinstance(cell, dict)
+
+
 def write_layout_files(lw_grid_m, output_dir, basename="layout"):
-    """Layout CSV (`i, j, x_m, y_m, length_m, width_m`) and the same data as JSON -- always
-    written, independent of whether STEP export (needs the optional `cad` extra) succeeds."""
+    """Layout CSV (`i, j, length_m, width_m`; PHASE15 Part E, only if the grid has at least one
+    annular-slot cell: `kind, length_m, width_m, R_m, r_m`, `length_m`/`width_m` holding an
+    annular-slot cell's own `a_m`/`b_m` footprint) and the same data as JSON -- always written,
+    independent of whether STEP export (needs the optional `cad` extra) succeeds. A plain-
+    rectangle-only grid (every pre-Phase-15 call, and every Phase-15 call that never uses the new
+    annular-slot cell type) gets the EXACT original 4-column CSV, byte-for-byte."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     n_y = len(lw_grid_m)
+    has_annular = any(_is_annular_slot_cell(cell) for row in lw_grid_m for cell in row)
     rows = []
     for i, row in enumerate(lw_grid_m):
-        for j, (length_m, width_m) in enumerate(row):
-            rows.append({"i": i, "j": j, "length_m": length_m, "width_m": width_m})
+        for j, cell in enumerate(row):
+            if _is_annular_slot_cell(cell):
+                rows.append(
+                    {
+                        "i": i, "j": j, "kind": "annular_slot",
+                        "length_m": cell["a_m"], "width_m": cell["b_m"],
+                        "R_m": cell["R_m"], "r_m": cell["r_m"],
+                    }
+                )
+            elif has_annular:
+                length_m, width_m = cell
+                rows.append({"i": i, "j": j, "kind": "rectangle", "length_m": length_m, "width_m": width_m})
+            else:
+                length_m, width_m = cell
+                rows.append({"i": i, "j": j, "length_m": length_m, "width_m": width_m})
 
     csv_path = output_dir / f"{basename}.csv"
+    fieldnames = ["i", "j", "kind", "length_m", "width_m", "R_m", "r_m"] if has_annular else ["i", "j", "length_m", "width_m"]
     with open(csv_path, "w", newline="") as fh:
-        writer = csv.DictWriter(fh, fieldnames=["i", "j", "length_m", "width_m"])
+        writer = csv.DictWriter(fh, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
 
@@ -169,7 +197,11 @@ def _layout_dxf_text(lw_grid_m, period_x_m, period_y_m):
     """The DXF entity text for `write_layout_dxf`'s board -- factored out so
     `write_layout_dxf_rect` (PHASE15 Part C: a non-square multi-port board) can reuse it without
     `_validate_square`'s square-only assumption. Generalizes `n` (one shared cell count) into
-    independent `n_x`/`n_y` (same formula, reduces to the original when `n_x == n_y`)."""
+    independent `n_x`/`n_y` (same formula, reduces to the original when `n_x == n_y`). PHASE15
+    Part E: an annular-slot cell (`_is_annular_slot_cell`) additionally draws its outer and inner
+    slot radii as native DXF `CIRCLE` entities (R12 already supports this entity, unlike
+    `LWPOLYLINE` -- no polygonal approximation needed) on the same `PATCHES` layer, so a PCB fab
+    sees exactly where to cut the ring."""
     n_y = len(lw_grid_m)
     n_x = len(lw_grid_m[0]) if n_y else 0
     px_mm, py_mm = period_x_m * 1e3, period_y_m * 1e3
@@ -177,11 +209,18 @@ def _layout_dxf_text(lw_grid_m, period_x_m, period_y_m):
     sub_py_mm = py_mm / n_y if n_y else py_mm
 
     lines = []
+    circles = []  # (cx_mm, cy_mm, radius_mm)
     for i, row in enumerate(lw_grid_m):
-        for j, (length_m, width_m) in enumerate(row):
+        for j, cell in enumerate(row):
             cx_mm = -px_mm / 2.0 + (j + 0.5) * sub_px_mm
             cy_mm = -py_mm / 2.0 + (i + 0.5) * sub_py_mm
-            lines.extend(_rectangle_lines_mm(cx_mm, cy_mm, length_m * 1e3, width_m * 1e3))
+            if _is_annular_slot_cell(cell):
+                lines.extend(_rectangle_lines_mm(cx_mm, cy_mm, cell["a_m"] * 1e3, cell["b_m"] * 1e3))
+                circles.append((cx_mm, cy_mm, cell["R_m"] * 1e3))
+                circles.append((cx_mm, cy_mm, cell["r_m"] * 1e3))
+            else:
+                length_m, width_m = cell
+                lines.extend(_rectangle_lines_mm(cx_mm, cy_mm, length_m * 1e3, width_m * 1e3))
 
     parts = ["0", "SECTION", "2", "HEADER", "9", "$ACADVER", "1", "AC1009", "0", "ENDSEC"]
     parts += ["0", "SECTION", "2", "ENTITIES"]
@@ -190,6 +229,12 @@ def _layout_dxf_text(lw_grid_m, period_x_m, period_y_m):
             "0", "LINE", "8", "PATCHES",
             "10", f"{x1:.6f}", "20", f"{y1:.6f}", "30", "0.0",
             "11", f"{x2:.6f}", "21", f"{y2:.6f}", "31", "0.0",
+        ]
+    for cx, cy, radius in circles:
+        parts += [
+            "0", "CIRCLE", "8", "PATCHES",
+            "10", f"{cx:.6f}", "20", f"{cy:.6f}", "30", "0.0",
+            "40", f"{radius:.6f}",
         ]
     parts += ["0", "ENDSEC", "0", "EOF"]
     return "\n".join(parts) + "\n"
@@ -250,24 +295,58 @@ def write_hfss_step(
     px, py = r(period_x_m * 1e3), r(period_y_m * 1e3)
     h = r(thickness_m * 1e3)
     lx, ly = r(n_x * px), r(n_y * py)
+    def _rect_face(cx, cy, l_mm, w_mm):
+        x0, x1 = r(cx - l_mm / 2), r(cx + l_mm / 2)
+        y0, y1 = r(cy - w_mm / 2), r(cy + w_mm / 2)
+        wire = cq.Wire.makePolygon(
+            [cq.Vector(x0, y0, 0), cq.Vector(x1, y0, 0), cq.Vector(x1, y1, 0), cq.Vector(x0, y1, 0)], close=True
+        )
+        return cq.Face.makeFromWires(wire)
+
+    def _annular_slot_faces(cx, cy, a_mm, b_mm, outer_r_mm, inner_r_mm):
+        # PHASE15 Part E: the outer patch (a x b) minus a disk of radius R (one hole in the outer
+        # face's wire), plus a SEPARATE disk of radius r re-inserted as its own face -- together
+        # these leave exactly the ring [r, R] empty, matching `geometry.AnnularSlotPatch.in_feature`
+        # (metal = patch AND NOT ring) exactly; the inner disk is a physically disconnected island
+        # if nothing bridges the ring, the same idealization the MoM solve itself already uses (no
+        # rooftop basis function spans a non-metal gap).
+        hl, hw = a_mm / 2.0, b_mm / 2.0
+        outer_rect = cq.Wire.makePolygon(
+            [
+                cq.Vector(r(cx - hl), r(cy - hw), 0), cq.Vector(r(cx + hl), r(cy - hw), 0),
+                cq.Vector(r(cx + hl), r(cy + hw), 0), cq.Vector(r(cx - hl), r(cy + hw), 0),
+            ],
+            close=True,
+        )
+        outer_circle = cq.Wire.makeCircle(r(outer_r_mm), cq.Vector(r(cx), r(cy), 0), cq.Vector(0, 0, 1))
+        ring_face = cq.Face.makeFromWires(outer_rect, [outer_circle])
+        faces = [ring_face]
+        if inner_r_mm > 0:
+            inner_circle = cq.Wire.makeCircle(r(inner_r_mm), cq.Vector(r(cx), r(cy), 0), cq.Vector(0, 0, 1))
+            faces.append(cq.Face.makeFromWires(inner_circle))
+        return faces
+
     faces = []
     for i, row in enumerate(lw_grid_m):
-        for j, (l_m, w_m) in enumerate(row):
-            l_mm, w_mm = l_m * 1e3, w_m * 1e3
-            if size_step_mm:
-                l_mm = round(l_mm / size_step_mm) * size_step_mm
-                w_mm = round(w_mm / size_step_mm) * size_step_mm
-            l_mm, w_mm = r(l_mm), r(w_mm)
-            if l_mm <= 0 or w_mm <= 0:
-                continue
+        for j, cell in enumerate(row):
             cx = r(-lx / 2 + (j + 0.5) * px)
             cy = r(-ly / 2 + (i + 0.5) * py)
-            x0, x1 = r(cx - l_mm / 2), r(cx + l_mm / 2)
-            y0, y1 = r(cy - w_mm / 2), r(cy + w_mm / 2)
-            wire = cq.Wire.makePolygon(
-                [cq.Vector(x0, y0, 0), cq.Vector(x1, y0, 0), cq.Vector(x1, y1, 0), cq.Vector(x0, y1, 0)], close=True
-            )
-            faces.append(cq.Face.makeFromWires(wire))
+            if _is_annular_slot_cell(cell):
+                a_mm, b_mm = r(cell["a_m"] * 1e3), r(cell["b_m"] * 1e3)
+                outer_r_mm, inner_r_mm = r(cell["R_m"] * 1e3), r(cell["r_m"] * 1e3)
+                if a_mm <= 0 or b_mm <= 0:
+                    continue
+                faces.extend(_annular_slot_faces(cx, cy, a_mm, b_mm, outer_r_mm, inner_r_mm))
+            else:
+                l_m, w_m = cell
+                l_mm, w_mm = l_m * 1e3, w_m * 1e3
+                if size_step_mm:
+                    l_mm = round(l_mm / size_step_mm) * size_step_mm
+                    w_mm = round(w_mm / size_step_mm) * size_step_mm
+                l_mm, w_mm = r(l_mm), r(w_mm)
+                if l_mm <= 0 or w_mm <= 0:
+                    continue
+                faces.append(_rect_face(cx, cy, l_mm, w_mm))
     patches = cq.Compound.makeCompound(faces)
     substrate = cq.Solid.makeBox(lx, ly, h, pnt=cq.Vector(r(-lx / 2), r(-ly / 2), -h))
     gw = cq.Wire.makePolygon(

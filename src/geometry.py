@@ -97,6 +97,73 @@ class Geometry:
         return (np.abs(u) <= self.length / 2) & (np.abs(v) <= self.width / 2)
 
 
+@dataclass(frozen=True)
+class AnnularSlotPatch:
+    """Phase 15 Part E: a rectangular metal patch (``a`` x ``b``) with a concentric annular
+    (ring) slot cut into it, outer slot radius ``R``, inner slot radius ``r``
+    (``0 <= r < R <= min(a, b)/2``) -- Mishra, Barad, Sarkar's own two-state 1-bit coded-metasurface
+    cell (full patch vs patch-with-annular-slot), `docs/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md`
+    Part E.
+
+    Duck-types ``Geometry``'s own interface (``.polarity``, ``.feature_area``, ``.corners()``,
+    ``.in_feature()``) rather than subclassing it, so ``UnitCell``/``RooftopBasis``/
+    ``discretization.py``/the MoM solve itself need NO changes: all of them call only these methods
+    on ``UnitCell.geometry`` and never ``isinstance``-check it (the same extension point
+    ``Geometry`` itself already relies on -- ``UnitCell`` stores a plain ``geometry`` field of no
+    fixed type)."""
+
+    a: float  # patch length, local u axis [m]
+    b: float  # patch width, local v axis [m]
+    R: float  # slot outer radius [m]
+    r: float  # slot inner radius [m]
+    center_x: float = 0.0
+    center_y: float = 0.0
+    rotation: float = 0.0  # [rad]
+
+    kind = "patch_annular_slot"
+
+    def __post_init__(self):
+        for name in ("a", "b", "R", "r", "center_x", "center_y", "rotation"):
+            object.__setattr__(self, name, finite_real(name, getattr(self, name)))
+        if self.a <= 0.0 or self.b <= 0.0:
+            raise ValueError(f"a and b must be > 0, got a={self.a}, b={self.b}")
+        if not (0.0 <= self.r < self.R):
+            raise ValueError(f"annular slot requires 0 <= r < R, got r={self.r}, R={self.R}")
+        half_min = min(self.a, self.b) / 2.0
+        if half_min < self.R:
+            raise ValueError(f"slot outer radius R={self.R} must fit inside the patch (<= min(a,b)/2 = {half_min})")
+
+    @property
+    def polarity(self):
+        return "metal"
+
+    @property
+    def feature_area(self):
+        return self.a * self.b - math.pi * (self.R**2 - self.r**2)
+
+    def corners(self):
+        """(4, 2) bounding-box corners of the OUTER a x b rectangle -- `UnitCell.__post_init__`'s
+        own "feature fits inside the lattice cell" check only needs a bounding box, not the exact
+        (non-rectangular) feature outline."""
+        hl, hw = self.a / 2, self.b / 2
+        local = np.array([[hl, hw], [-hl, hw], [-hl, -hw], [hl, -hw]])
+        c, s = math.cos(self.rotation), math.sin(self.rotation)
+        rot = np.array([[c, -s], [s, c]])
+        return local @ rot.T + np.array([self.center_x, self.center_y])
+
+    def in_feature(self, x, y):
+        """True where (x, y) is metal: inside the a x b patch AND NOT inside the annular slot."""
+        dx = np.asarray(x, dtype=float) - self.center_x
+        dy = np.asarray(y, dtype=float) - self.center_y
+        c, s = math.cos(self.rotation), math.sin(self.rotation)
+        u = dx * c + dy * s
+        v = -dx * s + dy * c
+        inside_patch = (np.abs(u) <= self.a / 2) & (np.abs(v) <= self.b / 2)
+        rho = np.hypot(u, v)
+        inside_ring_slot = (rho >= self.r) & (rho <= self.R)
+        return inside_patch & ~inside_ring_slot
+
+
 _BACKINGS = ("air", "pec")
 
 

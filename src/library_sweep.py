@@ -293,3 +293,90 @@ def write_square_library_json(cells, path):
     path = Path(path)
     path.write_text(json.dumps(doc, indent=1, allow_nan=False) + "\n")
     return path
+
+
+# ======================================================================= PHASE15 Part E
+
+
+def _annular_slot_cell_doc(cell, database, a_mm, b_mm, r_mm):
+    """`_cell_doc`'s own shape, keyed by the annular-slot cell's FOUR shape parameters
+    (`a_mm`/`b_mm`/`R_mm`/`r_mm`) instead of `L_mm`/`W_mm` -- a parallel function rather than
+    generalizing `_cell_doc` itself, since `cell.parameters` for this geometry has different keys
+    (`a_m`/`b_m`/`R_m`/`r_m`, `sweep.base_parameters`) that `_cell_doc` does not know about."""
+    outer_r_mm = round(cell.parameters["R_m"] * 1e3, 9)
+    geometry_status = "VALID" if cell.status == "ok" else "INVALID"
+    if cell.status != "ok":
+        return {
+            "cell_id": cell.cell_id, "a_mm": a_mm, "b_mm": b_mm, "R_mm": outer_r_mm, "r_mm": r_mm,
+            "geometry_status": geometry_status, "solver_status": "FAILED",
+            "invalid_reason": cell.reason, "frequency_GHz": [], "S11": [],
+        }
+    records = sorted(database.records_of(cell.index), key=lambda r: r.frequency_index)
+    families = _S_FAMILIES_ONE_PORT if records[0].port_topology == "one_port" else _S_FAMILIES_TWO_PORT
+    ctx = database.metadata["context"]
+    doc = {
+        "cell_id": cell.cell_id,
+        "a_mm": a_mm, "b_mm": b_mm, "R_mm": outer_r_mm, "r_mm": r_mm,
+        "period_x_mm": ctx["lattice"]["period_x_m"] * 1e3,
+        "period_y_mm": ctx["lattice"]["period_y_m"] * 1e3,
+        "substrate_thickness_mm": ctx["substrate"]["thickness_m"] * 1e3,
+        "epsilon_r": ctx["substrate"]["eps_r"],
+        "tan_delta": ctx["substrate"]["tan_delta"],
+        "backing": ctx["backing"],
+        "geometry_status": geometry_status,
+        "solver_status": "OK",
+        "frequency_GHz": [r.frequency / 1e9 for r in records],
+    }
+    for fam in families:
+        doc[fam] = [_s_entry(r, f"{fam}_xx") for r in records]
+    return doc
+
+
+def build_annular_slot_library_cells(base_config_dict, a_mm, b_mm, r_mm, R_values_mm, frequency_hz, progress=None):
+    """One real solve per outer slot radius `R` (`a`, `b`, `r` fixed) -- the annular-slot
+    geometry's own counterpart of `build_square_library_cells`'s one-real-solve-per-L sweep,
+    needed to find which `R` pairs best (closest to 180deg reflection-phase separation) with a
+    chosen plain-patch size for Part E's two-state coded cell. `base_config_dict`: same convention
+    as `build_square_library_cells` (placeholder `geometry`/`excitation.frequency`, overwritten per
+    `R` here)."""
+    from .config import config_from_dict
+
+    cells = []
+    for i, outer_r_mm in enumerate(R_values_mm):
+        if progress is not None:
+            progress({"done": i, "total": len(R_values_mm)})
+        cfg = config_from_dict(
+            {
+                **base_config_dict,
+                "geometry": {
+                    "type": "patch_annular_slot",
+                    "a": a_mm * 1e-3, "b": b_mm * 1e-3, "R": outer_r_mm * 1e-3, "r": r_mm * 1e-3,
+                },
+                "excitation": {"frequency": frequency_hz},
+            }
+        )
+        # No `SweepSpec` here (unlike `build_square_library_cells`): that dataclass's
+        # `l_values_mm`/`w_values_mm` are square-patch-specific and have no annular-slot
+        # equivalent -- the `SweepDefinition` below is built directly instead.
+        definition = SweepDefinition(
+            frequency=FrequencyGrid(frequency_hz, frequency_hz, 1.0e9),
+            axes=(ParameterAxis("R_m", (outer_r_mm * 1e-3,)),),
+            on_invalid="skip",
+            validation=ValidationPolicy(),
+        )
+        result = run_sweep(cfg, out_dir=None, definition=definition)
+        cells.append(_annular_slot_cell_doc(result.database.cells[0], result.database, a_mm, b_mm, r_mm))
+    if progress is not None:
+        progress({"done": len(R_values_mm), "total": len(R_values_mm)})
+    return cells
+
+
+def write_annular_slot_library_json(cells, path):
+    """Writes a `build_annular_slot_library_cells` cell list, same on-disk shape as
+    `write_square_library_json` (a different `"cells"` key schema, `a_mm`/`b_mm`/`R_mm`/`r_mm`
+    instead of `L_mm`/`W_mm` -- queried directly by Part E's two-state cell search, not through
+    `UnitCellLibrary` (which is hard-keyed to the `(L_mm, W_mm)` 2-tuple))."""
+    doc = {"format": LIBRARY_FORMAT_NAME, "version": LIBRARY_FORMAT_VERSION, "cells": cells}
+    path = Path(path)
+    path.write_text(json.dumps(doc, indent=1, allow_nan=False) + "\n")
+    return path

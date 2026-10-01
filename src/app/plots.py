@@ -135,9 +135,13 @@ _SUBSTRATE_EDGE = "#B8B9BC"
 def patch_layout_png(cells_mm, period_mm, nx, ny, path, title=None, feed_xy_mm=(0.0, 0.0)):
     """True-geometry board drawing (PHASE13D item 5): every patch at its real L x W and position,
     bright copper on a light-grey substrate, feed point marked, mm axes, size legend.
-    `cells_mm`: iterable of (x_mm, y_mm, l_mm, w_mm) patch centres/sizes."""
+    `cells_mm`: iterable of `(x_mm, y_mm, l_mm, w_mm)` plain-patch centres/sizes, or (PHASE15 Part
+    E) `(x_mm, y_mm, l_mm, w_mm, R_mm, r_mm)` for a patch with an annular slot -- drawn as the
+    patch rectangle with the ring `[r_mm, R_mm]` punched out (substrate colour) and the inner disk
+    (radius `r_mm`) restored as its own copper island on top, so a board using BOTH cell types
+    (Part E's own "the patch-layout PNG must show both geometries") renders each correctly."""
     from matplotlib.collections import PatchCollection
-    from matplotlib.patches import Rectangle
+    from matplotlib.patches import Circle, Rectangle
 
     cells = [c for c in cells_mm if c[2] is not None and c[3] is not None]
     xs = np.array([c[0] for c in cells]) if cells else np.zeros(1)
@@ -151,8 +155,15 @@ def patch_layout_png(cells_mm, period_mm, nx, ny, path, title=None, feed_xy_mm=(
     ax.set_facecolor("white")
     ax.add_patch(Rectangle((cx - half_x, cy - half_y), 2 * half_x, 2 * half_y,
                            facecolor=_SUBSTRATE, edgecolor=_SUBSTRATE_EDGE, linewidth=0.8, zorder=0))
-    rects = [Rectangle((x - l / 2.0, y - w / 2.0), l, w) for x, y, l, w in cells]
+    rects = [Rectangle((x - l / 2.0, y - w / 2.0), l, w) for x, y, l, w, *_rest in cells]
     ax.add_collection(PatchCollection(rects, facecolor=_COPPER, edgecolor=_COPPER_EDGE, linewidth=0.15, zorder=1))
+    for x, y, _l, _w, *rest in cells:
+        if not rest:
+            continue
+        outer_r_mm, inner_r_mm = rest
+        ax.add_patch(Circle((x, y), outer_r_mm, facecolor=_SUBSTRATE, edgecolor="none", zorder=2))
+        if inner_r_mm > 0:
+            ax.add_patch(Circle((x, y), inner_r_mm, facecolor=_COPPER, edgecolor=_COPPER_EDGE, linewidth=0.15, zorder=3))
     if feed_xy_mm is not None:
         ax.plot(feed_xy_mm[0], feed_xy_mm[1], "o", markersize=4, color=_ACCENT, zorder=3)
     ax.set_xlim(cx - half_x - 2, cx + half_x + 2)

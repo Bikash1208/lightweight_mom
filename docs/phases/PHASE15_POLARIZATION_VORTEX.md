@@ -219,6 +219,75 @@ vector-model pattern peaks within a qualitative tolerance of its commanded direc
 measured (not assumed) as the dominant circular component, and the quad-beam port shows elevated
 power at all four commanded directions.
 
+## Part E — the Coded (1-bit / N-bit) design method (`src/hologram/coded_synthesis.py`)
+
+Mishra, Barad, Sarkar's own methodology (IEEE TVT 2026) is a THIRD design method next to the
+eigenmode/dispersion (Formulation A) and reflection-phase (Formulation B) methods this app already
+has: a continuous per-cell phase target, quantized to 2 (1-bit) or `2**N` (N-bit) discrete
+reflective states.
+
+**The phase formula needs no new code.** Mishra's eq. 1, `psi = -k0(x*sin(th0)*cos(ph0) +
+y*sin(th0)*sin(ph0)) + beta_sw*rho + chi*atan2(y,x)` (`chi = +-1` for LH/RH CP — the same spiral as
+Part A; `chi = 0` with a half-plane flip for LP), decomposes exactly into quantities this phase
+already computes: the steering term is `arg(single_beam_object_field(...))` (identical formula);
+`beta_sw*rho` is `-arg(monopole_reference_field(...))`, so adding it is exactly Formulation B's own
+`required_phase = arg(E_obj) - arg(E_ref)`; the CP spiral/LP flip term is exactly
+`arg(polarization_compensation_term(..., oam_charge=0))` — Part A's own phi_ext. So calling
+`hmsa_synthesis.formulation_b_control_map` on a SINGLE beam already returns `psi_m(x,y)` — the
+brief's own "unify the code so both methods use one phi_ext implementation" falls out for free
+(`coded_synthesis.per_beam_phase_maps_deg`).
+
+**The 1-bit/N-bit combination rule is one formula, not two.** Mishra eq. 3,
+`f = sum_m w_m*cos(psi_m)`, eq. 2, `B = 1 if f>0 else 0`; the brief's N-bit generalization,
+quantize `arg(sum_m w_m*e^{j*psi_m})` into `2**N` levels. Since
+`f = sum_m w_m*cos(psi_m) = Re(sum_m w_m*e^{j*psi_m})`, and nearest-level quantization of an angle
+into `{0, 180}` by sign is exactly `sign(Re(.))`, the 1-bit rule IS the `N=1` case of the general
+N-bit quantization — `coded_synthesis.coded_phase_map_deg` implements it once (derived, then
+confirmed by test against the brief's own `f>0` formula directly, not merely asserted).
+
+**Unit cells, 1-bit**: a `two_state_cells.TwoStateChoice` pairs two real, measured candidate cells
+(never assumed 180° apart) — (a) `best_separated_pair` brute-force searches any pool of candidates
+(e.g. `candidates_from_square_library`'s own square-patch-library wrapper) for the pair closest to
+180°, reporting the ACHIEVED separation; (b) a genuinely new unit-cell geometry,
+`geometry.AnnularSlotPatch` (a rectangular `a`×`b` patch with a concentric annular slot `[r, R]`),
+duck-typing `Geometry`'s own interface (`.polarity`, `.feature_area`, `.corners()`, `.in_feature()`)
+so `UnitCell`/`RooftopBasis`/the MoM solve need no changes at all — validated with a real solve
+(`tests/test_geometry_annular_slot_patch.py`, `@pytest.mark.slow`): a lossless grounded reflector
+(`|S11| ~ 1`) whose phase measurably differs from a plain patch of the same outer footprint (e.g.
+−49.9° vs −43.2° at one tested size — the slot does something physically real, not asserted).
+Wired through the full sweep pipeline (`sweep.py`'s `PARAMETER_NAMES`/`base_parameters`/
+`geometry_from_parameters` generalized to dispatch on geometry kind; `config.py`'s `geometry:`
+section gains a `patch_annular_slot` type) exactly like the square patch, including a real
+`library_sweep.build_annular_slot_library_cells` R-sweep (one real solve per outer radius) so a
+user can search for a good pairing; (c) `two_state_cells.two_state_from_values` accepts an
+HFSS-measured two-state table directly. `separation_warning` reports (never silently accepts) a
+pair far from 180°.
+
+**Geometry mapping**: 1-bit designs map their quantized `{0,1}` level map DIRECTLY onto the chosen
+two states (no library search — these ARE the two available states); N-bit (`N>1`) designs instead
+match the quantized target phase against a CONTINUOUS phase library via the SAME
+`map_control_to_geometry_library`/`nearest_response_match` the continuous Formulation B path
+already uses — an N-bit design is reachability-reported exactly like a continuous one.
+
+**Pattern and quantization loss**: the same vector model (Part B) — `aperture_field` uses each
+cell's REAL achieved phase (the chosen state's own measured value, not the ideal 0°/180° target),
+exactly like Formulation B already does. `coded_synthesis.continuous_reference_aperture_field`
+builds the hypothetical zero-quantization-error field from the same design's own
+`continuous_phase_deg`, so comparing `compute_vector_pattern` of both measures quantization loss
+directly (`tests/test_hologram_coded_synthesis.py`'s own end-to-end case measured ~1.8 dB of
+directivity loss for a 1-bit design on a small synthetic board — a real number, not a textbook
+bound).
+
+**Export**: `export.array_export` generalizes its cell representation to accept EITHER a plain
+`(length_m, width_m)` tuple or a `{"kind": "annular_slot", "a_m", "b_m", "R_m", "r_m"}` dict,
+per cell, in `write_hfss_step` (two cadquery faces per annular cell — the outer patch-minus-a-disk
+ring, plus the inner disk re-inserted as its own island, exactly matching `AnnularSlotPatch.
+in_feature`'s own definition), `write_layout_dxf`/`write_layout_dxf_rect` (native DXF `CIRCLE`
+entities for the two slot radii), and `write_layout_files` (JSON always, CSV only gains the new
+`kind`/`R_m`/`r_m` columns when the grid actually has an annular-slot cell — a plain-rectangle-only
+grid still gets the EXACT original 4-column CSV, byte-for-byte). `app.plots.patch_layout_png` draws
+both cell types on one board (the brief: "the patch-layout PNG must show both cell types").
+
 ## Part D — the app
 
 Step 2's beam table gains Polarization and Beam type columns (UI default for a NEW row: Horizontal/
@@ -264,6 +333,22 @@ from stale `state.beams` without first reading back the user's own edits, silent
   project has no independent HFSS ground truth for the `oam_charge` option specifically to pin a
   universal sign convention against.
 - **No explicit feed-position-override UI** in Step 2 (API-only, `feed_x_mm`/`feed_y_mm`).
+- **Multi-port designs share one formulation/library across every port** (`MULTI_PORT_SHARED_METHOD`)
+  — not a genuinely independent per-port method choice, though each port DOES get its own feed, beam
+  list, and polarization compensation.
+- **The combined multi-port board drawing snaps to the nearest solved cell** at each shared seam
+  (`multi_port_synthesis.combined_board_lw_grid_m`) since each port's own grid is centred
+  independently within its own rectangle — a bounded (<= one period) visualization/export
+  imprecision at port boundaries, not a claim of a seamless physical layout there.
+- **Port isolation and inter-port S-parameters are not computed** — only a first-order edge-distance
+  heuristic (`PORT_ISOLATION_NOT_FULL_WAVE`); the HFSS README says plainly what full-wave check is
+  needed instead.
+- **N-bit (N>1) coded designs need an existing continuous phase library** (e.g. the square-patch
+  one) to match their quantized target against — only 1-bit designs use the dedicated two-state
+  cell search (`two_state_cells`); no N-bit-specific multi-level library-building tool is provided.
+- **The annular-slot geometry has no eigenmode/dispersion-table counterpart** (`sheet_model.py`/
+  `mom_scaffold.py`'s `square_patch_unit_cell` were not extended) — Mishra's own coded method uses
+  reflection phase (Formulation B's own library family), which is the only path implemented for it.
 
 ## Done when
 

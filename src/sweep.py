@@ -46,9 +46,17 @@ from .discretization import (
     metal_mask_key,
 )
 from .frequency import validate_frequency
-from .geometry import Geometry, UnitCell
+from .geometry import AnnularSlotPatch, Geometry, UnitCell
 
-PARAMETER_NAMES = ("length_m", "width_m", "center_x_m", "center_y_m", "rotation_deg")
+PARAMETER_NAMES = (
+    "length_m", "width_m", "center_x_m", "center_y_m", "rotation_deg",
+    # PHASE15 Part E: `geometry.AnnularSlotPatch`'s own four shape parameters -- only meaningful
+    # when `sweep_context(config)["geometry_kind"] == AnnularSlotPatch.kind`
+    # (`geometry_from_parameters`/`base_parameters` dispatch on that; `ParameterAxis` itself has no
+    # notion of geometry kind, so both families' names must coexist in this one flat tuple).
+    "a_m", "b_m", "R_m", "r_m",
+)
+_ANNULAR_SLOT_PARAMETER_NAMES = ("a_m", "b_m", "R_m", "r_m", "center_x_m", "center_y_m", "rotation_deg")
 ON_INVALID = ("error", "skip")
 REFINEMENT_FREQUENCIES = ("max", "all")
 
@@ -244,7 +252,14 @@ class SweepDefinition:
 
 
 def base_parameters(geometry):
-    """The five sweepable parameters of a Geometry (I/O units: m and degrees)."""
+    """The sweepable parameters of a `Geometry` (five) or an `AnnularSlotPatch` (seven; PHASE15
+    Part E) -- I/O units: m and degrees."""
+    if isinstance(geometry, AnnularSlotPatch):
+        return {
+            "a_m": geometry.a, "b_m": geometry.b, "R_m": geometry.R, "r_m": geometry.r,
+            "center_x_m": geometry.center_x, "center_y_m": geometry.center_y,
+            "rotation_deg": units.to_deg(geometry.rotation),
+        }
     return {
         "length_m": geometry.length,
         "width_m": geometry.width,
@@ -255,8 +270,22 @@ def base_parameters(geometry):
 
 
 def geometry_from_parameters(kind, parameters):
-    """Inverse of ``base_parameters`` (the only place degrees become radians for a sweep)."""
-    missing = set(PARAMETER_NAMES) - set(parameters)
+    """Inverse of ``base_parameters`` (the only place degrees become radians for a sweep). PHASE15
+    Part E: `kind == AnnularSlotPatch.kind` ("patch_annular_slot") builds an `AnnularSlotPatch`
+    instead of a `Geometry` -- the swept parameter NAMES (`a_m`/`b_m`/`R_m`/`r_m` vs `length_m`/
+    `width_m`) are what select the class, since `sweep_context`'s own `geometry_kind` already
+    records which family a given sweep is for."""
+    if kind == AnnularSlotPatch.kind:
+        missing = set(_ANNULAR_SLOT_PARAMETER_NAMES) - set(parameters)
+        if missing:
+            raise ValueError(f"missing geometry parameter(s) {sorted(missing)}")
+        return AnnularSlotPatch(
+            a=parameters["a_m"], b=parameters["b_m"], R=parameters["R_m"], r=parameters["r_m"],
+            center_x=parameters["center_x_m"], center_y=parameters["center_y_m"],
+            rotation=units.from_deg(parameters["rotation_deg"]),
+        )
+    base_names = ("length_m", "width_m", "center_x_m", "center_y_m", "rotation_deg")
+    missing = set(base_names) - set(parameters)
     if missing:
         raise ValueError(f"missing geometry parameter(s) {sorted(missing)}")
     return Geometry(

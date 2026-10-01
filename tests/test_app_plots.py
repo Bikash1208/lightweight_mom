@@ -62,3 +62,12 @@ def test_vortex_phase_ring_png(tmp_path):
     phase_deg = np.degrees(np.radians(alpha_deg))  # a winding=+1 sawtooth
     path = plots.vortex_phase_ring_png(alpha_deg, phase_deg, winding_number=1.0, path=tmp_path / "vortex.png")
     _assert_real_png(path)
+
+
+def test_patch_layout_png_renders_both_plain_and_annular_slot_cells(tmp_path):
+    cells_mm = [
+        (-2.0, 0.0, 2.0, 2.0),  # plain rectangle patch
+        (2.0, 0.0, 2.0, 2.0, 0.7, 0.4),  # PHASE15 Part E: patch with an annular slot
+    ]
+    path = plots.patch_layout_png(cells_mm, period_mm=4.0, nx=2, ny=1, path=tmp_path / "mixed_layout.png")
+    _assert_real_png(path)

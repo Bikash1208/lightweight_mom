@@ -10,11 +10,13 @@ import pytest
 from src.config import config_from_dict
 from src.library_sweep import (
     SweepSpec,
+    build_annular_slot_library_cells,
     build_square_library_cells,
     classify_cell_backing_aware,
     detect_resonance_phase_crossing,
     extract_design_frequency,
     run_custom_sweep,
+    write_annular_slot_library_json,
     write_app_library_json,
     write_square_library_json,
 )
@@ -228,3 +230,66 @@ def test_write_square_library_json_round_trips_through_unit_cell_library_query_a
     lib = UnitCellLibrary.from_json(path)
     entry = lib.response(2.0, 2.0, 12.5, family="S11")
     assert set(entry) == {"real", "imag", "mag", "mag_db", "phase_deg"}
+
+
+# ======================================================== PHASE15 Part E: annular-slot patch library
+
+
+def _annular_base_config():
+    return {
+        "period_x": 6.0e-3,
+        "period_y": 6.0e-3,
+        "substrate": {**_SUBSTRATE, "backing": "pec"},
+        "geometry": {"type": "patch_annular_slot", "a": 4.0e-3, "b": 4.0e-3, "R": 1.5e-3, "r": 1.0e-3},  # placeholder
+        "excitation": {"frequency": 12.5e9},  # placeholder
+        "mesh": _MESH,
+        "reference_planes": {"top_air_thickness": 5.0e-3},
+    }
+
+
+def test_build_annular_slot_library_cells_sweeps_only_the_outer_radius():
+    calls = []
+    cells = build_annular_slot_library_cells(
+        _annular_base_config(), a_mm=4.0, b_mm=4.0, r_mm=1.0, R_values_mm=[1.2, 1.5, 1.8],
+        frequency_hz=12.5e9, progress=calls.append,
+    )
+    assert len(cells) == 3
+    for cell, outer_r_mm in zip(cells, (1.2, 1.5, 1.8), strict=True):
+        assert cell["a_mm"] == pytest.approx(4.0)
+        assert cell["b_mm"] == pytest.approx(4.0)
+        assert cell["r_mm"] == pytest.approx(1.0)
+        assert cell["R_mm"] == pytest.approx(outer_r_mm)
+        assert cell["solver_status"] == "OK"
+        assert abs(cell["S11"][0]["mag"] - 1.0) < 0.05  # lossless grounded PEC reflector
+    assert calls[0] == {"done": 0, "total": 3}
+    assert calls[-1] == {"done": 3, "total": 3}
+
+
+def test_annular_slot_phase_differs_from_a_plain_patch_of_the_same_outer_size():
+    """A real measurement, not an assumption: the slot must actually change the reflection phase
+    relative to a plain (no-slot) patch of the same outer footprint."""
+    plain_config = {
+        "period_x": 6.0e-3, "period_y": 6.0e-3,
+        "substrate": {**_SUBSTRATE, "backing": "pec"},
+        "geometry": {"type": "rectangle", "length": 4.0e-3, "width": 4.0e-3},
+        "excitation": {"frequency": 12.5e9},
+        "mesh": _MESH,
+        "reference_planes": {"top_air_thickness": 5.0e-3},
+    }
+    plain_cells = build_square_library_cells(plain_config, l_values_mm=(4.0,), frequency_hz=12.5e9)
+    annular_cells = build_annular_slot_library_cells(
+        _annular_base_config(), a_mm=4.0, b_mm=4.0, r_mm=1.0, R_values_mm=[1.5], frequency_hz=12.5e9
+    )
+    plain_phase = plain_cells[0]["S11"][0]["phase_deg"]
+    annular_phase = annular_cells[0]["S11"][0]["phase_deg"]
+    assert abs(((annular_phase - plain_phase + 180.0) % 360.0) - 180.0) > 1.0
+
+
+def test_write_annular_slot_library_json_round_trips(tmp_path):
+    cells = build_annular_slot_library_cells(
+        _annular_base_config(), a_mm=4.0, b_mm=4.0, r_mm=1.0, R_values_mm=[1.2, 1.5], frequency_hz=12.5e9
+    )
+    path = write_annular_slot_library_json(cells, tmp_path / "annular_lib.json")
+    doc = json.loads(path.read_text())
+    assert len(doc["cells"]) == 2
+    assert doc["cells"][0]["R_mm"] == pytest.approx(1.2)

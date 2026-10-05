@@ -1,0 +1,253 @@
+{
+  "library_L_mm": [
+    1.0,
+    1.5,
+    2.0,
+    2.5,
+    3.0,
+    3.5,
+    4.0,
+    4.5,
+    5.0,
+    5.5,
+    6.0,
+    6.5,
+    7.0
+  ],
+  "candidates": 13,
+  "vortex_natural": {
+    "null_depth_db": -40.10347455452412,
+    "winding_number": 1.0000000000000002,
+    "axial_ratio_db_at_beam": 9.99470566127384,
+    "e_r_db_at_beam": -45.795588156708845,
+    "e_l_db_at_beam": -40.10347455452404,
+    "main_beam_theta_deg": 20.0,
+    "main_beam_phi_deg": 350.13698630136986,
+    "directivity_dbi": 25.653425422016348,
+    "winding_rhcp_lhcp": [
+      1.0000000000000002,
+      -1.0
+    ]
+  },
+  "pencil_rhcp": {
+    "null_depth_db": -0.02966813686427698,
+    "winding_number": 0.0,
+    "axial_ratio_db_at_beam": 1.4415665388496581,
+    "e_r_db_at_beam": -21.66976599852143,
+    "e_l_db_at_beam": -0.029668136864281,
+    "main_beam_theta_deg": 20.0,
+    "main_beam_phi_deg": 0.0,
+    "directivity_dbi": 27.92441532173492,
+    "copol_component": "E_L",
+    "xpd_db_at_beam": 21.640097861657146
+  },
+  "vortex_l1": {
+    "null_depth_db": -40.10347455452412,
+    "winding_number": 1.0000000000000002,
+    "axial_ratio_db_at_beam": 9.99470566127384,
+    "e_r_db_at_beam": -45.795588156708845,
+    "e_l_db_at_beam": -40.10347455452404,
+    "main_beam_theta_deg": 20.0,
+    "main_beam_phi_deg": 350.13698630136986,
+    "directivity_dbi": 25.653425422016348,
+    "copol_component": "E_L",
+    "xpd_db_at_beam": 5.692113602184797
+  },
+  "vortex_l2_limitation": {
+    "null_depth_db": -22.129714641822016,
+    "winding_number": -7.067899292141149e-17,
+    "axial_ratio_db_at_beam": 1.3664282359298152,
+    "e_r_db_at_beam": -0.0266775561164077,
+    "e_l_db_at_beam": -22.129714641821998,
+    "main_beam_theta_deg": 20.0,
+    "main_beam_phi_deg": 0.0,
+    "directivity_dbi": 27.92632827858654,
+    "copol_component": "E_L",
+    "xpd_db_at_beam": -22.103037085705594
+  },
+  "multiport": {
+    "ports": [
+      {
+        "port": 1,
+        "beams": [
+          15.0,
+          0.0
+        ],
+        "feed_mm": [
+          -90.0,
+          30.0
+        ],
+        "aperture_m2": 0.0036,
+        "directivity_dbi": 15.7,
+        "gain_efficiency_fraction": 0.664,
+        "max_directivity_dbi": 17.48,
+        "main_beam_theta_deg": 14.0,
+        "main_beam_phi_deg": 4.9
+      },
+      {
+        "port": 2,
+        "beams": [
+          30.0,
+          90.0
+        ],
+        "feed_mm": [
+          -30.0,
+          30.0
+        ],
+        "aperture_m2": 0.0036,
+        "directivity_dbi": 15.13,
+        "gain_efficiency_fraction": 0.583,
+        "max_directivity_dbi": 17.48,
+        "main_beam_theta_deg": 24.0,
+        "main_beam_phi_deg": 88.8
+      },
+      {
+        "port": 3,
+        "beams": [
+          45.0,
+          180.0
+        ],
+        "feed_mm": [
+          -90.0,
+          -30.0
+        ],
+        "aperture_m2": 0.0036,
+        "directivity_dbi": 14.57,
+        "gain_efficiency_fraction": 0.512,
+        "max_directivity_dbi": 17.48,
+        "main_beam_theta_deg": 36.0,
+        "main_beam_phi_deg": 182.5
+      },
+      {
+        "port": 4,
+        "beams": [
+          60.0,
+          270.0
+        ],
+        "feed_mm": [
+          -30.0,
+          -30.0
+        ],
+        "aperture_m2": 0.0036,
+        "directivity_dbi": 13.76,
+        "gain_efficiency_fraction": 0.425,
+        "max_directivity_dbi": 17.48,
+        "main_beam_theta_deg": 45.0,
+        "main_beam_phi_deg": 266.3
+      },
+      {
+        "port": 5,
+        "beams": [
+          [
+            15.0,
+            0.0
+          ],
+          [
+            30.0,
+            90.0
+          ],
+          [
+            45.0,
+            180.0
+          ],
+          [
+            60.0,
+            270.0
+          ]
+        ],
+        "feed_mm": [
+          60.0,
+          0.0
+        ],
+        "aperture_m2": 0.0144,
+        "directivity_dbi": 16.42,
+        "gain_efficiency_fraction": 0.196,
+        "max_directivity_dbi": 23.5,
+        "main_beam_theta_deg": 15.0,
+        "main_beam_phi_deg": 0.0
+      }
+    ],
+    "isolation": [
+      {
+        "ports": [
+          1,
+          2
+        ],
+        "gap_lambda_sw": 0.0,
+        "flagged": true
+      },
+      {
+        "ports": [
+          1,
+          3
+        ],
+        "gap_lambda_sw": 0.0,
+        "flagged": true
+      },
+      {
+        "ports": [
+          1,
+          4
+        ],
+        "gap_lambda_sw": 0.0,
+        "flagged": true
+      },
+      {
+        "ports": [
+          1,
+          5
+        ],
+        "gap_lambda_sw": 2.148,
+        "flagged": false
+      },
+      {
+        "ports": [
+          2,
+          3
+        ],
+        "gap_lambda_sw": 0.0,
+        "flagged": true
+      },
+      {
+        "ports": [
+          2,
+          4
+        ],
+        "gap_lambda_sw": 0.0,
+        "flagged": true
+      },
+      {
+        "ports": [
+          2,
+          5
+        ],
+        "gap_lambda_sw": 0.0,
+        "flagged": true
+      },
+      {
+        "ports": [
+          3,
+          4
+        ],
+        "gap_lambda_sw": 0.0,
+        "flagged": true
+      },
+      {
+        "ports": [
+          3,
+          5
+        ],
+        "gap_lambda_sw": 2.148,
+        "flagged": false
+      },
+      {
+        "ports": [
+          4,
+          5
+        ],
+        "gap_lambda_sw": 0.0,
+        "flagged": true
+      }
+    ]
+  }
+}

@@ -349,6 +349,15 @@ Added after the first Part E commit, as the reviewed requirements for a 1-bit pa
   -4.9 dB at (12 deg, 0 deg), 8 deg from the main beam at (20 deg, 0 deg), so a real shoulder of the
   1-bit beam, not an artifact of the search; mirror beam at -22.0 dB.
 
+**OAM sign rule (measured, submission).** With a monopole feed, a clean circular vortex needs the
+OAM charge sign opposite to the handedness in this code's convention: RHCP needs l<0, LHCP needs
+l>0. Measured on the walk-through board at 10.54 GHz: RHCP l=-1 gives winding -1 and an on-axis
+null of -31 dB (slow test, real library); RHCP l=-2 gives winding -2 and -32 dB; RHCP l=+1 equals
+the natural (uncompensated) beam; RHCP l=+2 puts its power into the LHCP pencil component. The app
+flags the wrong sign in the Step 2 beam table (`hologram.polarization_compensation.oam_sign_mismatch`).
+Handedness names come from `polarization.handedness` (IEEE, +z): the basis entry `L` is RHCP and
+`R` is LHCP in this code's convention.
+
 **Status of the Coded method: Experimental.** Pair validity (the patch-plane resonance check, the
 surface-wave model's valid range, and the inductive-at-patch-plane requirement) is pending and is not
 yet reflected in the pair rule; the walk-through pair shown above should not be relied on.

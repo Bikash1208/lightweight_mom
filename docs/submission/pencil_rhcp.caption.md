@@ -1,6 +1,6 @@
 # pencil_rhcp
 
-The same beam with per-beam RHCP compensation: a pencil beam, co-polar with E_R at boresight.
+The same beam with per-beam RHCP compensation: a pencil beam. The RHCP component is the main curve, and the LHCP (cross) component is the one shown dashed.
 
 ## Inputs
 
@@ -17,10 +17,10 @@ The same beam with per-beam RHCP compensation: a pencil beam, co-polar with E_R 
 - null_depth_db: -0.03
 - winding_number: 0.0
 - axial_ratio_db_at_beam: 1.442
-- e_r_db_at_beam: -21.67
-- e_l_db_at_beam: -0.03
+- LHCP_db_at_beam: -21.67
+- RHCP_db_at_beam: -0.03
 - main_beam_theta_deg: 20.0
 - main_beam_phi_deg: 0.0
 - directivity_dbi: 27.924
-- copol_component: E_L
+- copol: RHCP
 - xpd_db_at_beam: 21.64

@@ -27,14 +27,18 @@
     "rhcp_l+2": {
       "copol_null_db": -22.13,
       "copol_winding": -0.0
+    },
+    "rhcp_l-1": {
+      "copol_null_db": -31.42,
+      "copol_winding": -1.0
     }
   },
   "vortex_natural": {
     "null_depth_db": -40.10347455452412,
     "winding_number": 1.0000000000000002,
     "axial_ratio_db_at_beam": 9.99470566127384,
-    "e_r_db_at_beam": -45.795588156708845,
-    "e_l_db_at_beam": -40.10347455452404,
+    "LHCP_db_at_beam": -45.795588156708845,
+    "RHCP_db_at_beam": -40.10347455452404,
     "main_beam_theta_deg": 20.0,
     "main_beam_phi_deg": 350.13698630136986,
     "directivity_dbi": 25.653425422016348,
@@ -47,114 +51,197 @@
     "null_depth_db": -0.02966813686427698,
     "winding_number": 0.0,
     "axial_ratio_db_at_beam": 1.4415665388496581,
-    "e_r_db_at_beam": -21.66976599852143,
-    "e_l_db_at_beam": -0.029668136864281,
+    "LHCP_db_at_beam": -21.66976599852143,
+    "RHCP_db_at_beam": -0.029668136864281,
     "main_beam_theta_deg": 20.0,
     "main_beam_phi_deg": 0.0,
     "directivity_dbi": 27.92441532173492,
-    "copol_component": "E_L",
+    "copol": "RHCP",
     "xpd_db_at_beam": 21.640097861657146
   },
-  "vortex_l1": {
-    "null_depth_db": -40.10347455452412,
-    "winding_number": 1.0000000000000002,
-    "axial_ratio_db_at_beam": 9.99470566127384,
-    "e_r_db_at_beam": -45.795588156708845,
-    "e_l_db_at_beam": -40.10347455452404,
-    "main_beam_theta_deg": 20.0,
-    "main_beam_phi_deg": 350.13698630136986,
-    "directivity_dbi": 25.653425422016348,
-    "copol_component": "E_L",
-    "xpd_db_at_beam": 5.692113602184797
+  "vortex_rhcp_lm1": {
+    "null_depth_db": -31.420508987643174,
+    "winding_number": -1.0000000000000002,
+    "axial_ratio_db_at_beam": 12.758011440062635,
+    "LHCP_db_at_beam": -35.492408024075516,
+    "RHCP_db_at_beam": -31.42050898764319,
+    "main_beam_theta_deg": 16.0,
+    "main_beam_phi_deg": 0.0,
+    "directivity_dbi": 23.39820542992285,
+    "copol": "RHCP",
+    "xpd_db_at_beam": 4.071899036432324
   },
-  "vortex_l2": {
+  "vortex_rhcp_lm2": {
     "null_depth_db": -32.19724915511261,
     "winding_number": -2.0,
     "axial_ratio_db_at_beam": 1.2932629670492166,
-    "e_r_db_at_beam": -9.618074234358161,
-    "e_l_db_at_beam": -32.19724915511266,
+    "LHCP_db_at_beam": -9.618074234358161,
+    "RHCP_db_at_beam": -32.19724915511266,
     "main_beam_theta_deg": 16.0,
     "main_beam_phi_deg": 345.2054794520548,
     "directivity_dbi": 21.31386703518027,
-    "copol_component": "E_L",
+    "copol": "RHCP",
     "xpd_db_at_beam": -22.579174920754497
   },
   "multiport": {
     "ports": [
       {
         "port": 1,
+        "cells": "14 x 14",
+        "requested_beams": [
+          [
+            15.0,
+            0.0
+          ]
+        ],
+        "xpd_rhcp_over_lhcp_db": [
+          32.34
+        ],
+        "beam_levels_db": [
+          -0.03
+        ],
         "beams": [
           15.0,
           0.0
         ],
         "feed_mm": [
-          -132.0,
-          44.0
+          -213.0,
+          71.0
         ],
-        "aperture_m2": 0.0036,
-        "directivity_dbi": 15.52,
-        "aperture_efficiency_upper_bound": 0.637,
-        "unreachable_percent": 26.5,
-        "max_directivity_dbi": 17.48,
-        "main_beam_theta_deg": 13.0,
-        "main_beam_phi_deg": 355.1
+        "aperture_m2": 0.012996,
+        "directivity_dbi": 20.35,
+        "aperture_efficiency_upper_bound": 0.538,
+        "unreachable_percent": 31.1,
+        "max_directivity_dbi": 23.05,
+        "main_beam_theta_deg": 14.0,
+        "main_beam_phi_deg": 0.0
       },
       {
         "port": 2,
+        "cells": "14 x 14",
+        "requested_beams": [
+          [
+            30.0,
+            90.0
+          ]
+        ],
+        "xpd_rhcp_over_lhcp_db": [
+          14.42
+        ],
+        "beam_levels_db": [
+          -0.16
+        ],
         "beams": [
           30.0,
           90.0
         ],
         "feed_mm": [
-          -44.0,
-          44.0
+          -71.0,
+          71.0
         ],
-        "aperture_m2": 0.0036,
-        "directivity_dbi": 15.04,
-        "aperture_efficiency_upper_bound": 0.571,
-        "unreachable_percent": 36.7,
-        "max_directivity_dbi": 17.48,
-        "main_beam_theta_deg": 24.0,
-        "main_beam_phi_deg": 93.7
+        "aperture_m2": 0.012996,
+        "directivity_dbi": 19.94,
+        "aperture_efficiency_upper_bound": 0.489,
+        "unreachable_percent": 32.7,
+        "max_directivity_dbi": 23.05,
+        "main_beam_theta_deg": 28.0,
+        "main_beam_phi_deg": 88.8
       },
       {
         "port": 3,
+        "cells": "14 x 14",
+        "requested_beams": [
+          [
+            45.0,
+            180.0
+          ]
+        ],
+        "xpd_rhcp_over_lhcp_db": [
+          10.56
+        ],
+        "beam_levels_db": [
+          -0.52
+        ],
         "beams": [
           45.0,
           180.0
         ],
         "feed_mm": [
-          -132.0,
-          -44.0
+          -213.0,
+          -71.0
         ],
-        "aperture_m2": 0.0036,
-        "directivity_dbi": 14.55,
-        "aperture_efficiency_upper_bound": 0.51,
-        "unreachable_percent": 34.7,
-        "max_directivity_dbi": 17.48,
-        "main_beam_theta_deg": 37.0,
-        "main_beam_phi_deg": 177.5
+        "aperture_m2": 0.012996,
+        "directivity_dbi": 19.01,
+        "aperture_efficiency_upper_bound": 0.395,
+        "unreachable_percent": 31.1,
+        "max_directivity_dbi": 23.05,
+        "main_beam_theta_deg": 42.0,
+        "main_beam_phi_deg": 182.5
       },
       {
         "port": 4,
+        "cells": "14 x 14",
+        "requested_beams": [
+          [
+            60.0,
+            270.0
+          ]
+        ],
+        "xpd_rhcp_over_lhcp_db": [
+          4.97
+        ],
+        "beam_levels_db": [
+          -1.38
+        ],
         "beams": [
           60.0,
           270.0
         ],
         "feed_mm": [
-          -44.0,
-          -44.0
+          -71.0,
+          -71.0
         ],
-        "aperture_m2": 0.0036,
-        "directivity_dbi": 13.98,
-        "aperture_efficiency_upper_bound": 0.447,
-        "unreachable_percent": 38.8,
-        "max_directivity_dbi": 17.48,
-        "main_beam_theta_deg": 43.0,
+        "aperture_m2": 0.012996,
+        "directivity_dbi": 18.01,
+        "aperture_efficiency_upper_bound": 0.313,
+        "unreachable_percent": 38.3,
+        "max_directivity_dbi": 23.05,
+        "main_beam_theta_deg": 52.0,
         "main_beam_phi_deg": 271.2
       },
       {
         "port": 5,
+        "cells": "31 x 31",
+        "requested_beams": [
+          [
+            15.0,
+            0.0
+          ],
+          [
+            30.0,
+            90.0
+          ],
+          [
+            45.0,
+            180.0
+          ],
+          [
+            60.0,
+            270.0
+          ]
+        ],
+        "xpd_rhcp_over_lhcp_db": [
+          27.27,
+          19.3,
+          10.73,
+          5.33
+        ],
+        "beam_levels_db": [
+          0.0,
+          -2.01,
+          -5.27,
+          -9.31
+        ],
         "beams": [
           [
             15.0,
@@ -174,15 +261,15 @@
           ]
         ],
         "feed_mm": [
-          88.0,
+          142.0,
           0.0
         ],
-        "aperture_m2": 0.021904,
-        "directivity_dbi": 18.06,
-        "aperture_efficiency_upper_bound": 0.188,
-        "unreachable_percent": 34.3,
-        "max_directivity_dbi": 25.32,
-        "main_beam_theta_deg": 13.0,
+        "aperture_m2": 0.065536,
+        "directivity_dbi": 22.59,
+        "aperture_efficiency_upper_bound": 0.179,
+        "unreachable_percent": 33.0,
+        "max_directivity_dbi": 30.08,
+        "main_beam_theta_deg": 15.0,
         "main_beam_phi_deg": 0.0
       }
     ],
@@ -216,7 +303,7 @@
           1,
           5
         ],
-        "gap_lambda_sw": 4.154,
+        "gap_lambda_sw": 6.087,
         "flagged": false
       },
       {
@@ -256,7 +343,7 @@
           3,
           5
         ],
-        "gap_lambda_sw": 4.154,
+        "gap_lambda_sw": 6.087,
         "flagged": false
       },
       {

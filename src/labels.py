@@ -139,3 +139,9 @@ class LabeledResult:
 
     def has(self, label):
         return label in self.labels or any(str(l).startswith(label.split("(")[0]) for l in self.labels)
+
+
+def oam_sign_mismatch_label(desired_polarization, oam_charge):
+    """PHASE15 submission: the requested OAM charge's sign does not give a clean CP vortex for this
+    handedness (RHCP needs l<0, LHCP l>0) -- the beam is a cross-polar pencil, reported, not hidden."""
+    return f"OAM_SIGN_MISMATCH({desired_polarization.upper()},l={oam_charge:+d})"

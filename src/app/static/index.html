@@ -530,6 +530,21 @@
       ["rhcp", "RHCP"],
     ];
 
+    function oamSignWarningText(pol, charge, isVortex) {
+      if (!isVortex || charge === 0 || (pol !== "rhcp" && pol !== "lhcp")) return "";
+      const bad = (pol === "rhcp" && charge > 0) || (pol === "lhcp" && charge < 0);
+      if (!bad) return "";
+      return `Sign mismatch: ${pol.toUpperCase()} with charge ${charge > 0 ? "+" : ""}${charge} gives a cross-polar pencil, not a vortex. ` +
+        `Use a ${pol === "rhcp" ? "negative" : "positive"} charge.`;
+    }
+
+    function refreshOamWarning(tr) {
+      const isVortex = tr.querySelector(".beam-type-control button[data-type='vortex']").classList.contains("active");
+      const pol = tr.querySelector(".beam-polarization").value;
+      const charge = parseInt(tr.querySelector(".beam-oam-charge").value, 10) || 0;
+      tr.querySelector(".oam-sign-warning").textContent = oamSignWarningText(pol, charge, isVortex);
+    }
+
     function renderBeamsTable(n) {
       state.beams = Array.from({ length: n }, (_, i) => state.beams[i] || {
         theta_deg: 20, phi_deg: i * 180, power_db: 0, desired_polarization: "hp", oam_charge: 0, feed_index: 0,
@@ -557,9 +572,12 @@
             `<button type="button" data-type="pencil" class="${isVortex ? "" : "active"}">Pencil</button>` +
             `<button type="button" data-type="vortex" class="${isVortex ? "active" : ""}">Vortex</button>` +
           `</div>` +
-          `<input type="number" step="1" class="beam-oam-charge" title="Charge sign matters. With RHCP, a charge-2 vortex is -2 (measured winding -2); RHCP with +2 is not realised (winding 0). With LHCP, use +2. RHCP with +1 equals the natural beam." value="${b.oam_charge || 1}" style="width:4rem;display:${isVortex ? "inline-block" : "none"}" /></td>` +
+          `<input type="number" step="1" class="beam-oam-charge" title="Charge sign rule (this code's convention): RHCP needs a negative charge (-1, -2) for a clean vortex; LHCP needs a positive charge. The opposite sign gives a cross-polar pencil, not a vortex." value="${b.oam_charge || 1}" style="width:4rem;display:${isVortex ? "inline-block" : "none"}" /><span class="oam-sign-warning status warn"></span></td>` +
           `<td class="feed-col" style="display:${showFeedCol ? "" : "none"}"><select class="beam-feed-index">${feedOptions}</select></td>`;
         tbody.appendChild(tr);
+        refreshOamWarning(tr);
+        tr.querySelectorAll(".beam-oam-charge, .beam-polarization").forEach((el) => el.addEventListener("change", () => refreshOamWarning(tr)));
+        tr.querySelector(".beam-type-control").addEventListener("click", () => setTimeout(() => refreshOamWarning(tr), 0));
         tr.querySelector(".beam-type-control").addEventListener("click", (ev) => {
           const btn = ev.target.closest("button");
           if (!btn) return;
@@ -614,8 +632,11 @@
             `<button type="button" data-type="pencil" class="${isVortex ? "" : "active"}">Pencil</button>` +
             `<button type="button" data-type="vortex" class="${isVortex ? "active" : ""}">Vortex</button>` +
           `</div>` +
-          `<input type="number" step="1" class="beam-oam-charge" title="Charge sign matters. With RHCP, a charge-2 vortex is -2 (measured winding -2); RHCP with +2 is not realised (winding 0). With LHCP, use +2. RHCP with +1 equals the natural beam." value="${b.oam_charge || 1}" style="width:4rem;display:${isVortex ? "inline-block" : "none"}" /></td>`;
+          `<input type="number" step="1" class="beam-oam-charge" title="Charge sign rule (this code's convention): RHCP needs a negative charge (-1, -2) for a clean vortex; LHCP needs a positive charge. The opposite sign gives a cross-polar pencil, not a vortex." value="${b.oam_charge || 1}" style="width:4rem;display:${isVortex ? "inline-block" : "none"}" /><span class="oam-sign-warning status warn"></span></td>`;
         tbody.appendChild(tr);
+        refreshOamWarning(tr);
+        tr.querySelectorAll(".beam-oam-charge, .beam-polarization").forEach((el) => el.addEventListener("change", () => refreshOamWarning(tr)));
+        tr.querySelector(".beam-type-control").addEventListener("click", () => setTimeout(() => refreshOamWarning(tr), 0));
         tr.querySelector(".beam-type-control").addEventListener("click", (ev) => {
           const btn = ev.target.closest("button");
           if (!btn) return;

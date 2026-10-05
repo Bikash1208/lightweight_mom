@@ -17,8 +17,8 @@ Normal (natural, no compensation) beam at theta=20 deg, phi=0 deg: the monopole'
 - null_depth_db: -40.103
 - winding_number: 1.0
 - axial_ratio_db_at_beam: 9.995
-- e_r_db_at_beam: -45.796
-- e_l_db_at_beam: -40.103
+- LHCP_db_at_beam: -45.796
+- RHCP_db_at_beam: -40.103
 - main_beam_theta_deg: 20.0
 - main_beam_phi_deg: 350.137
 - directivity_dbi: 25.653

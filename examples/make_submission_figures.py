@@ -47,6 +47,7 @@ from src.pattern.vector_aperture_pattern import (  # noqa: E402
     measure_vortex_winding,
 )
 from src.phase8b.object_wave import Beam  # noqa: E402
+from src.polarization import handedness  # noqa: E402
 from src.unit_cell_library import UnitCellLibrary  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -58,6 +59,7 @@ EPS_R, TAN_D, THICK_M = 2.2, 0.0009, 1.575e-3
 BEAM_THETA, BEAM_PHI = 20.0, 0.0
 MULTIPORT_BEAMS = [(15.0, 0.0), (30.0, 90.0), (45.0, 180.0), (60.0, 270.0)]
 GUARD_GAP_M = 28e-3  # about 1 lambda_sw at the tm0 surface wave (lambda_sw = 2*pi/tm0_beta, 27.9 mm)
+SMALL_PORT_NOMINAL_M = 142e-3  # 5 lambda_0 at 10.54 GHz; the preset shrinks each port by the gap, 114 mm active
 SUBSTRATE = Substrate(name="user", eps_r=EPS_R, tan_delta=TAN_D, thickness=THICK_M)
 
 
@@ -106,6 +108,11 @@ def _axial_ratio_db(e_r, e_l):
     return 20.0 * np.log10(major / minor)
 
 
+def _physical(component):
+    """'L'/'R' basis entry -> the IEEE handedness of that far-field component, +z propagation."""
+    return handedness(component, "+z")
+
+
 def _measure(pat, jx, jy, x_m, y_m, green, desired):
     peak = float(np.max(np.abs(pat.e_theta) ** 2 + np.abs(pat.e_phi) ** 2))
     if desired == "natural":
@@ -126,8 +133,8 @@ def _measure(pat, jx, jy, x_m, y_m, green, desired):
         "null_depth_db": float(vortex.null_depth_db),
         "winding_number": float(vortex.winding_number),
         "axial_ratio_db_at_beam": ar_db,
-        "e_r_db_at_beam": float(20.0 * np.log10(max(abs(e_r), 1e-12) / np.sqrt(peak))),
-        "e_l_db_at_beam": float(20.0 * np.log10(max(abs(e_l), 1e-12) / np.sqrt(peak))),
+        f"{_physical('R')}_db_at_beam": float(20.0 * np.log10(max(abs(e_r), 1e-12) / np.sqrt(peak))),
+        f"{_physical('L')}_db_at_beam": float(20.0 * np.log10(max(abs(e_l), 1e-12) / np.sqrt(peak))),
         "main_beam_theta_deg": float(pat.main_beam_theta_deg),
         "main_beam_phi_deg": float(pat.main_beam_phi_deg),
         "directivity_dbi": float(pat.directivity_estimate_dbi),
@@ -135,10 +142,10 @@ def _measure(pat, jx, jy, x_m, y_m, green, desired):
     if desired == "natural":
         result["winding_rhcp_lhcp"] = [float(both["rhcp"].winding_number), float(both["lhcp"].winding_number)]
     if desired in ("rhcp", "lhcp"):
-        co_key = copol_label(desired)
-        co = pat.e_r[i, j] if co_key == "E_R" else pat.e_l[i, j]
-        cross = pat.e_l[i, j] if co_key == "E_R" else pat.e_r[i, j]
-        result["copol_component"] = co_key
+        co_key = copol_label(desired).split("_")[1]
+        co = pat.e_r[i, j] if co_key == "R" else pat.e_l[i, j]
+        cross = pat.e_l[i, j] if co_key == "R" else pat.e_r[i, j]
+        result["copol"] = _physical(co_key)
         result["xpd_db_at_beam"] = float(20.0 * np.log10(max(abs(co), 1e-12) / max(abs(cross), 1e-12)))
     return result, vortex
 
@@ -166,8 +173,10 @@ def _circular_cut_figure(pat, title, path):
     e_r = pat.e_r[:, 0]
     e_l = pat.e_l[:, 0]
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6.0, 6.0), sharex=True)
-    ax1.plot(theta, 10 * np.log10(np.maximum(np.abs(e_r) ** 2 / peak, 1e-12)), label="E_R")
-    ax1.plot(theta, 10 * np.log10(np.maximum(np.abs(e_l) ** 2 / peak, 1e-12)), label="E_L")
+    ax1.plot(theta, 10 * np.log10(np.maximum(np.abs(e_l) ** 2 / peak, 1e-12)), lw=2.2, color="C0",
+             label=f"{_physical('L')} (main)")
+    ax1.plot(theta, 10 * np.log10(np.maximum(np.abs(e_r) ** 2 / peak, 1e-12)), lw=1.4, ls="--", color="C1",
+             label=_physical("R"))
     ax1.axvline(BEAM_THETA, color="r", ls=":", lw=1)
     ax1.set_ylabel("power (dB, peak = 0)")
     ax1.set_ylim(-45, 2)
@@ -199,7 +208,7 @@ def _single_beam_figures(reference, feed_xy_m, candidates, green, metrics):
         "scripts": "examples/make_submission_figures.py",
     }
     sign_check = {}
-    for label, pol, l in [("rhcp_l-2", "rhcp", -2), ("lhcp_l+2", "lhcp", 2), ("rhcp_l+2", "rhcp", 2)]:
+    for label, pol, l in [("rhcp_l-2", "rhcp", -2), ("lhcp_l+2", "lhcp", 2), ("rhcp_l+2", "rhcp", 2), ("rhcp_l-1", "rhcp", -1)]:
         check = Beam(theta_deg=BEAM_THETA, phi_deg=BEAM_PHI, weight=1.0 + 0j, desired_polarization=pol, oam_charge=l)
         design = synthesize_formulation_b(reference, [check], F_HZ, candidates, PERIOD_M, feed_xy_m=feed_xy_m)
         pat, jx, jy = _pattern(design.x_m, design.y_m, design.aperture_field, feed_xy_m, green)
@@ -212,15 +221,15 @@ def _single_beam_figures(reference, feed_xy_m, candidates, green, metrics):
          "Normal (natural, no compensation) beam at theta=20 deg, phi=0 deg: the monopole's radial surface current "
          "is not compensated, so the aperture radiates a vortex (null on boresight, nonzero OAM winding)."),
         ("pencil_rhcp", Beam(theta_deg=BEAM_THETA, phi_deg=BEAM_PHI, weight=1.0 + 0j, desired_polarization="rhcp"),
-         "The same beam with per-beam RHCP compensation: a pencil beam, co-polar with E_R at boresight."),
-        ("vortex_l1", Beam(theta_deg=BEAM_THETA, phi_deg=BEAM_PHI, weight=1.0 + 0j, desired_polarization="rhcp", oam_charge=1),
-         "An intentionally requested OAM vortex, charge l=+1 (RHCP request). It reproduces the natural beam: the "
-         "uncompensated monopole current already carries winding +1, so the natural beam is an l=+1 vortex."),
-        ("vortex_l2", Beam(theta_deg=BEAM_THETA, phi_deg=BEAM_PHI, weight=1.0 + 0j, desired_polarization="rhcp", oam_charge=-2),
-         "Charge-2 vortex with the sign rule measured here: for RHCP-compensated beams the realised copol winding equals the "
-         "requested charge only with l=-2 (measured winding -2, copol null -32 dB). The mirror choice, l=+2 with RHCP, is NOT "
-         "realised (winding 0, power moves to the cross component); LHCP with l=+2 works instead (winding +2). Cross-polar "
-         "power at boresight is about -10 dB for both working choices."),
+         "The same beam with per-beam RHCP compensation: a pencil beam. The RHCP component is the main curve, and "
+         "the LHCP (cross) component is the one shown dashed."),
+        ("vortex_rhcp_lm1", Beam(theta_deg=BEAM_THETA, phi_deg=BEAM_PHI, weight=1.0 + 0j, desired_polarization="rhcp", oam_charge=-1),
+         "Clean RHCP vortex, charge l=-1. With a monopole feed the sign of l must be opposite to the handedness in this "
+         "code's convention (RHCP: l<0; LHCP: l>0). Measured: RHCP winding -1 with an on-axis RHCP null; LHCP (cross) "
+         "leakage stays well below the null."),
+        ("vortex_rhcp_lm2", Beam(theta_deg=BEAM_THETA, phi_deg=BEAM_PHI, weight=1.0 + 0j, desired_polarization="rhcp", oam_charge=-2),
+         "Clean RHCP vortex, charge l=-2, same sign rule (RHCP: l<0). Measured winding -2 with an on-axis RHCP null. "
+         "The opposite sign, RHCP with l=+2, is not a vortex: its power moves into the LHCP pencil component (see sign_check)."),
     ]
     for name, beam, text in cases:
         design = synthesize_formulation_b(reference, [beam], F_HZ, candidates, PERIOD_M, feed_xy_m=feed_xy_m)
@@ -247,7 +256,7 @@ def _single_beam_figures(reference, feed_xy_m, candidates, green, metrics):
 
 
 def _multiport_figures(candidates, green, metrics, work_dir):
-    regions = layout_preset_2x2_plus_1_large(60e-3 + GUARD_GAP_M, gap_m=GUARD_GAP_M)  # 60 mm active per small port
+    regions = layout_preset_2x2_plus_1_large(SMALL_PORT_NOMINAL_M, gap_m=GUARD_GAP_M)
     port_beams = {}
     for region in regions:
         if region.port_id < 4:
@@ -277,8 +286,20 @@ def _multiport_figures(candidates, green, metrics, work_dir):
         ref_x, ref_y = port.design.x_m, port.design.y_m
         pat, _, _ = _pattern(ref_x, ref_y, port.design.aperture_field, port.feed_xy_m, green)
         eff, dmax = aperture_efficiency_estimate(pat.directivity_estimate_dbi, region.area_m2, F_HZ)
+        requested = MULTIPORT_BEAMS if port.port_id == 4 else [MULTIPORT_BEAMS[port.port_id]]
+        peak_power = float(np.max(np.abs(pat.e_theta) ** 2 + np.abs(pat.e_phi) ** 2))
+        xpd_db, beam_levels_db = [], []
+        for t, ph in requested:
+            bi, bj = _nearest(pat, t, ph)
+            xpd_db.append(round(20.0 * np.log10(max(abs(pat.e_l[bi, bj]), 1e-12) / max(abs(pat.e_r[bi, bj]), 1e-12)), 2))
+            beam_levels_db.append(round(10.0 * np.log10(max(abs(pat.e_theta[bi, bj]) ** 2 + abs(pat.e_phi[bi, bj]) ** 2, 1e-30)
+                                                       / peak_power), 2))
         per_port_metrics.append({
             "port": port.port_id + 1,
+            "cells": f"{ref_x.shape[1]} x {ref_x.shape[0]}",
+            "requested_beams": requested,
+            "xpd_rhcp_over_lhcp_db": xpd_db,
+            "beam_levels_db": beam_levels_db,
             "beams": MULTIPORT_BEAMS[port.port_id] if port.port_id < 4 else MULTIPORT_BEAMS,
             "feed_mm": [round(port.feed_xy_m[0] * 1e3, 1), round(port.feed_xy_m[1] * 1e3, 1)],
             "aperture_m2": round(region.area_m2, 6),
@@ -347,14 +368,15 @@ def _multiport_figures(candidates, green, metrics, work_dir):
     inputs = {
         "field": "analytic TM0 monopole, phase-only, per port (no per-port .fld in this app version)",
         "k_swg": f"tm0_beta = {k_swg:.2f} rad/m",
-        "layout": f"2x2 small ports (88 mm nominal, 60 mm active after a {GUARD_GAP_M * 1e3:g} mm guard gap) plus one large port",
+        "layout": f"2x2 small ports ({SMALL_PORT_NOMINAL_M * 1e3:g} mm nominal, {(SMALL_PORT_NOMINAL_M - GUARD_GAP_M) * 1e3:g} mm active "
+                  f"after a {GUARD_GAP_M * 1e3:g} mm guard gap) plus one large port",
         "beams": "ports 1-4: one beam each (15,0), (30,90), (45,180), (60,270); port 5: all four beams",
-        "polarization": "RHCP compensation on every beam (pencil beams)",
+        "polarization": "RHCP compensation on every beam (pencil beams); XPD = RHCP over LHCP at each beam",
         "cells": f"{PERIOD_M * 1e3:g} mm pitch; formulation B with the square-patch library",
         "scripts": "examples/make_submission_figures.py",
     }
     text = ("Multi-port board: four single-beam sub-apertures and one quad-beam sub-aperture, each with its own "
-            f"feed, with a {GUARD_GAP_M * 1e3:g} mm guard gap (about 1 lambda_sw) between sub-apertures. Per-port "
+            f"feed; 5 lambda_0 nominal sub-apertures with a {GUARD_GAP_M * 1e3:g} mm guard gap (about 1 lambda_sw). Per-port "
             "patterns use the vector model; directivity is reported in dBi, and the directivity-based aperture efficiency "
             "is an UPPER BOUND against the port's own uniform-aperture maximum: it excludes residual surface-wave power, "
             "edge diffraction, feed loss and mismatch. Measured boards in the literature reach about 10-15% "
@@ -367,6 +389,9 @@ def _multiport_figures(candidates, green, metrics, work_dir):
         numbers[f"port {pm['port']} directivity (dBi)"] = f"{pm['directivity_dbi']:.2f} (port maximum {pm['max_directivity_dbi']:.2f} dBi)"
         numbers[f"port {pm['port']} directivity-based aperture efficiency (upper bound)"] = f"{pm['aperture_efficiency_upper_bound']:.3f}"
         numbers[f"port {pm['port']} unreachable cells"] = f"{pm['unreachable_percent']:.1f}%"
+        numbers[f"port {pm['port']} cells"] = pm["cells"]
+        numbers[f"port {pm['port']} XPD, RHCP over LHCP at each requested beam (dB)"] = pm["xpd_rhcp_over_lhcp_db"]
+        numbers[f"port {pm['port']} level of each requested beam relative to the port peak (dB)"] = pm["beam_levels_db"]
     numbers["board size"] = f"{board_w_mm:.1f} mm x {board_h_mm:.1f} mm (guard gap {GUARD_GAP_M * 1e3:g} mm)"
     numbers["isolation flags (first-order, edge gap in lambda_sw)"] = (
         f"{n_flagged} of {len(isolation)} port pairs flagged"

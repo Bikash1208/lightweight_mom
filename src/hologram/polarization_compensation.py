@@ -157,3 +157,13 @@ def combine_beams_with_polarization(
             contribution = np.where(sector_owner_index == i, contribution, 0.0)
         e_obj = e_obj + contribution
     return e_obj
+
+
+def oam_sign_mismatch(desired_polarization, oam_charge):
+    """True when the requested OAM charge has the sign that does NOT give a clean circular vortex
+    with a monopole feed: in this code's convention RHCP needs l<0 and LHCP needs l>0 (measured:
+    RHCP with l=+2 puts its power into the LHCP pencil component). Such a request is a cross-polar
+    pencil rather than the vortex asked for, so the app warns."""
+    if oam_charge == 0 or desired_polarization not in ("rhcp", "lhcp"):
+        return False
+    return (desired_polarization == "rhcp" and oam_charge > 0) or (desired_polarization == "lhcp" and oam_charge < 0)

@@ -306,16 +306,16 @@ Added after the first Part E commit, as the reviewed requirements for a 1-bit pa
 - **Pair rule.** The chosen pair is the largest separation among pairs where BOTH states carry the
   wave AND `|beta_a - beta_b| / mean(beta) <= 5%` (`BETA_SPREAD_LIMIT_FRACTION`). The 5% limit is a
   project choice, not from the paper; the report shows the measured spread against it. Otherwise
-  the job fails with `TWO_STATE_NO_VALID_PAIR`.
+  the job fails with `TWO_STATE_NO_VALID_PAIR`. This gate applies to `beta_mode: "state"` only. The
+  paper and model modes (below) use one common beta for the whole surface, so the states' own betas
+  need not agree.
 - **Phase used in psi.** The 1-bit control map uses `psi = arg(E_obj) + beta_bar*rho + polarization
   term` with `beta_bar` = the mean of the two states' betas (Mishra's `beta_sw`, the surface wave
   the impedance surface carries), not the feed-measured field's phase. The aperture amplitude still
   comes from the real reference field.
-- **Resonance and magnitude warnings.** Resonance uses the project's own convention (library_sweep's
-  `detect_resonance_phase_crossing`, citing Huang & Encinar): the reflection phase crosses +-180 deg.
-  A state within 30 deg of +-180 is flagged, measured at the library's 5 mm reference. The wording
-  must say so: the same state's patch-plane phase is different, and the resonance location depends
-  on the reference plane. Magnitudes differing by more than 1 dB are flagged.
+- **Patch-plane resonance and magnitude warnings.** The open-circuit patch resonance is at 0 deg at the
+  patch plane (Huang & Encinar). A state within 30 deg of 0 deg is refused (`NEAR_PATCH_PLANE_RESONANCE`),
+  not flagged. Magnitudes differing by more than 1 dB are flagged.
 - **+-5% robustness.** Only the chosen pair is re-solved at 0.95f and 1.05f (the library holds one
   frequency). Walk-through pair (L=5 mm, L=7 mm): separation 147.3 deg at 10.013 GHz, 176.3 deg at
   10.54 GHz, 165.0 deg at 11.067 GHz.
@@ -358,15 +358,80 @@ flags the wrong sign in the Step 2 beam table (`hologram.polarization_compensati
 Handedness names come from `polarization.handedness` (IEEE, +z): the basis entry `L` is RHCP and
 `R` is LHCP in this code's convention.
 
-**Status of the Coded method: Experimental.** Pair validity (the patch-plane resonance check, the
-surface-wave model's valid range, and the inductive-at-patch-plane requirement) is pending and is not
-yet reflected in the pair rule; the walk-through pair shown above should not be relied on.
+**Status of the Coded method: Experimental.** The pair screen (`two_state_cells.screen_gamma`) refuses a
+state that has no TM0 root, lies within 30 deg of the open-circuit patch-plane resonance (0 deg), or lies
+outside the sheet model's range (stop band `beta*P/pi >= 0.9`, or period `>= lambda0/2`). Phase is built
+with a path-integrated beta: `phi(x,y) = integral of beta(s) ds` along the radial ray from the feed, which
+reduces to `beta*rho` for a uniform beta. The walk-through pair shown above predates the screen and should
+not be relied on.
+
+**The inductive-at-patch-plane check was dropped.** For a lossless cell `Z = j*eta0*cot(theta/2)`, so two
+states 180 deg apart always have reactances of opposite sign. The check would reject every valid pair, so
+it is not part of the screen.
 
 **Limits added for Part E checks:** the 5% beta limit and the 30 deg thresholds are project choices;
 the resonance convention depends on the reference plane; the +-5% check re-solves only the chosen
 pair; uploaded two-state values are taken to be at the patch plane; 1-bit with multiple feeds is
-refused (one feed defines the surface-wave reference); the ports design path does not support
-Coded.
+refused (one feed defines the surface-wave reference); the Coded ports path takes one shared two-state
+source for every port.
+
+### Paper reproduction at 26 GHz (Mishra, Barad, Sarkar, IEEE TVT 2026)
+
+Script: `examples/make_paper_board_26ghz.py`. Outputs: `docs/submission/paper26/` (`comparison.md`,
+`metrics.json`, figures, `step/`). Run time about 25 s after the cell solves.
+
+**Cell 1 is read from the paper's Figure 2, not from its text.** The text calls cell 1 "full metal", but
+Fig. 2 draws it in the substrate colour, with copper only in cell 2, and the full-antenna drawing shows
+the same bare regions. We therefore model cell 1 as an EMPTY cell: bare RT/Duroid 5880 (1.575 mm) with no
+metal. Cell 2 is a 2.17 mm square patch with an annular slot (r = 0.46 mm, R = 0.75 mm). The period is
+2.57 mm (lambda0/4.5 at 26 GHz); the paper's table gives it as `a = 2.57 mm`. The cell solve uses the app's
+fast mesh (32 x 32). The empty cell's S11 is the bare-stack reflection (zero currents), which the MoM solve
+reduces to with no metal.
+
+Cell pair, patch-plane reference (`LIBRARY_REFERENCE_OFFSET_M` = 5 mm de-embedded):
+
+| f (GHz) | empty phase | slotted phase | separation | `|S11|` difference | beta empty (rad/m) | beta slotted (rad/m) |
+|---|---|---|---|---|---|---|
+| 25 | +56.4 deg | -130.2 deg | 173.5 deg | 0.000 dB | 580.2 | 666.5 |
+| 26 | +49.0 deg | -135.2 deg | 175.9 deg | 0.002 dB | 607.9 | 702.3 |
+| 27 | +41.3 deg | -139.5 deg | 179.2 deg | 0.004 dB | 636.1 | 738.1 |
+
+The empty cell's beta equals `tm0_beta` at 26 GHz (607.92 rad/m), the bare-slab check. The separation is
+within 180 +- 20 deg at all three frequencies, so the paper's own pair is used. Both states have
+`|S11|` about 0 dB: a lossless reflectarray cell reflects almost all power by construction.
+
+**Beta modes** (both reported; the coded phase uses one of them per run):
+
+- Paper mode, Mishra eq. (1): `beta_sw = k0*sqrt((eps_r+1)/2) = 689.27 rad/m` at 26 GHz.
+- Model mode: beta of the mixed 1-bit surface, `find_beta_from_sheet_admittance` applied to the mean
+  of the two states' sheet admittances (equal-area parallel loading). The mean is an assumption of this
+  model, not a paper result. It gives 662.07 rad/m at 26 GHz.
+- Aperture-edge phase difference between the two modes, `(beta_paper - beta_model) * rho` at the 28.8 mm
+  edge of a 5 lambda0 sub-aperture: 44.9 deg (89.9 deg at the 57.7 mm edge of the large port).
+
+**Board.** 5 lambda0 sub-apertures (57.65 mm) with no guard gap, as the paper's 20 lambda0 x 10 lambda0
+board. At 2.57 mm pitch the board is 230.6 x 115.3 mm, 90 x 45 cells. The paper's 92 x 46 cells would
+need a pitch of about 2.51 mm, so the cell count differs from the paper's by 2 x 1; the pitch is the
+paper's stated period and is kept.
+
+**Beams, LHCP.** Each port's beams are LHCP (the paper's polarisation), with the port's own feed, the
+analytic TM0 monopole, and two equalisation iterations for port 5. The table of pointing errors,
+LHCP/RHCP levels and directivity is in `docs/submission/paper26/comparison.md`. Summary: single-beam
+ports point within 0 to 5 deg of the request; port 5 (paper mode) is 6 to 11 deg off, and in model mode
+within 3.2 deg. The paper gives target directions, not measured beam angles, in its text (its measured
+patterns are in Fig. 5 only), so no measured angle is compared.
+
+**What is not compared, and why.** The paper's realised LHCP gains (14.8 to 16.8 dBic) include losses
+the model does not have, so they are set against our lossless directivity (18 to 21 dBi), not against a
+realised gain. The paper's isolation (below -30 dB) is a full-wave measurement; this model gives only the
+first-order edge-gap flags, so isolation is checked in HFSS with the exported STEP (`docs/submission/
+paper26/step/`). The paper's `|S11|` below -10 dB over 25 to 27 GHz is a feed-match quantity; a
+reflectarray cell's own `|S11|` is about 0 dB, so the two are not comparable.
+
+**Limits.** The cell 1 reading (empty, not solid copper) is from the figure; if the figure is misread the
+pair and every number here change. The model-mode beta depends on the equal-area averaging assumption.
+Results are first-order vector-model results (no mutual coupling between sub-apertures, no conductor or
+mismatch losses) and need HFSS confirmation.
 
 ## Part D — the app
 

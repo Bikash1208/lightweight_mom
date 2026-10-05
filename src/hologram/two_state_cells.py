@@ -23,13 +23,18 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from ..dispersion.sheet_model import find_beta_from_sheet_admittance, sheet_admittance_from_gamma
 from ..errors import LwmomError
 from ..frequency import free_space_wavenumber
 from ..phase import principal_phase_deg, wrapped_difference_deg
 
 IDEAL_SEPARATION_DEG = 180.0
 SEPARATION_WARNING_THRESHOLD_DEG = 30.0  # how far from 180deg before this is flagged, not silently used
-RESONANCE_WARNING_THRESHOLD_DEG = 30.0  # within this many degrees of the +-180deg resonance phase
+RESONANCE_PHASE_PATCH_PLANE_DEG = 0.0  # open-circuit patch resonance, at the patch plane (Huang & Encinar)
+RESONANCE_REFUSAL_DEG = 30.0  # a state this close to the patch-plane resonance is refused, not used
+REFUSED_NO_SURFACE_WAVE = "NO_SURFACE_WAVE"
+REFUSED_NEAR_RESONANCE = "NEAR_PATCH_PLANE_RESONANCE"
+REFUSED_OUTSIDE_MODEL_RANGE = "OUTSIDE_SHEET_MODEL_RANGE"
 MAGNITUDE_MISMATCH_WARNING_DB = 1.0
 BETA_SPREAD_LIMIT_FRACTION = 0.05  # |beta_a - beta_b| / mean(beta) above this -> the pair is invalid
 EDGE_PHASE_WARNING_DEG = 30.0  # beta mismatch (dbeta/2)*rho_max at the aperture edge above this -> flagged
@@ -111,20 +116,72 @@ def candidates_from_annular_slot_library(cell_docs, frequency_ghz):
     return out
 
 
-def surface_wave_of_state(cell, frequency_hz, substrate, period_m=None):
-    """The Phase 14 sheet model's TM0 solution for one state at its patch-plane reflection, or
-    `None` if that state carries no bound surface wave at this frequency (the model's own
-    `DISPERSION_SHEET_MODEL_NO_ROOT`, caught and returned as a real negative result, never a
-    fabricated beta)."""
+def resonance_proximity_patch_plane_deg(gamma):
+    """Distance in degrees from the patch-plane resonance phase (0deg: the open-circuit patch
+    resonance of a reflectarray element, Huang & Encinar). The library's own stored reference
+    plane is 5 mm above the patch, where this same resonance appears at a different phase, so
+    the check must run on `patch_plane_value`, never on the library-referenced value."""
+    return abs(wrapped_difference_deg(principal_phase_deg(gamma), RESONANCE_PHASE_PATCH_PLANE_DEG))
+
+
+def screen_gamma(gamma, substrate, frequency_hz, period_m=None):
+    """The pair-validity screen for one patch-plane reflection coefficient. Returns
+    `(sheet_model_mode, None)` for a usable state, or `(None, reason)` with `reason` one of the
+    `REFUSED_*` names. Checks run in order: a TM0 root must exist (Phase 14 sheet model), the
+    state must not sit within `RESONANCE_REFUSAL_DEG` of the patch-plane resonance, and the sheet
+    model's own range must hold (below the stop band, and the period under half a free-space
+    wavelength). No reactance-sign test: for a lossless cell Z = j*eta0*cot(theta/2), so two states
+    180deg apart always have opposite-sign reactance and such a test would refuse every pair."""
     from ..dispersion.sheet_model import find_beta_from_gamma
 
-    gamma = cell.patch_plane_value(frequency_hz)
     if not np.isfinite(gamma) or abs(1.0 + gamma) < 1e-9:
-        return None
+        return None, REFUSED_NO_SURFACE_WAVE
     try:
-        return find_beta_from_gamma(gamma, substrate, frequency_hz, period_m=period_m)
+        mode = find_beta_from_gamma(gamma, substrate, frequency_hz, period_m=period_m)
     except LwmomError:
-        return None
+        return None, REFUSED_NO_SURFACE_WAVE
+    if resonance_proximity_patch_plane_deg(gamma) <= RESONANCE_REFUSAL_DEG:
+        return None, REFUSED_NEAR_RESONANCE
+    if period_m is not None:
+        wavelength_m = 299792458.0 / frequency_hz
+        if mode.stop_band_warning or period_m >= wavelength_m / 2.0:
+            return None, REFUSED_OUTSIDE_MODEL_RANGE
+    return mode, None
+
+
+def screen_state(cell, frequency_hz, substrate, period_m=None):
+    """`screen_gamma` applied to one `TwoStateCell`'s patch-plane value."""
+    return screen_gamma(cell.patch_plane_value(frequency_hz), substrate, frequency_hz, period_m)
+
+
+def screen_candidates(candidates, frequency_hz, substrate, period_m=None):
+    """`screen_state` over every candidate: `(modes, reasons)`, both aligned with `candidates`
+    (`modes[i]` None and `reasons[i]` a `REFUSED_*` name for a refused state)."""
+    modes, reasons = [], []
+    for cell in candidates:
+        mode, reason = screen_state(cell, frequency_hz, substrate, period_m)
+        modes.append(mode)
+        reasons.append(reason)
+    return modes, reasons
+
+
+def surface_wave_of_state(cell, frequency_hz, substrate, period_m=None):
+    """The screened TM0 solution for one state (`screen_state`), or `None` if the state is refused."""
+    return screen_state(cell, frequency_hz, substrate, period_m)[0]
+
+
+def paper_surface_wave_beta(frequency_hz, eps_r):
+    """Mishra eq. (1): beta_sw = k0 * sqrt((eps_r + 1) / 2), one value for the whole mixed surface."""
+    return free_space_wavenumber(frequency_hz) * np.sqrt((eps_r + 1.0) / 2.0)
+
+
+def mixed_surface_mode(choice, substrate, frequency_hz, period_m):
+    """Model mode: beta of the mixed 1-bit surface. The two states cover equal areas, so their
+    sheet admittances combine as the mean of the two `Y_sheet` values (parallel loading), then
+    `sheet_model.find_beta_from_sheet_admittance` solves the transverse resonance for that mean."""
+    y_0 = sheet_admittance_from_gamma(choice.state_0.patch_plane_value(frequency_hz), substrate, frequency_hz)
+    y_1 = sheet_admittance_from_gamma(choice.state_1.patch_plane_value(frequency_hz), substrate, frequency_hz)
+    return find_beta_from_sheet_admittance(0.5 * (y_0 + y_1), substrate, frequency_hz, period_m=period_m)
 
 
 def best_separated_pair(candidates):
@@ -154,7 +211,7 @@ def pair_beta_spread_fraction(beta_a, beta_b):
     return abs(beta_a - beta_b) / mean
 
 
-def best_valid_pair(candidates, surface_waves, frequency_hz, substrate, period_m=None, beta_spread_limit=BETA_SPREAD_LIMIT_FRACTION):
+def best_valid_pair(candidates, surface_waves, frequency_hz, substrate, period_m=None, beta_spread_limit=BETA_SPREAD_LIMIT_FRACTION, reasons=None):
     """The Part E pair rule: the largest measured phase separation among pairs where BOTH states
     carry the TM0 surface wave (`surface_waves[i]` not None) and whose beta values agree within
     `beta_spread_limit` of their mean. `surface_waves` is aligned with `candidates` (from
@@ -183,9 +240,16 @@ def best_valid_pair(candidates, surface_waves, frequency_hz, substrate, period_m
             if best is None or sep > best[0]:
                 best = (sep, i, j)
     if best is None:
+        counts = ""
+        if reasons is not None:
+            tally = {}
+            for reason in reasons:
+                if reason is not None:
+                    tally[reason] = tally.get(reason, 0) + 1
+            counts = " Refused: " + ", ".join(f"{k} x{v}" for k, v in sorted(tally.items())) + "." if tally else ""
         raise two_state_no_valid_pair(
             message=f"none of {len(candidates)} candidate states forms a pair that carries the TM0 surface wave "
-            f"with beta values within {beta_spread_limit:.0%} of each other"
+            f"with beta values within {beta_spread_limit:.0%} of each other.{counts}"
         )
     sep, i, j = best
     beta_a = surface_waves[i].beta_rad_per_m
@@ -220,13 +284,6 @@ def separation_warning(choice: TwoStateChoice, threshold_deg=SEPARATION_WARNING_
         f"separation (ideal: 180deg) -- {shortfall:.1f}deg short. 1-bit coding will lose more "
         f"beam efficiency than an ideal pair; consider a different library or geometry pair."
     )
-
-
-def resonance_proximity_deg(phase_deg):
-    """Distance in degrees from the +-180deg resonance phase. Project convention (library_sweep's
-    `detect_resonance_phase_crossing`, citing Huang & Encinar): a reflective element's resonance is
-    where its reflection phase crosses +-180deg."""
-    return abs(wrapped_difference_deg(phase_deg, 180.0))
 
 
 def lambda_sw_over_cell(beta_rad_per_m, period_m):

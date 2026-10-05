@@ -87,27 +87,56 @@ class CodedDesign:
     aperture_field: "object"  # E_ref * exp(j*ACHIEVED phase) -- the real design's radiated field
     labels: tuple
     two_state_states: "tuple | None"  # PHASE15 Part E: the 2 TwoStateCell`s used, n_bits==1 only
+    unreachable_fraction: float = 0.0  # every cell takes one of the two real states, so none is unreachable
+    path_iterations: int = 0  # state-dependent beta iterations used (0 when beta was not path-integrated)
+    path_converged: bool = True
 
 
-def synthesize_coded_one_bit(reference_field, object_beams, frequency_hz, two_state_choice, period_m, feed_xy_m=(0.0, 0.0), cp_phase_offset_deg=0.0, weights=None, surface_wave_beta_rad_per_m=None):
+MAX_PATH_ITERATIONS = 10
+
+
+def synthesize_coded_one_bit(reference_field, object_beams, frequency_hz, two_state_choice, period_m, feed_xy_m=(0.0, 0.0), cp_phase_offset_deg=0.0, weights=None, surface_wave_betas_rad_per_m=None):
     """n_bits=1: the quantized {0, 1} map maps DIRECTLY onto `two_state_choice`'s own two physical
     states (no further library search -- these ARE the two available states, by definition of
     1-bit coding). `GeometryCell.geometry_param` holds the chosen STATE INDEX (0.0 or 1.0, a float
     so `GeometryCell`'s existing `"float | None"` type is unchanged) -- the caller maps a state
     index back to `two_state_choice.state_0/state_1` (each carrying its own `.geometry` dict,
     rectangle or annular-slot) for export; `achieved_value` is that state's own MEASURED reflection
-    phase (not the ideal 0/180deg target), `phase_error_deg` the gap between them."""
+    phase (not the ideal 0/180deg target), `phase_error_deg` the gap between them.
+
+    `surface_wave_betas_rad_per_m`: `(beta_state_0, beta_state_1)`. The surface-wave phase is then
+    path-integrated along each radial ray from the feed, `integral beta(s) ds`, where `beta(s)` is
+    the beta of the state chosen at that point -- the two states' betas differ, so the phase is
+    not `beta_mean * rho`. The state map and the phase are solved together by iteration (each
+    pass re-quantizes with the phase from the previous pass's states)."""
     from ..fields.reference_field_grid import resample_to_cell_grid
 
     cell_field = resample_to_cell_grid(reference_field, period_m)
-    psi_reference = cell_field
-    if surface_wave_beta_rad_per_m is not None:
-        psi_reference = beta_reference_field(cell_field, feed_xy_m, surface_wave_beta_rad_per_m)
-    continuous_deg, quantized_deg, level_map = coded_phase_map_deg(
-        psi_reference, object_beams, frequency_hz, n_bits=1, feed_xy_m=feed_xy_m,
-        cp_phase_offset_deg=cp_phase_offset_deg, weights=weights,
-    )
     states = (two_state_choice.state_0, two_state_choice.state_1)
+    path_iterations = 0
+    path_converged = True
+    if surface_wave_betas_rad_per_m is None:
+        continuous_deg, quantized_deg, level_map = coded_phase_map_deg(
+            cell_field, object_beams, frequency_hz, n_bits=1, feed_xy_m=feed_xy_m,
+            cp_phase_offset_deg=cp_phase_offset_deg, weights=weights,
+        )
+    else:
+        beta_states = tuple(float(b) for b in surface_wave_betas_rad_per_m)
+        beta_map = np.full(cell_field.x_m.shape, 0.5 * (beta_states[0] + beta_states[1]))
+        path_converged = False
+        while path_iterations < MAX_PATH_ITERATIONS:
+            path_iterations += 1
+            phase_rad = path_integrated_phase_rad(cell_field.x_m, cell_field.y_m, feed_xy_m, beta_map, period_m / 2.0)
+            psi_reference = _phase_reference_field(cell_field, phase_rad, f"PATH_INTEGRATED_BETA({beta_states[0]:.6g},{beta_states[1]:.6g}rad/m)")
+            continuous_deg, quantized_deg, level_map = coded_phase_map_deg(
+                psi_reference, object_beams, frequency_hz, n_bits=1, feed_xy_m=feed_xy_m,
+                cp_phase_offset_deg=cp_phase_offset_deg, weights=weights,
+            )
+            beta_next = np.where(level_map == 0, beta_states[0], beta_states[1])
+            if np.array_equal(beta_next, beta_map):
+                path_converged = True
+                break
+            beta_map = beta_next
     ny, nx = cell_field.x_m.shape
     cells = []
     achieved_deg = np.empty((ny, nx))
@@ -132,6 +161,43 @@ def synthesize_coded_one_bit(reference_field, object_beams, frequency_hz, two_st
         x_m=cell_field.x_m, y_m=cell_field.y_m, n_bits=1, continuous_phase_deg=continuous_deg,
         quantized_phase_deg=quantized_deg, level_map=level_map, cells=tuple(cells),
         aperture_field=aperture_field, labels=labels, two_state_states=states,
+        path_iterations=path_iterations, path_converged=path_converged,
+    )
+
+
+def path_integrated_phase_rad(x_m, y_m, feed_xy_m, beta_map_rad_per_m, step_m):
+    """`phi(x,y) = integral_0^rho beta(s) ds` along the straight ray from the feed to each cell
+    centre, the integrand taken from the cell nearest each sample point (samples every `step_m`,
+    exact segment lengths). A uniform beta gives exactly `beta*rho`."""
+    x0, y0 = feed_xy_m
+    xs, ys = x_m[0, :], y_m[:, 0]
+    dx = float(xs[1] - xs[0]) if len(xs) > 1 else step_m
+    dy = float(ys[1] - ys[0]) if len(ys) > 1 else step_m
+    ny, nx = x_m.shape
+    phase = np.zeros((ny, nx))
+    for i in range(ny):
+        for j in range(nx):
+            vx, vy = x_m[i, j] - x0, y_m[i, j] - y0
+            rho = float(np.hypot(vx, vy))
+            if rho == 0.0:
+                continue
+            n = max(1, int(np.ceil(rho / step_m)))
+            edges = np.linspace(0.0, rho, n + 1)
+            mids = 0.5 * (edges[:-1] + edges[1:])
+            sx = x0 + mids * vx / rho
+            sy = y0 + mids * vy / rho
+            ii = np.clip(np.round((sy - ys[0]) / dy).astype(int), 0, ny - 1)
+            jj = np.clip(np.round((sx - xs[0]) / dx).astype(int), 0, nx - 1)
+            phase[i, j] = float(np.sum(beta_map_rad_per_m[ii, jj] * np.diff(edges)))
+    return phase
+
+
+def _phase_reference_field(cell_field, phase_rad, source):
+    field = np.exp(-1j * phase_rad)
+    return ReferenceFieldGrid(
+        x_m=cell_field.x_m, y_m=cell_field.y_m, Ex=field, Ey=None, amplitude_available=True,
+        source=source, dx_m=cell_field.dx_m, dy_m=cell_field.dy_m,
+        z_reference_m=0.0, phase_deg=np.degrees(np.angle(field)),
     )
 
 
@@ -164,19 +230,11 @@ def synthesize_coded_n_bit(reference_field, object_beams, frequency_hz, n_bits, 
 
 
 def beta_reference_field(cell_field, feed_xy_m, beta_rad_per_m):
-    """The reference wave the coded phase compensates, when the surface-wave beta of the chosen
-    pair is used: `exp(-j*beta*rho)` about the feed, unit amplitude (only its PHASE enters the
-    coded control map). Mishra's eq. 1 `beta_sw*rho` term is the surface wave the IMPEDANCE
-    SURFACE carries -- here the mean of the two states' own TM0 betas -- rather than the
-    feed-measured field's phase; the aperture amplitude still comes from the real reference."""
+    """Uniform-beta reference `exp(-j*beta*rho)` about the feed: `path_integrated_phase_rad` with
+    a single beta, kept for the one-beta case (a state pair whose betas are the same)."""
     x0, y0 = feed_xy_m
     rho = np.hypot(cell_field.x_m - x0, cell_field.y_m - y0)
-    field = np.exp(-1j * beta_rad_per_m * rho)
-    return ReferenceFieldGrid(
-        x_m=cell_field.x_m, y_m=cell_field.y_m, Ex=field, Ey=None, amplitude_available=True,
-        source=f"SURFACE_WAVE_BETA({beta_rad_per_m:.4g}rad/m)", dx_m=cell_field.dx_m, dy_m=cell_field.dy_m,
-        z_reference_m=0.0, phase_deg=np.degrees(np.angle(field)),
-    )
+    return _phase_reference_field(cell_field, beta_rad_per_m * rho, f"SURFACE_WAVE_BETA({beta_rad_per_m:.4g}rad/m)")
 
 
 def textbook_quantization_loss_db(n_bits):

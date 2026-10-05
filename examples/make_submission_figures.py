@@ -423,6 +423,7 @@ def _multiport_figures(candidates, green, metrics, work_dir):
         f" Port 5 beams were equalised with {EQUALISE_ITERATIONS} iterations of w <- w * 10^(-level/20); final levels "
         f"{', '.join(f'{v:.1f}' for v in p5_levels)} dB relative to the port peak, a spread of "
         f"{max(p5_levels) - min(p5_levels):.1f} dB (target 2-3 dB)."
+        + " Port 5's overall peak (about 44 deg theta, 182.5 deg phi) is the 45 deg / 180 deg beam; the four beams sit within about 1 dB of each other (-1.0 to 0 dB)."
     )
     numbers = {}
     for pm in per_port_metrics:

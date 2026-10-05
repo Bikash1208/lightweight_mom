@@ -5,6 +5,7 @@ Coded (1-bit/N-bit) design method -- end to end through the real HTTP app, match
 import time
 import uuid
 
+import numpy as np
 import pytest
 
 fastapi = pytest.importorskip("fastapi")
@@ -199,10 +200,9 @@ def test_synthesize_coded_uploaded_two_state(client):
     }
     resp = client.post("/api/hmsa/synthesize_coded", json=body)
     job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
-    assert job["status"] == "done", job
-    result = job["result"]
-    assert result["two_state"]["states"][0]["label"] == "full patch"
-    assert result["two_state"]["achieved_separation_deg"] > 170.0
+    # a state at the patch-plane resonance (Gamma = +1, 0 deg) is refused, so no valid pair remains
+    assert job["status"] == "failed", job
+    assert "NEAR_PATCH_PLANE_RESONANCE" in str(job)
 
 
 def test_synthesize_coded_n_bit_matches_against_continuous_library(client, grounded_library):
@@ -310,3 +310,53 @@ def test_pattern_predict_rejects_out_of_range_port_index(client, grounded_librar
     }
     resp = client.post("/api/pattern/predict", json=pattern_body)
     assert resp.status_code == 422
+
+
+_PAPER_PAIR_26GHZ_PATCH_PLANE = {  # (phase deg, magnitude dB): empty cell, slotted cell (examples/make_paper_board_26ghz.py)
+    "empty": (48.955768, -0.010430),
+    "slotted": (-135.156476, -0.008195),
+}
+
+
+def _paper_pair_uploaded():
+    def gamma(phase_deg, mag_db):
+        return 10.0 ** (mag_db / 20.0) * np.exp(1j * np.radians(phase_deg))
+
+    empty = gamma(*_PAPER_PAIR_26GHZ_PATCH_PLANE["empty"])
+    slotted = gamma(*_PAPER_PAIR_26GHZ_PATCH_PLANE["slotted"])
+    return {
+        "source": "uploaded", "uploaded_label_0": "empty",
+        "uploaded_value_0_real": empty.real, "uploaded_value_0_imag": empty.imag,
+        "uploaded_label_1": "2.17 mm square, annular slot",
+        "uploaded_value_1_real": slotted.real, "uploaded_value_1_imag": slotted.imag,
+        "uploaded_geometry_0": {"kind": "empty"},
+        "uploaded_geometry_1": {"kind": "annular_slot", "a_mm": 2.17, "b_mm": 2.17, "R_mm": 0.75, "r_mm": 0.46},
+    }
+
+
+def _synthesize_ports_coded_paper_pair(client, beta_mode):
+    body = {
+        "formulation": "coded", "frequency_hz": 26e9, "period_mm": 2.57,
+        "layout": {"preset": "1xn", "n": 1, "cell_side_mm": 10.0, "gap_mm": 0.0},
+        "ports": [{"beams": [{"theta_deg": 20.0, "phi_deg": 0.0, "desired_polarization": "lhcp"}]}],
+        "port_eps_r": 2.2, "port_thickness_mm": 1.575, "port_tan_delta": 0.0009,
+        "two_state": _paper_pair_uploaded(), "beta_mode": beta_mode,
+    }
+    resp = client.post("/api/hmsa/synthesize_ports", json=body)
+    return _wait_for_job(client, resp.json()["id"], timeout=60.0)
+
+
+def test_synthesize_ports_coded_paper_beta_mode_accepts_the_paper_pair(client):
+    job = _synthesize_ports_coded_paper_pair(client, "paper")
+    assert job["status"] == "done", job
+    two_state = job["result"]["two_state"]
+    assert two_state["beta_mode"] == "paper"
+    assert two_state["beta_used_rad_per_m"] == pytest.approx(689.27, abs=0.5)
+    assert 640.0 < two_state["beta_model_rad_per_m"] < 700.0
+    assert two_state["state_betas_rad_per_m"][0] < two_state["state_betas_rad_per_m"][1]
+
+
+def test_synthesize_ports_coded_state_beta_mode_refuses_the_paper_pair_on_beta_spread(client):
+    job = _synthesize_ports_coded_paper_pair(client, "state")
+    assert job["status"] == "failed"
+    assert "NO_VALID_PAIR" in str(job)

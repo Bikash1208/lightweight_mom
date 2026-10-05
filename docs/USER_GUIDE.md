@@ -93,6 +93,8 @@ The unit-cell data either method needs is built automatically the first time it'
 board/frequency (cached — later runs with the same board reuse it instantly). You never visit a
 separate library page.
 
+![Step 2 with the Ports section](screenshots/phase15_step2_ports.png)
+
 **Ports (multi-port sub-apertures)**: choose "Multiple ports" to split the board into several feed
 sub-apertures, each with its own feed, beam table and polarization. Layout presets: 2×2 small ports
 plus one large port, a row of N ports, or a custom list. Step 3 reports per-port directivity and
@@ -100,6 +102,8 @@ aperture efficiency, and a first-order edge-distance check between ports (in uni
 check is a heuristic, not a full-wave isolation result. Each port is designed against its own
 analytic surface wave; there is no per-port field upload yet, so expect more unreachable cells than
 a single aperture built from an HFSS field. The Coded method is not offered for multi-port designs.
+
+![Step 2 with the Coded method](screenshots/phase15_step2_coded.png)
 
 **Coded (1-bit / N-bit)**: a design method that quantizes the phase target to two (1-bit) or 2^N
 reflective states, as in Mishra et al. (IEEE TVT 2026). The two-state source is one of:
@@ -109,6 +113,8 @@ complex values you enter. A 1-bit design needs the substrate values in Step 1 fo
 check. N-bit designs need a continuous phase library.
 
 ### Step 3 — Pattern & export
+
+![Step 3 Coded checks](screenshots/phase15_step3_coded_checks.png)
 
 **Coded checks (Step 3)**: the reflection phases and magnitudes of both states at the patch plane and at
 the library's 5 mm reference, each state's β and X_s, the mean β used in the coded phase, the cell size

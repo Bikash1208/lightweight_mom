@@ -81,12 +81,21 @@ def isolation_edge_distance(port_a, port_b, gap_lambda_sw):
     return f"PORT_EDGE_DISTANCE_TIGHT(port{port_a}-port{port_b},{gap_lambda_sw:.2f}lambda_sw)"
 
 
-def quantization_loss_db(loss_db, n_bits):
-    """PHASE15 Part E: the directivity lost at the main beam by quantizing the continuous
-    coded-method phase to `n_bits` bits (Mishra's own 1-bit case, or a finer N-bit one), relative
-    to the same aperture's continuous-phase design -- measured on this project's own vector
-    pattern model, never assumed from a textbook bound."""
-    return f"QUANTIZATION_LOSS({loss_db:.2f}dB,{n_bits}bit)"
+def quantization_loss_db(loss_db, n_bits, textbook_db):
+    """PHASE15 Part E: main-beam PEAK power lost by quantizing the continuous coded-method phase to
+    `n_bits` bits, at the same aperture power, measured on this project's own vector model. The
+    textbook value for uniform phase error (`coded_synthesis.textbook_quantization_loss_db`) is
+    carried alongside so the two can be compared, never one substituted for the other."""
+    return f"QUANTIZATION_LOSS({loss_db:.2f}dB,{n_bits}bit,textbook {textbook_db:.2f}dB)"
+
+
+def two_state_surface_wave_check(beta_bar_rad_per_m, spread_fraction, spread_limit):
+    """PHASE15 Part E: the pair's own TM0 surface-wave check -- the mean beta the coded phase uses,
+    and how far the two states' betas disagree relative to the allowed limit."""
+    return (
+        f"TWO_STATE_SURFACE_WAVE(beta_bar={beta_bar_rad_per_m:.1f}rad/m,"
+        f"spread={100.0 * spread_fraction:.2f}%,limit={100.0 * spread_limit:.0f}%)"
+    )
 
 
 def two_state_phase_separation(achieved_deg, n_bits=1):

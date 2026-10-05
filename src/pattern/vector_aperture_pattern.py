@@ -328,3 +328,51 @@ def measure_vortex_winding(
         null_depth_db=null_depth_db, winding_number=float(winding),
         ring_alpha_deg=np.degrees(alpha), ring_phase_deg=np.degrees(np.unwrap(phases)),
     )
+
+
+def first_null_half_width_deg(aperture_extent_m, wavelength_m, theta0_deg=0.0):
+    """Approximate first-null half-width of a uniformly illuminated aperture of extent `D`,
+    `asin(1.22*lambda/D)` (Balanis), widened by `1/cos(theta0)` for a steered beam. Used only to
+    exclude the main lobe's own shoulder from the search for a strongest SECONDARY beam."""
+    ratio = min(1.0, 1.22 * wavelength_m / aperture_extent_m)
+    return float(np.degrees(np.arcsin(ratio)) / max(np.cos(np.radians(theta0_deg)), 1e-3))
+
+
+def _angular_distance_deg(theta1_deg, phi1_deg, theta2_deg, phi2_deg):
+    t1, t2 = np.radians(theta1_deg), np.radians(theta2_deg)
+    dphi = np.radians(phi1_deg - phi2_deg)
+    cos_d = np.clip(np.cos(t1) * np.cos(t2) + np.sin(t1) * np.sin(t2) * np.cos(dphi), -1.0, 1.0)
+    return float(np.degrees(np.arccos(cos_d)))
+
+
+def strongest_secondary_beam(result: VectorPatternResult, exclusion_deg):
+    """The strongest local maximum of `result`'s power lying OUTSIDE `exclusion_deg` of the main
+    beam (angular distance on the sphere), as `(theta_deg, phi_deg, level_db_rel_main)`, or `None`
+    if no such maximum exists above the -40 dB search floor. Reuses `aperture_pattern`'s
+    `detect_local_maxima` unmodified, the same peak finder `compute_vector_pattern` uses."""
+    power = np.abs(result.e_theta) ** 2 + np.abs(result.e_phi) ** 2
+    peaks = detect_local_maxima(power, result.theta_deg, result.phi_deg, min_relative_db=-40.0, phi_periodic=True)
+    outside = [
+        p for p in peaks
+        if _angular_distance_deg(p.theta_deg, p.phi_deg, result.main_beam_theta_deg, result.main_beam_phi_deg)
+        > exclusion_deg
+    ]
+    if not outside:
+        return None
+    best = max(outside, key=lambda p: p.relative_power_db)
+    return (float(best.theta_deg), float(best.phi_deg), float(best.relative_power_db))
+
+
+def mirror_beam_level_db(result: VectorPatternResult):
+    """Level (dB, relative to the main beam) at the MIRROR direction `(theta0, phi0+180deg)` on the
+    pattern grid -- the direction a symmetric 1-bit pair would also radiate into if the quantization
+    were sign-symmetric. Nearest grid sample; `phi` is taken modulo 360."""
+    power = np.abs(result.e_theta) ** 2 + np.abs(result.e_phi) ** 2
+    peak = float(power.max())
+    theta_axis = result.theta_deg[:, 0]
+    phi_axis = result.phi_deg[0, :]
+    i = int(np.argmin(np.abs(theta_axis - result.main_beam_theta_deg)))
+    mirror_phi = (result.main_beam_phi_deg + 180.0) % 360.0
+    dphi = np.abs((phi_axis - mirror_phi + 180.0) % 360.0 - 180.0)
+    j = int(np.argmin(dphi))
+    return float(10.0 * np.log10(max(power[i, j], 1e-300) / peak)), float(theta_axis[i]), float(phi_axis[j])

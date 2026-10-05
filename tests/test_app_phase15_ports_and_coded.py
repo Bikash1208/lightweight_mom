@@ -141,6 +141,8 @@ def _synthesize_coded_one_bit_square_only(client, grounded_library):
         "period_mm": 8.0,
         "object_beams": [{"theta_deg": 20.0, "phi_deg": 0.0}],
         "n_bits": 1,
+        "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
+        "thickness_mm": _SUBSTRATE["thickness"] * 1e3,
         "library_id": grounded_library,
         "two_state": {"source": "square_only"},
     }
@@ -153,10 +155,15 @@ def test_synthesize_coded_one_bit_square_only(client, grounded_library):
     assert job["status"] == "done", job
     result = job["result"]
     assert result["n_bits"] == 1
-    assert result["two_state"]["state_0"]["geometry"]["kind"] == "rectangle"
-    assert result["two_state"]["state_1"]["geometry"]["kind"] == "rectangle"
+    states = result["two_state"]["states"]
+    assert [st["geometry"]["kind"] for st in states] == ["rectangle", "rectangle"]
+    assert all(st["beta_rad_per_m"] > 0.0 for st in states)
+    assert result["two_state"]["beta_bar_rad_per_m"] > 0.0
     assert "CODED_DESIGN_METHOD" in result["labels"]
     assert any(label.startswith("TWO_STATE_PHASE_SEPARATION(") for label in result["labels"])
+    assert any(label.startswith("TWO_STATE_SURFACE_WAVE(") for label in result["labels"])
+    assert result["quantization"]["textbook_db"] == pytest.approx(3.9224, abs=1e-3)
+    assert result["pattern_checks"]["main_beam_theta_deg"] is not None
     assert result["lw_grid_m"] is not None
 
 
@@ -182,6 +189,8 @@ def test_synthesize_coded_uploaded_two_state(client):
         "period_mm": 8.0,
         "object_beams": [{"theta_deg": 0.0, "phi_deg": 0.0}],
         "n_bits": 1,
+        "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
+        "thickness_mm": _SUBSTRATE["thickness"] * 1e3,
         "two_state": {
             "source": "uploaded", "uploaded_label_0": "full patch", "uploaded_value_0_real": 1.0,
             "uploaded_value_0_imag": 0.0, "uploaded_label_1": "slotted patch",
@@ -192,8 +201,8 @@ def test_synthesize_coded_uploaded_two_state(client):
     job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
     assert job["status"] == "done", job
     result = job["result"]
-    assert result["two_state"]["state_0"]["label"] == "full patch"
-    assert result["two_state"]["warning"] is None  # ~180deg separation
+    assert result["two_state"]["states"][0]["label"] == "full patch"
+    assert result["two_state"]["achieved_separation_deg"] > 170.0
 
 
 def test_synthesize_coded_n_bit_matches_against_continuous_library(client, grounded_library):
@@ -246,6 +255,8 @@ def test_synthesize_coded_square_and_annular_two_state(client, grounded_library)
         "period_mm": 8.0,
         "object_beams": [{"theta_deg": 20.0, "phi_deg": 0.0}],
         "n_bits": 1,
+        "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
+        "thickness_mm": _SUBSTRATE["thickness"] * 1e3,
         "library_id": grounded_library,
         "two_state": {"source": "square_and_annular", "annular_slot_library_id": annular_library_id},
     }

@@ -95,6 +95,17 @@ class SheetModelMode:
         self.labels = SCAFFOLD_LABELS
 
 
+def sheet_admittance_from_gamma(gamma, substrate, frequency_hz):
+    """`Y_sheet` (complex, [S]) from a normal-incidence reflection coefficient `gamma` referenced
+    at the PATCH PLANE z=0 (step 2 above). `substrate` must be grounded (PEC backing) -- the
+    transverse-resonance equation assumes a shorted substrate line."""
+    y_in = Y0 * (1.0 - gamma) / (1.0 + gamma)
+    omega = angular_frequency(frequency_hz)
+    k0 = free_space_wavenumber(frequency_hz)
+    y_slab0 = _y_slab(0.0, omega, substrate.eps_complex, k0, substrate.thickness)
+    return y_in - y_slab0
+
+
 def sheet_admittance_from_normal_incidence(unit_cell, frequency_hz, mesh):
     """`Y_sheet` (complex, [S]) for one patch geometry -- step 1-2 above. `unit_cell` must be
     grounded (`backing == "pec"`; the transverse-resonance equation below assumes a shorted
@@ -108,14 +119,7 @@ def sheet_admittance_from_normal_incidence(unit_cell, frequency_hz, mesh):
         top_air_thickness=0.0, substrate_thickness=unit_cell.substrate.thickness, bottom_air_thickness=None
     )
     sp = compute_s_parameters(unit_cell, frequency_hz, mesh, planes, warn_grating=False, warn_surface_wave=False)
-    gamma = sp.s11[0, 0]
-    y_in = Y0 * (1.0 - gamma) / (1.0 + gamma)
-
-    omega = angular_frequency(frequency_hz)
-    k0 = free_space_wavenumber(frequency_hz)
-    eps_c = unit_cell.substrate.eps_complex
-    y_slab0 = _y_slab(0.0, omega, eps_c, k0, unit_cell.substrate.thickness)
-    return y_in - y_slab0
+    return sheet_admittance_from_gamma(sp.s11[0, 0], unit_cell.substrate, frequency_hz)
 
 
 def find_beta_from_sheet_admittance(y_sheet, substrate, frequency_hz, period_m=None, n_scan=2000):
@@ -171,6 +175,14 @@ def find_beta_for_cell(unit_cell, frequency_hz, mesh, period_m=None):
     if period_m is None:
         period_m = unit_cell.lattice.period_x
     return find_beta_from_sheet_admittance(y_sheet, unit_cell.substrate, frequency_hz, period_m=period_m)
+
+
+def find_beta_from_gamma(gamma, substrate, frequency_hz, period_m=None):
+    """Steps 2-3 from an already-computed patch-plane reflection coefficient (e.g. a library
+    cell's stored S11, de-embedded to z=0) -- no MoM solve. Raises `LwmomError`
+    (`DISPERSION_SHEET_MODEL_NO_ROOT`) when the cell carries no TM surface wave at this frequency."""
+    y_sheet = sheet_admittance_from_gamma(gamma, substrate, frequency_hz)
+    return find_beta_from_sheet_admittance(y_sheet, substrate, frequency_hz, period_m=period_m)
 
 
 def build_dispersion_table_from_sheet_model(unit_cell_at, geometry_params, frequency_hz, mesh, period_m=None, source_label="sheet_model_dispersion_search"):

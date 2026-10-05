@@ -274,9 +274,8 @@ cell's REAL achieved phase (the chosen state's own measured value, not the ideal
 exactly like Formulation B already does. `coded_synthesis.continuous_reference_aperture_field`
 builds the hypothetical zero-quantization-error field from the same design's own
 `continuous_phase_deg`, so comparing `compute_vector_pattern` of both measures quantization loss
-directly (`tests/test_hologram_coded_synthesis.py`'s own end-to-end case measured ~1.8 dB of
-directivity loss for a 1-bit design on a small synthetic board — a real number, not a textbook
-bound).
+directly. The quantization loss is defined in the "Part E checks" subsection below; the directivity
+difference alone is NOT the loss (see there).
 
 **Export**: `export.array_export` generalizes its cell representation to accept EITHER a plain
 `(length_m, width_m)` tuple or a `{"kind": "annular_slot", "a_m", "b_m", "R_m", "r_m"}` dict,
@@ -287,6 +286,74 @@ entities for the two slot radii), and `write_layout_files` (JSON always, CSV onl
 `kind`/`R_m`/`r_m` columns when the grid actually has an annular-slot cell — a plain-rectangle-only
 grid still gets the EXACT original 4-column CSV, byte-for-byte). `app.plots.patch_layout_png` draws
 both cell types on one board (the brief: "the patch-layout PNG must show both cell types").
+
+### Part E checks: surface wave, reference plane, quantization definition, beam checks
+
+Added after the first Part E commit, as the reviewed requirements for a 1-bit pair before it is trusted:
+
+- **Reference plane.** The auto-built libraries store S11 referenced 5 mm ABOVE the patch
+  (`top_air_thickness=5e-3`). The surface-wave model needs the patch plane, so
+  `two_state_cells.patch_plane_gamma` de-embeds with `S11_patch = S11_top*exp(+2j*k0*5mm)` (the rule
+  of `sparameters.Sparameters.at_planes`). Every report states both: the patch-plane phase and the
+  library-reference phase differ by `2*k0*5mm` (127 deg at 10.54 GHz) — a common offset that does not
+  change the pattern but does change any absolute-phase check.
+- **Surface wave per state.** `dispersion.sheet_model.find_beta_from_gamma` (the Phase 14 model,
+  reused unmodified in its equations, no new MoM solve) gives each state's beta and X_s, or reports
+  that it carries no TM0 root. Validated: the bare grounded slab's own reflection returns the
+  analytic `tm0_beta` (`tests/test_phase15_part_e_checks.py`). Measured on the walk-through
+  library (L = 1…7 mm at 10.54 GHz): every state carries the wave, beta 225.0…236.8 rad/m, X_s
+  73…146 ohm.
+- **Pair rule.** The chosen pair is the largest separation among pairs where BOTH states carry the
+  wave AND `|beta_a - beta_b| / mean(beta) <= 5%` (`BETA_SPREAD_LIMIT_FRACTION`). The 5% limit is a
+  project choice, not from the paper; the report shows the measured spread against it. Otherwise
+  the job fails with `TWO_STATE_NO_VALID_PAIR`.
+- **Phase used in psi.** The 1-bit control map uses `psi = arg(E_obj) + beta_bar*rho + polarization
+  term` with `beta_bar` = the mean of the two states' betas (Mishra's `beta_sw`, the surface wave
+  the impedance surface carries), not the feed-measured field's phase. The aperture amplitude still
+  comes from the real reference field.
+- **Resonance and magnitude warnings.** Resonance uses the project's own convention (library_sweep's
+  `detect_resonance_phase_crossing`, citing Huang & Encinar): the reflection phase crosses +-180 deg.
+  A state within 30 deg of +-180 is flagged, measured at the library's 5 mm reference. The wording
+  must say so: the same state's patch-plane phase is different, and the resonance location depends
+  on the reference plane. Magnitudes differing by more than 1 dB are flagged.
+- **+-5% robustness.** Only the chosen pair is re-solved at 0.95f and 1.05f (the library holds one
+  frequency). Walk-through pair (L=5 mm, L=7 mm): separation 147.3 deg at 10.013 GHz, 176.3 deg at
+  10.54 GHz, 165.0 deg at 11.067 GHz.
+- **Edge phase from the beta mismatch.** `(|beta_a - beta_b|/2) * rho_max`, flagged above 30 deg.
+  Walk-through: 60 deg at the aperture corners, so that design is flagged.
+- **Cell size and lambda_sw.** Reported as `lambda_sw = 2*pi/beta_bar`, `lambda_sw/cell`, and the
+  cell pitch. Walk-through: cell 8.00 mm, lambda_sw 27.11 mm = 3.39 cells, lambda0 28.44 mm.
+- **Quantization loss, defined explicitly.** The continuous design `E_ref*exp(j*psi_cont)` is
+  compared with the ideal quantized levels `E_ref*exp(j*level)` (0/180 deg for 1 bit). Same aperture
+  amplitude, so equal input power. Three numbers:
+  1. the peak far-field power ratio at each design's own main beam (the main-beam gain loss) — the
+     reported "quantization loss";
+  2. the aperture coupling `-10*log10(|<E_q,E_c>|^2/(|E_q|^2*|E_c|^2))`, computed without any
+     pattern grid;
+  3. the state error (ideal vs achieved levels), also an aperture coupling, so a constant phase
+     offset common to both states is not counted.
+  The textbook 1-bit value is `-10*log10(sinc^2(pi/2)) = 3.92 dB` (`coded_synthesis.
+  textbook_quantization_loss_db`). Walk-through measurements: peak 3.89 dB, coupling 3.96 dB, textbook
+  3.92 dB. They agree.
+- **Why the directivity difference is not the loss.** An earlier version compared directivities, which
+  gave about 0.5 dB and did not match the textbook. The cause: directivity is normalised by the power
+  a design RADIATES. A 1-bit aperture with 8 mm (0.28 lambda) cells keeps only about 45% of its
+  aperture power in the visible spectrum; the rest is evanescent. Its visible-hemisphere integral
+  therefore drops by about 3.5 dB, and that cancels most of the peak drop. On the walk-through design
+  the radiated power change is -3.49 dB and the directivity change only 0.40 dB. The directivity
+  number is still reported, labelled as reference only.
+- **Secondary beam and mirror.** The strongest local maximum outside the main lobe's first-null
+  radius (`first_null_half_width_deg`, `asin(1.22*lambda/D)`, widened by `1/cos(theta0)`), and the
+  level at the mirror direction `(theta0, phi0+180 deg)` from the nearest grid sample (the phi grid
+  is 360/73 spaced, so the sample can be up to 2.5 deg off). Walk-through: strongest secondary at
+  -4.9 dB at (12 deg, 0 deg), 8 deg from the main beam at (20 deg, 0 deg), so a real shoulder of the
+  1-bit beam, not an artifact of the search; mirror beam at -22.0 dB.
+
+**Limits added for Part E checks:** the 5% beta limit and the 30 deg thresholds are project choices;
+the resonance convention depends on the reference plane; the +-5% check re-solves only the chosen
+pair; uploaded two-state values are taken to be at the patch plane; 1-bit with multiple feeds is
+refused (one feed defines the surface-wave reference); the ports design path does not support
+Coded.
 
 ## Part D — the app
 

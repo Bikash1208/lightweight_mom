@@ -35,6 +35,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from ..phase import principal_phase_deg, wrapped_difference_deg
+from ..phase8e.reference_field_input import ReferenceFieldGrid
 from .hmsa_synthesis import GeometryCell, map_control_to_geometry_library
 from .hmsa_synthesis import formulation_b_control_map as _psi_m_control_map
 
@@ -88,7 +89,7 @@ class CodedDesign:
     two_state_states: "tuple | None"  # PHASE15 Part E: the 2 TwoStateCell`s used, n_bits==1 only
 
 
-def synthesize_coded_one_bit(reference_field, object_beams, frequency_hz, two_state_choice, period_m, feed_xy_m=(0.0, 0.0), cp_phase_offset_deg=0.0, weights=None):
+def synthesize_coded_one_bit(reference_field, object_beams, frequency_hz, two_state_choice, period_m, feed_xy_m=(0.0, 0.0), cp_phase_offset_deg=0.0, weights=None, surface_wave_beta_rad_per_m=None):
     """n_bits=1: the quantized {0, 1} map maps DIRECTLY onto `two_state_choice`'s own two physical
     states (no further library search -- these ARE the two available states, by definition of
     1-bit coding). `GeometryCell.geometry_param` holds the chosen STATE INDEX (0.0 or 1.0, a float
@@ -99,8 +100,11 @@ def synthesize_coded_one_bit(reference_field, object_beams, frequency_hz, two_st
     from ..fields.reference_field_grid import resample_to_cell_grid
 
     cell_field = resample_to_cell_grid(reference_field, period_m)
+    psi_reference = cell_field
+    if surface_wave_beta_rad_per_m is not None:
+        psi_reference = beta_reference_field(cell_field, feed_xy_m, surface_wave_beta_rad_per_m)
     continuous_deg, quantized_deg, level_map = coded_phase_map_deg(
-        cell_field, object_beams, frequency_hz, n_bits=1, feed_xy_m=feed_xy_m,
+        psi_reference, object_beams, frequency_hz, n_bits=1, feed_xy_m=feed_xy_m,
         cp_phase_offset_deg=cp_phase_offset_deg, weights=weights,
     )
     states = (two_state_choice.state_0, two_state_choice.state_1)
@@ -157,6 +161,43 @@ def synthesize_coded_n_bit(reference_field, object_beams, frequency_hz, n_bits, 
         quantized_phase_deg=quantized_deg, level_map=level_map, cells=cells,
         aperture_field=aperture_field, labels=labels, two_state_states=None,
     )
+
+
+def beta_reference_field(cell_field, feed_xy_m, beta_rad_per_m):
+    """The reference wave the coded phase compensates, when the surface-wave beta of the chosen
+    pair is used: `exp(-j*beta*rho)` about the feed, unit amplitude (only its PHASE enters the
+    coded control map). Mishra's eq. 1 `beta_sw*rho` term is the surface wave the IMPEDANCE
+    SURFACE carries -- here the mean of the two states' own TM0 betas -- rather than the
+    feed-measured field's phase; the aperture amplitude still comes from the real reference."""
+    x0, y0 = feed_xy_m
+    rho = np.hypot(cell_field.x_m - x0, cell_field.y_m - y0)
+    field = np.exp(-1j * beta_rad_per_m * rho)
+    return ReferenceFieldGrid(
+        x_m=cell_field.x_m, y_m=cell_field.y_m, Ex=field, Ey=None, amplitude_available=True,
+        source=f"SURFACE_WAVE_BETA({beta_rad_per_m:.4g}rad/m)", dx_m=cell_field.dx_m, dy_m=cell_field.dy_m,
+        z_reference_m=0.0, phase_deg=np.degrees(np.angle(field)),
+    )
+
+
+def textbook_quantization_loss_db(n_bits):
+    """The standard main-beam loss of N-bit phase quantization, `-10*log10(sinc^2(pi/2^N))`
+    (uniformly distributed continuous phase, nearest-level rounding): 3.92 dB for 1 bit, 0.91 dB
+    for 2 bits. A sanity reference for `quantization_loss_db`, not a measured value."""
+    x = np.pi / (2**n_bits)
+    return float(-10.0 * np.log10((np.sin(x) / x) ** 2))
+
+
+def aperture_coupling_loss_db(ideal_aperture_field, continuous_aperture_field):
+    """The coherent (main-beam) fraction of the continuous aperture the quantized one retains:
+    `-10*log10(|<E_q, E_c>|^2 / (|E_q|^2 |E_c|^2))`, with equal aperture amplitudes this is exactly
+    the textbook quantity above. Independent of any pattern grid or directivity normalisation."""
+    e_q = np.asarray(ideal_aperture_field, dtype=complex).ravel()
+    e_c = np.asarray(continuous_aperture_field, dtype=complex).ravel()
+    num = abs(np.vdot(e_c, e_q)) ** 2
+    den = np.vdot(e_c, e_c).real * np.vdot(e_q, e_q).real
+    if den <= 0.0 or num <= 0.0:
+        return float("inf")
+    return float(-10.0 * np.log10(num / den))
 
 
 def continuous_reference_aperture_field(reference_field, continuous_phase_deg):

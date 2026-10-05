@@ -41,9 +41,11 @@ from ...fields.reference_field_grid import (
 )
 from ...green_function import LayeredGreenFunction
 from ...hologram.coded_synthesis import (
+    aperture_coupling_loss_db,
     continuous_reference_aperture_field,
     synthesize_coded_n_bit,
     synthesize_coded_one_bit,
+    textbook_quantization_loss_db,
 )
 from ...hologram.hmsa_synthesis import synthesize_formulation_a, synthesize_formulation_b
 from ...hologram.multi_feed import (
@@ -55,11 +57,20 @@ from ...hologram.multi_feed import (
 from ...hologram.multi_port_synthesis import combined_board_lw_grid_m, synthesize_ports
 from ...hologram.ports import custom_layout, layout_preset_1xn, layout_preset_2x2_plus_1_large
 from ...hologram.two_state_cells import (
-    best_separated_pair,
+    BETA_SPREAD_LIMIT_FRACTION,
+    EDGE_PHASE_WARNING_DEG,
+    LIBRARY_REFERENCE_OFFSET_M,
+    MAGNITUDE_MISMATCH_WARNING_DB,
+    RESONANCE_WARNING_THRESHOLD_DEG,
+    TwoStateCell,
+    best_valid_pair,
     candidates_from_annular_slot_library,
     candidates_from_square_library,
+    lambda_sw_over_cell,
+    patch_plane_gamma,
+    resonance_proximity_deg,
     separation_warning,
-    two_state_from_values,
+    surface_wave_of_state,
 )
 from ...labels import (
     FEED_REGION_MASKED,
@@ -70,6 +81,7 @@ from ...labels import (
     quantization_loss_db,
     reference_field_frequency_mismatch,
     two_state_phase_separation,
+    two_state_surface_wave_check,
 )
 from ...library_sweep import (
     build_annular_slot_library_cells,
@@ -78,7 +90,14 @@ from ...library_sweep import (
     write_square_library_json,
 )
 from ...materials import Metal, Substrate
-from ...pattern.vector_aperture_pattern import aperture_current_from_scalar, compute_vector_pattern
+from ...pattern.vector_aperture_pattern import (
+    aperture_current_from_scalar,
+    compute_vector_pattern,
+    first_null_half_width_deg,
+    mirror_beam_level_db,
+    strongest_secondary_beam,
+)
+from ...phase import principal_phase_deg, wrapped_difference_deg
 from ...phase8b.object_wave import Beam
 from ...reflectarray.designer import CellAssignment
 from ...unit_cell_library import UnitCellLibrary
@@ -609,22 +628,21 @@ def _auto_library_id(body_dict):
     return "auto_" + config_hash(payload)[:20]
 
 
-def _run_ensure_library_job(job, body_dict, library_id):
-    mesh_cells = AUTO_LIBRARY_MESH_CELLS_BY_ACCURACY[body_dict["accuracy"]]
-    l_fractions = _l_fractions_of_period(mesh_cells)
-    l_values_mm = tuple(round(body_dict["period_mm"] * f, 6) for f in l_fractions)
-    base_config = {
-        "period_x": body_dict["period_mm"] * 1e-3,
-        "period_y": body_dict["period_mm"] * 1e-3,
+def _square_library_base_config(body):
+    mesh_cells = AUTO_LIBRARY_MESH_CELLS_BY_ACCURACY[body["accuracy"]]
+    l_values_mm = tuple(round(body["period_mm"] * f, 6) for f in _l_fractions_of_period(mesh_cells))
+    return {
+        "period_x": body["period_mm"] * 1e-3,
+        "period_y": body["period_mm"] * 1e-3,
         "substrate": {
             "name": "user",
-            "eps_r": body_dict["eps_r"],
-            "tan_delta": body_dict["tan_delta"],
-            "thickness": body_dict["thickness_mm"] * 1e-3,
+            "eps_r": body["eps_r"],
+            "tan_delta": body["tan_delta"],
+            "thickness": body["thickness_mm"] * 1e-3,
             "backing": "pec",
         },
         "geometry": {"type": "rectangle", "length": l_values_mm[0], "width": l_values_mm[0]},  # placeholder
-        "excitation": {"frequency": body_dict["frequency_hz"]},  # placeholder
+        "excitation": {"frequency": body["frequency_hz"]},  # placeholder
         "mesh": {
             "cells_x": mesh_cells,
             "cells_y": mesh_cells,
@@ -632,6 +650,29 @@ def _run_ensure_library_job(job, body_dict, library_id):
         },
         "reference_planes": {"top_air_thickness": 5.0e-3},
     }
+
+
+def _annular_library_base_config(body, placeholder_R_mm):
+    mesh_cells = AUTO_LIBRARY_MESH_CELLS_BY_ACCURACY[body["accuracy"]]
+    return {
+        "period_x": body["period_mm"] * 1e-3,
+        "period_y": body["period_mm"] * 1e-3,
+        "substrate": {
+            "name": "user", "eps_r": body["eps_r"], "tan_delta": body["tan_delta"],
+            "thickness": body["thickness_mm"] * 1e-3, "backing": "pec",
+        },
+        "geometry": {"type": "patch_annular_slot", "a": body["a_mm"] * 1e-3, "b": body["b_mm"] * 1e-3, "R": placeholder_R_mm * 1e-3, "r": body["r_mm"] * 1e-3},
+        "excitation": {"frequency": body["frequency_hz"]},  # placeholder
+        "mesh": {"cells_x": mesh_cells, "cells_y": mesh_cells, "floquet_order": mesh_cells},
+        "reference_planes": {"top_air_thickness": 5.0e-3},
+    }
+
+
+def _run_ensure_library_job(job, body_dict, library_id):
+    mesh_cells = AUTO_LIBRARY_MESH_CELLS_BY_ACCURACY[body_dict["accuracy"]]
+    l_fractions = _l_fractions_of_period(mesh_cells)
+    l_values_mm = tuple(round(body_dict["period_mm"] * f, 6) for f in l_fractions)
+    base_config = _square_library_base_config(body_dict)
 
     def _progress(event):
         job.progress = event["done"] / max(event["total"], 1)
@@ -1064,23 +1105,8 @@ def _auto_annular_slot_library_id(body_dict):
 
 
 def _run_ensure_annular_slot_library_job(job, body_dict, library_id):
-    mesh_cells = AUTO_LIBRARY_MESH_CELLS_BY_ACCURACY[body_dict["accuracy"]]
     r_values_mm = _annular_slot_r_values_mm(body_dict["a_mm"], body_dict["b_mm"], body_dict["r_mm"])
-    base_config = {
-        "period_x": body_dict["period_mm"] * 1e-3,
-        "period_y": body_dict["period_mm"] * 1e-3,
-        "substrate": {
-            "name": "user", "eps_r": body_dict["eps_r"], "tan_delta": body_dict["tan_delta"],
-            "thickness": body_dict["thickness_mm"] * 1e-3, "backing": "pec",
-        },
-        "geometry": {
-            "type": "patch_annular_slot", "a": body_dict["a_mm"] * 1e-3, "b": body_dict["b_mm"] * 1e-3,
-            "R": r_values_mm[0] * 1e-3, "r": body_dict["r_mm"] * 1e-3,
-        },  # placeholder, overwritten per R
-        "excitation": {"frequency": body_dict["frequency_hz"]},  # placeholder
-        "mesh": {"cells_x": mesh_cells, "cells_y": mesh_cells, "floquet_order": mesh_cells},
-        "reference_planes": {"top_air_thickness": 5.0e-3},
-    }
+    base_config = _annular_library_base_config(body_dict, placeholder_R_mm=r_values_mm[0])
 
     def _progress(event):
         job.progress = event["done"] / max(event["total"], 1)
@@ -1123,11 +1149,11 @@ def ensure_annular_slot_library(body: EnsureAnnularSlotLibraryRequest, request: 
 
 
 class TwoStateSourceRequest(BaseModel):
-    """PHASE15 Part E's three two-state-cell options: (a) `"square_only"` -- the best-separated
-    pair within one square-patch library (`library_id`); (b) `"square_and_annular"` -- the
-    best-separated pair across a square-patch library AND an annular-slot one
-    (`annular_slot_library_id`, from `/ensure_annular_slot_library`) -- Mishra's own full-patch-vs-
-    annular-slot pairing; (c) `"uploaded"` -- two HFSS-measured complex values given directly."""
+    """PHASE15 Part E's three two-state-cell options: (a) `"square_only"` -- the best valid pair
+    within one square-patch library (`library_id`); (b) `"square_and_annular"` -- the best valid
+    pair across a square-patch library AND an annular-slot one (`annular_slot_library_id`, from
+    `/ensure_annular_slot_library`) -- Mishra's own full-patch-vs-annular-slot pairing; (c)
+    `"uploaded"` -- two HFSS-measured complex values given directly (taken at the patch plane)."""
 
     source: str = "square_and_annular"
     annular_slot_library_id: "str | None" = None
@@ -1139,30 +1165,86 @@ class TwoStateSourceRequest(BaseModel):
     uploaded_value_1_imag: "float | None" = None
 
 
-def _resolve_two_state_choice(two_state: dict, library_id, frequency_hz):
+def _resolve_two_state_choice(two_state: dict, library_id, frequency_hz, substrate, period_m):
+    """Every candidate state's own Phase 14 surface-wave check is run first; the pair is then the
+    best one whose BOTH states carry the TM0 wave with agreeing betas (`best_valid_pair`), never
+    the raw best-separated pair."""
     source = two_state["source"]
     if source == "uploaded":
         for key in ("uploaded_value_0_real", "uploaded_value_0_imag", "uploaded_value_1_real", "uploaded_value_1_imag"):
             if two_state[key] is None:
                 raise config_invalid(message=f"two_state source 'uploaded' needs {key}")
-        return two_state_from_values(
-            two_state["uploaded_label_0"], complex(two_state["uploaded_value_0_real"], two_state["uploaded_value_0_imag"]),
-            two_state["uploaded_label_1"], complex(two_state["uploaded_value_1_real"], two_state["uploaded_value_1_imag"]),
-        )
-    if library_id is None:
-        raise config_invalid(message=f"two_state source {source!r} needs library_id (a square-patch library)")
-    lib = UnitCellLibrary.from_json(library_registry.resolve_path(library_id))
-    candidates = candidates_from_square_library(library_candidates_at_frequency(lib, library_id, frequency_hz))
-    if source == "square_only":
-        return best_separated_pair(candidates)
-    if source == "square_and_annular":
-        if two_state["annular_slot_library_id"] is None:
-            raise config_invalid(message="two_state source 'square_and_annular' needs annular_slot_library_id")
-        annular_path = library_registry.resolve_path(two_state["annular_slot_library_id"])
-        annular_cells = json.loads(annular_path.read_text())["cells"]
-        annular_candidates = candidates_from_annular_slot_library(annular_cells, frequency_hz / 1e9)
-        return best_separated_pair(candidates + annular_candidates)
-    raise config_invalid(message=f"unknown two_state source {source!r}")
+        candidates = [
+            TwoStateCell(two_state["uploaded_label_0"], "uploaded_state_0", complex(two_state["uploaded_value_0_real"], two_state["uploaded_value_0_imag"]), {}),
+            TwoStateCell(two_state["uploaded_label_1"], "uploaded_state_1", complex(two_state["uploaded_value_1_real"], two_state["uploaded_value_1_imag"]), {}),
+        ]
+    else:
+        if library_id is None:
+            raise config_invalid(message=f"two_state source {source!r} needs library_id (a square-patch library)")
+        lib = UnitCellLibrary.from_json(library_registry.resolve_path(library_id))
+        candidates = candidates_from_square_library(library_candidates_at_frequency(lib, library_id, frequency_hz))
+        if source == "square_only":
+            pass
+        elif source == "square_and_annular":
+            if two_state["annular_slot_library_id"] is None:
+                raise config_invalid(message="two_state source 'square_and_annular' needs annular_slot_library_id")
+            annular_path = library_registry.resolve_path(two_state["annular_slot_library_id"])
+            annular_cells = json.loads(annular_path.read_text())["cells"]
+            candidates = candidates + candidates_from_annular_slot_library(annular_cells, frequency_hz / 1e9)
+        else:
+            raise config_invalid(message=f"unknown two_state source {source!r}")
+    surface_waves = [surface_wave_of_state(c, frequency_hz, substrate, period_m) for c in candidates]
+    return best_valid_pair(candidates, surface_waves, frequency_hz, substrate, period_m=period_m)
+
+
+def _state_s11_at_frequency(state, body, frequency_hz):
+    """The library-referenced (5 mm above the patch) S11 of one two-state candidate RE-SOLVED at
+    `frequency_hz` with the same solver settings its library used -- for the +-5% robustness check
+    on the chosen pair only. `None` for a state with no re-solvable geometry (an uploaded value) or
+    a solve that did not converge."""
+    geom = state.geometry
+    if geom.get("kind") == "annular_slot":
+        base = _annular_library_base_config({**body, "frequency_hz": frequency_hz}, placeholder_R_mm=geom["R_mm"])
+        docs = build_annular_slot_library_cells(base, geom["a_mm"], geom["b_mm"], geom["r_mm"], [geom["R_mm"]], frequency_hz)
+    elif "L_mm" in geom:
+        docs = build_square_library_cells(_square_library_base_config({**body, "frequency_hz": frequency_hz}), [geom["L_mm"]], frequency_hz)
+    else:
+        return None
+    doc = docs[0]
+    if doc["solver_status"] != "OK" or not doc["S11"]:
+        return None
+    entry = doc["S11"][0]
+    return complex(entry["real"], entry["imag"])
+
+
+def _frequency_checks(choice, body):
+    """The state's |S11| and phase difference at f*0.95, f and f*1.05 (patch-plane phases). Returns
+    `(rows, note)`: `rows` is None when a state cannot be re-solved, with the reason in `note`."""
+    f = body["frequency_hz"]
+    rows = []
+    for scale in (0.95, 1.05):
+        f_k = f * scale
+        values = []
+        for state in (choice.state_0, choice.state_1):
+            gamma_top = _state_s11_at_frequency(state, body, f_k)
+            if gamma_top is None:
+                return None, f"{state.label} could not be re-solved at {f_k / 1e9:.3f} GHz (uploaded or no solution)."
+            values.append(patch_plane_gamma(gamma_top, f_k, LIBRARY_REFERENCE_OFFSET_M))
+        rows.append(_frequency_row(f_k, values[0], values[1]))
+    rows.insert(1, _frequency_row(f, choice.state_0.patch_plane_value(f), choice.state_1.patch_plane_value(f)))
+    return rows, None
+
+
+def _frequency_row(f_hz, gamma_0, gamma_1):
+    sep = abs(wrapped_difference_deg(principal_phase_deg(gamma_0), principal_phase_deg(gamma_1)))
+    return {
+        "frequency_GHz": f_hz / 1e9,
+        "state_0_magnitude_db": float(20.0 * np.log10(abs(gamma_0))),
+        "state_1_magnitude_db": float(20.0 * np.log10(abs(gamma_1))),
+        "state_0_phase_patch_deg": float(np.degrees(np.angle(gamma_0))),
+        "state_1_phase_patch_deg": float(np.degrees(np.angle(gamma_1))),
+        "separation_deg": float(sep),
+    }
 
 
 class HmsaSynthesizeCodedRequest(BaseModel):
@@ -1184,12 +1266,13 @@ class HmsaSynthesizeCodedRequest(BaseModel):
     cp_phase_offset_deg: float = 0.0
     feed_x_mm: "float | None" = None
     feed_y_mm: "float | None" = None
-    # PHASE15 Part E: substrate params for an immediate quantization-loss measurement (Part B's own
-    # vector model) against the continuous (unquantized) design -- optional; omitted means "not
-    # computed" (never a fabricated/assumed loss number).
+    # Substrate of the library the two-state cells were solved on. Required for the 1-bit method
+    # (the surface-wave check and the +-5% re-solves need it); optional for N-bit (then the
+    # quantization-loss measurement is not computed).
     eps_r: "float | None" = None
     tan_delta: "float | None" = None
     thickness_mm: "float | None" = None
+    accuracy: Literal["fast", "accurate"] = "fast"
 
 
 def _two_state_geometry_to_cell_m(geometry):
@@ -1207,6 +1290,73 @@ def _two_state_geometry_to_cell_m(geometry):
     if "L_mm" in geometry and "W_mm" in geometry:
         return (geometry["L_mm"] * 1e-3, geometry["W_mm"] * 1e-3)
     return None
+
+
+def _ref_complex(reference_field):
+    return reference_field.Ex if reference_field.amplitude_available else np.exp(1j * np.radians(reference_field.phase()))
+
+
+def _pattern_power(x_m, y_m, aperture_field, feed_xy_m, body, green, dx, dy):
+    jx, jy = aperture_current_from_scalar(x_m, y_m, aperture_field, feed_xy_m=feed_xy_m)
+    pat = compute_vector_pattern(x_m, y_m, jx, jy, body["frequency_hz"], green, dx, dy)
+    power = np.abs(pat.e_theta) ** 2 + np.abs(pat.e_phi) ** 2
+    theta_rad = np.radians(pat.theta_deg)
+    dtheta = np.radians(pat.theta_deg[1, 0] - pat.theta_deg[0, 0])
+    dphi = np.radians(360.0 / pat.phi_deg.shape[1])
+    radiated = float(np.sum(power * np.sin(theta_rad) * dtheta * dphi))
+    return pat, float(power.max()), radiated
+
+
+def _quantization_report(design, cell_field, feed_xy_m, body, green, dx, dy, n_bits):
+    """Quantization loss, defined explicitly (never a single number of unknown origin):
+    the CONTINUOUS design `E_ref*exp(j*psi_cont)` is compared with the IDEAL quantized one
+    `E_ref*exp(j*level)` (levels 0/180deg for 1 bit) -- same aperture amplitude, so equal input
+    power. Reported three ways: (1) the peak far-field power ratio at each design's own main beam
+    (the textbook quantity, the main-beam gain loss); (2) the aperture coupling
+    `-10log10(|<E_q,E_c>|^2/(|E_q|^2|E_c|^2))` (the same quantity computed without a pattern grid);
+    (3) the state-error loss, ideal levels vs the ACHIEVED measured states, computed as an aperture
+    coupling so a constant phase offset common to both states (a reference-plane shift) does not
+    count as error -- it moves the whole aperture's phase, not the pattern. The directivity
+    difference is also returned, for reference only: directivity normalises by the power the
+    design RADIATES, and a 1-bit design radiates less, so the directivity loss is much smaller than
+    the peak-gain loss (see docs/phases/PHASE15_POLARIZATION_VORTEX.md Part E)."""
+    ref_complex = _ref_complex(cell_field)
+    e_cont = ref_complex * np.exp(1j * np.radians(design.continuous_phase_deg))
+    e_ideal = ref_complex * np.exp(1j * np.radians(design.quantized_phase_deg))
+    e_ach = design.aperture_field
+    pat_c, peak_c, rad_c = _pattern_power(design.x_m, design.y_m, e_cont, feed_xy_m, body, green, dx, dy)
+    pat_i, peak_i, rad_i = _pattern_power(design.x_m, design.y_m, e_ideal, feed_xy_m, body, green, dx, dy)
+    pat_a, peak_a, rad_a = _pattern_power(design.x_m, design.y_m, e_ach, feed_xy_m, body, green, dx, dy)
+    return {
+        "definition": "continuous design E_ref*exp(j*psi_cont) vs ideal quantized levels E_ref*exp(j*level); equal aperture power",
+        "n_bits": n_bits,
+        "textbook_db": textbook_quantization_loss_db(n_bits),
+        "peak_loss_db": float(10.0 * np.log10(peak_c / peak_i)),
+        "coupling_loss_db": aperture_coupling_loss_db(e_ideal, e_cont),
+        "state_error_loss_db": aperture_coupling_loss_db(e_ideal, e_ach),
+        "radiated_power_ratio_db": float(10.0 * np.log10(rad_i / rad_c)),
+        "directivity_difference_db": float(pat_c.directivity_estimate_dbi - pat_i.directivity_estimate_dbi),
+        "main_beam_continuous": (float(pat_c.main_beam_theta_deg), float(pat_c.main_beam_phi_deg)),
+        "main_beam_ideal": (float(pat_i.main_beam_theta_deg), float(pat_i.main_beam_phi_deg)),
+        "pattern_achieved": pat_a,
+    }
+
+
+def _pattern_checks(pat_a, design, body):
+    wavelength_m = 299792458.0 / body["frequency_hz"]
+    extent_m = float(design.x_m.max() - design.x_m.min()) + body["period_mm"] * 1e-3
+    exclusion = first_null_half_width_deg(extent_m, wavelength_m, pat_a.main_beam_theta_deg)
+    secondary = strongest_secondary_beam(pat_a, exclusion)
+    mirror_db, mirror_theta, mirror_phi = mirror_beam_level_db(pat_a)
+    return {
+        "main_beam_theta_deg": float(pat_a.main_beam_theta_deg),
+        "main_beam_phi_deg": float(pat_a.main_beam_phi_deg),
+        "main_lobe_exclusion_deg": exclusion,
+        "strongest_secondary": None if secondary is None else {
+            "theta_deg": secondary[0], "phi_deg": secondary[1], "level_db": secondary[2],
+        },
+        "mirror_beam": {"theta_deg": mirror_theta, "phi_deg": mirror_phi, "level_db": mirror_db},
+    }
 
 
 def _run_synthesize_coded_job(job, body: dict):
@@ -1237,22 +1387,82 @@ def _run_synthesize_coded_job(job, body: dict):
     ]
     period_m = body["period_mm"] * 1e-3
     n_bits = body["n_bits"]
+    has_substrate = body["eps_r"] is not None and body["tan_delta"] is not None and body["thickness_mm"] is not None
+    substrate = Substrate("user", body["eps_r"], body["tan_delta"], body["thickness_mm"] * 1e-3) if has_substrate else None
+    warnings = []
+    extra_checks = {}
 
+    state_labels = ()
     if n_bits == 1:
-        choice = _resolve_two_state_choice(body["two_state"], body["library_id"], body["frequency_hz"])
+        if substrate is None:
+            raise config_invalid(message="the 1-bit coded method needs the substrate (eps_r, tan_delta, thickness_mm) for its surface-wave check")
+        if body["feeds"] is not None:
+            raise config_invalid(message="the 1-bit coded method with multiple feeds is not supported yet (one feed defines the surface-wave reference)")
+        choice = _resolve_two_state_choice(body["two_state"], body["library_id"], body["frequency_hz"], substrate, period_m)
+        beta_bar = choice.beta_bar_rad_per_m
         design = synthesize_coded_one_bit(
             reference_field, beams, body["frequency_hz"], choice, period_m,
             feed_xy_m=feed_xy_m, cp_phase_offset_deg=body["cp_phase_offset_deg"],
+            surface_wave_beta_rad_per_m=beta_bar,
         )
-        warning = separation_warning(choice)
-        state_labels = (two_state_phase_separation(choice.achieved_separation_deg, n_bits=1),)
+        sep_warning = separation_warning(choice)
+        if sep_warning:
+            warnings.append(sep_warning)
+        state_labels = (
+            two_state_phase_separation(choice.achieved_separation_deg, n_bits=1),
+            two_state_surface_wave_check(beta_bar, choice.beta_spread_fraction, BETA_SPREAD_LIMIT_FRACTION),
+        )
+        states_report = []
+        for state, sw in ((choice.state_0, choice.surface_wave_0), (choice.state_1, choice.surface_wave_1)):
+            phase_library = float(np.degrees(np.angle(state.value)))
+            proximity = resonance_proximity_deg(phase_library)
+            resonance_warning = proximity <= RESONANCE_WARNING_THRESHOLD_DEG
+            if resonance_warning:
+                warnings.append(
+                    f"{state.label} reflects within {proximity:.0f}deg of its resonance phase (+-180deg, measured at the "
+                    f"library's own 5 mm reference) -- its phase moves fast with frequency, so the +-5% check below matters."
+                )
+            states_report.append({
+                "label": state.label, "record_id": state.record_id, "geometry": state.geometry,
+                "magnitude_db": float(20.0 * np.log10(abs(state.value))),
+                "phase_deg_library_reference": phase_library,
+                "phase_deg_patch_plane": float(np.degrees(np.angle(state.patch_plane_value(body["frequency_hz"])))),
+                "resonance_proximity_deg": proximity, "resonance_warning": bool(resonance_warning),
+                "beta_rad_per_m": sw.beta_rad_per_m, "x_s_ohm": sw.x_s_ohm,
+                "stop_band_warning": bool(sw.stop_band_warning),
+            })
+        mag_gap_db = abs(states_report[0]["magnitude_db"] - states_report[1]["magnitude_db"])
+        if mag_gap_db > MAGNITUDE_MISMATCH_WARNING_DB:
+            warnings.append(f"The two states' magnitudes differ by {mag_gap_db:.2f} dB (limit {MAGNITUDE_MISMATCH_WARNING_DB:g} dB).")
+        frequency_rows, frequency_note = _frequency_checks(choice, body)
+        if frequency_rows is not None:
+            for row in frequency_rows:
+                gap = abs(row["state_0_magnitude_db"] - row["state_1_magnitude_db"])
+                if gap > MAGNITUDE_MISMATCH_WARNING_DB:
+                    warnings.append(f"At {row['frequency_GHz']:.3f} GHz the two magnitudes differ by {gap:.2f} dB.")
+        delta_beta = abs(choice.surface_wave_0.beta_rad_per_m - choice.surface_wave_1.beta_rad_per_m)
+        rho_max = float(np.max(np.hypot(design.x_m - feed_xy_m[0], design.y_m - feed_xy_m[1])) + period_m / 2)
+        edge_error_deg = float(np.degrees(0.5 * delta_beta * rho_max))
+        if edge_error_deg > EDGE_PHASE_WARNING_DEG:
+            warnings.append(
+                f"The beta mismatch between the states leaves up to {edge_error_deg:.0f}deg of phase error at the "
+                f"aperture edge (limit {EDGE_PHASE_WARNING_DEG:g}deg)."
+            )
         two_state_info = {
-            "state_0": {"label": choice.state_0.label, "geometry": choice.state_0.geometry,
-                        "phase_deg": float(np.degrees(np.angle(choice.state_0.value)))},
-            "state_1": {"label": choice.state_1.label, "geometry": choice.state_1.geometry,
-                        "phase_deg": float(np.degrees(np.angle(choice.state_1.value)))},
+            "reference_plane": "patch plane (z=0); library S11 de-embedded from its 5 mm reference",
+            "states": states_report,
             "achieved_separation_deg": choice.achieved_separation_deg,
-            "warning": warning,
+            "beta_bar_rad_per_m": beta_bar,
+            "beta_spread_fraction": choice.beta_spread_fraction,
+            "beta_spread_limit_fraction": BETA_SPREAD_LIMIT_FRACTION,
+            "beta_edge_phase_error_deg": edge_error_deg,
+            "cell_size_mm": body["period_mm"],
+            "lambda_sw_mm": 2.0 * np.pi / beta_bar * 1e3,
+            "lambda_sw_over_cell": lambda_sw_over_cell(beta_bar, period_m),
+            "lambda0_mm": 299792458.0 / body["frequency_hz"] * 1e3,
+            "frequency_checks": frequency_rows,
+            "frequency_checks_note": frequency_note,
+            "warnings": warnings,
         }
         ny, nx = design.x_m.shape
         lw_grid_m = [[None] * nx for _ in range(ny)]
@@ -1272,7 +1482,6 @@ def _run_synthesize_coded_job(job, body: dict):
             reference_field, beams, body["frequency_hz"], n_bits, candidates, period_m,
             feed_xy_m=feed_xy_m, cp_phase_offset_deg=body["cp_phase_offset_deg"],
         )
-        state_labels = ()
         two_state_info = None
         lw_grid_m = None  # Export for N>1 reuses the existing Formulation-B-shaped `assignments`
 
@@ -1291,24 +1500,22 @@ def _run_synthesize_coded_job(job, body: dict):
     cell_field = resample_to_cell_grid(reference_field, period_m)
     continuous_field = continuous_reference_aperture_field(cell_field, design.continuous_phase_deg)
 
-    quantization_loss_label = None
-    if body["eps_r"] is not None and body["tan_delta"] is not None and body["thickness_mm"] is not None:
-        # Part E: "report quantization loss against the continuous design" -- a REAL measurement
-        # via the same vector pattern model Part B already validated, not a textbook bound.
-        try:
-            substrate = Substrate("user", body["eps_r"], body["tan_delta"], body["thickness_mm"] * 1e-3)
-            green = LayeredGreenFunction(substrate, body["frequency_hz"], backing="pec")
-            dx = float(design.x_m[0, 1] - design.x_m[0, 0])
-            dy = float(design.y_m[1, 0] - design.y_m[0, 0])
-            jx_q, jy_q = aperture_current_from_scalar(design.x_m, design.y_m, design.aperture_field, feed_xy_m=feed_xy_m)
-            jx_c, jy_c = aperture_current_from_scalar(design.x_m, design.y_m, continuous_field, feed_xy_m=feed_xy_m)
-            pat_q = compute_vector_pattern(design.x_m, design.y_m, jx_q, jy_q, body["frequency_hz"], green, dx, dy)
-            pat_c = compute_vector_pattern(design.x_m, design.y_m, jx_c, jy_c, body["frequency_hz"], green, dx, dy)
-            loss_db = pat_c.directivity_estimate_dbi - pat_q.directivity_estimate_dbi
-            quantization_loss_label = quantization_loss_db(loss_db, n_bits)
-        except Exception:
-            quantization_loss_label = None
+    quantization = None
+    quantization_label = None
+    if substrate is not None:
+        green = LayeredGreenFunction(substrate, body["frequency_hz"], backing="pec")
+        dx = float(design.x_m[0, 1] - design.x_m[0, 0])
+        dy = float(design.y_m[1, 0] - design.y_m[0, 0])
+        report = _quantization_report(design, cell_field, feed_xy_m, body, green, dx, dy, n_bits)
+        pat_a = report.pop("pattern_achieved")
+        quantization = report
+        quantization_label = quantization_loss_db(report["peak_loss_db"], n_bits, report["textbook_db"])
+        extra_checks = _pattern_checks(pat_a, design, body)
 
+    layout_url = _layout_preview_url(
+        job, design.x_m, design.y_m, design.quantized_phase_deg,
+        "target phase (deg)", f"Coded design target phase, {n_bits}-bit",
+    )
     patch_layout_png_url = None
     try:
         out_dir = job_output_dir(job.id)
@@ -1335,6 +1542,7 @@ def _run_synthesize_coded_job(job, body: dict):
     except Exception:
         patch_layout_png_url = None
 
+    labels = extra_labels + state_labels + ((quantization_label,) if quantization_label else ())
     return {
         "n_bits": n_bits,
         "x_m": design.x_m,
@@ -1346,11 +1554,14 @@ def _run_synthesize_coded_job(job, body: dict):
         "cells": design.cells,
         "assignments": assignments,
         "two_state": two_state_info,
-        "labels": extra_labels + state_labels + ((quantization_loss_label,) if quantization_loss_label else ()),
+        "quantization": quantization,
+        "pattern_checks": extra_checks or None,
+        "labels": labels,
         "aperture_field_real": design.aperture_field.real,
         "aperture_field_imag": design.aperture_field.imag,
         "continuous_aperture_field_real": continuous_field.real if continuous_field is not None else None,
         "continuous_aperture_field_imag": continuous_field.imag if continuous_field is not None else None,
+        "layout_png_url": layout_url,
         "patch_layout_png_url": patch_layout_png_url,
         "feeds_mm": feeds_mm,
         "lw_grid_m": lw_grid_m,  # n_bits==1 only -- the two-state export path reads this directly

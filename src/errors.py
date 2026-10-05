@@ -84,6 +84,13 @@ DISPERSION_MOM_NO_CLEAR_MODE = ErrorCode(
     "Try a different geometry_param, direction, or mesh; or import an HFSS eigenmode table instead "
     "(dispersion.hfss_table.read_dispersion_csv, label DISPERSION_FROM_HFSS).",
 )
+TWO_STATE_NO_VALID_PAIR = ErrorCode(
+    "TWO_STATE_NO_VALID_PAIR",
+    "No two-state (1-bit) cell pair passes the surface-wave check: both states must carry the TM0 "
+    "surface wave at the design frequency, with beta values close enough to share one reference.",
+    "Widen the square-patch library or add an annular-slot library so more candidates carry the "
+    "surface wave, or change the design frequency.",
+)
 DISPERSION_SHEET_MODEL_NO_ROOT = ErrorCode(
     "DISPERSION_SHEET_MODEL_NO_ROOT",
     "The homogenized sheet-admittance transverse-resonance equation has no bound-mode root for this cell/frequency.",
@@ -105,6 +112,7 @@ ALL_ERROR_CODES = (
     LIBRARY_FREQUENCY_UNAVAILABLE,
     DISPERSION_MOM_NO_CLEAR_MODE,
     DISPERSION_SHEET_MODEL_NO_ROOT,
+    TWO_STATE_NO_VALID_PAIR,
 )
 
 
@@ -191,3 +199,7 @@ def dispersion_mom_no_clear_mode(message=None):
 
 def dispersion_sheet_model_no_root(message=None):
     return LwmomError(DISPERSION_SHEET_MODEL_NO_ROOT, message=message)
+
+
+def two_state_no_valid_pair(message=None):
+    return LwmomError(TWO_STATE_NO_VALID_PAIR, message=message)

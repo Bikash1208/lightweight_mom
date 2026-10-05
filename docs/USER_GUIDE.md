@@ -93,7 +93,28 @@ The unit-cell data either method needs is built automatically the first time it'
 board/frequency (cached — later runs with the same board reuse it instantly). You never visit a
 separate library page.
 
+**Ports (multi-port sub-apertures)**: choose "Multiple ports" to split the board into several feed
+sub-apertures, each with its own feed, beam table and polarization. Layout presets: 2×2 small ports
+plus one large port, a row of N ports, or a custom list. Step 3 reports per-port directivity and
+aperture efficiency, and a first-order edge-distance check between ports (in units of λ_sw). That
+check is a heuristic, not a full-wave isolation result. Each port is designed against its own
+analytic surface wave; there is no per-port field upload yet, so expect more unreachable cells than
+a single aperture built from an HFSS field. The Coded method is not offered for multi-port designs.
+
+**Coded (1-bit / N-bit)**: a design method that quantizes the phase target to two (1-bit) or 2^N
+reflective states, as in Mishra et al. (IEEE TVT 2026). The two-state source is one of:
+square-patch library (the best pair whose two states both carry the TM0 surface wave with agreeing
+β), square plus annular-slot library (the same rule across both families), or two HFSS-measured
+complex values you enter. A 1-bit design needs the substrate values in Step 1 for its surface-wave
+check. N-bit designs need a continuous phase library.
+
 ### Step 3 — Pattern & export
+
+**Coded checks (Step 3)**: the reflection phases and magnitudes of both states at the patch plane and at
+the library's 5 mm reference, each state's β and X_s, the mean β used in the coded phase, the cell size
+and λ_sw/cell, the ±5% frequency rows, warnings (resonance proximity, magnitude mismatch, β mismatch at
+the aperture edge), the quantization loss with its textbook comparison, and the strongest secondary
+beam and the mirror beam.
 
 A one-line summary (beam count, board, cell size, method) appears before you run. "Design antenna"
 chains: builds/reuses the board's unit-cell data (library or dispersion table, whichever the chosen

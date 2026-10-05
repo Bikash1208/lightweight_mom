@@ -155,7 +155,7 @@
         <div class="segmented" id="method-control">
           <button type="button" data-method="eigenmode" class="active">Surface-wave (eigenmode)</button>
           <button type="button" data-method="reflection">Reflection phase</button>
-          <button type="button" data-method="coded">Coded (1-bit / N-bit)</button>
+          <button type="button" data-method="coded">Coded (1-bit / N-bit) <span class="status warn">Experimental</span></button>
         </div>
         <p class="status" id="method-hint"></p>
 
@@ -321,7 +321,6 @@
         <h3>Multi-port board</h3>
         <img class="plot" id="ports-patch-layout-img" alt="Multi-port patch layout" />
         <p class="status" id="ports-isolation-summary"></p>
-        <p class="status warn" id="ports-reference-note">Each port is designed against its own analytic surface wave (no per-port field upload yet), so expect more unreachable cells than a single aperture built from an HFSS field.</p>
         <div id="ports-per-port-results"></div>
       </div>
 

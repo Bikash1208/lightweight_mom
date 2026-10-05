@@ -18,6 +18,7 @@ from src.hologram.multi_port_synthesis import (
 from src.hologram.ports import layout_preset_1xn, layout_preset_2x2_plus_1_large
 from src.phase8b.object_wave import Beam
 from src.phase8b.reference_wave import monopole_reference_field
+from src.phase8e.reference_field_input import phase_only_reference_field
 
 FREQ = 10e9
 K_SWG = tm0_beta(FREQ, 2.2, 1.575e-3)
@@ -47,13 +48,40 @@ def test_port_native_grid_spans_the_region():
 # ========================================================================= port_reference_field
 
 
-def test_port_reference_field_with_no_upload_is_the_analytic_monopole_about_the_feed():
+def test_port_reference_field_with_no_upload_is_the_analytic_monopole_phase_about_the_feed():
     from dataclasses import replace
 
     region = replace(layout_preset_1xn(1, 0.02)[0], feed_x_m=0.003)  # an off-centre feed
     ref = port_reference_field(region, resolution_m=0.002, k_swg=K_SWG)
     expected = monopole_reference_field(ref.x_m - region.feed_x_m, ref.y_m - region.feed_y_m, K_SWG)
-    assert np.allclose(ref.Ex, expected)
+    assert np.allclose(ref.Ex, np.exp(1j * np.angle(expected)))
+
+
+def test_analytic_single_port_reproduces_a_phase_only_feed_design():
+    """Regression: the analytic monopole's rho^-1/2 amplitude made Formulation A report 28.5% of a
+    full-board port unreachable, while a phase-only field carrying the same phase reports 0%
+    (the uploaded .fld is phase-only). The analytic port must match that phase-only design."""
+    from src.dispersion.hfss_table import DispersionSample, DispersionTable
+
+    table = DispersionTable(
+        source_path="synthetic", frequency_hz=FREQ,
+        samples=tuple(DispersionSample(geometry_param=g, beta_rad_per_m=None, x_s_ohm=x)
+                      for g, x in [(1.0, 50.0), (2.0, 100.0), (3.0, 150.0), (4.0, 200.0)]),
+    )
+    region = layout_preset_1xn(1, 0.296)[0]  # a 37 x 37 cell board at 8 mm
+    beams = [Beam(theta_deg=20.0, phi_deg=0.0, weight=1.0 + 0j)]
+    analytic = port_reference_field(region, resolution_m=0.008, k_swg=K_SWG)
+    phase_only = phase_only_reference_field(
+        analytic.x_m, analytic.y_m, np.degrees(np.angle(monopole_reference_field(analytic.x_m, analytic.y_m, K_SWG)))
+    )
+    design_analytic = hs.synthesize_formulation_a(
+        analytic, beams, FREQ, 100.0, 0.3, table, 0.008, rescale_to_beta_bar=False, feed_xy_m=(0.0, 0.0)
+    )
+    design_phase_only = hs.synthesize_formulation_a(
+        phase_only, beams, FREQ, 100.0, 0.3, table, 0.008, rescale_to_beta_bar=False, feed_xy_m=(0.0, 0.0)
+    )
+    assert design_analytic.unreachable_fraction <= design_phase_only.unreachable_fraction + 0.02
+    assert design_analytic.unreachable_fraction < 0.05
 
 
 # =============================================================================== synthesize_ports

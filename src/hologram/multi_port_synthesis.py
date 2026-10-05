@@ -10,7 +10,7 @@ implemented as a genuinely independent per-port formulation choice in this first
 port DOES get its own feed position, own beam list, and its own polarization compensation (every
 other part of Part A/B is fully per-port)."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 
@@ -39,7 +39,14 @@ def port_reference_field(region: PortRegion, resolution_m, k_swg=None, uploaded_
 
     x_m, y_m = port_native_grid(region, resolution_m)
     feed = FeedSpec(region.feed_x_m, region.feed_y_m, amplitude=1.0, reference_field=uploaded_field)
-    return superposed_reference_field([feed], x_m, y_m, k_swg)
+    ref = superposed_reference_field([feed], x_m, y_m, k_swg)
+    if uploaded_field is None:
+        # Phase-only, as an uploaded .fld is: the monopole's rho^-1/2 spreading would be read as an
+        # amplitude taper that Formulation A's modulation range cannot follow (measured on the
+        # full board: 54% unreachable analytic vs 0% phase-only, uploaded field 15%).
+        phase_only = np.exp(1j * np.angle(ref.Ex))
+        ref = replace(ref, Ex=phase_only, Ey=np.zeros_like(phase_only), phase_deg=np.degrees(np.angle(phase_only)))
+    return ref
 
 
 @dataclass(frozen=True)

@@ -349,6 +349,10 @@ Added after the first Part E commit, as the reviewed requirements for a 1-bit pa
   -4.9 dB at (12 deg, 0 deg), 8 deg from the main beam at (20 deg, 0 deg), so a real shoulder of the
   1-bit beam, not an artifact of the search; mirror beam at -22.0 dB.
 
+**Status of the Coded method: Experimental.** Pair validity (the patch-plane resonance check, the
+surface-wave model's valid range, and the inductive-at-patch-plane requirement) is pending and is not
+yet reflected in the pair rule; the walk-through pair shown above should not be relied on.
+
 **Limits added for Part E checks:** the 5% beta limit and the 30 deg thresholds are project choices;
 the resonance convention depends on the reference plane; the +-5% check re-solves only the chosen
 pair; uploaded two-state values are taken to be at the patch plane; 1-bit with multiple feeds is

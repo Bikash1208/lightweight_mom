@@ -14,6 +14,7 @@ here with the app's own settings.
 """
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import matplotlib
@@ -48,6 +49,7 @@ from src.pattern.vector_aperture_pattern import (  # noqa: E402
 )
 from src.phase8b.object_wave import Beam  # noqa: E402
 from src.polarization import handedness  # noqa: E402
+from src.reflectarray.designer import PHASE_ERROR_UNREACHABLE_THRESHOLD_DEG  # noqa: E402
 from src.unit_cell_library import UnitCellLibrary  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -61,6 +63,8 @@ MULTIPORT_BEAMS = [(15.0, 0.0), (30.0, 90.0), (45.0, 180.0), (60.0, 270.0)]
 GUARD_GAP_M = 28e-3  # about 1 lambda_sw at the tm0 surface wave (lambda_sw = 2*pi/tm0_beta, 27.9 mm)
 SMALL_PORT_NOMINAL_M = 142e-3  # 5 lambda_0 at 10.54 GHz; the preset shrinks each port by the gap, 114 mm active
 SUBSTRATE = Substrate(name="user", eps_r=EPS_R, tan_delta=TAN_D, thickness=THICK_M)
+EQUALISE_ITERATIONS = 2
+UNREACHABLE_THRESHOLD_DEG = PHASE_ERROR_UNREACHABLE_THRESHOLD_DEG
 
 
 def _library_candidates(work_dir):
@@ -148,6 +152,16 @@ def _measure(pat, jx, jy, x_m, y_m, green, desired):
         result["copol"] = _physical(co_key)
         result["xpd_db_at_beam"] = float(20.0 * np.log10(max(abs(co), 1e-12) / max(abs(cross), 1e-12)))
     return result, vortex
+
+
+def _port_beam_levels_db(port, green, requested):
+    pat, _, _ = _pattern(port.design.x_m, port.design.y_m, port.design.aperture_field, port.feed_xy_m, green)
+    peak = float(np.max(np.abs(pat.e_theta) ** 2 + np.abs(pat.e_phi) ** 2))
+    levels = []
+    for t, ph in requested:
+        bi, bj = _nearest(pat, t, ph)
+        levels.append(float(10.0 * np.log10(max(abs(pat.e_theta[bi, bj]) ** 2 + abs(pat.e_phi[bi, bj]) ** 2, 1e-30) / peak)))
+    return levels
 
 
 def _uv_panel(ax, pat, title, marker=True):
@@ -271,7 +285,22 @@ def _multiport_figures(candidates, green, metrics, work_dir):
     def per_port(ref, beams, feed_xy_m):
         return synthesize_formulation_b(ref, beams, F_HZ, candidates, PERIOD_M, feed_xy_m=feed_xy_m)
 
-    multi = synthesize_ports(regions, port_beams, per_port, PERIOD_M, k_swg=k_swg, min_lambda_sw=1.0)
+    def synthesize_board():
+        return synthesize_ports(regions, port_beams, per_port, PERIOD_M, k_swg=k_swg, min_lambda_sw=1.0)
+
+    # Port 5 equalisation: w_m <- w_m * 10^(-level_m/20), levels in dB relative to the port's own peak.
+    equalisation_db = []
+    for iteration in range(EQUALISE_ITERATIONS + 1):
+        multi = synthesize_board()
+        port5 = next(p for p in multi.ports if p.port_id == 4)
+        levels = _port_beam_levels_db(port5, green, MULTIPORT_BEAMS)
+        equalisation_db.append([round(v, 2) for v in levels])
+        if iteration == EQUALISE_ITERATIONS:
+            break
+        port_beams[4] = [
+            replace(beam, weight=beam.weight * 10.0 ** (-level / 20.0))
+            for beam, level in zip(port_beams[4], levels, strict=True)
+        ]
     board = combined_board_lw_grid_m(
         multi,
         lambda c: None if c.geometry_param is None else (
@@ -291,9 +320,9 @@ def _multiport_figures(candidates, green, metrics, work_dir):
         xpd_db, beam_levels_db = [], []
         for t, ph in requested:
             bi, bj = _nearest(pat, t, ph)
-            xpd_db.append(round(20.0 * np.log10(max(abs(pat.e_l[bi, bj]), 1e-12) / max(abs(pat.e_r[bi, bj]), 1e-12)), 2))
-            beam_levels_db.append(round(10.0 * np.log10(max(abs(pat.e_theta[bi, bj]) ** 2 + abs(pat.e_phi[bi, bj]) ** 2, 1e-30)
-                                                       / peak_power), 2))
+            xpd_db.append(round(float(20.0 * np.log10(max(abs(pat.e_l[bi, bj]), 1e-12) / max(abs(pat.e_r[bi, bj]), 1e-12))), 2))
+            beam_levels_db.append(round(float(10.0 * np.log10(
+                max(abs(pat.e_theta[bi, bj]) ** 2 + abs(pat.e_phi[bi, bj]) ** 2, 1e-30) / peak_power)), 2))
         per_port_metrics.append({
             "port": port.port_id + 1,
             "cells": f"{ref_x.shape[1]} x {ref_x.shape[0]}",
@@ -356,7 +385,7 @@ def _multiport_figures(candidates, green, metrics, work_dir):
         {"ports": [f.port_a + 1, f.port_b + 1], "gap_lambda_sw": round(f.gap_lambda_sw, 3), "flagged": f.flagged}
         for f in multi.isolation_flags
     ]
-    metrics["multiport"] = {"ports": per_port_metrics, "isolation": isolation}
+    metrics["multiport"] = {"ports": per_port_metrics, "isolation": isolation, "port5_equalisation_db": equalisation_db}
 
     substrate, metal = SUBSTRATE, Metal()
     feeds_mm = [(p.feed_xy_m[0] * 1e3, p.feed_xy_m[1] * 1e3) for p in multi.ports]
@@ -382,6 +411,19 @@ def _multiport_figures(candidates, green, metrics, work_dir):
             "edge diffraction, feed loss and mismatch. Measured boards in the literature reach about 10-15% "
             "(Mishra et al., TVT 2026). The isolation flag is a first-order edge-distance check in lambda_sw, not a "
             "full-wave result.")
+    p4, p5_levels = per_port_metrics[3], equalisation_db[-1]
+    text += (
+        f" Unreachable: a cell is unreachable when its closest library patch has a phase error above "
+        f"{UNREACHABLE_THRESHOLD_DEG:g} deg. Those cells still carry the closest library patch in the STEP, and their phase "
+        "error is included in the patterns. Formulation B uses the normal-incidence reflection-phase library, which is "
+        "approximate for surface-wave feeding."
+        f" Port 4 steering limit: requested 60 deg, realised main beam {p4['main_beam_theta_deg']:.0f} deg, XPD "
+        f"{p4['xpd_rhcp_over_lhcp_db'][0]:.1f} dB at the request. Horizontal surface currents near a ground plane limit "
+        "steering above about 45 deg; this is a model-level limit, and HFSS confirmation is pending."
+        f" Port 5 beams were equalised with {EQUALISE_ITERATIONS} iterations of w <- w * 10^(-level/20); final levels "
+        f"{', '.join(f'{v:.1f}' for v in p5_levels)} dB relative to the port peak, a spread of "
+        f"{max(p5_levels) - min(p5_levels):.1f} dB (target 2-3 dB)."
+    )
     numbers = {}
     for pm in per_port_metrics:
         numbers[f"port {pm['port']} requested beams (theta, phi deg)"] = pm["beams"]
@@ -396,6 +438,9 @@ def _multiport_figures(candidates, green, metrics, work_dir):
     numbers["isolation flags (first-order, edge gap in lambda_sw)"] = (
         f"{n_flagged} of {len(isolation)} port pairs flagged"
     )
+    numbers["unreachable threshold (deg)"] = UNREACHABLE_THRESHOLD_DEG
+    numbers["port 5 equalisation history, beam levels (dB) per iteration"] = equalisation_db
+    numbers["port 5 final beam-level spread (dB)"] = round(max(p5_levels) - min(p5_levels), 2)
     _write_caption("multiport", text, inputs, numbers)
 
 
@@ -410,7 +455,7 @@ def main():
     _single_beam_figures(reference, feed_xy_m, candidates, green, metrics)
     _multiport_figures(candidates, green, metrics, work)
     (OUT / "submission_metrics.json").write_text(json.dumps(metrics, indent=2, default=float) + "\n")
-    print(json.dumps({k: metrics[k] for k in ("vortex_natural", "pencil_rhcp", "vortex_l1")}, indent=2, default=float))
+    print(json.dumps({k: metrics[k] for k in ("vortex_natural", "pencil_rhcp", "vortex_rhcp_lm1")}, indent=2, default=float))
 
 
 if __name__ == "__main__":

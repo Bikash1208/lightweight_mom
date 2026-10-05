@@ -321,6 +321,7 @@
         <h3>Multi-port board</h3>
         <img class="plot" id="ports-patch-layout-img" alt="Multi-port patch layout" />
         <p class="status" id="ports-isolation-summary"></p>
+        <p class="status" id="ports-efficiency-note">Directivity-based aperture efficiency is an upper bound: it excludes residual surface-wave power, edge diffraction, feed loss and mismatch. Measured boards in the literature reach about 10–15% (Mishra et al., TVT 2026).</p>
         <div id="ports-per-port-results"></div>
       </div>
 
@@ -556,7 +557,7 @@
             `<button type="button" data-type="pencil" class="${isVortex ? "" : "active"}">Pencil</button>` +
             `<button type="button" data-type="vortex" class="${isVortex ? "active" : ""}">Vortex</button>` +
           `</div>` +
-          `<input type="number" step="1" class="beam-oam-charge" value="${b.oam_charge || 1}" style="width:4rem;display:${isVortex ? "inline-block" : "none"}" /></td>` +
+          `<input type="number" step="1" class="beam-oam-charge" title="Charge sign matters. With RHCP, a charge-2 vortex is -2 (measured winding -2); RHCP with +2 is not realised (winding 0). With LHCP, use +2. RHCP with +1 equals the natural beam." value="${b.oam_charge || 1}" style="width:4rem;display:${isVortex ? "inline-block" : "none"}" /></td>` +
           `<td class="feed-col" style="display:${showFeedCol ? "" : "none"}"><select class="beam-feed-index">${feedOptions}</select></td>`;
         tbody.appendChild(tr);
         tr.querySelector(".beam-type-control").addEventListener("click", (ev) => {
@@ -613,7 +614,7 @@
             `<button type="button" data-type="pencil" class="${isVortex ? "" : "active"}">Pencil</button>` +
             `<button type="button" data-type="vortex" class="${isVortex ? "active" : ""}">Vortex</button>` +
           `</div>` +
-          `<input type="number" step="1" class="beam-oam-charge" value="${b.oam_charge || 1}" style="width:4rem;display:${isVortex ? "inline-block" : "none"}" /></td>`;
+          `<input type="number" step="1" class="beam-oam-charge" title="Charge sign matters. With RHCP, a charge-2 vortex is -2 (measured winding -2); RHCP with +2 is not realised (winding 0). With LHCP, use +2. RHCP with +1 equals the natural beam." value="${b.oam_charge || 1}" style="width:4rem;display:${isVortex ? "inline-block" : "none"}" /></td>`;
         tbody.appendChild(tr);
         tr.querySelector(".beam-type-control").addEventListener("click", (ev) => {
           const btn = ev.target.closest("button");
@@ -1471,10 +1472,13 @@
             const r = patternJob.result;
             if (r.pattern_uv_png_url) card.querySelector(".port-pattern-img").src = r.pattern_uv_png_url;
             const areaM2 = ((port.x_max_mm - port.x_min_mm) * (port.y_max_mm - port.y_min_mm)) / 1e6;
+            const lambdaM = 299792458 / frequencyHz;
+            const dmaxLin = (4 * Math.PI * areaM2) / (lambdaM * lambdaM);
+            const effUpper = Math.pow(10, r.result.directivity_estimate_dbi / 10) / dmaxLin;
             card.querySelector(".port-pattern-status").textContent =
-              `Directivity ~${r.result.directivity_estimate_dbi.toFixed(1)} dBi, peak at ` +
-              `θ=${r.result.main_beam_theta_deg.toFixed(1)}°, φ=${r.result.main_beam_phi_deg.toFixed(1)}° ` +
-              `(${areaM2.toFixed(4)} m² aperture).`;
+              `Directivity ${r.result.directivity_estimate_dbi.toFixed(1)} dBi; directivity-based aperture efficiency ` +
+              `(upper bound) ${effUpper.toFixed(2)}; peak at θ=${r.result.main_beam_theta_deg.toFixed(1)}°, ` +
+              `φ=${r.result.main_beam_phi_deg.toFixed(1)}° (${areaM2.toFixed(4)} m² aperture).`;
           } else {
             card.querySelector(".port-pattern-status").textContent = patternJob.error ? patternJob.error.message : patternJob.status;
           }

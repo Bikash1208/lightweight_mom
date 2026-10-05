@@ -57,6 +57,7 @@ PERIOD_M = 8.0e-3
 EPS_R, TAN_D, THICK_M = 2.2, 0.0009, 1.575e-3
 BEAM_THETA, BEAM_PHI = 20.0, 0.0
 MULTIPORT_BEAMS = [(15.0, 0.0), (30.0, 90.0), (45.0, 180.0), (60.0, 270.0)]
+GUARD_GAP_M = 28e-3  # about 1 lambda_sw at the tm0 surface wave (lambda_sw = 2*pi/tm0_beta, 27.9 mm)
 SUBSTRATE = Substrate(name="user", eps_r=EPS_R, tan_delta=TAN_D, thickness=THICK_M)
 
 
@@ -197,6 +198,15 @@ def _single_beam_figures(reference, feed_xy_m, candidates, green, metrics):
         "method": "Formulation B (phase-difference hologram) with the square-patch library (fast mesh)",
         "scripts": "examples/make_submission_figures.py",
     }
+    sign_check = {}
+    for label, pol, l in [("rhcp_l-2", "rhcp", -2), ("lhcp_l+2", "lhcp", 2), ("rhcp_l+2", "rhcp", 2)]:
+        check = Beam(theta_deg=BEAM_THETA, phi_deg=BEAM_PHI, weight=1.0 + 0j, desired_polarization=pol, oam_charge=l)
+        design = synthesize_formulation_b(reference, [check], F_HZ, candidates, PERIOD_M, feed_xy_m=feed_xy_m)
+        pat, jx, jy = _pattern(design.x_m, design.y_m, design.aperture_field, feed_xy_m, green)
+        numbers_check, _ = _measure(pat, jx, jy, design.x_m, design.y_m, green, pol)
+        sign_check[label] = {"copol_null_db": round(numbers_check["null_depth_db"], 2),
+                             "copol_winding": round(numbers_check["winding_number"], 2)}
+    metrics["sign_check"] = sign_check
     cases = [
         ("vortex_natural", Beam(theta_deg=BEAM_THETA, phi_deg=BEAM_PHI, weight=1.0 + 0j, desired_polarization="natural"),
          "Normal (natural, no compensation) beam at theta=20 deg, phi=0 deg: the monopole's radial surface current "
@@ -206,10 +216,11 @@ def _single_beam_figures(reference, feed_xy_m, candidates, green, metrics):
         ("vortex_l1", Beam(theta_deg=BEAM_THETA, phi_deg=BEAM_PHI, weight=1.0 + 0j, desired_polarization="rhcp", oam_charge=1),
          "An intentionally requested OAM vortex, charge l=+1 (RHCP request). It reproduces the natural beam: the "
          "uncompensated monopole current already carries winding +1, so the natural beam is an l=+1 vortex."),
-        ("vortex_l2_limitation", Beam(theta_deg=BEAM_THETA, phi_deg=BEAM_PHI, weight=1.0 + 0j, desired_polarization="rhcp", oam_charge=2),
-         "LIMITATION, not a clean charge-2 vortex: a requested l=+2 (RHCP) puts the boresight power into the opposite "
-         "(cross) circular component with zero winding, so the charge is not realised as requested in this model. "
-         "Reported as measured."),
+        ("vortex_l2", Beam(theta_deg=BEAM_THETA, phi_deg=BEAM_PHI, weight=1.0 + 0j, desired_polarization="rhcp", oam_charge=-2),
+         "Charge-2 vortex with the sign rule measured here: for RHCP-compensated beams the realised copol winding equals the "
+         "requested charge only with l=-2 (measured winding -2, copol null -32 dB). The mirror choice, l=+2 with RHCP, is NOT "
+         "realised (winding 0, power moves to the cross component); LHCP with l=+2 works instead (winding +2). Cross-polar "
+         "power at boresight is about -10 dB for both working choices."),
     ]
     for name, beam, text in cases:
         design = synthesize_formulation_b(reference, [beam], F_HZ, candidates, PERIOD_M, feed_xy_m=feed_xy_m)
@@ -236,7 +247,7 @@ def _single_beam_figures(reference, feed_xy_m, candidates, green, metrics):
 
 
 def _multiport_figures(candidates, green, metrics, work_dir):
-    regions = layout_preset_2x2_plus_1_large(60e-3, gap_m=0.0)
+    regions = layout_preset_2x2_plus_1_large(60e-3 + GUARD_GAP_M, gap_m=GUARD_GAP_M)  # 60 mm active per small port
     port_beams = {}
     for region in regions:
         if region.port_id < 4:
@@ -272,7 +283,8 @@ def _multiport_figures(candidates, green, metrics, work_dir):
             "feed_mm": [round(port.feed_xy_m[0] * 1e3, 1), round(port.feed_xy_m[1] * 1e3, 1)],
             "aperture_m2": round(region.area_m2, 6),
             "directivity_dbi": round(pat.directivity_estimate_dbi, 2),
-            "gain_efficiency_fraction": round(eff, 3),
+            "aperture_efficiency_upper_bound": round(eff, 3),
+            "unreachable_percent": round(100.0 * port.design.unreachable_fraction, 1),
             "max_directivity_dbi": round(dmax, 2),
             "main_beam_theta_deg": round(pat.main_beam_theta_deg, 1),
             "main_beam_phi_deg": round(pat.main_beam_phi_deg, 1),
@@ -283,8 +295,8 @@ def _multiport_figures(candidates, green, metrics, work_dir):
         for t, p in (MULTIPORT_BEAMS if port.port_id == 4 else [MULTIPORT_BEAMS[port.port_id]]):
             ax.plot([np.sin(np.radians(t)) * np.cos(np.radians(p))], [np.sin(np.radians(t)) * np.sin(np.radians(p))], "r+", ms=10)
         ax.set_aspect("equal")
-        ax.set_title(f"port {port.port_id + 1}: D = {pat.directivity_estimate_dbi:.1f} dBi, "
-                     f"eff {eff:.2f}", fontsize=9)
+        ax.set_title(f"port {port.port_id + 1}: {pat.directivity_estimate_dbi:.1f} dBi, "
+                     f"efficiency <= {eff:.2f} (upper bound)", fontsize=8)
     axes.ravel()[-1].axis("off")
     fig.tight_layout()
     fig.savefig(OUT / "multiport_patterns.png", dpi=150)
@@ -309,12 +321,16 @@ def _multiport_figures(candidates, green, metrics, work_dir):
     ax.set_xlabel("x (mm)")
     ax.set_ylabel("y (mm)")
     n_flagged = sum(1 for f in multi.isolation_flags if f.flagged)
-    ax.set_title(f"Multi-port board, 8 mm cells, feed markers\n"
-                 f"isolation flags: {n_flagged} of {len(multi.isolation_flags)} port pairs (edge gap under 1 lambda_sw)", fontsize=9)
+    ax.set_title(f"Multi-port board, 8 mm cells, feed markers, {GUARD_GAP_M * 1e3:g} mm guard gap\n"
+                 f"isolation flags: {n_flagged} of {len(multi.isolation_flags)} port pairs", fontsize=9)
     fig.tight_layout()
     fig.savefig(OUT / "multiport_patch_layout.png", dpi=150)
     plt.close(fig)
 
+    xs = [p.region.x_max_m for p in multi.ports] + [p.region.x_min_m for p in multi.ports]
+    ys = [p.region.y_max_m for p in multi.ports] + [p.region.y_min_m for p in multi.ports]
+    board_w_mm = (max(xs) - min(xs)) * 1e3
+    board_h_mm = (max(ys) - min(ys)) * 1e3
     isolation = [
         {"ports": [f.port_a + 1, f.port_b + 1], "gap_lambda_sw": round(f.gap_lambda_sw, 3), "flagged": f.flagged}
         for f in multi.isolation_flags
@@ -331,26 +347,29 @@ def _multiport_figures(candidates, green, metrics, work_dir):
     inputs = {
         "field": "analytic TM0 monopole, phase-only, per port (no per-port .fld in this app version)",
         "k_swg": f"tm0_beta = {k_swg:.2f} rad/m",
-        "layout": "2x2 small ports (60 mm) plus one large port, gap 0 mm",
+        "layout": f"2x2 small ports (88 mm nominal, 60 mm active after a {GUARD_GAP_M * 1e3:g} mm guard gap) plus one large port",
         "beams": "ports 1-4: one beam each (15,0), (30,90), (45,180), (60,270); port 5: all four beams",
         "polarization": "RHCP compensation on every beam (pencil beams)",
         "cells": f"{PERIOD_M * 1e3:g} mm pitch; formulation B with the square-patch library",
         "scripts": "examples/make_submission_figures.py",
     }
     text = ("Multi-port board: four single-beam sub-apertures and one quad-beam sub-aperture, each with its own "
-            "feed. Per-port patterns use the vector model; gain is reported as directivity and as aperture "
-            "efficiency against the port's own uniform-aperture maximum. The isolation flag is a first-order "
-            "edge-distance check in lambda_sw, not a full-wave result.")
+            f"feed, with a {GUARD_GAP_M * 1e3:g} mm guard gap (about 1 lambda_sw) between sub-apertures. Per-port "
+            "patterns use the vector model; directivity is reported in dBi, and the directivity-based aperture efficiency "
+            "is an UPPER BOUND against the port's own uniform-aperture maximum: it excludes residual surface-wave power, "
+            "edge diffraction, feed loss and mismatch. Measured boards in the literature reach about 10-15% "
+            "(Mishra et al., TVT 2026). The isolation flag is a first-order edge-distance check in lambda_sw, not a "
+            "full-wave result.")
     numbers = {}
     for pm in per_port_metrics:
         numbers[f"port {pm['port']} requested beams (theta, phi deg)"] = pm["beams"]
         numbers[f"port {pm['port']} main beam realised (theta, phi deg)"] = (pm["main_beam_theta_deg"], pm["main_beam_phi_deg"])
-        numbers[f"port {pm['port']} directivity (dBi) / aperture efficiency"] = (
-            f"{pm['directivity_dbi']:.2f} / {pm['gain_efficiency_fraction']:.3f} "
-            f"(port maximum {pm['max_directivity_dbi']:.2f} dBi, aperture {pm['aperture_m2'] * 1e4:.0f} cm^2)"
-        )
+        numbers[f"port {pm['port']} directivity (dBi)"] = f"{pm['directivity_dbi']:.2f} (port maximum {pm['max_directivity_dbi']:.2f} dBi)"
+        numbers[f"port {pm['port']} directivity-based aperture efficiency (upper bound)"] = f"{pm['aperture_efficiency_upper_bound']:.3f}"
+        numbers[f"port {pm['port']} unreachable cells"] = f"{pm['unreachable_percent']:.1f}%"
+    numbers["board size"] = f"{board_w_mm:.1f} mm x {board_h_mm:.1f} mm (guard gap {GUARD_GAP_M * 1e3:g} mm)"
     numbers["isolation flags (first-order, edge gap in lambda_sw)"] = (
-        f"{sum(1 for x in isolation if x['flagged'])} of {len(isolation)} port pairs flagged"
+        f"{n_flagged} of {len(isolation)} port pairs flagged"
     )
     _write_caption("multiport", text, inputs, numbers)
 

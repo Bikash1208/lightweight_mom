@@ -54,18 +54,18 @@ board's own current; to check a real far-field solve against it:
 
 ## Feed locations (PHASE15 Part C, multi-feed)
 
-- Feed 0: (-90.000, 30.000) mm
-- Feed 1: (-30.000, 30.000) mm
-- Feed 2: (-90.000, -30.000) mm
-- Feed 3: (-30.000, -30.000) mm
-- Feed 4: (60.000, 0.000) mm
+- Feed 0: (-132.000, 44.000) mm
+- Feed 1: (-44.000, 44.000) mm
+- Feed 2: (-132.000, -44.000) mm
+- Feed 3: (-44.000, -44.000) mm
+- Feed 4: (88.000, 0.000) mm
 
 ## Multi-port isolation (PHASE15 Part C)
 
 Assign one coax (or lumped) port to each monopole feed below, then solve the full 5x5 S-parameter matrix -- the off-diagonal terms S_ij (i != j) are the inter-port isolation this project's own `hologram.ports.isolation_estimate` cannot compute (it only flags tight edge-to-edge DISTANCE between sub-apertures, in surface-wave wavelengths, as a first-order heuristic; a true isolation number needs exactly this full-wave solve).
 
-- Port 1: monopole at (-90.000, 30.000) mm
-- Port 2: monopole at (-30.000, 30.000) mm
-- Port 3: monopole at (-90.000, -30.000) mm
-- Port 4: monopole at (-30.000, -30.000) mm
-- Port 5: monopole at (60.000, 0.000) mm
+- Port 1: monopole at (-132.000, 44.000) mm
+- Port 2: monopole at (-44.000, 44.000) mm
+- Port 3: monopole at (-132.000, -44.000) mm
+- Port 4: monopole at (-44.000, -44.000) mm
+- Port 5: monopole at (88.000, 0.000) mm

@@ -54,7 +54,12 @@ from ...hologram.multi_feed import (
     segmented_reference_field_and_regions,
     superposed_reference_field,
 )
-from ...hologram.multi_port_synthesis import combined_board_lw_grid_m, synthesize_ports
+from ...hologram.multi_port_synthesis import (
+    combined_board_lw_grid_m,
+    export_frame_feeds_and_rects_mm,
+    export_frame_offset_m,
+    synthesize_ports,
+)
 from ...hologram.pointing_correction import correct_beam_aim, measure_beam_aims
 from ...hologram.ports import custom_layout, layout_preset_1xn, layout_preset_2x2_plus_1_large
 from ...hologram.two_state_cells import (
@@ -1166,6 +1171,8 @@ def _run_synthesize_ports_job(job, body: dict):
         "board_width_mm": board.width_m * 1e3,
         "board_height_mm": board.height_m * 1e3,
         "feeds_mm": [(p.feed_xy_m[0] * 1e3, p.feed_xy_m[1] * 1e3) for p in multi.ports],
+        "export_feeds_mm": export_frame_feeds_and_rects_mm(multi, board)[0],
+        "export_offset_mm": [v * 1e3 for v in export_frame_offset_m(multi, board)],
         "lw_grid_m": board.lw_grid_m,
     }
 

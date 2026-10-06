@@ -158,3 +158,27 @@ class CombinedBoard:
         cx = self.x_min_m + (j + 0.5) * self.period_x_m
         cy = self.y_min_m + (i + 0.5) * self.period_y_m
         return cx, cy
+
+
+def export_frame_offset_m(multi_port: MultiPortDesign, board: CombinedBoard):
+    """The point `(x, y)` in the board's global frame that the STEP origin sits on. `export.array_export`
+    writes a board centred on the origin (cell j at -L/2 + (j + 1/2) P, L = n_x P), whereas the combined
+    grid and the ports are indexed from the board's own corner. Feeds and port rectangles must be
+    shifted by this offset before they are written next to the cells."""
+    n_x = len(board.lw_grid_m[0])
+    n_y = len(board.lw_grid_m)
+    period = multi_port.period_m
+    return board.x_min_m + n_x * period / 2.0, board.y_min_m + n_y * period / 2.0
+
+
+def export_frame_feeds_and_rects_mm(multi_port: MultiPortDesign, board: CombinedBoard):
+    """`(feeds_mm, rects_mm)` in the STEP frame, one entry per port in port order: each feed as
+    `(x_mm, y_mm)` and each port rectangle as `(x_min_mm, x_max_mm, y_min_mm, y_max_mm)`."""
+    ox, oy = export_frame_offset_m(multi_port, board)
+    feeds = [((p.feed_xy_m[0] - ox) * 1e3, (p.feed_xy_m[1] - oy) * 1e3) for p in multi_port.ports]
+    rects = [
+        ((p.region.x_min_m - ox) * 1e3, (p.region.x_max_m - ox) * 1e3,
+         (p.region.y_min_m - oy) * 1e3, (p.region.y_max_m - oy) * 1e3)
+        for p in multi_port.ports
+    ]
+    return feeds, rects

@@ -126,7 +126,7 @@ def _run_export_job(job, source_result, params):
     # PHASE15 Part C: mark each feed location in the STEP/README, if the source design recorded
     # one (every pre-Phase-15 synthesize result has no "feeds_mm" key -- .get(...) keeps this
     # export byte-for-byte unaffected for those).
-    feeds_mm = source_result.get("feeds_mm")
+    feeds_mm = source_result.get("export_feeds_mm", source_result.get("feeds_mm"))
 
     if source_result.get("assignments") is not None:
         assignments = source_result["assignments"]
@@ -161,6 +161,8 @@ def _run_export_job(job, source_result, params):
     ports_info = None
     if "ports" in source_result:
         ports_info = [(p["port_id"], p["feed_x_mm"], p["feed_y_mm"]) for p in source_result["ports"]]
+        if feeds_mm and len(feeds_mm) == len(ports_info):
+            ports_info = [(pid, fx, fy) for (pid, _x, _y), (fx, fy) in zip(ports_info, feeds_mm, strict=True)]
     n = max(len(lw_grid_m), len(lw_grid_m[0]) if lw_grid_m else 0)
     if params["include_step"]:
         with _StepProgressEstimator(job, estimate_step_export_seconds(n), n):

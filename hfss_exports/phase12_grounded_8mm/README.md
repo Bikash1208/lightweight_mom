@@ -65,3 +65,10 @@ Phase 12B `period_sweep.csv` values exactly at the shared frequencies.
 One CSV (or Touchstone) per case: frequency and complex S11 for both Floquet modes, including the
 cross-polarised terms, with a header note saying which mode is x-polarised and where the reference plane is.
 Put them in `hfss_exports/phase12_grounded_8mm/hfss_results/`.
+
+## Missing raw Touchstone files
+
+The raw `.s36p` exports under `hfss_results/` are not in git (`.gitignore`) and are no longer on disk,
+so the tests that read them skip rather than run. To re-enable them, re-export the 36-port
+Touchstone files from HFSS for each case listed in `manifest.json` and place them under
+`hfss_results/` with the names the manifest gives.

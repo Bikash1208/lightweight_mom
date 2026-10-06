@@ -55,6 +55,7 @@ from ...hologram.multi_feed import (
     superposed_reference_field,
 )
 from ...hologram.multi_port_synthesis import combined_board_lw_grid_m, synthesize_ports
+from ...hologram.pointing_correction import correct_beam_aim, measure_beam_aims
 from ...hologram.ports import custom_layout, layout_preset_1xn, layout_preset_2x2_plus_1_large
 from ...hologram.two_state_cells import (
     BETA_SPREAD_LIMIT_FRACTION,
@@ -925,6 +926,9 @@ class HmsaSynthesizePortsRequest(BaseModel):
     # k0*sqrt((eps_r+1)/2), one value for both states. "model": beta of the mixed 1-bit surface.
     beta_mode: str = "state"
     min_lambda_sw: float = 1.0
+    # Optional pointing correction (off by default): re-aim each beam by its measured miss, 1-2 passes.
+    pointing_correction: bool = False
+    pointing_iterations: int = 2
 
 
 def _build_port_regions(layout: dict):
@@ -962,6 +966,14 @@ def _port_cell_to_m(formulation, period_mm):
     return cell_m
 
 
+def _aim_dict(aim):
+    return {
+        "requested_theta_deg": aim.requested_theta_deg, "requested_phi_deg": aim.requested_phi_deg,
+        "achieved_theta_deg": aim.achieved_theta_deg, "achieved_phi_deg": aim.achieved_phi_deg,
+        "miss_deg": aim.miss_deg, "level_db": aim.level_db,
+    }
+
+
 def _run_synthesize_ports_job(job, body: dict):
     regions = _build_port_regions(body["layout"])
     if len(body["ports"]) != len(regions):
@@ -988,7 +1000,7 @@ def _run_synthesize_ports_job(job, body: dict):
             raise config_invalid(message="formulation A needs dispersion_id, x_avg_ohm and modulation_index")
         dispersion_table = read_dispersion_csv(upload_dir(body["dispersion_id"]) / "dispersion.csv", body["frequency_hz"])
 
-        def per_port(ref, beams, feed_xy_m):
+        def synthesize_one(ref, beams, feed_xy_m):
             return synthesize_formulation_a(
                 ref, beams, body["frequency_hz"], body["x_avg_ohm"], body["modulation_index"],
                 dispersion_table, period_m, rescale_to_beta_bar=body["rescale_to_beta_bar"],
@@ -1004,7 +1016,7 @@ def _run_synthesize_ports_job(job, body: dict):
                 f"library {body['library_id']!r} has no record at {body['frequency_hz'] / 1e9:g} GHz"
             )
 
-        def per_port(ref, beams, feed_xy_m):
+        def synthesize_one(ref, beams, feed_xy_m):
             return synthesize_formulation_b(
                 ref, beams, body["frequency_hz"], candidates, period_m,
                 feed_xy_m=feed_xy_m, cp_phase_offset_deg=body["cp_phase_offset_deg"],
@@ -1028,7 +1040,7 @@ def _run_synthesize_ports_job(job, body: dict):
         else:
             betas = (beta_paper, beta_paper) if body["beta_mode"] == "paper" else (beta_model, beta_model)
 
-        def per_port(ref, beams, feed_xy_m):
+        def synthesize_one(ref, beams, feed_xy_m):
             return synthesize_coded_one_bit(
                 ref, beams, body["frequency_hz"], choice, period_m,
                 feed_xy_m=feed_xy_m, cp_phase_offset_deg=body["cp_phase_offset_deg"],
@@ -1036,6 +1048,30 @@ def _run_synthesize_ports_job(job, body: dict):
             )
     else:
         raise config_invalid(message=f"formulation must be 'A', 'B' or 'coded', got {body['formulation']!r}")
+
+    pointing_report = []
+    per_port = synthesize_one
+    if body["pointing_correction"]:
+        if body["port_tan_delta"] is None:
+            raise config_invalid(message="pointing_correction needs port_tan_delta (the pattern check needs the loss tangent)")
+        port_substrate = Substrate("user", body["port_eps_r"], body["port_tan_delta"], body["port_thickness_mm"] * 1e-3)
+        port_green = LayeredGreenFunction(port_substrate, body["frequency_hz"], backing="pec")
+        region_ids = [r.port_id for r in regions]
+
+        def per_port(ref, beams, feed_xy_m):
+            def measure(design, beams_now):
+                return measure_beam_aims(design, beams_now, port_green, period_m, body["frequency_hz"], feed_xy_m)
+
+            design, _used, history = correct_beam_aim(
+                beams, lambda bs: synthesize_one(ref, bs, feed_xy_m), measure, body["pointing_iterations"]
+            )
+            pointing_report.append({
+                "port_id": region_ids[len(pointing_report)],
+                "passes": len(history) - 1,
+                "before": [_aim_dict(a) for a in history[0]],
+                "after": [_aim_dict(a) for a in history[-1]],
+            })
+            return design
 
     multi = synthesize_ports(
         regions, port_beams, per_port, period_m, k_swg=k_swg, min_lambda_sw=body["min_lambda_sw"]
@@ -1124,6 +1160,7 @@ def _run_synthesize_ports_job(job, body: dict):
         "labels": (MULTI_PORT_SHARED_METHOD, PORT_ISOLATION_NOT_FULL_WAVE, *isolation_labels),
         "formulation": body["formulation"],
         "two_state": two_state_info,
+        "pointing_correction": pointing_report if body["pointing_correction"] else None,
         "period_mm": body["period_mm"],
         "patch_layout_png_url": patch_layout_png_url,
         "board_width_mm": board.width_m * 1e3,

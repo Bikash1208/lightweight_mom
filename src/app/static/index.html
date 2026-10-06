@@ -101,6 +101,9 @@
             <span class="unit">uses the Board section below</span>
           </label>
           <div id="ports-beam-tables"></div>
+          <label class="checkbox-row"><input type="checkbox" id="port-pointing-correction" />
+            Pointing correction <span class="unit">(optional, off by default: re-aims each beam by its measured miss, 1-2 passes)</span>
+          </label>
           <p class="status" id="ports-isolation-status"></p>
         </div>
 
@@ -1494,7 +1497,8 @@
             desired_polarization: b.desired_polarization, oam_charge: b.oam_charge,
           })),
         })),
-        port_eps_r: substrate.eps_r, port_thickness_mm: substrate.thickness_mm,
+        port_eps_r: substrate.eps_r, port_thickness_mm: substrate.thickness_mm, port_tan_delta: substrate.tan_delta,
+        pointing_correction: document.getElementById("port-pointing-correction").checked, pointing_iterations: 2,
       };
 
       if (method === "reflection") {
@@ -1550,6 +1554,7 @@
 
       const container = document.getElementById("ports-per-port-results");
       container.innerHTML = "";
+      const aimReports = job.result.pointing_correction || [];
       for (const port of job.result.ports) {
         const card = document.createElement("div");
         card.className = "card";
@@ -1557,11 +1562,19 @@
           `<h4>Port ${port.port_id + 1}</h4>` +
           `<p class="status">Feed at (${port.feed_x_mm.toFixed(1)}, ${port.feed_y_mm.toFixed(1)}) mm &middot; ` +
           `${port.n_cells} cells &middot; ${(port.unreachable_fraction * 100).toFixed(0)}% unreachable</p>` +
+          `<p class="status port-aim-status"></p>` +
           `<img class="plot port-pattern-img" alt="Port ${port.port_id + 1} pattern" />` +
           `<p class="status port-pattern-status"></p>` +
           `<table class="port-beam-table" style="display:none"><thead><tr><th>Beam</th><th>Requested</th>` +
           `<th>Achieved</th><th>Level (dB)</th><th>Point XPD (dB)</th><th>Integrated XPD (dB)</th></tr></thead><tbody></tbody></table>`;
         container.appendChild(card);
+        const aimReport = aimReports.find((r) => r.port_id === port.port_id);
+        if (aimReport) {
+          const aimText = aimReport.before.map((b, k) =>
+            `beam ${k + 1}: miss ${b.miss_deg.toFixed(2)}° → ${aimReport.after[k].miss_deg.toFixed(2)}°`).join("; ");
+          card.querySelector(".port-aim-status").textContent =
+            `Pointing correction (${aimReport.passes} pass${aimReport.passes === 1 ? "" : "es"}): ${aimText}.`;
+        }
         try {
           const patternBody = {
             source_job_id: submitted.id, frequency_hz: frequencyHz, pattern_model: "vector",

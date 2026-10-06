@@ -379,3 +379,20 @@ def test_synthesize_ports_coded_state_beta_mode_refuses_the_paper_pair_on_beta_s
     job = _synthesize_ports_coded_paper_pair(client, "state")
     assert job["status"] == "failed"
     assert "NO_VALID_PAIR" in str(job)
+
+
+def test_synthesize_ports_pointing_correction_reports_before_and_after(client):
+    body = {
+        "formulation": "coded", "frequency_hz": 26e9, "period_mm": 2.57,
+        "layout": {"preset": "1xn", "n": 1, "cell_side_mm": 10.0, "gap_mm": 0.0},
+        "ports": [{"beams": [{"theta_deg": 20.0, "phi_deg": 0.0, "desired_polarization": "lhcp"}]}],
+        "port_eps_r": 2.2, "port_thickness_mm": 1.575, "port_tan_delta": 0.0009,
+        "two_state": _paper_pair_uploaded(), "beta_mode": "paper",
+        "pointing_correction": True, "pointing_iterations": 2,
+    }
+    resp = client.post("/api/hmsa/synthesize_ports", json=body)
+    job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+    assert job["status"] == "done", job
+    (report,) = job["result"]["pointing_correction"]
+    assert 1 <= report["passes"] <= 2
+    assert report["after"][0]["miss_deg"] <= report["before"][0]["miss_deg"]

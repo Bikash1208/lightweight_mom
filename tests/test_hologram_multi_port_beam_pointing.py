@@ -2,10 +2,13 @@
 port's own main beam against the request. The ideal phase library (`test_hologram_vortex_sign`)
 isolates the synthesis and the vector model from library quantisation."""
 
+import numpy as np
+import pytest
+
 from src.dispersion.analytic_tm0 import tm0_beta
 from src.green_function import LayeredGreenFunction
 from src.hologram.hmsa_synthesis import synthesize_formulation_b
-from src.hologram.multi_port_synthesis import synthesize_ports
+from src.hologram.multi_port_synthesis import port_reference_field, synthesize_ports
 from src.hologram.ports import layout_preset_1xn
 from src.materials import Substrate
 from src.pattern.vector_aperture_pattern import aperture_current_from_scalar, compute_vector_pattern
@@ -44,3 +47,38 @@ def _worst_pointing_error_deg(active_side_m):
 
 def test_1x3_rhcp_board_at_25_deg_points_within_1_5_deg():
     assert _worst_pointing_error_deg(120e-3) <= 1.5
+
+
+def test_corrected_beam_is_aimed_past_the_measured_miss():
+    from src.hologram.pointing_correction import BeamAim, corrected_beams
+
+    beam = Beam(theta_deg=REQUEST_THETA_DEG, phi_deg=0.0, weight=1.0 + 0j, desired_polarization="rhcp")
+    aim = BeamAim(REQUEST_THETA_DEG, 0.0, 23.25, 0.0, 0.0)
+    (aimed,) = corrected_beams([beam], [aim], [beam])
+    # re-aim in direction-cosine space: sin(theta_new) = 2 sin(target) - sin(achieved)
+    expected = float(np.degrees(np.arcsin(2.0 * np.sin(np.radians(25.0)) - np.sin(np.radians(23.25)))))
+    assert aimed.theta_deg == pytest.approx(expected, abs=1e-6)
+    assert aimed.phi_deg == pytest.approx(0.0)
+
+
+def test_pointing_correction_brings_the_92_mm_port_onto_its_request():
+    from src.hologram.pointing_correction import correct_beam_aim, measure_beam_aims
+
+    regions = layout_preset_1xn(1, 92e-3)
+    region = regions[0]
+    library = _ideal_library()
+    green = LayeredGreenFunction(SUB, FREQ, backing="pec")
+    beams = [Beam(theta_deg=REQUEST_THETA_DEG, phi_deg=0.0, weight=1.0 + 0j, desired_polarization="rhcp")]
+    feed = (region.feed_x_m, region.feed_y_m)
+
+    reference = port_reference_field(region, CELL / 4.0, K_SWG)
+
+    def synthesize(bs):
+        return synthesize_formulation_b(reference, bs, FREQ, library, CELL, feed_xy_m=feed)
+
+    def measure(design, bs):
+        return measure_beam_aims(design, bs, green, CELL, FREQ, feed)
+
+    _design, _used, history = correct_beam_aim(beams, synthesize, measure, iterations=2)
+    assert history[0][0].miss_deg > 1.0
+    assert history[-1][0].miss_deg < 0.5

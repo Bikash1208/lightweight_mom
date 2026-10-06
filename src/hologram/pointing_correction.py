@@ -102,3 +102,90 @@ def correct_beam_aim(beams, synthesize, measure, iterations=1):
         if worst < best[0]:
             best = (worst, design, used)
     return best[1], best[2], history
+
+
+BALANCE_PASSES = 3
+_BALANCE_TOLERANCE_DB = 0.1
+
+
+def aim_dict(aim):
+    return {
+        "requested_theta_deg": aim.requested_theta_deg, "requested_phi_deg": aim.requested_phi_deg,
+        "achieved_theta_deg": aim.achieved_theta_deg, "achieved_phi_deg": aim.achieved_phi_deg,
+        "miss_deg": aim.miss_deg, "level_db": aim.level_db,
+    }
+
+
+def aim_report(history):
+    """Before/after of a pointing correction, with `after` the best pass (fewest worst-case miss)."""
+    best = min(range(len(history)), key=lambda k: max(a.miss_deg for a in history[k]))
+    return {
+        "passes": best,
+        "before": [aim_dict(a) for a in history[0]],
+        "after": [aim_dict(a) for a in history[best]],
+    }
+
+
+def requested_levels_db(beams):
+    """The requested relative power of each beam, from its own weight, strongest beam = 0 dB
+    (a UI "Relative power" of 0 dB for every beam is therefore equal power)."""
+    mags = np.array([abs(b.weight) for b in beams], dtype=float)
+    return 20.0 * np.log10(mags / mags.max())
+
+
+def balance_beam_levels(beams, targets_db, synthesize, measure, passes=BALANCE_PASSES):
+    """Iterates `w <- w * 10^((target - achieved) / 20)` on each beam's internal weight so the achieved
+    levels (relative to the strongest beam) approach `targets_db`. Keeps the pass with the smallest
+    worst-case error. Returns `(design, beams_used, report)`; the report holds the relative levels
+    before and after, the targets and the errors."""
+    targets = np.asarray(targets_db, dtype=float)
+
+    def relative_levels(aims):
+        levels = np.array([a.level_db for a in aims], dtype=float)
+        return levels - levels.max()
+
+    used = list(beams)
+    design = synthesize(used)
+    levels = relative_levels(measure(design, used))
+    err = float(np.max(np.abs(levels - targets)))
+    history = [levels]
+    best = (err, design, used, levels)
+    best_pass = 0
+    for _ in range(passes):
+        if err < _BALANCE_TOLERANCE_DB:
+            break
+        used = [replace(b, weight=b.weight * 10.0 ** ((t - lv) / 20.0)) for b, t, lv in zip(used, targets, levels, strict=True)]
+        design = synthesize(used)
+        levels = relative_levels(measure(design, used))
+        err = float(np.max(np.abs(levels - targets)))
+        history.append(levels)
+        if err < best[0]:
+            best = (err, design, used, levels)
+            best_pass = len(history) - 1
+    err_best, design_best, used_best, levels_best = best
+    report = {
+        "passes": best_pass,
+        "targets_db": [float(t) for t in targets],
+        "before_db": [float(v) for v in history[0]],
+        "after_db": [float(v) for v in levels_best],
+        "max_error_before_db": float(np.max(np.abs(history[0] - targets))),
+        "max_error_after_db": float(err_best),
+    }
+    return design_best, used_best, report
+
+
+def refine_design(beams, synthesize, measure, *, pointing, balance, pointing_iterations=2):
+    """The optional stages on one design: pointing correction (when `pointing`), then level matching
+    (when `balance` and there are 2+ beams). Returns `(design, beams_used, report)`; `report` has a
+    "pointing" and/or "balance" entry for each stage that ran."""
+    report = {}
+    if pointing:
+        design, used, history = correct_beam_aim(beams, synthesize, measure, pointing_iterations)
+        report["pointing"] = aim_report(history)
+    else:
+        used = list(beams)
+        design = synthesize(used)
+    if balance and len(beams) >= 2:
+        design, used, balance_report = balance_beam_levels(used, requested_levels_db(beams), synthesize, measure)
+        report["balance"] = balance_report
+    return design, used, report

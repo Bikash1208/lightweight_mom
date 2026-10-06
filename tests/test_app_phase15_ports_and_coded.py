@@ -393,6 +393,26 @@ def test_synthesize_ports_pointing_correction_reports_before_and_after(client):
     resp = client.post("/api/hmsa/synthesize_ports", json=body)
     job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
     assert job["status"] == "done", job
-    (report,) = job["result"]["pointing_correction"]
-    assert 1 <= report["passes"] <= 2
+    (entry,) = job["result"]["refinement"]
+    report = entry["pointing"]
+    assert 0 <= report["passes"] <= 2
     assert report["after"][0]["miss_deg"] <= report["before"][0]["miss_deg"]
+
+
+def test_synthesize_ports_matches_requested_beam_levels_by_default(client):
+    body = {
+        "formulation": "coded", "frequency_hz": 26e9, "period_mm": 2.57,
+        "layout": {"preset": "1xn", "n": 1, "cell_side_mm": 10.0, "gap_mm": 0.0},
+        "ports": [{"beams": [
+            {"theta_deg": 20.0, "phi_deg": 0.0, "desired_polarization": "lhcp", "weight_real": 1.0},
+            {"theta_deg": 20.0, "phi_deg": 180.0, "desired_polarization": "lhcp", "weight_real": 1.0},
+        ]}],
+        "port_eps_r": 2.2, "port_thickness_mm": 1.575, "port_tan_delta": 0.0009,
+        "two_state": _paper_pair_uploaded(), "beta_mode": "paper",
+    }
+    resp = client.post("/api/hmsa/synthesize_ports", json=body)
+    job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+    assert job["status"] == "done", job
+    balance = job["result"]["refinement"][0]["balance"]
+    assert len(balance["before_db"]) == 2
+    assert balance["max_error_after_db"] <= balance["max_error_before_db"]

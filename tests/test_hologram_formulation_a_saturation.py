@@ -1,18 +1,16 @@
 """Formulation A with several beams on one port: the summed object wave is normalised to unit peak
 amplitude (`hmsa_synthesis.object_wave_scale`), so Psi stays in [-1, 1].
 
-Beam-level balance is not met with equal weights: the per-beam levels span about 6.4 dB, from the
-real-valued modulation, not from saturation. That check is a strict expected failure until the
-weights are balanced (a decision, since balancing changes the weights the user set)."""
+With equal requested levels the raw per-beam levels span about 6.4 dB (the real-valued modulation,
+not saturation). The default level matching brings them within 3 dB."""
 
 import numpy as np
-import pytest
 
 from src.dispersion.hfss_table import DispersionSample, DispersionTable
 from src.green_function import LayeredGreenFunction
 from src.hologram import hmsa_synthesis as hs
+from src.hologram.pointing_correction import measure_beam_aims, refine_design
 from src.materials import Substrate
-from src.pattern.vector_aperture_pattern import aperture_current_from_scalar, compute_vector_pattern
 from src.phase8b.object_wave import Beam
 from src.phase8e.reference_field_input import spherical_feed_reference_field
 
@@ -30,37 +28,34 @@ def _table():
     return DispersionTable(source_path="synthetic", frequency_hz=FREQ, samples=samples)
 
 
-def _four_beam_design():
+def _synthesize_for(ref, table):
+    def synthesize(beams):
+        return hs.synthesize_formulation_a(
+            ref, beams, FREQ, x_avg_ohm=125.0, modulation_index=0.3, dispersion_table=table, period_m=PERIOD
+        )
+
+    return synthesize
+
+
+def _reference():
     c = np.linspace(-0.06, 0.06, 31)
     x, y = np.meshgrid(c, c, indexing="xy")
-    ref = spherical_feed_reference_field(x, y, feed_height_m=0.05, frequency_hz=FREQ, amplitude_at_1m=0.05)
-    beams = [Beam(theta_deg=t, phi_deg=p, weight=1.0 + 0j, desired_polarization="rhcp") for t, p in BEAMS]
-    return hs.synthesize_formulation_a(
-        ref, beams, FREQ, x_avg_ohm=125.0, modulation_index=0.3, dispersion_table=_table(), period_m=PERIOD
-    )
+    return spherical_feed_reference_field(x, y, feed_height_m=0.05, frequency_hz=FREQ, amplitude_at_1m=0.05)
 
 
-def _local_peak_levels_db(design):
-    jx, jy = aperture_current_from_scalar(design.x_m, design.y_m, design.aperture_field, feed_xy_m=(0.0, 0.0))
+def _four_beam_beams():
+    return [Beam(theta_deg=t, phi_deg=p, weight=1.0 + 0j, desired_polarization="rhcp") for t, p in BEAMS]
+
+
+def _four_beam_design():
+    return _synthesize_for(_reference(), _table())(_four_beam_beams())
+
+
+def _level_spread_db(design, beams):
     green = LayeredGreenFunction(SUB, FREQ, backing="pec")
-    pat = compute_vector_pattern(design.x_m, design.y_m, jx, jy, FREQ, green, PERIOD, PERIOD, 60.0, 121, 73)
-    power = np.abs(pat.e_theta) ** 2 + np.abs(pat.e_phi) ** 2
-    peak = float(np.max(power))
-    levels = []
-    for t, p in BEAMS:
-        t0, p0 = np.radians(t), np.radians(p)
-        tt, pp = np.radians(pat.theta_deg), np.radians(pat.phi_deg)
-        cos_ang = np.cos(tt) * np.cos(t0) + np.sin(tt) * np.sin(t0) * np.cos(pp - p0)
-        near = np.degrees(np.arccos(np.clip(cos_ang, -1.0, 1.0))) <= 12.0
-        levels.append(10.0 * np.log10(np.max(np.where(near, power, 0.0)) / peak))
-    return levels
-
-
-def test_single_unit_beam_is_not_rescaled():
-    c = np.linspace(-0.02, 0.02, 5)
-    x, y = np.meshgrid(c, c, indexing="xy")
-    e_obj = np.exp(1j * np.zeros_like(x))
-    assert hs.object_wave_scale(e_obj) == 1.0
+    aims = measure_beam_aims(design, beams, green, PERIOD, FREQ, (0.0, 0.0))
+    levels = np.array([a.level_db for a in aims])
+    return float(levels.max() - levels.min())
 
 
 def test_four_beam_single_port_unreachable_is_below_5_percent():
@@ -69,7 +64,21 @@ def test_four_beam_single_port_unreachable_is_below_5_percent():
     assert any(label.startswith("OBJECT_WAVE_NORMALISED") for label in design.labels)
 
 
-@pytest.mark.xfail(strict=True, reason="equal weights give a 6.4 dB spread across four beams; balancing is a decision")
-def test_four_beam_single_port_beams_are_within_3_db():
-    levels = _local_peak_levels_db(_four_beam_design())
-    assert max(levels) - min(levels) <= 3.0
+def test_four_beam_single_port_beams_are_within_3_db_after_level_matching():
+    beams = _four_beam_beams()
+    green = LayeredGreenFunction(SUB, FREQ, backing="pec")
+    synthesize = _synthesize_for(_reference(), _table())
+
+    def measure(design, beams_now):
+        return measure_beam_aims(design, beams_now, green, PERIOD, FREQ, (0.0, 0.0))
+
+    design, _used, report = refine_design(beams, synthesize, measure, pointing=False, balance=True)
+    assert report["balance"]["max_error_after_db"] <= report["balance"]["max_error_before_db"]
+    assert _level_spread_db(design, _used) <= 3.0
+
+
+def test_single_unit_beam_is_not_rescaled():
+    c = np.linspace(-0.02, 0.02, 5)
+    x, y = np.meshgrid(c, c, indexing="xy")
+    e_obj = np.exp(1j * np.zeros_like(x))
+    assert hs.object_wave_scale(e_obj) == 1.0

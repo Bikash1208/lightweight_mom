@@ -60,7 +60,7 @@ from ...hologram.multi_port_synthesis import (
     export_frame_offset_m,
     synthesize_ports,
 )
-from ...hologram.pointing_correction import correct_beam_aim, measure_beam_aims
+from ...hologram.pointing_correction import measure_beam_aims, refine_design
 from ...hologram.ports import custom_layout, layout_preset_1xn, layout_preset_2x2_plus_1_large
 from ...hologram.two_state_cells import (
     BETA_SPREAD_LIMIT_FRACTION,
@@ -268,6 +268,15 @@ class HmsaSynthesizeRequest(BaseModel):
     x_avg_ohm: "float | None" = None  # formulation A
     modulation_index: "float | None" = None  # formulation A
     rescale_to_beta_bar: bool = True  # formulation A (PHASE13B B3); on by default per the brief
+    # The substrate of the pattern check used by the optional stages below (needed for both).
+    eps_r: "float | None" = None
+    tan_delta: "float | None" = None
+    thickness_mm: "float | None" = None
+    # Optional stages (off / on by default as noted): pointing correction, and matching the requested
+    # relative beam levels for 2+ beams (on by default).
+    pointing_correction: bool = False
+    pointing_iterations: int = 2
+    balance_levels: bool = True
     # PHASE15 Part A
     cp_phase_offset_deg: float = 0.0
     multiplexing: str = "full_aperture"  # "full_aperture" | "sectors"
@@ -421,6 +430,30 @@ def _geometry_param_to_mm(gp, period_mm):
     return mm if 0.0 < mm <= period_mm else None
 
 
+def _refined_design(body, beams, synthesize, feed_xy_m):
+    """One single-aperture design through the optional stages (`hologram.pointing_correction`).
+    Returns `(design, refinement)`; `refinement` is None when no stage applies."""
+    needs_pattern = body["pointing_correction"] or (body["balance_levels"] and len(beams) > 1)
+    if not needs_pattern:
+        return synthesize(beams), None
+    if body["eps_r"] is None or body["tan_delta"] is None or body["thickness_mm"] is None:
+        if body["pointing_correction"]:
+            raise config_invalid(message="pointing_correction needs eps_r, tan_delta and thickness_mm (the pattern check needs them)")
+        return synthesize(beams), {"balance": {"skipped": "needs eps_r, tan_delta and thickness_mm"}}
+    substrate = Substrate("user", body["eps_r"], body["tan_delta"], body["thickness_mm"] * 1e-3)
+    green = LayeredGreenFunction(substrate, body["frequency_hz"], backing="pec")
+    period_m = body["period_mm"] * 1e-3
+
+    def measure(design, beams_now):
+        return measure_beam_aims(design, beams_now, green, period_m, body["frequency_hz"], feed_xy_m)
+
+    design, _used, report = refine_design(
+        beams, synthesize, measure, pointing=body["pointing_correction"], balance=body["balance_levels"],
+        pointing_iterations=body["pointing_iterations"],
+    )
+    return design, report
+
+
 def _run_synthesize_job(job, body: dict):
     extra_labels = ()
     masked_cells = []
@@ -470,18 +503,14 @@ def _run_synthesize_job(job, body: dict):
             raise config_invalid(message="formulation A needs dispersion_id, x_avg_ohm and modulation_index")
         dispersion_path = upload_dir(body["dispersion_id"]) / "dispersion.csv"
         dispersion_table = read_dispersion_csv(dispersion_path, body["frequency_hz"])
-        design = synthesize_formulation_a(
-            reference_field,
-            beams,
-            body["frequency_hz"],
-            body["x_avg_ohm"],
-            body["modulation_index"],
-            dispersion_table,
-            period_m,
-            rescale_to_beta_bar=body["rescale_to_beta_bar"],
-            feed_xy_m=feed_xy_m,
-            cp_phase_offset_deg=body["cp_phase_offset_deg"],
-            multiplexing=body["multiplexing"],
+        design, refinement = _refined_design(
+            body, beams,
+            lambda bs: synthesize_formulation_a(
+                reference_field, bs, body["frequency_hz"], body["x_avg_ohm"], body["modulation_index"],
+                dispersion_table, period_m, rescale_to_beta_bar=body["rescale_to_beta_bar"],
+                feed_xy_m=feed_xy_m, cp_phase_offset_deg=body["cp_phase_offset_deg"], multiplexing=body["multiplexing"],
+            ),
+            feed_xy_m,
         )
         layout_png_url = _layout_preview_url(
             job, design.x_m, design.y_m, design.control_map, "reactance (ohm)", "Impedance modulation"
@@ -508,6 +537,7 @@ def _run_synthesize_job(job, body: dict):
         )
         return {
             "formulation": design.formulation,
+            "refinement": refinement,
             "x_m": design.x_m,
             "y_m": design.y_m,
             "control_map": design.control_map,
@@ -541,9 +571,13 @@ def _run_synthesize_job(job, body: dict):
                 f"library {body['library_id']!r} has no record at {body['frequency_hz'] / 1e9:g} GHz; "
                 f"available: {available_ghz} GHz"
             )
-        design = synthesize_formulation_b(
-            reference_field, beams, body["frequency_hz"], candidates, period_m,
-            feed_xy_m=feed_xy_m, cp_phase_offset_deg=body["cp_phase_offset_deg"], multiplexing=body["multiplexing"],
+        design, refinement = _refined_design(
+            body, beams,
+            lambda bs: synthesize_formulation_b(
+                reference_field, bs, body["frequency_hz"], candidates, period_m,
+                feed_xy_m=feed_xy_m, cp_phase_offset_deg=body["cp_phase_offset_deg"], multiplexing=body["multiplexing"],
+            ),
+            feed_xy_m,
         )
 
         if any(c.achieved_value is None for c in design.cells):
@@ -584,6 +618,7 @@ def _run_synthesize_job(job, body: dict):
         return {
             "patch_layout_png_url": patch_layout_png_url,
             "formulation": design.formulation,
+            "refinement": refinement,
             "x_m": design.x_m,
             "y_m": design.y_m,
             "period_mm": body["period_mm"],
@@ -934,6 +969,8 @@ class HmsaSynthesizePortsRequest(BaseModel):
     # Optional pointing correction (off by default): re-aim each beam by its measured miss, 1-2 passes.
     pointing_correction: bool = False
     pointing_iterations: int = 2
+    # Match the requested relative beam levels (2+ beams per port), on by default.
+    balance_levels: bool = True
 
 
 def _build_port_regions(layout: dict):
@@ -969,14 +1006,6 @@ def _port_cell_to_m(formulation, period_mm):
         return (mm * 1e-3, mm * 1e-3) if mm is not None else None
 
     return cell_m
-
-
-def _aim_dict(aim):
-    return {
-        "requested_theta_deg": aim.requested_theta_deg, "requested_phi_deg": aim.requested_phi_deg,
-        "achieved_theta_deg": aim.achieved_theta_deg, "achieved_phi_deg": aim.achieved_phi_deg,
-        "miss_deg": aim.miss_deg, "level_db": aim.level_db,
-    }
 
 
 def _run_synthesize_ports_job(job, body: dict):
@@ -1054,29 +1083,28 @@ def _run_synthesize_ports_job(job, body: dict):
     else:
         raise config_invalid(message=f"formulation must be 'A', 'B' or 'coded', got {body['formulation']!r}")
 
-    pointing_report = []
+    refinement_reports = []
     per_port = synthesize_one
-    if body["pointing_correction"]:
-        if body["port_tan_delta"] is None:
-            raise config_invalid(message="pointing_correction needs port_tan_delta (the pattern check needs the loss tangent)")
+    region_ids = [r.port_id for r in regions]
+    refine = body["pointing_correction"] or (
+        body["balance_levels"] and any(len(pb["beams"]) > 1 for pb in body["ports"])
+    )
+    if body["pointing_correction"] and body["port_tan_delta"] is None:
+        raise config_invalid(message="pointing_correction needs port_tan_delta (the pattern check needs the loss tangent)")
+    if refine and body["port_tan_delta"] is not None:
         port_substrate = Substrate("user", body["port_eps_r"], body["port_tan_delta"], body["port_thickness_mm"] * 1e-3)
         port_green = LayeredGreenFunction(port_substrate, body["frequency_hz"], backing="pec")
-        region_ids = [r.port_id for r in regions]
 
         def per_port(ref, beams, feed_xy_m):
             def measure(design, beams_now):
                 return measure_beam_aims(design, beams_now, port_green, period_m, body["frequency_hz"], feed_xy_m)
 
-            design, _used, history = correct_beam_aim(
-                beams, lambda bs: synthesize_one(ref, bs, feed_xy_m), measure, body["pointing_iterations"]
+            design, _used, report = refine_design(
+                beams, lambda bs: synthesize_one(ref, bs, feed_xy_m), measure,
+                pointing=body["pointing_correction"], balance=body["balance_levels"],
+                pointing_iterations=body["pointing_iterations"],
             )
-            best_pass = min(range(len(history)), key=lambda k: max(a.miss_deg for a in history[k]))
-            pointing_report.append({
-                "port_id": region_ids[len(pointing_report)],
-                "passes": best_pass,
-                "before": [_aim_dict(a) for a in history[0]],
-                "after": [_aim_dict(a) for a in history[best_pass]],
-            })
+            refinement_reports.append({"port_id": region_ids[len(refinement_reports)], **report})
             return design
 
     multi = synthesize_ports(
@@ -1166,7 +1194,7 @@ def _run_synthesize_ports_job(job, body: dict):
         "labels": (MULTI_PORT_SHARED_METHOD, PORT_ISOLATION_NOT_FULL_WAVE, *isolation_labels),
         "formulation": body["formulation"],
         "two_state": two_state_info,
-        "pointing_correction": pointing_report if body["pointing_correction"] else None,
+        "refinement": refinement_reports,
         "period_mm": body["period_mm"],
         "patch_layout_png_url": patch_layout_png_url,
         "board_width_mm": board.width_m * 1e3,
@@ -1371,6 +1399,9 @@ class HmsaSynthesizeCodedRequest(BaseModel):
     """PHASE15 Part E: the Coded design method. Reuses the single-aperture reference-field
     resolution (`upload_id` or `feeds`) and beam spec exactly as `/synthesize` does -- only the
     control-map/geometry-mapping step differs (`hologram.coded_synthesis`)."""
+    pointing_correction: bool = False
+    pointing_iterations: int = 2
+    balance_levels: bool = True
 
     upload_id: "str | None" = None
     feeds: "list[FeedSpecRequest] | None" = None
@@ -1522,10 +1553,14 @@ def _run_synthesize_coded_job(job, body: dict):
             raise config_invalid(message="the 1-bit coded method with multiple feeds is not supported yet (one feed defines the surface-wave reference)")
         choice, refusals = _resolve_two_state_choice(body["two_state"], body["library_id"], body["frequency_hz"], substrate, period_m)
         beta_bar = choice.beta_bar_rad_per_m
-        design = synthesize_coded_one_bit(
-            reference_field, beams, body["frequency_hz"], choice, period_m,
-            feed_xy_m=feed_xy_m, cp_phase_offset_deg=body["cp_phase_offset_deg"],
-            surface_wave_betas_rad_per_m=(choice.surface_wave_0.beta_rad_per_m, choice.surface_wave_1.beta_rad_per_m),
+        design, refinement = _refined_design(
+            body, beams,
+            lambda bs: synthesize_coded_one_bit(
+                reference_field, bs, body["frequency_hz"], choice, period_m,
+                feed_xy_m=feed_xy_m, cp_phase_offset_deg=body["cp_phase_offset_deg"],
+                surface_wave_betas_rad_per_m=(choice.surface_wave_0.beta_rad_per_m, choice.surface_wave_1.beta_rad_per_m),
+            ),
+            feed_xy_m,
         )
         if not design.path_converged:
             warnings.append(
@@ -1601,9 +1636,13 @@ def _run_synthesize_coded_job(job, body: dict):
             raise library_frequency_unavailable(
                 f"library {body['library_id']!r} has no record at {body['frequency_hz'] / 1e9:g} GHz"
             )
-        design = synthesize_coded_n_bit(
-            reference_field, beams, body["frequency_hz"], n_bits, candidates, period_m,
-            feed_xy_m=feed_xy_m, cp_phase_offset_deg=body["cp_phase_offset_deg"],
+        design, refinement = _refined_design(
+            body, beams,
+            lambda bs: synthesize_coded_n_bit(
+                reference_field, bs, body["frequency_hz"], n_bits, candidates, period_m,
+                feed_xy_m=feed_xy_m, cp_phase_offset_deg=body["cp_phase_offset_deg"],
+            ),
+            feed_xy_m,
         )
         two_state_info = None
         lw_grid_m = None  # Export for N>1 reuses the existing Formulation-B-shaped `assignments`
@@ -1668,6 +1707,7 @@ def _run_synthesize_coded_job(job, body: dict):
     labels = extra_labels + state_labels + ((quantization_label,) if quantization_label else ())
     return {
         "n_bits": n_bits,
+        "refinement": refinement,
         "x_m": design.x_m,
         "y_m": design.y_m,
         "period_mm": body["period_mm"],

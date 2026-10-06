@@ -101,6 +101,8 @@
             <span class="unit">uses the Board section below</span>
           </label>
           <div id="ports-beam-tables"></div>
+          <label style="display:flex;gap:0.5rem;align-items:center"><input type="checkbox" id="port-balance-levels" checked style="width:auto" />
+            Match requested beam levels <span class="unit">(each port with 2+ beams: up to 3 passes, best kept)</span></label>
           <label style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap"><input type="checkbox" id="port-pointing-correction" style="width:auto" />
             Pointing correction <span class="unit">(optional, off by default: re-aims each beam by its measured miss, 1-2 passes)</span>
           </label>
@@ -122,6 +124,10 @@
             <th>Polarization</th><th>Beam type</th></tr></thead>
             <tbody></tbody>
           </table>
+          <label style="display:flex;gap:0.5rem;align-items:center"><input type="checkbox" id="single-balance-levels" checked style="width:auto" />
+            Match requested beam levels <span class="unit">(2+ beams: iterates the internal weights, up to 3 passes)</span></label>
+          <label style="display:flex;gap:0.5rem;align-items:center"><input type="checkbox" id="single-pointing-correction" style="width:auto" />
+            Pointing correction <span class="unit">(optional, off by default: re-aims each beam by its measured miss)</span></label>
           <p class="status">"Natural" keeps the monopole's own radial surface current uncompensated
           &mdash; on this board that radiates a vortex (doughnut), not a pencil beam, at that
           direction (see Step 3). Pick a polarization to get a genuine pencil beam there instead.</p>
@@ -315,6 +321,7 @@
       <div class="card">
         <h2>3. Pattern &amp; export</h2>
         <p class="status" id="run-summary"></p>
+        <p class="status" id="refinement-status"></p>
         <button type="button" id="run-btn">Design antenna</button>
         <p class="status" id="run-status"></p>
         <p class="status warn" id="unreachable-explanation" style="display:none"></p>
@@ -508,6 +515,40 @@
     document.getElementById("to-step-2-btn").addEventListener("click", () => showStep(2));
 
     // ---------------------------------------------------------------- Step 2
+    // Optional stages of a design: the substrate for the pattern check, the pointing correction and
+    // the level matching. `ports` picks the ports controls; otherwise the single-aperture ones.
+    function refinementFields(ports) {
+      const sub = currentSubstrate();
+      const pointingId = ports ? "port-pointing-correction" : "single-pointing-correction";
+      const balanceId = ports ? "port-balance-levels" : "single-balance-levels";
+      return {
+        eps_r: sub.eps_r, tan_delta: sub.tan_delta, thickness_mm: sub.thickness_mm,
+        pointing_correction: document.getElementById(pointingId).checked, pointing_iterations: 2,
+        balance_levels: document.getElementById(balanceId).checked,
+      };
+    }
+    // One line per stage that ran: the requested vs achieved beam levels, and the pointing miss.
+    function refinementText(refinement) {
+      if (!refinement) return "";
+      const parts = [];
+      if (refinement.pointing) {
+        const pr = refinement.pointing;
+        parts.push(`Pointing correction (${pr.passes} pass${pr.passes === 1 ? "" : "es"}): ` +
+          pr.before.map((b, k) => `beam ${k + 1} miss ${b.miss_deg.toFixed(2)}° → ${pr.after[k].miss_deg.toFixed(2)}°`).join("; "));
+      }
+      if (refinement.balance) {
+        const b = refinement.balance;
+        if (b.skipped) {
+          parts.push(`Beam levels not matched: ${b.skipped}.`);
+        } else {
+          parts.push(`Beam levels matched (${b.passes} pass${b.passes === 1 ? "" : "es"}, worst error ` +
+            `${b.max_error_before_db.toFixed(1)} → ${b.max_error_after_db.toFixed(1)} dB): ` +
+            b.before_db.map((v, k) => `beam ${k + 1} ${v.toFixed(1)} → ${b.after_db[k].toFixed(1)} dB`).join("; ") + ".");
+        }
+      }
+      return parts.join(" ");
+    }
+
     function currentSubstrate() {
       const preset = document.getElementById("substrate-preset");
       if (preset.value === "custom") {
@@ -1218,6 +1259,7 @@
 
       {
         const body = {
+          ...refinementFields(false),
           upload_id: state.uploadId,
           frequency_hz: frequencyHz,
           object_beams: state.beams.map((b) => ({
@@ -1286,6 +1328,7 @@
         });
         if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
         state.synthesizeResult = job.result;
+        document.getElementById("refinement-status").textContent = refinementText(job.result.refinement);
         const labelsEl = document.getElementById("labels");
         LWMOM.renderLabels(labelsEl, job.result.labels, []);
         // PHASE13D item 2: the generic "Experimental." chip needs a reason in this specific
@@ -1314,6 +1357,7 @@
       const nBits = currentCodedBits();
 
       const body = {
+        ...refinementFields(false),
         upload_id: state.uploadId,
         frequency_hz: frequencyHz,
         period_mm: cellSizeMm,
@@ -1383,6 +1427,7 @@
       });
       if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
       state.synthesizeResult = job.result;
+      document.getElementById("refinement-status").textContent = refinementText(job.result.refinement);
 
       const labelsEl = document.getElementById("labels");
       LWMOM.renderLabels(labelsEl, job.result.labels, []);
@@ -1501,6 +1546,7 @@
         })),
         port_eps_r: substrate.eps_r, port_thickness_mm: substrate.thickness_mm, port_tan_delta: substrate.tan_delta,
         pointing_correction: document.getElementById("port-pointing-correction").checked, pointing_iterations: 2,
+        balance_levels: document.getElementById("port-balance-levels").checked,
       };
 
       if (method === "reflection") {
@@ -1556,7 +1602,7 @@
 
       const container = document.getElementById("ports-per-port-results");
       container.innerHTML = "";
-      const aimReports = job.result.pointing_correction || [];
+      const refinements = job.result.refinement || [];
       for (const port of job.result.ports) {
         const card = document.createElement("div");
         card.className = "card";
@@ -1570,13 +1616,8 @@
           `<table class="port-beam-table" style="display:none"><thead><tr><th>Beam</th><th>Requested</th>` +
           `<th>Achieved</th><th>Level (dB)</th><th>Point XPD (dB)</th><th>Integrated XPD (dB)</th></tr></thead><tbody></tbody></table>`;
         container.appendChild(card);
-        const aimReport = aimReports.find((r) => r.port_id === port.port_id);
-        if (aimReport) {
-          const aimText = aimReport.before.map((b, k) =>
-            `beam ${k + 1}: miss ${b.miss_deg.toFixed(2)}° → ${aimReport.after[k].miss_deg.toFixed(2)}°`).join("; ");
-          card.querySelector(".port-aim-status").textContent =
-            `Pointing correction (${aimReport.passes} pass${aimReport.passes === 1 ? "" : "es"}): ${aimText}.`;
-        }
+        const refinement = refinements.find((r) => r.port_id === port.port_id);
+        if (refinement) card.querySelector(".port-aim-status").textContent = refinementText(refinement);
         try {
           const patternBody = {
             source_job_id: submitted.id, frequency_hz: frequencyHz, pattern_model: "vector",

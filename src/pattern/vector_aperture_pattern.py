@@ -385,6 +385,16 @@ MAIN_BEAM_REGION_DB = -10.0  # the co-pol contour that bounds the main-beam regi
 _SEARCH_RADIUS_DEG = 12.0
 
 
+def beam_local_peak(pat: VectorPatternResult, theta_deg, phi_deg, radius_deg=_SEARCH_RADIUS_DEG):
+    """The strongest direction within `radius_deg` of a requested beam: `(theta_deg, phi_deg,
+    level_db)`, the level relative to the pattern's own peak. The achieved direction of a beam is
+    this point, which can differ from the request (finite aperture, steering limits)."""
+    power = np.abs(pat.e_theta) ** 2 + np.abs(pat.e_phi) ** 2
+    window = _direction_mask(pat.theta_deg, pat.phi_deg, theta_deg, phi_deg, radius_deg)
+    masked = np.where(window, power, -np.inf)
+    i, j = np.unravel_index(int(np.argmax(masked)), masked.shape)
+    return float(pat.theta_deg[i, j]), float(pat.phi_deg[i, j]), float(10.0 * np.log10(power[i, j] / np.max(power)))
+
 @dataclass(frozen=True)
 class BeamPolarizationMetrics:
     point_xpd_db: "float | None"  # co over cross at the grid point nearest the request

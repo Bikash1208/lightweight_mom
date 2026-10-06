@@ -300,6 +300,25 @@ def test_pattern_predict_with_port_index(client, grounded_library):
     assert len(job["result"]["per_beam"]) == 1
 
 
+def test_pattern_predict_port_beams_report_achieved_direction_and_xpd(client, grounded_library):
+    synth_job = _synthesize_ports_1xn(client, grounded_library)
+    assert synth_job["status"] == "done", synth_job
+    pattern_body = {
+        "source_job_id": synth_job["id"], "frequency_hz": _FREQ_HZ, "pattern_model": "vector",
+        "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
+        "thickness_mm": _SUBSTRATE["thickness"] * 1e3,
+        "beams": [{"theta_deg": 20.0, "phi_deg": 0.0, "desired_polarization": "rhcp"}], "port_index": 0,
+        "n_theta": 31, "n_phi": 37,
+    }
+    resp = client.post("/api/pattern/predict", json=pattern_body)
+    job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+    assert job["status"] == "done", job
+    entry = job["result"]["per_beam"][0]
+    assert entry["achieved_theta_deg"] == pytest.approx(20.0, abs=10.0)
+    assert entry["level_db"] <= 0.0
+    assert entry["integrated_xpd_db"] is not None
+
+
 def test_pattern_predict_rejects_out_of_range_port_index(client, grounded_library):
     synth_job = _synthesize_ports_1xn(client, grounded_library)
     assert synth_job["status"] == "done", synth_job

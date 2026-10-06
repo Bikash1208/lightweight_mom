@@ -23,6 +23,7 @@ from ...materials import Substrate
 from ...pattern.aperture_pattern import compute_pattern
 from ...pattern.vector_aperture_pattern import (
     aperture_current_from_scalar,
+    beam_local_peak,
     beam_polarization_metrics,
     compute_vector_pattern,
     copol_component,
@@ -134,6 +135,7 @@ def _per_beam_breakdown(job, x_m, y_m, jx, jy, frequency_hz, green, dx_m, dy_m, 
         measure_label = pol if pol in _CROSS_LABEL else "rhcp"  # "natural" has no single co-pol
         i, j = _nearest_grid_index(pat.theta_deg, pat.phi_deg, b["theta_deg"], b["phi_deg"])
 
+        achieved_theta, achieved_phi, level_db = beam_local_peak(pat, b["theta_deg"], b["phi_deg"])
         xpd_db = None
         integrated_xpd_db = None
         polarization_efficiency = None
@@ -169,6 +171,9 @@ def _per_beam_breakdown(job, x_m, y_m, jx, jy, frequency_hz, green, dx_m, dy_m, 
             {
                 "theta_deg": b["theta_deg"],
                 "phi_deg": b["phi_deg"],
+                "achieved_theta_deg": achieved_theta,
+                "achieved_phi_deg": achieved_phi,
+                "level_db": level_db,
                 "desired_polarization": pol,
                 "beam_type_requested": beam_type_requested,
                 "xpd_db": xpd_db,

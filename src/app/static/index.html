@@ -1558,13 +1558,19 @@
           `<p class="status">Feed at (${port.feed_x_mm.toFixed(1)}, ${port.feed_y_mm.toFixed(1)}) mm &middot; ` +
           `${port.n_cells} cells &middot; ${(port.unreachable_fraction * 100).toFixed(0)}% unreachable</p>` +
           `<img class="plot port-pattern-img" alt="Port ${port.port_id + 1} pattern" />` +
-          `<p class="status port-pattern-status"></p>`;
+          `<p class="status port-pattern-status"></p>` +
+          `<table class="port-beam-table" style="display:none"><thead><tr><th>Beam</th><th>Requested</th>` +
+          `<th>Achieved</th><th>Level (dB)</th><th>Point XPD (dB)</th><th>Integrated XPD (dB)</th></tr></thead><tbody></tbody></table>`;
         container.appendChild(card);
         try {
           const patternBody = {
             source_job_id: submitted.id, frequency_hz: frequencyHz, pattern_model: "vector",
             eps_r: substrate.eps_r, tan_delta: substrate.tan_delta, thickness_mm: substrate.thickness_mm,
-            beams: [], port_index: port.port_id, n_theta: 41, n_phi: 49,
+            beams: body.ports[port.port_id].beams.map((b) => ({
+              theta_deg: b.theta_deg, phi_deg: b.phi_deg,
+              desired_polarization: b.desired_polarization, oam_charge: b.oam_charge,
+            })),
+            port_index: port.port_id, n_theta: 41, n_phi: 49,
           };
           const patternSubmitted = await LWMOM.postJson("/api/pattern/predict", patternBody);
           const patternJob = await LWMOM.pollJob(patternSubmitted.id);
@@ -1579,6 +1585,15 @@
               `Directivity ${r.result.directivity_estimate_dbi.toFixed(1)} dBi; directivity-based aperture efficiency ` +
               `(upper bound) ${effUpper.toFixed(2)}; peak at θ=${r.result.main_beam_theta_deg.toFixed(1)}°, ` +
               `φ=${r.result.main_beam_phi_deg.toFixed(1)}° (${areaM2.toFixed(4)} m² aperture).`;
+            // one card line per requested beam: where it points, how strong, and its XPD
+            const fmt = (v) => (v != null ? v.toFixed(1) : "—");
+            const beamTable = card.querySelector(".port-beam-table");
+            beamTable.querySelector("tbody").innerHTML = (r.per_beam || []).map((e, k) =>
+              `<tr><td>${k + 1}</td><td>θ=${e.theta_deg.toFixed(1)}°, φ=${e.phi_deg.toFixed(1)}°</td>` +
+              `<td>θ=${e.achieved_theta_deg.toFixed(1)}°, φ=${e.achieved_phi_deg.toFixed(1)}°</td>` +
+              `<td>${fmt(e.level_db)}</td><td>${fmt(e.xpd_db)}</td><td>${fmt(e.integrated_xpd_db)}</td></tr>`
+            ).join("");
+            beamTable.style.display = (r.per_beam || []).length ? "table" : "none";
           } else {
             card.querySelector(".port-pattern-status").textContent = patternJob.error ? patternJob.error.message : patternJob.status;
           }

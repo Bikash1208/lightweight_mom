@@ -57,14 +57,28 @@ def test_2x2_plus_1_large_feed_defaults_to_each_ports_own_centre():
         assert p.feed_y_m == pytest.approx((p.y_min_m + p.y_max_m) / 2.0)
 
 
-def test_gap_shrinks_every_port_and_reduces_total_tiled_area():
+def test_gap_keeps_each_active_side_and_adds_the_gap_outside_it():
     s = 0.05
     gap = 0.004
     no_gap = layout_preset_2x2_plus_1_large(s, gap_m=0.0)
     with_gap = layout_preset_2x2_plus_1_large(s, gap_m=gap)
     for a, b in zip(no_gap, with_gap, strict=True):
-        assert b.width_m == pytest.approx(a.width_m - gap)
-        assert b.height_m == pytest.approx(a.height_m - gap)
+        assert b.width_m == pytest.approx(a.width_m)
+        assert b.height_m == pytest.approx(a.height_m)
+    # the two columns of small ports and the large port are each separated by exactly one gap
+    small_left, small_right = sorted(with_gap[:2], key=lambda p: p.x_min_m)[0], with_gap[1]
+    assert with_gap[4].x_min_m - small_right.x_max_m == pytest.approx(gap)
+    assert small_right.x_min_m - small_left.x_max_m == pytest.approx(gap)
+    # the board is centred on the origin
+    assert min(p.x_min_m for p in with_gap) == pytest.approx(-max(p.x_max_m for p in with_gap))
+
+
+def test_1xn_gap_is_outside_each_active_side():
+    regions = layout_preset_1xn(3, 0.12, gap_m=0.028)
+    for p in regions:
+        assert p.width_m == pytest.approx(0.12)
+    for a, b in zip(regions, regions[1:], strict=False):
+        assert b.x_min_m - a.x_max_m == pytest.approx(0.028)
 
 
 def test_1xn_preset_builds_n_equal_ports_in_a_row():

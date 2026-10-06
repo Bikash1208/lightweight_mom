@@ -58,41 +58,33 @@ class PortRegion:
         return (self.x_min_m <= x_m <= self.x_max_m) and (self.y_min_m <= y_m <= self.y_max_m)
 
 
-def _shrink(x_min, x_max, y_min, y_max, gap_m):
-    g = gap_m / 2.0
-    return x_min + g, x_max - g, y_min + g, y_max - g
-
-
 def layout_preset_2x2_plus_1_large(small_side_m, gap_m=0.0):
     """Mishra's own 5-port layout (Fig. 1 of the paper): four `small_side_m` x `small_side_m`
-    sub-apertures (ports 0-3, a 2x2 block) beside one `2*small_side_m` x `2*small_side_m`
-    sub-aperture (port 4) of the same total height -- so the whole board tiles exactly, with no
-    gap, when `gap_m=0`. `gap_m` (a guard-row margin, Part C's own isolation recommendation)
-    shrinks every port's rectangle by `gap_m/2` on EVERY edge (a simple, uniform margin -- not
-    only at the seams between ports -- documented here rather than a more intricate
-    seam-only-margin rule this phase does not attempt)."""
+    active sub-apertures (ports 0-3, a 2x2 block) beside one `2*small_side_m` x `2*small_side_m`
+    active sub-aperture (port 4). With `gap_m=0` the board tiles exactly. `gap_m` (Part C's guard
+    gap) is added between neighbouring ports, outside every active side."""
     if small_side_m <= 0.0:
         raise ValueError(f"small_side_m must be > 0, got {small_side_m!r}")
     if gap_m < 0.0:
         raise ValueError(f"gap_m must be >= 0, got {gap_m!r}")
-    s = small_side_m
+    s, g = small_side_m, gap_m
     raw = [
-        (-2 * s, -s, 0.0, s),  # port 0: top-left small
-        (-s, 0.0, 0.0, s),  # port 1: top-right small
-        (-2 * s, -s, -s, 0.0),  # port 2: bottom-left small
+        (-2 * s - g, -s - g, g, s + g),  # port 0: top-left small
+        (-s, 0.0, g, s + g),  # port 1: top-right small
+        (-2 * s - g, -s - g, -s, 0.0),  # port 2: bottom-left small
         (-s, 0.0, -s, 0.0),  # port 3: bottom-right small
-        (0.0, 2 * s, -s, s),  # port 4: the large quad-beam port
+        (g, 2 * s + g, -s, s),  # port 4: the large quad-beam port
     ]
     regions = []
     for i, (x0, x1, y0, y1) in enumerate(raw):
-        x0, x1, y0, y1 = _shrink(x0, x1, y0, y1, gap_m)
+        y0, y1 = y0 - g / 2.0, y1 - g / 2.0  # the rows' own gap is centred on the origin
         regions.append(PortRegion(i, x0, x1, y0, y1, (x0 + x1) / 2.0, (y0 + y1) / 2.0))
     return tuple(regions)
 
 
 def layout_preset_1xn(n, cell_side_m, gap_m=0.0):
-    """`n` equal `cell_side_m` x `cell_side_m` sub-apertures in a single row, centred on the
-    origin -- the brief's "1xN strip" preset."""
+    """`n` equal `cell_side_m` x `cell_side_m` active sub-apertures in a single row, centred on the
+    origin, with `gap_m` between neighbours (outside each side) -- the brief's "1xN strip" preset."""
     if not isinstance(n, int) or n < 1:
         raise ValueError(f"n must be a positive integer, got {n!r}")
     if cell_side_m <= 0.0:
@@ -100,13 +92,11 @@ def layout_preset_1xn(n, cell_side_m, gap_m=0.0):
     if gap_m < 0.0:
         raise ValueError(f"gap_m must be >= 0, got {gap_m!r}")
     s = cell_side_m
-    half_total = n * s / 2.0
+    half_total = (n * s + (n - 1) * gap_m) / 2.0
     regions = []
     for i in range(n):
-        x0, x1 = -half_total + i * s, -half_total + (i + 1) * s
-        y0, y1 = -s / 2.0, s / 2.0
-        x0, x1, y0, y1 = _shrink(x0, x1, y0, y1, gap_m)
-        regions.append(PortRegion(i, x0, x1, y0, y1, (x0 + x1) / 2.0, (y0 + y1) / 2.0))
+        x0 = -half_total + i * (s + gap_m)
+        regions.append(PortRegion(i, x0, x0 + s, -s / 2.0, s / 2.0, x0 + s / 2.0, 0.0))
     return tuple(regions)
 
 

@@ -180,9 +180,9 @@ Each port DOES get its own feed, beam list, and polarization compensation (every
 Part A/B is fully per-port).
 
 **Layout presets** (`ports.layout_preset_2x2_plus_1_large`, `layout_preset_1xn`, `custom_layout`):
-Mishra's own 2×2-plus-one-large-port layout tiles exactly (no gap) when `gap_m=0`; `gap_m` shrinks
-every port's rectangle by `gap_m/2` on every edge (a uniform margin, not only at shared seams — the
-simpler of two possible rules, documented as such).
+Mishra's own 2×2-plus-one-large-port layout tiles exactly (no gap) when `gap_m=0`. The port side is the
+ACTIVE aperture: `gap_m` is added outside it, between neighbouring ports (120 mm side + 28 mm gap gives a
+120 mm hologram and a 148 mm pitch), and the board is centred on the origin.
 
 **Isolation** (`isolation_estimate`): a first-order, explicitly-NOT-full-wave estimate — the
 Euclidean edge-to-edge gap between every pair of ports' rectangles, in units of the board's own

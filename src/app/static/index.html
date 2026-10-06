@@ -86,16 +86,17 @@
           </label>
           <div id="port-layout-2x2-fields">
             <label>Small sub-aperture side <span class="unit">mm (the large one is 2x this, same style as Mishra et al.)</span>
-              <input type="number" step="any" id="port-small-side-mm" value="60" />
+              <input type="number" step="any" id="port-small-side-mm" value="" />
             </label>
           </div>
           <div id="port-layout-1xn-fields" style="display:none">
             <label>Number of ports <input type="number" step="1" min="2" max="8" id="port-1xn-n" value="2" /></label>
-            <label>Each port's side <span class="unit">mm</span> <input type="number" step="any" id="port-1xn-side-mm" value="60" /></label>
+            <label>Each port's side <span class="unit">mm</span> <input type="number" step="any" id="port-1xn-side-mm" value="" /></label>
           </div>
           <label>Guard gap between ports <span class="unit">mm</span>
-            <input type="number" step="any" id="port-gap-mm" value="0" min="0" />
+            <input type="number" step="any" id="port-gap-mm" value="" min="0" />
           </label>
+          <p class="status" id="ports-size-warning"></p>
           <label>Board substrate &epsilon;r/thickness (for each port's own analytic feed)
             <span class="unit">uses the Board section below</span>
           </label>
@@ -138,7 +139,7 @@
           <label>Thickness <span class="unit">mm</span> <input type="number" step="any" id="substrate-thickness-mm" value="1.575" /></label>
         </div>
         <label>Cell size <span class="unit">mm</span>
-          <input type="number" step="any" id="cell-size-mm" value="8.0" required />
+          <input type="number" step="any" id="cell-size-mm" value="" required placeholder="from Step 1" />
         </label>
         <p class="status" id="cell-size-suggestion"></p>
         <p class="status" id="achievable-range-status"></p>
@@ -341,9 +342,13 @@
         <h3 id="per-beam-heading" style="display:none">Per-beam results</h3>
         <table id="per-beam-table" style="display:none">
           <thead><tr><th>Beam</th><th>Direction</th><th>Polarization requested</th><th>Beam type requested</th>
-          <th>XPD (dB)</th><th>Null depth (dB)</th><th>Winding</th><th>Note</th></tr></thead>
+          <th>Point XPD (dB)</th><th>Integrated XPD (dB)</th><th>Pol. efficiency</th><th>Null depth (dB)</th>
+          <th>Winding</th><th>Note</th></tr></thead>
           <tbody></tbody>
         </table>
+        <p class="status" id="pol-note" style="display:none">Up to ~half the power goes to cross-polarization around
+        the beam on this kind of board (scalar cells, monopole feed). Circular polarization keeps it further from the
+        beam than linear. Full control needs anisotropic cells (future).</p>
         <div id="per-beam-phase-imgs"></div>
       </div>
 
@@ -368,10 +373,11 @@
       apertureMm: null,
       betaMeasured: null,
       dispersionId: null,
-      // PHASE15 Part D: a new beam row defaults to Horizontal/Pencil (a UI convenience default --
+      // PHASE15 Part D: a new beam row defaults to RHCP/Pencil (a UI convenience default --
       // the backend's own default, left unsent, is "natural"/Pencil, which is what keeps an old
       // saved request bit-identical; see hologram.polarization_compensation's own docstring).
-      beams: [{ theta_deg: 20, phi_deg: 0, power_db: 0, desired_polarization: "hp", oam_charge: 0, feed_index: 0 }],
+      // A circular beam keeps the monopole's cross-polar lobes further from the beam than a linear one.
+      beams: [{ theta_deg: 20, phi_deg: 0, power_db: 0, desired_polarization: "rhcp", oam_charge: 0, feed_index: 0 }],
       feeds: [],  // PHASE15 Part C: empty = single feed from Step 1's own uploaded file
       ports: [],  // PHASE15 Part C gap-fill: one {beams: [...]} per sub-aperture, multi-port mode only
       synthesizeJobId: null,
@@ -473,6 +479,7 @@
         document.getElementById("synthesis-frequency-ghz").value = freqGhz;
         if (state.apertureMm) document.getElementById("aperture-mm").value = state.apertureMm.toFixed(1);
         suggestCellSize();
+        refreshPortDefaults();
         refreshMethodPreview();
       } catch (err) {
         if (!silent) { statusEl.textContent = err.message; statusEl.className = "status err"; }
@@ -547,7 +554,7 @@
 
     function renderBeamsTable(n) {
       state.beams = Array.from({ length: n }, (_, i) => state.beams[i] || {
-        theta_deg: 20, phi_deg: i * 180, power_db: 0, desired_polarization: "hp", oam_charge: 0, feed_index: 0,
+        theta_deg: 20, phi_deg: i * 180, power_db: 0, desired_polarization: "rhcp", oam_charge: 0, feed_index: 0,
       });
       const tbody = document.querySelector("#beams-table tbody");
       tbody.innerHTML = "";
@@ -675,7 +682,7 @@
     function renderPortsBeamTables() {
       const n = currentPortCount();
       state.ports = Array.from({ length: n }, (_, i) => state.ports[i] || {
-        beams: [{ theta_deg: 20 + i * 5, phi_deg: (i * 90) % 360, power_db: 0, desired_polarization: "hp", oam_charge: 0 }],
+        beams: [{ theta_deg: 20 + i * 5, phi_deg: (i * 90) % 360, power_db: 0, desired_polarization: "rhcp", oam_charge: 0 }],
       });
       const container = document.getElementById("ports-beam-tables");
       container.innerHTML = "";
@@ -700,7 +707,7 @@
           const current = readMiniBeamsFromTable(wrap.querySelector("tbody"));
           const newN = parseInt(btn.dataset.n, 10);
           const newBeams = Array.from({ length: newN }, (_, i) => current[i] || {
-            theta_deg: 20, phi_deg: 0, power_db: 0, desired_polarization: "hp", oam_charge: 0,
+            theta_deg: 20, phi_deg: 0, power_db: 0, desired_polarization: "rhcp", oam_charge: 0,
           });
           state.ports[pi].beams = newBeams;
           renderMiniBeamsTable(wrap.querySelector("tbody"), newBeams);
@@ -769,8 +776,66 @@
       const lambdaSwMm = (2 * Math.PI / state.betaMeasured) * 1e3;
       const suggestedMm = lambdaSwMm / _TARGET_CELLS_PER_FRINGE;
       el.textContent = `Suggested: ~${suggestedMm.toFixed(1)} mm (${_TARGET_CELLS_PER_FRINGE} cells per fringe at this board's measured wavenumber).`;
+      const cellEl = document.getElementById("cell-size-mm");
+      if (!cellEl.dataset.userEdited) cellEl.value = suggestedMm.toFixed(1);
+      refreshPortDefaults();
     }
+    document.getElementById("cell-size-mm").addEventListener("input", (ev) => {
+      ev.target.dataset.userEdited = "1";
+      refreshMethodPreview();
+    });
     document.getElementById("cell-size-mm").addEventListener("change", () => refreshMethodPreview());
+
+    // PHASE15 Part C gap-fill, defaults: a port's side is 5 lambda0 and the guard gap is 1 lambda_sw,
+    // both at the design frequency. lambda_sw scales from Step 1's measured TM0 beta (beta ~ k0 for a
+    // fixed substrate, so beta(f) ~ beta_measured * f / f_upload -- an approximation, stated here).
+    // A field the user has typed in is never overwritten.
+    const _PORT_SIDE_LAMBDA0 = 5;
+    const _PORT_MIN_SIDE_LAMBDA0 = 4;
+    function designLambda0Mm() {
+      const f = parseFloat(document.getElementById("synthesis-frequency-ghz").value);
+      return f > 0 ? (299.792458 / f) : null;
+    }
+    function designLambdaSwMm() {
+      const f = parseFloat(document.getElementById("synthesis-frequency-ghz").value);
+      if (!(f > 0) || !state.betaMeasured || !state.uploadFrequencyHz) return null;
+      const betaAtF = state.betaMeasured * (f * 1e9 / state.uploadFrequencyHz);
+      return (2 * Math.PI / betaAtF) * 1e3;
+    }
+    function setPortDefault(id, value) {
+      const el = document.getElementById(id);
+      if (value != null && !el.dataset.userEdited) el.value = value.toFixed(1);
+    }
+    function refreshPortDefaults() {
+      const l0 = designLambda0Mm();
+      const lsw = designLambdaSwMm();
+      if (l0 != null) {
+        setPortDefault("port-small-side-mm", _PORT_SIDE_LAMBDA0 * l0);
+        setPortDefault("port-1xn-side-mm", _PORT_SIDE_LAMBDA0 * l0);
+      }
+      setPortDefault("port-gap-mm", lsw);
+      const side = parseFloat(currentPortLayoutPreset() === "2x2_plus_1_large"
+        ? document.getElementById("port-small-side-mm").value
+        : document.getElementById("port-1xn-side-mm").value);
+      const gap = parseFloat(document.getElementById("port-gap-mm").value);
+      const msgs = [];
+      if (l0 != null && side < _PORT_MIN_SIDE_LAMBDA0 * l0) {
+        msgs.push(`Port side ${side.toFixed(1)} mm is under ${_PORT_MIN_SIDE_LAMBDA0} λ₀ (${(_PORT_MIN_SIDE_LAMBDA0 * l0).toFixed(1)} mm): a sub-aperture this small gives a broad, weak beam.`);
+      }
+      if (lsw != null && gap < lsw) {
+        msgs.push(`Guard gap ${gap.toFixed(1)} mm is under 1 λ_sw (${lsw.toFixed(1)} mm): neighbouring ports will couple through the surface wave.`);
+      }
+      const warnEl = document.getElementById("ports-size-warning");
+      warnEl.textContent = msgs.join(" ");
+      warnEl.className = msgs.length ? "status warn" : "status";
+    }
+    ["port-small-side-mm", "port-1xn-side-mm", "port-gap-mm"].forEach((id) => {
+      document.getElementById(id).addEventListener("input", (ev) => {
+        ev.target.dataset.userEdited = "1";
+        refreshPortDefaults();
+      });
+    });
+    document.getElementById("synthesis-frequency-ghz").addEventListener("input", () => refreshPortDefaults());
 
     const accuracyControl = document.getElementById("accuracy-control");
     accuracyControl.addEventListener("click", (ev) => {
@@ -1605,7 +1670,12 @@
           list.appendChild(li);
         };
         if (r.result.directivity_estimate_dbi != null) addRow("Directivity", `${r.result.directivity_estimate_dbi.toFixed(1)} dBi`);
-        if (r.result.sll_db != null) addRow("Side-lobe level", `${r.result.sll_db.toFixed(1)} dB`);
+        if (r.result.sll_copol_db != null) {
+          addRow("Co-pol side-lobe level (outside main beam)", `${r.result.sll_copol_db.toFixed(1)} dB`);
+          addRow("Cross-pol peak (relative to co-pol peak)", `${r.result.cross_peak_db.toFixed(1)} dB`);
+        } else if (r.result.sll_db != null) {
+          addRow("Side-lobe level", `${r.result.sll_db.toFixed(1)} dB`);
+        }
         if (r.result.main_beam_theta_deg != null) {
           addRow("Achieved beam direction", `θ=${r.result.main_beam_theta_deg.toFixed(1)}°, φ=${r.result.main_beam_phi_deg.toFixed(1)}°`);
         }
@@ -1618,6 +1688,8 @@
         const perBeamTbody = perBeamTable.querySelector("tbody");
         perBeamTbody.innerHTML = "";
         perBeamPhaseEl.innerHTML = "";
+        document.getElementById("pol-note").style.display =
+          r.per_beam && r.per_beam.some((e) => e.polarization_efficiency != null) ? "block" : "none";
         if (r.per_beam && r.per_beam.length) {
           perBeamHeading.style.display = "block";
           perBeamTable.style.display = "table";
@@ -1630,6 +1702,8 @@
               `<td>${polLabel}</td>` +
               `<td>${entry.beam_type_requested}</td>` +
               `<td>${entry.xpd_db != null ? entry.xpd_db.toFixed(1) : "—"}</td>` +
+              `<td>${entry.integrated_xpd_db != null ? entry.integrated_xpd_db.toFixed(1) : "—"}</td>` +
+              `<td>${entry.polarization_efficiency != null ? (100 * entry.polarization_efficiency).toFixed(0) + "%" : "—"}</td>` +
               `<td>${entry.null_depth_db.toFixed(1)}</td>` +
               `<td>${entry.winding_number.toFixed(2)}</td>` +
               `<td>${entry.note}</td>`;

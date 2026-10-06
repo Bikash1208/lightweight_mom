@@ -23,6 +23,7 @@ from ...materials import Substrate
 from ...pattern.aperture_pattern import compute_pattern
 from ...pattern.vector_aperture_pattern import (
     aperture_current_from_scalar,
+    beam_polarization_metrics,
     compute_vector_pattern,
     copol_component,
     measure_vortex_winding,
@@ -132,14 +133,15 @@ def _per_beam_breakdown(job, x_m, y_m, jx, jy, frequency_hz, green, dx_m, dy_m, 
         pol = b["desired_polarization"]
         measure_label = pol if pol in _CROSS_LABEL else "rhcp"  # "natural" has no single co-pol
         i, j = _nearest_grid_index(pat.theta_deg, pat.phi_deg, b["theta_deg"], b["phi_deg"])
-        e_theta_b, e_phi_b = pat.e_theta[i, j], pat.e_phi[i, j]
 
         xpd_db = None
+        integrated_xpd_db = None
+        polarization_efficiency = None
         if pol in _CROSS_LABEL:
-            co = copol_component(np.array([e_theta_b]), np.array([e_phi_b]), pol)[0]
-            cross = copol_component(np.array([e_theta_b]), np.array([e_phi_b]), _CROSS_LABEL[pol])[0]
-            if abs(cross) > 0.0:
-                xpd_db = float(10.0 * np.log10(np.abs(co) ** 2 / np.abs(cross) ** 2))
+            metrics = beam_polarization_metrics(pat, pol, b["theta_deg"], b["phi_deg"])
+            xpd_db = metrics.point_xpd_db
+            integrated_xpd_db = metrics.integrated_xpd_db
+            polarization_efficiency = metrics.polarization_efficiency
 
         winding = measure_vortex_winding(
             x_m, y_m, jx, jy, frequency_hz, green, dx_m, dy_m,
@@ -170,6 +172,8 @@ def _per_beam_breakdown(job, x_m, y_m, jx, jy, frequency_hz, green, dx_m, dy_m, 
                 "desired_polarization": pol,
                 "beam_type_requested": beam_type_requested,
                 "xpd_db": xpd_db,
+                "integrated_xpd_db": integrated_xpd_db,
+                "polarization_efficiency": polarization_efficiency,
                 "null_depth_db": winding.null_depth_db,
                 "winding_number": winding.winding_number,
                 "note": note,
@@ -243,13 +247,19 @@ def _run_vector_pattern_job(
 
     per_beam = _per_beam_breakdown(job, x_m, y_m, jx, jy, frequency_hz, green, period_m, period_m, beams, pat, out_dir)
 
+    result = {
+        "main_beam_theta_deg": pat.main_beam_theta_deg,
+        "main_beam_phi_deg": pat.main_beam_phi_deg,
+        "directivity_estimate_dbi": pat.directivity_estimate_dbi,
+        "sll_copol_db": None,
+        "cross_peak_db": None,
+    }
+    if first_pol in _CROSS_LABEL:
+        first = beam_polarization_metrics(pat, first_pol, beams[0]["theta_deg"], beams[0]["phi_deg"])
+        result["sll_copol_db"] = first.sll_copol_db
+        result["cross_peak_db"] = first.cross_peak_db
     return {
-        "result": {
-            "main_beam_theta_deg": pat.main_beam_theta_deg,
-            "main_beam_phi_deg": pat.main_beam_phi_deg,
-            "sll_db": pat.sll_db,
-            "directivity_estimate_dbi": pat.directivity_estimate_dbi,
-        },
+        "result": result,
         "labels": (LOCAL_PERIODICITY_APPROXIMATION, VECTOR_PATTERN_MODEL),
         "pattern_uv_png_url": uv_png_url,
         "pattern_cut_png_urls": cut_png_urls,

@@ -376,3 +376,92 @@ def mirror_beam_level_db(result: VectorPatternResult):
     dphi = np.abs((phi_axis - mirror_phi + 180.0) % 360.0 - 180.0)
     j = int(np.argmin(dphi))
     return float(10.0 * np.log10(max(power[i, j], 1e-300) / peak)), float(theta_axis[i]), float(phi_axis[j])
+
+
+ORTHOGONAL_POLARIZATION = {
+    "rhcp": "lhcp", "lhcp": "rhcp", "hp": "vp", "vp": "hp", "slant_p45": "slant_m45", "slant_m45": "slant_p45",
+}
+MAIN_BEAM_REGION_DB = -10.0  # the co-pol contour that bounds the main-beam region
+_SEARCH_RADIUS_DEG = 12.0
+
+
+@dataclass(frozen=True)
+class BeamPolarizationMetrics:
+    point_xpd_db: "float | None"  # co over cross at the grid point nearest the request
+    integrated_xpd_db: "float | None"  # co over cross power summed over the main-beam region
+    polarization_efficiency: "float | None"  # co-pol power / total power over the hemisphere
+    sll_copol_db: "float | None"  # highest co-pol level outside the main-beam region, rel. its peak
+    cross_peak_db: "float | None"  # highest cross-pol level over the hemisphere, rel. the co-pol peak
+    region_fraction: float  # fraction of the hemisphere grid inside the main-beam region
+
+
+def _direction_mask(theta_grid_deg, phi_grid_deg, theta_deg, phi_deg, radius_deg):
+    t0, p0 = np.radians(theta_deg), np.radians(phi_deg)
+    t, p = np.radians(theta_grid_deg), np.radians(phi_grid_deg)
+    cos_angle = np.cos(t) * np.cos(t0) + np.sin(t) * np.sin(t0) * np.cos(p - p0)
+    return cos_angle >= np.cos(np.radians(radius_deg))
+
+
+def _main_beam_region(co_power, theta_grid_deg, phi_grid_deg, theta_deg, phi_deg):
+    """The connected -10 dB region of the co-pol power around the beam: seeded at the co-pol
+    maximum within `_SEARCH_RADIUS_DEG` of the request, grown on the (theta, phi) grid with phi
+    periodic (wrapped by one column on each side so a region across phi=0/360 stays whole)."""
+    from scipy import ndimage
+
+    seed_window = _direction_mask(theta_grid_deg, phi_grid_deg, theta_deg, phi_deg, _SEARCH_RADIUS_DEG)
+    masked = np.where(seed_window, co_power, -np.inf)
+    si, sj = np.unravel_index(int(np.argmax(masked)), masked.shape)
+    peak = co_power[si, sj]
+    above = co_power >= peak * 10.0 ** (MAIN_BEAM_REGION_DB / 10.0)
+    padded = np.concatenate([above[:, -1:], above, above[:, :1]], axis=1)
+    labels, _ = ndimage.label(padded, structure=np.ones((3, 3), dtype=int))
+    region = labels == labels[si, sj + 1]
+    return region[:, 1:-1], peak
+
+
+def beam_polarization_metrics(pat: VectorPatternResult, desired_polarization, theta_deg, phi_deg):
+    """Polarization figures of merit for one requested beam, from a computed vector pattern.
+
+    `desired_polarization` is the beam's own label ("rhcp"/"lhcp"/"hp"/"vp"/"slant_p45"/
+    "slant_m45"); its orthogonal partner is the cross-pol. Every power is over the grid's own
+    hemisphere with the sin(theta) solid-angle weight. A scalar cell cannot fix both components of a
+    monopole's radial current, so the cross-pol share is reported as measured, not assumed."""
+    if desired_polarization not in ORTHOGONAL_POLARIZATION:
+        raise ValueError(f"beam_polarization_metrics needs a copol label, got {desired_polarization!r}")
+    cross_pol = ORTHOGONAL_POLARIZATION[desired_polarization]
+    e_theta, e_phi = pat.e_theta, pat.e_phi
+    co = np.abs(copol_component(e_theta, e_phi, desired_polarization)) ** 2
+    cross = np.abs(copol_component(e_theta, e_phi, cross_pol)) ** 2
+    total = np.abs(e_theta) ** 2 + np.abs(e_phi) ** 2
+
+    theta_rad = np.radians(pat.theta_deg)
+    dtheta = np.radians(pat.theta_deg[1, 0] - pat.theta_deg[0, 0])
+    dphi = 2.0 * np.pi / pat.theta_deg.shape[1]
+    weight = np.sin(theta_rad) * dtheta * dphi
+
+    region, co_peak = _main_beam_region(co, pat.theta_deg, pat.phi_deg, theta_deg, phi_deg)
+    outside = ~region
+    i = int(np.argmin(np.abs(pat.theta_deg[:, 0] - theta_deg)))
+    j = int(np.argmin(np.abs(((pat.phi_deg[0, :] - phi_deg + 180.0) % 360.0) - 180.0)))
+    point_cross = cross[i, j]
+    point_xpd = float(10.0 * np.log10(co[i, j] / point_cross)) if point_cross > 0.0 else None
+
+    region_co = float(np.sum(co * weight * region))
+    region_cross = float(np.sum(cross * weight * region))
+    integrated_xpd = float(10.0 * np.log10(region_co / region_cross)) if region_cross > 0.0 else None
+
+    total_power = float(np.sum(total * weight))
+    efficiency = float(np.sum(co * weight) / total_power) if total_power > 0.0 else None
+
+    outside_co = float(np.max(co[outside])) if np.any(outside) else 0.0
+    sll = float(10.0 * np.log10(outside_co / co_peak)) if outside_co > 0.0 else None
+    cross_peak = float(10.0 * np.log10(np.max(cross) / co_peak)) if co_peak > 0.0 else None
+
+    return BeamPolarizationMetrics(
+        point_xpd_db=point_xpd,
+        integrated_xpd_db=integrated_xpd,
+        polarization_efficiency=efficiency,
+        sll_copol_db=sll,
+        cross_peak_db=cross_peak,
+        region_fraction=float(np.mean(region)),
+    )

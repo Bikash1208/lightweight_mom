@@ -1070,11 +1070,12 @@ def _run_synthesize_ports_job(job, body: dict):
             design, _used, history = correct_beam_aim(
                 beams, lambda bs: synthesize_one(ref, bs, feed_xy_m), measure, body["pointing_iterations"]
             )
+            best_pass = min(range(len(history)), key=lambda k: max(a.miss_deg for a in history[k]))
             pointing_report.append({
                 "port_id": region_ids[len(pointing_report)],
-                "passes": len(history) - 1,
+                "passes": best_pass,
                 "before": [_aim_dict(a) for a in history[0]],
-                "after": [_aim_dict(a) for a in history[-1]],
+                "after": [_aim_dict(a) for a in history[best_pass]],
             })
             return design
 

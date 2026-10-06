@@ -78,9 +78,11 @@ def _against_targets(aims, targets):
 
 
 def correct_beam_aim(beams, synthesize, measure, iterations=1):
-    """`synthesize(beams) -> design`, `measure(design, beams) -> [BeamAim]`. Returns
-    `(design, beams_used, history)` where `history[k]` is the list of aims at pass k (history[0]
-    is the uncorrected design). The loop stops early once every miss is below 0.05 deg."""
+    """`synthesize(beams) -> design`, `measure(design, beams) -> [BeamAim]` (requested = target).
+    Returns `(design, beams_used, history)`: `history[k]` holds the aims of pass k (`history[0]` is the
+    uncorrected design). The returned design is the pass with the smallest worst-case miss, so a
+    correction never ships a worse design than the one it started from. Stops early once every miss is
+    below 0.05 deg."""
     if not 1 <= iterations <= MAX_ITERATIONS:
         raise ValueError(f"iterations must be 1..{MAX_ITERATIONS}, got {iterations!r}")
     targets = list(beams)
@@ -88,6 +90,7 @@ def correct_beam_aim(beams, synthesize, measure, iterations=1):
     design = synthesize(used)
     aims = _against_targets(measure(design, used), targets)
     history = [aims]
+    best = (max(aim.miss_deg for aim in aims), design, used)
     for _ in range(iterations):
         if max(aim.miss_deg for aim in aims) < 0.05:
             break
@@ -95,4 +98,7 @@ def correct_beam_aim(beams, synthesize, measure, iterations=1):
         design = synthesize(used)
         aims = _against_targets(measure(design, used), targets)
         history.append(aims)
-    return design, used, history
+        worst = max(aim.miss_deg for aim in aims)
+        if worst < best[0]:
+            best = (worst, design, used)
+    return best[1], best[2], history

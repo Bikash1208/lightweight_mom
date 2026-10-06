@@ -101,7 +101,7 @@
             <span class="unit">uses the Board section below</span>
           </label>
           <div id="ports-beam-tables"></div>
-          <label class="checkbox-row"><input type="checkbox" id="port-pointing-correction" />
+          <label style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap"><input type="checkbox" id="port-pointing-correction" style="width:auto" />
             Pointing correction <span class="unit">(optional, off by default: re-aims each beam by its measured miss, 1-2 passes)</span>
           </label>
           <p class="status" id="ports-isolation-status"></p>
@@ -836,10 +836,12 @@
         : document.getElementById("port-1xn-side-mm").value);
       const gap = parseFloat(document.getElementById("port-gap-mm").value);
       const msgs = [];
-      if (l0 != null && side < _PORT_MIN_SIDE_LAMBDA0 * l0) {
+      const minSide = Math.round(_PORT_MIN_SIDE_LAMBDA0 * (l0 || 0) * 10) / 10;
+      if (l0 != null && side < minSide) {
         msgs.push(`Port side ${side.toFixed(1)} mm is under ${_PORT_MIN_SIDE_LAMBDA0} λ₀ (${(_PORT_MIN_SIDE_LAMBDA0 * l0).toFixed(1)} mm): a sub-aperture this small gives a broad, weak beam.`);
       }
-      if (lsw != null && gap < lsw) {
+      const minGap = Math.round((lsw || 0) * 10) / 10;
+      if (lsw != null && gap < minGap) {
         msgs.push(`Guard gap ${gap.toFixed(1)} mm is under 1 λ_sw (${lsw.toFixed(1)} mm): neighbouring ports will couple through the surface wave.`);
       }
       const warnEl = document.getElementById("ports-size-warning");

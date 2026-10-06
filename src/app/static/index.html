@@ -386,14 +386,27 @@
       exportJobId: null,
     };
 
+    // A step becomes reachable once it has been entered; its inputs stay in the page while the user
+    // moves between steps, so going back to Step 2 and re-running reuses them.
+    const stepReached = { 1: true, 2: false, 3: false };
     function showStep(n) {
+      stepReached[n] = true;
       document.querySelectorAll(".step-panel").forEach((el, i) => { el.style.display = i === n - 1 ? "block" : "none"; });
       document.querySelectorAll("#stepper .step").forEach((el) => {
         const stepN = parseInt(el.dataset.step, 10);
         el.classList.toggle("active", stepN === n);
         el.classList.toggle("done", stepN < n);
+        el.classList.toggle("locked", !stepReached[stepN]);
       });
+      window.scrollTo(0, 0);
     }
+    document.querySelectorAll("#stepper .step").forEach((el) => {
+      el.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        const n = parseInt(el.dataset.step, 10);
+        if (stepReached[n]) showStep(n);
+      });
+    });
 
     // ---------------------------------------------------------------- Step 1
     const phaseFileInput = document.getElementById("phase-file-input");
@@ -475,6 +488,7 @@
           span.textContent = `Feed point excluded (${data.nan_count} sample${data.nan_count === 1 ? "" : "s"}).`;
           labelsEl.appendChild(span);
         }
+        stepReached[2] = true;
         // pre-fill Step 2 from what Step 1 just established
         document.getElementById("synthesis-frequency-ghz").value = freqGhz;
         if (state.apertureMm) document.getElementById("aperture-mm").value = state.apertureMm.toFixed(1);

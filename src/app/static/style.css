@@ -185,6 +185,7 @@ button.secondary:hover { background: var(--bg); opacity: 1; }
   background: var(--panel);
 }
 .stepper .step.active { color: var(--text); font-weight: 600; }
+.stepper .step.locked { opacity: 0.45; cursor: default; pointer-events: none; }
 .stepper .step.active .dot { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
 .stepper .step.done .dot { background: var(--ok); border-color: var(--ok); color: var(--accent-text); }
 .stepper .sep { flex: 1; height: 1px; background: var(--border); }

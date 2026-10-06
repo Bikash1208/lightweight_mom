@@ -60,6 +60,12 @@ def steep_gradient(threshold_deg_per_cell):
     return f"STEEP_GRADIENT(>{threshold_deg_per_cell:.1f}deg/cell)"
 
 
+def object_wave_normalised(scale):
+    """Multi-beam Formulation A: the summed object wave's peak exceeded unit amplitude and was divided
+    by `scale` (relative beam weights kept)."""
+    return f"OBJECT_WAVE_NORMALISED(divided by {scale:.2f})"
+
+
 def reference_wave_rescaled_to_beta_bar(beta_bar_rad_per_m):
     """PHASE13B B3: the imported bare-slab reference phase was rescaled to the guided wavenumber
     beta_bar implied by the hologram's own mean surface reactance (dispersion library), instead of

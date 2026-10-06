@@ -28,6 +28,7 @@ from ..labels import (
     EXPERIMENTAL,
     LOCAL_PERIODICITY_APPROXIMATION,
     REFERENCE_AMPLITUDE_ASSUMED_UNIFORM,
+    object_wave_normalised,
     phase_coverage_shortfall,
     reference_wave_not_rescaled,
     reference_wave_rescaled_to_beta_bar,
@@ -97,6 +98,37 @@ def _combined_object_field(
     )
 
 
+def object_wave_scale(e_obj):
+    """Divisor that stops a summed object wave from exceeding unit amplitude. N beams in phase reach
+    |E_obj| = N, which pushes Psi past its [-1, 1] range; dividing by the peak magnitude keeps the
+    relative beam weights. A sum that already peaks at or below 1 is returned unchanged (divisor 1.0),
+    so single beams at their own weight keep their pre-fix modulation exactly."""
+    return max(1.0, float(np.max(np.abs(e_obj))))
+
+
+def formulation_a_control_map_and_scale(
+    reference_field,
+    object_beams,
+    frequency_hz,
+    x_avg_ohm,
+    modulation_index,
+    feed_xy_m=(0.0, 0.0),
+    cp_phase_offset_deg=0.0,
+    multiplexing="full_aperture",
+):
+    """`(control_map, object_wave_divisor)` for `formulation_a_control_map`; the divisor is 1.0 unless
+    the multi-beam sum saturated (see `object_wave_scale`)."""
+    if not reference_field.amplitude_available:
+        raise ValueError("Formulation A needs a complex reference field (amplitude available)")
+    e_obj = _combined_object_field(
+        reference_field.x_m, reference_field.y_m, object_beams, frequency_hz,
+        feed_xy_m, cp_phase_offset_deg, multiplexing,
+    )
+    scale = object_wave_scale(e_obj)
+    psi = interference_modulation(reference_field.Ex, e_obj / scale)
+    return reactance_from_modulation(psi, x_avg_ohm, modulation_index), scale
+
+
 def formulation_a_control_map(
     reference_field,
     object_beams,
@@ -110,15 +142,13 @@ def formulation_a_control_map(
     """Fong et al. 2010: X(x,y) = X_avg*(1 + M*Re{E_ref*conj(E_obj)}). Requires a COMPLEX
     reference field (amplitude available) -- see `_ensure_complex_reference` (PHASE13B B4) for the
     phase-only fallback callers should apply before this. `feed_xy_m`/`cp_phase_offset_deg`/
-    `multiplexing`: PHASE15 Part A, see `_combined_object_field`."""
-    if not reference_field.amplitude_available:
-        raise ValueError("Formulation A needs a complex reference field (amplitude available)")
-    e_obj = _combined_object_field(
-        reference_field.x_m, reference_field.y_m, object_beams, frequency_hz,
+    `multiplexing`: PHASE15 Part A, see `_combined_object_field`. The summed object wave is kept at
+    unit peak amplitude (see `object_wave_scale`)."""
+    control, _scale = formulation_a_control_map_and_scale(
+        reference_field, object_beams, frequency_hz, x_avg_ohm, modulation_index,
         feed_xy_m, cp_phase_offset_deg, multiplexing,
     )
-    psi = interference_modulation(reference_field.Ex, e_obj)
-    return reactance_from_modulation(psi, x_avg_ohm, modulation_index)
+    return control
 
 
 def _ensure_complex_reference(reference_field):
@@ -268,10 +298,12 @@ def synthesize_formulation_a(
     except ValueError:
         pass  # the dispersion table has no beta_rad_per_m column -- beta_bar is not computable at all
 
-    control_map = formulation_a_control_map(
+    control_map, object_scale = formulation_a_control_map_and_scale(
         cell_field, object_beams, frequency_hz, x_avg_ohm, modulation_index,
         feed_xy_m, cp_phase_offset_deg, multiplexing,
     )
+    if object_scale > 1.0:
+        extra_labels.append(object_wave_normalised(object_scale))
     cells = map_control_to_geometry_dispersion(cell_field.x_m, cell_field.y_m, control_map, dispersion_table)
 
     # PHASE14 Part C: an equivalent aperture field for pattern prediction -- NOT the same model as

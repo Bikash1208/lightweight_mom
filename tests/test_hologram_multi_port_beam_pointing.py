@@ -61,6 +61,33 @@ def test_corrected_beam_is_aimed_past_the_measured_miss():
     assert aimed.phi_deg == pytest.approx(0.0)
 
 
+def test_pointing_correction_converges_for_a_steep_beam_not_on_the_phi_axis():
+    """Regression for a live-browser stall (PHASE16 follow-ups): a beam at (35deg, 180deg) only
+    moved from a 1.43deg miss to a 1.41deg miss over a pass, because the shared hemisphere grid's
+    own phi spacing -- several deg once projected to a real angle at this theta -- was coarser than
+    the miss pointing correction was trying to resolve. The fine local measurement fixes this."""
+    from src.hologram.pointing_correction import correct_beam_aim, measure_beam_aims
+
+    regions = layout_preset_1xn(1, 100e-3)
+    region = regions[0]
+    library = _ideal_library()
+    green = LayeredGreenFunction(SUB, FREQ, backing="pec")
+    beams = [Beam(theta_deg=35.0, phi_deg=180.0, weight=1.0 + 0j, desired_polarization="rhcp")]
+    feed = (region.feed_x_m, region.feed_y_m)
+
+    reference = port_reference_field(region, CELL / 4.0, K_SWG)
+
+    def synthesize(bs):
+        return synthesize_formulation_b(reference, bs, FREQ, library, CELL, feed_xy_m=feed)
+
+    def measure(design, bs):
+        return measure_beam_aims(design, bs, green, CELL, FREQ, feed)
+
+    _design, _used, history = correct_beam_aim(beams, synthesize, measure, iterations=2)
+    assert history[0][0].miss_deg > 1.0
+    assert history[-1][0].miss_deg < 0.3
+
+
 def test_pointing_correction_brings_the_92_mm_port_onto_its_request():
     from src.hologram.pointing_correction import correct_beam_aim, measure_beam_aims
 

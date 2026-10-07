@@ -396,6 +396,39 @@ def beam_local_peak(pat: VectorPatternResult, theta_deg, phi_deg, radius_deg=_SE
     return float(pat.theta_deg[i, j]), float(pat.phi_deg[i, j]), float(10.0 * np.log10(power[i, j] / np.max(power)))
 
 
+def beam_local_peak_fine(
+    x_m, y_m, Jx, Jy, frequency_hz, green_function, dx_m, dy_m,
+    theta_deg, phi_deg, radius_deg=3.0, step_deg=0.1,
+):
+    """Sub-grid-resolution achieved direction of one beam: evaluates the vector far field directly
+    (`_vector_far_field`, not `compute_vector_pattern`'s own shared hemisphere grid) on a FINE
+    local grid, `step_deg` apart, around the requested direction.
+
+    PHASE16 follow-ups: pointing correction stalled (a measured miss barely moving pass to pass,
+    e.g. 1.43 -> 1.41 deg) because the shared hemisphere grid's phi spacing, once projected to a
+    real angle at a beam off broadside, was several times coarser than the miss it was trying to
+    resolve -- so the "achieved direction" it measured was really just the nearest grid point, and
+    correcting towards a quantised measurement cannot converge below that quantisation. This
+    evaluates the field AT arbitrary points instead, so the achieved direction is resolved to
+    `step_deg`, independent of whatever hemisphere grid a plot elsewhere uses.
+
+    The window spans +-`radius_deg` in theta and, in phi, +-`radius_deg`/sin(theta) so a phi step
+    covers about the same real angle as a theta step (a modest sin(theta) floor keeps the window
+    finite for a near-broadside beam). Returns `(theta_deg, phi_deg, power)` -- `power` is NOT
+    normalised; a caller measuring several beams in one call should normalise all of them by one
+    shared reference so their relative levels stay meaningful."""
+    n = max(1, int(round(radius_deg / step_deg)))
+    offsets_deg = np.linspace(-radius_deg, radius_deg, 2 * n + 1)
+    dtheta, dphi_lin = np.meshgrid(offsets_deg, offsets_deg, indexing="ij")
+    sin_theta0 = max(np.sin(np.radians(theta_deg)), 0.05)
+    theta_grid = theta_deg + dtheta
+    phi_grid = (phi_deg + dphi_lin / sin_theta0) % 360.0
+    e_theta, e_phi = _vector_far_field(theta_grid, phi_grid, x_m, y_m, Jx, Jy, frequency_hz, green_function, dx_m, dy_m)
+    power = np.abs(e_theta) ** 2 + np.abs(e_phi) ** 2
+    i, j = np.unravel_index(int(np.argmax(power)), power.shape)
+    return float(theta_grid[i, j]), float(phi_grid[i, j]), float(power[i, j])
+
+
 @dataclass(frozen=True)
 class BeamPolarizationMetrics:
     point_xpd_db: "float | None"  # co over cross at the grid point nearest the request

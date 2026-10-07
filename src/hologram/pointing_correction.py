@@ -8,12 +8,11 @@ from dataclasses import dataclass, replace
 
 import numpy as np
 
-from ..pattern.vector_aperture_pattern import aperture_current_from_scalar, beam_local_peak, compute_vector_pattern
+from ..pattern.vector_aperture_pattern import aperture_current_from_scalar, beam_local_peak_fine
 
 MAX_ITERATIONS = 2
-_GRID_THETA_MAX_DEG = 60.0
-_GRID_N_THETA = 241
-_GRID_N_PHI = 73
+FINE_GRID_STEP_DEG = 0.1
+_FINE_GRID_RADIUS_DEG = 3.0
 
 
 @dataclass(frozen=True)
@@ -43,16 +42,24 @@ def _theta_phi(u, v):
 
 
 def measure_beam_aims(design, beams, green, period_m, frequency_hz, feed_xy_m):
-    """Achieved direction of every requested beam on the design's own vector pattern."""
+    """Achieved direction of every requested beam, from a fine local evaluation of the vector far
+    field around each beam's own request (`beam_local_peak_fine`, resolution `FINE_GRID_STEP_DEG`
+    deg) rather than a shared hemisphere grid -- see that function's docstring for why (it was the
+    cause of pointing correction stalling, PHASE16 follow-ups). All beams in one call are
+    normalised to the SAME peak so their relative levels stay meaningful."""
     jx, jy = aperture_current_from_scalar(design.x_m, design.y_m, design.aperture_field, feed_xy_m=feed_xy_m)
-    pattern = compute_vector_pattern(
-        design.x_m, design.y_m, jx, jy, frequency_hz, green, period_m, period_m,
-        _GRID_THETA_MAX_DEG, _GRID_N_THETA, _GRID_N_PHI,
-    )
+    raw = [
+        beam_local_peak_fine(
+            design.x_m, design.y_m, jx, jy, frequency_hz, green, period_m, period_m,
+            beam.theta_deg, beam.phi_deg, radius_deg=_FINE_GRID_RADIUS_DEG, step_deg=FINE_GRID_STEP_DEG,
+        )
+        for beam in beams
+    ]
+    peak_power = max(power for _, _, power in raw)
     aims = []
-    for beam in beams:
-        theta, phi, level = beam_local_peak(pattern, beam.theta_deg, beam.phi_deg)
-        aims.append(BeamAim(beam.theta_deg, beam.phi_deg, theta, phi, level))
+    for beam, (theta, phi, power) in zip(beams, raw, strict=True):
+        level_db = 10.0 * np.log10(power / peak_power) if peak_power > 0.0 else float("-inf")
+        aims.append(BeamAim(beam.theta_deg, beam.phi_deg, theta, phi, level_db))
     return aims
 
 
@@ -123,6 +130,7 @@ def aim_report(history):
         "passes": best,
         "before": [aim_dict(a) for a in history[0]],
         "after": [aim_dict(a) for a in history[best]],
+        "measurement_grid_step_deg": FINE_GRID_STEP_DEG,
     }
 
 

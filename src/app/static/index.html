@@ -533,7 +533,8 @@
       const parts = [];
       if (refinement.pointing) {
         const pr = refinement.pointing;
-        parts.push(`Pointing correction (${pr.passes} pass${pr.passes === 1 ? "" : "es"}): ` +
+        const grid = pr.measurement_grid_step_deg != null ? ` (measured on a ${pr.measurement_grid_step_deg}° local grid)` : "";
+        parts.push(`Pointing correction (${pr.passes} pass${pr.passes === 1 ? "" : "es"}${grid}): ` +
           pr.before.map((b, k) => `beam ${k + 1} miss ${b.miss_deg.toFixed(2)}° → ${pr.after[k].miss_deg.toFixed(2)}°`).join("; "));
       }
       if (refinement.balance) {

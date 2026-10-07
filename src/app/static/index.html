@@ -1241,6 +1241,14 @@
       document.getElementById("unreachable-explanation").style.display = "none";
       document.getElementById("ports-results-card").style.display = "none";
       document.getElementById("results-card").style.display = "none";
+      // Clear the previous run's own summary, labels and refinement lines -- otherwise a new run
+      // (especially one that switches design mode, or fails partway through) can leave stale
+      // content from the last run visible underneath/alongside the new one.
+      document.getElementById("labels").innerHTML = "";
+      document.getElementById("refinement-status").textContent = "";
+      document.getElementById("results-list").innerHTML = "";
+      document.getElementById("ports-per-port-results").innerHTML = "";
+      document.getElementById("ports-isolation-summary").textContent = "";
       try {
         if (currentPortMode() === "multi") {
           await runPortsDesign();

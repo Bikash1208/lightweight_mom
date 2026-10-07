@@ -99,7 +99,7 @@ def test_print_final_report_never_claims_hfss_performed(tmp_path, capsys, phase8
 def test_cli_runs_against_the_real_checkpoint(tmp_path):
     out_dir = tmp_path / "cli_out"
     proc = subprocess.run(
-        [sys.executable, str(ROOT / "examples" / "run_phase8e_control_bridge.py"), "--output-dir", str(out_dir)],
+        [sys.executable, str(ROOT / "scripts" / "research" / "run_phase8e_control_bridge.py"), "--output-dir", str(out_dir)],
         cwd=ROOT,
         capture_output=True,
         text=True,

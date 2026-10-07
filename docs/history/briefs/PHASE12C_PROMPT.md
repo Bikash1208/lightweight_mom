@@ -94,7 +94,7 @@ as `G<n>.s36p`). Build a proper ingestion path, not a one-off script:
 - Only single-cell HFSS gates can open; supercell/heterogeneous gates stay closed until S1–S3 are run.
 
 ## Deliverables
-- `examples/run_phase12c.py` → `results/phase12c_grounded_locality/` (CSV/JSON, plots: deviation vs
+- `scripts/research/run_phase12c.py` → `results/phase12c_grounded_locality/` (CSV/JSON, plots: deviation vs
   phase step, embedded vs isolated per cell for the phase-gradient supercell, coupling vs size grounded
   vs ungrounded, fine-vs-coarse spot-check table), plus `results/phase12c_hfss_export/`. Deterministic.
 - `PHASE12C_GROUNDED_LOCALITY.md`; updates to `README.md` (status, layout, "Still open"), `CLAUDE.md`.

@@ -87,7 +87,7 @@ contradictory to, the mesh-coarseness limitation `LIBRARY_REPORT.md` already doc
 ## Running it
 
 ```bash
-.venv/bin/python examples/run_phase8b_formulation.py     # results/phase8b_formulation/
+.venv/bin/python scripts/research/run_phase8b_formulation.py     # results/phase8b_formulation/
 ```
 
 ## Verification

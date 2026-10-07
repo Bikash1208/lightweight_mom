@@ -74,7 +74,7 @@ inversion (and final STEP generation) remain **LOCKED**.
 ## Running it
 
 ```bash
-.venv/bin/python examples/run_phase9_validation.py     # results/phase9_validation/
+.venv/bin/python scripts/research/run_phase9_validation.py     # results/phase9_validation/
 ```
 
 ## Verification

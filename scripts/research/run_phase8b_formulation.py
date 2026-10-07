@@ -2,7 +2,7 @@
 """Phase 8B CLI: evaluate the holographic formulation and physical control-variable question
 against the real Phase 7 library, and write `results/phase8b_formulation/`.
 
-    python examples/run_phase8b_formulation.py [--library-dir DIR] [--output-dir DIR]
+    python scripts/research/run_phase8b_formulation.py [--library-dir DIR] [--output-dir DIR]
                                                 [--design-frequency-ghz F]
 
 Does not build a GUI, does not modify the solver or Phase 7 data, and does not generate a final
@@ -13,7 +13,7 @@ import argparse
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.feasibility_schema import DEFAULT_LIBRARY_DIR
 from src.phase8b.run import print_final_report, run_phase8b

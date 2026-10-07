@@ -70,7 +70,7 @@ You are working in `lightweight_mom`. Read `CLAUDE.md`, `CONVENTIONS.md`, `PHASE
 - Register nothing as production data; any new sweep is a benchmark, tagged grounded + period + mesh.
 
 ## Deliverables
-- `examples/run_phase12b.py` → `results/phase12b_mesh_period_study/` (CSV/JSON, plots: aligned vs
+- `scripts/research/run_phase12b.py` → `results/phase12b_mesh_period_study/` (CSV/JSON, plots: aligned vs
   unaligned convergence, phase vs L per period and frequency, coverage vs frequency per period, |S11| vs L,
   duplicate-audit table). Deterministic.
 - `PHASE12B_MESH_PERIOD_STUDY.md`, and updates to `README.md` (status, layout, "Still open"),

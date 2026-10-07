@@ -59,7 +59,7 @@ h = 1.575 mm, P = 8.0 mm, square PEC patch, 10–15 GHz, design frequency 12.5 G
   `hfss_exports/phase12_grounded_8mm/`. Check they're geometrically identical and say so; use the latter's IDs.
 
 ## Deliverables
-- `examples/run_phase12d.py` → `results/phase12d_*` (CSV/JSON; plots: error vs step size, per-order power for
+- `scripts/research/run_phase12d.py` → `results/phase12d_*` (CSV/JSON; plots: error vs step size, per-order power for
   each N, per-cell phase error, HFSS vs MoM for each available case). `PHASE12D_*.md`; README/CLAUDE.md updates.
 - Statuses from fixed sets, e.g. `LOCAL_PERIODICITY_STEP_LIMIT_MEASURED` (with the number and tolerance) /
   `..._NOT_RESOLVED`; aperture test `LOOKUP_TABLE_ADEQUATE_FOR_N>=…` / `LOOKUP_TABLE_INADEQUATE`;

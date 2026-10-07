@@ -2,7 +2,7 @@
 per case; see VALIDATION_EXPORT.md).
 
 Run from the project root:
-    python examples/export_validation_cases.py [results/validation_cases] [case_id ...]
+    python scripts/research/export_validation_cases.py [results/validation_cases] [case_id ...]
 
 With no case ids, exports all 10 cases from `src.validation_cases.CASES`. Needs the optional CAD
 dependencies: `pip install -r requirements-cad.txt`.
@@ -12,12 +12,12 @@ import sys
 import time
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.validation_cases import CASES, CASES_BY_ID
 from src.validation_export import export_all_cases
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def main(argv):

@@ -17,7 +17,7 @@ fit to Phase 12C/12D's own meshes), `hfss_resonance_ingest.py` (G4/G6 real HFSS 
 budget: mesh~5.9deg, thickness~3.7deg, residual~3-4deg), `order_power_prediction.py` (the missing
 lookup-table-predicted-vs-measured comparison: N=6/8/12 diffs of 0.002/0.018/0.008 — confirms the
 ~50% intended-order-power ceiling is a DESIGN limit, not a lookup-table forward-model failure),
-`part0_run.py` + `examples/run_phase13_part0.py`. **Already run for real**; output at
+`part0_run.py` + `scripts/research/run_phase13_part0.py`. **Already run for real**; output at
 `results/phase13_part0/part0_carry_overs.json`. All tests pass (`tests/test_phase13_*.py`).
 
 ### Part 1 — repo curation

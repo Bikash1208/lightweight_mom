@@ -18,6 +18,8 @@ pip install -e ".[dev,app,cad]"     # dev: tests/lint; app: the web app; cad: ST
 make app                            # starts the app at http://127.0.0.1:8000 -- restart after
                                      # any backend (src/) change, there is no autoreload
 make test-fast                      # pytest -m "not slow", < 5 min
+make test-full                      # everything, including real MoM solves, tens of minutes
+make lint / make format             # ruff check(+format) / ruff check --fix + format
 ```
 
 Python >= 3.11. `requirements-lock.txt` reproduces the exact pinned environment this project was

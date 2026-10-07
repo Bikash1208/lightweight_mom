@@ -7,13 +7,13 @@ mesh-convergence families plus real HFSS Touchstone ingestion) -- run once; see
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.phase13.part0_run import run_part0, write_part0_json
 
 if __name__ == "__main__":
     result = run_part0()
-    out_dir = Path(__file__).resolve().parent.parent / "results" / "phase13_part0"
+    out_dir = Path(__file__).resolve().parent.parent.parent / "results" / "phase13_part0"
     path = write_part0_json(result, out_dir)
     print(f"Phase 13 Part 0 written to {path}")
     print(

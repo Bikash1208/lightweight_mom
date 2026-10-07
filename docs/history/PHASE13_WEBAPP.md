@@ -11,7 +11,7 @@ Implementation: Part 0 carry-overs in `src/phase13/` (`convergence.py`, `resonan
 ## Part 0 — carry-overs from PHASE12D_ADDENDUM.md
 
 Results: `results/phase13_part0/part0_carry_overs.json` (real output of
-`examples/run_phase13_part0.py`, reused verbatim below — not re-derived for this write-up).
+`scripts/research/run_phase13_part0.py`, reused verbatim below — not re-derived for this write-up).
 
 **Mesh convergence at resonance** (`convergence.py`'s Richardson extrapolation, G4 = L 6.0 mm,
 12.5 GHz, aligned meshes 40–96 cells): the 40-cell (0.2 mm) production mesh gives

@@ -181,7 +181,7 @@ classification rule itself is unchanged.
 ## 8. Running it
 
 ```bash
-.venv/bin/python examples/run_phase12b.py   # results/phase12b_mesh_period_study/
+.venv/bin/python scripts/research/run_phase12b.py   # results/phase12b_mesh_period_study/
 .venv/bin/python -m pytest -q tests/test_discretization_alignment.py tests/test_sweep_duplicate_detection.py \
     tests/test_phase12b_*.py
 ```

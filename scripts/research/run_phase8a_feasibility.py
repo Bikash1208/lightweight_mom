@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Phase 8A CLI: run the scientific feasibility gate against the Phase 7 production library.
 
-    python examples/run_phase8a_feasibility.py [--library-dir DIR] [--reference-field FILE]
+    python scripts/research/run_phase8a_feasibility.py [--library-dir DIR] [--reference-field FILE]
                                                 [--frequency-ghz F] [--polarization x|y]
                                                 [--tolerance-deg T] [--output-dir DIR]
 
@@ -14,7 +14,7 @@ import argparse
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.feasibility_gate import run_and_write_phase8a
 from src.feasibility_schema import DEFAULT_LIBRARY_DIR, FeasibilityConfig

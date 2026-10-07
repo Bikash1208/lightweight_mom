@@ -133,7 +133,7 @@ frequency sweep, and how to compare) ending in an explicit statement that this p
 
 ## 6a. Exact overlay-ready comparison export (Phase 6A, `src/hfss_comparison.py`)
 
-For a single case (`case01_non_resonant_patch` by default), `examples/export_hfss_comparison.py`
+For a single case (`case01_non_resonant_patch` by default), `scripts/research/export_hfss_comparison.py`
 adds, into that case's already-existing folder:
 
 * `hfss_comparison_reference.csv` — `frequency_GHz`, then `S11xx/S11yy/S21xx/S21yy_mag_dB` and

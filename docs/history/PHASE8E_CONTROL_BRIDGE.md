@@ -69,7 +69,7 @@ acceptable scientific outcome, not a failure of the pipeline -- geometry inversi
 ## Running it
 
 ```bash
-.venv/bin/python examples/run_phase8e_control_bridge.py     # results/phase8e_control_bridge/
+.venv/bin/python scripts/research/run_phase8e_control_bridge.py     # results/phase8e_control_bridge/
 ```
 
 ## Verification

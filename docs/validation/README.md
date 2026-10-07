@@ -74,7 +74,7 @@ own measured numbers, not reproduced here):
 
 `hfss_exports/fss_square_loop_10mm/`: a square-loop FSS unit cell (10 mm period, Rogers RT/duroid
 5880, 1.0 mm) measured TWO ways inside this project — the standard infinite-periodic Floquet MoM,
-and a finite 11×11-panel measurement-plane technique (`results/submission_work/fss/plane_s.py`,
+and a finite 11×11-panel measurement-plane technique (`scripts/adhoc/fss/plane_s.py`,
 parked as `docs/briefs/_parked/PHASE16_UNIT_CELL_SPARAM_TOOL.md`) that projects the field onto a
 plane in front of/behind a finite panel and moves the phase back to the substrate faces. This is a
 **self-consistency check between two measurement techniques in this project, not an HFSS
@@ -83,10 +83,10 @@ comparison** — no HFSS data exists for this geometry yet (`hfss_exports/README
 ## Regenerating
 
 - Phase 12 HFSS comparisons: re-run through the app's **HFSS compare** page, or
-  `examples/export_hfss_comparison.py`.
+  `scripts/research/export_hfss_comparison.py`.
 - Vortex/pencil and pointing/level-matching numbers: the cited test files (`tests/test_pattern_*`,
   `tests/test_hologram_*`), or walk the live app per `docs/USER_GUIDE.md`.
 - Mishra 26 GHz reproduction: `examples/make_paper_board_26ghz.py`.
-- Square-loop FSS reference: `results/submission_work/fss_loop.py` (periodic) and
-  `results/submission_work/fss/plane_s.py` + `mom_save.py` (finite panel) — see
-  `results/README.md` for status/regeneration of everything under `results/submission_work/`.
+- Square-loop FSS reference: `scripts/adhoc/fss_loop.py` (periodic) and
+  `scripts/adhoc/fss/plane_s.py` + `mom_save.py` (finite panel) — see `scripts/adhoc/README.md`
+  for each script's own status and usage.

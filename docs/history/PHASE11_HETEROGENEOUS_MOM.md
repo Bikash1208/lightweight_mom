@@ -84,7 +84,7 @@ found. **Geometry inversion and final STEP export remain LOCKED.**
 ## Running it
 
 ```bash
-.venv/bin/python examples/run_phase11_heterogeneous_mom.py     # results/phase11_heterogeneous_mom/
+.venv/bin/python scripts/research/run_phase11_heterogeneous_mom.py     # results/phase11_heterogeneous_mom/
 ```
 
 ## Verification

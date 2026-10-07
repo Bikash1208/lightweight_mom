@@ -23,27 +23,27 @@ phase-vs-geometry lookup table with honestly-quantified phase coverage, document
 query/phase-inversion API ([UNIT_CELL_LIBRARY.md](UNIT_CELL_LIBRARY.md)) — again no EM code changed and no HFSS agreement claimed. The library has
 been built (324/324 geometries solved, 0 failed; measured — not assumed — S11xx phase coverage at 12.5 GHz is **24.8° of 360°**, largest gap
 335.2°, 0 cells resonant in this 10–15 GHz band: see `results/unit_cell_library/reports/LIBRARY_REPORT.md` for the full, current numbers).
-**Phase 8A** adds a scientific feasibility gate (`examples/run_phase8a_feasibility.py`, [PHASE8A_FEASIBILITY.md](PHASE8A_FEASIBILITY.md)) that
+**Phase 8A** adds a scientific feasibility gate (`scripts/research/run_phase8a_feasibility.py`, [PHASE8A_FEASIBILITY.md](PHASE8A_FEASIBILITY.md)) that
 checks, from the real Phase 7 database only, whether the library can support a requested holographic design before any GUI or final geometry
 generation is attempted — library integrity, phase coverage/frequency-dependence/resonance, grating risk, and (design-specific) reference-field/
 required-phase/matching checks, each returning one of a fixed set of explicit states, never a bare pass/fail. Run against the real library it
 correctly reports **`PHASE_SOURCE_UNVALIDATED`**: this project has no implemented holographic generator, so whether S11xx is even the right
 phase-control quantity cannot be checked — a genuine, expected scientific limitation, not a bug. **Phase 8B** establishes the mathematical
-bridge Phase 8A found missing (`examples/run_phase8b_formulation.py`, [PHASE8B_FORMULATION.md](PHASE8B_FORMULATION.md)): object-wave/multi-beam
+bridge Phase 8A found missing (`scripts/research/run_phase8b_formulation.py`, [PHASE8B_FORMULATION.md](PHASE8B_FORMULATION.md)): object-wave/multi-beam
 field equations (reusing `excitation.PlaneWaveExcitation`'s convention, numerically tested), and an honest investigation of two literature-sourced
 candidate holographic formulations against the real Phase 7 library. One (the classic monopole-fed, grounded holographic-impedance-surface
 technique, Fong et al. 2010) is found **structurally incompatible** — this project's solver has no ground plane and no surface-wave dispersion
 solver, both required by that technique's control variable. The other (a simpler reflectarray/transmitarray-style phase-difference hologram) needs
 only a normal-incidence co-pol reflection/transmission phase — the *kind* of quantity Phase 7 stores — so it remains open, blocked only on the
 same S11-vs-S21 architecture decision Phase 8A already flagged. Overall status: **`PHASE_SOURCE_UNVALIDATED`** (unchanged from Phase 8A, now with
-a fully worked mathematical reason why). **Phase 8C** (`examples/run_phase8c_validation.py`, [PHASE8C_SCATTERING.md](PHASE8C_SCATTERING.md)) puts
+a fully worked mathematical reason why). **Phase 8C** (`scripts/research/run_phase8c_validation.py`, [PHASE8C_SCATTERING.md](PHASE8C_SCATTERING.md)) puts
 that question to real, full-library numeric tests: reading the full linear-basis S-matrix (not just the delivered library's "_xx" export) from the
 still-present Phase 7 solve checkpoint, it measures S11xx phase coverage (24.84°) *and*, for the first time, S21xx phase coverage (43.85°, more
 than S11xx — reported as data, never used to pick a winner, per the brief's explicit rule), confirms reciprocity and L↔W mirror symmetry to ~1e-15
 on the real solved data, confirms negligible cross-polarization, and confirms only the fundamental Floquet mode propagates in 10–15 GHz. Neither
 S11xx nor S21xx reaches `VALIDATED`; final status **`CONTROL_VARIABLE_UNVALIDATED`** — the physical interpretation (reflective vs. transmissive
 MTS), not the phase coverage, is the actual open question. Holographic synthesis itself is still **not implemented**. **Phase 8D-REV**
-(`examples/run_phase8d_rev_universal_database.py`, [UNIVERSAL_UNIT_CELL_DATABASE.md](UNIVERSAL_UNIT_CELL_DATABASE.md)) corrects an architectural
+(`scripts/research/run_phase8d_rev_universal_database.py`, [UNIVERSAL_UNIT_CELL_DATABASE.md](UNIVERSAL_UNIT_CELL_DATABASE.md)) corrects an architectural
 assumption rather than a scientific one: Phase 7's 4.8×4.8 mm period was one build's locked choice, not a solver constant
 (`periodic_bc.RectangularLattice` already takes any period), so nothing may keep treating it as global. `src/phase8d_rev/` adds a registry
 (`UniversalDatabase`) of independent, topology/period/material/frequency/polarization/incidence-tagged `LibraryEntry` objects — read-only wrappers
@@ -55,7 +55,7 @@ cross-polarization data intact (read from the same internal Phase 7 checkpoint P
 `DATABASE_COVERAGE_MISSING` rather than silently substituting the 4.8 mm data. No new period, topology or substrate has actually been built or
 validated by this phase — the architecture supports them; only 4.8 mm/rectangular-patch/Rogers RT/Duroid 5880 is real. `CONTROL_VARIABLE_UNVALIDATED`
 is carried through unchanged (this phase does not touch Phase 8C's finding, by design). **Phase 8E**
-(`examples/run_phase8e_control_bridge.py`, [PHASE8E_CONTROL_BRIDGE.md](PHASE8E_CONTROL_BRIDGE.md)) builds the actual reference-wave → object-wave →
+(`scripts/research/run_phase8e_control_bridge.py`, [PHASE8E_CONTROL_BRIDGE.md](PHASE8E_CONTROL_BRIDGE.md)) builds the actual reference-wave → object-wave →
 required-control-variable → unit-cell-response bridge, framework-first rather than S11-or-S21-first: four candidate formulations (A: Fong et al.
 2010 grounded impedance; B/C: the identical phase-difference-hologram kernel claimed against reflection or transmission; D: a new generalized 2x2
 transfer-operator candidate) are tested, in a fixed order, against the real measured architecture (A and D are `ARCHITECTURE_INCOMPATIBLE` — no
@@ -67,7 +67,7 @@ matched against real geometries — a genuine, measured consequence of this libr
 **`NO_VALIDATED_FORMULATION`** — no candidate's 9-checkbox geometry-inversion gate is fully open (B/C pass reconstruction but the S11-vs-S21
 control-variable question itself remains unvalidated, Phase 8B/8C unchanged; local periodicity is always reported unvalidated, no coupled-cell
 solver exists). Geometry inversion remains blocked project-wide; no STEP file is generated. **Phase 9**
-(`examples/run_phase9_validation.py`, [PHASE9_VALIDATION.md](PHASE9_VALIDATION.md)) resolves the two questions Phase 8E left open using real
+(`scripts/research/run_phase9_validation.py`, [PHASE9_VALIDATION.md](PHASE9_VALIDATION.md)) resolves the two questions Phase 8E left open using real
 evidence rather than declaring them permanently unresolvable. 9A builds the complete solver-vs-HFSS comparison infrastructure but — since no HFSS
 export exists anywhere in this repository — honestly reports every comparison as `NOT_AVAILABLE_FROM_CURRENT_DATA` (both S11xx and S21xx classify
 `UNVALIDATED`), never a fabricated number. 9B is a genuinely new, real capability: a heterogeneous N×N "supercell" (multiple different patches in
@@ -75,7 +75,7 @@ one larger-period unit cell) solved through the *exact same, unmodified* MoM pip
 A homogeneous 3×3 supercell reproduces the isolated single-cell result to ~1e-14 (a real correctness proof), while a realistic strong-contrast 3×3
 neighborhood changes the centre cell's induced current by **99.7%** of its own magnitude — a substantial, measured failure of the periodic-cell
 assumption, not asserted. Final status: **`LOCAL_PERIODICITY_INVALIDATED`**; geometry inversion and final STEP generation remain locked. **Phase 10**
-(`examples/run_phase10_environment_model.py`, [PHASE10_ENVIRONMENT_MODEL.md](PHASE10_ENVIRONMENT_MODEL.md)) asks the question Phase 9 could not:
+(`scripts/research/run_phase10_environment_model.py`, [PHASE10_ENVIRONMENT_MODEL.md](PHASE10_ENVIRONMENT_MODEL.md)) asks the question Phase 9 could not:
 how much neighborhood information does the system actually need, and can a finite model replace the isolated-cell lookup? A real measured finding
 across all 5 tested centre geometries: diagonal neighbours are not negligible (~25–70% of the cardinal contribution), a cardinal-only "5-cell"
 model misses up to 300–490% of the centre cell's own response magnitude under strong contrast, and even the full 3×3 "9-cell" neighbourhood is
@@ -86,7 +86,7 @@ isolated-cell baseline on blind-test relative error** (0.57 vs. 1.01 vs. 1.35 me
 judged by the surrogate alone) and a beam-level far-field comparison were both implemented and run regardless, for completeness. Final status:
 **`SURROGATE_INVALIDATED`**; geometry inversion and final STEP generation remain locked, independently, by both the still-missing HFSS control
 variable and this new, measured surrogate failure. **Phase 11**
-(`examples/run_phase11_heterogeneous_mom.py`, [PHASE11_HETEROGENEOUS_MOM.md](PHASE11_HETEROGENEOUS_MOM.md)) deliberately does NOT try another
+(`scripts/research/run_phase11_heterogeneous_mom.py`, [PHASE11_HETEROGENEOUS_MOM.md](PHASE11_HETEROGENEOUS_MOM.md)) deliberately does NOT try another
 data-fitted model. It asks the physics question directly: how far does electromagnetic interaction from a centre cell actually reach, using only
 the existing, unmodified `Z I = V` MoM solver as the reference (no ML anywhere in `src/phase11/`, mechanically grep-checked by its own test suite).
 A fixed checkerboard pattern is grown from 1×1 through 11×11 (every smaller size an exact centred truncation of the same larger pattern, verified
@@ -99,7 +99,7 @@ the actual spatial arrangement must be retained; neighbourhood size alone is not
 ranked, direct-MoM-verified) first-stage inversion and real heterogeneous-MoM beam-level/three-beam holographic validation were both implemented and
 run to completion regardless. Geometry inversion and final STEP export remain **LOCKED** — independently, by both the still-missing HFSS control
 variable and this phase's own measured pattern-dependence/non-convergence finding. **Phase 12A**
-(`examples/run_phase12a_ground_plane.py`, [PHASE12A_GROUND_PLANE.md](PHASE12A_GROUND_PLANE.md)) adds an optional **PEC
+(`scripts/research/run_phase12a_ground_plane.py`, [PHASE12A_GROUND_PLANE.md](PHASE12A_GROUND_PLANE.md)) adds an optional **PEC
 ground plane** at z = −h (`substrate.backing: pec`; default `air`, every existing config unchanged, verified bit-identical),
 so the solver can model the grounded reflectarray/holographic-impedance-surface stack every incompatible formulation in
 Phases 8B/8E needed (Fong 2010, Minatti, Pozar 1997, Budhu & Grbic 2021). With a ground, S21 ≡ 0 by construction (no port 2
@@ -118,7 +118,7 @@ smoothed over. Final status: **`GROUNDED_STACK_PARTIAL`** (the mesh-convergence 
 bare-slab closed form, TM0 surface-wave-pole avoidance for both the 4.8 mm and 8 mm periods across 10–15 GHz — passed).
 Geometry inversion and STEP export remain **LOCKED** — this phase does not attempt to unlock them, independently of its own
 result, and HFSS status is unchanged (`HFSS_NOT_AVAILABLE`, still no HFSS export anywhere in this project). **Phase 12B**
-(`examples/run_phase12b.py`, [PHASE12B_MESH_PERIOD_STUDY.md](PHASE12B_MESH_PERIOD_STUDY.md)) traces Phase 12A's own
+(`scripts/research/run_phase12b.py`, [PHASE12B_MESH_PERIOD_STUDY.md](PHASE12B_MESH_PERIOD_STUDY.md)) traces Phase 12A's own
 `mesh_error=0.048` finding to its root cause: a mesh cell is metal iff its centroid is metal, and Phase 7/12A's 32-cells-per-4.8mm
 mesh does not divide the 0.2mm sweep step evenly, so many feature edges are staircased and — a real, measured consequence —
 **155 of the Phase 7 library's 324 geometries are mesh-identical to another one** (169 distinct, 105 duplicate groups, exactly
@@ -136,7 +136,7 @@ surface-wave-pole margin shrinks from a full k0 at 10GHz to just 0.18×k0 at 15G
 single-layer resonant patch. Final statuses: **`ALIGNED_MESH_VALIDATED`**, **`CONCLUSIONS_AT_RISK`** (Phase 10's C2/C3
 degeneracy, contained, not overturning), **`COVERAGE_INSUFFICIENT`** (best 296.6° < the 300° practical threshold). Geometry
 inversion and STEP export remain **LOCKED**; HFSS status is unchanged. **Phase 12C**
-(`examples/run_phase12c.py`, [PHASE12C_GROUNDED_LOCALITY.md](PHASE12C_GROUNDED_LOCALITY.md)) asks, for Phase 12B's own
+(`scripts/research/run_phase12c.py`, [PHASE12C_GROUNDED_LOCALITY.md](PHASE12C_GROUNDED_LOCALITY.md)) asks, for Phase 12B's own
 favoured grounded design point (P=8mm, RT/Duroid 5880, 12.5GHz, recorded as `config_phase12c_grounded_8mm.yaml`, not
 hard-coded), whether local periodicity now holds. A `GroundedSupercellUnitCell` wraps Phase 9's frozen `SupercellUnitCell`
 unmodified (`backing="pec"` only) and is validated to ~1e-15 against a homogeneous supercell — after finding and fixing a
@@ -153,7 +153,7 @@ artifact — and Phase 10's C2/C3 also turn out mesh-**distinct** at a finer mes
 findings hold. 5 single-cell + 3 supercell grounded STEP exports (ground solid included) with real MoM references, and
 one-port HFSS CSV ingestion (tested on a synthetic file only), are `HFSS_EXPORT_READY`. Geometry inversion and STEP export
 remain **LOCKED**; HFSS status is unchanged. **Phase 12D**
-(`examples/run_phase12d.py`, [PHASE12D_LOCAL_PERIODICITY.md](PHASE12D_LOCAL_PERIODICITY.md)) re-measures Phase 12C's
+(`scripts/research/run_phase12d.py`, [PHASE12D_LOCAL_PERIODICITY.md](PHASE12D_LOCAL_PERIODICITY.md)) re-measures Phase 12C's
 step limit with the design-relevant reflection-phase/amplitude metric (not the raw dipole proxy), reusing
 `sparameters.scattering_from_fields` unmodified to convert any dipole moment/current into an equivalent S11 (validated
 exactly against `compute_s_parameters`). At the largest embedded-solve mesh this project can afford (24 cells/subcell,
@@ -185,14 +185,14 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python examples/run_sweep.py            # sweep + database in results/sweep_example (re-run = resume)
 
 # Optional (Phase 6/6A/7, needs a full OpenCASCADE build — pip install -r requirements-cad.txt):
-.venv/bin/python examples/export_validation_cases.py   # STEP + results + plots + README per case, results/validation_cases
-.venv/bin/python examples/export_hfss_comparison.py     # Phase 6A: exact overlay-ready plots/CSV for case01, from its mom_results.json
+.venv/bin/python scripts/research/export_validation_cases.py   # STEP + results + plots + README per case, results/validation_cases
+.venv/bin/python scripts/research/export_hfss_comparison.py     # Phase 6A: exact overlay-ready plots/CSV for case01, from its mom_results.json
 .venv/bin/python examples/build_unit_cell_library.py    # Phase 7: 324-geometry x 201-frequency production library (long-running, resumable)
 .venv/bin/python examples/inspect_unit_cell_library.py  # query an already-built library
-.venv/bin/python examples/run_phase12a_ground_plane.py  # Phase 12A: grounded (backing=pec) physics-sanity sweep, results/phase12a_ground_plane
-.venv/bin/python examples/run_phase12b.py               # Phase 12B: mesh alignment/duplicate audit/period study, results/phase12b_mesh_period_study
-.venv/bin/python examples/run_phase12c.py               # Phase 12C: grounded supercells, local-periodicity/coupling/spot-check, HFSS exports, results/phase12c_*
-.venv/bin/python examples/run_phase12d.py               # Phase 12D: step-limit re-measurement, aperture Floquet-power test, real HFSS ingestion, results/phase12d_*
+.venv/bin/python scripts/research/run_phase12a_ground_plane.py  # Phase 12A: grounded (backing=pec) physics-sanity sweep, results/phase12a_ground_plane
+.venv/bin/python scripts/research/run_phase12b.py               # Phase 12B: mesh alignment/duplicate audit/period study, results/phase12b_mesh_period_study
+.venv/bin/python scripts/research/run_phase12c.py               # Phase 12C: grounded supercells, local-periodicity/coupling/spot-check, HFSS exports, results/phase12c_*
+.venv/bin/python scripts/research/run_phase12d.py               # Phase 12D: step-limit re-measurement, aperture Floquet-power test, real HFSS ingestion, results/phase12d_*
 ```
 
 Conventions (time factor `exp(+jωt)`, SI units, coordinates, kz branch) are in
@@ -241,14 +241,14 @@ Conventions (time factor `exp(+jωt)`, SI units, coordinates, kz branch) are in
 | `tests/` | done | 2065 tests (2061 run + 4 skipped without the optional `requirements-cad.txt`), mathematical/numerical properties only; full suite passes in 1955s (32m35s); `tests/reference_layered.py` is an independent field-matching solver (sheet and incident-wave fields at any z, plus a PEC-terminated grounded variant, Phase 12A) used only by tests |
 | `examples/print_config.py` | done | loads `config.yaml`, prints in mm/GHz |
 | `examples/sweep_config.yaml`, `examples/run_sweep.py` | done | example `sweep:` section; runs it (resumable) and prints a summary |
-| `examples/export_validation_cases.py` | done | runs `validation_export.export_all_cases` for some or all of the 10 cases, prints progress and a summary |
+| `scripts/research/export_validation_cases.py` | done | runs `validation_export.export_all_cases` for some or all of the 10 cases, prints progress and a summary |
 | `examples/build_unit_cell_library.py` | done | Phase 7: builds the full 324-geometry × 201-frequency production library into `results/unit_cell_library/` (long-running, resumable) |
 | `examples/inspect_unit_cell_library.py` | done | Phase 7: read-only query/phase-inversion demo against an already-built library |
-| `examples/export_hfss_comparison.py` | done | runs `hfss_comparison.export_hfss_comparison` for one already-exported case (default `case01_non_resonant_patch`) |
-| `examples/run_phase12a_ground_plane.py` | done | Phase 12A: grounded rectangular-PEC-patch physics-sanity sweep + validation into `results/phase12a_ground_plane/` |
-| `examples/run_phase12b.py` | done | Phase 12B: mesh alignment, duplicate-geometry audit, grounded period study into `results/phase12b_mesh_period_study/` |
-| `examples/run_phase12c.py` | done | Phase 12C: grounded supercells, local-periodicity/coupling/fine-mesh spot-check, HFSS-ready exports into `results/phase12c_grounded_locality/`, `results/phase12c_hfss_export/` |
-| `examples/run_phase12d.py` | done | Phase 12D: design-relevant step-limit re-measurement, aperture-level Floquet-order-power test, real HFSS Touchstone ingestion into `results/phase12d_local_periodicity/` |
+| `scripts/research/export_hfss_comparison.py` | done | runs `hfss_comparison.export_hfss_comparison` for one already-exported case (default `case01_non_resonant_patch`) |
+| `scripts/research/run_phase12a_ground_plane.py` | done | Phase 12A: grounded rectangular-PEC-patch physics-sanity sweep + validation into `results/phase12a_ground_plane/` |
+| `scripts/research/run_phase12b.py` | done | Phase 12B: mesh alignment, duplicate-geometry audit, grounded period study into `results/phase12b_mesh_period_study/` |
+| `scripts/research/run_phase12c.py` | done | Phase 12C: grounded supercells, local-periodicity/coupling/fine-mesh spot-check, HFSS-ready exports into `results/phase12c_grounded_locality/`, `results/phase12c_hfss_export/` |
+| `scripts/research/run_phase12d.py` | done | Phase 12D: design-relevant step-limit re-measurement, aperture-level Floquet-order-power test, real HFSS Touchstone ingestion into `results/phase12d_local_periodicity/` |
 
 Implementation notes:
 - Import as `from src.xxx import ...` (run pytest from the project root; `pytest.ini` sets `pythonpath = .`).
@@ -288,7 +288,7 @@ returns a `SweepResult` and writes `checkpoint.jsonl`, `database.json`, `databas
 
 ## Validation unit-cell export (Phase 6) — summary
 
-`examples/export_validation_cases.py` (needs `pip install -r requirements-cad.txt`) writes one folder per representative unit cell under
+`scripts/research/export_validation_cases.py` (needs `pip install -r requirements-cad.txt`) writes one folder per representative unit cell under
 `results/validation_cases/<case_id>/`: `unit_cell.step`, `geometry.json`, `solver_config.json`, `mom_results.{json,csv}`, `plots/*.png`,
 `README.md`. Full reference, coordinate/unit mapping and the case catalog rationale: [VALIDATION_EXPORT.md](VALIDATION_EXPORT.md).
 
@@ -536,7 +536,7 @@ span (186° of 360°) is the same coverage shortfall Phases 12A–12C already me
 3. Magnitude **and phase** agreement with an independent full-wave solver (HFSS/CST/openEMS) for a patch, a dipole and a slot, after
    converting between time conventions if the reference uses `exp(−jωt)` (conjugate S-parameters) and checking the handedness naming.
    Phase 6 exports importable STEP models plus matching MoM reference results and a manual reproduction recipe for exactly this
-   (`examples/export_validation_cases.py`, [VALIDATION_EXPORT.md](VALIDATION_EXPORT.md)); the comparison itself is still manual and has
+   (`scripts/research/export_validation_cases.py`, [VALIDATION_EXPORT.md](VALIDATION_EXPORT.md)); the comparison itself is still manual and has
    not been performed by this project.
 
 ## Phases 13–17 (production repo onward)

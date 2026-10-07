@@ -1,6 +1,6 @@
 """Phase 12A end-to-end pipeline, at REDUCED scale (fewer L values/frequencies, a smaller
 convergence-size list) so the routine test suite stays bounded -- every stage is still a REAL MoM
-solve, nothing mocked. The full, production-scale run is `examples/run_phase12a_ground_plane.py`,
+solve, nothing mocked. The full, production-scale run is `scripts/research/run_phase12a_ground_plane.py`,
 and its real, measured result is what `PHASE12A_GROUND_PLANE.md` reports. Module-scoped so the
 (still nontrivial) reduced run happens once per test session, matching
 ``tests/test_phase11_run.py``'s own established pattern.

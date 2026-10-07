@@ -103,7 +103,7 @@ unchanged, because it only consumes `G` and the unpatterned-stack field.
 
 ## Deliverables
 
-- Code + tests as above; `examples/run_phase12a_ground_plane.py` writing
+- Code + tests as above; `scripts/research/run_phase12a_ground_plane.py` writing
   `results/phase12a_ground_plane/` (sweep CSV/JSON, plots: phase vs L at several frequencies,
   |S11| vs L, grounded vs ungrounded comparison, convergence), deterministic outputs.
 - `PHASE12A_GROUND_PLANE.md` (method, derivation pointer, measured numbers, limitations) and updates

@@ -136,7 +136,7 @@ A finer production mesh for grounded designs is the natural next step, not a rea
 ## 6. Running it
 
 ```bash
-.venv/bin/python examples/run_phase12a_ground_plane.py   # results/phase12a_ground_plane/
+.venv/bin/python scripts/research/run_phase12a_ground_plane.py   # results/phase12a_ground_plane/
 .venv/bin/python -m pytest -q tests/test_green_function_grounded.py tests/test_geometry_grounded.py \
     tests/test_excitation_grounded.py tests/test_config_grounded.py tests/test_sparameters_grounded.py \
     tests/test_database_grounded.py tests/test_runner_grounded.py tests/test_cad_export_grounded.py \

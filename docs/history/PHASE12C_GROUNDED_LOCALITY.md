@@ -236,7 +236,7 @@ to a monotonic series and is explicitly labelled a summary, not an asserted deca
 ## 10. Running it
 
 ```bash
-.venv/bin/python examples/run_phase12c.py   # results/phase12c_grounded_locality/, results/phase12c_hfss_export/
+.venv/bin/python scripts/research/run_phase12c.py   # results/phase12c_grounded_locality/, results/phase12c_hfss_export/
 .venv/bin/python -m pytest -q tests/test_phase12c_*.py tests/test_hfss_reference_one_port.py \
     tests/test_cad_export_supercell.py
 ```

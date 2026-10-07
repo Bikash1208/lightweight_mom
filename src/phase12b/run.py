@@ -41,7 +41,7 @@ def run_phase12b(
     aligned_refinement_cells=(24, 48, 96),
 ):
     """``l_values_mm``/``frequencies_hz``/``period_l_values_mm``/``aligned_refinement_cells``:
-    reduced-scale overrides for tests; the production run (``examples/run_phase12b.py``) uses
+    reduced-scale overrides for tests; the production run (``scripts/research/run_phase12b.py``) uses
     every default unchanged."""
     output_dir = Path(output_dir)
     plots_dir = output_dir / "plots"

@@ -39,6 +39,17 @@ results/unit_cell_library/geometry/
 # redundant with the tracked src/ tree itself.
 hfss_exports/_src_snapshot.tgz
 
+# New HFSS export packages' own STEP files: large, binary, regenerable from layout.json via the
+# app's Export page (hfss_exports/README.md). Only affects NEW packages -- the STEP files already
+# tracked before this rule was added (phase12_grounded_8mm/, two_beam_20deg_phi0_180/) stay tracked;
+# gitignore never untracks a file that is already in the index.
+hfss_exports/**/*.step
+
+# Cached per-frequency MoM current coefficients for the square-loop FSS finite-panel check
+# (scripts/adhoc/fss/plane_s.py's input) -- kept on disk, not in git; regenerate with
+# scripts/adhoc/fss/mom_save.py (see scripts/adhoc/README.md).
+scripts/adhoc/fss/coef/
+
 # Reference-paper PDFs (copyrighted third-party journal articles, supplied locally
 # by the user for methodology reference) -- never committed, cited by DOI instead.
 docs/references/*.pdf

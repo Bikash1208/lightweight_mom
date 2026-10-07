@@ -51,7 +51,7 @@ def run_phase12a(
 ):
     """``convergence_sizes``/``l_values_mm``/``frequencies_hz``/``skip_ungrounded_comparison``:
     reduced-scale overrides for tests (module docstring pattern of every later phase's own
-    ``run_phaseN``); the production run (``examples/run_phase12a_ground_plane.py``) uses every
+    ``run_phaseN``); the production run (``scripts/research/run_phase12a_ground_plane.py``) uses every
     default unchanged."""
     output_dir = Path(output_dir)
     plots_dir = output_dir / "plots"

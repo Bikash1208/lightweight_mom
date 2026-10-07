@@ -35,7 +35,7 @@ This project has **no implemented holographic-synthesis formulation**
 * `feasibility_spatial.check_mapping_method_defined()` always reports `defined=False`: no
   validated reference-grid → MTS-unit-cell mapping exists to check against.
 
-Running the gate against the real library (`python examples/run_phase8a_feasibility.py`) therefore
+Running the gate against the real library (`python scripts/research/run_phase8a_feasibility.py`) therefore
 reports **`PHASE_SOURCE_UNVALIDATED`** (exit code 4) today. This is the expected, honest
 conclusion (matches the brief's own Sec. 48), reached from real, computed data — not a
 placeholder or a software defect.
@@ -93,7 +93,7 @@ directly).
 ## Running it
 
 ```bash
-.venv/bin/python examples/run_phase8a_feasibility.py        # Mode A against results/unit_cell_library
+.venv/bin/python scripts/research/run_phase8a_feasibility.py        # Mode A against results/unit_cell_library
 ```
 
 Exit codes: `src/feasibility_schema.py::EXIT_CODES` (0 = `DESIGN_FEASIBLE`, 4 = the current

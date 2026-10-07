@@ -24,8 +24,8 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -e ".[dev,app]"
-      - run: ruff check src tests examples
-      - run: ruff format --check src tests examples
+      - run: ruff check src tests examples scripts
+      - run: ruff format --check src tests examples scripts
       - run: pytest -m "not slow" -q
 
   full-suite:

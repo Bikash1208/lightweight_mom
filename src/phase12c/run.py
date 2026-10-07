@@ -67,7 +67,7 @@ def run_phase12c(
 ):
     """``correctness_mesh_sequence``/``feasibility_sizes``/``periodic_n_cells``/``coupling_sizes``/
     ``spot_check_mesh_cells_per_subcell``/``export_mesh_cells_per_side``: reduced-scale overrides
-    for tests; the production run (``examples/run_phase12c.py``) uses every default unchanged."""
+    for tests; the production run (``scripts/research/run_phase12c.py``) uses every default unchanged."""
     output_dir = Path(output_dir)
     plots_dir = output_dir / "plots"
     export_dir = Path(str(output_dir).replace("phase12c_grounded_locality", "phase12c_hfss_export"))

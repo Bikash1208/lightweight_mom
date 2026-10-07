@@ -51,7 +51,7 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
 ## Parked ideas (`docs/briefs/_parked/`)
 
 - `PHASE16_UNIT_CELL_SPARAM_TOOL.md` — a unit-cell/FSS tool with plane-defined S-parameters (the
-  measurement-plane technique `results/submission_work/fss/plane_s.py` prototyped for the
+  measurement-plane technique `scripts/adhoc/fss/plane_s.py` prototyped for the
   square-loop FSS reference, `hfss_exports/fss_square_loop_10mm/`). Not implemented.
 - Also parked, no brief written yet: transmitarray support, oblique incidence, tensor
   (anisotropic) unit cells (would relax the scalar-cell XPD ceiling above), 2-bit multi-port.

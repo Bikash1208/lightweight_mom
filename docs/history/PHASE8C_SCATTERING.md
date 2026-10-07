@@ -86,7 +86,7 @@ software workflow transition.
 ## Running it
 
 ```bash
-.venv/bin/python examples/run_phase8c_validation.py     # results/phase8c_scattering/
+.venv/bin/python scripts/research/run_phase8c_validation.py     # results/phase8c_scattering/
 ```
 
 ## Verification

@@ -187,6 +187,6 @@ ML/fitted surrogate appears anywhere in this phase. Outputs are written only und
 ## 8. Running it
 
 ```bash
-.venv/bin/python examples/run_phase12d.py   # results/phase12d_local_periodicity/
+.venv/bin/python scripts/research/run_phase12d.py   # results/phase12d_local_periodicity/
 .venv/bin/python -m pytest -q tests/test_phase12d_*.py tests/test_phase9_hfss_reference.py
 ```

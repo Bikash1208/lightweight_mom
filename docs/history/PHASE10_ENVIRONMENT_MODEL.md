@@ -129,7 +129,7 @@ surrogate's own measured failure to beat the status quo).
 ## Running it
 
 ```bash
-.venv/bin/python examples/run_phase10_environment_model.py     # results/phase10_environment_model/
+.venv/bin/python scripts/research/run_phase10_environment_model.py     # results/phase10_environment_model/
 ```
 
 ## Verification

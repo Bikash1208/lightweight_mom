@@ -2,7 +2,7 @@
 """Phase 8C CLI: unit-cell scattering architecture and control-quantity validation, against the
 real Phase 7 data (read from the internal solve checkpoint, never re-solved).
 
-    python examples/run_phase8c_validation.py [--output-dir DIR] [--checkpoint PATH]
+    python scripts/research/run_phase8c_validation.py [--output-dir DIR] [--checkpoint PATH]
 
 Does not build a GUI, does not modify the solver or Phase 7 data, and does not generate a final
 MTS STEP file or calculate an aperture (Sec. 2-4, 57-60).
@@ -11,7 +11,7 @@ MTS STEP file or calculate an aperture (Sec. 2-4, 57-60).
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 import argparse
 

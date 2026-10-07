@@ -93,7 +93,7 @@ def test_print_final_report_never_claims_geometry_unlocked(tmp_path, capsys, pha
 def test_cli_runs_against_the_real_checkpoint(tmp_path):
     out_dir = tmp_path / "cli_out"
     proc = subprocess.run(
-        [sys.executable, str(ROOT / "examples" / "run_phase9_validation.py"), "--output-dir", str(out_dir)],
+        [sys.executable, str(ROOT / "scripts" / "research" / "run_phase9_validation.py"), "--output-dir", str(out_dir)],
         cwd=ROOT,
         capture_output=True,
         text=True,

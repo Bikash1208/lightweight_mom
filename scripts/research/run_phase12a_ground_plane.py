@@ -9,7 +9,7 @@ not re-run Phases 8-11, and does not unlock geometry inversion or STEP export.
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.phase12a.run import print_final_report, run_phase12a  # noqa: E402

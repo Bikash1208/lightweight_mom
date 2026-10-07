@@ -130,6 +130,8 @@ def _per_beam_breakdown(job, x_m, y_m, jx, jy, frequency_hz, green, dx_m, dy_m, 
     report for the exact same design (e.g. a beam the balance summary reports at its target 0 dB
     showing -1.6 dB here, from grid-snap error alone)."""
     peak_power = float(np.max(np.abs(pat.e_theta) ** 2 + np.abs(pat.e_phi) ** 2))
+    aperture_extent_m = float(x_m.max() - x_m.min()) + dx_m
+    wavelength_m = 299792458.0 / frequency_hz
     fine_peaks = [
         beam_local_peak_fine(x_m, y_m, jx, jy, frequency_hz, green, dx_m, dy_m, b["theta_deg"], b["phi_deg"])
         for b in beams
@@ -145,7 +147,10 @@ def _per_beam_breakdown(job, x_m, y_m, jx, jy, frequency_hz, green, dx_m, dy_m, 
         integrated_xpd_db = None
         polarization_efficiency = None
         if pol in _CROSS_LABEL:
-            metrics = beam_polarization_metrics(pat, pol, b["theta_deg"], b["phi_deg"])
+            other_beams_deg = [(ob["theta_deg"], ob["phi_deg"]) for k, ob in enumerate(beams) if k != idx]
+            metrics = beam_polarization_metrics(
+                pat, pol, b["theta_deg"], b["phi_deg"], aperture_extent_m, wavelength_m, other_beams_deg
+            )
             xpd_db = metrics.point_xpd_db
             integrated_xpd_db = metrics.integrated_xpd_db
             polarization_efficiency = metrics.polarization_efficiency
@@ -265,7 +270,13 @@ def _run_vector_pattern_job(
         "cross_peak_db": None,
     }
     if first_pol in _CROSS_LABEL:
-        first = beam_polarization_metrics(pat, first_pol, beams[0]["theta_deg"], beams[0]["phi_deg"])
+        aperture_extent_m = float(x_m.max() - x_m.min()) + period_m
+        wavelength_m = 299792458.0 / frequency_hz
+        other_beams_deg = [(b["theta_deg"], b["phi_deg"]) for b in beams[1:]]
+        first = beam_polarization_metrics(
+            pat, first_pol, beams[0]["theta_deg"], beams[0]["phi_deg"], aperture_extent_m, wavelength_m,
+            other_beams_deg,
+        )
         result["sll_copol_db"] = first.sll_copol_db
         result["cross_peak_db"] = first.cross_peak_db
     return {

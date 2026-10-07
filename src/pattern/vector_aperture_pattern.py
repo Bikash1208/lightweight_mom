@@ -381,7 +381,6 @@ def mirror_beam_level_db(result: VectorPatternResult):
 ORTHOGONAL_POLARIZATION = {
     "rhcp": "lhcp", "lhcp": "rhcp", "hp": "vp", "vp": "hp", "slant_p45": "slant_m45", "slant_m45": "slant_p45",
 }
-MAIN_BEAM_REGION_DB = -10.0  # the co-pol contour that bounds the main-beam region
 _SEARCH_RADIUS_DEG = 12.0
 
 
@@ -439,54 +438,56 @@ class BeamPolarizationMetrics:
     region_fraction: float  # fraction of the hemisphere grid inside the main-beam region
 
 
-def _direction_mask(theta_grid_deg, phi_grid_deg, theta_deg, phi_deg, radius_deg):
+def _angular_distance_grid_deg(theta_grid_deg, phi_grid_deg, theta_deg, phi_deg):
+    """Great-circle angle (deg) from every grid point to `(theta_deg, phi_deg)` -- the angle
+    between unit vectors, so it needs no grid indexing and has no seam."""
     t0, p0 = np.radians(theta_deg), np.radians(phi_deg)
     t, p = np.radians(theta_grid_deg), np.radians(phi_grid_deg)
     cos_angle = np.cos(t) * np.cos(t0) + np.sin(t) * np.sin(t0) * np.cos(p - p0)
-    return cos_angle >= np.cos(np.radians(radius_deg))
+    return np.degrees(np.arccos(np.clip(cos_angle, -1.0, 1.0)))
 
 
-def _main_beam_region(co_power, theta_grid_deg, phi_grid_deg, theta_deg, phi_deg):
-    """The connected -10 dB region of the co-pol power around the beam: seeded at the co-pol
-    maximum within `_SEARCH_RADIUS_DEG` of the request, grown on the (theta, phi) grid.
-
-    The phi axis is first rolled so the beam sits at the MIDDLE column, away from the array's own
-    phi=0/360 seam (PHASE16 follow-ups: a beam requested at phi=0, 180, etc. straddles that seam,
-    and a single beam's main lobe can span columns on both sides of it; growing the region on the
-    raw array -- even with one column of wraparound padding -- split the lobe into two
-    disconnected islands there, so half of a plain pencil beam's own main lobe was misclassified
-    as 'outside' and the side-lobe level was reported within ~1 dB of the peak instead of the true
-    ~-13 dB). Rolling moves the beam, and with it the whole main lobe, comfortably into the middle
-    of the array, where plain (non-periodic) connected-component labelling is exact; the seam ends
-    up on the far side (phi = beam + 180 deg), where a normal pencil beam has no power, so losing
-    wraparound there costs nothing. The result is rolled back before returning."""
-    from scipy import ndimage
-
-    n_phi = co_power.shape[1]
-    phi_axis = phi_grid_deg[0, :]
-    seed_phi_idx = int(np.argmin(np.abs(((phi_axis - phi_deg + 180.0) % 360.0) - 180.0)))
-    shift = n_phi // 2 - seed_phi_idx
-    co_r = np.roll(co_power, shift, axis=1)
-    theta_r = np.roll(theta_grid_deg, shift, axis=1)
-    phi_r = np.roll(phi_grid_deg, shift, axis=1)
-
-    seed_window = _direction_mask(theta_r, phi_r, theta_deg, phi_deg, _SEARCH_RADIUS_DEG)
-    masked = np.where(seed_window, co_r, -np.inf)
-    si, sj = np.unravel_index(int(np.argmax(masked)), masked.shape)
-    peak = co_r[si, sj]
-    above = co_r >= peak * 10.0 ** (MAIN_BEAM_REGION_DB / 10.0)
-    labels, _ = ndimage.label(above, structure=np.ones((3, 3), dtype=int))
-    region_r = labels == labels[si, sj]
-    return np.roll(region_r, -shift, axis=1), peak
+def _direction_mask(theta_grid_deg, phi_grid_deg, theta_deg, phi_deg, radius_deg):
+    return _angular_distance_grid_deg(theta_grid_deg, phi_grid_deg, theta_deg, phi_deg) <= radius_deg
 
 
-def beam_polarization_metrics(pat: VectorPatternResult, desired_polarization, theta_deg, phi_deg):
+def _main_beam_region(co_power, theta_grid_deg, phi_grid_deg, theta_deg, phi_deg, exclusion_deg):
+    """Everything within `exclusion_deg` (great-circle angle between unit vectors) of the beam
+    direction, and that region's own co-pol peak.
+
+    PHASE16 follow-ups: an earlier version grew a connected -10 dB region on the (theta, phi) grid
+    (even after rolling the array to dodge the phi=0/360 seam for a single beam) -- with two
+    REQUESTED beams, rolling can only centre one of them, so the other beam's own main lobe could
+    still straddle the seam, AND a strong second beam's own main lobe, sitting entirely outside the
+    first beam's region, was itself counted as the first beam's "sidelobe". A plain angular-
+    distance cone has neither problem: it depends only on the angle between unit vectors, never on
+    any grid's own indexing, and `beam_polarization_metrics` additionally excludes every OTHER
+    beam's own cone from the sidelobe search below."""
+    region = _direction_mask(theta_grid_deg, phi_grid_deg, theta_deg, phi_deg, exclusion_deg)
+    peak = float(np.max(np.where(region, co_power, -np.inf)))
+    return region, peak
+
+
+def beam_polarization_metrics(
+    pat: VectorPatternResult, desired_polarization, theta_deg, phi_deg, aperture_extent_m, wavelength_m,
+    other_beams_deg=(),
+):
     """Polarization figures of merit for one requested beam, from a computed vector pattern.
 
     `desired_polarization` is the beam's own label ("rhcp"/"lhcp"/"hp"/"vp"/"slant_p45"/
     "slant_m45"); its orthogonal partner is the cross-pol. Every power is over the grid's own
     hemisphere with the sin(theta) solid-angle weight. A scalar cell cannot fix both components of a
-    monopole's radial current, so the cross-pol share is reported as measured, not assumed."""
+    monopole's radial current, so the cross-pol share is reported as measured, not assumed.
+
+    `aperture_extent_m`/`wavelength_m` size the excluded main-lobe region: everything within the
+    beam's own first-null radius (`first_null_half_width_deg`, the SAME formula/convention
+    `strongest_secondary_beam` already uses to look past a main lobe) counts as "main beam", not a
+    sidelobe. `other_beams_deg`, an iterable of `(theta_deg, phi_deg)` for every OTHER beam in a
+    multi-beam design, narrows the sidelobe search to directions actually CLOSER to this beam than
+    to any other one (a nearest-beam/Voronoi partition of the sky): a feature that is nearer to
+    another requested beam is that beam's own main lobe or its near sidelobe structure, not an
+    unwanted feature of THIS beam, so it is never counted against this beam's SLL (the XPD/
+    efficiency figures below are about this beam's own region only, and are unaffected)."""
     if desired_polarization not in ORTHOGONAL_POLARIZATION:
         raise ValueError(f"beam_polarization_metrics needs a copol label, got {desired_polarization!r}")
     cross_pol = ORTHOGONAL_POLARIZATION[desired_polarization]
@@ -500,8 +501,15 @@ def beam_polarization_metrics(pat: VectorPatternResult, desired_polarization, th
     dphi = 2.0 * np.pi / pat.theta_deg.shape[1]
     weight = np.sin(theta_rad) * dtheta * dphi
 
-    region, co_peak = _main_beam_region(co, pat.theta_deg, pat.phi_deg, theta_deg, phi_deg)
+    exclusion_deg = first_null_half_width_deg(aperture_extent_m, wavelength_m, theta_deg)
+    region, co_peak = _main_beam_region(co, pat.theta_deg, pat.phi_deg, theta_deg, phi_deg, exclusion_deg)
     outside = ~region
+    if other_beams_deg:
+        own_distance = _angular_distance_grid_deg(pat.theta_deg, pat.phi_deg, theta_deg, phi_deg)
+        for other_theta, other_phi in other_beams_deg:
+            other_distance = _angular_distance_grid_deg(pat.theta_deg, pat.phi_deg, other_theta, other_phi)
+            outside &= own_distance <= other_distance
+
     i = int(np.argmin(np.abs(pat.theta_deg[:, 0] - theta_deg)))
     j = int(np.argmin(np.abs(((pat.phi_deg[0, :] - phi_deg + 180.0) % 360.0) - 180.0)))
     point_cross = cross[i, j]

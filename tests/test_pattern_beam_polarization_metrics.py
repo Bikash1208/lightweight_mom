@@ -67,3 +67,13 @@ def test_cross_pol_peak_and_copol_side_lobe_are_reported_separately(pencil_patte
 def test_rhcp_pencil_efficiency_is_about_half_too(pencil_patterns):
     metrics = beam_polarization_metrics(pencil_patterns["rhcp"], "rhcp", 20.0, 0.0)
     assert metrics.polarization_efficiency == pytest.approx(0.5, abs=0.10)
+
+
+def test_rhcp_pencil_copol_sll_is_a_real_sidelobe_not_the_main_lobes_own_far_shoulder(pencil_patterns):
+    """Regression (PHASE16 follow-ups): this beam is requested at phi=0, straddling this grid's
+    own phi=0/360 seam. An earlier flood-fill main-lobe exclusion split the lobe into two
+    disconnected islands there, reporting its own far shoulder (~-1.3 dB) as the side-lobe level
+    instead of the true first sidelobe (well below -10 dB for a clean circularly-polarized pencil
+    on this aperture)."""
+    metrics = beam_polarization_metrics(pencil_patterns["rhcp"], "rhcp", 20.0, 0.0)
+    assert metrics.sll_copol_db < -10.0

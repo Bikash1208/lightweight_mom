@@ -395,6 +395,7 @@ def beam_local_peak(pat: VectorPatternResult, theta_deg, phi_deg, radius_deg=_SE
     i, j = np.unravel_index(int(np.argmax(masked)), masked.shape)
     return float(pat.theta_deg[i, j]), float(pat.phi_deg[i, j]), float(10.0 * np.log10(power[i, j] / np.max(power)))
 
+
 @dataclass(frozen=True)
 class BeamPolarizationMetrics:
     point_xpd_db: "float | None"  # co over cross at the grid point nearest the request
@@ -414,19 +415,36 @@ def _direction_mask(theta_grid_deg, phi_grid_deg, theta_deg, phi_deg, radius_deg
 
 def _main_beam_region(co_power, theta_grid_deg, phi_grid_deg, theta_deg, phi_deg):
     """The connected -10 dB region of the co-pol power around the beam: seeded at the co-pol
-    maximum within `_SEARCH_RADIUS_DEG` of the request, grown on the (theta, phi) grid with phi
-    periodic (wrapped by one column on each side so a region across phi=0/360 stays whole)."""
+    maximum within `_SEARCH_RADIUS_DEG` of the request, grown on the (theta, phi) grid.
+
+    The phi axis is first rolled so the beam sits at the MIDDLE column, away from the array's own
+    phi=0/360 seam (PHASE16 follow-ups: a beam requested at phi=0, 180, etc. straddles that seam,
+    and a single beam's main lobe can span columns on both sides of it; growing the region on the
+    raw array -- even with one column of wraparound padding -- split the lobe into two
+    disconnected islands there, so half of a plain pencil beam's own main lobe was misclassified
+    as 'outside' and the side-lobe level was reported within ~1 dB of the peak instead of the true
+    ~-13 dB). Rolling moves the beam, and with it the whole main lobe, comfortably into the middle
+    of the array, where plain (non-periodic) connected-component labelling is exact; the seam ends
+    up on the far side (phi = beam + 180 deg), where a normal pencil beam has no power, so losing
+    wraparound there costs nothing. The result is rolled back before returning."""
     from scipy import ndimage
 
-    seed_window = _direction_mask(theta_grid_deg, phi_grid_deg, theta_deg, phi_deg, _SEARCH_RADIUS_DEG)
-    masked = np.where(seed_window, co_power, -np.inf)
+    n_phi = co_power.shape[1]
+    phi_axis = phi_grid_deg[0, :]
+    seed_phi_idx = int(np.argmin(np.abs(((phi_axis - phi_deg + 180.0) % 360.0) - 180.0)))
+    shift = n_phi // 2 - seed_phi_idx
+    co_r = np.roll(co_power, shift, axis=1)
+    theta_r = np.roll(theta_grid_deg, shift, axis=1)
+    phi_r = np.roll(phi_grid_deg, shift, axis=1)
+
+    seed_window = _direction_mask(theta_r, phi_r, theta_deg, phi_deg, _SEARCH_RADIUS_DEG)
+    masked = np.where(seed_window, co_r, -np.inf)
     si, sj = np.unravel_index(int(np.argmax(masked)), masked.shape)
-    peak = co_power[si, sj]
-    above = co_power >= peak * 10.0 ** (MAIN_BEAM_REGION_DB / 10.0)
-    padded = np.concatenate([above[:, -1:], above, above[:, :1]], axis=1)
-    labels, _ = ndimage.label(padded, structure=np.ones((3, 3), dtype=int))
-    region = labels == labels[si, sj + 1]
-    return region[:, 1:-1], peak
+    peak = co_r[si, sj]
+    above = co_r >= peak * 10.0 ** (MAIN_BEAM_REGION_DB / 10.0)
+    labels, _ = ndimage.label(above, structure=np.ones((3, 3), dtype=int))
+    region_r = labels == labels[si, sj]
+    return np.roll(region_r, -shift, axis=1), peak
 
 
 def beam_polarization_metrics(pat: VectorPatternResult, desired_polarization, theta_deg, phi_deg):

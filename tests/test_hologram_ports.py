@@ -57,6 +57,20 @@ def test_2x2_plus_1_large_feed_defaults_to_each_ports_own_centre():
         assert p.feed_y_m == pytest.approx((p.y_min_m + p.y_max_m) / 2.0)
 
 
+def test_large_port_feed_stays_centred_on_the_2x2_block_with_a_gap():
+    """Regression (PHASE16 follow-ups): port 5 (the large port) used to inherit the small ports'
+    own row-gap shift, pulling its feed off-centre by gap/2 even though it already spans the full
+    height of the 2x2 block centred on the origin."""
+    s, gap = 0.05, 0.0279
+    regions = layout_preset_2x2_plus_1_large(s, gap_m=gap)
+    large = regions[4]
+    assert large.feed_y_m == pytest.approx(0.0)
+    assert large.feed_x_m == pytest.approx((large.x_min_m + large.x_max_m) / 2.0)
+    small_top_y = max(p.y_max_m for p in regions[:4])
+    small_bottom_y = min(p.y_min_m for p in regions[:4])
+    assert (small_top_y + small_bottom_y) / 2.0 == pytest.approx(0.0)
+
+
 def test_gap_keeps_each_active_side_and_adds_the_gap_outside_it():
     s = 0.05
     gap = 0.004

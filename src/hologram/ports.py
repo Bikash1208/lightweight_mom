@@ -77,7 +77,11 @@ def layout_preset_2x2_plus_1_large(small_side_m, gap_m=0.0):
     ]
     regions = []
     for i, (x0, x1, y0, y1) in enumerate(raw):
-        y0, y1 = y0 - g / 2.0, y1 - g / 2.0  # the rows' own gap is centred on the origin
+        if i < 4:
+            y0, y1 = y0 - g / 2.0, y1 - g / 2.0  # the rows' own gap is centred on the origin
+        # Port 4 (the large port) already spans [-s, s], centred on the origin -- the same centre
+        # the 2x2 block above ends up at once its own row gap is centred. Shifting it by -g/2 too
+        # (PHASE16 follow-ups bug) pulled its feed off that centre by g/2.
         regions.append(PortRegion(i, x0, x1, y0, y1, (x0 + x1) / 2.0, (y0 + y1) / 2.0))
     return tuple(regions)
 

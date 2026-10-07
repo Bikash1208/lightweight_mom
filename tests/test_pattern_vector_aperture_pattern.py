@@ -107,7 +107,7 @@ def test_leakage_decay_tapers_amplitude_with_radius():
 
 
 def test_case_1_natural_polarization_single_beam_shows_a_vortex_null_with_unit_winding():
-    """"Natural" polarization, single beam theta=20deg, phi=0 on the user's walk-through board ->
+    """ "Natural" polarization, single beam theta=20deg, phi=0 on the user's walk-through board ->
     vector model shows a null at the beam direction with |winding| = 1 in the circular components
     (the vortex HFSS showed)."""
     x, y, dx = _board()
@@ -162,7 +162,9 @@ def test_case_3_extra_oam_charge_gives_a_deep_null_with_matching_winding_magnitu
     jx, jy = _single_beam_current(x, y, 0.0, 0.0, "natural", -2)
 
     for label in ("rhcp", "lhcp"):
-        m = measure_vortex_winding(x, y, jx, jy, F_HZ, gf, dx, dx, 0.0, 0.0, label, ring_radius=0.02, n_ring_samples=144)
+        m = measure_vortex_winding(
+            x, y, jx, jy, F_HZ, gf, dx, dx, 0.0, 0.0, label, ring_radius=0.02, n_ring_samples=144
+        )
         assert m.null_depth_db < -30.0, f"{label}: expected a deep null, got {m.null_depth_db:.1f}dB"
         assert abs(abs(m.winding_number) - 2.0) < 0.05, f"{label}: expected |winding|=2, got {m.winding_number}"
 
@@ -180,7 +182,7 @@ def test_case_3b_oam_charge_zero_is_the_pencil_beam_case_regression():
 
 
 def test_case_4_scalar_model_is_unaffected_by_the_new_vector_module():
-    """"With the vector model disabled, previous results unchanged" -- Part B added only NEW
+    """ "With the vector model disabled, previous results unchanged" -- Part B added only NEW
     files/functions (`pattern.vector_aperture_pattern`, `hologram.polarization_compensation`'s
     `combine_beams_with_polarization`, both additive per PHASE15 Part A's own regression test);
     `pattern.aperture_pattern.compute_pattern` and `phase8e.beam_reconstruction.far_field_pattern`
@@ -271,8 +273,18 @@ def test_case_5_design1_qualitative_reproduction():
         )
 
         m = measure_vortex_winding(
-            design.x_m, design.y_m, jx, jy, F_HZ, gf, dx, dx,
-            beam.theta_deg, beam.phi_deg, beam.desired_polarization, ring_radius=0.05,
+            design.x_m,
+            design.y_m,
+            jx,
+            jy,
+            F_HZ,
+            gf,
+            dx,
+            dx,
+            beam.theta_deg,
+            beam.phi_deg,
+            beam.desired_polarization,
+            ring_radius=0.05,
         )
         assert m.null_depth_db > -20.0, (
             f"beam {beam.desired_polarization} at ({beam.theta_deg},{beam.phi_deg}): "

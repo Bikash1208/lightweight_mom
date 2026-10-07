@@ -31,8 +31,16 @@ K_SWG = tm0_beta(FREQ, 2.2, 1.575e-3)
 
 @pytest.mark.parametrize(
     ("pol", "charge", "flagged"),
-    [("rhcp", -1, False), ("rhcp", -2, False), ("rhcp", 2, True), ("rhcp", 1, True),
-     ("lhcp", 2, False), ("lhcp", -1, True), ("lhcp", 0, False), ("natural", 2, False)],
+    [
+        ("rhcp", -1, False),
+        ("rhcp", -2, False),
+        ("rhcp", 2, True),
+        ("rhcp", 1, True),
+        ("lhcp", 2, False),
+        ("lhcp", -1, True),
+        ("lhcp", 0, False),
+        ("natural", 2, False),
+    ],
 )
 def test_sign_rule_flags_only_the_opposite_sign(pol, charge, flagged):
     assert oam_sign_mismatch(pol, charge) is flagged
@@ -46,8 +54,10 @@ def _ideal_library():
     k = np.arange(200)
     phases = np.radians(360.0 * k / 200.0)
     lengths = 0.5 + 0.02 * k  # mm, a monotone label for each ideal phase
-    return [(f"ideal{i}", float(lengths[i]), float(lengths[i]), "ideal", complex(np.cos(p), np.sin(p)))
-            for i, p in enumerate(phases)]
+    return [
+        (f"ideal{i}", float(lengths[i]), float(lengths[i]), "ideal", complex(np.cos(p), np.sin(p)))
+        for i, p in enumerate(phases)
+    ]
 
 
 def _ring_xpd_db(pat_fn, theta_b_deg, phi_b_deg, desired, radius_uv=0.02, n=48):
@@ -88,7 +98,18 @@ def _vortex_design_pattern(desired, charge):
 def test_rhcp_with_negative_charge_gives_a_clean_vortex():
     design, green, jx, jy, peak, _pat, pat_fn = _vortex_design_pattern("rhcp", -1)
     vortex = measure_vortex_winding(
-        design.x_m, design.y_m, jx, jy, FREQ, green, PERIOD, PERIOD, 20.0, 0.0, "rhcp", pattern_peak_power=peak,
+        design.x_m,
+        design.y_m,
+        jx,
+        jy,
+        FREQ,
+        green,
+        PERIOD,
+        PERIOD,
+        20.0,
+        0.0,
+        "rhcp",
+        pattern_peak_power=peak,
     )
     assert vortex.winding_number == pytest.approx(-1.0, abs=0.05)
     # The ideal synthetic library gives about -24.6 dB; the real-library check (slow test) enforces -25 dB.
@@ -101,7 +122,18 @@ def test_rhcp_with_positive_charge_two_is_flagged_and_is_not_a_clean_rhcp_vortex
     assert oam_sign_mismatch("rhcp", 2)
     design, green, jx, jy, peak, _pat, _pat_fn = _vortex_design_pattern("rhcp", 2)
     vortex = measure_vortex_winding(
-        design.x_m, design.y_m, jx, jy, FREQ, green, PERIOD, PERIOD, 20.0, 0.0, "rhcp", pattern_peak_power=peak,
+        design.x_m,
+        design.y_m,
+        jx,
+        jy,
+        FREQ,
+        green,
+        PERIOD,
+        PERIOD,
+        20.0,
+        0.0,
+        "rhcp",
+        pattern_peak_power=peak,
     )
     assert abs(vortex.winding_number - 2.0) > 0.5 or vortex.null_depth_db > -25.0
 
@@ -126,7 +158,8 @@ def test_rhcp_l_minus_1_on_the_real_square_library_meets_the_spec(tmp_path):
     mesh_cells = AUTO_LIBRARY_MESH_CELLS_BY_ACCURACY["fast"]
     l_values = tuple(round(PERIOD * 1e3 * f, 6) for f in _l_fractions_of_period(mesh_cells))
     base = {
-        "period_x": PERIOD, "period_y": PERIOD,
+        "period_x": PERIOD,
+        "period_y": PERIOD,
         "substrate": {"name": "user", "eps_r": 2.2, "tan_delta": 0.0009, "thickness": 1.575e-3, "backing": "pec"},
         "geometry": {"type": "rectangle", "length": l_values[0] * 1e-3, "width": l_values[0] * 1e-3},
         "excitation": {"frequency": FREQ},
@@ -148,11 +181,24 @@ def test_rhcp_l_minus_1_on_the_real_square_library_meets_the_spec(tmp_path):
     beam = Beam(theta_deg=20.0, phi_deg=0.0, weight=1.0 + 0j, desired_polarization="rhcp", oam_charge=-1)
     design = synthesize_formulation_b(reference, [beam], FREQ, candidates, PERIOD, feed_xy_m=(float(x0), float(y0)))
     green = LayeredGreenFunction(SUB, FREQ, backing="pec")
-    jx, jy = aperture_current_from_scalar(design.x_m, design.y_m, design.aperture_field, feed_xy_m=(float(x0), float(y0)))
+    jx, jy = aperture_current_from_scalar(
+        design.x_m, design.y_m, design.aperture_field, feed_xy_m=(float(x0), float(y0))
+    )
     pat = compute_vector_pattern(design.x_m, design.y_m, jx, jy, FREQ, green, PERIOD, PERIOD)
     peak = float(np.max(np.abs(pat.e_theta) ** 2 + np.abs(pat.e_phi) ** 2))
     vortex = measure_vortex_winding(
-        design.x_m, design.y_m, jx, jy, FREQ, green, PERIOD, PERIOD, 20.0, 0.0, "rhcp", pattern_peak_power=peak,
+        design.x_m,
+        design.y_m,
+        jx,
+        jy,
+        FREQ,
+        green,
+        PERIOD,
+        PERIOD,
+        20.0,
+        0.0,
+        "rhcp",
+        pattern_peak_power=peak,
     )
     assert vortex.winding_number == pytest.approx(-1.0, abs=0.05)
     assert vortex.null_depth_db <= -25.0

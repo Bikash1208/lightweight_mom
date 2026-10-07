@@ -53,7 +53,9 @@ def per_beam_phase_maps_deg(reference_field, object_beams, frequency_hz, feed_xy
     return maps
 
 
-def coded_phase_map_deg(reference_field, object_beams, frequency_hz, n_bits=1, feed_xy_m=(0.0, 0.0), cp_phase_offset_deg=0.0, weights=None):
+def coded_phase_map_deg(
+    reference_field, object_beams, frequency_hz, n_bits=1, feed_xy_m=(0.0, 0.0), cp_phase_offset_deg=0.0, weights=None
+):
     """Returns `(continuous_deg, quantized_deg, level_map)`: `continuous_deg` is
     `arg(sum_m w_m*exp(j*psi_m))`, the un-quantized reference used to measure quantization loss;
     `quantized_deg`/`level_map` snap it to the nearest of `2**n_bits` evenly-spaced levels starting
@@ -95,7 +97,17 @@ class CodedDesign:
 MAX_PATH_ITERATIONS = 10
 
 
-def synthesize_coded_one_bit(reference_field, object_beams, frequency_hz, two_state_choice, period_m, feed_xy_m=(0.0, 0.0), cp_phase_offset_deg=0.0, weights=None, surface_wave_betas_rad_per_m=None):
+def synthesize_coded_one_bit(
+    reference_field,
+    object_beams,
+    frequency_hz,
+    two_state_choice,
+    period_m,
+    feed_xy_m=(0.0, 0.0),
+    cp_phase_offset_deg=0.0,
+    weights=None,
+    surface_wave_betas_rad_per_m=None,
+):
     """n_bits=1: the quantized {0, 1} map maps DIRECTLY onto `two_state_choice`'s own two physical
     states (no further library search -- these ARE the two available states, by definition of
     1-bit coding). `GeometryCell.geometry_param` holds the chosen STATE INDEX (0.0 or 1.0, a float
@@ -117,8 +129,13 @@ def synthesize_coded_one_bit(reference_field, object_beams, frequency_hz, two_st
     path_converged = True
     if surface_wave_betas_rad_per_m is None:
         continuous_deg, quantized_deg, level_map = coded_phase_map_deg(
-            cell_field, object_beams, frequency_hz, n_bits=1, feed_xy_m=feed_xy_m,
-            cp_phase_offset_deg=cp_phase_offset_deg, weights=weights,
+            cell_field,
+            object_beams,
+            frequency_hz,
+            n_bits=1,
+            feed_xy_m=feed_xy_m,
+            cp_phase_offset_deg=cp_phase_offset_deg,
+            weights=weights,
         )
     else:
         beta_states = tuple(float(b) for b in surface_wave_betas_rad_per_m)
@@ -127,10 +144,17 @@ def synthesize_coded_one_bit(reference_field, object_beams, frequency_hz, two_st
         while path_iterations < MAX_PATH_ITERATIONS:
             path_iterations += 1
             phase_rad = path_integrated_phase_rad(cell_field.x_m, cell_field.y_m, feed_xy_m, beta_map, period_m / 2.0)
-            psi_reference = _phase_reference_field(cell_field, phase_rad, f"PATH_INTEGRATED_BETA({beta_states[0]:.6g},{beta_states[1]:.6g}rad/m)")
+            psi_reference = _phase_reference_field(
+                cell_field, phase_rad, f"PATH_INTEGRATED_BETA({beta_states[0]:.6g},{beta_states[1]:.6g}rad/m)"
+            )
             continuous_deg, quantized_deg, level_map = coded_phase_map_deg(
-                psi_reference, object_beams, frequency_hz, n_bits=1, feed_xy_m=feed_xy_m,
-                cp_phase_offset_deg=cp_phase_offset_deg, weights=weights,
+                psi_reference,
+                object_beams,
+                frequency_hz,
+                n_bits=1,
+                feed_xy_m=feed_xy_m,
+                cp_phase_offset_deg=cp_phase_offset_deg,
+                weights=weights,
             )
             beta_next = np.where(level_map == 0, beta_states[0], beta_states[1])
             if np.array_equal(beta_next, beta_map):
@@ -149,19 +173,33 @@ def synthesize_coded_one_bit(reference_field, object_beams, frequency_hz, two_st
             target = float(quantized_deg[i, j])
             cells.append(
                 GeometryCell(
-                    i, j, float(cell_field.x_m[i, j]), float(cell_field.y_m[i, j]),
-                    control_value=target, geometry_param=float(level), achieved_value=achieved,
-                    phase_error_deg=float(abs(wrapped_difference_deg(achieved, target))), reachable=True,
+                    i,
+                    j,
+                    float(cell_field.x_m[i, j]),
+                    float(cell_field.y_m[i, j]),
+                    control_value=target,
+                    geometry_param=float(level),
+                    achieved_value=achieved,
+                    phase_error_deg=float(abs(wrapped_difference_deg(achieved, target))),
+                    reachable=True,
                 )
             )
     ref_complex = cell_field.Ex if cell_field.amplitude_available else np.exp(1j * np.radians(cell_field.phase()))
     aperture_field = ref_complex * np.exp(1j * np.radians(achieved_deg))
     labels = ("CODED_DESIGN_METHOD",)
     return CodedDesign(
-        x_m=cell_field.x_m, y_m=cell_field.y_m, n_bits=1, continuous_phase_deg=continuous_deg,
-        quantized_phase_deg=quantized_deg, level_map=level_map, cells=tuple(cells),
-        aperture_field=aperture_field, labels=labels, two_state_states=states,
-        path_iterations=path_iterations, path_converged=path_converged,
+        x_m=cell_field.x_m,
+        y_m=cell_field.y_m,
+        n_bits=1,
+        continuous_phase_deg=continuous_deg,
+        quantized_phase_deg=quantized_deg,
+        level_map=level_map,
+        cells=tuple(cells),
+        aperture_field=aperture_field,
+        labels=labels,
+        two_state_states=states,
+        path_iterations=path_iterations,
+        path_converged=path_converged,
     )
 
 
@@ -195,13 +233,30 @@ def path_integrated_phase_rad(x_m, y_m, feed_xy_m, beta_map_rad_per_m, step_m):
 def _phase_reference_field(cell_field, phase_rad, source):
     field = np.exp(-1j * phase_rad)
     return ReferenceFieldGrid(
-        x_m=cell_field.x_m, y_m=cell_field.y_m, Ex=field, Ey=None, amplitude_available=True,
-        source=source, dx_m=cell_field.dx_m, dy_m=cell_field.dy_m,
-        z_reference_m=0.0, phase_deg=np.degrees(np.angle(field)),
+        x_m=cell_field.x_m,
+        y_m=cell_field.y_m,
+        Ex=field,
+        Ey=None,
+        amplitude_available=True,
+        source=source,
+        dx_m=cell_field.dx_m,
+        dy_m=cell_field.dy_m,
+        z_reference_m=0.0,
+        phase_deg=np.degrees(np.angle(field)),
     )
 
 
-def synthesize_coded_n_bit(reference_field, object_beams, frequency_hz, n_bits, library_candidates, period_m, feed_xy_m=(0.0, 0.0), cp_phase_offset_deg=0.0, weights=None):
+def synthesize_coded_n_bit(
+    reference_field,
+    object_beams,
+    frequency_hz,
+    n_bits,
+    library_candidates,
+    period_m,
+    feed_xy_m=(0.0, 0.0),
+    cp_phase_offset_deg=0.0,
+    weights=None,
+):
     """n_bits > 1: the quantized target phase (`2**n_bits` discrete levels) is matched against a
     CONTINUOUS phase library (e.g. the square-patch one) via the SAME
     `hmsa_synthesis.map_control_to_geometry_library`/`nearest_response_match` the continuous
@@ -212,8 +267,13 @@ def synthesize_coded_n_bit(reference_field, object_beams, frequency_hz, n_bits, 
 
     cell_field = resample_to_cell_grid(reference_field, period_m)
     continuous_deg, quantized_deg, level_map = coded_phase_map_deg(
-        cell_field, object_beams, frequency_hz, n_bits=n_bits, feed_xy_m=feed_xy_m,
-        cp_phase_offset_deg=cp_phase_offset_deg, weights=weights,
+        cell_field,
+        object_beams,
+        frequency_hz,
+        n_bits=n_bits,
+        feed_xy_m=feed_xy_m,
+        cp_phase_offset_deg=cp_phase_offset_deg,
+        weights=weights,
     )
     cells = map_control_to_geometry_library(cell_field.x_m, cell_field.y_m, quantized_deg, library_candidates)
     achieved_deg = np.array([c.achieved_value if c.achieved_value is not None else 0.0 for c in cells]).reshape(
@@ -223,9 +283,16 @@ def synthesize_coded_n_bit(reference_field, object_beams, frequency_hz, n_bits, 
     aperture_field = ref_complex * np.exp(1j * np.radians(achieved_deg))
     labels = ("CODED_DESIGN_METHOD",)
     return CodedDesign(
-        x_m=cell_field.x_m, y_m=cell_field.y_m, n_bits=n_bits, continuous_phase_deg=continuous_deg,
-        quantized_phase_deg=quantized_deg, level_map=level_map, cells=cells,
-        aperture_field=aperture_field, labels=labels, two_state_states=None,
+        x_m=cell_field.x_m,
+        y_m=cell_field.y_m,
+        n_bits=n_bits,
+        continuous_phase_deg=continuous_deg,
+        quantized_phase_deg=quantized_deg,
+        level_map=level_map,
+        cells=cells,
+        aperture_field=aperture_field,
+        labels=labels,
+        two_state_states=None,
     )
 
 
@@ -262,7 +329,7 @@ def continuous_reference_aperture_field(reference_field, continuous_phase_deg):
     """The hypothetical zero-quantization-error aperture field (`E_ref * exp(j*continuous_phase)`)
     -- compared against a `CodedDesign.aperture_field` (which uses the REAL quantized+achieved
     phase) to measure quantization loss (Part E's own "report quantization loss vs continuous")."""
-    ref_complex = reference_field.Ex if reference_field.amplitude_available else np.exp(
-        1j * np.radians(reference_field.phase())
+    ref_complex = (
+        reference_field.Ex if reference_field.amplitude_available else np.exp(1j * np.radians(reference_field.phase()))
     )
     return ref_complex * np.exp(1j * np.radians(continuous_phase_deg))

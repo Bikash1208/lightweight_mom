@@ -135,9 +135,13 @@ def _run_export_job(job, source_result, params):
         if params["include_step"]:
             n = len(lw_grid_m)
             with _StepProgressEstimator(job, estimate_step_export_seconds(n), n):
-                result = export_array(lw_grid_m, period_m, period_m, substrate, metal, out_dir, include_step=True, feeds_mm=feeds_mm)
+                result = export_array(
+                    lw_grid_m, period_m, period_m, substrate, metal, out_dir, include_step=True, feeds_mm=feeds_mm
+                )
         else:
-            result = export_array(lw_grid_m, period_m, period_m, substrate, metal, out_dir, include_step=False, feeds_mm=feeds_mm)
+            result = export_array(
+                lw_grid_m, period_m, period_m, substrate, metal, out_dir, include_step=False, feeds_mm=feeds_mm
+            )
         return {
             "n_cells_per_side": result.n_cells_per_side,
             "total_cells": result.total_cells,
@@ -167,13 +171,27 @@ def _run_export_job(job, source_result, params):
     if params["include_step"]:
         with _StepProgressEstimator(job, estimate_step_export_seconds(n), n):
             result = export_multi_port_array(
-                lw_grid_m, period_m, period_m, substrate, metal, out_dir, include_step=True,
-                feeds_mm=feeds_mm, ports_info=ports_info,
+                lw_grid_m,
+                period_m,
+                period_m,
+                substrate,
+                metal,
+                out_dir,
+                include_step=True,
+                feeds_mm=feeds_mm,
+                ports_info=ports_info,
             )
     else:
         result = export_multi_port_array(
-            lw_grid_m, period_m, period_m, substrate, metal, out_dir, include_step=False,
-            feeds_mm=feeds_mm, ports_info=ports_info,
+            lw_grid_m,
+            period_m,
+            period_m,
+            substrate,
+            metal,
+            out_dir,
+            include_step=False,
+            feeds_mm=feeds_mm,
+            ports_info=ports_info,
         )
     return {
         "n_cells_x": result.n_cells_x,
@@ -288,7 +306,9 @@ def export_package(body: ExportPackageRequest, request: Request):
         if synthesize_job is None:
             raise HTTPException(404, f"job {body.synthesize_job_id!r} not found")
         if synthesize_job.status != JobStatus.DONE:
-            raise HTTPException(409, f"synthesize job {body.synthesize_job_id!r} is {synthesize_job.status.value}, not done")
+            raise HTTPException(
+                409, f"synthesize job {body.synthesize_job_id!r} is {synthesize_job.status.value}, not done"
+            )
         synthesize_result = synthesize_job.result
 
     job = request.app.state.jobs.submit(

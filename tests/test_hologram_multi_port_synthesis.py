@@ -64,9 +64,12 @@ def test_analytic_single_port_reproduces_a_phase_only_feed_design():
     from src.dispersion.hfss_table import DispersionSample, DispersionTable
 
     table = DispersionTable(
-        source_path="synthetic", frequency_hz=FREQ,
-        samples=tuple(DispersionSample(geometry_param=g, beta_rad_per_m=None, x_s_ohm=x)
-                      for g, x in [(1.0, 50.0), (2.0, 100.0), (3.0, 150.0), (4.0, 200.0)]),
+        source_path="synthetic",
+        frequency_hz=FREQ,
+        samples=tuple(
+            DispersionSample(geometry_param=g, beta_rad_per_m=None, x_s_ohm=x)
+            for g, x in [(1.0, 50.0), (2.0, 100.0), (3.0, 150.0), (4.0, 200.0)]
+        ),
     )
     region = layout_preset_1xn(1, 0.296)[0]  # a 37 x 37 cell board at 8 mm
     beams = [Beam(theta_deg=20.0, phi_deg=0.0, weight=1.0 + 0j)]
@@ -125,9 +128,7 @@ def test_synthesize_ports_skips_isolation_without_k_swg():
     beams = {0: [Beam(theta_deg=0.0, phi_deg=0.0)], 1: [Beam(theta_deg=0.0, phi_deg=0.0)]}
     native = {i: port_native_grid(r, resolution_m=0.002) for i, r in enumerate(regions)}
     uploaded = {i: phase_only_reference_field(x, y, np.zeros_like(x)) for i, (x, y) in native.items()}
-    multi = synthesize_ports(
-        regions, beams, _per_port, period_m=PERIOD_M, k_swg=None, uploaded_fields=uploaded
-    )
+    multi = synthesize_ports(regions, beams, _per_port, period_m=PERIOD_M, k_swg=None, uploaded_fields=uploaded)
     assert multi.isolation_flags == ()
 
 

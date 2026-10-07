@@ -113,7 +113,24 @@ const LWMOM = (() => {
     });
   }
 
-  return { postJson, postForm, pollJob, renderLabels, describeLabel, markActiveNav };
+  // Phase 17 hygiene: a visible version/commit footer so screenshots and bug reports are traceable.
+  async function renderVersionFooter() {
+    let info = {};
+    try {
+      const resp = await fetch("/api/version");
+      info = await resp.json();
+    } catch {
+      // offline/startup race -- footer just stays blank, never blocks the page.
+    }
+    const footer = document.createElement("footer");
+    footer.className = "version-footer";
+    const commitPart = info.commit ? ` · ${info.commit}` : "";
+    footer.textContent = `HMSA Designer · v${info.version || "unknown"}${commitPart}`;
+    document.body.appendChild(footer);
+  }
+
+  return { postJson, postForm, pollJob, renderLabels, describeLabel, markActiveNav, renderVersionFooter };
 })();
 
 document.addEventListener("DOMContentLoaded", LWMOM.markActiveNav);
+document.addEventListener("DOMContentLoaded", LWMOM.renderVersionFooter);

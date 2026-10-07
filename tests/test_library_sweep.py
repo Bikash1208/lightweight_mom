@@ -250,8 +250,13 @@ def _annular_base_config():
 def test_build_annular_slot_library_cells_sweeps_only_the_outer_radius():
     calls = []
     cells = build_annular_slot_library_cells(
-        _annular_base_config(), a_mm=4.0, b_mm=4.0, r_mm=1.0, R_values_mm=[1.2, 1.5, 1.8],
-        frequency_hz=12.5e9, progress=calls.append,
+        _annular_base_config(),
+        a_mm=4.0,
+        b_mm=4.0,
+        r_mm=1.0,
+        R_values_mm=[1.2, 1.5, 1.8],
+        frequency_hz=12.5e9,
+        progress=calls.append,
     )
     assert len(cells) == 3
     for cell, outer_r_mm in zip(cells, (1.2, 1.5, 1.8), strict=True):
@@ -269,7 +274,8 @@ def test_annular_slot_phase_differs_from_a_plain_patch_of_the_same_outer_size():
     """A real measurement, not an assumption: the slot must actually change the reflection phase
     relative to a plain (no-slot) patch of the same outer footprint."""
     plain_config = {
-        "period_x": 6.0e-3, "period_y": 6.0e-3,
+        "period_x": 6.0e-3,
+        "period_y": 6.0e-3,
         "substrate": {**_SUBSTRATE, "backing": "pec"},
         "geometry": {"type": "rectangle", "length": 4.0e-3, "width": 4.0e-3},
         "excitation": {"frequency": 12.5e9},

@@ -69,7 +69,7 @@ _OBJECT_WAVE_DIRECTION = "+z"
 
 
 def _circular_jones_vector(label, cp_phase_offset_deg):
-    """"rhcp"/"lhcp" -> whichever of `polarization.E_R`/`E_L` is that handedness for a wave
+    """ "rhcp"/"lhcp" -> whichever of `polarization.E_R`/`E_L` is that handedness for a wave
     travelling `_OBJECT_WAVE_DIRECTION`, per `polarization.handedness` (derived, not hardcoded --
     see module docstring)."""
     wanted = "RHCP" if label == "rhcp" else "LHCP"

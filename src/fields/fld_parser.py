@@ -41,8 +41,11 @@ _SCALAR_RE = re.compile(r"^Scalar(?P<comp>[XYZ])\(")
 _UNIT_TO_M = {"mm": 1e-3, "m": 1.0, "cm": 1e-2, "um": 1e-6}
 
 _OUTER_KIND = {
-    "CmplxPhase": "phase_rad", "CmplxMag": "magnitude", "Mag": "magnitude",
-    "CmplxReal": "real", "CmplxImag": "imag",
+    "CmplxPhase": "phase_rad",
+    "CmplxMag": "magnitude",
+    "Mag": "magnitude",
+    "CmplxReal": "real",
+    "CmplxImag": "imag",
 }
 
 
@@ -66,8 +69,8 @@ def _parse_triple_m(text):
 @dataclass(frozen=True)
 class FldExpression:
     raw: str
-    kind: str          # "phase_rad" | "magnitude" | "real" | "imag"
-    component: "str | None"   # "X" | "Y" | "Z" | None
+    kind: str  # "phase_rad" | "magnitude" | "real" | "imag"
+    component: "str | None"  # "X" | "Y" | "Z" | None
 
 
 def parse_expression(expr):
@@ -101,8 +104,11 @@ def _parse_header(line1, line2):
     if not m2:
         raise ValueError(f".fld file: unparseable header line 2 (no quoted expression): {line2!r}")
     return FldHeader(
-        min_m=_parse_triple_m(m1.group("min")), max_m=_parse_triple_m(m1.group("max")),
-        step_m=_parse_triple_m(m1.group("step")), coordinate_system=m1.group("cs"), unit=m1.group("unit"),
+        min_m=_parse_triple_m(m1.group("min")),
+        max_m=_parse_triple_m(m1.group("max")),
+        step_m=_parse_triple_m(m1.group("step")),
+        coordinate_system=m1.group("cs"),
+        unit=m1.group("unit"),
         expression=parse_expression(m2.group("expr")),
     )
 
@@ -110,10 +116,10 @@ def _parse_header(line1, line2):
 @dataclass(frozen=True)
 class FldGrid:
     header: FldHeader
-    x_m: np.ndarray    # 2-D, shape (ny, nx)
-    y_m: np.ndarray    # 2-D, shape (ny, nx)
+    x_m: np.ndarray  # 2-D, shape (ny, nx)
+    y_m: np.ndarray  # 2-D, shape (ny, nx)
     value: np.ndarray  # 2-D, shape (ny, nx); NaN where the source file had NaN (e.g. the feed point)
-    ordering: str       # "x_major" | "y_major" -- detected, not assumed
+    ordering: str  # "x_major" | "y_major" -- detected, not assumed
     path: str
 
     @property
@@ -142,7 +148,7 @@ def read_fld(path):
             raise ValueError(f"{path}: malformed data row (expected 4 columns, got {len(parts)}): {line!r}")
         xs.append(float(parts[0]))
         ys.append(float(parts[1]))
-        vals.append(float(parts[3]))   # parts[2] is Z (the fixed sampling-plane height)
+        vals.append(float(parts[3]))  # parts[2] is Z (the fixed sampling-plane height)
     xs, ys, vals = np.array(xs), np.array(ys), np.array(vals)
 
     dx_m, dy_m, _ = header.step_m

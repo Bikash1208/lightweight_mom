@@ -22,7 +22,11 @@ def git_hash():
     raises -- a manifest without provenance is still useful, an app crash over it is not)."""
     try:
         out = subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=_REPO_ROOT, capture_output=True, text=True, timeout=5,
+            ["git", "rev-parse", "HEAD"],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         return out.stdout.strip() if out.returncode == 0 else None
     except Exception:
@@ -34,7 +38,11 @@ def git_dirty():
     that can't be determined."""
     try:
         out = subprocess.run(
-            ["git", "status", "--porcelain"], cwd=_REPO_ROOT, capture_output=True, text=True, timeout=5,
+            ["git", "status", "--porcelain"],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         return bool(out.stdout.strip()) if out.returncode == 0 else None
     except Exception:
@@ -63,13 +71,13 @@ def hash_file(path):
 @dataclass
 class RunManifest:
     run_id: str
-    job_kind: str                    # e.g. "unit_cell_solve", "reflectarray_design", "hmsa_design"
+    job_kind: str  # e.g. "unit_cell_solve", "reflectarray_design", "hmsa_design"
     inputs: dict = field(default_factory=dict)
     resolved_config: dict = field(default_factory=dict)
     labels: tuple = ()
     warnings: tuple = ()
     timings_s: dict = field(default_factory=dict)
-    output_files: dict = field(default_factory=dict)   # {relative path: sha256 hash}
+    output_files: dict = field(default_factory=dict)  # {relative path: sha256 hash}
     code_git_hash: "str | None" = field(default=None)
     code_git_dirty: "bool | None" = field(default=None)
     dependency_versions: dict = field(default_factory=dict)
@@ -89,12 +97,19 @@ class RunManifest:
 
     def to_dict(self):
         return {
-            "run_id": self.run_id, "job_kind": self.job_kind, "inputs": self.inputs,
-            "resolved_config": self.resolved_config, "labels": list(self.labels),
-            "warnings": list(self.warnings), "timings_s": self.timings_s,
-            "output_files": self.output_files, "code_git_hash": self.code_git_hash,
-            "code_git_dirty": self.code_git_dirty, "dependency_versions": self.dependency_versions,
-            "python_version": self.python_version, "platform": self.platform,
+            "run_id": self.run_id,
+            "job_kind": self.job_kind,
+            "inputs": self.inputs,
+            "resolved_config": self.resolved_config,
+            "labels": list(self.labels),
+            "warnings": list(self.warnings),
+            "timings_s": self.timings_s,
+            "output_files": self.output_files,
+            "code_git_hash": self.code_git_hash,
+            "code_git_dirty": self.code_git_dirty,
+            "dependency_versions": self.dependency_versions,
+            "python_version": self.python_version,
+            "platform": self.platform,
         }
 
     def write(self, path):
@@ -115,10 +130,7 @@ def build_diagnostic_bundle(manifest: RunManifest, log_file_path, input_files, o
         zf.writestr("manifest.json", json.dumps(manifest.to_dict(), indent=2, sort_keys=True, default=str))
         log_file_path = Path(log_file_path)
         if log_file_path.exists():
-            lines = [
-                line for line in log_file_path.read_text(errors="replace").splitlines()
-                if manifest.run_id in line
-            ]
+            lines = [line for line in log_file_path.read_text(errors="replace").splitlines() if manifest.run_id in line]
             zf.writestr("log_excerpt.jsonl", "\n".join(lines))
         for input_file in input_files:
             input_file = Path(input_file)

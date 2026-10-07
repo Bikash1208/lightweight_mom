@@ -50,7 +50,12 @@ def test_candidates_from_square_library_wraps_each_entry():
 def test_candidates_from_annular_slot_library_skips_failed_cells_and_picks_nearest_frequency():
     docs = [
         {
-            "solver_status": "OK", "cell_id": "ok1", "a_mm": 4.0, "b_mm": 4.0, "R_mm": 1.5, "r_mm": 1.0,
+            "solver_status": "OK",
+            "cell_id": "ok1",
+            "a_mm": 4.0,
+            "b_mm": 4.0,
+            "R_mm": 1.5,
+            "r_mm": 1.0,
             "frequency_GHz": [12.0, 12.5, 13.0],
             "S11": [{"real": 0.1, "imag": 0.1}, {"real": -1.0, "imag": 0.0}, {"real": 0.5, "imag": 0.5}],
         },
@@ -68,12 +73,16 @@ def test_two_state_from_values_computes_separation():
 
 
 def test_separation_warning_none_when_close_to_180deg():
-    choice = two_state_from_values("a", complex(1.0, 0.0), "b", complex(math.cos(math.radians(175)), math.sin(math.radians(175))))
+    choice = two_state_from_values(
+        "a", complex(1.0, 0.0), "b", complex(math.cos(math.radians(175)), math.sin(math.radians(175)))
+    )
     assert separation_warning(choice) is None
 
 
 def test_separation_warning_flags_a_poor_pair():
-    choice = two_state_from_values("a", complex(1.0, 0.0), "b", complex(math.cos(math.radians(60)), math.sin(math.radians(60))))
+    choice = two_state_from_values(
+        "a", complex(1.0, 0.0), "b", complex(math.cos(math.radians(60)), math.sin(math.radians(60)))
+    )
     warning = separation_warning(choice)
     assert warning is not None
     assert "60.0" in warning

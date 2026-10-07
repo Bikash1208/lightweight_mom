@@ -12,6 +12,7 @@ actually reads (grep-verified, same set Phase 9's own module docstring lists: ``
 object. ``supercell_geometry.py`` is not modified.
 """
 
+import time
 from dataclasses import dataclass
 
 from .. import solver as solver_mod
@@ -130,8 +131,6 @@ def solve_grounded_supercell_center(
 
 
 # ------------------------------------------------ Task A: correctness proof, cost, convergence
-
-import time
 
 
 @dataclass(frozen=True)

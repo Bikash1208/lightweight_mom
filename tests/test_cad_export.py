@@ -19,11 +19,11 @@ import pytest
 
 cadquery = pytest.importorskip("cadquery")
 
-from src import cad_export, units
-from src.geometry import Geometry, UnitCell
-from src.materials import Metal, Substrate
-from src.periodic_bc import RectangularLattice
-from src.validation_cases import CASES
+from src import cad_export, units  # noqa: E402
+from src.geometry import Geometry, UnitCell  # noqa: E402
+from src.materials import Metal, Substrate  # noqa: E402
+from src.periodic_bc import RectangularLattice  # noqa: E402
+from src.validation_cases import CASES  # noqa: E402
 
 _SUB = Substrate(name="test", eps_r=2.2, tan_delta=0.0009, thickness=1.575e-3)
 _METAL_MAT = Metal()

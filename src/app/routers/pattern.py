@@ -75,8 +75,10 @@ def _port_source_result(source_result, port_index):
         raise config_invalid(message=f"port_index {port_index} out of range (0..{len(ports) - 1})")
     port = ports[port_index]
     return {
-        "x_m": port["x_m"], "y_m": port["y_m"],
-        "aperture_field_real": port["aperture_field_real"], "aperture_field_imag": port["aperture_field_imag"],
+        "x_m": port["x_m"],
+        "y_m": port["y_m"],
+        "aperture_field_real": port["aperture_field_real"],
+        "aperture_field_imag": port["aperture_field_imag"],
         "period_mm": source_result["period_mm"],
         "feeds_mm": [(port["feed_x_mm"], port["feed_y_mm"])],
     }
@@ -115,7 +117,14 @@ def _run_scalar_pattern_job(job, source_result, frequency_hz, theta_max_deg, n_t
     }
 
 
-_CROSS_LABEL = {"rhcp": "lhcp", "lhcp": "rhcp", "hp": "vp", "vp": "hp", "slant_p45": "slant_m45", "slant_m45": "slant_p45"}
+_CROSS_LABEL = {
+    "rhcp": "lhcp",
+    "lhcp": "rhcp",
+    "hp": "vp",
+    "vp": "hp",
+    "slant_p45": "slant_m45",
+    "slant_m45": "slant_p45",
+}
 
 
 def _per_beam_breakdown(job, x_m, y_m, jx, jy, frequency_hz, green, dx_m, dy_m, beams, pat, out_dir):
@@ -156,21 +165,35 @@ def _per_beam_breakdown(job, x_m, y_m, jx, jy, frequency_hz, green, dx_m, dy_m, 
             polarization_efficiency = metrics.polarization_efficiency
 
         winding = measure_vortex_winding(
-            x_m, y_m, jx, jy, frequency_hz, green, dx_m, dy_m,
-            b["theta_deg"], b["phi_deg"], measure_label, pattern_peak_power=peak_power,
+            x_m,
+            y_m,
+            jx,
+            jy,
+            frequency_hz,
+            green,
+            dx_m,
+            dy_m,
+            b["theta_deg"],
+            b["phi_deg"],
+            measure_label,
+            pattern_peak_power=peak_power,
         )
         beam_type_requested = "Pencil" if b["oam_charge"] == 0 else f"Vortex l={b['oam_charge']}"
         looks_like_vortex = abs(winding.winding_number) > 0.5
         note = (
             "Vortex expected — Natural polarization keeps the monopole's radial currents."
             if pol == "natural" and looks_like_vortex
-            else ("Vortex measured at this direction." if looks_like_vortex else "Pencil beam measured at this direction.")
+            else (
+                "Vortex measured at this direction." if looks_like_vortex else "Pencil beam measured at this direction."
+            )
         )
 
         phase_png_url = None
         try:
             path = vortex_phase_ring_png(
-                winding.ring_alpha_deg, winding.ring_phase_deg, winding.winding_number,
+                winding.ring_alpha_deg,
+                winding.ring_phase_deg,
+                winding.winding_number,
                 out_dir / f"vortex_phase_{idx}.png",
             )
             phase_png_url = f"/api/files/{job.id}/{path.name}"
@@ -199,7 +222,17 @@ def _per_beam_breakdown(job, x_m, y_m, jx, jy, frequency_hz, green, dx_m, dy_m, 
 
 
 def _run_vector_pattern_job(
-    job, source_result, frequency_hz, theta_max_deg, n_theta, n_phi, beams, eps_r, tan_delta, thickness_mm, leakage_alpha_per_m
+    job,
+    source_result,
+    frequency_hz,
+    theta_max_deg,
+    n_theta,
+    n_phi,
+    beams,
+    eps_r,
+    tan_delta,
+    thickness_mm,
+    leakage_alpha_per_m,
 ):
     if eps_r is None or tan_delta is None or thickness_mm is None:
         raise config_invalid(message="pattern_model='vector' needs eps_r, tan_delta and thickness_mm")
@@ -218,7 +251,9 @@ def _run_vector_pattern_job(
     substrate = Substrate(name="user", eps_r=eps_r, tan_delta=tan_delta, thickness=thickness_mm * 1e-3)
     green = LayeredGreenFunction(substrate, frequency_hz, backing="pec")
     jx, jy = aperture_current_from_scalar(x_m, y_m, aperture_field, feed_xy_m, leakage_alpha_per_m)
-    pat = compute_vector_pattern(x_m, y_m, jx, jy, frequency_hz, green, period_m, period_m, theta_max_deg, n_theta, n_phi)
+    pat = compute_vector_pattern(
+        x_m, y_m, jx, jy, frequency_hz, green, period_m, period_m, theta_max_deg, n_theta, n_phi
+    )
 
     beams_theta_phi = [(b["theta_deg"], b["phi_deg"]) for b in beams]
     uv_png_url, cut_png_urls = None, []
@@ -230,7 +265,9 @@ def _run_vector_pattern_job(
         uv_png_url = f"/api/files/{job.id}/{uv_path.name}"
         cut_phis = [b[1] for b in beams_theta_phi] or [0.0]
         for i, phi_cut in enumerate(cut_phis):
-            cut_path = pattern_cut_png(pat.theta_deg, pat.phi_deg, pat.power_db, phi_cut, out_dir / f"pattern_cut_{i}.png")
+            cut_path = pattern_cut_png(
+                pat.theta_deg, pat.phi_deg, pat.power_db, phi_cut, out_dir / f"pattern_cut_{i}.png"
+            )
             cut_png_urls.append(f"/api/files/{job.id}/{cut_path.name}")
     except Exception:
         pass  # best-effort plots only
@@ -248,11 +285,19 @@ def _run_vector_pattern_job(
             co_db = 10.0 * np.log10(np.maximum(np.abs(co) ** 2, 1e-30) / total_peak)
             cross_db = 10.0 * np.log10(np.maximum(np.abs(cross) ** 2, 1e-30) / total_peak)
             co_path = pattern_uv_map_png(
-                pat.theta_deg, pat.phi_deg, co_db, out_dir / "pattern_uv_copol.png", beams_theta_phi,
+                pat.theta_deg,
+                pat.phi_deg,
+                co_db,
+                out_dir / "pattern_uv_copol.png",
+                beams_theta_phi,
                 title=f"Co-pol ({first_pol})",
             )
             cross_path = pattern_uv_map_png(
-                pat.theta_deg, pat.phi_deg, cross_db, out_dir / "pattern_uv_crosspol.png", beams_theta_phi,
+                pat.theta_deg,
+                pat.phi_deg,
+                cross_db,
+                out_dir / "pattern_uv_crosspol.png",
+                beams_theta_phi,
                 title=f"Cross-pol ({_CROSS_LABEL[first_pol]})",
             )
             copol_uv_url = f"/api/files/{job.id}/{co_path.name}"
@@ -274,7 +319,12 @@ def _run_vector_pattern_job(
         wavelength_m = 299792458.0 / frequency_hz
         other_beams_deg = [(b["theta_deg"], b["phi_deg"]) for b in beams[1:]]
         first = beam_polarization_metrics(
-            pat, first_pol, beams[0]["theta_deg"], beams[0]["phi_deg"], aperture_extent_m, wavelength_m,
+            pat,
+            first_pol,
+            beams[0]["theta_deg"],
+            beams[0]["phi_deg"],
+            aperture_extent_m,
+            wavelength_m,
             other_beams_deg,
         )
         result["sll_copol_db"] = first.sll_copol_db
@@ -308,14 +358,29 @@ def predict(body: PatternRequest, request: Request):
     beams = body.model_dump()["beams"]
     if body.pattern_model == "scalar":
         job = request.app.state.jobs.submit(
-            "pattern_predict", _run_scalar_pattern_job,
-            result, body.frequency_hz, body.theta_max_deg, body.n_theta, body.n_phi, beams,
+            "pattern_predict",
+            _run_scalar_pattern_job,
+            result,
+            body.frequency_hz,
+            body.theta_max_deg,
+            body.n_theta,
+            body.n_phi,
+            beams,
         )
     elif body.pattern_model == "vector":
         job = request.app.state.jobs.submit(
-            "pattern_predict", _run_vector_pattern_job,
-            result, body.frequency_hz, body.theta_max_deg, body.n_theta, body.n_phi, beams,
-            body.eps_r, body.tan_delta, body.thickness_mm, body.leakage_alpha_per_m,
+            "pattern_predict",
+            _run_vector_pattern_job,
+            result,
+            body.frequency_hz,
+            body.theta_max_deg,
+            body.n_theta,
+            body.n_phi,
+            beams,
+            body.eps_r,
+            body.tan_delta,
+            body.thickness_mm,
+            body.leakage_alpha_per_m,
         )
     else:
         raise HTTPException(400, f"pattern_model must be 'scalar' or 'vector', got {body.pattern_model!r}")

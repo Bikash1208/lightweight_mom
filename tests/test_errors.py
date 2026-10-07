@@ -10,17 +10,20 @@ def test_every_error_code_is_unique():
     assert len(codes) == len(set(codes))
 
 
-@pytest.mark.parametrize("factory, args", [
-    (errors.config_invalid, ()),
-    (errors.geometry_out_of_cell, ()),
-    (errors.mesh_unaligned, ()),
-    (errors.floquet_rank_deficient, ()),
-    (errors.solve_failed, ()),
-    (errors.not_converged, ()),
-    (errors.phase_unreachable, ()),
-    (errors.cad_unavailable, ()),
-    (errors.impedance_unreachable, ()),
-])
+@pytest.mark.parametrize(
+    "factory, args",
+    [
+        (errors.config_invalid, ()),
+        (errors.geometry_out_of_cell, ()),
+        (errors.mesh_unaligned, ()),
+        (errors.floquet_rank_deficient, ()),
+        (errors.solve_failed, ()),
+        (errors.not_converged, ()),
+        (errors.phase_unreachable, ()),
+        (errors.cad_unavailable, ()),
+        (errors.impedance_unreachable, ()),
+    ],
+)
 def test_factory_functions_raise_lwmom_error_with_stable_code(factory, args):
     err = factory(*args)
     assert isinstance(err, errors.LwmomError)

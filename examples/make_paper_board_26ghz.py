@@ -505,8 +505,13 @@ def main():
     ports_info = [(p["port_id"] + 1, fx, fy) for p, (fx, fy) in zip(paper_result["ports"], feeds_mm, strict=True)]
     ox, oy = paper_result["export_offset_mm"]
     marker_check = [
-        {"port": p["port_id"] + 1, "feed_mm": [round(fx, 3), round(fy, 3)], "inside_own_port": bool(
-            p["x_min_mm"] - ox <= fx <= p["x_max_mm"] - ox and p["y_min_mm"] - oy <= fy <= p["y_max_mm"] - oy)}
+        {
+            "port": p["port_id"] + 1,
+            "feed_mm": [round(fx, 3), round(fy, 3)],
+            "inside_own_port": bool(
+                p["x_min_mm"] - ox <= fx <= p["x_max_mm"] - ox and p["y_min_mm"] - oy <= fy <= p["y_max_mm"] - oy
+            ),
+        }
         for p, (fx, fy) in zip(paper_result["ports"], feeds_mm, strict=True)
     ]
     metrics["feed_markers_in_step_frame"] = marker_check

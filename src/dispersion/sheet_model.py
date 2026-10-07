@@ -55,11 +55,10 @@ from ..constants import EPS0, ETA0
 from ..errors import LwmomError, config_invalid, dispersion_sheet_model_no_root
 from ..excitation import ReferencePlanes
 from ..frequency import angular_frequency, free_space_wavenumber
+from ..green_function import LayeredGreenFunction
 from ..labels import DISPERSION_FROM_SHEET_MODEL, EXPERIMENTAL
 from ..sparameters import compute_s_parameters, surface_wave_interval
-from ..green_function import LayeredGreenFunction
 from .hfss_table import DispersionSample, DispersionTable
-from .mom_scaffold import square_patch_unit_cell
 
 SCAFFOLD_LABELS = (DISPERSION_FROM_SHEET_MODEL, EXPERIMENTAL)
 
@@ -146,9 +145,7 @@ def find_beta_from_sheet_admittance(y_sheet, substrate, frequency_hz, period_m=N
         )
     i = int(sign_changes[0])
     beta = float(brentq(f_imag, betas[i], betas[i + 1]))
-    residual = float(
-        (y_sheet + _y_air(beta, omega, k0) + _y_slab(beta, omega, eps_c, k0, substrate.thickness)).real
-    )
+    residual = float((y_sheet + _y_air(beta, omega, k0) + _y_slab(beta, omega, eps_c, k0, substrate.thickness)).real)
     x_s = float(ETA0 * np.sqrt((beta / k0) ** 2 - 1.0))
 
     beta_p_over_pi = None
@@ -185,7 +182,9 @@ def find_beta_from_gamma(gamma, substrate, frequency_hz, period_m=None):
     return find_beta_from_sheet_admittance(y_sheet, substrate, frequency_hz, period_m=period_m)
 
 
-def build_dispersion_table_from_sheet_model(unit_cell_at, geometry_params, frequency_hz, mesh, period_m=None, source_label="sheet_model_dispersion_search"):
+def build_dispersion_table_from_sheet_model(
+    unit_cell_at, geometry_params, frequency_hz, mesh, period_m=None, source_label="sheet_model_dispersion_search"
+):
     """Sweeps `geometry_params` (e.g. a square patch side length, in metres) through
     `find_beta_for_cell`, building a `DispersionTable` the same shape `hfss_table.
     read_dispersion_csv` would. A sample that raises `DISPERSION_SHEET_MODEL_NO_ROOT` is skipped,
@@ -197,7 +196,9 @@ def build_dispersion_table_from_sheet_model(unit_cell_at, geometry_params, frequ
             mode = find_beta_for_cell(cell, frequency_hz, mesh, period_m=period_m)
         except LwmomError:
             continue
-        samples.append(DispersionSample(geometry_param=float(gp), beta_rad_per_m=mode.beta_rad_per_m, x_s_ohm=mode.x_s_ohm))
+        samples.append(
+            DispersionSample(geometry_param=float(gp), beta_rad_per_m=mode.beta_rad_per_m, x_s_ohm=mode.x_s_ohm)
+        )
     if not samples:
         raise dispersion_sheet_model_no_root(
             f"no bound-mode root found for any of {len(list(geometry_params))} geometry samples"

@@ -18,12 +18,12 @@ import pytest
 cadquery = pytest.importorskip("cadquery")
 pytest.importorskip("matplotlib")
 
-from src import cad_export, units
-from src.database import CONVENTIONS, Database
-from src.runner import run_sweep
-from src.sweep import SweepDefinition
-from src.validation_cases import CASES_BY_ID
-from src.validation_export import (
+from src import cad_export, units  # noqa: E402
+from src.database import CONVENTIONS, Database  # noqa: E402
+from src.runner import run_sweep  # noqa: E402
+from src.sweep import SweepDefinition  # noqa: E402
+from src.validation_cases import CASES_BY_ID  # noqa: E402
+from src.validation_export import (  # noqa: E402
     CaseExportResult,
     _db,
     _mag_phase,

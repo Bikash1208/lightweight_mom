@@ -13,17 +13,16 @@ from ..phase8e.beam_reconstruction import detect_local_maxima, far_field_pattern
 
 @dataclass(frozen=True)
 class PatternResult:
-    theta_deg: np.ndarray       # 2-D angular grid
+    theta_deg: np.ndarray  # 2-D angular grid
     phi_deg: np.ndarray
-    power_db: np.ndarray         # relative to the pattern's own peak, 0 dB at peak
+    power_db: np.ndarray  # relative to the pattern's own peak, 0 dB at peak
     main_beam_theta_deg: float
     main_beam_phi_deg: float
-    sll_db: "float | None"       # highest sidelobe relative to the main beam, None if only 1 peak found
+    sll_db: "float | None"  # highest sidelobe relative to the main beam, None if only 1 peak found
     directivity_estimate_dbi: float
 
 
-def compute_pattern(x_m, y_m, aperture_field, frequency_hz, dx_m, dy_m,
-                     theta_max_deg=90.0, n_theta=91, n_phi=73):
+def compute_pattern(x_m, y_m, aperture_field, frequency_hz, dx_m, dy_m, theta_max_deg=90.0, n_theta=91, n_phi=73):
     """Far field over a hemisphere (theta in [0, theta_max_deg], phi in [0, 360)), on an
     `n_theta` x `n_phi` grid. Returns a `PatternResult`."""
     theta = np.linspace(0.0, theta_max_deg, n_theta)
@@ -57,9 +56,13 @@ def compute_pattern(x_m, y_m, aperture_field, frequency_hz, dx_m, dy_m,
 
     directivity = _directivity_estimate(power, theta_grid)
     return PatternResult(
-        theta_deg=theta_grid, phi_deg=phi_grid, power_db=power_db,
-        main_beam_theta_deg=main.theta_deg, main_beam_phi_deg=main.phi_deg,
-        sll_db=sll_db, directivity_estimate_dbi=directivity,
+        theta_deg=theta_grid,
+        phi_deg=phi_grid,
+        power_db=power_db,
+        main_beam_theta_deg=main.theta_deg,
+        main_beam_phi_deg=main.phi_deg,
+        sll_db=sll_db,
+        directivity_estimate_dbi=directivity,
     )
 
 

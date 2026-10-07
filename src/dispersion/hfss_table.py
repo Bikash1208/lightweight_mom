@@ -35,7 +35,7 @@ class DispersionSample:
 class DispersionTable:
     source_path: str
     frequency_hz: float
-    samples: tuple   # DispersionSample, sorted by geometry_param
+    samples: tuple  # DispersionSample, sorted by geometry_param
     label: str = DISPERSION_FROM_HFSS
 
     @property
@@ -58,6 +58,7 @@ class DispersionTable:
         lo, hi = self.geometry_range
         if not (lo <= geometry_param <= hi):
             from ..errors import impedance_unreachable
+
             raise impedance_unreachable(
                 f"geometry_param={geometry_param!r} outside this table's range [{lo!r}, {hi!r}]"
             )
@@ -115,7 +116,11 @@ def read_dispersion_csv(path, frequency_hz):
             for row in reader:
                 try:
                     gp = float(row["geometry_param"])
-                    beta = float(row["beta_rad_per_m"]) if has_beta and row.get("beta_rad_per_m") not in (None, "") else None
+                    beta = (
+                        float(row["beta_rad_per_m"])
+                        if has_beta and row.get("beta_rad_per_m") not in (None, "")
+                        else None
+                    )
                     xs = float(row["x_s_ohm"]) if has_xs and row.get("x_s_ohm") not in (None, "") else None
                 except ValueError as exc:
                     raise config_invalid(exc, message=f"{path}: non-numeric value in row {row!r}") from exc

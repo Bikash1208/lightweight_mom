@@ -21,8 +21,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 warnings.filterwarnings("ignore", category=UserWarning)  # grating-order warning: none expected in this band
 
-from src.library_schema import LibraryConfig
-from src.unit_cell_library import build_full_library
+from src.library_schema import LibraryConfig  # noqa: E402
+from src.unit_cell_library import build_full_library  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 

@@ -5,7 +5,9 @@ frontend with no build step (see docs/ARCHITECTURE.md "why no frontend build ste
 localhost only; nothing here calls out to the network.
 """
 
+import subprocess
 import webbrowser
+from importlib.metadata import PackageNotFoundError, version as _package_version
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -15,6 +17,28 @@ from ..logging_setup import configure_logging
 from .jobs import JobQueue
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+
+
+def app_version() -> str:
+    try:
+        return _package_version("lwmom")
+    except PackageNotFoundError:
+        return "unknown"
+
+
+def git_short_sha() -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return result.stdout.strip() or None if result.returncode == 0 else None
 
 
 def create_app():
@@ -22,7 +46,7 @@ def create_app():
     app = FastAPI(
         title="lwmom",
         description="Reflectarray / holographic metasurface antenna (HMSA) design tool -- local, offline.",
-        version="0.13.0",
+        version=app_version(),
     )
     app.state.jobs = JobQueue()
 
@@ -51,6 +75,10 @@ def create_app():
     @app.get("/api/health")
     def health():
         return {"status": "ok"}
+
+    @app.get("/api/version")
+    def version_info():
+        return {"version": app_version(), "commit": git_short_sha()}
 
     # Mounted last: a "/" StaticFiles mount would otherwise shadow every API route registered
     # after it (Starlette matches routes in registration order).

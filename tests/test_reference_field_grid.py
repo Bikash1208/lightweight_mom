@@ -12,9 +12,7 @@ from src.dispersion.analytic_tm0 import tm0_beta
 from src.fields import fld_parser as fp
 from src.fields import reference_field_grid as rfg
 
-EXAMPLE_PATH = (
-    Path(__file__).resolve().parent.parent / "inputs" / "reference_fields" / "efl_phase_EzZ_example.fld"
-)
+EXAMPLE_PATH = Path(__file__).resolve().parent.parent / "inputs" / "reference_fields" / "efl_phase_EzZ_example.fld"
 pytestmark = pytest.mark.skipif(not EXAMPLE_PATH.exists(), reason="example .fld file not present in this checkout")
 
 EPS_R = 2.2
@@ -48,12 +46,18 @@ def test_fld_to_reference_field_grid_phase_only(example_grid):
 def test_rejects_non_phase_expression(example_grid):
     fake_mag = fp.FldGrid(
         header=fp.FldHeader(
-            min_m=example_grid.header.min_m, max_m=example_grid.header.max_m,
-            step_m=example_grid.header.step_m, coordinate_system="x", unit="mm",
+            min_m=example_grid.header.min_m,
+            max_m=example_grid.header.max_m,
+            step_m=example_grid.header.step_m,
+            coordinate_system="x",
+            unit="mm",
             expression=fp.parse_expression("CmplxMag(ScalarZ(<Ex,Ey,Ez>))"),
         ),
-        x_m=example_grid.x_m, y_m=example_grid.y_m, value=np.ones_like(example_grid.value),
-        ordering=example_grid.ordering, path="fake",
+        x_m=example_grid.x_m,
+        y_m=example_grid.y_m,
+        value=np.ones_like(example_grid.value),
+        ordering=example_grid.ordering,
+        path="fake",
     )
     with pytest.raises(ValueError, match="must be a CmplxPhase"):
         rfg.fld_to_reference_field_grid(fake_mag)
@@ -61,8 +65,12 @@ def test_rejects_non_phase_expression(example_grid):
 
 def test_fld_to_reference_field_grid_with_magnitude(example_grid):
     magnitude_fld = fp.FldGrid(
-        header=example_grid.header, x_m=example_grid.x_m, y_m=example_grid.y_m,
-        value=np.ones_like(example_grid.value), ordering=example_grid.ordering, path="synthetic_mag",
+        header=example_grid.header,
+        x_m=example_grid.x_m,
+        y_m=example_grid.y_m,
+        value=np.ones_like(example_grid.value),
+        ordering=example_grid.ordering,
+        path="synthetic_mag",
     )
     grid = rfg.fld_to_reference_field_grid(example_grid, magnitude_fld)
     assert grid.amplitude_available is True
@@ -84,7 +92,7 @@ def test_radial_beta_profile_is_roughly_flat_in_the_plateau_region(example_grid)
     in_plateau = (centers > 0.015) & (centers < 0.135)
     plateau_values = medians[in_plateau]
     plateau_values = plateau_values[~np.isnan(plateau_values)]
-    assert plateau_values.std() / plateau_values.mean() < 0.15   # "constant" per the brief
+    assert plateau_values.std() / plateau_values.mean() < 0.15  # "constant" per the brief
 
 
 def test_compare_beta_to_tm0_reports_a_real_relative_difference(example_grid):

@@ -90,9 +90,7 @@ def _locate_peak(kts, vals, min_prominence):
     imax = int(np.argmax(vals))
     background = float(np.median(vals))
     if imax in (0, len(kts) - 1) or background <= 0:
-        raise dispersion_mom_no_clear_mode(
-            f"scan maximum at a boundary (kt={kts[imax]:.6g}) -- no interior peak found"
-        )
+        raise dispersion_mom_no_clear_mode(f"scan maximum at a boundary (kt={kts[imax]:.6g}) -- no interior peak found")
     prominence = float(vals[imax]) / background
     if prominence < min_prominence:
         raise dispersion_mom_no_clear_mode(
@@ -102,7 +100,14 @@ def _locate_peak(kts, vals, min_prominence):
     return kts[imax - 1], kts[imax + 1], prominence
 
 
-def find_surface_wave_mode(unit_cell, frequency_hz, direction_deg=0.0, mesh=DEFAULT_MESH, n_scan=DEFAULT_N_SCAN, min_prominence=DEFAULT_MIN_PROMINENCE):
+def find_surface_wave_mode(
+    unit_cell,
+    frequency_hz,
+    direction_deg=0.0,
+    mesh=DEFAULT_MESH,
+    n_scan=DEFAULT_N_SCAN,
+    min_prominence=DEFAULT_MIN_PROMINENCE,
+):
     """Search `sparameters.surface_wave_interval` for the real, bound TM surface-wave eigenmode of
     `unit_cell` (must have `backing == "pec"`) at `frequency_hz`, along `direction_deg` (0 = +x).
 
@@ -144,7 +149,14 @@ def find_surface_wave_mode(unit_cell, frequency_hz, direction_deg=0.0, mesh=DEFA
     )
 
 
-def build_dispersion_table_from_mom(unit_cell_at, geometry_params, frequency_hz, direction_deg=0.0, mesh=DEFAULT_MESH, source_label="mom_dispersion_search"):
+def build_dispersion_table_from_mom(
+    unit_cell_at,
+    geometry_params,
+    frequency_hz,
+    direction_deg=0.0,
+    mesh=DEFAULT_MESH,
+    source_label="mom_dispersion_search",
+):
     """Sweep `geometry_params` (e.g. a square patch side length, in metres) through
     `find_surface_wave_mode`, building a `DispersionTable` the same way `hfss_table.read_dispersion_csv`
     would -- `unit_cell_at(geometry_param)` builds the grounded `UnitCell` for one sample (the
@@ -159,7 +171,9 @@ def build_dispersion_table_from_mom(unit_cell_at, geometry_params, frequency_hz,
             mode = find_surface_wave_mode(cell, frequency_hz, direction_deg=direction_deg, mesh=mesh)
         except LwmomError:
             continue
-        samples.append(DispersionSample(geometry_param=float(gp), beta_rad_per_m=mode.beta_rad_per_m, x_s_ohm=mode.x_s_ohm))
+        samples.append(
+            DispersionSample(geometry_param=float(gp), beta_rad_per_m=mode.beta_rad_per_m, x_s_ohm=mode.x_s_ohm)
+        )
     if not samples:
         raise dispersion_mom_no_clear_mode(
             f"no clear surface-wave mode found for any of {len(list(geometry_params))} geometry samples"

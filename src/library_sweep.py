@@ -307,16 +307,26 @@ def _annular_slot_cell_doc(cell, database, a_mm, b_mm, r_mm):
     geometry_status = "VALID" if cell.status == "ok" else "INVALID"
     if cell.status != "ok":
         return {
-            "cell_id": cell.cell_id, "a_mm": a_mm, "b_mm": b_mm, "R_mm": outer_r_mm, "r_mm": r_mm,
-            "geometry_status": geometry_status, "solver_status": "FAILED",
-            "invalid_reason": cell.reason, "frequency_GHz": [], "S11": [],
+            "cell_id": cell.cell_id,
+            "a_mm": a_mm,
+            "b_mm": b_mm,
+            "R_mm": outer_r_mm,
+            "r_mm": r_mm,
+            "geometry_status": geometry_status,
+            "solver_status": "FAILED",
+            "invalid_reason": cell.reason,
+            "frequency_GHz": [],
+            "S11": [],
         }
     records = sorted(database.records_of(cell.index), key=lambda r: r.frequency_index)
     families = _S_FAMILIES_ONE_PORT if records[0].port_topology == "one_port" else _S_FAMILIES_TWO_PORT
     ctx = database.metadata["context"]
     doc = {
         "cell_id": cell.cell_id,
-        "a_mm": a_mm, "b_mm": b_mm, "R_mm": outer_r_mm, "r_mm": r_mm,
+        "a_mm": a_mm,
+        "b_mm": b_mm,
+        "R_mm": outer_r_mm,
+        "r_mm": r_mm,
         "period_x_mm": ctx["lattice"]["period_x_m"] * 1e3,
         "period_y_mm": ctx["lattice"]["period_y_m"] * 1e3,
         "substrate_thickness_mm": ctx["substrate"]["thickness_m"] * 1e3,
@@ -350,7 +360,10 @@ def build_annular_slot_library_cells(base_config_dict, a_mm, b_mm, r_mm, R_value
                 **base_config_dict,
                 "geometry": {
                     "type": "patch_annular_slot",
-                    "a": a_mm * 1e-3, "b": b_mm * 1e-3, "R": outer_r_mm * 1e-3, "r": r_mm * 1e-3,
+                    "a": a_mm * 1e-3,
+                    "b": b_mm * 1e-3,
+                    "R": outer_r_mm * 1e-3,
+                    "r": r_mm * 1e-3,
                 },
                 "excitation": {"frequency": frequency_hz},
             }

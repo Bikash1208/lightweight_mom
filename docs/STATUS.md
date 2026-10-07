@@ -48,6 +48,23 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
 3. **2-bit multi-port wiring** (parked, see below) — if a future phase needs > 1-bit coding on a
    multi-port layout.
 
+## Hygiene (Phase 17 §4 findings — report only, not acted on)
+
+- **Dead code**: an import-graph scan (`ast`-based, resolves relative imports, checked against
+  `src/`+`tests/`+`scripts/`+`examples/`) found no module under `src/` that is both never imported
+  and never covered by a test. None found, none removed.
+- **Lint debt**: `ruff check src tests examples scripts` has ~95 pre-existing findings predating
+  Phase 17 (mostly `B905` bare `zip()`, `F841` unused locals, `B023`/`B007` loop-variable closures,
+  a handful of `SIM105`/`SIM115`/`E731`/`E701`/`B017`/`B018`/`I001`/`F401`) spread across `src/`
+  (40), `tests/` (42) and `scripts/` (12). Each needs per-site judgement (e.g. adding `zip(...,
+  strict=True)` can change behaviour if lengths ever mismatch) rather than a bulk `--fix`, so it's
+  left as a punch list for the user to triage rather than silently edited. Only genuinely safe,
+  zero-behaviour-change items were fixed as part of this phase: 34 intentional `E402` cases
+  (`pytest.importorskip`/`sys.path.insert` guard patterns — annotated `# noqa: E402`, or two stray
+  imports moved to the top of their file) and a repo-wide `ruff format` pass (whitespace only).
+- No stray debug `print()` or unowned `TODO`/`FIXME`/`XXX` found anywhere in `src/`, `tests/`,
+  `scripts/`, or `examples/`.
+
 ## Parked ideas (`docs/briefs/_parked/`)
 
 - `PHASE16_UNIT_CELL_SPARAM_TOOL.md` — a unit-cell/FSS tool with plane-defined S-parameters (the

@@ -21,6 +21,16 @@ def test_health_endpoint_reports_ok(client):
     assert resp.json() == {"status": "ok"}
 
 
+def test_version_endpoint_reports_the_installed_package_version(client):
+    from importlib.metadata import version as package_version
+
+    resp = client.get("/api/version")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["version"] == package_version("lwmom")
+    assert body["commit"] is None or isinstance(body["commit"], str)
+
+
 def test_static_index_is_served_at_root(client):
     resp = client.get("/")
     assert resp.status_code == 200

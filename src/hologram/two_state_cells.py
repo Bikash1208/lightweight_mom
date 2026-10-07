@@ -84,7 +84,9 @@ def candidates_from_square_library(candidates):
     already use) -- wraps each as a `TwoStateCell` labelled by its own square side length."""
     return [
         TwoStateCell(
-            label=f"square patch L={l_mm:g}mm", record_id=record_id, value=complex(value),
+            label=f"square patch L={l_mm:g}mm",
+            record_id=record_id,
+            value=complex(value),
             geometry={"kind": "rectangle", "L_mm": l_mm, "W_mm": w_mm},
             reference_offset_m=LIBRARY_REFERENCE_OFFSET_M,
         )
@@ -105,10 +107,15 @@ def candidates_from_annular_slot_library(cell_docs, frequency_ghz):
         value = complex(entry["real"], entry["imag"])
         out.append(
             TwoStateCell(
-                label=f"annular slot R={doc['R_mm']:g}mm", record_id=doc["cell_id"], value=value,
+                label=f"annular slot R={doc['R_mm']:g}mm",
+                record_id=doc["cell_id"],
+                value=value,
                 geometry={
-                    "kind": "annular_slot", "a_mm": doc["a_mm"], "b_mm": doc["b_mm"],
-                    "R_mm": doc["R_mm"], "r_mm": doc["r_mm"],
+                    "kind": "annular_slot",
+                    "a_mm": doc["a_mm"],
+                    "b_mm": doc["b_mm"],
+                    "R_mm": doc["R_mm"],
+                    "r_mm": doc["r_mm"],
                 },
                 reference_offset_m=LIBRARY_REFERENCE_OFFSET_M,
             )
@@ -211,7 +218,15 @@ def pair_beta_spread_fraction(beta_a, beta_b):
     return abs(beta_a - beta_b) / mean
 
 
-def best_valid_pair(candidates, surface_waves, frequency_hz, substrate, period_m=None, beta_spread_limit=BETA_SPREAD_LIMIT_FRACTION, reasons=None):
+def best_valid_pair(
+    candidates,
+    surface_waves,
+    frequency_hz,
+    substrate,
+    period_m=None,
+    beta_spread_limit=BETA_SPREAD_LIMIT_FRACTION,
+    reasons=None,
+):
     """The Part E pair rule: the largest measured phase separation among pairs where BOTH states
     carry the TM0 surface wave (`surface_waves[i]` not None) and whose beta values agree within
     `beta_spread_limit` of their mean. `surface_waves` is aligned with `candidates` (from
@@ -255,8 +270,11 @@ def best_valid_pair(candidates, surface_waves, frequency_hz, substrate, period_m
     beta_a = surface_waves[i].beta_rad_per_m
     beta_b = surface_waves[j].beta_rad_per_m
     return TwoStateChoice(
-        state_0=candidates[i], state_1=candidates[j], achieved_separation_deg=float(sep),
-        surface_wave_0=surface_waves[i], surface_wave_1=surface_waves[j],
+        state_0=candidates[i],
+        state_1=candidates[j],
+        achieved_separation_deg=float(sep),
+        surface_wave_0=surface_waves[i],
+        surface_wave_1=surface_waves[j],
         beta_bar_rad_per_m=0.5 * (beta_a + beta_b),
         beta_spread_fraction=pair_beta_spread_fraction(beta_a, beta_b),
     )
@@ -290,4 +308,3 @@ def lambda_sw_over_cell(beta_rad_per_m, period_m):
     """`lambda_sw / cell` -- the surface-wave wavelength in units of the cell pitch (the same
     `lambda_sw` `hologram/ports.py`'s isolation rule uses)."""
     return float((2.0 * np.pi / beta_rad_per_m) / period_m)
-

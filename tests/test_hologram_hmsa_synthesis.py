@@ -147,8 +147,14 @@ def test_formulation_b_natural_pencil_default_is_bit_identical_to_pre_phase15():
     candidates = [("c1", 2.0, 2.0, "lib", complex(1.0, 0.0))]
     design_default = hs.synthesize_formulation_b(ref, beams, FREQ, candidates, period_m=8e-3)
     design_explicit = hs.synthesize_formulation_b(
-        ref, beams, FREQ, candidates, period_m=8e-3,
-        feed_xy_m=(0.0, 0.0), cp_phase_offset_deg=0.0, multiplexing="full_aperture",
+        ref,
+        beams,
+        FREQ,
+        candidates,
+        period_m=8e-3,
+        feed_xy_m=(0.0, 0.0),
+        cp_phase_offset_deg=0.0,
+        multiplexing="full_aperture",
     )
     assert np.array_equal(design_default.control_map, design_explicit.control_map)
     assert np.array_equal(design_default.aperture_field, design_explicit.aperture_field)
@@ -181,8 +187,16 @@ def test_synthesize_formulation_a_accepts_feed_and_multiplexing_kwargs():
     beams = [Beam(theta_deg=0.0, phi_deg=0.0, desired_polarization="hp")]
     table = _dispersion_table()
     design = hs.synthesize_formulation_a(
-        ref, beams, FREQ, x_avg_ohm=125.0, modulation_index=0.3, dispersion_table=table, period_m=8e-3,
-        feed_xy_m=(0.0, 0.0), cp_phase_offset_deg=0.0, multiplexing="full_aperture",
+        ref,
+        beams,
+        FREQ,
+        x_avg_ohm=125.0,
+        modulation_index=0.3,
+        dispersion_table=table,
+        period_m=8e-3,
+        feed_xy_m=(0.0, 0.0),
+        cp_phase_offset_deg=0.0,
+        multiplexing="full_aperture",
     )
     assert design.formulation == "A_impedance_modulation"
 

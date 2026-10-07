@@ -170,7 +170,9 @@ def test_single_feed_multi_feed_pipeline_matches_the_single_feed_path():
     plain_field = monopole_reference_field(x, y, BETA)
     plain_ref = replace(
         phase_only_reference_field(x, y, np.zeros_like(x)),
-        Ex=plain_field, Ey=np.zeros_like(plain_field), amplitude_available=True,
+        Ex=plain_field,
+        Ey=np.zeros_like(plain_field),
+        amplitude_available=True,
         phase_deg=np.degrees(np.angle(plain_field)),
     )
     single_design = hs.synthesize_formulation_b(plain_ref, beam, FREQ, _candidates(), period_m=8e-3)

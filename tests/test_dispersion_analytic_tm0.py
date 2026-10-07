@@ -17,7 +17,7 @@ def test_beta_matches_brief_cited_values(freq_ghz, expected_beta):
 
 def test_n_eff_is_just_above_one_for_a_thin_low_contrast_slab():
     n_eff = tm0.tm0_n_eff(10e9, EPS_R, THICKNESS_M)
-    assert 1.0 < n_eff < 1.05   # matches the brief's own "n_eff ~= 1.07" ballpark
+    assert 1.0 < n_eff < 1.05  # matches the brief's own "n_eff ~= 1.07" ballpark
 
 
 def test_beta_increases_with_frequency():

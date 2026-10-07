@@ -4,7 +4,7 @@ import pytest
 
 cadquery = pytest.importorskip("cadquery")
 
-from src.phase12c import exports
+from src.phase12c import exports  # noqa: E402
 
 
 def test_export_single_cells_writes_a_step_file_per_l(tmp_path):

@@ -1,12 +1,10 @@
 """Part 3: the HFSS-compare service (upload validation, comparison, ledger)."""
 
-from pathlib import Path
-
 import pytest
 
 from src.hfss_compare import service as svc
-from src.phase12d.hfss_ingest import TOUCHSTONE_PATH
 from src.phase9.hfss_reference import TouchstoneError
+from src.phase12d.hfss_ingest import TOUCHSTONE_PATH
 
 pytestmark = pytest.mark.skipif(not TOUCHSTONE_PATH.exists(), reason="real HFSS export not present in this checkout")
 

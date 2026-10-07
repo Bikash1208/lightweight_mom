@@ -153,8 +153,17 @@ def patch_layout_png(cells_mm, period_mm, nx, ny, path, title=None, feed_xy_mm=(
     fig, ax = plt.subplots(figsize=(8, 8), dpi=260)
     fig.patch.set_facecolor("white")
     ax.set_facecolor("white")
-    ax.add_patch(Rectangle((cx - half_x, cy - half_y), 2 * half_x, 2 * half_y,
-                           facecolor=_SUBSTRATE, edgecolor=_SUBSTRATE_EDGE, linewidth=0.8, zorder=0))
+    ax.add_patch(
+        Rectangle(
+            (cx - half_x, cy - half_y),
+            2 * half_x,
+            2 * half_y,
+            facecolor=_SUBSTRATE,
+            edgecolor=_SUBSTRATE_EDGE,
+            linewidth=0.8,
+            zorder=0,
+        )
+    )
     rects = [Rectangle((x - l / 2.0, y - w / 2.0), l, w) for x, y, l, w, *_rest in cells]
     ax.add_collection(PatchCollection(rects, facecolor=_COPPER, edgecolor=_COPPER_EDGE, linewidth=0.15, zorder=1))
     for x, y, _l, _w, *rest in cells:
@@ -163,7 +172,9 @@ def patch_layout_png(cells_mm, period_mm, nx, ny, path, title=None, feed_xy_mm=(
         outer_r_mm, inner_r_mm = rest
         ax.add_patch(Circle((x, y), outer_r_mm, facecolor=_SUBSTRATE, edgecolor="none", zorder=2))
         if inner_r_mm > 0:
-            ax.add_patch(Circle((x, y), inner_r_mm, facecolor=_COPPER, edgecolor=_COPPER_EDGE, linewidth=0.15, zorder=3))
+            ax.add_patch(
+                Circle((x, y), inner_r_mm, facecolor=_COPPER, edgecolor=_COPPER_EDGE, linewidth=0.15, zorder=3)
+            )
     if feed_xy_mm is not None:
         ax.plot(feed_xy_mm[0], feed_xy_mm[1], "o", markersize=4, color=_ACCENT, zorder=3)
     ax.set_xlim(cx - half_x - 2, cx + half_x + 2)
@@ -175,7 +186,15 @@ def patch_layout_png(cells_mm, period_mm, nx, ny, path, title=None, feed_xy_mm=(
         spine.set_visible(False)
     if cells:
         sizes = np.array([c[2] for c in cells])
-        ax.text(0.99, -0.07, f"Patch size {sizes.min():.2f}–{sizes.max():.2f} mm  ·  {len(cells)} patches  ·  pitch {period_mm:g} mm",
-                transform=ax.transAxes, ha="right", va="top", fontsize=8, color="#555")
+        ax.text(
+            0.99,
+            -0.07,
+            f"Patch size {sizes.min():.2f}–{sizes.max():.2f} mm  ·  {len(cells)} patches  ·  pitch {period_mm:g} mm",
+            transform=ax.transAxes,
+            ha="right",
+            va="top",
+            fontsize=8,
+            color="#555",
+        )
     ax.set_title(title or f"Patch layout — {nx} × {ny} cells, {period_mm:g} mm pitch", fontsize=10)
     return _save_png(fig, path)

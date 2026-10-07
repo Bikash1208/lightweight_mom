@@ -175,8 +175,14 @@ def test_export_multi_port_array_handles_a_rectangular_board(tmp_path):
     metal = Metal("pec")
     grid = _rect_grid(2, 4)  # 2 rows x 4 columns: a rectangular, non-square board
     result = ae.export_multi_port_array(
-        grid, 8.0e-3, 8.0e-3, substrate, metal, tmp_path,
-        feeds_mm=[(-12.0, 0.0), (12.0, 0.0)], ports_info=[(0, -12.0, 0.0), (1, 12.0, 0.0)],
+        grid,
+        8.0e-3,
+        8.0e-3,
+        substrate,
+        metal,
+        tmp_path,
+        feeds_mm=[(-12.0, 0.0), (12.0, 0.0)],
+        ports_info=[(0, -12.0, 0.0), (1, 12.0, 0.0)],
     )
     assert result.n_cells_x == 4
     assert result.n_cells_y == 2

@@ -103,7 +103,7 @@ def test_zero_inner_radius_is_a_plain_disk_slot_with_no_separate_island():
 
 @pytest.mark.slow
 def test_annular_slot_cell_solves_and_differs_from_a_plain_patch_of_the_same_outer_size():
-    """"validated like the square patch" (the brief): a real MoM solve on this new geometry is
+    """ "validated like the square patch" (the brief): a real MoM solve on this new geometry is
     passive/reciprocal-scale (|S11| close to 1 for a lossless PEC grounded reflector) and gives a
     MEASURABLY different reflection phase than a plain patch of the same outer footprint -- the
     slot is doing something physically real, not a geometry that silently reduces to the plain
@@ -128,4 +128,6 @@ def test_annular_slot_cell_solves_and_differs_from_a_plain_patch_of_the_same_out
     phase_annular = math.degrees(np.angle(s_annular.s11[0, 0]))
     phase_plain = math.degrees(np.angle(s_plain.s11[0, 0]))
     phase_diff = abs(((phase_annular - phase_plain + 180.0) % 360.0) - 180.0)
-    assert phase_diff > 1.0, f"annular-slot phase ({phase_annular:.1f}deg) barely differs from plain patch ({phase_plain:.1f}deg)"
+    assert phase_diff > 1.0, (
+        f"annular-slot phase ({phase_annular:.1f}deg) barely differs from plain patch ({phase_plain:.1f}deg)"
+    )

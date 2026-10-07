@@ -31,9 +31,12 @@ def _worst_pointing_error_deg(active_side_m):
     }
     library = _ideal_library()
     multi = synthesize_ports(
-        regions, beams,
+        regions,
+        beams,
         lambda ref, bs, feed: synthesize_formulation_b(ref, bs, FREQ, library, CELL, feed_xy_m=feed),
-        CELL, k_swg=K_SWG, min_lambda_sw=1.0,
+        CELL,
+        k_swg=K_SWG,
+        min_lambda_sw=1.0,
     )
     green = LayeredGreenFunction(SUB, FREQ, backing="pec")
     worst = 0.0

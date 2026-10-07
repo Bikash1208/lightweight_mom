@@ -738,11 +738,19 @@
       if (currentPortLayoutPreset() === "2x2_plus_1_large") return 5;
       return parseInt(document.getElementById("port-1xn-n").value, 10) || 2;
     }
+    function defaultPortBeams(i) {
+      // The 2x2+1 preset's large port 5 (index 4) illuminates the same quadrant as ports 1-4,
+      // so it defaults to all four of their beams instead of one beam of its own.
+      if (currentPortLayoutPreset() === "2x2_plus_1_large" && i === 4) {
+        return [0, 1, 2, 3].map((j) => ({
+          theta_deg: 20 + j * 5, phi_deg: (j * 90) % 360, power_db: 0, desired_polarization: "rhcp", oam_charge: 0,
+        }));
+      }
+      return [{ theta_deg: 20 + i * 5, phi_deg: (i * 90) % 360, power_db: 0, desired_polarization: "rhcp", oam_charge: 0 }];
+    }
     function renderPortsBeamTables() {
       const n = currentPortCount();
-      state.ports = Array.from({ length: n }, (_, i) => state.ports[i] || {
-        beams: [{ theta_deg: 20 + i * 5, phi_deg: (i * 90) % 360, power_db: 0, desired_polarization: "rhcp", oam_charge: 0 }],
-      });
+      state.ports = Array.from({ length: n }, (_, i) => state.ports[i] || { beams: defaultPortBeams(i) });
       const container = document.getElementById("ports-beam-tables");
       container.innerHTML = "";
       state.ports.forEach((port, pi) => {

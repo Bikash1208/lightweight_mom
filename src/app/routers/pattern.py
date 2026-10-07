@@ -23,7 +23,7 @@ from ...materials import Substrate
 from ...pattern.aperture_pattern import compute_pattern
 from ...pattern.vector_aperture_pattern import (
     aperture_current_from_scalar,
-    beam_local_peak,
+    beam_local_peak_fine,
     beam_polarization_metrics,
     compute_vector_pattern,
     copol_component,
@@ -115,27 +115,32 @@ def _run_scalar_pattern_job(job, source_result, frequency_hz, theta_max_deg, n_t
     }
 
 
-def _nearest_grid_index(theta_grid_deg, phi_grid_deg, theta_deg, phi_deg):
-    i = int(np.argmin(np.abs(theta_grid_deg[:, 0] - theta_deg)))
-    j = int(np.argmin(np.abs((phi_grid_deg[0, :] - phi_deg + 180.0) % 360.0 - 180.0)))
-    return i, j
-
-
 _CROSS_LABEL = {"rhcp": "lhcp", "lhcp": "rhcp", "hp": "vp", "vp": "hp", "slant_p45": "slant_m45", "slant_m45": "slant_p45"}
 
 
 def _per_beam_breakdown(job, x_m, y_m, jx, jy, frequency_hz, green, dx_m, dy_m, beams, pat, out_dir):
     """PHASE15 Part D: "Step 3 gains a per-beam result table (direction achieved, polarization
     achieved, XPD or axial ratio, 'Pencil check' or 'Vortex l=...')" -- one entry per REQUESTED
-    beam, measured (not assumed) against the actual computed vector pattern."""
+    beam, measured (not assumed) against the actual computed vector pattern.
+
+    PHASE16 follow-ups: "Achieved" direction and level now come from `beam_local_peak_fine`, the
+    SAME fine local evaluation `pointing_correction.measure_beam_aims` uses, normalised to the same
+    peak (the strongest of THESE beams) -- an earlier version read them off `pat`'s own shared,
+    coarser hemisphere grid instead, so this table could disagree with the pointing/level-matching
+    report for the exact same design (e.g. a beam the balance summary reports at its target 0 dB
+    showing -1.6 dB here, from grid-snap error alone)."""
     peak_power = float(np.max(np.abs(pat.e_theta) ** 2 + np.abs(pat.e_phi) ** 2))
+    fine_peaks = [
+        beam_local_peak_fine(x_m, y_m, jx, jy, frequency_hz, green, dx_m, dy_m, b["theta_deg"], b["phi_deg"])
+        for b in beams
+    ]
+    fine_peak_power = max((p for _, _, p in fine_peaks), default=0.0)
     entries = []
-    for idx, b in enumerate(beams):
+    for idx, (b, (achieved_theta, achieved_phi, power)) in enumerate(zip(beams, fine_peaks, strict=True)):
         pol = b["desired_polarization"]
         measure_label = pol if pol in _CROSS_LABEL else "rhcp"  # "natural" has no single co-pol
-        i, j = _nearest_grid_index(pat.theta_deg, pat.phi_deg, b["theta_deg"], b["phi_deg"])
 
-        achieved_theta, achieved_phi, level_db = beam_local_peak(pat, b["theta_deg"], b["phi_deg"])
+        level_db = 10.0 * np.log10(power / fine_peak_power) if fine_peak_power > 0.0 else float("-inf")
         xpd_db = None
         integrated_xpd_db = None
         polarization_efficiency = None

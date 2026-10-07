@@ -399,8 +399,8 @@ def test_synthesize_ports_pointing_correction_reports_before_and_after(client):
     assert report["after"][0]["miss_deg"] <= report["before"][0]["miss_deg"]
 
 
-def test_synthesize_ports_matches_requested_beam_levels_by_default(client):
-    body = {
+def _two_beam_balance_body():
+    return {
         "formulation": "coded", "frequency_hz": 26e9, "period_mm": 2.57,
         "layout": {"preset": "1xn", "n": 1, "cell_side_mm": 10.0, "gap_mm": 0.0},
         "ports": [{"beams": [
@@ -410,9 +410,40 @@ def test_synthesize_ports_matches_requested_beam_levels_by_default(client):
         "port_eps_r": 2.2, "port_thickness_mm": 1.575, "port_tan_delta": 0.0009,
         "two_state": _paper_pair_uploaded(), "beta_mode": "paper",
     }
+
+
+def test_synthesize_ports_matches_requested_beam_levels_by_default(client):
+    body = _two_beam_balance_body()
     resp = client.post("/api/hmsa/synthesize_ports", json=body)
     job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
     assert job["status"] == "done", job
     balance = job["result"]["refinement"][0]["balance"]
     assert len(balance["before_db"]) == 2
     assert balance["max_error_after_db"] <= balance["max_error_before_db"]
+
+
+def test_pattern_predict_per_beam_levels_match_the_balance_summary(client):
+    """Regression (PHASE16 follow-ups): the per-port beam table's "Level" and the balance
+    summary's "after" level used to come from two different measurements (the table from a
+    coarser shared hemisphere grid, the summary from `measure_beam_aims`'s fine local evaluation),
+    so they could disagree for the very same design and beam (e.g. -1.6 dB in the table vs. 0.0 dB
+    in the summary). Both now use the same `beam_local_peak_fine` evaluation."""
+    body = _two_beam_balance_body()
+    resp = client.post("/api/hmsa/synthesize_ports", json=body)
+    job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+    assert job["status"] == "done", job
+    balance = job["result"]["refinement"][0]["balance"]
+    port_beams = body["ports"][0]["beams"]
+
+    pattern_body = {
+        "source_job_id": job["id"], "frequency_hz": body["frequency_hz"], "pattern_model": "vector",
+        "eps_r": body["port_eps_r"], "tan_delta": body["port_tan_delta"], "thickness_mm": body["port_thickness_mm"],
+        "beams": [{"theta_deg": b["theta_deg"], "phi_deg": b["phi_deg"], "desired_polarization": b["desired_polarization"]} for b in port_beams],
+        "port_index": 0, "n_theta": 31, "n_phi": 37,
+    }
+    resp = client.post("/api/pattern/predict", json=pattern_body)
+    pjob = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+    assert pjob["status"] == "done", pjob
+    table_levels = [e["level_db"] for e in pjob["result"]["per_beam"]]
+    for table_level, summary_level in zip(table_levels, balance["after_db"], strict=True):
+        assert table_level == pytest.approx(summary_level, abs=0.5)

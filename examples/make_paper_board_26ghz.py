@@ -368,7 +368,8 @@ def figure_layout(result, path):
     ax.set_xlabel("x (mm)")
     ax.set_ylabel("y (mm)")
     ax.set_title(
-        f"26 GHz board, {n_x} x {n_y} cells at {PERIOD_MM} mm (copper = annular-slot patch, grey = empty)", fontsize=8
+        f"{F_HZ / 1e9:g} GHz board, {n_x} x {n_y} cells at {PERIOD_MM} mm (copper = annular-slot patch, grey = empty)",
+        fontsize=8,
     )
     fig.tight_layout()
     fig.savefig(path, dpi=150)

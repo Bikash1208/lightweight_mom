@@ -11,15 +11,15 @@ import pytest
 
 cadquery = pytest.importorskip("cadquery")
 
-import math
+import math  # noqa: E402
 
-from src.cad_export import solid_validity
-from src.geometry import Geometry, UnitCell
-from src.geometry_export import check_geometry_bounds, export_library_geometries, step_filename
-from src.library_builder import build_library_database
-from src.library_schema import LibraryConfig
-from src.materials import Metal, Substrate
-from src.periodic_bc import RectangularLattice
+from src.cad_export import solid_validity  # noqa: E402
+from src.geometry import Geometry, UnitCell  # noqa: E402
+from src.geometry_export import check_geometry_bounds, export_library_geometries, step_filename  # noqa: E402
+from src.library_builder import build_library_database  # noqa: E402
+from src.library_schema import LibraryConfig  # noqa: E402
+from src.materials import Metal, Substrate  # noqa: E402
+from src.periodic_bc import RectangularLattice  # noqa: E402
 
 warnings.filterwarnings("ignore", category=UserWarning)
 

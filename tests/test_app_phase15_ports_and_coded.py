@@ -42,7 +42,8 @@ def grounded_library(client):
     body = {
         "library_id": library_id,
         "base_config": {
-            "period_x": 8.0e-3, "period_y": 8.0e-3,
+            "period_x": 8.0e-3,
+            "period_y": 8.0e-3,
             "substrate": {**_SUBSTRATE, "backing": "pec"},
             "geometry": {"type": "rectangle", "length": 2.0e-3, "width": 2.0e-3},
             "excitation": {"frequency": _FREQ_HZ},
@@ -51,7 +52,10 @@ def grounded_library(client):
         },
         "l_values_mm": [2.0, 3.0, 4.0, 5.0, 6.0],
         "w_values_mm": [2.0, 3.0, 4.0, 5.0, 6.0],
-        "f_min_hz": _FREQ_HZ, "f_max_hz": _FREQ_HZ, "f_step_hz": 1.0e9, "f_design_hz": _FREQ_HZ,
+        "f_min_hz": _FREQ_HZ,
+        "f_max_hz": _FREQ_HZ,
+        "f_step_hz": 1.0e9,
+        "f_design_hz": _FREQ_HZ,
     }
     resp = client.post("/api/library/sweep", json=body)
     job = _wait_for_job(client, resp.json()["id"])
@@ -94,11 +98,14 @@ def test_synthesize_ports_1xn_layout_end_to_end(client, grounded_library):
 
 def test_synthesize_ports_rejects_mismatched_beam_count(client, grounded_library):
     body = {
-        "formulation": "B", "frequency_hz": _FREQ_HZ, "period_mm": 8.0,
+        "formulation": "B",
+        "frequency_hz": _FREQ_HZ,
+        "period_mm": 8.0,
         "layout": {"preset": "1xn", "n": 2, "cell_side_mm": 40.0},
         "ports": [{"beams": [{"theta_deg": 20.0, "phi_deg": 0.0}]}],  # only 1, layout has 2
         "library_id": grounded_library,
-        "port_eps_r": _SUBSTRATE["eps_r"], "port_thickness_mm": _SUBSTRATE["thickness"] * 1e3,
+        "port_eps_r": _SUBSTRATE["eps_r"],
+        "port_thickness_mm": _SUBSTRATE["thickness"] * 1e3,
     }
     resp = client.post("/api/hmsa/synthesize_ports", json=body)
     job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
@@ -109,9 +116,12 @@ def test_export_chains_off_a_ports_synthesis_job(client, grounded_library):
     synth_job = _synthesize_ports_1xn(client, grounded_library)
     assert synth_job["status"] == "done", synth_job
     export_body = {
-        "source_job_id": synth_job["id"], "period_mm": 8.0,
-        "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
-        "thickness_mm": _SUBSTRATE["thickness"] * 1e3, "include_step": False,
+        "source_job_id": synth_job["id"],
+        "period_mm": 8.0,
+        "eps_r": _SUBSTRATE["eps_r"],
+        "tan_delta": _SUBSTRATE["tan_delta"],
+        "thickness_mm": _SUBSTRATE["thickness"] * 1e3,
+        "include_step": False,
     }
     resp = client.post("/api/export/array", json=export_body)
     job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
@@ -130,7 +140,9 @@ def _upload_example_field(client):
 
     example = Path(__file__).resolve().parent.parent / "inputs" / "reference_fields" / "efl_phase_EzZ_example.fld"
     with open(example, "rb") as fh:
-        resp = client.post("/api/hmsa/upload_field", files={"phase_file": ("efl_phase_EzZ_example.fld", fh, "text/plain")})
+        resp = client.post(
+            "/api/hmsa/upload_field", files={"phase_file": ("efl_phase_EzZ_example.fld", fh, "text/plain")}
+        )
     return resp.json()["upload_id"]
 
 
@@ -142,7 +154,8 @@ def _synthesize_coded_one_bit_square_only(client, grounded_library):
         "period_mm": 8.0,
         "object_beams": [{"theta_deg": 20.0, "phi_deg": 0.0}],
         "n_bits": 1,
-        "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
+        "eps_r": _SUBSTRATE["eps_r"],
+        "tan_delta": _SUBSTRATE["tan_delta"],
         "thickness_mm": _SUBSTRATE["thickness"] * 1e3,
         "library_id": grounded_library,
         "two_state": {"source": "square_only"},
@@ -172,9 +185,12 @@ def test_export_chains_off_a_one_bit_coded_job(client, grounded_library):
     synth_job = _synthesize_coded_one_bit_square_only(client, grounded_library)
     assert synth_job["status"] == "done", synth_job
     export_body = {
-        "source_job_id": synth_job["id"], "period_mm": 8.0,
-        "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
-        "thickness_mm": _SUBSTRATE["thickness"] * 1e3, "include_step": False,
+        "source_job_id": synth_job["id"],
+        "period_mm": 8.0,
+        "eps_r": _SUBSTRATE["eps_r"],
+        "tan_delta": _SUBSTRATE["tan_delta"],
+        "thickness_mm": _SUBSTRATE["thickness"] * 1e3,
+        "include_step": False,
     }
     resp = client.post("/api/export/array", json=export_body)
     job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
@@ -190,12 +206,17 @@ def test_synthesize_coded_uploaded_two_state(client):
         "period_mm": 8.0,
         "object_beams": [{"theta_deg": 0.0, "phi_deg": 0.0}],
         "n_bits": 1,
-        "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
+        "eps_r": _SUBSTRATE["eps_r"],
+        "tan_delta": _SUBSTRATE["tan_delta"],
         "thickness_mm": _SUBSTRATE["thickness"] * 1e3,
         "two_state": {
-            "source": "uploaded", "uploaded_label_0": "full patch", "uploaded_value_0_real": 1.0,
-            "uploaded_value_0_imag": 0.0, "uploaded_label_1": "slotted patch",
-            "uploaded_value_1_real": -0.98, "uploaded_value_1_imag": 0.0,
+            "source": "uploaded",
+            "uploaded_label_0": "full patch",
+            "uploaded_value_0_real": 1.0,
+            "uploaded_value_0_imag": 0.0,
+            "uploaded_label_1": "slotted patch",
+            "uploaded_value_1_real": -0.98,
+            "uploaded_value_1_imag": 0.0,
         },
     }
     resp = client.post("/api/hmsa/synthesize_coded", json=body)
@@ -227,8 +248,15 @@ def test_synthesize_coded_n_bit_matches_against_continuous_library(client, groun
 @pytest.mark.slow
 def test_ensure_annular_slot_library_builds_a_real_library(client):
     body = {
-        "period_mm": 6.0, "eps_r": 2.2, "tan_delta": 0.0009, "thickness_mm": 1.575,
-        "frequency_hz": 12.5e9, "a_mm": 4.0, "b_mm": 4.0, "r_mm": 1.0, "accuracy": "fast",
+        "period_mm": 6.0,
+        "eps_r": 2.2,
+        "tan_delta": 0.0009,
+        "thickness_mm": 1.575,
+        "frequency_hz": 12.5e9,
+        "a_mm": 4.0,
+        "b_mm": 4.0,
+        "r_mm": 1.0,
+        "accuracy": "fast",
     }
     resp = client.post("/api/hmsa/ensure_annular_slot_library", json=body)
     job = _wait_for_job(client, resp.json()["id"], timeout=300.0)
@@ -239,9 +267,15 @@ def test_ensure_annular_slot_library_builds_a_real_library(client):
 @pytest.mark.slow
 def test_synthesize_coded_square_and_annular_two_state(client, grounded_library):
     annular_body = {
-        "period_mm": 8.0, "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
-        "thickness_mm": _SUBSTRATE["thickness"] * 1e3, "frequency_hz": _FREQ_HZ,
-        "a_mm": 4.0, "b_mm": 4.0, "r_mm": 1.0, "accuracy": "fast",
+        "period_mm": 8.0,
+        "eps_r": _SUBSTRATE["eps_r"],
+        "tan_delta": _SUBSTRATE["tan_delta"],
+        "thickness_mm": _SUBSTRATE["thickness"] * 1e3,
+        "frequency_hz": _FREQ_HZ,
+        "a_mm": 4.0,
+        "b_mm": 4.0,
+        "r_mm": 1.0,
+        "accuracy": "fast",
     }
     resp = client.post("/api/hmsa/ensure_annular_slot_library", json=annular_body)
     annular_job = _wait_for_job(client, resp.json()["id"], timeout=300.0)
@@ -255,7 +289,8 @@ def test_synthesize_coded_square_and_annular_two_state(client, grounded_library)
         "period_mm": 8.0,
         "object_beams": [{"theta_deg": 20.0, "phi_deg": 0.0}],
         "n_bits": 1,
-        "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
+        "eps_r": _SUBSTRATE["eps_r"],
+        "tan_delta": _SUBSTRATE["tan_delta"],
         "thickness_mm": _SUBSTRATE["thickness"] * 1e3,
         "library_id": grounded_library,
         "two_state": {"source": "square_and_annular", "annular_slot_library_id": annular_library_id},
@@ -287,11 +322,16 @@ def test_pattern_predict_with_port_index(client, grounded_library):
     synth_job = _synthesize_ports_1xn(client, grounded_library)
     assert synth_job["status"] == "done", synth_job
     pattern_body = {
-        "source_job_id": synth_job["id"], "frequency_hz": _FREQ_HZ, "pattern_model": "vector",
-        "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
+        "source_job_id": synth_job["id"],
+        "frequency_hz": _FREQ_HZ,
+        "pattern_model": "vector",
+        "eps_r": _SUBSTRATE["eps_r"],
+        "tan_delta": _SUBSTRATE["tan_delta"],
         "thickness_mm": _SUBSTRATE["thickness"] * 1e3,
-        "beams": [{"theta_deg": 20.0, "phi_deg": 0.0}], "port_index": 0,
-        "n_theta": 31, "n_phi": 37,
+        "beams": [{"theta_deg": 20.0, "phi_deg": 0.0}],
+        "port_index": 0,
+        "n_theta": 31,
+        "n_phi": 37,
     }
     resp = client.post("/api/pattern/predict", json=pattern_body)
     job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
@@ -304,11 +344,16 @@ def test_pattern_predict_port_beams_report_achieved_direction_and_xpd(client, gr
     synth_job = _synthesize_ports_1xn(client, grounded_library)
     assert synth_job["status"] == "done", synth_job
     pattern_body = {
-        "source_job_id": synth_job["id"], "frequency_hz": _FREQ_HZ, "pattern_model": "vector",
-        "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
+        "source_job_id": synth_job["id"],
+        "frequency_hz": _FREQ_HZ,
+        "pattern_model": "vector",
+        "eps_r": _SUBSTRATE["eps_r"],
+        "tan_delta": _SUBSTRATE["tan_delta"],
         "thickness_mm": _SUBSTRATE["thickness"] * 1e3,
-        "beams": [{"theta_deg": 20.0, "phi_deg": 0.0, "desired_polarization": "rhcp"}], "port_index": 0,
-        "n_theta": 31, "n_phi": 37,
+        "beams": [{"theta_deg": 20.0, "phi_deg": 0.0, "desired_polarization": "rhcp"}],
+        "port_index": 0,
+        "n_theta": 31,
+        "n_phi": 37,
     }
     resp = client.post("/api/pattern/predict", json=pattern_body)
     job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
@@ -323,9 +368,13 @@ def test_pattern_predict_rejects_out_of_range_port_index(client, grounded_librar
     synth_job = _synthesize_ports_1xn(client, grounded_library)
     assert synth_job["status"] == "done", synth_job
     pattern_body = {
-        "source_job_id": synth_job["id"], "frequency_hz": _FREQ_HZ, "pattern_model": "vector",
-        "eps_r": _SUBSTRATE["eps_r"], "tan_delta": _SUBSTRATE["tan_delta"],
-        "thickness_mm": _SUBSTRATE["thickness"] * 1e3, "port_index": 99,
+        "source_job_id": synth_job["id"],
+        "frequency_hz": _FREQ_HZ,
+        "pattern_model": "vector",
+        "eps_r": _SUBSTRATE["eps_r"],
+        "tan_delta": _SUBSTRATE["tan_delta"],
+        "thickness_mm": _SUBSTRATE["thickness"] * 1e3,
+        "port_index": 99,
     }
     resp = client.post("/api/pattern/predict", json=pattern_body)
     assert resp.status_code == 422
@@ -344,10 +393,13 @@ def _paper_pair_uploaded():
     empty = gamma(*_PAPER_PAIR_26GHZ_PATCH_PLANE["empty"])
     slotted = gamma(*_PAPER_PAIR_26GHZ_PATCH_PLANE["slotted"])
     return {
-        "source": "uploaded", "uploaded_label_0": "empty",
-        "uploaded_value_0_real": empty.real, "uploaded_value_0_imag": empty.imag,
+        "source": "uploaded",
+        "uploaded_label_0": "empty",
+        "uploaded_value_0_real": empty.real,
+        "uploaded_value_0_imag": empty.imag,
         "uploaded_label_1": "2.17 mm square, annular slot",
-        "uploaded_value_1_real": slotted.real, "uploaded_value_1_imag": slotted.imag,
+        "uploaded_value_1_real": slotted.real,
+        "uploaded_value_1_imag": slotted.imag,
         "uploaded_geometry_0": {"kind": "empty"},
         "uploaded_geometry_1": {"kind": "annular_slot", "a_mm": 2.17, "b_mm": 2.17, "R_mm": 0.75, "r_mm": 0.46},
     }
@@ -355,11 +407,16 @@ def _paper_pair_uploaded():
 
 def _synthesize_ports_coded_paper_pair(client, beta_mode):
     body = {
-        "formulation": "coded", "frequency_hz": 26e9, "period_mm": 2.57,
+        "formulation": "coded",
+        "frequency_hz": 26e9,
+        "period_mm": 2.57,
         "layout": {"preset": "1xn", "n": 1, "cell_side_mm": 10.0, "gap_mm": 0.0},
         "ports": [{"beams": [{"theta_deg": 20.0, "phi_deg": 0.0, "desired_polarization": "lhcp"}]}],
-        "port_eps_r": 2.2, "port_thickness_mm": 1.575, "port_tan_delta": 0.0009,
-        "two_state": _paper_pair_uploaded(), "beta_mode": beta_mode,
+        "port_eps_r": 2.2,
+        "port_thickness_mm": 1.575,
+        "port_tan_delta": 0.0009,
+        "two_state": _paper_pair_uploaded(),
+        "beta_mode": beta_mode,
     }
     resp = client.post("/api/hmsa/synthesize_ports", json=body)
     return _wait_for_job(client, resp.json()["id"], timeout=60.0)
@@ -383,12 +440,18 @@ def test_synthesize_ports_coded_state_beta_mode_refuses_the_paper_pair_on_beta_s
 
 def test_synthesize_ports_pointing_correction_reports_before_and_after(client):
     body = {
-        "formulation": "coded", "frequency_hz": 26e9, "period_mm": 2.57,
+        "formulation": "coded",
+        "frequency_hz": 26e9,
+        "period_mm": 2.57,
         "layout": {"preset": "1xn", "n": 1, "cell_side_mm": 10.0, "gap_mm": 0.0},
         "ports": [{"beams": [{"theta_deg": 20.0, "phi_deg": 0.0, "desired_polarization": "lhcp"}]}],
-        "port_eps_r": 2.2, "port_thickness_mm": 1.575, "port_tan_delta": 0.0009,
-        "two_state": _paper_pair_uploaded(), "beta_mode": "paper",
-        "pointing_correction": True, "pointing_iterations": 2,
+        "port_eps_r": 2.2,
+        "port_thickness_mm": 1.575,
+        "port_tan_delta": 0.0009,
+        "two_state": _paper_pair_uploaded(),
+        "beta_mode": "paper",
+        "pointing_correction": True,
+        "pointing_iterations": 2,
     }
     resp = client.post("/api/hmsa/synthesize_ports", json=body)
     job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
@@ -401,14 +464,23 @@ def test_synthesize_ports_pointing_correction_reports_before_and_after(client):
 
 def _two_beam_balance_body():
     return {
-        "formulation": "coded", "frequency_hz": 26e9, "period_mm": 2.57,
+        "formulation": "coded",
+        "frequency_hz": 26e9,
+        "period_mm": 2.57,
         "layout": {"preset": "1xn", "n": 1, "cell_side_mm": 10.0, "gap_mm": 0.0},
-        "ports": [{"beams": [
-            {"theta_deg": 20.0, "phi_deg": 0.0, "desired_polarization": "lhcp", "weight_real": 1.0},
-            {"theta_deg": 20.0, "phi_deg": 180.0, "desired_polarization": "lhcp", "weight_real": 1.0},
-        ]}],
-        "port_eps_r": 2.2, "port_thickness_mm": 1.575, "port_tan_delta": 0.0009,
-        "two_state": _paper_pair_uploaded(), "beta_mode": "paper",
+        "ports": [
+            {
+                "beams": [
+                    {"theta_deg": 20.0, "phi_deg": 0.0, "desired_polarization": "lhcp", "weight_real": 1.0},
+                    {"theta_deg": 20.0, "phi_deg": 180.0, "desired_polarization": "lhcp", "weight_real": 1.0},
+                ]
+            }
+        ],
+        "port_eps_r": 2.2,
+        "port_thickness_mm": 1.575,
+        "port_tan_delta": 0.0009,
+        "two_state": _paper_pair_uploaded(),
+        "beta_mode": "paper",
     }
 
 
@@ -436,10 +508,19 @@ def test_pattern_predict_per_beam_levels_match_the_balance_summary(client):
     port_beams = body["ports"][0]["beams"]
 
     pattern_body = {
-        "source_job_id": job["id"], "frequency_hz": body["frequency_hz"], "pattern_model": "vector",
-        "eps_r": body["port_eps_r"], "tan_delta": body["port_tan_delta"], "thickness_mm": body["port_thickness_mm"],
-        "beams": [{"theta_deg": b["theta_deg"], "phi_deg": b["phi_deg"], "desired_polarization": b["desired_polarization"]} for b in port_beams],
-        "port_index": 0, "n_theta": 31, "n_phi": 37,
+        "source_job_id": job["id"],
+        "frequency_hz": body["frequency_hz"],
+        "pattern_model": "vector",
+        "eps_r": body["port_eps_r"],
+        "tan_delta": body["port_tan_delta"],
+        "thickness_mm": body["port_thickness_mm"],
+        "beams": [
+            {"theta_deg": b["theta_deg"], "phi_deg": b["phi_deg"], "desired_polarization": b["desired_polarization"]}
+            for b in port_beams
+        ],
+        "port_index": 0,
+        "n_theta": 31,
+        "n_phi": 37,
     }
     resp = client.post("/api/pattern/predict", json=pattern_body)
     pjob = _wait_for_job(client, resp.json()["id"], timeout=60.0)

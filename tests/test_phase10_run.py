@@ -1,7 +1,7 @@
 """Phase 10 end-to-end pipeline, at REDUCED scale (2 centers, a handful of random samples) so the
 routine test suite stays fast -- every stage is still a REAL MoM solve, nothing mocked. The full,
 production-scale run (all 5 centers, 350 random samples) is performed separately via
-``examples/run_phase10_environment_model.py`` and its real, measured result is what
+``scripts/research/run_phase10_environment_model.py`` and its real, measured result is what
 ``PHASE10_ENVIRONMENT_MODEL.md`` reports.
 """
 

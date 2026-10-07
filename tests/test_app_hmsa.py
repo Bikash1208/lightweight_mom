@@ -366,7 +366,9 @@ def test_ensure_dispersion_builds_reuses_and_feeds_formulation_a(client):
     synth_resp = client.post("/api/hmsa/synthesize", json=synth_body)
     synth_job = _wait_for_job(client, synth_resp.json()["id"], timeout=120.0)
     assert synth_job["status"] == "done", synth_job
-    assert "DISPERSION_FROM_SHEET_MODEL" not in synth_job["result"]["labels"]  # not a design label; it's the table's own provenance, not carried onto the synth result -- confirms no accidental mislabeling
+    assert (
+        "DISPERSION_FROM_SHEET_MODEL" not in synth_job["result"]["labels"]
+    )  # not a design label; it's the table's own provenance, not carried onto the synth result -- confirms no accidental mislabeling
     assert any(label.startswith("REFERENCE_WAVE_RESCALED_TO_BETA_BAR(") for label in synth_job["result"]["labels"])
 
 

@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.phase9.hfss_reference import HfssReferenceError, load_hfss_reference
+from src.phase9.hfss_reference import HfssReferenceError, TouchstoneError, load_hfss_reference, read_touchstone
 
 
 def test_load_hfss_reference_returns_none_when_file_absent(tmp_path):
@@ -47,8 +47,6 @@ def test_no_real_hfss_reference_exists_in_this_project():
 
 
 # ---------------------------------------------------------------- Phase 12D: read_touchstone
-
-from src.phase9.hfss_reference import TouchstoneError, read_touchstone
 
 
 def _write_touchstone(tmp_path, name, header_extra=""):

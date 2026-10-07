@@ -22,14 +22,14 @@ def test_uniform_aperture_points_broadside():
     x, y, d = _square_aperture_grid()
     field = np.ones_like(x, dtype=complex)
     result = compute_pattern(x, y, field, FREQ, d, d, n_theta=46, n_phi=37)
-    assert result.main_beam_theta_deg < 5.0   # broadside, within grid resolution
+    assert result.main_beam_theta_deg < 5.0  # broadside, within grid resolution
 
 
 def test_linear_phase_gradient_steers_the_beam():
     x, y, d = _square_aperture_grid()
     theta0_deg = 20.0
     kx_target = K0 * np.sin(np.radians(theta0_deg))
-    field = np.exp(-1j * kx_target * x)   # standard progressive phase for a beam steered to theta0 along phi=0
+    field = np.exp(-1j * kx_target * x)  # standard progressive phase for a beam steered to theta0 along phi=0
     result = compute_pattern(x, y, field, FREQ, d, d, n_theta=46, n_phi=37)
     assert result.main_beam_theta_deg == pytest.approx(theta0_deg, abs=3.0)
     assert result.main_beam_phi_deg in (0.0, pytest.approx(360.0, abs=1e-6)) or result.main_beam_phi_deg < 5.0

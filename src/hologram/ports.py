@@ -1,5 +1,5 @@
 """Phase 15 Part C (gap-fill): multi-port sub-apertures. Methodology source: Mishra, Barad, Sarkar,
-IEEE TVT 2026 (`docs/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md` Part C) -- five coaxial
+IEEE TVT 2026 (`docs/history/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md` Part C) -- five coaxial
 monopoles on one grounded board, each feeding its OWN rectangular sub-aperture (ports 1-4: 5*lambda
 x 5*lambda single-beam; port 5: 10*lambda x 10*lambda quad-beam), rather than several feeds sharing
 one hologram (`hologram.multi_feed`'s superposition/segmentation strategies, still available as the

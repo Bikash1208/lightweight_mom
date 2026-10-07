@@ -103,7 +103,9 @@ def configure_logging(level=None, log_dir=None):
     console.setLevel(resolved_level)
 
     file_handler = logging.handlers.RotatingFileHandler(
-        log_dir / "lwmom.log", maxBytes=_MAX_BYTES, backupCount=_BACKUP_COUNT,
+        log_dir / "lwmom.log",
+        maxBytes=_MAX_BYTES,
+        backupCount=_BACKUP_COUNT,
     )
     file_handler.setFormatter(JsonFormatter())
     file_handler.addFilter(_RunIdFilter())

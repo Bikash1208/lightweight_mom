@@ -121,8 +121,13 @@ def formulation_a_control_map_and_scale(
     if not reference_field.amplitude_available:
         raise ValueError("Formulation A needs a complex reference field (amplitude available)")
     e_obj = _combined_object_field(
-        reference_field.x_m, reference_field.y_m, object_beams, frequency_hz,
-        feed_xy_m, cp_phase_offset_deg, multiplexing,
+        reference_field.x_m,
+        reference_field.y_m,
+        object_beams,
+        frequency_hz,
+        feed_xy_m,
+        cp_phase_offset_deg,
+        multiplexing,
     )
     scale = object_wave_scale(e_obj)
     psi = interference_modulation(reference_field.Ex, e_obj / scale)
@@ -145,8 +150,14 @@ def formulation_a_control_map(
     `multiplexing`: PHASE15 Part A, see `_combined_object_field`. The summed object wave is kept at
     unit peak amplitude (see `object_wave_scale`)."""
     control, _scale = formulation_a_control_map_and_scale(
-        reference_field, object_beams, frequency_hz, x_avg_ohm, modulation_index,
-        feed_xy_m, cp_phase_offset_deg, multiplexing,
+        reference_field,
+        object_beams,
+        frequency_hz,
+        x_avg_ohm,
+        modulation_index,
+        feed_xy_m,
+        cp_phase_offset_deg,
+        multiplexing,
     )
     return control
 
@@ -206,8 +217,13 @@ def formulation_b_control_map(
     sufficient"). `feed_xy_m`/`cp_phase_offset_deg`/`multiplexing`: PHASE15 Part A, see
     `_combined_object_field`."""
     e_obj = _combined_object_field(
-        reference_field.x_m, reference_field.y_m, object_beams, frequency_hz,
-        feed_xy_m, cp_phase_offset_deg, multiplexing,
+        reference_field.x_m,
+        reference_field.y_m,
+        object_beams,
+        frequency_hz,
+        feed_xy_m,
+        cp_phase_offset_deg,
+        multiplexing,
     )
     obj_phase_deg = np.degrees(np.angle(e_obj))
     return phase_difference_hologram_from_phases_deg(reference_field.phase(), obj_phase_deg)
@@ -299,8 +315,14 @@ def synthesize_formulation_a(
         pass  # the dispersion table has no beta_rad_per_m column -- beta_bar is not computable at all
 
     control_map, object_scale = formulation_a_control_map_and_scale(
-        cell_field, object_beams, frequency_hz, x_avg_ohm, modulation_index,
-        feed_xy_m, cp_phase_offset_deg, multiplexing,
+        cell_field,
+        object_beams,
+        frequency_hz,
+        x_avg_ohm,
+        modulation_index,
+        feed_xy_m,
+        cp_phase_offset_deg,
+        multiplexing,
     )
     if object_scale > 1.0:
         extra_labels.append(object_wave_normalised(object_scale))
@@ -320,9 +342,9 @@ def synthesize_formulation_a(
     # exactly how Formulation B uses the achieved, not the ideal, phase). This is a documented
     # approximation (a rigorous leaky-wave/full-wave radiation calculation is out of scope here),
     # not a claim of the same fidelity as a full leaky-wave analysis.
-    achieved_x_ohm = np.array(
-        [c.achieved_value if c.achieved_value is not None else x_avg_ohm for c in cells]
-    ).reshape(cell_field.x_m.shape)
+    achieved_x_ohm = np.array([c.achieved_value if c.achieved_value is not None else x_avg_ohm for c in cells]).reshape(
+        cell_field.x_m.shape
+    )
     psi_achieved = achieved_x_ohm / x_avg_ohm - 1.0
     ref_complex = cell_field.Ex if cell_field.amplitude_available else np.exp(1j * np.radians(cell_field.phase()))
     aperture_field = ref_complex * psi_achieved

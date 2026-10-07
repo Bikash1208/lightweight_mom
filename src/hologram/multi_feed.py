@@ -1,5 +1,5 @@
 """Phase 15 Part C: multi-feed ("multipole") reference-field construction. Methodology source:
-`docs/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md` Part C (paper eq. 5 for superposition).
+`docs/history/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md` Part C (paper eq. 5 for superposition).
 
 Each feed contributes a reference field either supplied directly (an uploaded `.fld`, already a
 `phase8e.reference_field_input.ReferenceFieldGrid`) or built analytically about that feed's own
@@ -115,8 +115,15 @@ def superposed_reference_field(feeds, x_m, y_m, k_swg=None):
     for feed in feeds:
         total = total + _feed_complex_field(feed, x_m, y_m, k_swg)
     return ReferenceFieldGrid(
-        x_m=x_m, y_m=y_m, Ex=total, Ey=np.zeros_like(total), amplitude_available=True,
-        source=f"MULTI_FEED_SUPERPOSITION({len(feeds)} feeds)", dx_m=None, dy_m=None, z_reference_m=None,
+        x_m=x_m,
+        y_m=y_m,
+        Ex=total,
+        Ey=np.zeros_like(total),
+        amplitude_available=True,
+        source=f"MULTI_FEED_SUPERPOSITION({len(feeds)} feeds)",
+        dx_m=None,
+        dy_m=None,
+        z_reference_m=None,
         phase_deg=np.degrees(np.angle(total)),
     )
 
@@ -146,8 +153,15 @@ def segmented_reference_field_and_regions(feeds, x_m, y_m, k_swg=None):
             continue
         combined = np.where(mask, _feed_complex_field(feed, x_m, y_m, k_swg), combined)
     grid = ReferenceFieldGrid(
-        x_m=x_m, y_m=y_m, Ex=combined, Ey=np.zeros_like(combined), amplitude_available=True,
-        source=f"MULTI_FEED_SEGMENTATION({len(feeds)} feeds)", dx_m=None, dy_m=None, z_reference_m=None,
+        x_m=x_m,
+        y_m=y_m,
+        Ex=combined,
+        Ey=np.zeros_like(combined),
+        amplitude_available=True,
+        source=f"MULTI_FEED_SEGMENTATION({len(feeds)} feeds)",
+        dx_m=None,
+        dy_m=None,
+        z_reference_m=None,
         phase_deg=np.degrees(np.angle(combined)),
     )
     return grid, owner

@@ -3,6 +3,7 @@
 ## Setup
 
 ```bash
+python3 --version  # must be >= 3.11 -- substitute a 3.11+ interpreter below otherwise
 python3 -m venv .venv && .venv/bin/pip install -e ".[dev,app,cad]"
 # or, to reproduce the exact pinned environment this project was developed against:
 .venv/bin/pip install -r requirements-lock.txt

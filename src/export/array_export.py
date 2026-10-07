@@ -27,12 +27,12 @@ _HFSS_README_TEMPLATE = """\
   keep the drawn thickness.
 - Mesh convergence at resonance is first-order in cell size on this project's own MoM (unresolved
   edge-current singularity); do not assume a coarse-mesh MoM comparison point is converged near
-  resonance (see `docs/phases/PHASE13_WEBAPP.md`).
+  resonance (see `docs/history/PHASE13_WEBAPP.md`).
 - 10-15 GHz, 401 points reproduces this project's own validated frequency sweep.
 
 ## Checking the surface-wave dispersion table (Phase 14) against HFSS
 
-If you want a spot check of the eigenmode method's auto-built dispersion table (`docs/phases/
+If you want a spot check of the eigenmode method's auto-built dispersion table (`docs/history/
 PHASE14_EIGENMODE.md`) against a real HFSS eigenmode solve, for one representative patch size:
 
 - Master/slave periodic boundaries on the unit cell's four side walls, with a linear phase shift
@@ -51,7 +51,7 @@ PHASE14_EIGENMODE.md`) against a real HFSS eigenmode solve, for one representati
 ## Checking polarization and vortex/OAM (Phase 15) against HFSS
 
 This project's own vector pattern model (`pattern.vector_aperture_pattern`,
-`docs/phases/PHASE15_POLARIZATION_VORTEX.md`) predicts polarization and OAM winding from this same
+`docs/history/PHASE15_POLARIZATION_VORTEX.md`) predicts polarization and OAM winding from this same
 board's own current; to check a real far-field solve against it:
 
 - **Polarization / axial ratio / XPD**: HFSS's Far Field Report supports Ludwig-3 co/cross-pol
@@ -121,9 +121,13 @@ def write_layout_files(lw_grid_m, output_dir, basename="layout"):
             if _is_annular_slot_cell(cell):
                 rows.append(
                     {
-                        "i": i, "j": j, "kind": "annular_slot",
-                        "length_m": cell["a_m"], "width_m": cell["b_m"],
-                        "R_m": cell["R_m"], "r_m": cell["r_m"],
+                        "i": i,
+                        "j": j,
+                        "kind": "annular_slot",
+                        "length_m": cell["a_m"],
+                        "width_m": cell["b_m"],
+                        "R_m": cell["R_m"],
+                        "r_m": cell["r_m"],
                     }
                 )
             elif has_annular:
@@ -134,7 +138,9 @@ def write_layout_files(lw_grid_m, output_dir, basename="layout"):
                 rows.append({"i": i, "j": j, "length_m": length_m, "width_m": width_m})
 
     csv_path = output_dir / f"{basename}.csv"
-    fieldnames = ["i", "j", "kind", "length_m", "width_m", "R_m", "r_m"] if has_annular else ["i", "j", "length_m", "width_m"]
+    fieldnames = (
+        ["i", "j", "kind", "length_m", "width_m", "R_m", "r_m"] if has_annular else ["i", "j", "length_m", "width_m"]
+    )
     with open(csv_path, "w", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames)
         writer.writeheader()
@@ -145,9 +151,7 @@ def write_layout_files(lw_grid_m, output_dir, basename="layout"):
     # which was silently WRONG for a non-square (n_x != n_y) grid -- a bug no square-only caller
     # could ever trigger (n*n == n_x*n_y when n_x == n_y, so this is a no-op for every pre-Phase-15
     # export). `n_cells_per_side` is kept (same name, same value) for backward compatibility.
-    json_path.write_text(
-        json.dumps({"n_cells_per_side": n_y, "total_cells": len(rows), "cells": rows}, indent=2)
-    )
+    json_path.write_text(json.dumps({"n_cells_per_side": n_y, "total_cells": len(rows), "cells": rows}, indent=2))
     return csv_path, json_path
 
 
@@ -226,15 +230,37 @@ def _layout_dxf_text(lw_grid_m, period_x_m, period_y_m):
     parts += ["0", "SECTION", "2", "ENTITIES"]
     for (x1, y1), (x2, y2) in lines:
         parts += [
-            "0", "LINE", "8", "PATCHES",
-            "10", f"{x1:.6f}", "20", f"{y1:.6f}", "30", "0.0",
-            "11", f"{x2:.6f}", "21", f"{y2:.6f}", "31", "0.0",
+            "0",
+            "LINE",
+            "8",
+            "PATCHES",
+            "10",
+            f"{x1:.6f}",
+            "20",
+            f"{y1:.6f}",
+            "30",
+            "0.0",
+            "11",
+            f"{x2:.6f}",
+            "21",
+            f"{y2:.6f}",
+            "31",
+            "0.0",
         ]
     for cx, cy, radius in circles:
         parts += [
-            "0", "CIRCLE", "8", "PATCHES",
-            "10", f"{cx:.6f}", "20", f"{cy:.6f}", "30", "0.0",
-            "40", f"{radius:.6f}",
+            "0",
+            "CIRCLE",
+            "8",
+            "PATCHES",
+            "10",
+            f"{cx:.6f}",
+            "20",
+            f"{cy:.6f}",
+            "30",
+            "0.0",
+            "40",
+            f"{radius:.6f}",
         ]
     parts += ["0", "ENDSEC", "0", "EOF"]
     return "\n".join(parts) + "\n"
@@ -271,9 +297,7 @@ def write_layout_dxf_rect(lw_grid_m, period_x_m, period_y_m, output_dir, basenam
 _FEED_MARKER_RADIUS_MM = 0.3  # small enough to never overlap a real patch, visible enough to find
 
 
-def write_hfss_step(
-    lw_grid_m, period_x_m, period_y_m, thickness_m, path, decimals=3, size_step_mm=None, feeds_mm=None
-):
+def write_hfss_step(lw_grid_m, period_x_m, period_y_m, thickness_m, path, decimals=3, size_step_mm=None, feeds_mm=None):
     """HFSS-friendly full-array STEP: every coordinate/size rounded in millimetres (no
     3.9999999999 values from m->mm float conversion), patches and ground as zero-thickness sheets
     (the solver's own model; no 35 um solids that force tiny mesh elements), all patches in ONE
@@ -295,6 +319,7 @@ def write_hfss_step(
     px, py = r(period_x_m * 1e3), r(period_y_m * 1e3)
     h = r(thickness_m * 1e3)
     lx, ly = r(n_x * px), r(n_y * py)
+
     def _rect_face(cx, cy, l_mm, w_mm):
         x0, x1 = r(cx - l_mm / 2), r(cx + l_mm / 2)
         y0, y1 = r(cy - w_mm / 2), r(cy + w_mm / 2)
@@ -313,8 +338,10 @@ def write_hfss_step(
         hl, hw = a_mm / 2.0, b_mm / 2.0
         outer_rect = cq.Wire.makePolygon(
             [
-                cq.Vector(r(cx - hl), r(cy - hw), 0), cq.Vector(r(cx + hl), r(cy - hw), 0),
-                cq.Vector(r(cx + hl), r(cy + hw), 0), cq.Vector(r(cx - hl), r(cy + hw), 0),
+                cq.Vector(r(cx - hl), r(cy - hw), 0),
+                cq.Vector(r(cx + hl), r(cy - hw), 0),
+                cq.Vector(r(cx + hl), r(cy + hw), 0),
+                cq.Vector(r(cx - hl), r(cy + hw), 0),
             ],
             close=True,
         )
@@ -350,8 +377,13 @@ def write_hfss_step(
     patches = cq.Compound.makeCompound(faces)
     substrate = cq.Solid.makeBox(lx, ly, h, pnt=cq.Vector(r(-lx / 2), r(-ly / 2), -h))
     gw = cq.Wire.makePolygon(
-        [cq.Vector(r(-lx / 2), r(-ly / 2), -h), cq.Vector(r(lx / 2), r(-ly / 2), -h),
-         cq.Vector(r(lx / 2), r(ly / 2), -h), cq.Vector(r(-lx / 2), r(ly / 2), -h)], close=True
+        [
+            cq.Vector(r(-lx / 2), r(-ly / 2), -h),
+            cq.Vector(r(lx / 2), r(-ly / 2), -h),
+            cq.Vector(r(lx / 2), r(ly / 2), -h),
+            cq.Vector(r(-lx / 2), r(ly / 2), -h),
+        ],
+        close=True,
     )
     ground = cq.Face.makeFromWires(gw)
     asm = cq.Assembly()
@@ -360,7 +392,9 @@ def write_hfss_step(
     asm.add(ground, name="Ground", color=cq.Color(0.60, 0.60, 0.65, 1.0))
     if feeds_mm:
         markers = [
-            cq.Face.makeFromWires(cq.Wire.makeCircle(_FEED_MARKER_RADIUS_MM, cq.Vector(r(fx), r(fy), 0), cq.Vector(0, 0, 1)))
+            cq.Face.makeFromWires(
+                cq.Wire.makeCircle(_FEED_MARKER_RADIUS_MM, cq.Vector(r(fx), r(fy), 0), cq.Vector(0, 0, 1))
+            )
             for fx, fy in feeds_mm
         ]
         asm.add(cq.Compound.makeCompound(markers), name="Feeds", color=cq.Color(0.0, 0.7, 0.2, 1.0))
@@ -369,8 +403,15 @@ def write_hfss_step(
 
 
 def export_array(
-    lw_grid_m, period_x_m, period_y_m, substrate, metal, output_dir, metal_export_thickness_m=None,
-    include_step=True, feeds_mm=None,
+    lw_grid_m,
+    period_x_m,
+    period_y_m,
+    substrate,
+    metal,
+    output_dir,
+    metal_export_thickness_m=None,
+    include_step=True,
+    feeds_mm=None,
 ):
     """Writes layout CSV/JSON, an HFSS-ready README, and (if `include_step` and the `cad` extra is
     installed) a full-array STEP file. Raises `errors.LwmomError` (`CAD_UNAVAILABLE`) only if
@@ -388,7 +429,6 @@ def export_array(
 
     step_path, file_size, export_time = None, None, None
     if include_step:
-
         step_path = output_dir / "array.step"
         t0 = time.perf_counter()
         try:
@@ -433,8 +473,15 @@ class MultiPortExportResult:
 
 
 def export_multi_port_array(
-    lw_grid_m, period_x_m, period_y_m, substrate, metal, output_dir, include_step=True,
-    feeds_mm=None, ports_info=None,
+    lw_grid_m,
+    period_x_m,
+    period_y_m,
+    substrate,
+    metal,
+    output_dir,
+    include_step=True,
+    feeds_mm=None,
+    ports_info=None,
 ):
     """`export_array`, for a multi-port board that need not be square (PHASE15 Part C): ONE STEP
     with all sub-apertures (`write_hfss_step` already supports a rectangular `n_x != n_y` grid --

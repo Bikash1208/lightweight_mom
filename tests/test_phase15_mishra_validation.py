@@ -57,10 +57,10 @@ def _peak_direction(design, feed_xy_m):
 @pytest.mark.slow
 def test_mishra_5port_layout_steers_each_port_to_its_own_commanded_direction():
     regions = layout_preset_2x2_plus_1_large(SMALL_SIDE_M)
-    beams = {i: [Beam(theta_deg=t, phi_deg=p, desired_polarization="lhcp")] for i, (t, p) in enumerate(_BEAM_DIRECTIONS)}
-    beams[4] = [
-        Beam(theta_deg=t, phi_deg=p, desired_polarization="lhcp", weight=0.5) for t, p in _BEAM_DIRECTIONS
-    ]
+    beams = {
+        i: [Beam(theta_deg=t, phi_deg=p, desired_polarization="lhcp")] for i, (t, p) in enumerate(_BEAM_DIRECTIONS)
+    }
+    beams[4] = [Beam(theta_deg=t, phi_deg=p, desired_polarization="lhcp", weight=0.5) for t, p in _BEAM_DIRECTIONS]
     multi = synthesize_ports(regions, beams, _per_port, period_m=PERIOD_M, k_swg=K_SWG)
 
     for port_result, (theta_cmd, phi_cmd) in zip(multi.ports[:4], _BEAM_DIRECTIONS, strict=True):
@@ -73,12 +73,8 @@ def test_mishra_5port_layout_steers_each_port_to_its_own_commanded_direction():
         # materially more power than its cross-pol (RHCP) component at the commanded direction.
         i_t = np.argmin(np.abs(pat.theta_deg[:, 0] - theta_cmd))
         j_p = np.argmin(np.abs((pat.phi_deg[0, :] - phi_cmd + 180.0) % 360.0 - 180.0))
-        co = copol_component(
-            np.array([pat.e_theta[i_t, j_p]]), np.array([pat.e_phi[i_t, j_p]]), "lhcp"
-        )[0]
-        cross = copol_component(
-            np.array([pat.e_theta[i_t, j_p]]), np.array([pat.e_phi[i_t, j_p]]), "rhcp"
-        )[0]
+        co = copol_component(np.array([pat.e_theta[i_t, j_p]]), np.array([pat.e_phi[i_t, j_p]]), "lhcp")[0]
+        cross = copol_component(np.array([pat.e_theta[i_t, j_p]]), np.array([pat.e_phi[i_t, j_p]]), "rhcp")[0]
         xpd_db = 10.0 * np.log10(np.abs(co) ** 2 / np.abs(cross) ** 2)
         assert xpd_db > 3.0, f"port {port_result.port_id}: LHCP/RHCP ratio only {xpd_db:.1f}dB"
 
@@ -86,10 +82,10 @@ def test_mishra_5port_layout_steers_each_port_to_its_own_commanded_direction():
 @pytest.mark.slow
 def test_mishra_quad_beam_port_radiates_near_all_four_commanded_directions():
     regions = layout_preset_2x2_plus_1_large(SMALL_SIDE_M)
-    beams = {i: [Beam(theta_deg=t, phi_deg=p, desired_polarization="lhcp")] for i, (t, p) in enumerate(_BEAM_DIRECTIONS)}
-    beams[4] = [
-        Beam(theta_deg=t, phi_deg=p, desired_polarization="lhcp", weight=0.5) for t, p in _BEAM_DIRECTIONS
-    ]
+    beams = {
+        i: [Beam(theta_deg=t, phi_deg=p, desired_polarization="lhcp")] for i, (t, p) in enumerate(_BEAM_DIRECTIONS)
+    }
+    beams[4] = [Beam(theta_deg=t, phi_deg=p, desired_polarization="lhcp", weight=0.5) for t, p in _BEAM_DIRECTIONS]
     multi = synthesize_ports(regions, beams, _per_port, period_m=PERIOD_M, k_swg=K_SWG)
     quad_port = multi.ports[4]
     pat = _peak_direction(quad_port.design, quad_port.feed_xy_m)

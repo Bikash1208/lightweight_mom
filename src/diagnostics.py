@@ -42,9 +42,9 @@ class SolveDiagnostics:
     condition_estimate: float | None
     condition_estimate_skipped_reason: str | None
     grating_orders_propagating: bool
-    surface_wave_margin: dict | None       # `sparameters.surface_wave_proximity`'s own dict, or None (ungrounded)
-    energy_conservation_residual: float | None   # |1 - power_out_per_incident| for x-pol, None if not computable
-    reciprocity_residual: float | None            # |S21_xx - S12_xx|, None for a grounded (one-port) result
+    surface_wave_margin: dict | None  # `sparameters.surface_wave_proximity`'s own dict, or None (ungrounded)
+    energy_conservation_residual: float | None  # |1 - power_out_per_incident| for x-pol, None if not computable
+    reciprocity_residual: float | None  # |S21_xx - S12_xx|, None for a grounded (one-port) result
 
 
 def _ru_maxrss_kb():
@@ -96,6 +96,7 @@ def instrumented_compute_s_parameters(unit_cell, frequency, mesh, planes, run_id
     condition_estimate, skip_reason = None, None
     if basis.n_unknowns <= CONDITION_ESTIMATE_MAX_UNKNOWNS:
         from .mom_matrix import assemble_impedance_matrix
+
         z = assemble_impedance_matrix(basis, green, 0.0, 0.0, mesh.floquet_order)
         condition_estimate = float(np.linalg.cond(z))
     else:
@@ -120,13 +121,21 @@ def instrumented_compute_s_parameters(unit_cell, frequency, mesh, planes, run_id
             pass
 
     diagnostics = SolveDiagnostics(
-        run_id=run_id, cells_x=mesh.cells_x, cells_y=mesh.cells_y,
-        dx_m=period_x / mesh.cells_x, dy_m=period_y / mesh.cells_y, mesh_aligned=aligned,
-        floquet_order=mesh.floquet_order, n_unknowns=basis.n_unknowns, total_time_s=total_time,
-        peak_memory_kb=peak_memory_kb, condition_estimate=condition_estimate,
+        run_id=run_id,
+        cells_x=mesh.cells_x,
+        cells_y=mesh.cells_y,
+        dx_m=period_x / mesh.cells_x,
+        dy_m=period_y / mesh.cells_y,
+        mesh_aligned=aligned,
+        floquet_order=mesh.floquet_order,
+        n_unknowns=basis.n_unknowns,
+        total_time_s=total_time,
+        peak_memory_kb=peak_memory_kb,
+        condition_estimate=condition_estimate,
         condition_estimate_skipped_reason=skip_reason,
         grating_orders_propagating=_grating_orders_propagate(unit_cell, green, mesh.floquet_order),
-        surface_wave_margin=sw_margin, energy_conservation_residual=energy_residual,
+        surface_wave_margin=sw_margin,
+        energy_conservation_residual=energy_residual,
         reciprocity_residual=reciprocity_residual,
     )
     _log.debug("solve complete", extra={"diagnostics": diagnostics.__dict__})

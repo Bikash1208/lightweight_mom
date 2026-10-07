@@ -103,7 +103,9 @@ def test_coded_phase_map_rejects_zero_bits():
 def _ideal_two_state_choice():
     state_0 = TwoStateCell("full patch", "r0", complex(1.0, 0.0), {"kind": "rectangle", "L_mm": 2.0, "W_mm": 2.0})
     state_1 = TwoStateCell(
-        "annular slot", "r1", complex(-1.0, 0.0),
+        "annular slot",
+        "r1",
+        complex(-1.0, 0.0),
         {"kind": "annular_slot", "a_mm": 2.0, "b_mm": 2.0, "R_mm": 0.7, "r_mm": 0.4},
     )
     return TwoStateChoice(state_0, state_1, achieved_separation_deg=180.0)
@@ -202,8 +204,12 @@ def test_quantization_loss_is_measurable_against_the_continuous_design():
 
     jx_q, jy_q = aperture_current_from_scalar(design.x_m, design.y_m, design.aperture_field)
     jx_c, jy_c = aperture_current_from_scalar(design.x_m, design.y_m, continuous_field)
-    pat_q = compute_vector_pattern(design.x_m, design.y_m, jx_q, jy_q, FREQ, gf, dx, dy, theta_max_deg=60.0, n_theta=61, n_phi=73)
-    pat_c = compute_vector_pattern(design.x_m, design.y_m, jx_c, jy_c, FREQ, gf, dx, dy, theta_max_deg=60.0, n_theta=61, n_phi=73)
+    pat_q = compute_vector_pattern(
+        design.x_m, design.y_m, jx_q, jy_q, FREQ, gf, dx, dy, theta_max_deg=60.0, n_theta=61, n_phi=73
+    )
+    pat_c = compute_vector_pattern(
+        design.x_m, design.y_m, jx_c, jy_c, FREQ, gf, dx, dy, theta_max_deg=60.0, n_theta=61, n_phi=73
+    )
 
     # both designs should at least agree on WHERE the main beam landed (this small, coarse test
     # aperture is not expected to steer to the commanded 20deg precisely -- see

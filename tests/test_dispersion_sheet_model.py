@@ -73,9 +73,7 @@ def test_find_beta_from_sheet_admittance_raises_when_no_root_exists():
 @pytest.mark.slow
 def test_build_dispersion_table_from_sheet_model_has_beta_and_xs_columns():
     sizes_m = [1.0e-3, 2.0e-3, 3.0e-3]
-    table = build_dispersion_table_from_sheet_model(
-        lambda l: _cell(l), sizes_m, FREQUENCY_HZ, MESH, period_m=PERIOD_M
-    )
+    table = build_dispersion_table_from_sheet_model(lambda l: _cell(l), sizes_m, FREQUENCY_HZ, MESH, period_m=PERIOD_M)
     assert table.label == DISPERSION_FROM_SHEET_MODEL
     assert len(table.samples) == len(sizes_m)
     for sample in table.samples:

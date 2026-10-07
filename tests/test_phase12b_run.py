@@ -1,6 +1,6 @@
 """Phase 12B end-to-end pipeline, at REDUCED scale, so the routine test suite stays bounded --
 every stage is still a REAL MoM solve, nothing mocked. The full, production-scale run is
-`examples/run_phase12b.py`, and its real, measured result is what `PHASE12B_MESH_PERIOD_STUDY.md`
+`scripts/research/run_phase12b.py`, and its real, measured result is what `PHASE12B_MESH_PERIOD_STUDY.md`
 reports. Module-scoped so the reduced run happens once per test session
 (``tests/test_phase11_run.py``/``test_phase12a_run.py``'s own established pattern).
 """

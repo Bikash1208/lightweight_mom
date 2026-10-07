@@ -11,7 +11,7 @@ def test_configure_logging_is_idempotent(tmp_path):
     n_handlers = len(logger1.handlers)
     logger2 = ls.configure_logging(level="WARNING", log_dir=tmp_path)
     assert logger1 is logger2
-    assert len(logger2.handlers) == n_handlers   # no duplicate handlers added
+    assert len(logger2.handlers) == n_handlers  # no duplicate handlers added
     assert logger2.level == logging.WARNING
 
 
@@ -42,4 +42,4 @@ def test_new_run_id_is_unique_hex():
     a, b = ls.new_run_id(), ls.new_run_id()
     assert a != b
     assert len(a) == 32
-    int(a, 16)   # valid hex
+    int(a, 16)  # valid hex

@@ -2,7 +2,7 @@
 results). These tests use small, cheap mesh overrides (not the full production-scale aligned mesh,
 which is expensive by design -- module docstring's own cost note) to keep the suite fast; the real,
 fully aligned production call is exercised in test_phase12c_run.py's reduced-scale run and in the
-production run itself (examples/run_phase12c.py).
+production run itself (scripts/research/run_phase12c.py).
 """
 
 from src.phase12c import spot_check as sc

@@ -1,6 +1,6 @@
 """Phase 11 end-to-end pipeline, at REDUCED scale (2 centers) so the routine test suite stays
 bounded -- every stage is still a REAL MoM solve, nothing mocked. The full, production-scale run
-(all 5 centers) is performed separately via ``examples/run_phase11_heterogeneous_mom.py`` and its
+(all 5 centers) is performed separately via ``scripts/research/run_phase11_heterogeneous_mom.py`` and its
 real, measured result is what ``PHASE11_HETEROGENEOUS_MOM.md`` reports. This single test is
 inherently the most expensive one in the whole suite (Phase 11's own scope is large by design,
 Sec. 36: "do not try to make the problem look easier than it is") -- module-scoped so it runs

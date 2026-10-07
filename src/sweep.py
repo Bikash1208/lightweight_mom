@@ -49,12 +49,19 @@ from .frequency import validate_frequency
 from .geometry import AnnularSlotPatch, Geometry, UnitCell
 
 PARAMETER_NAMES = (
-    "length_m", "width_m", "center_x_m", "center_y_m", "rotation_deg",
+    "length_m",
+    "width_m",
+    "center_x_m",
+    "center_y_m",
+    "rotation_deg",
     # PHASE15 Part E: `geometry.AnnularSlotPatch`'s own four shape parameters -- only meaningful
     # when `sweep_context(config)["geometry_kind"] == AnnularSlotPatch.kind`
     # (`geometry_from_parameters`/`base_parameters` dispatch on that; `ParameterAxis` itself has no
     # notion of geometry kind, so both families' names must coexist in this one flat tuple).
-    "a_m", "b_m", "R_m", "r_m",
+    "a_m",
+    "b_m",
+    "R_m",
+    "r_m",
 )
 _ANNULAR_SLOT_PARAMETER_NAMES = ("a_m", "b_m", "R_m", "r_m", "center_x_m", "center_y_m", "rotation_deg")
 ON_INVALID = ("error", "skip")
@@ -256,8 +263,12 @@ def base_parameters(geometry):
     Part E) -- I/O units: m and degrees."""
     if isinstance(geometry, AnnularSlotPatch):
         return {
-            "a_m": geometry.a, "b_m": geometry.b, "R_m": geometry.R, "r_m": geometry.r,
-            "center_x_m": geometry.center_x, "center_y_m": geometry.center_y,
+            "a_m": geometry.a,
+            "b_m": geometry.b,
+            "R_m": geometry.R,
+            "r_m": geometry.r,
+            "center_x_m": geometry.center_x,
+            "center_y_m": geometry.center_y,
             "rotation_deg": units.to_deg(geometry.rotation),
         }
     return {
@@ -280,8 +291,12 @@ def geometry_from_parameters(kind, parameters):
         if missing:
             raise ValueError(f"missing geometry parameter(s) {sorted(missing)}")
         return AnnularSlotPatch(
-            a=parameters["a_m"], b=parameters["b_m"], R=parameters["R_m"], r=parameters["r_m"],
-            center_x=parameters["center_x_m"], center_y=parameters["center_y_m"],
+            a=parameters["a_m"],
+            b=parameters["b_m"],
+            R=parameters["R_m"],
+            r=parameters["r_m"],
+            center_x=parameters["center_x_m"],
+            center_y=parameters["center_y_m"],
             rotation=units.from_deg(parameters["rotation_deg"]),
         )
     base_names = ("length_m", "width_m", "center_x_m", "center_y_m", "rotation_deg")

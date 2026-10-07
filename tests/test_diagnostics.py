@@ -24,7 +24,9 @@ def _small_ungrounded_cell():
 def test_instrumented_solve_returns_result_and_diagnostics():
     cell = _small_ungrounded_cell()
     mesh = MeshSettings(cells_x=8, cells_y=8, floquet_order=8)
-    planes = ReferencePlanes(top_air_thickness=10e-3, bottom_air_thickness=10e-3, substrate_thickness=cell.substrate.thickness)
+    planes = ReferencePlanes(
+        top_air_thickness=10e-3, bottom_air_thickness=10e-3, substrate_thickness=cell.substrate.thickness
+    )
     result, d = diag.instrumented_compute_s_parameters(cell, 10e9, mesh, planes, run_id="test-run")
 
     assert result.magnitude("S11_xx") <= 1.0 + 1e-9
@@ -32,10 +34,10 @@ def test_instrumented_solve_returns_result_and_diagnostics():
     assert d.cells_x == 8 and d.cells_y == 8
     assert d.n_unknowns > 0
     assert d.total_time_s > 0.0
-    assert d.condition_estimate is not None   # small mesh, below CONDITION_ESTIMATE_MAX_UNKNOWNS
+    assert d.condition_estimate is not None  # small mesh, below CONDITION_ESTIMATE_MAX_UNKNOWNS
     assert d.energy_conservation_residual is not None and d.energy_conservation_residual < 0.2
-    assert d.reciprocity_residual is not None and d.reciprocity_residual < 1e-9   # exact reciprocity
-    assert d.surface_wave_margin is None   # ungrounded stack
+    assert d.reciprocity_residual is not None and d.reciprocity_residual < 1e-9  # exact reciprocity
+    assert d.surface_wave_margin is None  # ungrounded stack
     # PHASE13B A9: platform-normalized to kB everywhere -- a tiny test-process solve is nowhere
     # near the ~1.4e9 "kB" the live review saw from an un-normalized macOS ru_maxrss (bytes).
     assert d.peak_memory_kb is not None and 0.0 < d.peak_memory_kb < 1.0e7
@@ -61,7 +63,9 @@ def test_condition_estimate_skipped_above_threshold(monkeypatch):
     monkeypatch.setattr(diag, "CONDITION_ESTIMATE_MAX_UNKNOWNS", 1)
     cell = _small_ungrounded_cell()
     mesh = MeshSettings(cells_x=8, cells_y=8, floquet_order=8)
-    planes = ReferencePlanes(top_air_thickness=10e-3, bottom_air_thickness=10e-3, substrate_thickness=cell.substrate.thickness)
+    planes = ReferencePlanes(
+        top_air_thickness=10e-3, bottom_air_thickness=10e-3, substrate_thickness=cell.substrate.thickness
+    )
     _, d = diag.instrumented_compute_s_parameters(cell, 10e9, mesh, planes)
     assert d.condition_estimate is None
     assert "too expensive" in d.condition_estimate_skipped_reason
@@ -77,7 +81,9 @@ def test_solve_failure_raises_typed_lwmom_error(monkeypatch):
     monkeypatch.setattr(diag, "compute_s_parameters", _boom)
     cell = _small_ungrounded_cell()
     mesh = MeshSettings(cells_x=8, cells_y=8, floquet_order=8)
-    planes = ReferencePlanes(top_air_thickness=10e-3, bottom_air_thickness=10e-3, substrate_thickness=cell.substrate.thickness)
+    planes = ReferencePlanes(
+        top_air_thickness=10e-3, bottom_air_thickness=10e-3, substrate_thickness=cell.substrate.thickness
+    )
     with pytest.raises(errors.LwmomError) as exc_info:
         diag.instrumented_compute_s_parameters(cell, 10e9, mesh, planes)
     assert exc_info.value.code == "SOLVE_FAILED"

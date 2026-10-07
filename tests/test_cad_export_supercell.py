@@ -5,10 +5,10 @@ import pytest
 
 cadquery = pytest.importorskip("cadquery")
 
-from src import cad_export
-from src.materials import Metal, Substrate
-from src.phase9.supercell_geometry import build_supercell
-from src.phase12c.grounded_supercell import build_grounded_supercell
+from src import cad_export  # noqa: E402
+from src.materials import Metal, Substrate  # noqa: E402
+from src.phase9.supercell_geometry import build_supercell  # noqa: E402
+from src.phase12c.grounded_supercell import build_grounded_supercell  # noqa: E402
 
 SUBSTRATE = Substrate("RT5880", 2.2, 0.0009, 1.575e-3)
 METAL = Metal()

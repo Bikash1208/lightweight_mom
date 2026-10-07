@@ -45,7 +45,7 @@ def test_inverse_lookup_finds_nearest_achievable(tmp_path):
     gp, achieved, within = table.geometry_for_beta(148.0)
     assert gp == 2.0 and within is True
     gp2, achieved2, within2 = table.geometry_for_beta(1000.0)
-    assert within2 is False   # out of range, but still returns the nearest achievable
+    assert within2 is False  # out of range, but still returns the nearest achievable
 
 
 def test_missing_required_column_raises_config_invalid(tmp_path):

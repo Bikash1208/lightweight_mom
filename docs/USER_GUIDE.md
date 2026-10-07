@@ -4,7 +4,7 @@
 Everything below runs locally; nothing leaves the machine. A real walk-through's own screenshots
 are checked into `docs/screenshots/`; fresh ones after Part 3D's fixes were not captured — no
 browser or screenshot tool was available in the session that made those fixes (see
-`docs/phases/PHASE13_WEBAPP.md` "Known limitations"). Phase 15's own screenshots (`phase15_*.png`)
+`docs/history/PHASE13_WEBAPP.md` "Known limitations"). Phase 15's own screenshots (`phase15_*.png`)
 ARE fresh, from a real walk-through of the Phase 15 UI (polarization/beam-type columns, Advanced's
 new sections, Step 3's per-beam table) run against the live app in a real browser.
 
@@ -13,6 +13,13 @@ flow. Everything else (single unit-cell solves, a standalone reflectarray design
 verification, HFSS comparison) lives one click away under **More tools**.
 
 ## The 3-step wizard
+
+The three steps sit behind a stepper (clickable chips at the top): a step is reachable once
+you've completed the one before it, and clicking a reached chip jumps straight back to it without
+losing what you entered — a step you haven't reached yet is locked (not clickable) rather than
+silently resettable. "Design antenna" in Step 3 clears that run's own previous results (summary,
+labels, refinement report) before starting a new one, so a failed or re-run attempt can never
+leave stale numbers on screen next to the new ones.
 
 ### Step 1 — Reference wave
 
@@ -38,7 +45,7 @@ a field-amplitude weight internally — power ratio = amplitude²), plus (Phase 
   note under the beam table and Step 3's measurement of it), Horizontal, Vertical, Slant ±45°,
   LHCP, RHCP. Choosing anything other than Natural adds a per-beam hologram compensation term so
   the aperture radiates a genuine pencil beam of that polarization instead (derived in
-  `docs/phases/PHASE15_POLARIZATION_VORTEX.md`).
+  `docs/history/PHASE15_POLARIZATION_VORTEX.md`).
 - **Beam type**: Pencil (the default for a new row) or Vortex, with an OAM charge field that
   appears once Vortex is selected — deliberately requests an orbital-angular-momentum beam instead
   of (or on top of) the polarization choice.
@@ -60,6 +67,15 @@ a field-amplitude weight internally — power ratio = amplitude²), plus (Phase 
   via this board's own layered Green's function — or Scalar (legacy), the pre-Phase-15 model kept
   for comparison (no polarization information).
 
+**Beam refinement** (Phase 16 follow-ups), under Advanced for a single aperture or next to each
+port's beam table: **Match requested beam levels** (on by default whenever 2+ beams are
+requested) iterates the internal beam weights so the achieved relative levels approach the
+requested "Relative power (dB)" values — up to 3 passes, keeping the best. **Pointing correction**
+(off by default) re-aims each beam by its own measured miss, on a fine 0.1°-resolution local
+evaluation of the far field (not the shared pattern-plot grid) — up to 2 passes, keeping the best.
+Step 3 reports before/after for whichever of these ran, and the per-beam results table (below) and
+this report are measured the same way, so they always agree.
+
 **Board**: a substrate preset (Rogers RT/duroid 5880, RO4003C, FR-4, or Custom εr/loss
 tangent/thickness) and a cell size (a suggested value appears once Step 1's field is analyzed,
 targeting 8 cells per surface-wave fringe at this board's own measured wavenumber). Aperture size
@@ -73,7 +89,7 @@ the default — or **Reflection phase** — simpler, but with a limited phase ra
 sizes (Part 3D's own finding: ~33-36° of range with 4 mm cells on RT/duroid 5880, most cells
 clipping to the smallest or largest patch). The eigenmode method has its own choice of unit-cell
 data: *Compute automatically* (default — builds a real surface-wave dispersion table for this
-board from this project's own MoM, via a homogenized patch-admittance model; `docs/phases/
+board from this project's own MoM, via a homogenized patch-admittance model; `docs/history/
 PHASE14_EIGENMODE.md`) or *Upload an HFSS eigenmode table* (CSV: patch size, beta or reactance, at
 one frequency). As soon as board, cell size and frequency are set, a preview line shows the chosen
 method's achievable range — the phase range (reflection) or the surface-reactance range across the
@@ -97,20 +113,34 @@ separate library page.
 
 **Ports (multi-port sub-apertures)**: choose "Multiple ports" to split the board into several feed
 sub-apertures, each with its own feed, beam table and polarization. Layout presets: 2×2 small ports
-plus one large port, a row of N ports, or a custom list. Step 3 reports per-port directivity and
-aperture efficiency, and a first-order edge-distance check between ports (in units of λ_sw). That
-check is a heuristic, not a full-wave isolation result. Each port is designed against its own
-analytic surface wave; there is no per-port field upload yet, so expect more unreachable cells than
-a single aperture built from an HFSS field. The Coded method is not offered for multi-port designs.
+plus one large port (the large port defaults to the combined four beams of the four small ports,
+its own typical use), a row of N ports, or a custom list. Step 3 reports per-port directivity and
+aperture efficiency, and the edge spacing between every port pair in units of λ_sw, phrased as
+information, not a fault: isolation comes mainly from the holograms themselves radiating the
+surface wave away, not from edge distance alone — confirm with an HFSS S-parameter solve either
+way. Each port is designed against its own analytic surface wave; there is no per-port field
+upload yet, so expect more unreachable cells than a single aperture built from an HFSS field. The
+Coded method is not offered for multi-port designs.
+
+*Worked example — a 2-port board*: pick "Multiple ports" → "a row of N ports" → N=2 (or a custom
+2-port list for unequal sizes/spacing); give each port its own beam table (e.g. two different RHCP
+directions). Step 3 then shows each port's own directivity/efficiency plus the one port-pair edge
+spacing. Export the same way as a single-aperture board ("Taking a design to HFSS" below) — the
+layout/HFSS-README files list each port's feed location and recommended Floquet-port count.
+`scripts/adhoc/three_port.py` is the generator behind the committed `hfss_exports/three_port_25deg/`
+package and is the closest real worked reference for a multi-port layout (3 ports, not 2, but the
+same mechanism).
 
 ![Step 2 with the Coded method](screenshots/phase15_step2_coded.png)
 
-**Coded (1-bit / N-bit)**: a design method that quantizes the phase target to two (1-bit) or 2^N
-reflective states, as in Mishra et al. (IEEE TVT 2026). The two-state source is one of:
-square-patch library (the best pair whose two states both carry the TM0 surface wave with agreeing
-β), square plus annular-slot library (the same rule across both families), or two HFSS-measured
-complex values you enter. A 1-bit design needs the substrate values in Step 1 for its surface-wave
-check. N-bit designs need a continuous phase library.
+**Coded (1-bit / N-bit)** — model-only, not yet HFSS-validated (`docs/STATUS.md`): a design method
+that quantizes the phase target to two (1-bit) or 2^N reflective states, as in Mishra et al. (IEEE
+TVT 2026). The two-state source is one of: square-patch library (the best pair whose two states
+both carry the TM0 surface wave with agreeing β), square plus annular-slot library (the same rule
+across both families), or two HFSS-measured complex values you enter. A 1-bit design needs the
+substrate values in Step 1 for its surface-wave check — the cell pair's own phase separation is
+mesh-sensitive, which is why Step 3's Coded checks report it explicitly rather than assuming 180°.
+N-bit designs need a continuous phase library.
 
 ### Step 3 — Pattern & export
 
@@ -132,7 +162,7 @@ many cells couldn't reach their required value (with the mean/max phase error) �
 than 20% of the cells, a plain sentence explains why (the phase-lookup method's limited range at
 small cell sizes) and what to do about it (switch to the eigenmode method, or use a larger cell).
 On the walk-through's own case, the eigenmode method reaches all 5476 cells vs. the reflection-phase
-method's 4006 unreachable (`docs/phases/PHASE14_EIGENMODE.md`).
+method's 4006 unreachable (`docs/history/PHASE14_EIGENMODE.md`).
 
 STEP (CAD) is a separate, explicit "Build STEP (CAD)" action — it can take minutes and produce a
 file well over 100 MB for a large array, so it no longer runs automatically as part of the chain
@@ -162,6 +192,25 @@ null depth and ~0 winding at its own direction; beam 2 (Horizontal, Vortex charg
 direction) measures a genuine −30 dB null with winding ≈ +1.0 — the vortex is requested and then
 independently *measured*, matching the design. Scalar (legacy) skips all of this (`per_beam` is
 empty) and reproduces the pre-Phase-15 pattern exactly.
+
+## Taking a design to HFSS
+
+1. Click **Build STEP (CAD)** (a separate, explicit action — see above) and **Download package**;
+   the zip's `HFSS_README.md` (written by `src/export/array_export.py`) has the Floquet-port mode
+   count, PEC-vs-copper, and zero-thickness-vs-drawn-thickness notes this project's own HFSS
+   comparisons (`docs/validation/README.md`) found necessary.
+2. Import the `.step` file; it already carries feed markers at each port's own feed position (in
+   the STEP file's own coordinate frame — check `layout.json`'s `export_feeds_mm` against the
+   markers before wiring ports if you're not sure the frame matches).
+3. Set up Floquet/periodic boundaries per the README's own mode count, PEC ground (if the design
+   used `backing: pec`), and the substrate from Step 2's board choice.
+4. For a result you can compare back against this project: run the same single-cell geometry
+   (G1–G6 style) through HFSS and use the **HFSS compare** page (below) rather than eyeballing it —
+   it computes mean/max phase and magnitude differences the same way every existing validation
+   number in `docs/validation/README.md` was produced.
+5. For a multi-port or coded design, see `docs/STATUS.md` "Open next steps" — the `hfss_exports/`
+   packages already committed for exactly this (`three_port_25deg`, `four_port_1bit_gap0/28`) are
+   awaiting that HFSS run; add your own result (STEP + Touchstone + README) there when done.
 
 ## More tools
 
@@ -259,7 +308,7 @@ or with the measured residual otherwise. Every comparison is appended to a ledge
 on the same page. Only case G1 has a real HFSS export bundled with this checkout (`hfss_exports/`,
 excluded from git — `docs/DEVELOPING.md`); the others need your own export.
 
-## Known limitations (see also `docs/phases/PHASE13_WEBAPP.md`)
+## Known limitations (see also `docs/history/PHASE13_WEBAPP.md`)
 
 - **Plots exist for the wizard's own flow only.** The "More tools" pages still show tables, not
   the server-rendered charts the original brief called for; large results are capped (e.g. a
@@ -284,7 +333,7 @@ excluded from git — `docs/DEVELOPING.md`); the others need your own export.
   aperture current's own radial direction (ρ̂) — exact for a single-feed design (every feed marker
   the Advanced "Feeds" section defaults to); a full per-region ρ̂ model for multi-feed pattern
   PREDICTION specifically is not implemented (synthesis itself already assigns each beam its own
-  feed correctly, Part A/C). See `docs/phases/PHASE15_POLARIZATION_VORTEX.md`.
+  feed correctly, Part A/C). See `docs/history/PHASE15_POLARIZATION_VORTEX.md`.
 - **(Phase 15) Explicit feed-position override has no Step 2 UI control** — the backend accepts
   `feed_x_mm`/`feed_y_mm` (`/api/hmsa/synthesize`), but the app always auto-detects from the
   uploaded field's own NaN/singularity; script against the API directly if you need to override it.

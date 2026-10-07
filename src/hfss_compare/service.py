@@ -1,5 +1,5 @@
 """Upload-driven HFSS-vs-MoM comparison, plus a small on-disk ledger of past comparisons (feeds
-the HFSS gate records the brief asks for, `docs/phases/PHASE13_WEBAPP.md`'s own gate). Reuses
+the HFSS gate records the brief asks for, `docs/history/PHASE13_WEBAPP.md`'s own gate). Reuses
 `phase9.hfss_reference.read_touchstone` (structural validation) and
 `phase12d.hfss_ingest.compare_single_cell` (the actual comparison) unmodified.
 """

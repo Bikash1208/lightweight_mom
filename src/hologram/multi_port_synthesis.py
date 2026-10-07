@@ -65,8 +65,14 @@ class MultiPortDesign:
 
 
 def synthesize_ports(
-    port_regions, port_beams, per_port_synthesize, period_m, resolution_m=None, k_swg=None,
-    uploaded_fields=None, min_lambda_sw=1.0,
+    port_regions,
+    port_beams,
+    per_port_synthesize,
+    period_m,
+    resolution_m=None,
+    k_swg=None,
+    uploaded_fields=None,
+    min_lambda_sw=1.0,
 ):
     """`port_beams`: `{port_id: [Beam, ...]}`. `per_port_synthesize(reference_field, beams,
     feed_xy_m) -> HmsaDesign`: a caller-supplied partial application of `synthesize_formulation_a`
@@ -136,8 +142,13 @@ def combined_board_lw_grid_m(multi_port: MultiPortDesign, cell_m_fn):
             row.append(cell_value if cell_value is not None else (0.0, 0.0))
         grid.append(row)
     return CombinedBoard(
-        lw_grid_m=grid, width_m=(x_max - x_min), height_m=(y_max - y_min),
-        x_min_m=x_min, y_min_m=y_min, period_x_m=px, period_y_m=py,
+        lw_grid_m=grid,
+        width_m=(x_max - x_min),
+        height_m=(y_max - y_min),
+        x_min_m=x_min,
+        y_min_m=y_min,
+        period_x_m=px,
+        period_y_m=py,
     )
 
 
@@ -177,8 +188,12 @@ def export_frame_feeds_and_rects_mm(multi_port: MultiPortDesign, board: Combined
     ox, oy = export_frame_offset_m(multi_port, board)
     feeds = [((p.feed_xy_m[0] - ox) * 1e3, (p.feed_xy_m[1] - oy) * 1e3) for p in multi_port.ports]
     rects = [
-        ((p.region.x_min_m - ox) * 1e3, (p.region.x_max_m - ox) * 1e3,
-         (p.region.y_min_m - oy) * 1e3, (p.region.y_max_m - oy) * 1e3)
+        (
+            (p.region.x_min_m - ox) * 1e3,
+            (p.region.x_max_m - ox) * 1e3,
+            (p.region.y_min_m - oy) * 1e3,
+            (p.region.y_max_m - oy) * 1e3,
+        )
         for p in multi_port.ports
     ]
     return feeds, rects

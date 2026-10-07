@@ -85,7 +85,7 @@ def test_cli_runs_against_the_real_checkpoint(tmp_path):
     proc = subprocess.run(
         [
             sys.executable,
-            str(ROOT / "examples" / "run_phase8d_rev_universal_database.py"),
+            str(ROOT / "scripts" / "research" / "run_phase8d_rev_universal_database.py"),
             "--output-dir",
             str(out_dir),
         ],

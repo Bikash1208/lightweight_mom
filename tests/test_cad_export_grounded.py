@@ -4,13 +4,13 @@ import pytest
 
 cadquery = pytest.importorskip("cadquery")
 
-from src.cad_export import (
+from src.cad_export import (  # noqa: E402
     build_ground_solid,
     build_unit_cell_solids,
     export_unit_cell_step,
     import_and_summarize,
 )
-from src.config import config_from_dict
+from src.config import config_from_dict  # noqa: E402
 
 BASE = {
     "period_x": 4.8e-3,

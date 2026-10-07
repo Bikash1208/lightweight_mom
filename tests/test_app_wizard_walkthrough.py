@@ -153,8 +153,13 @@ def test_one_beam_walkthrough_ends_in_a_valid_zip_with_the_beam_near_its_target(
         # PHASE13D item 4: the zip used to only ever get STEP/CSV/notes -- PNGs, DXF and the
         # project record either weren't wired in (layout.png) or weren't implemented (DXF) yet.
         assert {
-            "layout.csv", "layout.json", "layout.dxf", "layout.png",
-            "HFSS_README.md", "pattern_uv.png", "project_record.json",
+            "layout.csv",
+            "layout.json",
+            "layout.dxf",
+            "layout.png",
+            "HFSS_README.md",
+            "pattern_uv.png",
+            "project_record.json",
         } <= names
 
 

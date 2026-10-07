@@ -1,5 +1,5 @@
 """Phase 15 Part B: a VECTOR aperture-to-far-field model, replacing `aperture_pattern.py`'s scalar
-one for HMSA. Methodology source: `docs/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md` Part B.
+one for HMSA. Methodology source: `docs/history/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md` Part B.
 
 ## Why
 
@@ -152,7 +152,7 @@ def circular_components(e_theta, e_phi):
 
 
 def copol_label(desired_polarization):
-    """"rhcp"/"lhcp" -> "E_R" or "E_L", whichever `circular_components` output is co-polar with a
+    """ "rhcp"/"lhcp" -> "E_R" or "E_L", whichever `circular_components` output is co-polar with a
     beam compensated for that handedness (`hologram.polarization_compensation.polarization_jones_vector`
     picks `p_hat_b` via the SAME `handedness()` call used here) -- see module docstring ("Which
     circular label is co-polar") for the derivation: at boresight the medium is isotropic, so the
@@ -205,8 +205,17 @@ class VectorPatternResult:
 
 
 def compute_vector_pattern(
-    x_m, y_m, Jx, Jy, frequency_hz, green_function: LayeredGreenFunction, dx_m, dy_m,
-    theta_max_deg=90.0, n_theta=91, n_phi=73,
+    x_m,
+    y_m,
+    Jx,
+    Jy,
+    frequency_hz,
+    green_function: LayeredGreenFunction,
+    dx_m,
+    dy_m,
+    theta_max_deg=90.0,
+    n_theta=91,
+    n_phi=73,
 ):
     """Vector far field over a hemisphere, on an `n_theta` x `n_phi` grid -- the vector counterpart
     of `pattern.aperture_pattern.compute_pattern`, same grid/peak-normalization/peak-detection
@@ -231,9 +240,17 @@ def compute_vector_pattern(
 
     directivity = _directivity_estimate(power, theta_grid)
     return VectorPatternResult(
-        theta_deg=theta_grid, phi_deg=phi_grid, e_theta=e_theta, e_phi=e_phi, e_r=e_r, e_l=e_l,
-        power_db=power_db, main_beam_theta_deg=main.theta_deg, main_beam_phi_deg=main.phi_deg,
-        sll_db=sll_db, directivity_estimate_dbi=directivity,
+        theta_deg=theta_grid,
+        phi_deg=phi_grid,
+        e_theta=e_theta,
+        e_phi=e_phi,
+        e_r=e_r,
+        e_l=e_l,
+        power_db=power_db,
+        main_beam_theta_deg=main.theta_deg,
+        main_beam_phi_deg=main.phi_deg,
+        sll_db=sll_db,
+        directivity_estimate_dbi=directivity,
     )
 
 
@@ -277,9 +294,20 @@ class VortexMeasurement:
 
 
 def measure_vortex_winding(
-    x_m, y_m, Jx, Jy, frequency_hz, green_function, dx_m, dy_m,
-    theta_b_deg, phi_b_deg, desired_polarization, pattern_peak_power=None,
-    ring_radius=0.03, n_ring_samples=72,
+    x_m,
+    y_m,
+    Jx,
+    Jy,
+    frequency_hz,
+    green_function,
+    dx_m,
+    dy_m,
+    theta_b_deg,
+    phi_b_deg,
+    desired_polarization,
+    pattern_peak_power=None,
+    ring_radius=0.03,
+    n_ring_samples=72,
 ):
     """Makes "vortex vs pencil" a MEASUREMENT (the brief's own requirement), not an assumption:
     samples the beam's own co-pol component (`copol_component`) on a small ring around
@@ -325,8 +353,10 @@ def measure_vortex_winding(
     peak = pattern_peak_power if pattern_peak_power is not None else np.max(np.abs(field_ring) ** 2)
     null_depth_db = 10.0 * np.log10(np.abs(field_b) ** 2 / peak) if peak > 0.0 else float("-inf")
     return VortexMeasurement(
-        null_depth_db=null_depth_db, winding_number=float(winding),
-        ring_alpha_deg=np.degrees(alpha), ring_phase_deg=np.degrees(np.unwrap(phases)),
+        null_depth_db=null_depth_db,
+        winding_number=float(winding),
+        ring_alpha_deg=np.degrees(alpha),
+        ring_phase_deg=np.degrees(np.unwrap(phases)),
     )
 
 
@@ -353,7 +383,8 @@ def strongest_secondary_beam(result: VectorPatternResult, exclusion_deg):
     power = np.abs(result.e_theta) ** 2 + np.abs(result.e_phi) ** 2
     peaks = detect_local_maxima(power, result.theta_deg, result.phi_deg, min_relative_db=-40.0, phi_periodic=True)
     outside = [
-        p for p in peaks
+        p
+        for p in peaks
         if _angular_distance_deg(p.theta_deg, p.phi_deg, result.main_beam_theta_deg, result.main_beam_phi_deg)
         > exclusion_deg
     ]
@@ -379,7 +410,12 @@ def mirror_beam_level_db(result: VectorPatternResult):
 
 
 ORTHOGONAL_POLARIZATION = {
-    "rhcp": "lhcp", "lhcp": "rhcp", "hp": "vp", "vp": "hp", "slant_p45": "slant_m45", "slant_m45": "slant_p45",
+    "rhcp": "lhcp",
+    "lhcp": "rhcp",
+    "hp": "vp",
+    "vp": "hp",
+    "slant_p45": "slant_m45",
+    "slant_m45": "slant_p45",
 }
 _SEARCH_RADIUS_DEG = 12.0
 
@@ -396,8 +432,18 @@ def beam_local_peak(pat: VectorPatternResult, theta_deg, phi_deg, radius_deg=_SE
 
 
 def beam_local_peak_fine(
-    x_m, y_m, Jx, Jy, frequency_hz, green_function, dx_m, dy_m,
-    theta_deg, phi_deg, radius_deg=3.0, step_deg=0.1,
+    x_m,
+    y_m,
+    Jx,
+    Jy,
+    frequency_hz,
+    green_function,
+    dx_m,
+    dy_m,
+    theta_deg,
+    phi_deg,
+    radius_deg=3.0,
+    step_deg=0.1,
 ):
     """Sub-grid-resolution achieved direction of one beam: evaluates the vector far field directly
     (`_vector_far_field`, not `compute_vector_pattern`'s own shared hemisphere grid) on a FINE
@@ -469,7 +515,12 @@ def _main_beam_region(co_power, theta_grid_deg, phi_grid_deg, theta_deg, phi_deg
 
 
 def beam_polarization_metrics(
-    pat: VectorPatternResult, desired_polarization, theta_deg, phi_deg, aperture_extent_m, wavelength_m,
+    pat: VectorPatternResult,
+    desired_polarization,
+    theta_deg,
+    phi_deg,
+    aperture_extent_m,
+    wavelength_m,
     other_beams_deg=(),
 ):
     """Polarization figures of merit for one requested beam, from a computed vector pattern.

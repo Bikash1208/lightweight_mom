@@ -50,8 +50,18 @@ def measure_beam_aims(design, beams, green, period_m, frequency_hz, feed_xy_m):
     jx, jy = aperture_current_from_scalar(design.x_m, design.y_m, design.aperture_field, feed_xy_m=feed_xy_m)
     raw = [
         beam_local_peak_fine(
-            design.x_m, design.y_m, jx, jy, frequency_hz, green, period_m, period_m,
-            beam.theta_deg, beam.phi_deg, radius_deg=_FINE_GRID_RADIUS_DEG, step_deg=FINE_GRID_STEP_DEG,
+            design.x_m,
+            design.y_m,
+            jx,
+            jy,
+            frequency_hz,
+            green,
+            period_m,
+            period_m,
+            beam.theta_deg,
+            beam.phi_deg,
+            radius_deg=_FINE_GRID_RADIUS_DEG,
+            step_deg=FINE_GRID_STEP_DEG,
         )
         for beam in beams
     ]
@@ -117,9 +127,12 @@ _BALANCE_TOLERANCE_DB = 0.1
 
 def aim_dict(aim):
     return {
-        "requested_theta_deg": aim.requested_theta_deg, "requested_phi_deg": aim.requested_phi_deg,
-        "achieved_theta_deg": aim.achieved_theta_deg, "achieved_phi_deg": aim.achieved_phi_deg,
-        "miss_deg": aim.miss_deg, "level_db": aim.level_db,
+        "requested_theta_deg": aim.requested_theta_deg,
+        "requested_phi_deg": aim.requested_phi_deg,
+        "achieved_theta_deg": aim.achieved_theta_deg,
+        "achieved_phi_deg": aim.achieved_phi_deg,
+        "miss_deg": aim.miss_deg,
+        "level_db": aim.level_db,
     }
 
 
@@ -162,7 +175,10 @@ def balance_beam_levels(beams, targets_db, synthesize, measure, passes=BALANCE_P
     for _ in range(passes):
         if err < _BALANCE_TOLERANCE_DB:
             break
-        used = [replace(b, weight=b.weight * 10.0 ** ((t - lv) / 20.0)) for b, t, lv in zip(used, targets, levels, strict=True)]
+        used = [
+            replace(b, weight=b.weight * 10.0 ** ((t - lv) / 20.0))
+            for b, t, lv in zip(used, targets, levels, strict=True)
+        ]
         design = synthesize(used)
         levels = relative_levels(measure(design, used))
         err = float(np.max(np.abs(levels - targets)))

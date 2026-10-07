@@ -6,7 +6,7 @@ import pytest
 
 from src.constants import ETA0
 from src.dispersion.analytic_tm0 import tm0_beta
-from src.dispersion.sheet_model import SheetModelMode, _y_slab, find_beta_from_gamma, Y0
+from src.dispersion.sheet_model import Y0, SheetModelMode, _y_slab, find_beta_from_gamma
 from src.errors import LwmomError
 from src.frequency import angular_frequency, free_space_wavenumber
 from src.hologram.coded_synthesis import (
@@ -46,7 +46,9 @@ def _mode(beta):
 
 
 def _cell(label, phase_deg, geometry=None):
-    return TwoStateCell(label, label, complex(np.exp(1j * np.radians(phase_deg))), geometry or {}, reference_offset_m=0.0)
+    return TwoStateCell(
+        label, label, complex(np.exp(1j * np.radians(phase_deg))), geometry or {}, reference_offset_m=0.0
+    )
 
 
 def test_sheet_model_from_gamma_recovers_the_analytic_bare_slab_tm0():
@@ -138,16 +140,25 @@ def test_quantization_label_states_the_textbook_value():
 def _vector_result(power, theta_grid, phi_grid, main_theta, main_phi):
     amplitude = np.sqrt(power)
     return VectorPatternResult(
-        theta_deg=theta_grid, phi_deg=phi_grid, e_theta=amplitude.astype(complex),
-        e_phi=np.zeros_like(amplitude, dtype=complex), e_r=amplitude.astype(complex),
-        e_l=np.zeros_like(amplitude, dtype=complex), power_db=10 * np.log10(np.maximum(power, 1e-300) / power.max()),
-        main_beam_theta_deg=main_theta, main_beam_phi_deg=main_phi, sll_db=None, directivity_estimate_dbi=0.0,
+        theta_deg=theta_grid,
+        phi_deg=phi_grid,
+        e_theta=amplitude.astype(complex),
+        e_phi=np.zeros_like(amplitude, dtype=complex),
+        e_r=amplitude.astype(complex),
+        e_l=np.zeros_like(amplitude, dtype=complex),
+        power_db=10 * np.log10(np.maximum(power, 1e-300) / power.max()),
+        main_beam_theta_deg=main_theta,
+        main_beam_phi_deg=main_phi,
+        sll_db=None,
+        directivity_estimate_dbi=0.0,
     )
 
 
 def _gaussian_beam(theta_grid, phi_grid, theta0, phi0, width_deg=3.0):
     dphi = (phi_grid - phi0 + 180.0) % 360.0 - 180.0
-    return np.exp(-((theta_grid - theta0) ** 2 + (dphi * np.sin(np.radians(theta_grid + 1e-9))) ** 2) / (2 * width_deg**2))
+    return np.exp(
+        -((theta_grid - theta0) ** 2 + (dphi * np.sin(np.radians(theta_grid + 1e-9))) ** 2) / (2 * width_deg**2)
+    )
 
 
 def _two_beam_result(secondary_amplitude=0.5, mirror_amplitude=0.0):
@@ -187,4 +198,6 @@ def test_mirror_beam_level_is_sampled_at_phi_plus_180():
 
 def test_first_null_half_width_matches_the_airy_formula():
     assert first_null_half_width_deg(0.3, 0.0284, 0.0) == pytest.approx(np.degrees(np.arcsin(1.22 * 0.0284 / 0.3)))
-    assert first_null_half_width_deg(0.3, 0.0284, 60.0) == pytest.approx(2.0 * first_null_half_width_deg(0.3, 0.0284, 0.0), rel=1e-6)
+    assert first_null_half_width_deg(0.3, 0.0284, 60.0) == pytest.approx(
+        2.0 * first_null_half_width_deg(0.3, 0.0284, 0.0), rel=1e-6
+    )

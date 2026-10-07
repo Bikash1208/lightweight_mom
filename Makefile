@@ -15,14 +15,16 @@ test-full:
 	$(VENV)/python -m pytest -q
 
 lint:
-	$(VENV)/ruff check src tests examples
-	$(VENV)/ruff format --check src tests examples
+	$(VENV)/ruff check src tests examples scripts
+	$(VENV)/ruff format --check src tests examples scripts
 
 format:
-	$(VENV)/ruff check --fix src tests examples
-	$(VENV)/ruff format src tests examples
+	$(VENV)/ruff check --fix src tests examples scripts
+	$(VENV)/ruff format src tests examples scripts
 
 app:
+	@echo "Restart this command after pulling backend (src/) changes -- the frontend is static files," \
+	      "reloaded on refresh, but the FastAPI process itself is not."
 	$(VENV)/python -m src.app.main
 
 clean:

@@ -30,7 +30,7 @@ from .schema_export import (
 DESIGN_FREQUENCY_HZ = 12.5e9
 MISMATCHED_PERIOD_MM = 3.2  # deliberately not 4.8 mm, for Sec. 20's negative benchmark query
 
-ROOT_DIR = Path(__file__).resolve().parent.parent.parent / "docs" / "phases"
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent / "docs" / "history"
 
 
 def _hash_file(path):

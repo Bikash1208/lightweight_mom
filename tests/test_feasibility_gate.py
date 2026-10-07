@@ -1,5 +1,5 @@
 """Phase 8A orchestrator + CLI: `run_feasibility_gate`, `feasibility.json`/`FEASIBILITY_REPORT.md`
-output, and `examples/run_phase8a_feasibility.py`'s exit codes."""
+output, and `scripts/research/run_phase8a_feasibility.py`'s exit codes."""
 
 import subprocess
 import sys
@@ -163,7 +163,7 @@ def test_cli_runs_against_a_small_library_and_exits_with_the_gate_status_code(bu
     proc = subprocess.run(
         [
             sys.executable,
-            str(ROOT / "examples" / "run_phase8a_feasibility.py"),
+            str(ROOT / "scripts" / "research" / "run_phase8a_feasibility.py"),
             "--library-dir",
             str(built_library_dir),
             "--frequency-ghz",

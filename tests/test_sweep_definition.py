@@ -109,10 +109,22 @@ def test_parameter_names_are_the_five_rectangle_fields_plus_the_four_annular_slo
     # sweep.py's own module docstring/comments); a single geometry's own `base_parameters()` only
     # ever returns ITS OWN family's subset, matched by `geometry_from_parameters`'s dispatch.
     assert set(PARAMETER_NAMES) == {
-        "length_m", "width_m", "center_x_m", "center_y_m", "rotation_deg", "a_m", "b_m", "R_m", "r_m",
+        "length_m",
+        "width_m",
+        "center_x_m",
+        "center_y_m",
+        "rotation_deg",
+        "a_m",
+        "b_m",
+        "R_m",
+        "r_m",
     }
     assert set(base_parameters(config_from_dict(config_dict()).unit_cell.geometry)) == {
-        "length_m", "width_m", "center_x_m", "center_y_m", "rotation_deg",
+        "length_m",
+        "width_m",
+        "center_x_m",
+        "center_y_m",
+        "rotation_deg",
     }
 
 

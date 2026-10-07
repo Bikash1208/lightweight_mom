@@ -11,7 +11,7 @@ def test_run_manifest_fills_provenance_fields_automatically():
     assert m.python_version
     assert m.platform
     assert isinstance(m.dependency_versions, dict) and "numpy" in m.dependency_versions
-    assert m.dependency_versions["numpy"] is not None   # numpy is always installed here
+    assert m.dependency_versions["numpy"] is not None  # numpy is always installed here
 
 
 def test_git_hash_is_a_real_commit_in_this_checkout():
@@ -24,7 +24,7 @@ def test_add_output_file_hashes_it(tmp_path):
     f.write_text('{"a": 1}')
     m = mf.RunManifest(run_id="r1", job_kind="test")
     m.add_output_file("result.json", f)
-    assert len(m.output_files["result.json"]) == 64   # sha256 hex digest length
+    assert len(m.output_files["result.json"]) == 64  # sha256 hex digest length
     # deterministic: same content -> same hash
     f2 = tmp_path / "result2.json"
     f2.write_text('{"a": 1}')

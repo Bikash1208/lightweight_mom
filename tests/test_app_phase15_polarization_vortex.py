@@ -66,7 +66,9 @@ def grounded_library(client):
 
 def _upload_example_field(client):
     with open(_EXAMPLE_FLD, "rb") as fh:
-        resp = client.post("/api/hmsa/upload_field", files={"phase_file": ("efl_phase_EzZ_example.fld", fh, "text/plain")})
+        resp = client.post(
+            "/api/hmsa/upload_field", files={"phase_file": ("efl_phase_EzZ_example.fld", fh, "text/plain")}
+        )
     return resp.json()["upload_id"]
 
 

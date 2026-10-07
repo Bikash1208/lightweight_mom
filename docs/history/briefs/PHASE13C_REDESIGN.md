@@ -1,6 +1,6 @@
 # Phase 13C brief — redesign the app around one 3-step HMSA flow (supersedes the ordering of 13B)
 
-Read `docs/briefs/PHASE13B_UI_REVIEW_FIXES.md` first — it lists bugs found in a live review. This brief keeps the
+Read `docs/history/briefs/PHASE13B_UI_REVIEW_FIXES.md` first — it lists bugs found in a live review. This brief keeps the
 bugs that affect the main flow as **must-fix**, and changes what the app is: the user wants **one simple, polished
 flow**, everything else tucked away. Physics/numerics unchanged. Commit per step.
 
@@ -38,7 +38,7 @@ Top level has exactly three steps (a stepper: 1 · 2 · 3), plus one quiet link 
 
 **More tools** (one page with a list, or a drawer): Unit cell, Unit-cell library, Reflectarray designer,
 Full-wave check (Verify), HFSS comparison, Diagnostics & logs. These keep working; 13B fixes for them are lower
-priority (do A1, A6, A8–A10 there; defer the rest in `docs/phases/PHASE13_WEBAPP.md`).
+priority (do A1, A6, A8–A10 there; defer the rest in `docs/history/PHASE13_WEBAPP.md`).
 
 ## 2. Look and feel — Apple-like
 - System font stack (`-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Inter, sans-serif`),

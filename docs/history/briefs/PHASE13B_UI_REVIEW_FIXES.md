@@ -74,6 +74,6 @@ Physics/numerics unchanged. Commit per group.
 - Browser pane width ~800 px: layout works; nav wraps to two rows — acceptable.
 
 ## Done when
-All A items fixed with tests, B1–B5 done, the rest done or explicitly deferred in `docs/phases/PHASE13_WEBAPP.md`;
+All A items fixed with tests, B1–B5 done, the rest done or explicitly deferred in `docs/history/PHASE13_WEBAPP.md`;
 fast suite green; a scripted walk-through (API-level) of: grounded unit cell (richardson) → square library sweep →
 reflectarray design → pattern → export; `.fld` upload → HMSA (A with dispersion CSV, B labelled) → pattern → export.

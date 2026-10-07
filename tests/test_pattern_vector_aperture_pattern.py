@@ -1,5 +1,5 @@
 """Phase 15 Part B: the vector aperture/far-field model. The brief's own 5 validation cases
-(docs/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md, Part B), plus unit tests for the building
+(docs/history/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md, Part B), plus unit tests for the building
 blocks. All cases use the brief's own worked board (25 GHz, RT/duroid 5880-like substrate) and its
 own walk-through beam (theta=20deg, phi=0deg) where the brief specifies one; the winding sign
 convention (which of rhcp/lhcp reads +1 vs -1 for a given oam_charge sign) is DERIVED here and

@@ -102,7 +102,7 @@ class AnnularSlotPatch:
     """Phase 15 Part E: a rectangular metal patch (``a`` x ``b``) with a concentric annular
     (ring) slot cut into it, outer slot radius ``R``, inner slot radius ``r``
     (``0 <= r < R <= min(a, b)/2``) -- Mishra, Barad, Sarkar's own two-state 1-bit coded-metasurface
-    cell (full patch vs patch-with-annular-slot), `docs/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md`
+    cell (full patch vs patch-with-annular-slot), `docs/history/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md`
     Part E.
 
     Duck-types ``Geometry``'s own interface (``.polarity``, ``.feature_area``, ``.corners()``,

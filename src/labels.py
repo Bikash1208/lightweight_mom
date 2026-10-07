@@ -1,6 +1,6 @@
 """Phase 13 Part 2: the fixed validation-label vocabulary (PHASE13_WEBAPP_PROMPT.md Part 2) --
 every result object the app returns carries a tuple of these, and the UI shows them next to the
-result. Labels are grounded in this project's own recorded evidence (docs/phases/, `gate.py`
+result. Labels are grounded in this project's own recorded evidence (docs/history/, `gate.py`
 modules of earlier phases); nothing here invents a claim a phase didn't actually measure.
 
 Some labels are plain (a fixed string); others are parameterized (a value baked into the label at

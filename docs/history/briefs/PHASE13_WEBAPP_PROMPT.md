@@ -55,7 +55,7 @@ Constraints: **no change to physics or numerics**; existing results reproduce bi
   `src.*` everywhere; decide whether to rename to a real package name (e.g. `lwmom`) — if you do, do it mechanically
   in one commit with tests green and a compatibility note; if not, justify.
 - **Layout**: move phase write-ups and briefs out of the root into `docs/` (`docs/theory/` for GREEN_FUNCTION,
-  MOM_FORMULATION, S_PARAMETERS, CONVENTIONS, DATABASE; `docs/phases/` for PHASE*_*.md; `docs/briefs/` for the
+  MOM_FORMULATION, S_PARAMETERS, CONVENTIONS, DATABASE; `docs/history/` for PHASE*_*.md; `docs/briefs/` for the
   *_PROMPT.md / ADDENDUM files). Fix every link. Keep root: README (short: what it is, install, run app, run tests,
   status, links), CLAUDE.md, CHANGELOG.md (reconstructed per phase), CONTRIBUTING.md, pyproject, config presets in
   `configs/`. Remove `src/postprocess.py` if still empty (or document it). No license file — ask the user (ISRO
@@ -186,7 +186,7 @@ available; otherwise API-level) that (a) design a small reflectarray and export 
 - Parts 0–3 as above, each in its own commits. `docs/USER_GUIDE.md` (with screenshots if you can capture them),
   `docs/ARCHITECTURE.md` (backend/job/UI/solver layers, data flow, where logs and manifests go),
   `docs/DEVELOPING.md` (setup, tests, markers, adding a solver capability, reading diagnostic bundles).
-- `docs/phases/PHASE13_WEBAPP.md` with what was built, carry-over results (Part 0 numbers), known limitations and the
+- `docs/history/PHASE13_WEBAPP.md` with what was built, carry-over results (Part 0 numbers), known limitations and the
   validation-label definitions.
 - Final report: test counts and runtimes (fast and full), app start command, fresh-clone result, repo size, anything
   excluded from git and how to regenerate it, open questions for the user (license, remote, package name if changed).

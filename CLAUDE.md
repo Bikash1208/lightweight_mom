@@ -8,9 +8,9 @@ Guidance for Claude when working in this repository.
 metasurface unit cells, built up into a local web app ("HMSA Designer") that designs holographic/
 reflectarray metasurface antennas end to end. **Read `docs/START_HERE.md` and `docs/STATUS.md`
 first** — they carry the purpose, design flow, repo map, conventions and current validation state
-that used to live here. The full phase-by-phase narrative is in `docs/history/PROJECT_HISTORY.md`;
-per-phase write-ups are in `docs/history/` (phases 1–12D) and `docs/phases/` (13 onward, until a
-future phase archives them too); active work items are in `docs/briefs/`.
+that used to live here. The full phase-by-phase narrative is in `docs/history/PROJECT_HISTORY.md`,
+with one write-up per phase alongside it in `docs/history/`; active work items are in
+`docs/briefs/` (a finished brief moves to `docs/history/briefs/`).
 
 ## Hard rules
 

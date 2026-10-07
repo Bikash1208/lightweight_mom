@@ -10,12 +10,12 @@
   keep the drawn thickness.
 - Mesh convergence at resonance is first-order in cell size on this project's own MoM (unresolved
   edge-current singularity); do not assume a coarse-mesh MoM comparison point is converged near
-  resonance (see `docs/phases/PHASE13_WEBAPP.md`).
+  resonance (see `docs/history/PHASE13_WEBAPP.md`).
 - 10-15 GHz, 401 points reproduces this project's own validated frequency sweep.
 
 ## Checking the surface-wave dispersion table (Phase 14) against HFSS
 
-If you want a spot check of the eigenmode method's auto-built dispersion table (`docs/phases/
+If you want a spot check of the eigenmode method's auto-built dispersion table (`docs/history/
 PHASE14_EIGENMODE.md`) against a real HFSS eigenmode solve, for one representative patch size:
 
 - Master/slave periodic boundaries on the unit cell's four side walls, with a linear phase shift
@@ -34,7 +34,7 @@ PHASE14_EIGENMODE.md`) against a real HFSS eigenmode solve, for one representati
 ## Checking polarization and vortex/OAM (Phase 15) against HFSS
 
 This project's own vector pattern model (`pattern.vector_aperture_pattern`,
-`docs/phases/PHASE15_POLARIZATION_VORTEX.md`) predicts polarization and OAM winding from this same
+`docs/history/PHASE15_POLARIZATION_VORTEX.md`) predicts polarization and OAM winding from this same
 board's own current; to check a real far-field solve against it:
 
 - **Polarization / axial ratio / XPD**: HFSS's Far Field Report supports Ludwig-3 co/cross-pol

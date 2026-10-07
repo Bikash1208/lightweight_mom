@@ -4,7 +4,7 @@
 Registers the existing, unmodified Phase 7 324-cell/4.8 mm library as the one benchmark
 `LibraryEntry`, runs the Sec. 20 benchmark queries and Sec. 24-25 integrity checks, and writes
 every required file under ``--output-dir`` (default `results/universal_database/`) plus
-`UNIVERSAL_UNIT_CELL_DATABASE.md` under `docs/phases/`.
+`UNIVERSAL_UNIT_CELL_DATABASE.md` under `docs/history/`.
 """
 
 import argparse

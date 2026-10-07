@@ -1,5 +1,5 @@
 """Phase 15 Part B: a VECTOR aperture-to-far-field model, replacing `aperture_pattern.py`'s scalar
-one for HMSA. Methodology source: `docs/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md` Part B.
+one for HMSA. Methodology source: `docs/history/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md` Part B.
 
 ## Why
 

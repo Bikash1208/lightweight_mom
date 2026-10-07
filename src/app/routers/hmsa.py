@@ -1472,7 +1472,7 @@ def _quantization_report(design, cell_field, feed_xy_m, body, green, dx, dy, n_b
     count as error -- it moves the whole aperture's phase, not the pattern. The directivity
     difference is also returned, for reference only: directivity normalises by the power the
     design RADIATES, and a 1-bit design radiates less, so the directivity loss is much smaller than
-    the peak-gain loss (see docs/phases/PHASE15_POLARIZATION_VORTEX.md Part E)."""
+    the peak-gain loss (see docs/history/PHASE15_POLARIZATION_VORTEX.md Part E)."""
     ref_complex = _ref_complex(cell_field)
     e_cont = ref_complex * np.exp(1j * np.radians(design.continuous_phase_deg))
     e_ideal = ref_complex * np.exp(1j * np.radians(design.quantized_phase_deg))

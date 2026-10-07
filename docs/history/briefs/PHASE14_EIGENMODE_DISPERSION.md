@@ -1,7 +1,7 @@
 # Phase 14 brief — built-in eigenmode (dispersion) library + a method choice in the app
 
 Read `CLAUDE.md`, `docs/theory/CONVENTIONS.md`, `docs/theory/GREEN_FUNCTION.md`, `docs/theory/MOM_FORMULATION.md`,
-`docs/briefs/PHASE13D_POLISH_AND_PHYSICS.md` (§1.1) and `src/dispersion/` (analytic TM0, HFSS table import, MoM
+`docs/history/briefs/PHASE13D_POLISH_AND_PHYSICS.md` (§1.1) and `src/dispersion/` (analytic TM0, HFSS table import, MoM
 scaffold) first. Existing physics untouched; this adds a capability. Commit per part; fast suite green each time.
 
 ## Why

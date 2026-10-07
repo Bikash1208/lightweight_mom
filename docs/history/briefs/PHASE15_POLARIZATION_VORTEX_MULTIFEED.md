@@ -109,7 +109,7 @@ If a single shared aperture with several feeds is chosen, each feed's contributi
 - Patch-layout PNG, STEP (rounded mm, sheets, one Patches body), CSV/DXF work unchanged for all options.
 
 ## Deliverables
-Code + tests as above; `docs/phases/PHASE15_POLARIZATION_VORTEX.md` with derivations, sign conventions, validation
+Code + tests as above; `docs/history/PHASE15_POLARIZATION_VORTEX.md` with derivations, sign conventions, validation
 numbers, and limits (first-order model; scalar isotropic cells limit XPD — tensor/anisotropic cells are the next step
 per Fong 2010 / Minatti 2016); updated USER_GUIDE; fresh screenshots; HFSS notes updated with how to check
 polarization (Ludwig-3 / RHCP-LHCP far-field outputs) and vortex (phase of E_R around the beam).

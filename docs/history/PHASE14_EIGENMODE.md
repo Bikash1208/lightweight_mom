@@ -1,6 +1,6 @@
 # Phase 14 — a real surface-wave dispersion capability + a method choice in the app
 
-Brief: `docs/briefs/PHASE14_EIGENMODE_DISPERSION.md`. Built on Phase 13D's own finding (`docs/phases/
+Brief: `docs/history/briefs/PHASE14_EIGENMODE_DISPERSION.md`. Built on Phase 13D's own finding (`docs/history/
 PHASE13_WEBAPP.md` "Part 3D" §1.1): with 4 mm cells the reflection-phase method reaches only ≈33-36°
 of phase, so most cells clip to the smallest or largest patch size — a near-binary hologram
 (`docs/screenshots/patch_layout_example.png`). The user asked for the library to compute a real

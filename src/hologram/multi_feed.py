@@ -1,5 +1,5 @@
 """Phase 15 Part C: multi-feed ("multipole") reference-field construction. Methodology source:
-`docs/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md` Part C (paper eq. 5 for superposition).
+`docs/history/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md` Part C (paper eq. 5 for superposition).
 
 Each feed contributes a reference field either supplied directly (an uploaded `.fld`, already a
 `phase8e.reference_field_input.ReferenceFieldGrid`) or built analytically about that feed's own

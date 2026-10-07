@@ -5,8 +5,8 @@ Implementation: Part 0 carry-overs in `src/phase13/` (`convergence.py`, `resonan
 `src/logging_setup.py`/`errors.py`/`labels.py`/`manifest.py`/`diagnostics.py`; Part 3
 `src/app/`, `src/dispersion/`, `src/fields/`, `src/hologram/`, `src/reflectarray/`, `src/pattern/`,
 `src/verify/`, `src/export/`, `src/hfss_compare/`, `src/library_sweep.py`. Brief:
-`docs/briefs/PHASE13_WEBAPP_PROMPT.md`; mid-session resume state:
-`docs/briefs/PHASE13_HANDOFF.md`.
+`docs/history/briefs/PHASE13_WEBAPP_PROMPT.md`; mid-session resume state:
+`docs/history/briefs/PHASE13_HANDOFF.md`.
 
 ## Part 0 — carry-overs from PHASE12D_ADDENDUM.md
 
@@ -122,8 +122,8 @@ reporting the masked grid index and attaching `FEED_REGION_MASKED` — not a sil
 
 ## Part 3B/3C — live-review fixes and the 3-step redesign
 
-A live browser review of the running Part 3 app (`docs/briefs/PHASE13B_UI_REVIEW_FIXES.md`) found
-several real bugs; a follow-up brief (`docs/briefs/PHASE13C_REDESIGN.md`) then asked for the app to
+A live browser review of the running Part 3 app (`docs/history/briefs/PHASE13B_UI_REVIEW_FIXES.md`) found
+several real bugs; a follow-up brief (`docs/history/briefs/PHASE13C_REDESIGN.md`) then asked for the app to
 be rebuilt around one 3-step HMSA flow, superseding Part 3's flat 8-page layout and absorbing the
 review's must-fix items. Both are implemented; commit history has the full per-item account.
 
@@ -234,7 +234,7 @@ otherwise. New pieces the wizard needed that didn't exist in Part 3:
   walk-through with real screenshots, now checked into `docs/screenshots/` — see Part 3D below for
   what the fixes changed and what's still unverified visually.)
 
-## Part 3D — live walk-through findings, fixed (`docs/briefs/PHASE13D_POLISH_AND_PHYSICS.md`)
+## Part 3D — live walk-through findings, fixed (`docs/history/briefs/PHASE13D_POLISH_AND_PHYSICS.md`)
 
 A real human walk-through (light mode, 800 px pane; the exact case used throughout this section:
 monopole field, 151x151, 2 mm grid, β=224.96 rad/m, 10.54 GHz; RT/duroid 5880, 1.575 mm; 1 beam

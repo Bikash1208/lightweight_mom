@@ -29,9 +29,9 @@ confirm/change this before any real push). `.gitignore` excludes `.venv/`, `__py
 `src.*` — deliberately NOT renamed, justified in the file's own comment: 200+ files import
 `src.*`, a mechanical rename was judged not worth the risk/time here; revisit if the user disagrees).
 Docs moved: `docs/theory/` (CONVENTIONS/GREEN_FUNCTION/MOM_FORMULATION/S_PARAMETERS/DATABASE),
-`docs/phases/` (every PHASE*.md write-up + UNIT_CELL_LIBRARY/UNIVERSAL_UNIT_CELL_DATABASE/
+`docs/history/` (every PHASE*.md write-up + UNIT_CELL_LIBRARY/UNIVERSAL_UNIT_CELL_DATABASE/
 VALIDATION_EXPORT), `docs/briefs/` (every `*_PROMPT.md` + `PHASE12D_ADDENDUM.md` + this file).
-`docs/PROJECT_HISTORY.md` is the OLD full README.md content (all internal links fixed to the new
+`docs/history/PROJECT_HISTORY.md` is the OLD full README.md content (all internal links fixed to the new
 paths); root `README.md` is now short, per the brief. `configs/` holds `config.yaml` and
 `config_phase12c_grounded_8mm.yaml` (moved from root; the 2 real code references —
 `src/library_schema.py`, `src/phase12c/design_point.py` — and their tests were updated and
@@ -144,7 +144,7 @@ This is the majority of the remaining work:
    tests (design + export a small reflectarray; import the example `.fld` + a synthetic dispersion
    table + build + export a hologram). None written.
 5. **Docs**: `docs/USER_GUIDE.md`, `docs/ARCHITECTURE.md`, `docs/DEVELOPING.md`,
-   `docs/phases/PHASE13_WEBAPP.md` (what was built, the Part 0 numbers above, known limitations,
+   `docs/history/PHASE13_WEBAPP.md` (what was built, the Part 0 numbers above, known limitations,
    validation-label definitions) — none written yet. `README.md`'s "Run the app" section already
    references `make app` / `lwmom-app` as if they exist; keep them working once `src/app/main.py`
    is real, or fix the README if the final command differs.

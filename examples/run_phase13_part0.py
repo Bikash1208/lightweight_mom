@@ -2,7 +2,7 @@
 """Phase 13 Part 0: carry-overs from PHASE12D_ADDENDUM.md. Writes
 ``results/phase13_part0/part0_carry_overs.json``. Expensive (several real 7-point Richardson
 mesh-convergence families plus real HFSS Touchstone ingestion) -- run once; see
-``docs/phases/PHASE13_WEBAPP.md`` for the numbers already extracted from a run of this script."""
+``docs/history/PHASE13_WEBAPP.md`` for the numbers already extracted from a run of this script."""
 
 import sys
 from pathlib import Path

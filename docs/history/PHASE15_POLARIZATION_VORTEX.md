@@ -1,6 +1,6 @@
 # Phase 15 — per-beam polarization, pencil vs vortex beams, a vector pattern model, multi-feed
 
-Brief: `docs/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md`. Methodology source: Ghosh, Ghosh,
+Brief: `docs/history/briefs/PHASE15_POLARIZATION_VORTEX_MULTIFEED.md`. Methodology source: Ghosh, Ghosh,
 Saha, IEEE OJAP 2026 (`docs/references/Ghosh_OJAP2026_multipolarized_HMS.pdf`), Table 1 and eqs.
 1-17; Minatti et al., IEEE TAP 2016, for the general polarization-control framing.
 

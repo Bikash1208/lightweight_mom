@@ -1,7 +1,7 @@
 # Changelog
 
 Reconstructed per phase (this project did not keep a changelog before Phase 13; entries below
-summarize each phase's own write-up in `docs/history/`/`docs/phases/`). No version tag existed
+summarize each phase's own write-up in `docs/history/`/`docs/history/`). No version tag existed
 before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` for current
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
@@ -74,12 +74,12 @@ validation numbers and open next steps; this file is the per-phase "what changed
   reflection-phase method's 4006 unreachable.
 
 ## 0.13.0 - Phase 13 - production repo + local web app
-- Part 0 carry-overs (`docs/phases/PHASE13_WEBAPP.md`): Richardson mesh-convergence extrapolation
+- Part 0 carry-overs (`docs/history/PHASE13_WEBAPP.md`): Richardson mesh-convergence extrapolation
   at resonance; resonance-region error re-stated for Phase 12B/12C/12D's own meshes; G4/G6 real
   HFSS ingestion with a mesh/thickness/residual error budget; the missing lookup-table-predicted-
   vs-measured per-order-power comparison for Phase 12D's Task B.
 - Part 1: git repository initialized; `pyproject.toml` packaging (`pip install -e .[dev,app,cad]`);
-  docs moved into `docs/{theory,phases,briefs}/` plus `docs/PROJECT_HISTORY.md`; `configs/` for
+  docs moved into `docs/{theory,phases,briefs}/` plus `docs/history/PROJECT_HISTORY.md`; `configs/` for
   config-file presets; ruff lint/format; pytest markers (`slow`/`cad`/`checkpoint`/`hfss_data`) and
   a fast (<5 min) suite; GitHub Actions CI (written, not run); `requirements-lock.txt`; `Makefile`.
 - Part 2: structured logging (`LWMOM_LOG_LEVEL`, per-run ID), solver diagnostics capture, a typed

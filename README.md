@@ -5,7 +5,7 @@ web app that designs holographic/reflectarray metasurface antennas (HMSA) end to
 monopole feed's measured surface-wave field, pick beam directions and a board, get a synthesized
 hologram, a predicted far-field pattern, and an HFSS-ready export.
 
-![Step 3 — pattern and export](docs/screenshots/step3_results_top_light.jpg)
+![Step 3 — per-beam results, measured against the actual computed pattern](docs/screenshots/phase15_step3_per_beam_results.png)
 
 Read **[docs/START_HERE.md](docs/START_HERE.md)** first — purpose, design flow, repo map,
 conventions that bite. Then **[docs/STATUS.md](docs/STATUS.md)** for what's validated right now.

@@ -4,7 +4,7 @@
 Everything below runs locally; nothing leaves the machine. A real walk-through's own screenshots
 are checked into `docs/screenshots/`; fresh ones after Part 3D's fixes were not captured — no
 browser or screenshot tool was available in the session that made those fixes (see
-`docs/phases/PHASE13_WEBAPP.md` "Known limitations"). Phase 15's own screenshots (`phase15_*.png`)
+`docs/history/PHASE13_WEBAPP.md` "Known limitations"). Phase 15's own screenshots (`phase15_*.png`)
 ARE fresh, from a real walk-through of the Phase 15 UI (polarization/beam-type columns, Advanced's
 new sections, Step 3's per-beam table) run against the live app in a real browser.
 
@@ -45,7 +45,7 @@ a field-amplitude weight internally — power ratio = amplitude²), plus (Phase 
   note under the beam table and Step 3's measurement of it), Horizontal, Vertical, Slant ±45°,
   LHCP, RHCP. Choosing anything other than Natural adds a per-beam hologram compensation term so
   the aperture radiates a genuine pencil beam of that polarization instead (derived in
-  `docs/phases/PHASE15_POLARIZATION_VORTEX.md`).
+  `docs/history/PHASE15_POLARIZATION_VORTEX.md`).
 - **Beam type**: Pencil (the default for a new row) or Vortex, with an OAM charge field that
   appears once Vortex is selected — deliberately requests an orbital-angular-momentum beam instead
   of (or on top of) the polarization choice.
@@ -89,7 +89,7 @@ the default — or **Reflection phase** — simpler, but with a limited phase ra
 sizes (Part 3D's own finding: ~33-36° of range with 4 mm cells on RT/duroid 5880, most cells
 clipping to the smallest or largest patch). The eigenmode method has its own choice of unit-cell
 data: *Compute automatically* (default — builds a real surface-wave dispersion table for this
-board from this project's own MoM, via a homogenized patch-admittance model; `docs/phases/
+board from this project's own MoM, via a homogenized patch-admittance model; `docs/history/
 PHASE14_EIGENMODE.md`) or *Upload an HFSS eigenmode table* (CSV: patch size, beta or reactance, at
 one frequency). As soon as board, cell size and frequency are set, a preview line shows the chosen
 method's achievable range — the phase range (reflection) or the surface-reactance range across the
@@ -153,7 +153,7 @@ many cells couldn't reach their required value (with the mean/max phase error) �
 than 20% of the cells, a plain sentence explains why (the phase-lookup method's limited range at
 small cell sizes) and what to do about it (switch to the eigenmode method, or use a larger cell).
 On the walk-through's own case, the eigenmode method reaches all 5476 cells vs. the reflection-phase
-method's 4006 unreachable (`docs/phases/PHASE14_EIGENMODE.md`).
+method's 4006 unreachable (`docs/history/PHASE14_EIGENMODE.md`).
 
 STEP (CAD) is a separate, explicit "Build STEP (CAD)" action — it can take minutes and produce a
 file well over 100 MB for a large array, so it no longer runs automatically as part of the chain
@@ -299,7 +299,7 @@ or with the measured residual otherwise. Every comparison is appended to a ledge
 on the same page. Only case G1 has a real HFSS export bundled with this checkout (`hfss_exports/`,
 excluded from git — `docs/DEVELOPING.md`); the others need your own export.
 
-## Known limitations (see also `docs/phases/PHASE13_WEBAPP.md`)
+## Known limitations (see also `docs/history/PHASE13_WEBAPP.md`)
 
 - **Plots exist for the wizard's own flow only.** The "More tools" pages still show tables, not
   the server-rendered charts the original brief called for; large results are capped (e.g. a
@@ -324,7 +324,7 @@ excluded from git — `docs/DEVELOPING.md`); the others need your own export.
   aperture current's own radial direction (ρ̂) — exact for a single-feed design (every feed marker
   the Advanced "Feeds" section defaults to); a full per-region ρ̂ model for multi-feed pattern
   PREDICTION specifically is not implemented (synthesis itself already assigns each beam its own
-  feed correctly, Part A/C). See `docs/phases/PHASE15_POLARIZATION_VORTEX.md`.
+  feed correctly, Part A/C). See `docs/history/PHASE15_POLARIZATION_VORTEX.md`.
 - **(Phase 15) Explicit feed-position override has no Step 2 UI control** — the backend accepts
   `feed_x_mm`/`feed_y_mm` (`/api/hmsa/synthesize`), but the app always auto-detects from the
   uploaded field's own NaN/singularity; script against the API directly if you need to override it.

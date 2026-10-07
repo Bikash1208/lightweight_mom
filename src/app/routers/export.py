@@ -227,7 +227,7 @@ def _run_package_job(job, export_result, pattern_result, synthesize_result):
     reload later)". The project record here captures every RESULT value already computed
     (export summary, pattern summary/plots) -- not the full original request bodies (beam list,
     board substrate, ...), which the app does not currently persist anywhere the export job could
-    read back; a documented simplification, not a silent one (docs/phases/PHASE13_WEBAPP.md)."""
+    read back; a documented simplification, not a silent one (docs/history/PHASE13_WEBAPP.md)."""
     out_dir = job_output_dir(job.id)
     zip_path = out_dir / "package.zip"
     record = {

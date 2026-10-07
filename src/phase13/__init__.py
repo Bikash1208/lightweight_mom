@@ -24,7 +24,7 @@ Part 2 (logging/diagnostics/errors/labels/manifest) and Part 3 (the web app, fie
 dispersion library, HMSA/reflectarray/pattern/export/verify/compare services) live in their own
 sibling packages (`src/logging_setup.py`, `src/diagnostics.py`, `src/errors.py`, `src/labels.py`,
 `src/manifest.py`, `src/fields/`, `src/dispersion/`, `src/app/`) -- see
-`docs/phases/PHASE13_WEBAPP.md` for the full map. Everything under this package (`src/phase13/`)
+`docs/history/PHASE13_WEBAPP.md` for the full map. Everything under this package (`src/phase13/`)
 is analysis-only, following the project's "new phases reuse earlier phases unmodified" rule; it
 does not edit any earlier-phase or core module.
 """

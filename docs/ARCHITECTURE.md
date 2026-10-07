@@ -1,13 +1,69 @@
-# Architecture — Phase 13's local web app
+# Architecture
 
-The app is `src/app/`: a FastAPI backend plus a static HTML + vanilla-JS frontend, wrapping the
-`src/*` service layer (dispersion, fields, hologram, reflectarray, pattern, verify, export,
-hfss_compare, and the earlier phases' own solver/library modules) that Parts 0–2 and the rest of
-Part 3 built. **No physics lives in `src/app/`** — every router calls an already-tested `src/*`
-function and translates its result to JSON; the one exception is `src/library_sweep.py`, itself a
-generalization of `library_builder.py` to an arbitrary (including grounded) config, not new
-physics (see its own module docstring for why `library_schema.LibraryConfig` couldn't be reused
-directly).
+## Module map
+
+Four layers, outermost first:
+
+**(d) App** — `src/app/`: FastAPI backend + static HTML/JS frontend. No physics here; every
+router calls an already-tested function below it. See "The app" below for its own internals.
+
+**(c) HMSA design layer** — built on the core solver, used by the app:
+
+| Package | What it does |
+|---|---|
+| `src/dispersion/` | Surface-wave dispersion (analytic TM0, HFSS-table import, sheet-admittance model; a MoM eigenmode scaffold, not implemented) |
+| `src/fields/` | HFSS field-calculator `.fld` import (the monopole reference-wave upload) |
+| `src/hologram/` | Hologram synthesis (both formulations), two-state/coded cells, multi-port layouts, polarization compensation, pointing correction/level matching |
+| `src/pattern/` | Far-field pattern (scalar legacy + vector polarization-aware model), SLL/XPD/vortex measurement |
+| `src/reflectarray/` | Standalone reflectarray designer (phase-gradient lookup, not HMSA) |
+| `src/export/` | CSV/JSON/DXF/STEP layout export |
+| `src/verify/` | Real full-supercell MoM check of the local-periodicity forward model |
+| `src/hfss_compare/` | HFSS-vs-MoM single-cell comparison ledger |
+| `src/library_sweep.py` | Generalizes `library_builder.py`'s sweep to an arbitrary (incl. grounded) config — not new physics, see its own docstring |
+
+**(b) Research-phase packages** (`src/phase8b/` … `src/phase13/`) — frozen, one package per
+phase, **never renamed or edited to suit a new caller** (`CLAUDE.md`). Still imported directly by
+the layers above; import-count (modules outside the package itself that import it, as of Phase 17):
+
+| Package | What it is | Imported by |
+|---|---|---|
+| `phase8b` | Object-wave/multi-beam formulation, reference-wave models | 15 |
+| `phase8c` | Unit-cell scattering architecture validation | 9 |
+| `phase8d_rev` | Universal unit-cell database architecture | 6 |
+| `phase8e` | Control-variable/holographic-scattering bridge, beam reconstruction | 8 |
+| `phase9` | Control-variable & local-periodicity validation, HFSS Touchstone reference reader | 23 |
+| `phase10` | Environment-aware neighborhood/surrogate/inverse/beam validation | 9 |
+| `phase11` | Heterogeneous-MoM nonlocal-coupling study (physics-only, no ML) | 4 |
+| `phase12a` | Optional PEC ground plane | 3 |
+| `phase12b` | Mesh alignment / duplicate-geometry audit / grounded period study | 0 (analysis-only; its own tests/examples) |
+| `phase12c` | Grounded supercells, HFSS export | 7 |
+| `phase12d` | General N-port Touchstone reader, aperture Floquet-power test | 5 |
+| `phase13` | Richardson mesh-convergence extrapolation, resonance restatement | 1 |
+
+**(a) Core periodic MoM solver** — flat modules directly under `src/`: `config`, `units`,
+`constants`, `materials`, `geometry`, `periodic_bc`, `excitation`, `green_function`,
+`basis_functions`, `mom_matrix`, `solver`, `sparameters`, `sweep`, `runner`, `database`,
+`polarization`, `phase`, plus the library/feasibility modules. Everything above is built on this,
+unmodified (the documented, additive exceptions in `CLAUDE.md` "Code conventions" aside).
+
+## Data flow — the app's 3 steps
+
+```
+Step 1  upload .fld  --fields.fld_parser-->  reference wave (phase, optional magnitude)
+Step 2  beams + board + design method
+           --hologram.hmsa_synthesis / two_state_cells / multi_port_synthesis-->  hologram / cells
+Step 3  --pattern.vector_aperture_pattern--> far field (SLL/XPD/vortex, pointing/level reports)
+        --export.array_export--> CSV/JSON/DXF (+ optional STEP) ready for HFSS
+```
+
+Each step is a `POST` that the app either answers directly or runs as a background job
+(`src/app/jobs.py`); the browser polls until done. See "The job queue" below.
+
+## The app
+
+`src/app/`: a FastAPI backend plus a static HTML + vanilla-JS frontend, wrapping the `src/*`
+service layer above. **No physics lives in `src/app/`** — every router calls an already-tested
+`src/*` function and translates its result to JSON.
 
 ## Layers
 

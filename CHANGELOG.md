@@ -1,8 +1,77 @@
 # Changelog
 
 Reconstructed per phase (this project did not keep a changelog before Phase 13; entries below
-summarize each phase's own write-up in `docs/phases/` and `docs/PROJECT_HISTORY.md`). No version
-tag existed before Phase 13; `0.13.0` (`pyproject.toml`) is the first.
+summarize each phase's own write-up in `docs/history/`/`docs/phases/`). No version tag existed
+before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` for current
+validation numbers and open next steps; this file is the per-phase "what changed" record.
+
+## 0.17.0 - Phase 17 - handoff-ready repo (no physics/solver changes)
+- Onboarding rewrite: `README.md`, `docs/START_HERE.md` (new), `docs/STATUS.md` (new, single
+  source of truth for current validation state), `CLAUDE.md` (rewritten to ≤80 lines),
+  `docs/ARCHITECTURE.md` (added the three-layer + research-phase-package module map and the app's
+  3-step data-flow diagram), `docs/USER_GUIDE.md` (brought up to date: stepper navigation, port
+  defaults, level matching, pointing correction, Coded = model-only), `docs/validation/README.md`
+  (new, indexes every validation run with numbers and provenance).
+- Docs reorganized: completed phase write-ups and briefs moved to `docs/history/` (git history
+  preserved via `git mv`); `docs/briefs/` keeps only active work + `_parked/`; added
+  `docs/README.md`, `docs/briefs/README.md`, `docs/references/README.md`.
+- `examples/` split: user-facing scripts stay; one-off research drivers moved to
+  `scripts/research/`. `results/submission_work/`'s reusable scripts moved to `scripts/adhoc/`;
+  scratch logs/probes removed (listed in the Phase 17 report, user-approved).
+- `hfss_exports/README.md` added, indexing every package (status: awaiting HFSS / validated);
+  the four untracked packages from the Phase 16 live-review round
+  (`three_port_25deg`, `four_port_1bit_gap0/28`, `fss_square_loop_10mm`) committed (README/CSV/
+  JSON/PNG only — `*.step` files stay gitignored alongside the already-tracked phase12/two_beam
+  STEP files).
+- App footer now shows its own version/commit (`HMSA Designer · <tag or short sha>`) so a
+  screenshot or bug report is traceable; `make app` prints a restart-after-backend-changes hint.
+
+## 0.16.0 - Phase 16 - follow-ups and a live-review round
+- Default-on level matching (`hologram.pointing_correction.balance_beam_levels`) for any port or
+  design with 2+ beams: iterates internal weights so achieved levels approach the requested ones,
+  up to 3 passes, best kept; reported before/after in the beam cards.
+- Optional pointing correction (off by default) wired into the single-aperture job for all three
+  formulations, with the same before/after report as the multi-port path; later fixed to measure
+  on a fine 0.1°-resolution local grid (the shared plotting grid was too coarse to resolve a
+  small-aperture squint, which stalled correction for some beams).
+- Co-pol side-lobe level (SLL) exclusion-region fix: first a grid-seam bug (a beam at phi=0/180
+  read its own far shoulder as its sidelobe), then a direction-space rewrite with a nearest-beam
+  (Voronoi) split so one requested beam's own main lobe is never counted as another beam's
+  sidelobe.
+- Multi-port layout fixes: active-aperture-side ports with the guard gap outside; the 2x2+1
+  preset's large port centred correctly on the 2x2 block (was offset by gap/2) and defaulting to
+  the four small ports' combined beams; the isolation-gap check tolerant of its own default-value
+  rounding and reworded as information, not a fault; feed markers written in the STEP export's own
+  frame and checked against each port.
+- The per-port/per-beam results table's "Achieved" direction and "Level" now use the same fine
+  local measurement as pointing correction and level matching, so the table and the refinement
+  summary always agree.
+- Restored deleted-but-tracked `hfss_exports/` files; noted in `hfss_exports/phase12_grounded_8mm/
+  README.md` that the raw `.s36p` exports must be re-exported from HFSS to re-enable their tests.
+
+## 0.15.0 - Phase 15 - polarization, vortex, multi-feed, multi-port, coded cells
+- Root-cause fix for a vortex HFSS found: a monopole feed's radial surface current carries an
+  orbital-angular-momentum term in circular polarization that the project's scalar pattern model
+  couldn't see. Added a per-beam polarization-compensation term (natural/LHCP/RHCP/HP/VP/slant,
+  or a deliberate OAM vortex request) and a genuine VECTOR far-field model via this project's own
+  layered Green's function (`src/pattern/vector_aperture_pattern.py`), replacing the scalar model
+  for HMSA pattern prediction.
+- Multi-feed ("multipole") reference-field construction (superposition/segmentation).
+- Multi-port sub-apertures (Mishra et al., IEEE TVT 2026 layout): per-port synthesis, layout
+  presets, a first-order edge-distance isolation estimate.
+- Coded (1-bit/N-bit) design method: quantizes the phase target to a small number of reflective
+  states instead of a continuous value.
+- Corresponding Step 2/3 app UI for all of the above, verified live in a real browser.
+
+## 0.14.0 - Phase 14 - surface-wave eigenmode dispersion
+- A direct MoM eigenmode search over the periodic array's own Z(kx,ky) was tried and found not to
+  resolve a loading-dependent mode at any affordable mesh size (kept as a documented research
+  item, `src/dispersion/mom_scaffold.py`).
+- Working replacement: `src/dispersion/sheet_model.py` extracts a patch-sheet admittance from the
+  already-validated normal-incidence S11 and solves the closed-form transverse-resonance
+  condition for beta. Added a "Design method" choice (surface-wave/eigenmode vs. reflection-phase)
+  to Step 2 — on the walk-through case the eigenmode method reaches all 5476 cells vs. the
+  reflection-phase method's 4006 unreachable.
 
 ## 0.13.0 - Phase 13 - production repo + local web app
 - Part 0 carry-overs (`docs/phases/PHASE13_WEBAPP.md`): Richardson mesh-convergence extrapolation

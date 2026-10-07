@@ -130,10 +130,13 @@ class IsolationFlag:
     """A first-order, NOT full-wave, isolation estimate (the brief: "flag adjacent-edge distance
     in lambda_sw and recommend a gap/guard row; say plainly that true isolation needs HFSS") --
     `gap_lambda_sw` is the measured edge-to-edge gap divided by the surface-wave wavelength this
-    design's own feed uses; `flagged` is True when that gap is below `min_lambda_sw` (a tight
-    seam, where surface-wave coupling between the two ports' currents is least suppressed by
-    distance alone -- not a claim of a specific achievable isolation in dB, which this project
-    cannot compute without a full-wave solve)."""
+    design's own feed uses; `flagged` is True when that gap is below `min_lambda_sw` by more than
+    `_FLAG_TOLERANCE` (a tight seam, where surface-wave coupling between the two ports' currents is
+    least suppressed by distance alone -- not a claim of a specific achievable isolation in dB,
+    which this project cannot compute without a full-wave solve). This is INFORMATION, not a fault:
+    isolation comes mainly from the holograms themselves radiating the surface wave away rather
+    than from edge distance alone, and should be confirmed with an HFSS S-parameter solve either
+    way."""
 
     port_a: int
     port_b: int
@@ -142,6 +145,12 @@ class IsolationFlag:
     flagged: bool
     guard_row_suggestion_m: "float | None"  # extra gap (in addition to what's already there) to
     # reach `min_lambda_sw`, only when `flagged`
+
+
+_FLAG_TOLERANCE = 0.01  # lambda_sw, PHASE16 follow-ups: the app's own default gap is lambda_sw
+# rounded to 0.1 mm for display, so a design left at that default could come back ~0.1-0.2%
+# under 1.00 lambda_sw from rounding alone and get flagged as "too tight" at its own recommended
+# minimum; this tolerance comfortably covers that rounding without hiding a genuinely tight gap.
 
 
 def isolation_estimate(port_regions, k_swg, min_lambda_sw=1.0):
@@ -156,7 +165,7 @@ def isolation_estimate(port_regions, k_swg, min_lambda_sw=1.0):
         for j in range(i + 1, len(port_regions)):
             gap_m = _rect_gap_m(port_regions[i], port_regions[j])
             gap_lsw = gap_m / lambda_sw
-            flagged = gap_lsw < min_lambda_sw
+            flagged = gap_lsw < min_lambda_sw - _FLAG_TOLERANCE
             suggestion = (min_lambda_sw - gap_lsw) * lambda_sw if flagged else None
             flags.append(
                 IsolationFlag(port_regions[i].port_id, port_regions[j].port_id, gap_m, gap_lsw, flagged, suggestion)

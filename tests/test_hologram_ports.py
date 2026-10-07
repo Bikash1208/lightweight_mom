@@ -130,6 +130,28 @@ def test_isolation_estimate_flags_touching_ports_and_not_distant_ones():
     assert flags_far[0].guard_row_suggestion_m is None
 
 
+def test_isolation_estimate_does_not_flag_a_gap_at_exactly_the_minimum():
+    """Regression (PHASE16 follow-ups): the app's own default gap is exactly 1.00 lambda_sw
+    (rounded for display), and a strict `<` comparison flagged it anyway on floating-point
+    rounding in the lambda_sw conversion."""
+    k_swg = 2.0 * math.pi / 0.01  # lambda_sw = 10 mm
+    lambda_sw = 2.0 * math.pi / k_swg
+    exact = (
+        PortRegion(0, 0.0, 1.0, 0.0, 1.0, 0.5, 0.5),
+        PortRegion(1, 1.0 + lambda_sw, 2.0 + lambda_sw, 0.0, 1.0, 1.5 + lambda_sw, 0.5),
+    )
+    flags = isolation_estimate(exact, k_swg, min_lambda_sw=1.0)
+    assert flags[0].gap_lambda_sw == pytest.approx(1.0)
+    assert not flags[0].flagged
+
+    just_under = (
+        PortRegion(0, 0.0, 1.0, 0.0, 1.0, 0.5, 0.5),
+        PortRegion(1, 1.0 + 0.5 * lambda_sw, 2.0 + 0.5 * lambda_sw, 0.0, 1.0, 1.5 + 0.5 * lambda_sw, 0.5),
+    )
+    flags_under = isolation_estimate(just_under, k_swg, min_lambda_sw=1.0)
+    assert flags_under[0].flagged
+
+
 def test_isolation_estimate_requires_positive_k_swg():
     regions = layout_preset_1xn(2, 0.02)
     with pytest.raises(ValueError):

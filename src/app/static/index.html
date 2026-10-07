@@ -1594,12 +1594,16 @@
       document.getElementById("ports-results-card").style.display = "block";
       if (job.result.patch_layout_png_url) document.getElementById("ports-patch-layout-img").src = job.result.patch_layout_png_url;
       const isoEl = document.getElementById("ports-isolation-summary");
-      const flagged = (job.result.isolation || []).filter((f) => f.flagged);
-      isoEl.textContent = flagged.length
-        ? `${flagged.length} port pair(s) are closer than recommended (first-order edge-distance check, ` +
-          `not a full-wave result): ` + flagged.map((f) => `ports ${f.port_a + 1}-${f.port_b + 1} (${f.gap_lambda_sw.toFixed(2)}λ_sw)`).join(", ")
-        : "No tight port spacing flagged (first-order edge-distance check only — true isolation needs an HFSS S-parameter solve).";
-      isoEl.className = flagged.length ? "status warn" : "status ok";
+      const isoFlags = job.result.isolation || [];
+      const flagged = isoFlags.filter((f) => f.flagged);
+      const edgeList = isoFlags.map((f) => `ports ${f.port_a + 1}-${f.port_b + 1} ${f.gap_lambda_sw.toFixed(2)}λ_sw`).join(", ");
+      isoEl.textContent = isoFlags.length
+        ? `Edge spacing (first-order check, not a full-wave result): ${edgeList}` +
+          (flagged.length ? `; ${flagged.length} pair(s) under the recommended 1λ_sw minimum` : "") +
+          `. Isolation comes mainly from the holograms themselves radiating the surface wave away, not from edge ` +
+          `distance alone — confirm with an HFSS S-parameter solve either way.`
+        : "No port pairs to compare.";
+      isoEl.className = "status";
 
       const container = document.getElementById("ports-per-port-results");
       container.innerHTML = "";

@@ -122,6 +122,15 @@ way. Each port is designed against its own analytic surface wave; there is no pe
 upload yet, so expect more unreachable cells than a single aperture built from an HFSS field. The
 Coded method is not offered for multi-port designs.
 
+*Worked example — a 2-port board*: pick "Multiple ports" → "a row of N ports" → N=2 (or a custom
+2-port list for unequal sizes/spacing); give each port its own beam table (e.g. two different RHCP
+directions). Step 3 then shows each port's own directivity/efficiency plus the one port-pair edge
+spacing. Export the same way as a single-aperture board ("Taking a design to HFSS" below) — the
+layout/HFSS-README files list each port's feed location and recommended Floquet-port count.
+`scripts/adhoc/three_port.py` is the generator behind the committed `hfss_exports/three_port_25deg/`
+package and is the closest real worked reference for a multi-port layout (3 ports, not 2, but the
+same mechanism).
+
 ![Step 2 with the Coded method](screenshots/phase15_step2_coded.png)
 
 **Coded (1-bit / N-bit)** — model-only, not yet HFSS-validated (`docs/STATUS.md`): a design method

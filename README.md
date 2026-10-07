@@ -13,6 +13,8 @@ conventions that bite. Then **[docs/STATUS.md](docs/STATUS.md)** for what's vali
 ## Install and run
 
 ```bash
+python3 --version                   # must be >= 3.11 -- if not, substitute your 3.11+
+                                     # interpreter below (e.g. python3.12, python3.14, pyenv's)
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev,app,cad]"     # dev: tests/lint; app: the web app; cad: STEP export/plots
 make app                            # starts the app at http://127.0.0.1:8000 -- restart after

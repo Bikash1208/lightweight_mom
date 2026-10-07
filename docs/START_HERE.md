@@ -43,6 +43,7 @@ lives at `inputs/reference_fields/efl_phase_EzZ_example.fld` (see `inputs/README
 ## How to run / test
 
 ```bash
+python3 --version  # must be >= 3.11 -- substitute a 3.11+ interpreter below otherwise
 python3 -m venv .venv && .venv/bin/pip install -e ".[dev,app,cad]"
 make app          # start the web app at http://127.0.0.1:8000 -- RESTART after any backend change
 make test-fast    # pytest -m "not slow", <5 min, run before every commit

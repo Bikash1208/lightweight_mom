@@ -20,3 +20,26 @@ Two families: `pillar` (octagon in air on the plate) and `hole` (solid nylon, oc
 
 `library.csv`: complex `t_*`, `r_*` (2×2, s/p basis, project convention exp(+jωt), reference planes in
 `docs/theory/DIELECTRIC_CELL_RCWA.md`). `summary.json`: parameters and the numbers above.
+
+## Through-hole vs blind pockets, and plate thickness (Phase 19 follow-up items 2-3)
+Restricted to the best-360 deg window (fill <= 0.804 for the chosen 0.6 mm plate; smallest pocket used has a flat-to-flat width of ~2.4 mm, about 10:1 aspect).
+Normal-incidence library at 0.6 mm plate (`library_plate0.6mm_{blind,through}.csv`): both span 462.9 deg with loss
+-2.39 ... -0.31 dB; best 360 deg window worst-case |S21| -1.88 dB blind vs
+-1.83 dB through (window spans 365.5 / 362.7 deg).
+
+`plate_study.json` (`scripts/research/phase19_plate_study.py`; theta-interpolated ranking, not the final solve): total height 25 mm, illumination-weighted
+aperture-averaged transmission for the dual-beam phase map, both families over their full range:
+
+| plate [mm] | pockets | fill cap | aperture-avg loss [dB] | worst cell [dB] |
+|---|---|---|---|---|
+| 0.6 | blind | 0.804 | -0.852 | -1.91 |
+| 0.6 | through | 0.804 | -0.836 | -1.84 |
+| 1 | blind | 0.804 | -1.060 | -2.00 |
+| 1 | through | 0.826 | -0.990 | -1.87 |
+| 2 | blind | 0.826 | -1.239 | -2.11 |
+| 2 | through | 0.847 | -1.130 | -1.91 |
+| 3.42 | blind | 0.901 | -1.001 | -1.96 |
+| 3.42 | through | 0.917 | -0.923 | -1.95 |
+
+Pick: **0.6 mm plate, through-holes** (best aperture-averaged transmission and the only one that keeps the pocket fill cap at 0.804). 3.42 mm (half-wave) is second but
+needs a cap of 0.92 (narrower pockets, harder to print). A 0.6 mm floor is thin; check it against your printer.

@@ -44,6 +44,8 @@ hfss_exports/_src_snapshot.tgz
 # tracked before this rule was added (phase12_grounded_8mm/, two_beam_20deg_phi0_180/) stay tracked;
 # gitignore never untracks a file that is already in the index.
 hfss_exports/**/*.step
+# Phase 19 lens printing mesh: ~1.3 MB, regenerable (examples/export_nylon_lens_28ghz.py)
+hfss_exports/nylon_lens_28ghz_dual30/*.stl
 
 # Cached per-frequency MoM current coefficients for the square-loop FSS finite-panel check
 # (scripts/adhoc/fss/plane_s.py's input) -- kept on disk, not in git; regenerate with

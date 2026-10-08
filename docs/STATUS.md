@@ -1,6 +1,6 @@
 # Status — single source of truth for *now*
 
-**Last updated:** 2026-10-07, by Claude (Phase 17 handoff/cleanup). **Rule: every phase updates this
+**Last updated:** 2026-10-08, by Claude (Phase 19 Parts A-D, branch `phase19-transmitarray`, not yet merged/tagged). **Rule: every phase updates this
 file** (last release tag/commit, capability matrix, open next steps) as part of its own final commit.
 
 **Last release tag:** `phase16-complete` (commit `1c5ebfb`). The submission snapshot tag
@@ -10,6 +10,8 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
 
 | Capability | Validation level | Numbers / where |
 |---|---|---|
+| Dielectric (nylon) unit-cell RCWA, oblique TE/TM (Phase 19 Part A, `src/dielectric_cell/`) | Verified against an independent analytic slab formula (agreement ~1e-14) and internal checks; **not HFSS-validated** | Uniform slab vs Fabry–Pérot/Macleod 1e-14; power balance 1e-14 (φ=0) / <1e-8; Fourier order M=8 converged to <0.2° / 0.01 dB (`docs/theory/DIELECTRIC_CELL_RCWA.md`) |
+| 28 GHz nylon cell library + dual-beam transmitarray lens (Phase 19 Parts B–D, `src/transmitarray/`) | **Model-only, awaiting the user's HFSS run** | 150 mm octagonal lens, 756 cells, ±30° beams: per-beam gain 25.6 dBi, SLL −9.7 dB, 0.00 dB level difference (mirror symmetry), 0 cells >1° phase residual (direct per-cell solve). **Local periodicity is weak for this phase map** (median neighbour step 122°; order-0 error up to ~0.5 of the cell amplitude at large steps, worse for dense-hole|thin-pillar pairs) so HFSS is expected to be lower/worse (`results/transmitarray_dual30/`, `hfss_exports/nylon_lens_28ghz_dual30/`) |
 | Periodic unit-cell solver (ungrounded, Phases 1–9) | HFSS-validated, off-resonance | Case G1: mean phase diff **-0.29°**, max \|S\| diff **~1.6e-5** (`docs/history/PHASE13_WEBAPP.md`) |
 | Periodic unit-cell solver, at/near resonance | Mesh-convergence-characterized, residual unexplained | G4 (12.5 GHz): HFSS-vs-0.2mm-mesh diff 13.51° = mesh 5.93° + thickness 3.66° + **residual 3.92° unexplained** (`docs/history/PHASE13_WEBAPP.md`) |
 | Grounded supercell / local periodicity (Phase 12C/12D) | Cross-checked against real full-array MoM | Lookup-table-vs-measured per-order power differs by 0.17–1.8 percentage points (`docs/history/PHASE12D_LOCAL_PERIODICITY.md`) |
@@ -23,7 +25,7 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
 
 - Normal incidence only; single substrate layer; PEC zero-thickness metal model (a real HFSS
   patch has finite thickness — see the G4/G6 residual above).
-- No transmitarray support, no finite-array (N×N, N not a power of a small factor) full-wave MoM
+- Transmitarray support is **model-only** (Phase 19, dielectric horn-fed lens; no HFSS comparison yet); the MoM solver itself remains reflectarray/metasurface only. No finite-array (N×N, N not a power of a small factor) full-wave MoM
   beyond what `Verify` already runs for a cost-bounded N.
 - 2-bit (or higher) multi-port coded designs are **not wired** — Phase 15 Part E's coded method
   does not combine with Phase 15 Part C's multi-port layout in the app (single-aperture coded
@@ -36,6 +38,8 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
   is tested, nothing attaches it to a job — `docs/ARCHITECTURE.md`).
 
 ## Open next steps
+
+0. **Phase 19 (nylon lens)**: run `hfss_exports/nylon_lens_28ghz_dual30/lens.step` in HFSS and report beam angle/gain/level difference, and optionally the six single cells in `hfss_exports/nylon_cells_28ghz/`; then decide Part E (app integration) and close out (tag `phase19-complete`, move the brief to `docs/history/briefs/`).
 
 1. **HFSS checks awaiting simulation** (packages committed, `*.step` files present locally but
    gitignored — see `hfss_exports/README.md`):
@@ -70,5 +74,5 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
 - `PHASE16_UNIT_CELL_SPARAM_TOOL.md` — a unit-cell/FSS tool with plane-defined S-parameters (the
   measurement-plane technique `scripts/adhoc/fss/plane_s.py` prototyped for the
   square-loop FSS reference, `hfss_exports/fss_square_loop_10mm/`). Not implemented.
-- Also parked, no brief written yet: transmitarray support, oblique incidence, tensor
+- Also parked, no brief written yet: transmitarray support in the app (Phase 19 Part E), oblique incidence in the MoM core, tensor
   (anisotropic) unit cells (would relax the scalar-cell XPD ceiling above), 2-bit multi-port.

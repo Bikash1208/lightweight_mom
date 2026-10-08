@@ -5,6 +5,15 @@ summarize each phase's own write-up in `docs/history/`/`docs/history/`). No vers
 before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` for current
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
+## Unreleased - Phase 19 - 3D-printed nylon transmitarray (model-only; Parts A-D)
+- New `src/dielectric_cell/`: minimal RCWA for air | z-invariant extruded layers (octagonal pillar / pocket) | air, oblique TE/TM,
+  normal-vector field factorisation, multi-region supercell strips. MoM core untouched.
+- New `src/transmitarray/`: lens layout, cos^q horn, symmetric dual-beam aperture-phase synthesis, direct per-cell octagon-radius
+  solve with the full 2x2 Jones response, Huygens far-field model, one-solid STEP/STL export with re-import verification.
+- 28 GHz nylon cell library (`results/nylon_cells_28ghz/`), plate-thickness / through-hole study, 150 mm +-30 deg lens design
+  (`results/transmitarray_dual30/`), local-periodicity supercell check, package `hfss_exports/nylon_lens_28ghz_dual30/`.
+- Docs: `docs/theory/DIELECTRIC_CELL_RCWA.md`. Everything is labelled model-only (HFSS: `NOT_AVAILABLE_FROM_CURRENT_DATA`).
+
 ## 0.17.0 - Phase 17 - handoff-ready repo (no physics/solver changes)
 - Onboarding rewrite: `README.md`, `docs/START_HERE.md` (new), `docs/STATUS.md` (new, single
   source of truth for current validation state), `CLAUDE.md` (rewritten to ≤80 lines),

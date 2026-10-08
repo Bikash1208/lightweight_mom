@@ -12,6 +12,8 @@ real HFSS results exist for it. Raw HFSS Touchstone exports (`*.s36p`, `*.s4p`) 
 | `three_port_25deg/` | 1×3 port board, 25° RHCP beams per port (`scripts/adhoc/three_port.py`) | **Awaiting HFSS** (`docs/STATUS.md` "Open next steps"). `*.step` gitignored; everything else committed. |
 | `four_port_1bit_gap0/`, `four_port_1bit_gap28/` | 4-port 1-bit coded boards, two guard-gap variants (`scripts/adhoc/coded4.py`) | **Awaiting HFSS** (`docs/STATUS.md` "Open next steps"). `*.step` gitignored; everything else committed. |
 | `fss_square_loop_10mm/` | Square-loop FSS unit cell, periodic MoM + finite-11×11-panel plane-S (`scripts/adhoc/fss_loop.py`, `scripts/adhoc/fss/plane_s.py`) | **Self-consistency reference, not HFSS-validated** — no HFSS data exists for this geometry (`docs/validation/README.md` item 5). No `*.step` (CSV/PNG only). |
+| `nylon_lens_28ghz_dual30/` | 28 GHz all-dielectric (nylon) horn-fed transmitarray lens, ±30° dual beam, 150 mm octagon, 25 mm thick (`examples/export_nylon_lens_28ghz.py`) | **Awaiting HFSS** (model-only; local-periodicity caveat in its README). `lens.step`/`lens.stl` gitignored, regenerable. |
+| `nylon_cells_28ghz/` | Six optional single nylon cells spanning the phase range with RCWA reference CSV (`examples/export_nylon_cell_checkset_28ghz.py`) | **Awaiting HFSS** (optional spot check). |
 
 ## `*.step` files and git
 

@@ -38,11 +38,25 @@ PARAMS = LibraryParams(
 )
 
 
-def main():
+def main(argv=None):
+    """No arguments: the Part B library (1 mm plate, blind pockets) -> library.csv.
+    ``--plate-mm X [--through]``: the same sweep for another plate / through-hole pockets -> library_<tag>.csv."""
+    import argparse
+    import dataclasses
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--plate-mm", type=float, default=None)
+    ap.add_argument("--through", action="store_true")
+    args = ap.parse_args(argv)
+    params, tag = PARAMS, ""
+    if args.plate_mm is not None or args.through:
+        plate = args.plate_mm if args.plate_mm is not None else 1.0
+        params = dataclasses.replace(PARAMS, base_plate_m=plate * 1e-3, through_hole=args.through)
+        tag = f"_plate{plate:g}mm_{'through' if args.through else 'blind'}"
     OUT.mkdir(parents=True, exist_ok=True)
-    rows = sweep(PARAMS)
+    rows = sweep(params)
     names = ["ss", "sp", "ps", "pp"]
-    with open(OUT / "library.csv", "w", newline="") as fh:
+    with open(OUT / f"library{tag}.csv", "w", newline="") as fh:
         w = csv.writer(fh)
         head = ["kind", "radius_mm", "fill", "theta_deg", "phi_deg"]
         head += [f"t_{n}_{part}" for n in names for part in ("re", "im")]
@@ -57,7 +71,7 @@ def main():
     ordered = order_by_fill(normal_incidence_table(rows))
     win = best_window(ordered)
     summary = {
-        "params": {k: (list(v) if isinstance(v, tuple) else v) for k, v in PARAMS.__dict__.items()},
+        "params": {k: (list(v) if isinstance(v, tuple) else v) for k, v in params.__dict__.items()},
         "n_cells": len(ordered),
         "full_library_phase_span_deg": abs(ordered[-1][3] - ordered[0][3]),
         "full_library_loss_db_range": [min(x[4] for x in ordered), max(x[4] for x in ordered)],
@@ -71,7 +85,7 @@ def main():
         },
         "hfss_comparison": "NOT_AVAILABLE_FROM_CURRENT_DATA",
     }
-    (OUT / "summary.json").write_text(json.dumps(summary, indent=2))
+    (OUT / f"summary{tag}.json").write_text(json.dumps(summary, indent=2))
     print(json.dumps(summary, indent=2))
 
 

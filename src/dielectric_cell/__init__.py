@@ -4,12 +4,14 @@ New package; does not touch the periodic-MoM core.  See ``docs/theory/DIELECTRIC
 """
 
 from .cell import CellResponse, OctagonPillarCell, solve_cell
-from .rcwa import PolygonLayer, UniformLayer, solve_stack
+from .rcwa import PolygonLayer, Region, RegionLayer, UniformLayer, solve_stack
 
 __all__ = [
     "CellResponse",
     "OctagonPillarCell",
     "PolygonLayer",
+    "Region",
+    "RegionLayer",
     "UniformLayer",
     "solve_cell",
     "solve_stack",

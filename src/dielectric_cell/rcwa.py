@@ -51,6 +51,32 @@ class PolygonLayer:
     tan_delta_out: float = 0.0
 
 
+@dataclass(frozen=True)
+class Region:
+    """One painted polygon: value ``eps_r_in`` replaces the local value ``eps_r_prev`` (for 1/eps and eps).
+
+    ``edges_m`` are the material-interface segments used for the normal field (default: every polygon
+    edge); pass only the true interfaces when the polygon edge lies on a periodic cell border.
+    """
+
+    vertices_m: tuple
+    eps_r_in: float
+    tan_delta_in: float
+    eps_r_prev: float
+    tan_delta_prev: float
+    edges_m: tuple | None = None
+
+
+@dataclass(frozen=True)
+class RegionLayer:
+    """Layer = background + painted regions (nested/disjoint polygons); supercells and plate/hole layouts."""
+
+    thickness_m: float
+    eps_r_bg: float
+    tan_delta_bg: float
+    regions: tuple
+
+
 def _branch(gamma2_neg: np.ndarray) -> np.ndarray:
     """gamma = sqrt(-lambda) on the decaying/forward branch for exp(-jwt) with exp(+j gamma z)."""
     g = np.sqrt(gamma2_neg.astype(complex))
@@ -64,20 +90,41 @@ def _layer_matrices(layer, ctx):
     if isinstance(layer, UniformLayer):
         eps = layer.eps_r * (1 + 1j * layer.tan_delta)
         return eps * np.eye(2 * n), np.eye(n) / eps
-    eps_in = layer.eps_r_in * (1 + 1j * layer.tan_delta_in)
-    verts = np.asarray(layer.vertices_m, float)
+    single = isinstance(layer, PolygonLayer)
+    if single:
+        verts = np.asarray(layer.vertices_m, float)
+        reg = [Region(layer.vertices_m, layer.eps_r_in, layer.tan_delta_in, layer.eps_r_out, layer.tan_delta_out)]
+        bg = layer.eps_r_out * (1 + 1j * layer.tan_delta_out)
+        edges = fr.polygon_edges(verts)
+    else:
+        reg = list(layer.regions)
+        bg = layer.eps_r_bg * (1 + 1j * layer.tan_delta_bg)
+        edges = np.concatenate(
+            [
+                np.asarray(r.edges_m, float).reshape(-1, 2, 2)
+                if r.edges_m is not None
+                else fr.polygon_edges(np.asarray(r.vertices_m, float))
+                for r in reg
+            ]
+        )
     M = ctx["n_harm"]
-    eps_out = layer.eps_r_out * (1 + 1j * layer.tan_delta_out)
-    c_eps = fr.polygon_pattern_coeffs(verts, ctx["px"], ctx["py"], M, eps_in, eps_out)
+    cplx = lambda e, t: e * (1 + 1j * t)  # noqa: E731
+    eps_regions, inv_regions = [], []
+    for r in reg:
+        v = np.asarray(r.vertices_m, float)
+        ein, eprev = cplx(r.eps_r_in, r.tan_delta_in), cplx(r.eps_r_prev, r.tan_delta_prev)
+        eps_regions.append((v, ein - eprev))
+        inv_regions.append((v, 1.0 / ein - 1.0 / eprev))
+    c_eps = fr.region_pattern_coeffs(eps_regions, ctx["px"], ctx["py"], M, bg)
     te = fr.toeplitz_from_coeffs(c_eps, M, ctx["m"], ctx["n"])
     te_inv = np.linalg.inv(te)
     if ctx["factorization"] == "laurent":
         z = np.zeros_like(te)
         return np.block([[te, z], [z, te]]), te_inv
-    c_inv = fr.polygon_pattern_coeffs(verts, ctx["px"], ctx["py"], M, 1.0 / eps_in, 1.0 / eps_out)
+    c_inv = fr.region_pattern_coeffs(inv_regions, ctx["px"], ctx["py"], M, 1.0 / bg)
     ti = fr.toeplitz_from_coeffs(c_inv, M, ctx["m"], ctx["n"])
     ti_inv = np.linalg.inv(ti)
-    cxx, cxy, cyy = fr.normal_field_coeffs(verts, ctx["px"], ctx["py"], M, ctx["n_grid"])
+    cxx, cxy, cyy = fr.normal_field_coeffs(edges, ctx["px"], ctx["py"], M, ctx["n_grid"], xy_symmetric=single)
     pxx = fr.toeplitz_from_coeffs(cxx, M, ctx["m"], ctx["n"])
     pxy = fr.toeplitz_from_coeffs(cxy, M, ctx["m"], ctx["n"])
     pyy = fr.toeplitz_from_coeffs(cyy, M, ctx["m"], ctx["n"])
@@ -133,7 +180,8 @@ def solve_stack(
     phi_deg: float,
     n_harm: int,
     factorization: str = "normal",
-    n_grid: int | None = None,
+    n_grid: int | tuple | None = None,
+    orders: tuple = (),
 ):
     """Total 4-block S-matrix of the stack in the (0,0)-order TE/TM basis, project convention exp(+jwt).
 
@@ -151,8 +199,11 @@ def solve_stack(
     N = m.size
     kx = math.sin(th) * math.cos(ph) + m * lam0 / period_x_m
     ky = math.sin(th) * math.sin(ph) + n * lam0 / period_y_m
+    mx_, my_ = fr.mxy(n_harm)
     if n_grid is None:
-        n_grid = max(128, 8 * (4 * n_harm + 1))
+        n_grid = (max(128, 8 * (4 * mx_ + 1)), max(128, 8 * (4 * my_ + 1)))
+        if mx_ == my_:
+            n_grid = n_grid[0]
     ctx = dict(N=N, n_harm=n_harm, px=period_x_m, py=period_y_m, m=m, n=n, factorization=factorization, n_grid=n_grid)
 
     # air reference medium: W0 = I, gamma0 = sqrt(1 - kx^2 - ky^2)
@@ -202,5 +253,27 @@ def solve_stack(
             ex, ey = out[i0], out[N + i0]
             mat[0, j] = -sphi * ex + cphi * ey
             mat[1, j] = (cphi * ex + sphi * ey) / ct
+    # transmitted transverse E (ex, ey) of requested diffraction orders, per incident pol [s, p]
+    orders_out = {}
+    for mo, no in orders:
+        idx = np.flatnonzero((m == mo) & (n == no))
+        if idx.size == 0:
+            raise ValueError(f"order {(mo, no)} outside the harmonic truncation")
+        io = int(idx[0])
+        res = np.zeros((2, 2), complex)  # [x/y, s/p]
+        for j, pol in enumerate(("s", "p")):
+            c_in = np.zeros(2 * N, complex)
+            c_in[i0], c_in[N + i0] = inc[pol]
+            out = total["21"] @ c_in
+            res[:, j] = out[io], out[N + io]
+        orders_out[(mo, no)] = np.conj(res)
     # exp(-jwt) -> exp(+jwt)
-    return {"r": np.conj(r_mat), "t": np.conj(t_mat), "n_modes": N, "kx0": kx[i0], "ky0": ky[i0], "sin_theta": st}
+    return {
+        "r": np.conj(r_mat),
+        "t": np.conj(t_mat),
+        "n_modes": N,
+        "kx0": kx[i0],
+        "ky0": ky[i0],
+        "sin_theta": st,
+        "orders": orders_out,
+    }

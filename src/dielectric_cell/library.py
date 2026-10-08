@@ -33,6 +33,7 @@ class LibraryParams:
     thetas_deg: tuple
     phis_deg: tuple
     n_harm: int
+    through_hole: bool = False  # hole-family pocket also cuts the base plate (continuous nylon lattice)
 
     @property
     def r_min_m(self) -> float:
@@ -55,6 +56,8 @@ def cell_list(p: LibraryParams) -> list[tuple[str, float]]:
 
 
 def make_cell(p: LibraryParams, kind: str, radius_m: float) -> OctagonPillarCell:
+    if kind == "hole" and p.through_hole:
+        return OctagonPillarCell(p.period_m, radius_m, p.total_thickness_m, p.eps_r, p.tan_delta, 0.0, 22.5, "hole")
     return OctagonPillarCell(
         p.period_m, radius_m, p.total_thickness_m - p.base_plate_m, p.eps_r, p.tan_delta, p.base_plate_m, 22.5, kind
     )

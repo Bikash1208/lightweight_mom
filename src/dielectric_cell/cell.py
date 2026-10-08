@@ -37,10 +37,13 @@ class OctagonPillarCell:
     tan_delta: float
     base_plate_m: float
     rotation_deg: float  # 22.5 = flats on the lattice axes, 0 = vertices on the axes
+    kind: str = "pillar"  # "pillar": nylon octagon in air;  "hole": air octagon through solid nylon
 
     def __post_init__(self):
         if not (self.period_m > 0 and self.height_m > 0 and self.eps_r >= 1 and self.tan_delta >= 0):
             raise ValueError("period, height must be > 0, eps_r >= 1, tan_delta >= 0")
+        if self.kind not in ("pillar", "hole"):
+            raise ValueError(f"kind must be 'pillar' or 'hole', got {self.kind!r}")
         if self.circumradius_m < 0 or self.base_plate_m < 0:
             raise ValueError("circumradius and base plate thickness must be >= 0")
         if self.max_extent_m > self.period_m / 2 * (1 + 1e-9):
@@ -60,16 +63,22 @@ class OctagonPillarCell:
 
     @property
     def fill_fraction(self) -> float:
-        """Pillar area / cell area  (octagon area = 2*sqrt(2)*R^2)."""
-        return 2.0 * math.sqrt(2.0) * self.circumradius_m**2 / self.period_m**2
+        """Nylon area / cell area  (octagon area = 2*sqrt(2)*R^2)."""
+        oct_frac = 2.0 * math.sqrt(2.0) * self.circumradius_m**2 / self.period_m**2
+        return oct_frac if self.kind == "pillar" else 1.0 - oct_frac
 
     def layers(self):
         out = []
         if self.circumradius_m > 0:
             v = tuple(map(tuple, octagon_vertices(self.circumradius_m, self.rotation_deg)))
-            out.append(PolygonLayer(self.height_m, v, self.eps_r, self.tan_delta))
-        else:
+            if self.kind == "pillar":
+                out.append(PolygonLayer(self.height_m, v, self.eps_r, self.tan_delta))
+            else:
+                out.append(PolygonLayer(self.height_m, v, 1.0, 0.0, self.eps_r, self.tan_delta))
+        elif self.kind == "pillar":
             out.append(UniformLayer(self.height_m, 1.0, 0.0))
+        else:
+            out.append(UniformLayer(self.height_m, self.eps_r, self.tan_delta))
         if self.base_plate_m > 0:
             out.append(UniformLayer(self.base_plate_m, self.eps_r, self.tan_delta))
         return out

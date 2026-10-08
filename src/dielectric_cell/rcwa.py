@@ -38,12 +38,17 @@ class UniformLayer:
 
 @dataclass(frozen=True)
 class PolygonLayer:
-    """Convex polygon of ``eps_r_in`` (loss ``tan_delta_in``) in air, extruded through the layer."""
+    """Convex polygon of ``eps_r_in`` (loss ``tan_delta_in``) in a background (default air), extruded.
+
+    A hole is ``eps_r_in = 1`` in a nylon background (``eps_r_out``, ``tan_delta_out``).
+    """
 
     thickness_m: float
     vertices_m: tuple  # ((x, y), ...) CCW, metres
     eps_r_in: float
     tan_delta_in: float
+    eps_r_out: float = 1.0
+    tan_delta_out: float = 0.0
 
 
 def _branch(gamma2_neg: np.ndarray) -> np.ndarray:
@@ -62,13 +67,14 @@ def _layer_matrices(layer, ctx):
     eps_in = layer.eps_r_in * (1 + 1j * layer.tan_delta_in)
     verts = np.asarray(layer.vertices_m, float)
     M = ctx["n_harm"]
-    c_eps = fr.polygon_pattern_coeffs(verts, ctx["px"], ctx["py"], M, eps_in, 1.0)
+    eps_out = layer.eps_r_out * (1 + 1j * layer.tan_delta_out)
+    c_eps = fr.polygon_pattern_coeffs(verts, ctx["px"], ctx["py"], M, eps_in, eps_out)
     te = fr.toeplitz_from_coeffs(c_eps, M, ctx["m"], ctx["n"])
     te_inv = np.linalg.inv(te)
     if ctx["factorization"] == "laurent":
         z = np.zeros_like(te)
         return np.block([[te, z], [z, te]]), te_inv
-    c_inv = fr.polygon_pattern_coeffs(verts, ctx["px"], ctx["py"], M, 1.0 / eps_in, 1.0)
+    c_inv = fr.polygon_pattern_coeffs(verts, ctx["px"], ctx["py"], M, 1.0 / eps_in, 1.0 / eps_out)
     ti = fr.toeplitz_from_coeffs(c_inv, M, ctx["m"], ctx["n"])
     ti_inv = np.linalg.inv(ti)
     cxx, cxy, cyy = fr.normal_field_coeffs(verts, ctx["px"], ctx["py"], M, ctx["n_grid"])

@@ -12,6 +12,10 @@ validation numbers and open next steps; this file is the per-phase "what changed
   solve with the full 2x2 Jones response, Huygens far-field model, one-solid STEP/STL export with re-import verification.
 - 28 GHz nylon cell library (`results/nylon_cells_28ghz/`), plate-thickness / through-hole study, 150 mm +-30 deg lens design
   (`results/transmitarray_dual30/`), local-periodicity supercell check, package `hfss_exports/nylon_lens_28ghz_dual30/`.
+- Part D-bis: Monte Carlo error bar on the lens prediction from the measured neighbour-coupling error (exact 1x4 / alternating / 2x2 supercells, real 9-cell window
+  check, `src/transmitarray/uncertainty.py`, `scripts/research/phase19_*`); pitch-lever estimate; the inter-beam 0.00 dB relabelled as a layout identity.
+  STEP coordinates made exact (snap to design values within 1e-7 mm, shortest round-trip reals, explicit 1e-6 mm uncertainty, verified: no merged vertices, valid solid,
+  volume change 1.7e-16); the old "no float noise" check had a blind spot below 1e-13 (34,764 inexact literals were in the first STEP).
 - Docs: `docs/theory/DIELECTRIC_CELL_RCWA.md`. Everything is labelled model-only (HFSS: `NOT_AVAILABLE_FROM_CURRENT_DATA`).
 
 ## 0.17.0 - Phase 17 - handoff-ready repo (no physics/solver changes)

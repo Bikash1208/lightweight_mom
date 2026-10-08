@@ -52,3 +52,31 @@ def test_zeroth_order_of_a_mixed_strip_is_energy_bounded_and_orders_are_requeste
     assert amp <= 1.0 + 1e-6  # transmitted power in the propagating orders cannot exceed the incident power
     # +1 / -1 orders mirror each other for a normal-incidence strip that is symmetric in |m|
     assert abs(res["orders"][(1, 0)][0, 1]) == pytest.approx(abs(res["orders"][(-1, 0)][0, 1]), rel=1e-6)
+
+
+def test_checkerboard_of_identical_cells_reproduces_the_single_cell():
+    from src.dielectric_cell.supercell import solve_grid
+
+    c = OctagonPillarCell(P, 1.8e-3, TOTAL, EPS, TAND, 0.0, 22.5, "hole")
+    one = solve_cell(c, F, 0, 0, 8).t[1, 1]
+    a = CellSpec("hole", 1.8e-3)
+    chk = solve_grid([[a, a], [a, a]], P, H, PLATE, EPS, TAND, True, F, 0, 0, (10, 10))["t"][1, 1]
+    assert abs(chk / one - 1) < 3e-3  # truncation-level agreement (5 harmonics per cell here)
+
+
+def test_strip_is_exactly_the_one_column_grid():
+    from src.dielectric_cell.supercell import solve_grid
+
+    a, b = CellSpec("pillar", 1.2e-3), CellSpec("hole", 2.0e-3)
+    s1 = solve_strip([a, b], P, H, PLATE, EPS, TAND, True, F, 0, 0, (8, 4))["t"][1, 1]
+    s2 = solve_grid([[a], [b]], P, H, PLATE, EPS, TAND, True, F, 0, 0, (8, 4))["t"][1, 1]
+    assert s1 == s2
+
+
+def test_checkerboard_transmits_x_and_y_polarisation_equally():
+    from src.dielectric_cell.supercell import solve_grid
+
+    a, b = CellSpec("pillar", 1.2e-3), CellSpec("hole", 2.0e-3)
+    t = solve_grid([[a, b], [b, a]], P, H, PLATE, EPS, TAND, True, F, 0, 0, (8, 8))["t"]
+    # the checkerboard is symmetric under x <-> y, so the zeroth-order transmission is the same for x- and y-pol
+    assert abs(t[1, 1] - t[0, 0]) < 2e-3 * abs(t[0, 0])

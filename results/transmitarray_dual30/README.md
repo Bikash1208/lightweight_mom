@@ -32,3 +32,10 @@ SLL -9.7 dB; max cross-pol -19.3 dBi; aperture-averaged transmission 0.817;
   0.26 (112 deg), 0.37-0.44 (150-170 deg), and two dense-hole|thin-pillar pairs 0.63 (26 deg) and 0.70 (83 deg). The error follows the neighbour phase step; the
   family boundary matters mainly when a dense hole cell sits next to a nearly empty pillar. Supercell solver truncation: order-0 changes 0.1 deg / 0.2 % from Mx = 16 to 32.
 - Consequence: the HFSS result is expected to be worse than the numbers above. This design has not been optimised against neighbour coupling.
+
+## Error bar on the prediction (Part D-bis)
+`error_bar.json` (`scripts/research/phase19_error_bar.py`, 2000 draws/scenario, seed 20261008), built on `coupling_samples.json` (1x4 strips, 184 per-cell samples),
+`coupling_superposition.json` (alternating strips and 2x2 checkerboards: coupling saturates, 0.40 -> 0.29 -> 0.15 per neighbour for 1 -> 2 -> 4), `row_validation.json` / `row_models.json`
+(four real 9-cell windows solved exactly) and `pitch_estimate.json`. Medians (p10...p90): primary phase-constrained model 21.5 (21.1…22.0) dBi, SLL -8.2 (-9.2…-7.1) dB; random-phase
+model 25.6 (25.3…26.0) dBi, SLL -8.8 (-9.8…-7.8) dB; isolated-cell 25.63 dBi / -9.7 dB. The inter-beam 0.00 dB of the nominal layout is an identity of its mirror symmetry. Full discussion,
+validation caveats, the pitch estimate and the STEP-exactness record: `hfss_exports/nylon_lens_28ghz_dual30/README.md`.

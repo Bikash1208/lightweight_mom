@@ -162,3 +162,33 @@ def test_acceptance_four_port_square_300mm_board(client, gap_mm):
         assert 27.0 <= beam["directivity_dbi"] <= 27.9
         assert -20.5 <= beam["cross_pol_level_db"] <= -16.0
     assert result["ports"][0]["feed_x_mm"] == pytest.approx(150.4 + gap_mm / 2.0)
+
+
+def test_export_board_endpoint_writes_exact_step_script_csv_and_readme(client):
+    body = _grid_request(32.0, 0.0)
+    body["layout"]["snap_side_to_cells"] = True
+    submitted = client.post("/api/hmsa/synthesize_ports", json=body).json()
+    synth = _wait_for_job(client, submitted["id"], timeout=120.0)
+    assert synth["status"] == "done", synth
+    resp = client.post(
+        "/api/export/board",
+        json={"source_job_id": submitted["id"], "period_mm": 6.4, "eps_r": 2.2, "tan_delta": 0.0009,
+              "thickness_mm": 1.575, "frequency_hz": F, "name": "four_port_test"},
+    )
+    assert resp.status_code == 200, resp.text
+    job = _wait_for_job(client, resp.json()["id"], timeout=120.0)
+    assert job["status"] == "done", job
+    result = job["result"]
+    assert result["n_patches"] == sum(p["patch_count"] for p in synth["result"]["ports"])
+    for key in ("step_download_url", "layout_csv_download_url", "hfss_script_download_url", "readme_download_url"):
+        assert client.get(result[key]).status_code == 200
+    assert "AssignLumpedPort" in client.get(result["hfss_script_download_url"]).text
+
+
+def test_export_board_endpoint_rejects_a_single_aperture_job(client):
+    resp = client.post(
+        "/api/export/board",
+        json={"source_job_id": "nope", "period_mm": 6.4, "eps_r": 2.2, "tan_delta": 0.0009,
+              "thickness_mm": 1.575, "frequency_hz": F},
+    )
+    assert resp.status_code == 404

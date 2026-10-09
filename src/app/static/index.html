@@ -425,6 +425,10 @@
         synthesis finishes. STEP (CAD) is a separate, optional step &mdash; it can take minutes and
         produce a large file (100+ MB for a big array).</p>
         <button type="button" class="secondary" id="build-step-btn">Build STEP (CAD)</button>
+        <button type="button" class="secondary" id="build-hfss-script-btn" style="display:none">HFSS script (.py)</button>
+        <p class="status" id="exact-export-note" style="display:none">Multi-port boards: STEP is built from exact
+        vertex coordinates (verified after writing), each port's cells at their own positions. The HFSS script
+        builds the whole board natively in AEDT (Tools &gt; Run Script).</p>
         <p class="status" id="export-status"></p>
         <ul class="result-list" id="export-links"></ul>
       </div>
@@ -2104,6 +2108,9 @@
     function renderExportLinks(exportJob) {
       if (exportJob.status !== "done") return;
       document.getElementById("export-card").style.display = "block";
+      const exact = isExactBoardDesign();
+      document.getElementById("build-hfss-script-btn").style.display = exact ? "" : "none";
+      document.getElementById("exact-export-note").style.display = exact ? "" : "none";
       const links = document.getElementById("export-links");
       links.innerHTML = "";
       const addLink = (label, url) => {
@@ -2118,8 +2125,57 @@
       addLink("HFSS setup notes", exportJob.result.readme_download_url);
     }
 
+    function isExactBoardDesign() {
+      const r = state.synthesizeResult;
+      return currentPortMode() === "multi" && r && r.ports && r.ports[0] && r.ports[0].patches_mm;
+    }
+    // Phase 21 D: exact STEP / AEDT script / README for a multi-port board
+    async function runBoardExport(includeStep) {
+      const substrate = currentSubstrate();
+      const submitted = await LWMOM.postJson("/api/export/board", {
+        source_job_id: state.synthesizeJobId,
+        period_mm: parseFloat(document.getElementById("cell-size-mm").value),
+        eps_r: substrate.eps_r, tan_delta: substrate.tan_delta, thickness_mm: substrate.thickness_mm,
+        frequency_hz: parseFloat(document.getElementById("synthesis-frequency-ghz").value) * 1e9,
+        include_step: includeStep, name: "HMSA_board",
+      });
+      const job = await LWMOM.pollJob(submitted.id);
+      if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
+      const links = document.getElementById("export-links");
+      const add = (label, url) => {
+        if (!url) return;
+        const li = document.createElement("li");
+        li.innerHTML = `<span class="k">${label}</span><a href="${url}">Download</a>`;
+        links.appendChild(li);
+      };
+      add("Exact board (STEP)", job.result.step_download_url);
+      add("HFSS script (AEDT .py)", job.result.hfss_script_download_url);
+      add("Exact layout (CSV)", job.result.layout_csv_download_url);
+      add("Board README", job.result.readme_download_url);
+      return job;
+    }
+    document.getElementById("build-hfss-script-btn").addEventListener("click", async () => {
+      const statusEl = document.getElementById("export-status");
+      statusEl.textContent = "Building the HFSS script...";
+      statusEl.className = "status";
+      try {
+        const job = await runBoardExport(false);
+        statusEl.textContent = `HFSS script built (${job.result.n_patches} patches).`;
+        statusEl.className = "status ok";
+      } catch (err) { statusEl.textContent = err.message; statusEl.className = "status err"; }
+    });
     document.getElementById("build-step-btn").addEventListener("click", async () => {
       const statusEl = document.getElementById("export-status");
+      if (isExactBoardDesign()) {
+        statusEl.textContent = "Building the exact STEP...";
+        statusEl.className = "status";
+        try {
+          const job = await runBoardExport(true);
+          statusEl.textContent = `Exact STEP built (${job.result.n_patches} patches, largest rounding ${job.result.max_rounding_mm.toExponential(1)} mm).`;
+          statusEl.className = "status ok";
+        } catch (err) { statusEl.textContent = err.message; statusEl.className = "status err"; }
+        return;
+      }
       if (!state.synthesizeResult || (!state.synthesizeResult.assignments && !state.synthesizeResult.lw_grid_m)) {
         statusEl.textContent = "Run synthesis first (STEP needs a completed design).";
         statusEl.className = "status err";

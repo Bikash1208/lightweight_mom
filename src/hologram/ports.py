@@ -104,6 +104,53 @@ def layout_preset_1xn(n, cell_side_m, gap_m=0.0):
     return tuple(regions)
 
 
+def layout_preset_grid(n_rows, n_cols, side_m, gap_m=0.0):
+    """Phase 21: `n_rows` x `n_cols` equal `side_m` x `side_m` sub-apertures, centred on the origin,
+    `gap_m` between neighbours (outside each side), one feed at each sub-aperture centre.
+
+    Port order is a serpentine from the top-right: the top row runs right -> left, the next row
+    left -> right, and so on. For 2x2 that is P1 (+,+), P2 (-,+), P3 (-,-), P4 (+,-) -- the
+    counter-clockwise order of the hand-built four-port reference board."""
+    for name, n in (("n_rows", n_rows), ("n_cols", n_cols)):
+        if not isinstance(n, int) or isinstance(n, bool) or n < 1:
+            raise ValueError(f"{name} must be a positive integer, got {n!r}")
+    if side_m <= 0.0:
+        raise ValueError(f"side_m must be > 0, got {side_m!r}")
+    if gap_m < 0.0:
+        raise ValueError(f"gap_m must be >= 0, got {gap_m!r}")
+    pitch = side_m + gap_m
+    half_w = (n_cols * side_m + (n_cols - 1) * gap_m) / 2.0
+    half_h = (n_rows * side_m + (n_rows - 1) * gap_m) / 2.0
+    regions = []
+    for r in range(n_rows):  # r = 0 is the top row
+        cols = range(n_cols - 1, -1, -1) if r % 2 == 0 else range(n_cols)
+        for c in cols:
+            x0 = -half_w + c * pitch
+            y1 = half_h - r * pitch
+            regions.append(PortRegion(len(regions), x0, x0 + side_m, y1 - side_m, y1, x0 + side_m / 2.0, y1 - side_m / 2.0))
+    return tuple(regions)
+
+
+def snap_side_to_cells(side_m, period_m):
+    """`(snapped_side_m, n_cells)`: `side_m` rounded to the nearest whole number of `period_m`
+    cells (at least 1). Off-grid sides make the combined board resample cells by nearest neighbour."""
+    if side_m <= 0.0 or period_m <= 0.0:
+        raise ValueError(f"side_m and period_m must be > 0, got {side_m!r}, {period_m!r}")
+    n = max(1, round(side_m / period_m))
+    return n * period_m, n
+
+
+def check_no_overlap(port_regions, tolerance_m=1e-9):
+    """Raises ValueError naming the first pair of ports whose rectangles overlap with positive area
+    (touching edges are fine -- a gap of 0 is a valid board)."""
+    for i, a in enumerate(port_regions):
+        for b in port_regions[i + 1 :]:
+            ox = min(a.x_max_m, b.x_max_m) - max(a.x_min_m, b.x_min_m)
+            oy = min(a.y_max_m, b.y_max_m) - max(a.y_min_m, b.y_min_m)
+            if ox > tolerance_m and oy > tolerance_m:
+                raise ValueError(f"ports {a.port_id + 1} and {b.port_id + 1} overlap")
+
+
 def custom_layout(rectangles_m):
     """`rectangles_m`: an iterable of `(x_min_m, x_max_m, y_min_m, y_max_m)` or
     `(x_min_m, x_max_m, y_min_m, y_max_m, feed_x_m, feed_y_m)` tuples (the brief's "draw

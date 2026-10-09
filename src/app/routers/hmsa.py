@@ -61,7 +61,14 @@ from ...hologram.multi_port_synthesis import (
     synthesize_ports,
 )
 from ...hologram.pointing_correction import measure_beam_aims, refine_design
-from ...hologram.ports import custom_layout, layout_preset_1xn, layout_preset_2x2_plus_1_large
+from ...hologram.ports import (
+    check_no_overlap,
+    custom_layout,
+    layout_preset_1xn,
+    layout_preset_2x2_plus_1_large,
+    layout_preset_grid,
+    snap_side_to_cells,
+)
 from ...hologram.two_state_cells import (
     BETA_SPREAD_LIMIT_FRACTION,
     EDGE_PHASE_WARNING_DEG,
@@ -975,15 +982,21 @@ class PortSpec(BaseModel):
 
 class PortLayoutRequest(BaseModel):
     """`preset`: `"2x2_plus_1_large"` (Mishra's own layout, needs `small_side_mm`),
-    `"1xn"` (needs `n`/`cell_side_mm`), or `"custom"` (needs `regions_mm`, each either
-    `[x_min,x_max,y_min,y_max]` or `[x_min,x_max,y_min,y_max,feed_x,feed_y]`, millimetres)."""
+    `"1xn"` (needs `n`/`cell_side_mm`), `"grid"` (needs `rows`, `cols`, `cell_side_mm`: an N x M grid of
+    equal sub-apertures, serpentine port order from the top-right), or `"custom"` (needs `regions_mm`,
+    each either `[x_min,x_max,y_min,y_max]` or `[x_min,x_max,y_min,y_max,feed_x,feed_y]`, millimetres).
+    `snap_side_to_cells` rounds the preset's side to a whole number of cells (off by default here so
+    existing requests are unchanged; the app sends it on)."""
 
     preset: str
     small_side_mm: "float | None" = None
     n: "int | None" = None
+    rows: "int | None" = None
+    cols: "int | None" = None
     cell_side_mm: "float | None" = None
     gap_mm: float = 0.0
     regions_mm: "list[list[float]] | None" = None
+    snap_side_to_cells: bool = False
 
 
 class HmsaSynthesizePortsRequest(BaseModel):
@@ -1022,7 +1035,21 @@ class HmsaSynthesizePortsRequest(BaseModel):
     balance_levels: bool = True
 
 
-def _build_port_regions(layout: dict):
+def _snap_layout_sides(layout: dict, period_mm):
+    """Returns `(layout, notes)`: with `snap_side_to_cells`, the preset's side rounded to the nearest
+    whole number of cells (`notes`: one `{requested_mm, snapped_mm, n_cells}` per snapped side)."""
+    if not layout.get("snap_side_to_cells") or period_mm is None or layout["preset"] == "custom":
+        return layout, []
+    key = "small_side_mm" if layout["preset"] == "2x2_plus_1_large" else "cell_side_mm"
+    if layout.get(key) is None:
+        return layout, []
+    snapped_m, n_cells = snap_side_to_cells(layout[key] * 1e-3, period_mm * 1e-3)
+    note = {"requested_mm": layout[key], "snapped_mm": snapped_m * 1e3, "n_cells": n_cells}
+    return {**layout, key: snapped_m * 1e3}, [note]
+
+
+def _build_port_regions(layout: dict, period_mm=None):
+    layout, _notes = _snap_layout_sides(layout, period_mm)
     preset = layout["preset"]
     if preset == "2x2_plus_1_large":
         if layout["small_side_mm"] is None:
@@ -1032,12 +1059,28 @@ def _build_port_regions(layout: dict):
         if layout["n"] is None or layout["cell_side_mm"] is None:
             raise config_invalid(message="layout preset '1xn' needs n and cell_side_mm")
         return layout_preset_1xn(layout["n"], layout["cell_side_mm"] * 1e-3, gap_m=layout["gap_mm"] * 1e-3)
+    if preset == "grid":
+        if layout["rows"] is None or layout["cols"] is None or layout["cell_side_mm"] is None:
+            raise config_invalid(message="layout preset 'grid' needs rows, cols and cell_side_mm")
+        try:
+            return layout_preset_grid(
+                layout["rows"], layout["cols"], layout["cell_side_mm"] * 1e-3, gap_m=layout["gap_mm"] * 1e-3
+            )
+        except ValueError as exc:
+            raise config_invalid(message=str(exc)) from exc
     if preset == "custom":
         if not layout["regions_mm"]:
             raise config_invalid(message="layout preset 'custom' needs regions_mm")
         rects_m = [tuple(v * 1e-3 for v in r) for r in layout["regions_mm"]]
-        return custom_layout(rects_m)
-    raise config_invalid(message=f"unknown layout preset {preset!r}; expected '2x2_plus_1_large', '1xn', or 'custom'")
+        try:
+            regions = custom_layout(rects_m)
+            check_no_overlap(regions)
+        except ValueError as exc:
+            raise config_invalid(message=f"custom layout: {exc}") from exc
+        return regions
+    raise config_invalid(
+        message=f"unknown layout preset {preset!r}; expected '2x2_plus_1_large', '1xn', 'grid', or 'custom'"
+    )
 
 
 def _port_cell_to_m(formulation, period_mm):
@@ -1058,7 +1101,7 @@ def _port_cell_to_m(formulation, period_mm):
 
 
 def _run_synthesize_ports_job(job, body: dict):
-    regions = _build_port_regions(body["layout"])
+    regions = _build_port_regions(body["layout"], body["period_mm"])
     if len(body["ports"]) != len(regions):
         raise config_invalid(
             message=f"layout '{body['layout']['preset']}' has {len(regions)} port(s) but "

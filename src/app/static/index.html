@@ -82,8 +82,13 @@
             <div class="segmented" id="port-layout-control">
               <button type="button" data-preset="2x2_plus_1_large" class="active">2×2 small + 1 large</button>
               <button type="button" data-preset="1xn">1×N strip</button>
+              <button type="button" data-preset="grid">N×M grid</button>
+              <button type="button" data-preset="custom">Custom rectangles</button>
             </div>
           </label>
+          <p class="status" id="port-layout-help">Fixed port count: "2×2 small + 1 large" is Mishra's
+          5-port board by definition. "1×N strip" and "N×M grid" take their port count from the fields
+          below; "Custom rectangles" has one port per table row.</p>
           <div id="port-layout-2x2-fields">
             <label>Small sub-aperture side <span class="unit">mm, active aperture (the large one is 2x this; the guard gap sits outside it)</span>
               <input type="number" step="any" id="port-small-side-mm" value="" />
@@ -93,6 +98,28 @@
             <label>Number of ports <input type="number" step="1" min="2" max="8" id="port-1xn-n" value="2" /></label>
             <label>Each port's side <span class="unit">mm, active aperture (the guard gap sits outside it)</span> <input type="number" step="any" id="port-1xn-side-mm" value="" /></label>
           </div>
+          <div id="port-layout-grid-fields" style="display:none">
+            <label>Rows <input type="number" step="1" min="1" max="6" id="port-grid-rows" value="2" style="width:6rem" /></label>
+            <label>Columns <input type="number" step="1" min="1" max="6" id="port-grid-cols" value="2" style="width:6rem" /></label>
+            <label>Each port's side <span class="unit">mm, active aperture (the guard gap sits outside it)</span> <input type="number" step="any" id="port-grid-side-mm" value="" /></label>
+            <p class="status">Ports are numbered in a serpentine from the top-right: the top row runs
+            right to left, the next row left to right, and so on. For 2×2 that is P1 (+,+), P2 (−,+),
+            P3 (−,−), P4 (+,−). One feed sits at each sub-aperture centre.</p>
+          </div>
+          <div id="port-layout-custom-fields" style="display:none">
+            <table id="port-custom-table">
+              <thead><tr><th>Port</th><th>x min</th><th>x max</th><th>y min</th><th>y max</th>
+              <th>feed x</th><th>feed y</th><th></th></tr></thead>
+              <tbody></tbody>
+            </table>
+            <button type="button" class="secondary" id="port-custom-add-btn">Add rectangle</button>
+            <p class="status">Millimetres, in board coordinates. Feed x/y are optional (blank = the
+            rectangle's centre). Rectangles must not overlap; touching edges are fine.</p>
+            <p class="status warn" id="port-custom-error"></p>
+          </div>
+          <label style="display:flex;gap:0.5rem;align-items:center" id="port-snap-label"><input type="checkbox" id="port-snap-side" checked style="width:auto" />
+            Snap side to whole cells <span class="unit">(off-grid sides make the combined board resample cells by nearest neighbour)</span></label>
+          <p class="status" id="port-snap-status"></p>
           <label>Guard gap between ports <span class="unit">mm</span>
             <input type="number" step="any" id="port-gap-mm" value="" min="0" />
           </label>
@@ -735,8 +762,59 @@
       return portLayoutControl.querySelector("button.active")?.dataset.preset || "2x2_plus_1_large";
     }
     function currentPortCount() {
-      if (currentPortLayoutPreset() === "2x2_plus_1_large") return 5;
+      const preset = currentPortLayoutPreset();
+      if (preset === "2x2_plus_1_large") return 5;
+      if (preset === "grid") {
+        const r = parseInt(document.getElementById("port-grid-rows").value, 10) || 1;
+        const c = parseInt(document.getElementById("port-grid-cols").value, 10) || 1;
+        return Math.max(1, r) * Math.max(1, c);
+      }
+      if (preset === "custom") return document.querySelectorAll("#port-custom-table tbody tr").length || 1;
       return parseInt(document.getElementById("port-1xn-n").value, 10) || 2;
+    }
+    // ---- custom rectangles table
+    function addCustomRow(vals) {
+      const tbody = document.querySelector("#port-custom-table tbody");
+      const tr = document.createElement("tr");
+      const v = vals || [-50, 50, -50, 50, "", ""];
+      tr.innerHTML = `<td class="custom-port-no"></td>` +
+        v.map((x, k) => `<td><input type="number" step="any" class="custom-v" data-k="${k}" value="${x}" style="width:5.5rem" /></td>`).join("") +
+        `<td><button type="button" class="secondary custom-del">remove</button></td>`;
+      tbody.appendChild(tr);
+      tr.querySelector(".custom-del").addEventListener("click", () => {
+        if (tbody.children.length > 1) { tr.remove(); afterCustomChange(); }
+      });
+      tr.querySelectorAll("input").forEach((el) => el.addEventListener("input", afterCustomChange));
+      afterCustomChange(true);
+    }
+    function readCustomRegions() {
+      return Array.from(document.querySelectorAll("#port-custom-table tbody tr")).map((tr) => {
+        const v = Array.from(tr.querySelectorAll("input.custom-v")).map((el) => parseFloat(el.value));
+        const rect = v.slice(0, 4);
+        return (Number.isFinite(v[4]) && Number.isFinite(v[5])) ? [...rect, v[4], v[5]] : rect;
+      });
+    }
+    function validateCustomRegions() {
+      const rects = readCustomRegions();
+      for (let i = 0; i < rects.length; i++) {
+        const [x0, x1, y0, y1] = rects[i];
+        if (![x0, x1, y0, y1].every(Number.isFinite)) return `Port ${i + 1}: fill in x min/max and y min/max.`;
+        if (!(x1 > x0 && y1 > y0)) return `Port ${i + 1}: each side must be greater than 0 (max > min).`;
+      }
+      for (let i = 0; i < rects.length; i++) for (let j = i + 1; j < rects.length; j++) {
+        const ox = Math.min(rects[i][1], rects[j][1]) - Math.max(rects[i][0], rects[j][0]);
+        const oy = Math.min(rects[i][3], rects[j][3]) - Math.max(rects[i][2], rects[j][2]);
+        if (ox > 1e-9 && oy > 1e-9) return `Ports ${i + 1} and ${j + 1} overlap.`;
+      }
+      return "";
+    }
+    function afterCustomChange(skipRender) {
+      document.querySelectorAll("#port-custom-table tbody tr").forEach((tr, i) => {
+        tr.querySelector(".custom-port-no").textContent = i + 1;
+      });
+      document.getElementById("port-custom-error").textContent = validateCustomRegions();
+      if (skipRender !== true) renderPortsBeamTables();
+      refreshPortDefaults();
     }
     function defaultPortBeams(i) {
       // The 2x2+1 preset's large port 5 (index 4) illuminates the same quadrant as ports 1-4,
@@ -810,9 +888,20 @@
       btn.classList.add("active");
       document.getElementById("port-layout-2x2-fields").style.display = btn.dataset.preset === "2x2_plus_1_large" ? "block" : "none";
       document.getElementById("port-layout-1xn-fields").style.display = btn.dataset.preset === "1xn" ? "block" : "none";
+      document.getElementById("port-layout-grid-fields").style.display = btn.dataset.preset === "grid" ? "block" : "none";
+      document.getElementById("port-layout-custom-fields").style.display = btn.dataset.preset === "custom" ? "block" : "none";
+      document.getElementById("port-snap-label").style.display = btn.dataset.preset === "custom" ? "none" : "flex";
+      if (btn.dataset.preset === "custom" && !document.querySelector("#port-custom-table tbody tr")) {
+        addCustomRow([0, 300, 0, 300, "", ""]);
+      }
       renderPortsBeamTables();
+      refreshPortDefaults();
     });
     document.getElementById("port-1xn-n").addEventListener("change", renderPortsBeamTables);
+    document.getElementById("port-grid-rows").addEventListener("change", renderPortsBeamTables);
+    document.getElementById("port-grid-cols").addEventListener("change", renderPortsBeamTables);
+    document.getElementById("port-custom-add-btn").addEventListener("click", () => addCustomRow());
+    document.getElementById("port-snap-side").addEventListener("change", () => refreshPortDefaults());
 
     document.getElementById("unlock-frequency-btn").addEventListener("click", () => {
       const freqEl = document.getElementById("synthesis-frequency-ghz");
@@ -852,6 +941,8 @@
       refreshMethodPreview();
     });
     document.getElementById("cell-size-mm").addEventListener("change", () => refreshMethodPreview());
+    document.getElementById("cell-size-mm").addEventListener("input", () => refreshPortDefaults());
+    document.getElementById("cell-size-mm").addEventListener("change", () => refreshPortDefaults());
 
     // PHASE15 Part C gap-fill, defaults: a port's side is 5 lambda0 and the guard gap is 1 lambda_sw,
     // both at the design frequency. lambda_sw scales from Step 1's measured TM0 beta (beta ~ k0 for a
@@ -879,11 +970,28 @@
       if (l0 != null) {
         setPortDefault("port-small-side-mm", _PORT_SIDE_LAMBDA0 * l0);
         setPortDefault("port-1xn-side-mm", _PORT_SIDE_LAMBDA0 * l0);
+        setPortDefault("port-grid-side-mm", _PORT_SIDE_LAMBDA0 * l0);
       }
       setPortDefault("port-gap-mm", lsw);
-      const side = parseFloat(currentPortLayoutPreset() === "2x2_plus_1_large"
+      const preset = currentPortLayoutPreset();
+      let side = parseFloat(preset === "2x2_plus_1_large"
         ? document.getElementById("port-small-side-mm").value
+        : preset === "grid" ? document.getElementById("port-grid-side-mm").value
         : document.getElementById("port-1xn-side-mm").value);
+      if (preset === "custom") {
+        const r = readCustomRegions()[0];
+        side = r ? Math.min(r[1] - r[0], r[3] - r[2]) : NaN;
+      }
+      // "Snap side to whole cells": show what the run will use before it starts
+      const snapEl = document.getElementById("port-snap-status");
+      const periodMm = parseFloat(document.getElementById("cell-size-mm").value);
+      if (preset !== "custom" && document.getElementById("port-snap-side").checked && side > 0 && periodMm > 0) {
+        const n = Math.max(1, Math.round(side / periodMm));
+        snapEl.textContent = `side ${side.toFixed(1)} → ${(n * periodMm).toFixed(1)} mm (${n} cells)`;
+      } else if (side > 0 && periodMm > 0) {
+        snapEl.textContent = `side ${side.toFixed(1)} mm = ${(side / periodMm).toFixed(2)} cells` +
+          (Math.abs(side / periodMm - Math.round(side / periodMm)) > 1e-6 ? " (not a whole number of cells)" : "");
+      } else { snapEl.textContent = ""; }
       const gap = parseFloat(document.getElementById("port-gap-mm").value);
       const msgs = [];
       const minSide = Math.round(_PORT_MIN_SIDE_LAMBDA0 * (l0 || 0) * 10) / 10;
@@ -898,7 +1006,7 @@
       warnEl.textContent = msgs.join(" ");
       warnEl.className = msgs.length ? "status warn" : "status";
     }
-    ["port-small-side-mm", "port-1xn-side-mm", "port-gap-mm"].forEach((id) => {
+    ["port-small-side-mm", "port-1xn-side-mm", "port-grid-side-mm", "port-gap-mm"].forEach((id) => {
       document.getElementById(id).addEventListener("input", (ev) => {
         ev.target.dataset.userEdited = "1";
         refreshPortDefaults();
@@ -1545,8 +1653,17 @@
 
       const preset = currentPortLayoutPreset();
       const layout = { preset, gap_mm: parseFloat(document.getElementById("port-gap-mm").value) || 0 };
+      layout.snap_side_to_cells = document.getElementById("port-snap-side").checked;
       if (preset === "2x2_plus_1_large") {
         layout.small_side_mm = parseFloat(document.getElementById("port-small-side-mm").value);
+      } else if (preset === "grid") {
+        layout.rows = parseInt(document.getElementById("port-grid-rows").value, 10);
+        layout.cols = parseInt(document.getElementById("port-grid-cols").value, 10);
+        layout.cell_side_mm = parseFloat(document.getElementById("port-grid-side-mm").value);
+      } else if (preset === "custom") {
+        const err = validateCustomRegions();
+        if (err) throw new Error(`Custom layout: ${err}`);
+        layout.regions_mm = readCustomRegions();
       } else {
         layout.n = parseInt(document.getElementById("port-1xn-n").value, 10);
         layout.cell_side_mm = parseFloat(document.getElementById("port-1xn-side-mm").value);

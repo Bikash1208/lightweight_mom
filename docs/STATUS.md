@@ -23,6 +23,11 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
 
 ## Known limitations
 
+- **Cell-count floor bug fixed (Phase 21 C1).** `fields.reference_field_grid._cell_centers` floored
+  300.8 mm / 6.4 mm to 46 cells (46.999… in floating point). The earlier `four_port_1bit_300mm_*`
+  boards were affected: 46 cells per port were stretched onto 47 in the combined board. A
+  whole-cell side now keeps all its cells; `test_pattern_beam_polarization_metrics`'s two-beam
+  fixture had relied on the same float noise and now builds its 61x61 grid explicitly.
 - Normal incidence only; single substrate layer; PEC zero-thickness metal model (a real HFSS
   patch has finite thickness — see the G4/G6 residual above).
 - Transmitarray support is **model-only** (Phase 19, dielectric horn-fed lens; no HFSS comparison yet); the MoM solver itself remains reflectarray/metasurface only. No finite-array (N×N, N not a power of a small factor) full-wave MoM

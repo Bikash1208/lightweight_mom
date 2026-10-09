@@ -177,9 +177,11 @@ def cells_per_fringe(beta_rad_per_m, period_m):
 def _cell_centers(vmin, vmax, period_m):
     """`n` centres of `period_m`-spaced cells, symmetric about the midpoint, spanning no more than
     `[vmin, vmax]` -- `n = floor((vmax-vmin)/period_m)` (e.g. a 300mm aperture at an 8mm period
-    gives 37 cells, matching the PHASE13B review's own worked example, not 38)."""
+    gives 37 cells, matching the PHASE13B review's own worked example, not 38). The floor has a
+    relative tolerance (1e-6 cells): 300.8mm / 6.4mm is 46.999... in floating point, and a
+    whole-cell side must not silently lose a row and column (Phase 21 C1)."""
     span = vmax - vmin
-    n = max(1, int(span // period_m))
+    n = max(1, int(np.floor(span / period_m + 1e-6)))
     center = 0.5 * (vmin + vmax)
     offsets = (np.arange(n) - (n - 1) / 2.0) * period_m
     return center + offsets, n

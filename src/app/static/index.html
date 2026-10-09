@@ -51,6 +51,9 @@
         <p class="status" id="upload-status"></p>
 
         <button type="button" id="upload-btn">Analyze</button>
+        <p class="status" style="margin-top:1rem">Designing a <b>multi-port</b> board? Each port is fed by its own
+        analytic monopole, so no reference file is needed:
+        <button type="button" class="secondary" id="skip-to-multiport-btn" style="margin-top:0">Skip to Step 2 (multi-port)</button></p>
 
         <div id="upload-result" style="display:none">
           <img class="plot" id="phase-map-img" alt="Reference phase map" />
@@ -230,11 +233,30 @@
           <div id="coded-one-bit-fields">
             <label>Two-state cells
               <div class="segmented" id="coded-two-state-control">
-                <button type="button" data-source="square_only" class="active">Best pair from the square-patch library</button>
-                <button type="button" data-source="square_and_annular">Square patch + patch-with-annular-slot</button>
-                <button type="button" data-source="uploaded">Enter two measured values</button>
+                <button type="button" data-source="auto" class="active">Automatic (squares; computed from the cell size)</button>
+                <button type="button" data-source="square_only" data-label-1="Best pair from the square-patch library" data-label-n="Square-patch library (nearest phase)">Best pair from the square-patch library</button>
+                <button type="button" data-source="square_and_annular" data-onebit-only="1">Square patch + patch-with-annular-slot</button>
+                <button type="button" data-source="uploaded" data-onebit-only="1">Enter two measured values</button>
               </div>
             </label>
+            <div id="coded-auto-fields">
+              <p class="status">The app finds the cell states itself from the Board section's substrate,
+              cell size and frequency: the empty cell plus square patches (1-bit: one square about 180° from the
+              empty cell; 2-/3-bit: 4/8 states, 90°/45° apart). Squares are solved with this project's own method
+              of moments, mesh-corrected and snapped to a 0.05 mm grid. Model-only; verify the pair with one HFSS
+              unit cell and override with "Enter two measured values" if it differs.</p>
+              <button type="button" class="secondary" id="coded-auto-compute-btn">Compute cell states</button>
+              <details class="advanced" id="coded-auto-advanced">
+                <summary>Advanced</summary>
+                <label>Fix the square's side <span class="unit">mm, 1-bit only; blank = search for the best</span>
+                  <input type="number" step="any" id="coded-auto-fixed-L" value="" placeholder="e.g. 5.85" style="width:8rem" />
+                </label>
+                <p class="status">Use this when you have a fabricated cell size in mind: the app computes that
+                square's reflection coefficient instead of searching.</p>
+              </details>
+              <p class="status" id="coded-auto-status"></p>
+              <div id="coded-auto-table"></div>
+            </div>
             <div id="coded-annular-fields" style="display:none">
               <p class="status">A real, separate unit cell &mdash; a square patch with a concentric
               annular slot &mdash; solved by this project's own method of moments, the same way the
@@ -243,6 +265,8 @@
               <label>Slot inner radius <span class="unit">mm</span> <input type="number" step="any" id="coded-annular-r-mm" value="1.0" /></label>
             </div>
             <div id="coded-uploaded-fields" style="display:none">
+              <p class="status">Phase at the patch plane: de-embed the Floquet port to the top face of the
+              substrate (the Unit cell tool's "patch plane" column is already de-embedded).</p>
               <label>State 0 reflection coefficient <span class="unit">real, imag (e.g. from HFSS)</span>
                 <input type="number" step="any" id="coded-uploaded-0-real" value="1.0" style="width:6rem" />
                 <input type="number" step="any" id="coded-uploaded-0-imag" value="0.0" style="width:6rem" />
@@ -276,10 +300,15 @@
                 <button type="button" data-beta="state">Each state's own</button>
               </div>
             </label>
+            <ul class="status" id="coded-beta-help" style="margin-top:0;padding-left:1.2rem">
+              <li><b>Model (default):</b> β of the actual mixed surface of both states, solved by the app. The most accurate.</li>
+              <li><b>Paper:</b> Mishra et al.'s eq. 1 closed form, from εr and thickness only. Use it to compare with the paper.</li>
+              <li><b>Each state's own:</b> β is path-integrated cell by cell from each state's own β. Use it only when both states are far from resonance.</li>
+            </ul>
             <label style="display:flex;gap:0.5rem;align-items:center"><input type="checkbox" id="coded-feed-keepout" checked style="width:auto" />
               Feed keep-out <span class="unit">(1-bit: the cell(s) under each feed are forced empty; the count per port is reported)</span></label>
             <p class="status">Every port shares the same cell states. With 2+ bits the phase levels are
-            matched against the square-patch library instead.</p>
+            found automatically, or matched against the square-patch library.</p>
           </div>
           <p class="status" id="coded-range-status"></p>
         </div>
@@ -405,6 +434,7 @@
         </div>
         <div id="cuts-imgs"></div>
         <ul class="result-list" id="results-list"></ul>
+        <div id="coded-auto-results"></div>
         <h3 id="per-beam-heading" style="display:none">Per-beam results</h3>
         <table id="per-beam-table" style="display:none">
           <thead><tr><th>Beam</th><th>Direction</th><th>Polarization requested</th><th>Beam type requested</th>
@@ -573,6 +603,21 @@
     document.getElementById("upload-btn").addEventListener("click", () => analyzeReferenceField());
 
     document.getElementById("to-step-2-btn").addEventListener("click", () => showStep(2));
+
+    // Multi-port boards do not use the Step 1 reference file: Step 2 is reachable without it, with the
+    // Frequency field enabled (single-port behaviour is unchanged: it still needs the upload).
+    document.getElementById("skip-to-multiport-btn").addEventListener("click", () => {
+      stepReached[2] = true;
+      const freqEl = document.getElementById("synthesis-frequency-ghz");
+      freqEl.disabled = false;
+      freqEl.placeholder = "e.g. 10.54";
+      document.getElementById("unlock-frequency-btn").style.display = "none";
+      document.getElementById("cell-size-mm").placeholder = "e.g. 6.4";
+      document.getElementById("aperture-mm").closest("label").style.display = "none";
+      portModeControl.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.mode === "multi"));
+      updatePortModeVisibility();
+      showStep(2);
+    });
 
     // ---------------------------------------------------------------- Step 2
     // Optional stages of a design: the substrate for the pattern check, the pointing correction and
@@ -1114,8 +1159,77 @@
       return parseInt(codedBitsControl.querySelector("button.active")?.dataset.bits || "1", 10);
     }
     function currentCodedTwoStateSource() {
-      return codedTwoStateControl.querySelector("button.active")?.dataset.source || "square_only";
+      return codedTwoStateControl.querySelector("button.active")?.dataset.source || "auto";
     }
+    function autoTwoState() {
+      const v = parseFloat(document.getElementById("coded-auto-fixed-L").value);
+      const body = { source: "auto" };
+      if (currentCodedBits() === 1 && Number.isFinite(v) && v > 0) body.auto_fixed_L_mm = v;
+      return body;
+    }
+    function fmtDeg(v, d = 1) { return v == null ? "—" : v.toFixed(d); }
+    // Phase 22: the automatically found cell states (state, geometry, |Gamma|, phase at the patch plane, ...)
+    function autoStatesTableHtml(auto, withUseButton) {
+      if (!auto) return "";
+      const rows = auto.states.map((s) => {
+        const geom = s.geometry.kind === "empty" ? "empty" : `${s.geometry.L_mm} × ${s.geometry.W_mm} mm square`;
+        const labels = (s.labels || []).map((l) => `<span class="label" title="${l}">${l}</span>`).join(" ");
+        return `<tr><td>${s.level}</td><td>${geom}</td><td>${s.magnitude_db.toFixed(3)}</td>` +
+          `<td>${fmtDeg(s.phase_deg_patch_plane)}</td><td>${fmtDeg(s.target_phase_deg)}</td>` +
+          `<td>${s.separation_deg != null ? s.separation_deg.toFixed(1) + "°" : "—"}</td>` +
+          `<td>${fmtDeg(s.sensitivity_deg_per_0p01mm)}</td><td>${s.mesh_uncertainty_deg != null ? "±" + s.mesh_uncertainty_deg.toFixed(1) + "°" : "—"}</td>` +
+          `<td>${labels}</td></tr>`;
+      }).join("");
+      const useBtn = withUseButton && auto.n_bits === 1
+        ? `<button type="button" class="secondary use-auto-as-uploaded">Use these as uploaded values</button>` : "";
+      window.__lastAutoStates = auto;
+      return `<h4>Cell states found automatically (${auto.n_bits}-bit)</h4>` +
+        `<div style="overflow-x:auto"><table><thead><tr><th>State</th><th>Cell</th><th>|Γ| (dB)</th><th>Phase at the patch plane (°)</th>` +
+        `<th>Target (°)</th><th>Separation</th><th>Sensitivity (°/0.01 mm)</th><th>Mesh uncertainty</th><th>Labels</th></tr></thead>` +
+        `<tbody>${rows}</tbody></table></div>` +
+        `<p class="status">Reference plane: the patch plane. ${auto.n_solves} MoM solve(s) run, ${auto.n_cached} served from the cache, ` +
+        `${auto.solve_seconds.toFixed(1)} s. Model-only: mesh-corrected MoM (0.2/0.1 mm Richardson), side snapped to 0.05 mm, ` +
+        `Γ interpolated between mesh-aligned solves.</p>` + useBtn;
+    }
+    // "Use these as uploaded values": copy the found pair into the "Enter two measured values" fields to edit/override
+    function useAutoAsUploaded() {
+      const auto = window.__lastAutoStates;
+      if (!auto || auto.n_bits !== 1) return;
+      const [s0, s1] = auto.states;
+      const set = (id, v) => { document.getElementById(id).value = v; };
+      set("coded-uploaded-0-real", s0.gamma_real); set("coded-uploaded-0-imag", s0.gamma_imag);
+      set("coded-uploaded-1-real", s1.gamma_real); set("coded-uploaded-1-imag", s1.gamma_imag);
+      const geomSel = document.getElementById("coded-uploaded-geom-0");
+      geomSel.value = s0.geometry.kind === "empty" ? "empty" : "rectangle";
+      geomSel.dispatchEvent(new Event("change"));
+      if (s0.geometry.kind !== "empty") { set("coded-uploaded-0-L-mm", s0.geometry.L_mm); set("coded-uploaded-0-W-mm", s0.geometry.W_mm); }
+      set("coded-uploaded-1-L-mm", s1.geometry.L_mm); set("coded-uploaded-1-W-mm", s1.geometry.W_mm);
+      codedTwoStateControl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      codedTwoStateControl.querySelector('button[data-source="uploaded"]').classList.add("active");
+      updateCodedTwoStateVisibility();
+    }
+    document.addEventListener("click", (ev) => { if (ev.target.closest(".use-auto-as-uploaded")) useAutoAsUploaded(); });
+    document.getElementById("coded-auto-compute-btn").addEventListener("click", async () => {
+      const statusEl = document.getElementById("coded-auto-status");
+      const substrate = currentSubstrate();
+      statusEl.className = "status";
+      statusEl.textContent = "Solving the cell states (about a minute the first time, instant after that)...";
+      try {
+        const body = {
+          eps_r: substrate.eps_r, tan_delta: substrate.tan_delta, thickness_mm: substrate.thickness_mm,
+          period_mm: parseFloat(document.getElementById("cell-size-mm").value),
+          frequency_hz: parseFloat(document.getElementById("synthesis-frequency-ghz").value) * 1e9,
+          n_bits: currentCodedBits(),
+        };
+        const fixed = autoTwoState().auto_fixed_L_mm;
+        if (fixed) body.fixed_L_mm = fixed;
+        const submitted = await LWMOM.postJson("/api/hmsa/auto_states", body);
+        const job = await LWMOM.pollJob(submitted.id, { onTick: (j) => { statusEl.textContent = j.progress_message || "Solving..."; } });
+        if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
+        document.getElementById("coded-auto-table").innerHTML = autoStatesTableHtml(job.result, true);
+        statusEl.textContent = "";
+      } catch (err) { statusEl.textContent = err.message; statusEl.className = "status err"; }
+    });
     function updateCodedMultiVisibility() {
       const show = currentPortMode() === "multi" && currentMethod() === "coded";
       document.getElementById("coded-multi-fields").style.display = show ? "block" : "none";
@@ -1151,8 +1265,17 @@
       };
     }
     function updateCodedTwoStateVisibility() {
-      document.getElementById("coded-one-bit-fields").style.display = currentCodedBits() === 1 ? "block" : "none";
+      const oneBit = currentCodedBits() === 1;
+      // 2-/3-bit offer "Automatic" or the continuous square library; the annular and uploaded sources are two-state only
+      codedTwoStateControl.querySelectorAll("button[data-onebit-only]").forEach((b) => { b.style.display = oneBit ? "" : "none"; });
+      codedTwoStateControl.querySelectorAll("button[data-label-1]").forEach((b) => { b.textContent = oneBit ? b.dataset.label1 : b.dataset.labelN; });
+      if (!oneBit && ["square_and_annular", "uploaded"].includes(currentCodedTwoStateSource())) {
+        codedTwoStateControl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+        codedTwoStateControl.querySelector('button[data-source="auto"]').classList.add("active");
+      }
       const source = currentCodedTwoStateSource();
+      document.getElementById("coded-auto-fields").style.display = source === "auto" ? "block" : "none";
+      document.getElementById("coded-auto-advanced").style.display = oneBit ? "" : "none";
       document.getElementById("coded-annular-fields").style.display = source === "square_and_annular" ? "block" : "none";
       document.getElementById("coded-uploaded-fields").style.display = source === "uploaded" ? "block" : "none";
     }
@@ -1421,6 +1544,8 @@
       try {
         if (currentPortMode() === "multi") {
           await runPortsDesign();
+        } else if (!state.uploadId) {
+          throw new Error("A single-port design needs the Step 1 reference file: go back to Step 1 and analyze one, or switch Ports to Multi-port.");
         } else if (currentMethod() === "coded") {
           await runCodedDesign();
         } else {
@@ -1557,8 +1682,13 @@
         accuracy: currentAccuracy(),
       };
 
-      if (nBits === 1) {
-        const source = currentCodedTwoStateSource();
+      const codedSource = currentCodedTwoStateSource();
+      if (codedSource === "auto") {
+        // Phase 22: the cell states are found by the backend from the Board section's values; no library is needed
+        body.two_state = autoTwoState();
+        statusEl.textContent = "Finding the cell states (first run about a minute, then cached)...";
+      } else if (nBits === 1) {
+        const source = codedSource;
         body.two_state = { source };
         if (source === "uploaded") {
           body.two_state = readUploadedTwoState();
@@ -1626,6 +1756,8 @@
       addRow("Design method", `Coded (${nBits}-bit)`);
       addRow("Cells used", job.result.cells.length);
       renderCodedChecks(job.result, addRow);
+      document.getElementById("coded-auto-results").innerHTML =
+        autoStatesTableHtml((job.result.two_state && job.result.two_state.auto) || job.result.auto_states, true);
       const layoutImg = document.getElementById("layout-img");
       if (job.result.layout_png_url) { layoutImg.src = job.result.layout_png_url; layoutImg.style.display = ""; }
       else { layoutImg.style.display = "none"; }
@@ -1714,6 +1846,15 @@
     }
     function stateTableHtml(result) {
       if (result.formulation !== "coded") return "";
+      const auto = (result.two_state && result.two_state.auto) || result.auto_states;
+      if (auto) {
+        let html = autoStatesTableHtml(auto, true);
+        if (result.two_state) {
+          html += `<p class="status">Achieved separation ${result.two_state.achieved_separation_deg.toFixed(1)}°; beta used ` +
+            `${result.two_state.beta_used_rad_per_m != null ? result.two_state.beta_used_rad_per_m.toFixed(1) + " rad/m (" + result.two_state.beta_mode + ")" : "each state's own"}.</p>`;
+        }
+        return html;
+      }
       if (result.two_state && result.two_state.states) {
         return `<h4>Cell states (shared by every port)</h4><table><thead><tr><th>State</th><th>Cell</th><th>|Γ| (dB)</th>` +
           `<th>Phase at the patch plane (°)</th></tr></thead><tbody>` +
@@ -1785,8 +1926,11 @@
         body.n_bits = nBits;
         body.beta_mode = currentCodedBetaMode();
         body.feed_keepout = document.getElementById("coded-feed-keepout").checked;
-        const source = nBits === 1 ? currentCodedTwoStateSource() : null;
-        if (nBits === 1 && source === "uploaded") {
+        const source = currentCodedTwoStateSource();
+        if (source === "auto") {
+          body.two_state = autoTwoState();  // Phase 22: no library needed; the backend finds the states
+          statusEl.textContent = "Finding the cell states (first run about a minute, then cached)...";
+        } else if (nBits === 1 && source === "uploaded") {
           body.two_state = readUploadedTwoState();
         } else {
           statusEl.textContent = "Preparing the square-patch library...";
@@ -1909,11 +2053,20 @@
             const areaM2 = ((port.x_max_mm - port.x_min_mm) * (port.y_max_mm - port.y_min_mm)) / 1e6;
             const lambdaM = 299792458 / frequencyHz;
             const dmaxLin = (4 * Math.PI * areaM2) / (lambdaM * lambdaM);
-            const effUpper = Math.pow(10, r.result.directivity_estimate_dbi / 10) / dmaxLin;
+            // One directivity per port: the server's fine (0.1 degree) beam search when it has one; the
+            // coarse 41x49 plot grid under-samples the peak and would read ~1 dB lower, so it is only a fallback.
+            const best = port.report && port.report.beams.length
+              ? port.report.beams.reduce((m, b) => (b.directivity_dbi > m.directivity_dbi ? b : m)) : null;
+            const dirDbi = best ? best.directivity_dbi : r.result.directivity_estimate_dbi;
+            const peakTheta = best ? best.theta_deg : r.result.main_beam_theta_deg;
+            const peakPhi = best ? best.phi_deg : r.result.main_beam_phi_deg;
+            const effUpper = Math.pow(10, dirDbi / 10) / dmaxLin;
             card.querySelector(".port-pattern-status").textContent =
-              `Directivity ${r.result.directivity_estimate_dbi.toFixed(1)} dBi; directivity-based aperture efficiency ` +
-              `(upper bound) ${effUpper.toFixed(2)}; peak at θ=${r.result.main_beam_theta_deg.toFixed(1)}°, ` +
-              `φ=${r.result.main_beam_phi_deg.toFixed(1)}° (${areaM2.toFixed(4)} m² aperture).`;
+              `Directivity ${dirDbi.toFixed(1)} dBi; directivity-based aperture efficiency ` +
+              `(upper bound) ${effUpper.toFixed(2)}; peak at θ=${peakTheta.toFixed(1)}°, ` +
+              `φ=${peakPhi.toFixed(1)}° (${areaM2.toFixed(4)} m² aperture). ` +
+              (best ? "Numbers from the fine (0.1°) beam search; the plot above is a coarse 41×49 grid." :
+                      "Numbers from the coarse 41×49 plot grid (no fine search without a loss tangent).");
             // one card line per requested beam: where it points, how strong, and its XPD
             const fmt = (v) => (v != null ? v.toFixed(1) : "—");
             const beamTable = card.querySelector(".port-beam-table");

@@ -357,3 +357,23 @@ excluded from git — `docs/DEVELOPING.md`); the others need your own export.
   coordinate, each port's cells at their own positions, verified after writing), and
   **"HFSS script (.py)"** writes an AEDT IronPython script that builds the whole board natively,
   plus layout.csv and a README with the port/beam/cell-pair tables. Rectangular patches only.
+
+## Phase 22 additions: automatic coded-cell states
+
+- **Coded > Two-state cells > "Automatic" (default).** You choose only the substrate, cell size, frequency and bits;
+  the app finds the cell states itself: the empty cell plus square patches (1-bit: one square about 180° from the empty
+  cell; 2-/3-bit: 4/8 states 90°/45° apart). "Compute cell states" shows the table before you design anything: cell,
+  |Γ| and phase **at the patch plane**, target, separation, phase sensitivity (°/0.01 mm), mesh uncertainty and labels
+  (`NEAR_RESONANCE`: above 1°/0.01 mm, a warning; `UNREACHABLE_LEVEL`: no square reaches that level, the closest is used).
+  The first run solves the squares with the project's own MoM (about 80 s for a 1-bit pair; 2-/3-bit add a few solves);
+  results are cached, so a re-run is instant. "Use these as uploaded values" copies the pair into "Enter two measured
+  values" so you can override it with HFSS numbers. Advanced > "Fix the square's side" computes that square instead of searching.
+- **How the side is found.** The MoM mesh only builds even-width squares (a requested 5.85 mm is 5.8 mm on the 0.1 mm mesh),
+  so the app interpolates the Richardson-corrected phase curve between mesh-aligned solves and snaps the side to 0.05 mm.
+  The reported Γ is that curve at the snapped side. Model-only; check the pair with one HFSS unit cell.
+- **Multi-port without Step 1.** Step 1 has a "Skip to Step 2 (multi-port)" button: multi-port boards are fed by analytic
+  monopoles, so no reference file is needed and the Frequency field is editable. Single-port designs still need the file.
+- **Unit cell tool:** a "∠S11 at the patch plane" column (reported phase + 2·k0·5 mm) that can be pasted into the measured-value fields.
+- **Surface-wave beta** options now have a one-line explanation each; each port's directivity is one consistent number
+  (the fine 0.1° beam search).
+

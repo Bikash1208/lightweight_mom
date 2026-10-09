@@ -5,6 +5,13 @@ summarize each phase's own write-up in `docs/history/`/`docs/history/`). No vers
 before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` for current
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
+## Unreleased - Phase 22 - automatic coded-cell states
+- `src/hologram/auto_states.py`: empty + mesh-corrected squares (0.2/0.1 mm MoM + Richardson, interpolated, snapped to 0.05 mm),
+  1-/2-/3-bit, disk cache; `auto` two-state source in `/synthesize_ports` and `/synthesize_coded`, `/api/hmsa/auto_states`;
+  the near-resonance refusal is skipped for the auto pair unless beta_mode is "state".
+- UI: "Automatic" default, results table, "use as uploaded values", fix-L; unit-cell tool patch-plane column; multi-port reachable
+  without Step 1; one directivity per port; beta help text.
+
 ## Unreleased - Phase 21 - multi-port layouts, coded multi-port, exact board export
 - C1: `_cell_centers` floors with a 1e-6 tolerance (300.8 mm / 6.4 mm is 47 cells, not 46); the earlier `four_port_1bit_300mm_*`
   boards were affected. One test fixture that relied on the float noise now builds its 61x61 grid explicitly.

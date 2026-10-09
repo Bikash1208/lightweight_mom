@@ -40,6 +40,7 @@ from ...fields.reference_field_grid import (
     resample_to_cell_grid,
 )
 from ...green_function import LayeredGreenFunction
+from ...hologram.auto_states import auto_states
 from ...hologram.coded_synthesis import (
     apply_feed_keepout_one_bit,
     aperture_coupling_loss_db,
@@ -88,6 +89,7 @@ from ...hologram.two_state_cells import (
     separation_warning,
 )
 from ...labels import (
+    EXPERIMENTAL,
     FEED_REGION_MASKED,
     MULTI_PORT_SHARED_METHOD,
     PORT_ISOLATION_NOT_FULL_WAVE,
@@ -126,7 +128,7 @@ from ..jobs import config_hash
 from ..jsonutil import to_jsonable
 from ..library_query import available_frequencies_hz, library_candidates_at_frequency
 from ..plots import layout_map_png, patch_layout_png, reference_phase_map_png
-from ..storage import job_output_dir, upload_dir
+from ..storage import app_data_dir, job_output_dir, upload_dir
 
 # PHASE13C/13D: the wizard never sends the user to a separate Library page -- these are the fixed
 # square-patch geometry family and mesh the auto-built board library always uses. Mesh-aligned BY
@@ -966,6 +968,10 @@ class TwoStateSourceRequest(BaseModel):
     uploaded_value_1_imag: "float | None" = None
     uploaded_geometry_0: "dict | None" = None  # optional cell geometry (two_state_cells' own dict format, mm)
     uploaded_geometry_1: "dict | None" = None
+    # Phase 22: source "auto" finds the cell states itself (empty + squares, MoM, mesh-corrected, snapped to
+    # a 0.05 mm grid) from the substrate, cell size, frequency and number of bits. `auto_fixed_L_mm` (1-bit)
+    # computes that square's Gamma instead of searching.
+    auto_fixed_L_mm: "float | None" = None
 
 
 class PortBeamSpec(BaseModel):
@@ -1315,6 +1321,7 @@ def _run_synthesize_ports_job(job, body: dict):
             )
     elif body["formulation"] == "coded":
         n_bits = body["n_bits"]
+        auto_n_bit_info = {}
         if n_bits < 1:
             raise config_invalid(message=f"n_bits must be >= 1, got {n_bits!r}")
         if n_bits == 1:
@@ -1329,6 +1336,7 @@ def _run_synthesize_ports_job(job, body: dict):
             substrate = Substrate("user", body["port_eps_r"], body["port_tan_delta"], body["port_thickness_mm"] * 1e-3)
             # paper/model: one beta for the whole mixed surface, so the states' own betas need not agree
             spread_limit = BETA_SPREAD_LIMIT_FRACTION if body["beta_mode"] == "state" else float("inf")
+            auto_info = {}
             choice, refusals = _resolve_two_state_choice(
                 body["two_state"],
                 body["library_id"],
@@ -1336,6 +1344,9 @@ def _run_synthesize_ports_job(job, body: dict):
                 substrate,
                 period_m,
                 beta_spread_limit=spread_limit,
+                beta_mode=body["beta_mode"],
+                job=job,
+                auto_info_out=auto_info,
             )
             beta_paper = paper_surface_wave_beta(body["frequency_hz"], body["port_eps_r"])
             beta_model = mixed_surface_mode(choice, substrate, body["frequency_hz"], period_m).beta_rad_per_m
@@ -1359,15 +1370,26 @@ def _run_synthesize_ports_job(job, body: dict):
                     design, _n_changed = apply_feed_keepout_one_bit(design, feed_xy_m, period_m)
                 return design
         else:
-            # same validation messages as the single-aperture /synthesize_coded N-bit path
-            if body["library_id"] is None:
-                raise config_invalid(message="n_bits > 1 needs library_id (a continuous phase library)")
-            lib = UnitCellLibrary.from_json(library_registry.resolve_path(body["library_id"]))
-            candidates = library_candidates_at_frequency(lib, body["library_id"], body["frequency_hz"])
-            if not candidates:
-                raise library_frequency_unavailable(
-                    f"library {body['library_id']!r} has no record at {body['frequency_hz'] / 1e9:g} GHz"
+            if body["two_state"]["source"] == "auto":
+                # Phase 22: the 2**n_bits states are found automatically (no library needed)
+                if body["port_tan_delta"] is None:
+                    raise config_invalid(message="automatic cell states need port_tan_delta (the MoM solve needs it)")
+                auto_substrate = Substrate(
+                    "user", body["port_eps_r"], body["port_tan_delta"], body["port_thickness_mm"] * 1e-3
                 )
+                auto = _compute_auto_states(n_bits, body["two_state"], auto_substrate, body["frequency_hz"], period_m, job)
+                auto_n_bit_info.update(auto_states_to_dict(auto))
+                candidates = auto.library_candidates()
+            else:
+                # same validation messages as the single-aperture /synthesize_coded N-bit path
+                if body["library_id"] is None:
+                    raise config_invalid(message="n_bits > 1 needs library_id (a continuous phase library)")
+                lib = UnitCellLibrary.from_json(library_registry.resolve_path(body["library_id"]))
+                candidates = library_candidates_at_frequency(lib, body["library_id"], body["frequency_hz"])
+                if not candidates:
+                    raise library_frequency_unavailable(
+                        f"library {body['library_id']!r} has no record at {body['frequency_hz'] / 1e9:g} GHz"
+                    )
 
             def synthesize_one(ref, beams, feed_xy_m):
                 return synthesize_coded_n_bit(
@@ -1452,6 +1474,7 @@ def _run_synthesize_ports_job(job, body: dict):
             "beta_paper_rad_per_m": beta_paper,
             "beta_model_rad_per_m": beta_model,
             "state_betas_rad_per_m": [choice.surface_wave_0.beta_rad_per_m, choice.surface_wave_1.beta_rad_per_m],
+            "auto": auto_info or None,
             # the phase table, once for the whole board (every port shares the pair)
             "states": [
                 {
@@ -1541,6 +1564,7 @@ def _run_synthesize_ports_job(job, body: dict):
         "n_bits": body["n_bits"] if body["formulation"] == "coded" else None,
         "two_state": two_state_info,
         "state_table": _state_table(multi, body) if body["formulation"] == "coded" else None,
+        "auto_states": (auto_n_bit_info or None) if body["formulation"] == "coded" and body["n_bits"] > 1 else None,
         "refinement": refinement_reports,
         "period_mm": body["period_mm"],
         "patch_layout_png_url": patch_layout_png_url,
@@ -1670,15 +1694,82 @@ def ensure_annular_slot_library(body: EnsureAnnularSlotLibraryRequest, request: 
     return job.to_dict()
 
 
+def _compute_auto_states(n_bits, two_state, substrate, frequency_hz, period_m, job=None):
+    """Phase 22: the automatic cell states, cached on disk under the app data dir (a re-run is instant)."""
+
+    def progress(message):
+        if job is not None:
+            job.progress_message = message
+
+    return auto_states(
+        n_bits,
+        substrate,
+        frequency_hz,
+        period_m,
+        fixed_L_mm=two_state.get("auto_fixed_L_mm") if n_bits == 1 else None,
+        cache_dir=app_data_dir() / "auto_states_cache",
+        progress=progress,
+    )
+
+
+def auto_states_to_dict(auto):
+    """JSON form of an `AutoStates`: the table the UI shows (state, geometry, |Gamma|, patch-plane phase,
+    separation, sensitivity, labels) plus timings."""
+    states = auto.states
+    rows = []
+    for s in states:
+        sep = None
+        if len(states) == 2 and s.level == 1:
+            sep = abs(wrapped_difference_deg(states[0].phase_deg, s.phase_deg))
+        rows.append(
+            {
+                "level": s.level,
+                "label": s.label,
+                "geometry": s.geometry,
+                "gamma_real": s.gamma.real,
+                "gamma_imag": s.gamma.imag,
+                "magnitude_db": s.magnitude_db,
+                "phase_deg_patch_plane": s.phase_deg,
+                "target_phase_deg": float(((s.target_phase_deg + 180.0) % 360.0) - 180.0),
+                "phase_error_deg": s.phase_error_deg,
+                "separation_deg": sep,
+                "sensitivity_deg_per_0p01mm": s.sensitivity_deg_per_0p01mm,
+                "mesh_uncertainty_deg": s.mesh_uncertainty_deg,
+                "labels": list(s.labels),
+            }
+        )
+    return {
+        "n_bits": auto.n_bits,
+        "states": rows,
+        "solve_seconds": auto.solve_seconds,
+        "n_solves": auto.n_solves,
+        "n_cached": auto.n_cached,
+        "reference_plane": "patch plane (z = 0)",
+    }
+
+
 def _resolve_two_state_choice(
-    two_state: dict, library_id, frequency_hz, substrate, period_m, beta_spread_limit=BETA_SPREAD_LIMIT_FRACTION
+    two_state: dict,
+    library_id,
+    frequency_hz,
+    substrate,
+    period_m,
+    beta_spread_limit=BETA_SPREAD_LIMIT_FRACTION,
+    beta_mode="state",
+    job=None,
+    auto_info_out=None,
 ):
     """Every candidate state is screened first (`screen_candidates`: TM0 root, clear of
     patch-plane resonance, inside the sheet model's range); the pair is then
     the best one whose BOTH states pass with agreeing betas (`best_valid_pair`), never the raw
     best-separated pair. Returns `(choice, refusals)`, `refusals` naming every refused state."""
     source = two_state["source"]
-    if source == "uploaded":
+    if source == "auto":
+        auto = _compute_auto_states(1, two_state, substrate, frequency_hz, period_m, job)
+        if auto_info_out is not None:
+            auto_info_out.update(auto_states_to_dict(auto))
+        candidates = auto.cells()
+    elif source == "uploaded":
         for key in ("uploaded_value_0_real", "uploaded_value_0_imag", "uploaded_value_1_real", "uploaded_value_1_imag"):
             if two_state[key] is None:
                 raise config_invalid(message=f"two_state source 'uploaded' needs {key}")
@@ -1711,7 +1802,9 @@ def _resolve_two_state_choice(
             candidates = candidates + candidates_from_annular_slot_library(annular_cells, frequency_hz / 1e9)
         else:
             raise config_invalid(message=f"unknown two_state source {source!r}")
-    modes, reasons = screen_candidates(candidates, frequency_hz, substrate, period_m)
+    # an automatic pair with one beta for the whole mixed surface (model/paper) may sit on the patch resonance
+    refuse_resonance = not (source == "auto" and beta_mode != "state")
+    modes, reasons = screen_candidates(candidates, frequency_hz, substrate, period_m, refuse_resonance)
     choice = best_valid_pair(
         candidates,
         modes,
@@ -1781,6 +1874,36 @@ def _frequency_row(f_hz, gamma_0, gamma_1):
         "state_1_phase_patch_deg": float(np.degrees(np.angle(gamma_1))),
         "separation_deg": float(sep),
     }
+
+
+class AutoStatesRequest(BaseModel):
+    """Phase 22: find the coded-cell states for a substrate/cell/frequency/bits without designing anything
+    (the Coded panel's "Compute cell states" button; results are cached, so the later design run reuses them)."""
+
+    eps_r: float
+    tan_delta: float
+    thickness_mm: float
+    period_mm: float
+    frequency_hz: float
+    n_bits: int = 1
+    fixed_L_mm: "float | None" = None
+
+
+def _run_auto_states_job(job, body: dict):
+    substrate = Substrate("user", body["eps_r"], body["tan_delta"], body["thickness_mm"] * 1e-3)
+    two_state = {"auto_fixed_L_mm": body["fixed_L_mm"]}
+    auto = _compute_auto_states(body["n_bits"], two_state, substrate, body["frequency_hz"], body["period_mm"] * 1e-3, job)
+    return {**auto_states_to_dict(auto), "labels": (EXPERIMENTAL,)}
+
+
+@router.post("/auto_states")
+def auto_states_endpoint(body: AutoStatesRequest, request: Request):
+    if body.n_bits < 1 or body.n_bits > 3:
+        raise HTTPException(422, f"n_bits must be 1, 2 or 3, got {body.n_bits}")
+    if body.fixed_L_mm is not None and body.n_bits != 1:
+        raise HTTPException(422, "fixed_L_mm is for 1-bit designs")
+    job = request.app.state.jobs.submit("hmsa_auto_states", _run_auto_states_job, body.model_dump())
+    return job.to_dict()
 
 
 class HmsaSynthesizeCodedRequest(BaseModel):
@@ -1949,6 +2072,7 @@ def _run_synthesize_coded_job(job, body: dict):
     extra_checks = {}
 
     state_labels = ()
+    auto_n_bit_info = {}
     if n_bits == 1:
         if substrate is None:
             raise config_invalid(
@@ -1958,8 +2082,15 @@ def _run_synthesize_coded_job(job, body: dict):
             raise config_invalid(
                 message="the 1-bit coded method with multiple feeds is not supported yet (one feed defines the surface-wave reference)"
             )
+        auto_info = {}
         choice, refusals = _resolve_two_state_choice(
-            body["two_state"], body["library_id"], body["frequency_hz"], substrate, period_m
+            body["two_state"],
+            body["library_id"],
+            body["frequency_hz"],
+            substrate,
+            period_m,
+            job=job,
+            auto_info_out=auto_info,
         )
         beta_bar = choice.beta_bar_rad_per_m
         design, refinement = _refined_design(
@@ -2037,6 +2168,7 @@ def _run_synthesize_coded_job(job, body: dict):
             "beta_spread_limit_fraction": BETA_SPREAD_LIMIT_FRACTION,
             "beta_edge_phase_error_deg": edge_error_deg,
             "refused_states": refusals,
+            "auto": auto_info or None,
             "path_iterations": design.path_iterations,
             "path_converged": design.path_converged,
             "cell_size_mm": body["period_mm"],
@@ -2053,14 +2185,22 @@ def _run_synthesize_coded_job(job, body: dict):
             state = choice.state_0 if int(c.geometry_param) == 0 else choice.state_1
             lw_grid_m[c.i][c.j] = _two_state_geometry_to_cell_m(state.geometry)
     else:
-        if body["library_id"] is None:
-            raise config_invalid(message="n_bits > 1 needs library_id (a continuous phase library)")
-        lib = UnitCellLibrary.from_json(library_registry.resolve_path(body["library_id"]))
-        candidates = library_candidates_at_frequency(lib, body["library_id"], body["frequency_hz"])
-        if not candidates:
-            raise library_frequency_unavailable(
-                f"library {body['library_id']!r} has no record at {body['frequency_hz'] / 1e9:g} GHz"
-            )
+        if body["two_state"]["source"] == "auto":
+            # Phase 22: the 2**n_bits states are found automatically (no library needed)
+            if substrate is None:
+                raise config_invalid(message="automatic cell states need the substrate (eps_r, tan_delta, thickness_mm)")
+            auto = _compute_auto_states(n_bits, body["two_state"], substrate, body["frequency_hz"], period_m, job)
+            auto_n_bit_info.update(auto_states_to_dict(auto))
+            candidates = auto.library_candidates()
+        else:
+            if body["library_id"] is None:
+                raise config_invalid(message="n_bits > 1 needs library_id (a continuous phase library)")
+            lib = UnitCellLibrary.from_json(library_registry.resolve_path(body["library_id"]))
+            candidates = library_candidates_at_frequency(lib, body["library_id"], body["frequency_hz"])
+            if not candidates:
+                raise library_frequency_unavailable(
+                    f"library {body['library_id']!r} has no record at {body['frequency_hz'] / 1e9:g} GHz"
+                )
         design, refinement = _refined_design(
             body,
             beams,
@@ -2165,6 +2305,7 @@ def _run_synthesize_coded_job(job, body: dict):
         "cells": design.cells,
         "assignments": assignments,
         "two_state": two_state_info,
+        "auto_states": auto_n_bit_info or None,
         "quantization": quantization,
         "pattern_checks": extra_checks or None,
         "labels": labels,

@@ -5,6 +5,13 @@ summarize each phase's own write-up in `docs/history/`/`docs/history/`). No vers
 before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` for current
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
+## Unreleased - Phase 21 - multi-port layouts, coded multi-port, exact board export
+- C1: `_cell_centers` floors with a 1e-6 tolerance (300.8 mm / 6.4 mm is 47 cells, not 46); the earlier `four_port_1bit_300mm_*`
+  boards were affected. One test fixture that relied on the float noise now builds its 61x61 grid explicitly.
+- A: `layout_preset_grid` (N x M, serpentine port order), custom-rectangles table with overlap check, snap-side-to-whole-cells.
+- B/C2: coded 1-bit and N-bit in `/synthesize_ports` (`n_bits`, `feed_keepout`), per-port report, shared state table.
+- C3/D: per-port exact cell positions, exact verified STEP, AEDT script generator, per-export README, `/api/export/board`.
+
 ## Unreleased - Phase 19 - 3D-printed nylon transmitarray (model-only; Parts A-D)
 - New `src/dielectric_cell/`: minimal RCWA for air | z-invariant extruded layers (octagonal pillar / pocket) | air, oblique TE/TM,
   normal-vector field factorisation, multi-region supercell strips. MoM core untouched.

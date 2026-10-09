@@ -120,7 +120,7 @@ information, not a fault: isolation comes mainly from the holograms themselves r
 surface wave away, not from edge distance alone — confirm with an HFSS S-parameter solve either
 way. Each port is designed against its own analytic surface wave; there is no per-port field
 upload yet, so expect more unreachable cells than a single aperture built from an HFSS field. The
-Coded method is not offered for multi-port designs.
+Coded (1-bit / 2-bit / 3-bit) is available for multi-port designs; see "Phase 21 additions" below.
 
 *Worked example — a 2-port board*: pick "Multiple ports" → "a row of N ports" → N=2 (or a custom
 2-port list for unequal sizes/spacing); give each port its own beam table (e.g. two different RHCP
@@ -337,3 +337,23 @@ excluded from git — `docs/DEVELOPING.md`); the others need your own export.
 - **(Phase 15) Explicit feed-position override has no Step 2 UI control** — the backend accepts
   `feed_x_mm`/`feed_y_mm` (`/api/hmsa/synthesize`), but the app always auto-detects from the
   uploaded field's own NaN/singularity; script against the API directly if you need to override it.
+
+## Phase 21 additions: multi-port layouts, coded multi-port, exact export
+
+- **Layouts** (Step 2, Ports > Multi-port): "2×2 small + 1 large" (always 5 ports, Mishra's board),
+  "1×N strip", **"N×M grid"** (rows, columns, side, gap; ports numbered in a serpentine from the
+  top-right, so a 2×2 is P1 (+,+), P2 (−,+), P3 (−,−), P4 (+,−)) and **"Custom rectangles"** (an
+  editable table: x/y min/max in mm and an optional feed position; rectangles may touch but not
+  overlap). **Snap side to whole cells** (default on) rounds a side to a whole number of cells and
+  shows e.g. "side 300.0 → 300.8 mm (47 cells)".
+- **Coded in multi-port**: pick the Coded method with Multi-port. 1-bit uses the same two-state
+  sources as single-port (the "enter two measured values" source takes a cell shape for each state,
+  at least a rectangle for state 1) plus a surface-wave beta mode (model / paper / each state's own);
+  2-bit and 3-bit match the phase levels against the square-patch library. **Feed keep-out**
+  (1-bit, default on) forces the cell(s) under each feed empty and reports how many changed per port.
+  Each port reports its beam direction, pointing error, directivity, cross-pol and patch count; the
+  cell pair's (or the N levels') phase table is shown once.
+- **Export** (Step 3, multi-port): "Build STEP" writes an exact STEP (every vertex at its exact
+  coordinate, each port's cells at their own positions, verified after writing), and
+  **"HFSS script (.py)"** writes an AEDT IronPython script that builds the whole board natively,
+  plus layout.csv and a README with the port/beam/cell-pair tables. Rectangular patches only.

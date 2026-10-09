@@ -32,9 +32,9 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
   patch has finite thickness — see the G4/G6 residual above).
 - Transmitarray support is **model-only** (Phase 19, dielectric horn-fed lens; no HFSS comparison yet); the MoM solver itself remains reflectarray/metasurface only. No finite-array (N×N, N not a power of a small factor) full-wave MoM
   beyond what `Verify` already runs for a cost-bounded N.
-- 2-bit (or higher) multi-port coded designs are **not wired** — Phase 15 Part E's coded method
-  does not combine with Phase 15 Part C's multi-port layout in the app (single-aperture coded
-  only; see `src/app/static/index.html`'s own note hiding Coded when "Multiple ports" is chosen).
+- Multi-port coded designs (Phase 21): 1-bit and N-bit are wired in the Ports UI and `/synthesize_ports`
+  (`n_bits`, shared cell pair, feed keep-out for 1-bit). Model-only; the 4-port square-cell reference
+  board's predicted numbers are not yet compared with an HFSS solve.
 - Geometry inversion and full-array STEP export remain `GEOMETRY_INVERSION_LOCKED` /
   `STEP_EXPORT_LOCKED` scientific-finding records (Phase 12D) even though the app produces designs
   and exports anyway, per the project's Phase 13 decision — every such output still carries these

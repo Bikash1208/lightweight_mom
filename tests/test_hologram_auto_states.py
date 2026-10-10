@@ -26,14 +26,15 @@ class FakeSolver:
     plus a first-order mesh error +50 deg/mm * dx: the 0.2 mm mesh reads +10 deg, the 0.1 mm mesh +5 deg, so
     Richardson (v64 + (v64 - v32)) must recover the exact curve."""
 
-    def __init__(self):
+    def __init__(self, floor_deg=-110.0):
         self.calls = []
+        self.floor_deg = floor_deg
 
     def __call__(self, side_cells, n, substrate, frequency_hz, period_m):
         self.calls.append((side_cells, n))
         dx_mm = period_m / n * 1e3
         side_mm = side_cells * dx_mm
-        phase = float(np.clip(-42.0 - 260.0 * (side_mm - 5.85), -110.0, 150.0)) + 50.0 * dx_mm
+        phase = float(np.clip(-42.0 - 260.0 * (side_mm - 5.85), self.floor_deg, 150.0)) + 50.0 * dx_mm
         return 0.996 * np.exp(1j * np.radians(phase))
 
 
@@ -131,3 +132,30 @@ def test_acceptance_reference_cell_with_the_real_mom(tmp_path):
     assert result.n_solves == 14
     again = auto_states(1, SUB, F, P, cache_dir=tmp_path)
     assert again.n_solves == 0 and again.solve_seconds < 5.0
+
+
+def test_squares_beyond_the_coarse_scan_are_reachable_up_to_period_minus_min_gap(tmp_path):
+    """The 0.2 mm-mesh scan stops at 6.0 mm (31 cells would be odd); the 0.1 mm mesh builds 6.2 mm (gap 0.2 mm),
+    so a target past the 6.0 mm phase is found on a curve extended to 6.2 mm, with the nearest Richardson shift held."""
+    from src.hologram.auto_states import LABEL_MESH_CORRECTION_EXTRAPOLATED, max_square_side_mm
+
+    assert max_square_side_mm(P, 0.2) == pytest.approx(6.2)
+    assert max_square_side_mm(P, 0.4) == pytest.approx(6.0)
+    side, gamma, info = find_square_for_phase(-120.0, SUB, F, P, cache_dir=tmp_path, solver=FakeSolver(-150.0))
+    assert 6.0 < side <= 6.2 + 1e-9
+    assert np.degrees(np.angle(gamma)) == pytest.approx(-42.0 - 260.0 * (side - 5.85), abs=0.5)
+    assert abs(np.degrees(np.angle(gamma)) + 120.0) < 3.0
+    assert LABEL_MESH_CORRECTION_EXTRAPOLATED in info["labels"] and info["max_side_mm"] == pytest.approx(6.2)
+
+
+def test_min_gap_limits_the_largest_square_and_is_named_in_the_unreachable_message(tmp_path):
+    wide = auto_states(2, SUB, F, P, cache_dir=tmp_path, solver=FakeSolver(-150.0), min_gap_mm=0.2)
+    narrow = auto_states(2, SUB, F, P, cache_dir=tmp_path, solver=FakeSolver(-150.0), min_gap_mm=0.4)
+    assert max(s.geometry.get("L_mm", 0) for s in wide.states) > 6.0
+    assert max(s.geometry.get("L_mm", 0) for s in narrow.states) <= 6.0 + 1e-9
+    level1 = narrow.states[1]
+    assert LABEL_UNREACHABLE_LEVEL in level1.labels
+    assert "minimum gap 0.4 mm" in level1.message and "6 mm" in level1.message
+    assert wide.min_gap_mm == 0.2 and narrow.min_gap_mm == 0.4
+    with pytest.raises(ValueError, match="minimum gap"):
+        gamma_for_square(6.15, SUB, F, P, cache_dir=tmp_path, solver=FakeSolver(), min_gap_mm=0.4)

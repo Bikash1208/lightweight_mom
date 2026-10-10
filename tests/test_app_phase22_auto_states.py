@@ -108,3 +108,12 @@ def test_single_aperture_coded_with_the_automatic_pair(client):
     job = _wait_for_job(client, client.post("/api/hmsa/synthesize_coded", json=body).json()["id"], timeout=120)
     assert job["status"] == "done", job
     assert job["result"]["two_state"]["auto"]["states"][1]["geometry"]["L_mm"] == pytest.approx(5.85, abs=0.05)
+
+
+def test_auto_states_endpoint_min_gap_setting(client):
+    narrow = _auto_states(client, n_bits=2, min_gap_mm=0.4)["result"]
+    assert narrow["min_gap_mm"] == 0.4
+    assert max(s["geometry"].get("L_mm", 0) for s in narrow["states"]) <= 6.0 + 1e-9
+    assert any("minimum gap 0.4 mm" in s["message"] for s in narrow["states"])
+    body = {**_SUB, "period_mm": 6.4, "frequency_hz": F, "min_gap_mm": 3.5}
+    assert client.post("/api/hmsa/auto_states", json=body).status_code == 422

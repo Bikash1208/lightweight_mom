@@ -9,6 +9,8 @@ validation numbers and open next steps; this file is the per-phase "what changed
 - `src/hologram/auto_states.py`: empty + mesh-corrected squares (0.2/0.1 mm MoM + Richardson, interpolated, snapped to 0.05 mm),
   1-/2-/3-bit, disk cache; `auto` two-state source in `/synthesize_ports` and `/synthesize_coded`, `/api/hmsa/auto_states`;
   the near-resonance refusal is skipped for the auto pair unless beta_mode is "state".
+- Follow-up: squares up to period - min gap (default 0.2 mm, Advanced setting) via a 0.1 mm-mesh extension past the 6.0 mm coarse-scan limit
+  (2-bit level 1 on the reference board: 6.2 mm, -126.0 deg, 5.9 deg error instead of 6.0 mm / 49 deg); the gap is named in UNREACHABLE_LEVEL messages.
 - UI: "Automatic" default, results table, "use as uploaded values", fix-L; unit-cell tool patch-plane column; multi-port reachable
   without Step 1; one directivity per port; beta help text.
 

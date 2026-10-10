@@ -253,6 +253,9 @@
                 </label>
                 <p class="status">Use this when you have a fabricated cell size in mind: the app computes that
                 square's reflection coefficient instead of searching.</p>
+                <label>Minimum gap between patches <span class="unit">mm; a square is at most cell size − gap wide</span>
+                  <input type="number" step="any" id="coded-auto-min-gap" value="0.2" min="0" style="width:8rem" />
+                </label>
               </details>
               <p class="status" id="coded-auto-status"></p>
               <div id="coded-auto-table"></div>
@@ -1165,6 +1168,8 @@
       const v = parseFloat(document.getElementById("coded-auto-fixed-L").value);
       const body = { source: "auto" };
       if (currentCodedBits() === 1 && Number.isFinite(v) && v > 0) body.auto_fixed_L_mm = v;
+      const gap = parseFloat(document.getElementById("coded-auto-min-gap").value);
+      if (Number.isFinite(gap) && gap >= 0) body.auto_min_gap_mm = gap;
       return body;
     }
     function fmtDeg(v, d = 1) { return v == null ? "—" : v.toFixed(d); }
@@ -1178,7 +1183,8 @@
           `<td>${fmtDeg(s.phase_deg_patch_plane)}</td><td>${fmtDeg(s.target_phase_deg)}</td>` +
           `<td>${s.separation_deg != null ? s.separation_deg.toFixed(1) + "°" : "—"}</td>` +
           `<td>${fmtDeg(s.sensitivity_deg_per_0p01mm)}</td><td>${s.mesh_uncertainty_deg != null ? "±" + s.mesh_uncertainty_deg.toFixed(1) + "°" : "—"}</td>` +
-          `<td>${labels}</td></tr>`;
+          `<td>${labels}</td></tr>` +
+          (s.message ? `<tr><td></td><td colspan="8" class="status warn">${s.message}</td></tr>` : "");
       }).join("");
       const useBtn = withUseButton && auto.n_bits === 1
         ? `<button type="button" class="secondary use-auto-as-uploaded">Use these as uploaded values</button>` : "";
@@ -1223,6 +1229,8 @@
         };
         const fixed = autoTwoState().auto_fixed_L_mm;
         if (fixed) body.fixed_L_mm = fixed;
+        const minGap = autoTwoState().auto_min_gap_mm;
+        if (minGap != null) body.min_gap_mm = minGap;
         const submitted = await LWMOM.postJson("/api/hmsa/auto_states", body);
         const job = await LWMOM.pollJob(submitted.id, { onTick: (j) => { statusEl.textContent = j.progress_message || "Solving..."; } });
         if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);

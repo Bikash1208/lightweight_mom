@@ -972,6 +972,8 @@ class TwoStateSourceRequest(BaseModel):
     # a 0.05 mm grid) from the substrate, cell size, frequency and number of bits. `auto_fixed_L_mm` (1-bit)
     # computes that square's Gamma instead of searching.
     auto_fixed_L_mm: "float | None" = None
+    # smallest gap left between neighbouring patches (a fabrication limit): a square is at most P - gap wide
+    auto_min_gap_mm: float = 0.2
 
 
 class PortBeamSpec(BaseModel):
@@ -1707,6 +1709,7 @@ def _compute_auto_states(n_bits, two_state, substrate, frequency_hz, period_m, j
         frequency_hz,
         period_m,
         fixed_L_mm=two_state.get("auto_fixed_L_mm") if n_bits == 1 else None,
+        min_gap_mm=two_state.get("auto_min_gap_mm", 0.2),
         cache_dir=app_data_dir() / "auto_states_cache",
         progress=progress,
     )
@@ -1736,6 +1739,7 @@ def auto_states_to_dict(auto):
                 "sensitivity_deg_per_0p01mm": s.sensitivity_deg_per_0p01mm,
                 "mesh_uncertainty_deg": s.mesh_uncertainty_deg,
                 "labels": list(s.labels),
+                "message": s.message,
             }
         )
     return {
@@ -1744,6 +1748,7 @@ def auto_states_to_dict(auto):
         "solve_seconds": auto.solve_seconds,
         "n_solves": auto.n_solves,
         "n_cached": auto.n_cached,
+        "min_gap_mm": auto.min_gap_mm,
         "reference_plane": "patch plane (z = 0)",
     }
 
@@ -1887,11 +1892,12 @@ class AutoStatesRequest(BaseModel):
     frequency_hz: float
     n_bits: int = 1
     fixed_L_mm: "float | None" = None
+    min_gap_mm: float = 0.2
 
 
 def _run_auto_states_job(job, body: dict):
     substrate = Substrate("user", body["eps_r"], body["tan_delta"], body["thickness_mm"] * 1e-3)
-    two_state = {"auto_fixed_L_mm": body["fixed_L_mm"]}
+    two_state = {"auto_fixed_L_mm": body["fixed_L_mm"], "auto_min_gap_mm": body["min_gap_mm"]}
     auto = _compute_auto_states(body["n_bits"], two_state, substrate, body["frequency_hz"], body["period_mm"] * 1e-3, job)
     return {**auto_states_to_dict(auto), "labels": (EXPERIMENTAL,)}
 
@@ -1902,6 +1908,8 @@ def auto_states_endpoint(body: AutoStatesRequest, request: Request):
         raise HTTPException(422, f"n_bits must be 1, 2 or 3, got {body.n_bits}")
     if body.fixed_L_mm is not None and body.n_bits != 1:
         raise HTTPException(422, "fixed_L_mm is for 1-bit designs")
+    if not (0.0 <= body.min_gap_mm < body.period_mm / 2.0):
+        raise HTTPException(422, f"min_gap_mm must be in [0, period/2), got {body.min_gap_mm}")
     job = request.app.state.jobs.submit("hmsa_auto_states", _run_auto_states_job, body.model_dump())
     return job.to_dict()
 

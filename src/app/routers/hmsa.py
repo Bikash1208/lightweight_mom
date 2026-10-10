@@ -1712,6 +1712,9 @@ def _compute_auto_states(n_bits, two_state, substrate, frequency_hz, period_m, j
     )
 
 
+WEAK_PAIR_SEPARATION_DEG = 150.0  # a fixed-side 1-bit pair below this separation is flagged
+
+
 def auto_states_to_dict(auto):
     """JSON form of an `AutoStates`: the table the UI shows (state, geometry, |Gamma|, patch-plane phase,
     separation, sensitivity, labels) plus timings."""
@@ -1739,8 +1742,16 @@ def auto_states_to_dict(auto):
                 "message": s.message,
             }
         )
+    warnings = []
+    if auto.fixed_L_mm is not None and auto.n_bits == 1 and rows[1]["separation_deg"] < WEAK_PAIR_SEPARATION_DEG:
+        warnings.append(
+            f"Weak pair: {auto.fixed_L_mm:.2f} mm gives {rows[1]['separation_deg']:.0f}° separation "
+            f"(below {WEAK_PAIR_SEPARATION_DEG:.0f}°); leave the fixed side blank to search."
+        )
     return {
         "n_bits": auto.n_bits,
+        "fixed_L_mm": auto.fixed_L_mm,
+        "warnings": warnings,
         "states": rows,
         "solve_seconds": auto.solve_seconds,
         "n_solves": auto.n_solves,

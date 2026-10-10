@@ -73,6 +73,7 @@ class AutoStates:
     min_gap_mm: float  # the minimum patch gap the search honoured
     n_solves: int  # MoM solves actually run (cache misses)
     n_cached: int  # solves served from the cache
+    fixed_L_mm: "float | None" = None  # set when the user fixed the square's side instead of searching
 
     def two_state_choice(self):
         """The `TwoStateChoice` the 1-bit coded synthesis consumes."""
@@ -479,7 +480,7 @@ def auto_states(
         states.append(
             AutoState(
                 level,
-                f"square patch {side:g} mm",
+                f"square patch {side:.2f} mm",
                 {"kind": "rectangle", "L_mm": side, "W_mm": side},
                 gamma,
                 target,
@@ -490,4 +491,4 @@ def auto_states(
                 message,
             )
         )
-    return AutoStates(n_bits, tuple(states), frequency_hz, period_m * 1e3, time.time() - t0, min_gap_mm, solves.n_solves, solves.n_cached)
+    return AutoStates(n_bits, tuple(states), frequency_hz, period_m * 1e3, time.time() - t0, min_gap_mm, solves.n_solves, solves.n_cached, fixed_L_mm)

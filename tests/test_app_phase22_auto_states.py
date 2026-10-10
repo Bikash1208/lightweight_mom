@@ -117,3 +117,23 @@ def test_auto_states_endpoint_min_gap_setting(client):
     assert any("minimum gap 0.4 mm" in s["message"] for s in narrow["states"])
     body = {**_SUB, "period_mm": 6.4, "frequency_hz": F, "min_gap_mm": 3.5}
     assert client.post("/api/hmsa/auto_states", json=body).status_code == 422
+
+
+def test_fixed_side_reports_its_separation_and_warns_when_the_pair_is_weak(client):
+    weak = _auto_states(client, fixed_L_mm=4.0)["result"]
+    assert weak["fixed_L_mm"] == 4.0
+    assert weak["states"][1]["separation_deg"] < 150.0
+    assert len(weak["warnings"]) == 1
+    assert "Weak pair: 4.00 mm gives" in weak["warnings"][0] and "leave the fixed side blank to search" in weak["warnings"][0]
+    good = _auto_states(client, fixed_L_mm=5.85)["result"]
+    assert good["states"][1]["separation_deg"] == pytest.approx(180.0, abs=5.0) and good["warnings"] == []
+    searched = _auto_states(client)["result"]
+    assert searched["fixed_L_mm"] is None and searched["warnings"] == []
+
+
+def test_state_labels_format_the_side_with_two_decimals(client):
+    result = _auto_states(client, n_bits=2)["result"]
+    import re
+
+    for st in result["states"][1:]:
+        assert re.fullmatch(r"square patch \d+\.\d{2} mm", st["label"]), st["label"]

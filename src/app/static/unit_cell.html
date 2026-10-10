@@ -113,7 +113,7 @@
           statusEl.className = "status ok";
           onDone(job.result);
         } else {
-          statusEl.textContent = `${job.status}: ${job.error ? job.error.message : ""}`;
+          statusEl.textContent = `${job.status}: ${LWMOM.errorText(job.error, "")}`;
           statusEl.className = "status err";
         }
       } catch (err) {

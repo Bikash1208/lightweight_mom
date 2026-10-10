@@ -234,7 +234,7 @@
             <label>Two-state cells
               <div class="segmented" id="coded-two-state-control">
                 <button type="button" data-source="auto" class="active">Automatic (squares; computed from the cell size)</button>
-                <button type="button" data-source="square_only" data-label-1="Best pair from the square-patch library" data-label-n="Square-patch library (nearest phase)">Best pair from the square-patch library</button>
+                <button type="button" data-source="square_only" data-label-one="Best pair from the square-patch library" data-label-many="Square-patch library (nearest phase)">Best pair from the square-patch library</button>
                 <button type="button" data-source="square_and_annular" data-onebit-only="1">Square patch + patch-with-annular-slot</button>
                 <button type="button" data-source="uploaded" data-onebit-only="1">Enter two measured values</button>
               </div>
@@ -1177,7 +1177,7 @@
     function autoStatesTableHtml(auto, withUseButton) {
       if (!auto) return "";
       const rows = auto.states.map((s) => {
-        const geom = s.geometry.kind === "empty" ? "empty" : `${s.geometry.L_mm} × ${s.geometry.W_mm} mm square`;
+        const geom = s.geometry.kind === "empty" ? "empty" : `${s.geometry.L_mm.toFixed(2)} × ${s.geometry.W_mm.toFixed(2)} mm square`;
         const labels = (s.labels || []).map((l) => `<span class="label" title="${l}">${l}</span>`).join(" ");
         return `<tr><td>${s.level}</td><td>${geom}</td><td>${s.magnitude_db.toFixed(3)}</td>` +
           `<td>${fmtDeg(s.phase_deg_patch_plane)}</td><td>${fmtDeg(s.target_phase_deg)}</td>` +
@@ -1186,10 +1186,17 @@
           `<td>${labels}</td></tr>` +
           (s.message ? `<tr><td></td><td colspan="8" class="status warn">${s.message}</td></tr>` : "");
       }).join("");
+      let fixedBanner = "";
+      if (auto.fixed_L_mm != null && auto.n_bits === 1) {
+        const sep = auto.states[1].separation_deg;
+        fixedBanner = `<p class="status fixed-side-separation" style="font-size:1.15rem;font-weight:600">` +
+          `Separation with the fixed ${auto.fixed_L_mm.toFixed(2)} mm square: ${sep.toFixed(1)}°</p>`;
+      }
+      const warnings = (auto.warnings || []).map((w) => `<p class="status warn auto-states-warning">${w}</p>`).join("");
       const useBtn = withUseButton && auto.n_bits === 1
         ? `<button type="button" class="secondary use-auto-as-uploaded">Use these as uploaded values</button>` : "";
       window.__lastAutoStates = auto;
-      return `<h4>Cell states found automatically (${auto.n_bits}-bit)</h4>` +
+      return `<h4>Cell states found automatically (${auto.n_bits}-bit)</h4>` + fixedBanner + warnings +
         `<div style="overflow-x:auto"><table><thead><tr><th>State</th><th>Cell</th><th>|Γ| (dB)</th><th>Phase at the patch plane (°)</th>` +
         `<th>Target (°)</th><th>Separation</th><th>Sensitivity (°/0.01 mm)</th><th>Mesh uncertainty</th><th>Labels</th></tr></thead>` +
         `<tbody>${rows}</tbody></table></div>` +
@@ -1215,9 +1222,23 @@
       updateCodedTwoStateVisibility();
     }
     document.addEventListener("click", (ev) => { if (ev.target.closest(".use-auto-as-uploaded")) useAutoAsUploaded(); });
+    // Cell size and Frequency (Board section) must be set before anything is sent to the API
+    function checkBoardValues() {
+      const cell = document.getElementById("cell-size-mm");
+      const freq = document.getElementById("synthesis-frequency-ghz");
+      const empty = [];
+      if (!Number.isFinite(parseFloat(cell.value)) || !(parseFloat(cell.value) > 0)) empty.push(cell);
+      if (!Number.isFinite(parseFloat(freq.value)) || !(parseFloat(freq.value) > 0)) empty.push(freq);
+      if (!empty.length) return null;
+      empty[0].scrollIntoView({ behavior: "smooth", block: "center" });
+      empty[0].focus();
+      return "Set Cell size and Frequency in the Board section first.";
+    }
     document.getElementById("coded-auto-compute-btn").addEventListener("click", async () => {
       const statusEl = document.getElementById("coded-auto-status");
       const substrate = currentSubstrate();
+      const missing = checkBoardValues();
+      if (missing) { statusEl.textContent = missing; statusEl.className = "status err"; return; }
       statusEl.className = "status";
       statusEl.textContent = "Solving the cell states (about a minute the first time, instant after that)...";
       try {
@@ -1233,7 +1254,7 @@
         if (minGap != null) body.min_gap_mm = minGap;
         const submitted = await LWMOM.postJson("/api/hmsa/auto_states", body);
         const job = await LWMOM.pollJob(submitted.id, { onTick: (j) => { statusEl.textContent = j.progress_message || "Solving..."; } });
-        if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
+        if (job.status !== "done") throw new Error(LWMOM.errorText(job.error, job.status));
         document.getElementById("coded-auto-table").innerHTML = autoStatesTableHtml(job.result, true);
         statusEl.textContent = "";
       } catch (err) { statusEl.textContent = err.message; statusEl.className = "status err"; }
@@ -1276,7 +1297,7 @@
       const oneBit = currentCodedBits() === 1;
       // 2-/3-bit offer "Automatic" or the continuous square library; the annular and uploaded sources are two-state only
       codedTwoStateControl.querySelectorAll("button[data-onebit-only]").forEach((b) => { b.style.display = oneBit ? "" : "none"; });
-      codedTwoStateControl.querySelectorAll("button[data-label-1]").forEach((b) => { b.textContent = oneBit ? b.dataset.label1 : b.dataset.labelN; });
+      codedTwoStateControl.querySelectorAll("button[data-label-one]").forEach((b) => { b.textContent = oneBit ? b.dataset.labelOne : b.dataset.labelMany; });
       if (!oneBit && ["square_and_annular", "uploaded"].includes(currentCodedTwoStateSource())) {
         codedTwoStateControl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
         codedTwoStateControl.querySelector('button[data-source="auto"]').classList.add("active");
@@ -1367,7 +1388,7 @@
         });
         if (token !== _previewToken) return;
         if (done.status !== "done") {
-          eigenEl.textContent = done.error ? done.error.message : done.status;
+          eigenEl.textContent = LWMOM.errorText(done.error, done.status);
           eigenEl.className = "status err";
           return;
         }
@@ -1608,7 +1629,7 @@
           const libDone = await LWMOM.pollJob(libJob.id, {
             onTick: (j) => { statusEl.textContent = `Preparing the board's unit-cell data: ${j.progress_message || "..."}`; },
           });
-          if (libDone.status !== "done") throw new Error(libDone.error ? libDone.error.message : "could not prepare the board's unit-cell data");
+          if (libDone.status !== "done") throw new Error(LWMOM.errorText(libDone.error, "could not prepare the board's unit-cell data"));
           body.formulation = "B";
           body.library_id = libDone.result.library_id;
         } else if (currentEigenmodeSource() === "upload") {
@@ -1633,7 +1654,7 @@
           const dispDone = await LWMOM.pollJob(dispJob.id, {
             onTick: (j) => { statusEl.textContent = `Preparing the board's own surface-wave dispersion: ${j.progress_message || "..."}`; },
           });
-          if (dispDone.status !== "done") throw new Error(dispDone.error ? dispDone.error.message : "could not prepare the board's own surface-wave dispersion");
+          if (dispDone.status !== "done") throw new Error(LWMOM.errorText(dispDone.error, "could not prepare the board's own surface-wave dispersion"));
           body.formulation = "A";
           body.dispersion_id = dispDone.result.dispersion_id;
           body.x_avg_ohm = parseFloat(document.getElementById("x-avg-ohm").value);
@@ -1647,7 +1668,7 @@
         const job = await LWMOM.pollJob(submitted.id, {
           onTick: (j) => { statusEl.textContent = `${j.status}: ${j.progress_message || ""}`; },
         });
-        if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
+        if (job.status !== "done") throw new Error(LWMOM.errorText(job.error, job.status));
         state.synthesizeResult = job.result;
         document.getElementById("refinement-status").textContent = refinementText(job.result.refinement);
         const labelsEl = document.getElementById("labels");
@@ -1711,7 +1732,7 @@
           const libDone = await LWMOM.pollJob(libJob.id, {
             onTick: (j) => { statusEl.textContent = `Preparing the square-patch library: ${j.progress_message || "..."}`; },
           });
-          if (libDone.status !== "done") throw new Error(libDone.error ? libDone.error.message : "could not prepare the square-patch library");
+          if (libDone.status !== "done") throw new Error(LWMOM.errorText(libDone.error, "could not prepare the square-patch library"));
           body.library_id = libDone.result.library_id;
           if (source === "square_and_annular") {
             statusEl.textContent = "Solving the patch-with-annular-slot cell...";
@@ -1725,7 +1746,7 @@
             const annularDone = await LWMOM.pollJob(annularJob.id, {
               onTick: (j) => { statusEl.textContent = `Solving the patch-with-annular-slot cell: ${j.progress_message || "..."}`; },
             });
-            if (annularDone.status !== "done") throw new Error(annularDone.error ? annularDone.error.message : "could not solve the annular-slot cell");
+            if (annularDone.status !== "done") throw new Error(LWMOM.errorText(annularDone.error, "could not solve the annular-slot cell"));
             body.two_state.annular_slot_library_id = annularDone.result.annular_slot_library_id;
           }
         }
@@ -1738,7 +1759,7 @@
         const libDone = await LWMOM.pollJob(libJob.id, {
           onTick: (j) => { statusEl.textContent = `Preparing the phase-lookup library: ${j.progress_message || "..."}`; },
         });
-        if (libDone.status !== "done") throw new Error(libDone.error ? libDone.error.message : "could not prepare the phase-lookup library");
+        if (libDone.status !== "done") throw new Error(LWMOM.errorText(libDone.error, "could not prepare the phase-lookup library"));
         body.library_id = libDone.result.library_id;
       }
 
@@ -1748,7 +1769,7 @@
       const job = await LWMOM.pollJob(submitted.id, {
         onTick: (j) => { statusEl.textContent = `${j.status}: ${j.progress_message || ""}`; },
       });
-      if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
+      if (job.status !== "done") throw new Error(LWMOM.errorText(job.error, job.status));
       state.synthesizeResult = job.result;
       document.getElementById("refinement-status").textContent = refinementText(job.result.refinement);
 
@@ -1951,7 +1972,7 @@
           const libDone = await LWMOM.pollJob(libJob.id, {
             onTick: (j) => { statusEl.textContent = `Preparing the square-patch library: ${j.progress_message || "..."}`; },
           });
-          if (libDone.status !== "done") throw new Error(libDone.error ? libDone.error.message : "could not prepare the square-patch library");
+          if (libDone.status !== "done") throw new Error(LWMOM.errorText(libDone.error, "could not prepare the square-patch library"));
           body.library_id = libDone.result.library_id;
           if (nBits === 1) {
             body.two_state = { source };
@@ -1965,7 +1986,7 @@
                 a_mm: aMm, b_mm: aMm, r_mm: rMm, accuracy: accuracy,
               });
               const annularDone = await LWMOM.pollJob(annularJob.id);
-              if (annularDone.status !== "done") throw new Error(annularDone.error ? annularDone.error.message : "could not solve the annular-slot cell");
+              if (annularDone.status !== "done") throw new Error(LWMOM.errorText(annularDone.error, "could not solve the annular-slot cell"));
               body.two_state.annular_slot_library_id = annularDone.result.annular_slot_library_id;
             }
           }
@@ -1979,7 +2000,7 @@
         const libDone = await LWMOM.pollJob(libJob.id, {
           onTick: (j) => { statusEl.textContent = `Preparing the board's unit-cell data: ${j.progress_message || "..."}`; },
         });
-        if (libDone.status !== "done") throw new Error(libDone.error ? libDone.error.message : "could not prepare the board's unit-cell data");
+        if (libDone.status !== "done") throw new Error(LWMOM.errorText(libDone.error, "could not prepare the board's unit-cell data"));
         body.formulation = "B";
         body.library_id = libDone.result.library_id;
       } else {
@@ -1991,7 +2012,7 @@
         const dispDone = await LWMOM.pollJob(dispJob.id, {
           onTick: (j) => { statusEl.textContent = `Preparing the board's own surface-wave dispersion: ${j.progress_message || "..."}`; },
         });
-        if (dispDone.status !== "done") throw new Error(dispDone.error ? dispDone.error.message : "could not prepare the board's own surface-wave dispersion");
+        if (dispDone.status !== "done") throw new Error(LWMOM.errorText(dispDone.error, "could not prepare the board's own surface-wave dispersion"));
         body.formulation = "A";
         body.dispersion_id = dispDone.result.dispersion_id;
         body.x_avg_ohm = parseFloat(document.getElementById("x-avg-ohm").value);
@@ -2005,7 +2026,7 @@
       const job = await LWMOM.pollJob(submitted.id, {
         onTick: (j) => { statusEl.textContent = `${j.status}: ${j.progress_message || ""}`; },
       });
-      if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
+      if (job.status !== "done") throw new Error(LWMOM.errorText(job.error, job.status));
       state.synthesizeResult = job.result;
 
       const labelsEl = document.getElementById("labels");
@@ -2087,7 +2108,7 @@
             ).join("");
             beamTable.style.display = (r.per_beam || []).length ? "table" : "none";
           } else {
-            card.querySelector(".port-pattern-status").textContent = patternJob.error ? patternJob.error.message : patternJob.status;
+            card.querySelector(".port-pattern-status").textContent = LWMOM.errorText(patternJob.error, patternJob.status);
           }
         } catch (err) {
           card.querySelector(".port-pattern-status").textContent = `Pattern prediction failed: ${err.message}`;
@@ -2303,7 +2324,7 @@
         include_step: includeStep, name: "HMSA_board",
       });
       const job = await LWMOM.pollJob(submitted.id);
-      if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
+      if (job.status !== "done") throw new Error(LWMOM.errorText(job.error, job.status));
       const links = document.getElementById("export-links");
       const add = (label, url) => {
         if (!url) return;
@@ -2351,7 +2372,7 @@
         const job = await LWMOM.pollJob(jobId, {
           onTick: (j) => { statusEl.textContent = j.progress_message || "Building STEP (CAD)..."; },
         });
-        if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
+        if (job.status !== "done") throw new Error(LWMOM.errorText(job.error, job.status));
         state.exportJobId = jobId;
         renderExportLinks(job);
         const sizeMb = job.result.file_size_bytes ? (job.result.file_size_bytes / 1e6).toFixed(1) + " MB" : "";
@@ -2374,7 +2395,7 @@
         if (state.synthesizeJobId) body.synthesize_job_id = state.synthesizeJobId;
         const submitted = await LWMOM.postJson("/api/export/package", body);
         const job = await LWMOM.pollJob(submitted.id);
-        if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
+        if (job.status !== "done") throw new Error(LWMOM.errorText(job.error, job.status));
         window.location = job.result.download_url;
         statusEl.textContent = "";
       } catch (err) {

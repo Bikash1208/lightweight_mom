@@ -1,6 +1,8 @@
 """Mishra et al. (IEEE TVT 2026) 1-bit coded 5-port board at 26 GHz, run through the app's own coded
 ports path, with both beta modes, the paper's beams (LHCP) and a comparison against the paper's
-reported values.
+reported values. NOTE (Phase 22): the app no longer has beta_mode "paper"; the paper-mode boards need
+the code at tag submission-2026-10-06 (the committed results are in docs/submission/paper26), and this
+script now stops with a message instead of running them.
 
 Run from the project root (needs the `cad` extra for the STEP file):
     .venv/bin/python examples/make_paper_board_26ghz.py
@@ -155,6 +157,12 @@ def _port_beam_dict(theta, phi, weight):
 
 
 def _board_body(beta_mode, gamma_empty, gamma_slot, port5_weights):
+    if beta_mode == "paper":
+        raise RuntimeError(
+            "beta_mode 'paper' (Mishra eq. 1) was removed from the app in Phase 22 (use 'model'). The paper-mode "
+            "boards in docs/submission/paper26 were produced at tag submission-2026-10-06; check that tag out to "
+            "regenerate them."
+        )
     ports = [{"beams": [_port_beam_dict(*BEAMS[i], 1.0 + 0j)]} for i in range(4)]
     ports.append({"beams": [_port_beam_dict(t, p, w) for (t, p), w in zip(BEAMS, port5_weights, strict=True)]})
     return HmsaSynthesizePortsRequest(

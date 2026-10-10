@@ -11,6 +11,8 @@ validation numbers and open next steps; this file is the per-phase "what changed
   the near-resonance refusal is skipped for the auto pair unless beta_mode is "state".
 - Follow-up: squares up to period - min gap (default 0.2 mm, Advanced setting) via a 0.1 mm-mesh extension past the 6.0 mm coarse-scan limit
   (2-bit level 1 on the reference board: 6.2 mm, -126.0 deg, 5.9 deg error instead of 6.0 mm / 49 deg); the gap is named in UNREACHABLE_LEVEL messages.
+- `beta_mode 'paper'` removed (Mishra eq. 1): the API accepts only 'model' and 'state' ('paper' fails with "beta_mode 'paper' was removed; use 'model'"); `paper_surface_wave_beta` and `beta_paper_rad_per_m` are gone; the UI offers Model (default) and Each state's own.
+- A level within 10% of the level step counts as reached (UNREACHABLE_LEVEL above that); the Advanced section (minimum gap) stays visible for 2-/3-bit.
 - UI: "Automatic" default, results table, "use as uploaded values", fix-L; unit-cell tool patch-plane column; multi-port reachable
   without Step 1; one directivity per port; beta help text.
 

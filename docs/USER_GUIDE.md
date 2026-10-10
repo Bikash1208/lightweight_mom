@@ -348,7 +348,7 @@ excluded from git — `docs/DEVELOPING.md`); the others need your own export.
   shows e.g. "side 300.0 → 300.8 mm (47 cells)".
 - **Coded in multi-port**: pick the Coded method with Multi-port. 1-bit uses the same two-state
   sources as single-port (the "enter two measured values" source takes a cell shape for each state,
-  at least a rectangle for state 1) plus a surface-wave beta mode (model / paper / each state's own);
+  at least a rectangle for state 1) plus a surface-wave beta mode (model, the default, or each state's own);
   2-bit and 3-bit match the phase levels against the square-patch library. **Feed keep-out**
   (1-bit, default on) forces the cell(s) under each feed empty and reports how many changed per port.
   Each port reports its beam direction, pointing error, directivity, cross-pol and patch count; the

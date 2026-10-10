@@ -82,7 +82,6 @@ from ...hologram.two_state_cells import (
     candidates_from_square_library,
     lambda_sw_over_cell,
     mixed_surface_mode,
-    paper_surface_wave_beta,
     patch_plane_gamma,
     resonance_proximity_patch_plane_deg,
     screen_candidates,
@@ -1038,8 +1037,8 @@ class HmsaSynthesizePortsRequest(BaseModel):
     port_tan_delta: "float | None" = None
     two_state: TwoStateSourceRequest = TwoStateSourceRequest()
     # "coded" only: the surface-wave beta the phase is built with. "state": each state's own solved
-    # beta (pair must agree within BETA_SPREAD_LIMIT_FRACTION). "paper": Mishra eq. (1),
-    # k0*sqrt((eps_r+1)/2), one value for both states. "model": beta of the mixed 1-bit surface.
+    # beta (pair must agree within BETA_SPREAD_LIMIT_FRACTION). "model": beta of the mixed 1-bit surface.
+    # ("paper", Mishra eq. 1, was removed in Phase 22.)
     beta_mode: str = "state"
     min_lambda_sw: float = 1.0
     # Optional pointing correction (off by default): re-aim each beam by its measured miss, 1-2 passes.
@@ -1324,6 +1323,8 @@ def _run_synthesize_ports_job(job, body: dict):
     elif body["formulation"] == "coded":
         n_bits = body["n_bits"]
         auto_n_bit_info = {}
+        if body["beta_mode"] == "paper":
+            raise config_invalid(message="beta_mode 'paper' was removed; use 'model'")
         if n_bits < 1:
             raise config_invalid(message=f"n_bits must be >= 1, got {n_bits!r}")
         if n_bits == 1:
@@ -1331,12 +1332,10 @@ def _run_synthesize_ports_job(job, body: dict):
                 raise config_invalid(
                     message="formulation 'coded' needs port_tan_delta (the surface-wave check needs the loss tangent)"
                 )
-            if body["beta_mode"] not in ("state", "paper", "model"):
-                raise config_invalid(
-                    message=f"beta_mode must be 'state', 'paper' or 'model', got {body['beta_mode']!r}"
-                )
+            if body["beta_mode"] not in ("state", "model"):
+                raise config_invalid(message=f"beta_mode must be 'state' or 'model', got {body['beta_mode']!r}")
             substrate = Substrate("user", body["port_eps_r"], body["port_tan_delta"], body["port_thickness_mm"] * 1e-3)
-            # paper/model: one beta for the whole mixed surface, so the states' own betas need not agree
+            # model: one beta for the whole mixed surface, so the states' own betas need not agree
             spread_limit = BETA_SPREAD_LIMIT_FRACTION if body["beta_mode"] == "state" else float("inf")
             auto_info = {}
             choice, refusals = _resolve_two_state_choice(
@@ -1350,12 +1349,11 @@ def _run_synthesize_ports_job(job, body: dict):
                 job=job,
                 auto_info_out=auto_info,
             )
-            beta_paper = paper_surface_wave_beta(body["frequency_hz"], body["port_eps_r"])
             beta_model = mixed_surface_mode(choice, substrate, body["frequency_hz"], period_m).beta_rad_per_m
             if body["beta_mode"] == "state":
                 betas = (choice.surface_wave_0.beta_rad_per_m, choice.surface_wave_1.beta_rad_per_m)
             else:
-                betas = (beta_paper, beta_paper) if body["beta_mode"] == "paper" else (beta_model, beta_model)
+                betas = (beta_model, beta_model)
 
             def synthesize_one(ref, beams, feed_xy_m):
                 design = synthesize_coded_one_bit(
@@ -1473,7 +1471,6 @@ def _run_synthesize_ports_job(job, body: dict):
             "refused_states": refusals,
             "beta_mode": body["beta_mode"],
             "beta_used_rad_per_m": betas[0] if body["beta_mode"] != "state" else None,
-            "beta_paper_rad_per_m": beta_paper,
             "beta_model_rad_per_m": beta_model,
             "state_betas_rad_per_m": [choice.surface_wave_0.beta_rad_per_m, choice.surface_wave_1.beta_rad_per_m],
             "auto": auto_info or None,

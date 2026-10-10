@@ -167,9 +167,9 @@ def screen_candidates(candidates, frequency_hz, substrate, period_m=None, refuse
     """`screen_state` over every candidate: `(modes, reasons)`, both aligned with `candidates`
     (`modes[i]` None and `reasons[i]` a `REFUSED_*` name for a refused state).
 
-    `refuse_near_resonance=False` (Phase 22, the automatic pair with beta_mode "model"/"paper"): the
+    `refuse_near_resonance=False` (Phase 22, the automatic pair with beta_mode "model"): the
     near-resonance refusal exists because a state's own beta is only trustworthy away from the patch
-    resonance; with one beta for the whole mixed surface (model/paper) that reason does not apply, and
+    resonance; with one beta for the whole mixed surface (model) that reason does not apply, and
     the 180 degree partner of the empty cell is often exactly a near-resonant square."""
     modes, reasons = [], []
     for cell in candidates:
@@ -182,11 +182,6 @@ def screen_candidates(candidates, frequency_hz, substrate, period_m=None, refuse
 def surface_wave_of_state(cell, frequency_hz, substrate, period_m=None):
     """The screened TM0 solution for one state (`screen_state`), or `None` if the state is refused."""
     return screen_state(cell, frequency_hz, substrate, period_m)[0]
-
-
-def paper_surface_wave_beta(frequency_hz, eps_r):
-    """Mishra eq. (1): beta_sw = k0 * sqrt((eps_r + 1) / 2), one value for the whole mixed surface."""
-    return free_space_wavenumber(frequency_hz) * np.sqrt((eps_r + 1.0) / 2.0)
 
 
 def mixed_surface_mode(choice, substrate, frequency_hz, period_m):

@@ -301,13 +301,11 @@
             <label>Surface-wave beta used for the phase
               <div class="segmented" id="coded-beta-mode-control">
                 <button type="button" data-beta="model" class="active">Model (mixed 1-bit surface)</button>
-                <button type="button" data-beta="paper">Paper (Mishra eq. 1)</button>
                 <button type="button" data-beta="state">Each state's own</button>
               </div>
             </label>
             <ul class="status" id="coded-beta-help" style="margin-top:0;padding-left:1.2rem">
               <li><b>Model (default):</b> β of the actual mixed surface of both states, solved by the app. The most accurate.</li>
-              <li><b>Paper:</b> Mishra et al.'s eq. 1 closed form, from εr and thickness only. Use it to compare with the paper.</li>
               <li><b>Each state's own:</b> β is path-integrated cell by cell from each state's own β. Use it only when both states are far from resonance.</li>
             </ul>
             <label style="display:flex;gap:0.5rem;align-items:center"><input type="checkbox" id="coded-feed-keepout" checked style="width:auto" />

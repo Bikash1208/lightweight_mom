@@ -248,11 +248,13 @@
               <button type="button" class="secondary" id="coded-auto-compute-btn">Compute cell states</button>
               <details class="advanced" id="coded-auto-advanced">
                 <summary>Advanced</summary>
-                <label>Fix the square's side <span class="unit">mm, 1-bit only; blank = search for the best</span>
-                  <input type="number" step="any" id="coded-auto-fixed-L" value="" placeholder="e.g. 5.85" style="width:8rem" />
-                </label>
-                <p class="status">Use this when you have a fabricated cell size in mind: the app computes that
-                square's reflection coefficient instead of searching.</p>
+                <div id="coded-auto-fixed-wrap">
+                  <label>Fix the square's side <span class="unit">mm, 1-bit only; blank = search for the best</span>
+                    <input type="number" step="any" id="coded-auto-fixed-L" value="" placeholder="e.g. 5.85" style="width:8rem" />
+                  </label>
+                  <p class="status">Use this when you have a fabricated cell size in mind: the app computes that
+                  square's reflection coefficient instead of searching.</p>
+                </div>
                 <label>Minimum gap between patches <span class="unit">mm; a square is at most cell size − gap wide</span>
                   <input type="number" step="any" id="coded-auto-min-gap" value="0.2" min="0" style="width:8rem" />
                 </label>
@@ -1283,7 +1285,9 @@
       }
       const source = currentCodedTwoStateSource();
       document.getElementById("coded-auto-fields").style.display = source === "auto" ? "block" : "none";
-      document.getElementById("coded-auto-advanced").style.display = oneBit ? "" : "none";
+      // Advanced stays visible for every bit count (the minimum gap matters most for 2-/3-bit); only the
+      // "fix the square's side" option is one-bit only
+      document.getElementById("coded-auto-fixed-wrap").style.display = oneBit ? "" : "none";
       document.getElementById("coded-annular-fields").style.display = source === "square_and_annular" ? "block" : "none";
       document.getElementById("coded-uploaded-fields").style.display = source === "uploaded" ? "block" : "none";
     }

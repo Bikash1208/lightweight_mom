@@ -29,6 +29,7 @@ from .two_state_cells import TwoStateCell, TwoStateChoice
 COARSE_CELLS = 32  # dx = P/32 (0.2 mm for the 6.4 mm reference cell)
 FINE_CELLS = 64  # dx = P/64 (0.1 mm)
 SCAN_MIN_FRACTION = 0.3
+REACHED_FRACTION_OF_STEP = 0.1  # a level is reached when its phase error is under 10% of the level step
 DEFAULT_MIN_GAP_MM = 0.2  # smallest gap left between neighbouring patches (a fabrication limit; Advanced setting)
 NEAR_RESONANCE_SENSITIVITY_DEG_PER_0P01MM = 1.0
 CACHE_VERSION = "auto_states_v1"
@@ -439,7 +440,8 @@ def auto_states(
 ):
     """Automatic coded states. 1-bit: empty + the square closest to empty + 180 deg. 2-/3-bit: 4/8 states
     at empty + k * 360 / 2**n_bits degrees (level 0 is the empty cell); a level no square can reach gets
-    the closest square and an `UNREACHABLE_LEVEL` label with its phase error. `fixed_L_mm` (1-bit only)
+    the closest square and an `UNREACHABLE_LEVEL` label with its phase error, unless that error is under 10% of the
+    level step (9 deg for 2-bit, 4.5 deg for 3-bit), which counts as reached. `fixed_L_mm` (1-bit only)
     uses that square for state 1 instead of searching. `min_gap_mm`: neighbouring patches keep at least this
     gap, so a square is at most `period - min_gap_mm` wide (and at most what the 0.1 mm mesh can build)."""
     if n_bits < 1:
@@ -465,6 +467,9 @@ def auto_states(
                 target, substrate, frequency_hz, period_m, L_grid_mm, solves=solves, min_gap_mm=min_gap_mm
             )
         message = ""
+        if LABEL_UNREACHABLE_LEVEL in info["labels"] and info["phase_error_deg"] < REACHED_FRACTION_OF_STEP * step:
+            # the closest square is within 10% of the level step (9 deg for 2-bit, 4.5 deg for 3-bit): reached
+            info = {**info, "labels": tuple(x for x in info["labels"] if x != LABEL_UNREACHABLE_LEVEL)}
         if LABEL_UNREACHABLE_LEVEL in info["labels"]:
             message = (
                 f"No square up to {info['max_side_mm']:g} mm (minimum gap {min_gap_mm:g} mm) reaches "

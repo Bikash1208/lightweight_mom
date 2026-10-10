@@ -159,3 +159,27 @@ def test_min_gap_limits_the_largest_square_and_is_named_in_the_unreachable_messa
     assert wide.min_gap_mm == 0.2 and narrow.min_gap_mm == 0.4
     with pytest.raises(ValueError, match="minimum gap"):
         gamma_for_square(6.15, SUB, F, P, cache_dir=tmp_path, solver=FakeSolver(), min_gap_mm=0.4)
+
+
+def test_a_level_within_ten_percent_of_the_step_counts_as_reached(tmp_path):
+    """2-bit level 1 sits at 6.2 mm (-133 deg with the fake curve floor): -131.9 target -> error ~1 deg: reached.
+    With the curve floored at -125 the error is ~7 deg (< 9 deg = 10% of 90): still reached. At -115 it is
+    ~17 deg: UNREACHABLE_LEVEL, with the gap named."""
+    for floor, reached in ((-150.0, True), (-125.0, True), (-115.0, False)):
+        result = auto_states(2, SUB, F, P, cache_dir=tmp_path / f"c{floor}", solver=FakeSolver(floor))
+        level1 = result.states[1]
+        assert level1.phase_error_deg < 9.0 or not reached
+        assert (LABEL_UNREACHABLE_LEVEL not in level1.labels) == reached, (floor, level1.phase_error_deg)
+        assert bool(level1.message) == (not reached)
+        if not reached:
+            assert "minimum gap 0.2 mm" in level1.message
+
+
+def test_three_bit_threshold_is_four_and_a_half_degrees(tmp_path):
+    """UNREACHABLE_LEVEL is only ever attached to a level no square reaches AND whose closest error is >= 4.5 deg
+    (10% of the 45 deg step); a level with a bracket but a 0.05 mm-grid snapping error shows it in the error column."""
+    result = auto_states(3, SUB, F, P, cache_dir=tmp_path, solver=FakeSolver(-125.0))
+    flagged = [s for s in result.states if LABEL_UNREACHABLE_LEVEL in s.labels]
+    assert flagged, "the fake curve cannot reach the lowest levels"
+    assert all(s.phase_error_deg >= 4.5 and s.message for s in flagged)
+    assert all(s.phase_error_deg < 4.5 or LABEL_UNREACHABLE_LEVEL in s.labels or s.message == "" for s in result.states)

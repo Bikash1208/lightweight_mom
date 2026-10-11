@@ -124,29 +124,67 @@ def write_layout_csv(board, path):
     return Path(path)
 
 
-_POINT_RE = re.compile(r"CARTESIAN_POINT\([^,]*,\(([^)]*)\)\)")
+DEFAULT_R_PIN_MM = "0.635"  # monopole pin radius -- the same defaults as the AEDT script's design variables
+DEFAULT_MONO_H_MM = "7.1"  # pin height from the ground (z = 0)
+FEED_MARKER_HALF_MM = Decimal("0.3")  # feed markers are 0.6 x 0.6 mm square sheets centred on the feed
+
+_POINT_LINE_RE = re.compile(r"#(\d+)\s*=\s*CARTESIAN_POINT\('[^']*',\(([^)]*)\)\)")
+_VERTEX_RE = re.compile(r"VERTEX_POINT\('[^']*',#(\d+)\)")
 
 
-def verify_step_exact(path):
-    """Parses every CARTESIAN_POINT of the STEP file at `path`; raises ValueError if any coordinate is
-    off the 0.001 mm grid or prints with float residue. Returns the number of points checked."""
+def _step_points(text):
+    """`{entity id: (floats...)}` of every CARTESIAN_POINT, and the set of ids that are 3-D vertex points."""
+    points = {int(m.group(1)): tuple(float(t) for t in m.group(2).split(",")) for m in _POINT_LINE_RE.finditer(text)}
+    vertices = {int(m.group(1)) for m in _VERTEX_RE.finditer(text)}
+    return points, vertices
+
+
+def _bad_coordinates(coords):
+    raw = [repr(c) for c in coords]
+    off_grid = [c for c in coords if abs(c * 1000 - round(c * 1000)) > 1e-9]
+    ugly = [t for t in raw if re.search(r"(9999|0000\d)", t)]
+    return off_grid, ugly
+
+
+def verify_step_exact(path, strict_points=True, pins=()):
+    """Raises ValueError if a STEP coordinate is off the 0.001 mm grid or prints with float residue.
+
+    By default (`strict_points=True`, a board of planar faces) every 3-D CARTESIAN_POINT is checked.
+    Cylinders (monopole pins) add circle geometry whose 2-D pcurve points and surface-placement
+    parameters (angles such as 6.28318530718) can never be on the grid, so with `strict_points=False`
+    only the 3-D VERTEX/edge-end points are checked. `pins`: `(x_mm, y_mm, radius_mm, height_mm)` per
+    pin -- each must have vertices at exactly z = 0 and z = height, at exactly `radius` from its axis.
+    Returns the number of coordinates checked."""
     text = Path(path).read_text()
-    values = []
-    for m in _POINT_RE.finditer(text):
-        values += [t.strip() for t in m.group(1).split(",")]
-    off_grid = [t for t in values if abs(float(t) * 1000 - round(float(t) * 1000)) > 1e-9]
-    ugly = [t for t in values if re.search(r"(9999|0000\d)", t)]
+    points, vertices = _step_points(text)
+    if strict_points:
+        checked = [p for p in points.values() if len(p) == 3]
+    else:
+        checked = [points[i] for i in vertices if i in points and len(points[i]) == 3]
+    off_grid, ugly = [], []
+    for p in checked:
+        o, u = _bad_coordinates(p)
+        off_grid += o
+        ugly += u
     if off_grid or ugly:
         raise ValueError(
             f"STEP export is not exact: {len(off_grid)} coordinate(s) off the 0.001 mm grid "
             f"(e.g. {off_grid[:3]}), {len(ugly)} printed with float residue (e.g. {ugly[:3]})"
         )
-    return len(values)
+    vertex_xyz = [points[i] for i in vertices if i in points and len(points[i]) == 3]
+    for x, y, r, h in pins:
+        near = [v for v in vertex_xyz if abs(((v[0] - x) ** 2 + (v[1] - y) ** 2) ** 0.5 - r) < 1e-9]
+        if not any(v[2] == 0.0 for v in near) or not any(v[2] == float(h) for v in near):
+            raise ValueError(f"monopole pin at ({x}, {y}) is not exact: needs vertices at z=0 and z={h}, radius {r}")
+    return len(checked)
 
 
-def write_exact_step(board, path):
+def write_exact_step(board, path, include_pins=False, r_pin_mm=DEFAULT_R_PIN_MM, mono_h_mm=DEFAULT_MONO_H_MM):
     """Substrate box, Ground (Face.makePlane at the origin when the board is centred there, else an
-    exact polygon face) and Patches (one compound of exact rectangular faces at z = thickness)."""
+    exact polygon face), Patches (one compound of exact rectangular faces at z = thickness) and
+    Feed1..FeedN: one 0.6 x 0.6 mm square sheet per port at z = 0, corners at feed +-0.3 mm (exact
+    vertices -- a circle would leave pcurve residues). `include_pins=True` adds PEC pins
+    Monopole1..MonopoleN: cylinders of radius `r_pin_mm` and height `mono_h_mm` from z = 0 at each feed."""
     try:
         import cadquery as cq
     except ImportError as exc:  # pragma: no cover - cadquery is an optional dependency
@@ -170,6 +208,66 @@ def write_exact_step(board, path):
     assembly.add(substrate, name="Substrate")
     assembly.add(ground, name="Ground")
     assembly.add(patches, name="Patches")
+    for k, (fx, fy) in enumerate(board.feeds_mm, start=1):
+        m = FEED_MARKER_HALF_MM
+        assembly.add(rect(quantize(fx - m), quantize(fy - m), quantize(fx + m), quantize(fy + m), 0), name=f"Feed{k}")
+    pins = []
+    if include_pins:
+        r_pin, mono_h = quantize(r_pin_mm), quantize(mono_h_mm)
+        for k, (fx, fy) in enumerate(board.feeds_mm, start=1):
+            pin = cq.Solid.makeCylinder(float(r_pin), float(mono_h), vec(fx, fy, 0), cq.Vector(0, 0, 1))
+            assembly.add(pin, name=f"Monopole{k}")
+            pins.append((float(fx), float(fy), float(r_pin), float(mono_h)))
     assembly.save(str(path))
-    verify_step_exact(path)
+    verify_step_exact(path, strict_points=not include_pins, pins=pins)
+    return Path(path)
+
+
+def write_feeds_csv(board, path):
+    """`port,x_mm,y_mm` -- one row per port, in port order."""
+    with open(path, "w") as f:
+        f.write("port,x_mm,y_mm\n")
+        for k, (fx, fy) in enumerate(board.feeds_mm, start=1):
+            f.write(f"{k},{fmt(fx)},{fmt(fy)}\n")
+    return Path(path)
+
+
+def write_layout_json(board, path):
+    """Patches (`port,row,col` and the rectangle corners, mm) and the feed table, as JSON."""
+    import json
+
+    data = {
+        "units": "mm",
+        "board": {"x_min": fmt(board.x_min), "x_max": fmt(board.x_max), "y_min": fmt(board.y_min), "y_max": fmt(board.y_max)},
+        "feeds": [{"port": k, "x_mm": fmt(fx), "y_mm": fmt(fy)} for k, (fx, fy) in enumerate(board.feeds_mm, start=1)],
+        "patches": [
+            {"port": p.port, "row": p.i, "col": p.j, "x_min_mm": fmt(p.x0), "y_min_mm": fmt(p.y0),
+             "x_max_mm": fmt(p.x1), "y_max_mm": fmt(p.y1)}
+            for p in board.patches
+        ],
+    }
+    Path(path).write_text(json.dumps(data, indent=1))
+    return Path(path)
+
+
+def write_layout_dxf(board, path):
+    """DXF R12 (millimetres): patch outlines on layer PATCHES, the board outline on BOARD, and one marker
+    (CIRCLE r = 0.3 mm plus a "P<k>" label) per feed on layer FEEDS."""
+    parts = ["0", "SECTION", "2", "HEADER", "9", "$ACADVER", "1", "AC1009", "0", "ENDSEC", "0", "SECTION", "2", "ENTITIES"]
+
+    def line(layer, x1, y1, x2, y2):
+        return ["0", "LINE", "8", layer, "10", fmt(x1), "20", fmt(y1), "30", "0.0", "11", fmt(x2), "21", fmt(y2), "31", "0.0"]
+
+    def rectangle(layer, x0, y0, x1, y1):
+        return (line(layer, x0, y0, x1, y0) + line(layer, x1, y0, x1, y1) + line(layer, x1, y1, x0, y1)
+                + line(layer, x0, y1, x0, y0))
+
+    parts += rectangle("BOARD", board.x_min, board.y_min, board.x_max, board.y_max)
+    for p in board.patches:
+        parts += rectangle("PATCHES", p.x0, p.y0, p.x1, p.y1)
+    for k, (fx, fy) in enumerate(board.feeds_mm, start=1):
+        parts += ["0", "CIRCLE", "8", "FEEDS", "10", fmt(fx), "20", fmt(fy), "30", "0.0", "40", fmt(FEED_MARKER_HALF_MM)]
+        parts += ["0", "TEXT", "8", "FEEDS", "10", fmt(fx + 1), "20", fmt(fy + 1), "30", "0.0", "40", "3.0", "1", f"P{k}"]
+    parts += ["0", "ENDSEC", "0", "EOF"]
+    Path(path).write_text("\n".join(parts) + "\n")
     return Path(path)

@@ -176,7 +176,12 @@ def patch_layout_png(cells_mm, period_mm, nx, ny, path, title=None, feed_xy_mm=(
                 Circle((x, y), inner_r_mm, facecolor=_COPPER, edgecolor=_COPPER_EDGE, linewidth=0.15, zorder=3)
             )
     if feed_xy_mm is not None:
-        ax.plot(feed_xy_mm[0], feed_xy_mm[1], "o", markersize=4, color=_ACCENT, zorder=3)
+        # one (x, y) feed, or a list of them (multi-port: labelled P1..PN)
+        feeds = [feed_xy_mm] if np.ndim(feed_xy_mm) == 1 else list(feed_xy_mm)
+        for k, (fx, fy) in enumerate(feeds, start=1):
+            ax.plot(fx, fy, "o", markersize=4, color=_ACCENT, zorder=3)
+            if len(feeds) > 1:
+                ax.annotate(f"P{k}", (fx, fy), textcoords="offset points", xytext=(5, 5), fontsize=7, color=_ACCENT)
     ax.set_xlim(cx - half_x - 2, cx + half_x + 2)
     ax.set_ylim(cy - half_y - 2, cy + half_y + 2)
     ax.set_aspect("equal")

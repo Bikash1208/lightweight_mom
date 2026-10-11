@@ -136,3 +136,10 @@ def test_auto_table_formats_sides_with_two_decimals_and_flags_a_weak_fixed_side(
     assert "6.00 × 6.00 mm square" in html and "6 × 6 mm" not in html
     assert "Separation with the fixed 4.00 mm square: 11.9°" in html
     assert "Weak pair: 4.00 mm gives 12° separation" in html
+
+
+def test_export_card_has_an_unchecked_monopole_pins_option_sent_with_the_step_request():
+    html = INDEX.read_text()
+    assert re.search(r'<input type="checkbox" id="include-pins"(?![^>]*checked)[^>]*>', html)
+    assert "Include monopole pins in STEP" in html
+    assert 'include_pins: includeStep && document.getElementById("include-pins").checked' in html

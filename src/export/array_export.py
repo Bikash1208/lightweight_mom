@@ -104,7 +104,7 @@ def _is_annular_slot_cell(cell):
     return isinstance(cell, dict)
 
 
-def write_layout_files(lw_grid_m, output_dir, basename="layout"):
+def write_layout_files(lw_grid_m, output_dir, basename="layout", feeds_mm=None):
     """Layout CSV (`i, j, length_m, width_m`; PHASE15 Part E, only if the grid has at least one
     annular-slot cell: `kind, length_m, width_m, R_m, r_m`, `length_m`/`width_m` holding an
     annular-slot cell's own `a_m`/`b_m` footprint) and the same data as JSON -- always written,
@@ -151,8 +151,23 @@ def write_layout_files(lw_grid_m, output_dir, basename="layout"):
     # which was silently WRONG for a non-square (n_x != n_y) grid -- a bug no square-only caller
     # could ever trigger (n*n == n_x*n_y when n_x == n_y, so this is a no-op for every pre-Phase-15
     # export). `n_cells_per_side` is kept (same name, same value) for backward compatibility.
-    json_path.write_text(json.dumps({"n_cells_per_side": n_y, "total_cells": len(rows), "cells": rows}, indent=2))
+    payload = {"n_cells_per_side": n_y, "total_cells": len(rows), "cells": rows}
+    if feeds_mm:  # Phase 21/22: the feed positions (port, x_mm, y_mm) travel with the layout
+        payload["feeds"] = [{"port": k, "x_mm": x, "y_mm": y} for k, (x, y) in enumerate(feeds_mm, start=1)]
+    json_path.write_text(json.dumps(payload, indent=2))
     return csv_path, json_path
+
+
+def write_feeds_csv(feeds_mm, output_dir, basename="feeds"):
+    """`port,x_mm,y_mm`, one row per feed in port order (the layout CSV itself stays a cell table)."""
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    path = output_dir / f"{basename}.csv"
+    with open(path, "w", newline="") as fh:
+        fh.write("port,x_mm,y_mm\n")
+        for k, (x, y) in enumerate(feeds_mm, start=1):
+            fh.write(f"{k},{x:.3f},{y:.3f}\n")
+    return path
 
 
 def write_hfss_readme(output_dir, basename="HFSS_README", feeds_mm=None, ports_info=None):
@@ -197,7 +212,7 @@ def _rectangle_lines_mm(cx_mm, cy_mm, length_mm, width_mm):
     return [(corners[k], corners[(k + 1) % 4]) for k in range(4)]
 
 
-def _layout_dxf_text(lw_grid_m, period_x_m, period_y_m):
+def _layout_dxf_text(lw_grid_m, period_x_m, period_y_m, feeds_mm=None):
     """The DXF entity text for `write_layout_dxf`'s board -- factored out so
     `write_layout_dxf_rect` (PHASE15 Part C: a non-square multi-port board) can reuse it without
     `_validate_square`'s square-only assumption. Generalizes `n` (one shared cell count) into
@@ -262,6 +277,9 @@ def _layout_dxf_text(lw_grid_m, period_x_m, period_y_m):
             "40",
             f"{radius:.6f}",
         ]
+    for k, (fx, fy) in enumerate(feeds_mm or (), start=1):  # feed markers on their own layer, labelled P<k>
+        parts += ["0", "CIRCLE", "8", "FEEDS", "10", f"{fx:.6f}", "20", f"{fy:.6f}", "30", "0.0", "40", f"{_FEED_MARKER_RADIUS_MM:.6f}"]
+        parts += ["0", "TEXT", "8", "FEEDS", "10", f"{fx + 1.0:.6f}", "20", f"{fy + 1.0:.6f}", "30", "0.0", "40", "3.0", "1", f"P{k}"]
     parts += ["0", "ENDSEC", "0", "EOF"]
     return "\n".join(parts) + "\n"
 
@@ -283,14 +301,14 @@ def write_layout_dxf(lw_grid_m, period_x_m, period_y_m, output_dir, basename="la
     return path
 
 
-def write_layout_dxf_rect(lw_grid_m, period_x_m, period_y_m, output_dir, basename="layout"):
+def write_layout_dxf_rect(lw_grid_m, period_x_m, period_y_m, output_dir, basename="layout", feeds_mm=None):
     """PHASE15 Part C: `write_layout_dxf` without the single-aperture square-board assumption --
     a multi-port board (Mishra's own 5-port layout is 4*s wide by 2*s tall) is rectangular, not
     square, so `_validate_square` does not apply; otherwise identical (same DXF text helper)."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / f"{basename}.dxf"
-    path.write_text(_layout_dxf_text(lw_grid_m, period_x_m, period_y_m))
+    path.write_text(_layout_dxf_text(lw_grid_m, period_x_m, period_y_m, feeds_mm))
     return path
 
 
@@ -470,6 +488,7 @@ class MultiPortExportResult:
     total_cells: int
     file_size_bytes: "int | None"
     export_time_s: "float | None"
+    feeds_csv_path: "str | None" = None
 
 
 def export_multi_port_array(
@@ -493,8 +512,9 @@ def export_multi_port_array(
     n_y = len(lw_grid_m)
     n_x = len(lw_grid_m[0]) if n_y else 0
     output_dir = Path(output_dir)
-    csv_path, json_path = write_layout_files(lw_grid_m, output_dir)
-    dxf_path = write_layout_dxf_rect(lw_grid_m, period_x_m, period_y_m, output_dir)
+    csv_path, json_path = write_layout_files(lw_grid_m, output_dir, feeds_mm=feeds_mm)
+    dxf_path = write_layout_dxf_rect(lw_grid_m, period_x_m, period_y_m, output_dir, feeds_mm=feeds_mm)
+    feeds_csv_path = write_feeds_csv(feeds_mm, output_dir) if feeds_mm else None
     readme_path = write_hfss_readme(output_dir, feeds_mm=feeds_mm, ports_info=ports_info)
 
     step_path, file_size, export_time = None, None, None
@@ -520,4 +540,5 @@ def export_multi_port_array(
         total_cells=n_x * n_y,
         file_size_bytes=file_size,
         export_time_s=export_time,
+        feeds_csv_path=str(feeds_csv_path) if feeds_csv_path else None,
     )

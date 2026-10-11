@@ -8,9 +8,8 @@ into one body "Patches" (Perfect E), PEC monopoles, 50 ohm lumped ports on the c
 with a radiation boundary, a driven-modal setup, an interpolating sweep and a 1 degree far-field sphere.
 Design variables: mono_h, r_pin, r_out, pad_xy, pad_top, pad_bot. It runs in AEDT (Tools > Run Script)."""
 
-from .exact_board import fmt, quantize
+from .exact_board import DEFAULT_MONO_H_MM, DEFAULT_R_PIN_MM, fmt, quantize
 
-DEFAULT_R_PIN_MM = "0.635"
 DEFAULT_R_OUT_MM = "2.05"
 
 _TEMPLATE = r'''
@@ -58,7 +57,7 @@ def var(name, value):
         ["NAME:PropServers", "LocalVariables"],
         ["NAME:NewProps", ["NAME:" + name, "PropType:=", "VariableProp", "UserDef:=", True, "Value:=", value]]]])
 
-for n, v in (("mono_h", "7.1mm"), ("r_pin", "@@RPIN@@mm"), ("r_out", "@@ROUT@@mm"),
+for n, v in (("mono_h", "@@MONOH@@mm"), ("r_pin", "@@RPIN@@mm"), ("r_out", "@@ROUT@@mm"),
              ("pad_xy", "15mm"), ("pad_top", "30mm"), ("pad_bot", "15mm")):
     var(n, v)
 
@@ -164,7 +163,8 @@ oDesktop.AddMessage(oProject.GetName(), "@@NAME@@", 0, "Built: @@N@@ patches, @@
 '''.lstrip("\n")
 
 
-def generate_aedt_script(board, name, eps_r, tan_delta, frequency_hz, r_pin_mm=DEFAULT_R_PIN_MM, r_out_mm=DEFAULT_R_OUT_MM):
+def generate_aedt_script(board, name, eps_r, tan_delta, frequency_hz, r_pin_mm=DEFAULT_R_PIN_MM, r_out_mm=DEFAULT_R_OUT_MM,
+                       mono_h_mm=DEFAULT_MONO_H_MM):
     """The script text. `name` becomes the HFSS design and project name (letters, digits, _)."""
     safe = "".join(ch if ch.isalnum() or ch == "_" else "_" for ch in name)
     f_ghz = frequency_hz / 1e9
@@ -186,6 +186,7 @@ def generate_aedt_script(board, name, eps_r, tan_delta, frequency_hz, r_pin_mm=D
         "SWEEP_LO": "%g" % round(0.95 * f_ghz, 2),
         "SWEEP_HI": "%g" % round(1.05 * f_ghz, 2),
         "RPIN": fmt(quantize(r_pin_mm)),
+        "MONOH": fmt(quantize(mono_h_mm)),
         "ROUT": fmt(quantize(r_out_mm)),
         "N": str(len(board.patches)),
         "FEEDS": feeds,

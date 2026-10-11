@@ -192,3 +192,25 @@ def test_export_board_endpoint_rejects_a_single_aperture_job(client):
               "thickness_mm": 1.575, "frequency_hz": F},
     )
     assert resp.status_code == 404
+
+
+def test_export_board_endpoint_feeds_files_pins_and_png(client):
+    body = _grid_request(32.0, 0.0)
+    submitted = client.post("/api/hmsa/synthesize_ports", json=body).json()
+    synth = _wait_for_job(client, submitted["id"], timeout=120.0)
+    assert synth["status"] == "done", synth
+    payload = {"source_job_id": submitted["id"], "period_mm": 6.4, "eps_r": 2.2, "tan_delta": 0.0009,
+               "thickness_mm": 1.575, "frequency_hz": F, "name": "pins_test"}
+    plain = _wait_for_job(client, client.post("/api/export/board", json=payload).json()["id"], timeout=120.0)
+    pinned = _wait_for_job(client, client.post("/api/export/board", json={**payload, "include_pins": True}).json()["id"], timeout=120.0)
+    assert plain["status"] == pinned["status"] == "done", (plain, pinned)
+    assert plain["result"]["has_monopole_pins"] is False and pinned["result"]["has_monopole_pins"] is True
+    assert "Monopole1" not in client.get(plain["result"]["step_download_url"]).text
+    pinned_step = client.get(pinned["result"]["step_download_url"]).text
+    assert "PRODUCT('Monopole4'" in pinned_step and "PRODUCT('Feed4'" in pinned_step
+    for key in ("feeds_csv_download_url", "layout_json_download_url", "layout_dxf_download_url", "layout_png_download_url"):
+        assert client.get(pinned["result"][key]).status_code == 200, key
+    feeds = client.get(pinned["result"]["feeds_csv_download_url"]).text.splitlines()
+    assert len(feeds) == 5 and feeds[1].startswith("1,")
+    readme = client.get(pinned["result"]["readme_download_url"]).text
+    assert "Feed1" in readme and "Monopole1" in readme and "feeds.csv" in readme

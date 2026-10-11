@@ -1520,7 +1520,7 @@ def _run_synthesize_ports_job(job, body: dict):
             n_y,
             out_dir / "patch_layout.png",
             title=f"Multi-port board — {len(multi.ports)} ports, {n_x} × {n_y} cells",
-            feed_xy_mm=None,
+            feed_xy_mm=[(p.feed_xy_m[0] * 1e3, p.feed_xy_m[1] * 1e3) for p in multi.ports],
         )
         patch_layout_png_url = f"/api/files/{job.id}/{path.name}"
     except Exception:

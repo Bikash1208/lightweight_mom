@@ -87,3 +87,93 @@ def test_layout_matches_the_hand_built_reference_board(tmp_path):
     ref = {tuple(r) for r in list(csv.reader(open(REFERENCE / "layout.csv")))[1:]}
     assert len(ours) == len(ref) == 4416
     assert ours == ref
+
+
+# ======================================================================= Phase 22: feeds in the exact STEP and the package
+
+
+@pytest.fixture(scope="module", params=[0.0, 28.0], ids=["gap0", "gap28"])
+def full_board(request, tmp_path_factory):
+    import os
+
+    os.environ["LWMOM_APP_DATA_DIR"] = str(tmp_path_factory.mktemp("appdata_full"))
+    gap = request.param
+    result = _run_synthesize_ports_job(_Job(f"p22full{int(gap)}"), _grid_request(300.0, gap))
+    return gap, result, exact_board_from_ports_result(result, 6.4, 1.575)
+
+
+def _import_feed_faces(step_path):
+    import cadquery as cq
+
+    shape = cq.importers.importStep(str(step_path)).val()
+    faces = [f for f in shape.Faces() if abs(f.Center().z) < 1e-9 and abs(f.Area() - 0.36) < 1e-6]
+    return sorted((round(f.Center().x, 6), round(f.Center().y, 6)) for f in faces)
+
+
+def test_step_has_feed_markers_at_the_exact_feed_coordinates(full_board, tmp_path):
+    gap, _result, board = full_board
+    step = write_exact_step(board, tmp_path / "board.step")
+    text = step.read_text()
+    for k in range(1, 5):
+        assert f"PRODUCT('Feed{k}'" in text
+    assert "Monopole" not in text
+    c = 150.4 + gap / 2.0
+    assert [(float(x), float(y)) for x, y in board.feeds_mm] == [(c, c), (-c, c), (-c, -c), (c, -c)]
+    expected = sorted([(c, c), (-c, c), (-c, -c), (c, -c)])
+    assert _import_feed_faces(step) == [(round(x, 6), round(y, 6)) for x, y in expected]
+
+
+def test_step_verifies_with_and_without_pins_and_pins_are_exact(full_board, tmp_path):
+    from src.export.exact_board import DEFAULT_MONO_H_MM, DEFAULT_R_PIN_MM
+
+    gap, _result, board = full_board
+    plain = write_exact_step(board, tmp_path / "plain.step")
+    assert verify_step_exact(plain) > 100
+    pinned = write_exact_step(board, tmp_path / "pins.step", include_pins=True)
+    text = pinned.read_text()
+    assert all(f"PRODUCT('Monopole{k}'" in text and f"PRODUCT('Feed{k}'" in text for k in range(1, 5))
+    c = 150.4 + gap / 2.0
+    pins = [(sx * c, sy * c, float(DEFAULT_R_PIN_MM), float(DEFAULT_MONO_H_MM)) for sx, sy in ((1, 1), (-1, 1), (-1, -1), (1, -1))]
+    assert verify_step_exact(pinned, strict_points=False, pins=pins) > 100
+    with pytest.raises(ValueError, match="monopole pin"):
+        verify_step_exact(pinned, strict_points=False, pins=[(c, c, 0.635, 7.2)])
+    # the pin geometry is on the grid: pin vertices at z = 0 and exactly z = 7.1, at feed +- 0.635 in x
+    from src.export.exact_board import _step_points
+
+    points, vertices = _step_points(text)
+    tops = [points[i] for i in vertices if i in points and len(points[i]) == 3 and points[i][2] == 7.1]
+    assert sorted(round(v[0], 9) for v in tops if abs(v[1] - c) < 1e-9) == sorted([round(-c + 0.635, 9), round(c + 0.635, 9)])
+
+
+def test_layout_files_list_the_feeds(full_board, tmp_path):
+    from src.export.exact_board import write_feeds_csv, write_layout_dxf, write_layout_json
+
+    gap, _result, board = full_board
+    c = 150.4 + gap / 2.0
+    feeds = write_feeds_csv(board, tmp_path / "feeds.csv").read_text().splitlines()
+    assert feeds[0] == "port,x_mm,y_mm" and feeds[1:] == [f"1,{c:g},{c:g}", f"2,{-c:g},{c:g}", f"3,{-c:g},{-c:g}", f"4,{c:g},{-c:g}"]
+    import json
+
+    data = json.loads(write_layout_json(board, tmp_path / "layout.json").read_text())
+    assert [f["port"] for f in data["feeds"]] == [1, 2, 3, 4] and data["feeds"][0]["x_mm"] == f"{c:g}"
+    assert len(data["patches"]) == 4416
+    dxf = write_layout_dxf(board, tmp_path / "layout.dxf").read_text().splitlines()
+    circles = [i for i, t in enumerate(dxf) if t == "CIRCLE"]
+    assert len(circles) == 4 and all(dxf[i + 2] == "FEEDS" for i in circles)
+    assert float(dxf[circles[0] + 4]) == pytest.approx(c) and float(dxf[circles[0] + 6]) == pytest.approx(c)
+    assert {"P1", "P2", "P3", "P4"} <= set(dxf)
+
+
+def test_standard_multi_port_export_lists_the_feeds_too(tmp_path):
+    from src.export.array_export import export_multi_port_array
+    from src.materials import Metal, Substrate
+
+    grid = [[(0.0, 0.0), (5.85e-3, 5.85e-3)], [(5.85e-3, 5.85e-3), (0.0, 0.0)]]
+    result = export_multi_port_array(grid, 12.8e-3, 12.8e-3, Substrate("s", 2.2, 0.0009, 1.575e-3), Metal(), tmp_path,
+                                     include_step=False, feeds_mm=[(-3.2, -3.2), (3.2, 3.2)])
+    assert Path(result.feeds_csv_path).read_text().splitlines() == ["port,x_mm,y_mm", "1,-3.200,-3.200", "2,3.200,3.200"]
+    import json
+
+    assert json.loads(Path(result.layout_json_path).read_text())["feeds"][1] == {"port": 2, "x_mm": 3.2, "y_mm": 3.2}
+    dxf = Path(result.layout_dxf_path).read_text().splitlines()
+    assert dxf.count("FEEDS") == 4 and "P2" in dxf  # two CIRCLE + two TEXT entities, layer FEEDS

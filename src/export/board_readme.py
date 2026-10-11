@@ -29,7 +29,7 @@ def _beam_rows(ports):
     return rows
 
 
-def build_board_readme(board, result, name, eps_r, tan_delta, frequency_hz, files):
+def build_board_readme(board, result, name, eps_r, tan_delta, frequency_hz, files, with_pins=False):
     """The README text. `result` is the `/synthesize_ports` job result; `files` the exported file names."""
     ports = result["ports"]
     f_ghz = frequency_hz / 1e9
@@ -103,6 +103,13 @@ def build_board_readme(board, result, name, eps_r, tan_delta, frequency_hz, file
         "## Files",
         "",
         *["- `%s`" % f for f in files],
+        "",
+        ("The STEP carries `Feed1`..`Feed%d`: 0.6 x 0.6 mm marker sheets at z = 0 centred on each feed (listed above and "
+        "in `feeds.csv`, `layout.json`, and on layer FEEDS of `layout.dxf`)%s." % (
+            len(ports),
+            "; the PEC monopole pins `Monopole1`..`Monopole%d` (r 0.635 mm, 7.1 mm tall) are included too" % len(ports)
+            if with_pins else " (monopole pins were not requested)",
+        ) if "board.step" in files else "The feed positions are listed above and in `feeds.csv`, `layout.json` and on layer FEEDS of `layout.dxf`."),
         "",
         "`hfss_build_board.py` is a native AEDT script (HFSS: Tools > Run Script). It builds the substrate, ground "
         "with a coax opening at each feed, all patches united into one body \"Patches\" (Perfect E), the PEC "

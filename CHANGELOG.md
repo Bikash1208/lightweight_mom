@@ -6,6 +6,9 @@ before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` 
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
 ## Unreleased - Phase 22 - automatic coded-cell states
+- Exact multi-port STEP: `Feed1..FeedN` marker sheets (0.6 x 0.6 mm at z = 0, exact vertices) restored; optional `Monopole1..N` pins
+  (checkbox on the Export card; verification then checks 3-D vertices and the pins' z/radius). Feed positions are listed in `feeds.csv`,
+  `layout.json`, layer FEEDS of `layout.dxf`, the layout PNG (P1..PN) and the board README; the standard multi-port export gets them too.
 - `src/hologram/auto_states.py`: empty + mesh-corrected squares (0.2/0.1 mm MoM + Richardson, interpolated, snapped to 0.05 mm),
   1-/2-/3-bit, disk cache; `auto` two-state source in `/synthesize_ports` and `/synthesize_coded`, `/api/hmsa/auto_states`;
   the near-resonance refusal is skipped for the auto pair unless beta_mode is "state".

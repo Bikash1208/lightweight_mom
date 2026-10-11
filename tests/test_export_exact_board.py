@@ -3,6 +3,7 @@ writing), layout CSV, the AEDT script and the README -- checked against the hand
 
 import ast
 import csv
+import re
 from pathlib import Path
 
 import pytest
@@ -57,6 +58,35 @@ def test_aedt_script_is_valid_python_with_every_patch_and_feed(small_board, smal
     patches_block = text.split("PATCHES = [")[1].split("\n]")[0]
     assert len([ln for ln in patches_block.splitlines() if ln.startswith("(")]) == len(small_board.patches)
     assert "HMSA_test" in text and '"Frequency:=", "10.54GHz"' in text and "mono_h" in text and "AssignLumpedPort" in text
+
+
+def _zero_conductivity_solve_inside_violations(source):
+    """attrs(name, material, solve_inside, ...) calls pairing vacuum/air with SolveInside False."""
+    bad = []
+    source = re.sub(r"@@\w+@@", "0", source)  # template placeholders
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Call) and getattr(node.func, "id", None) == "attrs" and len(node.args) >= 3:
+            material, inside = node.args[1], node.args[2]
+            if (isinstance(material, ast.Constant) and str(material.value).lower() in ("vacuum", "air")
+                    and not (isinstance(inside, ast.Constant) and inside.value is True)):
+                bad.append((node.lineno, material.value))
+    return bad
+
+
+def test_aedt_script_never_pairs_vacuum_or_air_with_solve_inside_false(small_board):
+    text = generate_aedt_script(small_board, "HMSA test", 2.2, 0.0009, 10.54e9)
+    assert text.count("attrs(") >= 5  # the check below really sees the calls
+    assert _zero_conductivity_solve_inside_violations(text) == []
+    template = Path(__file__).resolve().parents[1] / "scripts" / "adhoc" / "square4" / "aedt_template.py"
+    if template.exists():
+        assert _zero_conductivity_solve_inside_violations(template.read_text()) == []
+    # the helper itself catches the 2025 R1 failure mode
+    assert _zero_conductivity_solve_inside_violations('attrs("s", "vacuum", False)') == [(1, "vacuum")]
+
+
+def test_readme_names_the_targeted_aedt_versions(small_board, small_result):
+    text = build_board_readme(small_board, small_result, "x", 2.2, 0.0009, 10.54e9, ["hfss_build_board.py"])
+    assert "2019 R1" in text and "2025 R1" in text and "SolveInside" in text
 
 
 def test_readme_has_the_port_beam_and_cell_tables(small_board, small_result):

@@ -73,11 +73,11 @@ def mm(v):
 def rect(name, x, y, z, w, h, color="(255 128 0)"):
     oEditor.CreateRectangle(["NAME:RectangleParameters", "IsCovered:=", True,
         "XStart:=", x, "YStart:=", y, "ZStart:=", z, "Width:=", w, "Height:=", h, "WhichAxis:=", "Z"],
-        attrs(name, "vacuum", False, color))
+        attrs(name, "vacuum", True, color))
 
 def circle(name, x, y, z, r):
     oEditor.CreateCircle(["NAME:CircleParameters", "IsCovered:=", True, "XCenter:=", x, "YCenter:=", y,
-        "ZCenter:=", z, "Radius:=", r, "WhichAxis:=", "Z", "NumSegments:=", "0"], attrs(name, "vacuum", False))
+        "ZCenter:=", z, "Radius:=", r, "WhichAxis:=", "Z", "NumSegments:=", "0"], attrs(name, "vacuum", True))
 
 def unite(names):
     oEditor.Unite(["NAME:Selections", "Selections:=", ",".join(names)], ["NAME:UniteParameters", "KeepOriginals:=", False])

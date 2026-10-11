@@ -116,7 +116,9 @@ def build_board_readme(board, result, name, eps_r, tan_delta, frequency_hz, file
         "monopoles with %d lumped ports (50 ohm), an air box with a radiation boundary, a %.4g GHz setup, a sweep "
         "and a far-field sphere. Design variables: `mono_h` (default 7.1 mm: set it to your monopole), `r_pin`, `r_out`, "
         "`pad_xy`, `pad_top`, `pad_bot`. Set `BUILD_MONOPOLES = False` at the top for geometry only. Creating a few "
-        "thousand rectangles takes minutes." % (len(ports), f_ghz),
+        "thousand rectangles takes minutes. The script targets AEDT / HFSS 2019 R1 through 2025 R1 (sheets are "
+        "created with `SolveInside` enabled because 2025 R1 rejects a zero-conductivity material such as vacuum "
+        "with `SolveInside` off; Perfect E is assigned afterwards)." % (len(ports), f_ghz),
         "",
         "## Exciting the ports in HFSS",
         "",

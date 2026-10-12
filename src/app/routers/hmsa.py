@@ -1509,6 +1509,12 @@ def _run_synthesize_ports_job(job, body: dict):
             "beta_model_rad_per_m": beta_model,
             "state_betas_rad_per_m": [choice.surface_wave_0.beta_rad_per_m, choice.surface_wave_1.beta_rad_per_m],
             "auto": auto_info or None,
+            # the exact phases the aperture field was built with (state.value, not the patch-plane shift);
+            # Phase 23's sidelobe optimiser rebuilds each cell's two possible aperture values from them
+            "achieved_phase_deg": [
+                float(principal_phase_deg(choice.state_0.value)),
+                float(principal_phase_deg(choice.state_1.value)),
+            ],
             # the phase table, once for the whole board (every port shares the pair)
             "states": [
                 {

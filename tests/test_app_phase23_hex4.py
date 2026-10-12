@@ -207,3 +207,71 @@ def test_hex4_needs_exactly_one_size():
         _run_synthesize_ports_job(
             _Job("p23bad2"), _request({"preset": "hex4", "side_mm": 40.0, "flat_to_flat_mm": 69.0, "gap_mm": 0.0})
         )
+
+
+def test_sidelobe_endpoint_end_to_end(tmp_path, monkeypatch):
+    """`/api/sidelobes/optimize` on a finished hex4 job: a new job result with the optimised board,
+    before/after tables on the held-out grid, and an exportable layout."""
+    import time
+
+    from fastapi.testclient import TestClient
+
+    from src.app.main import create_app
+
+    monkeypatch.setenv("LWMOM_APP_DATA_DIR", str(tmp_path / "data"))
+    client = TestClient(create_app())
+
+    def wait(job_id, timeout=300):
+        t0 = time.time()
+        while True:
+            job = client.get(f"/api/jobs/{job_id}").json()
+            if job["status"] in ("done", "failed", "cancelled"):
+                return job
+            assert time.time() - t0 < timeout
+            time.sleep(0.1)
+
+    body = _request({"preset": "hex4", "side_mm": 50.0, "gap_mm": 0.0})
+    synth = wait(client.post("/api/hmsa/synthesize_ports", json=body).json()["id"])
+    assert synth["status"] == "done", synth
+    req = {
+        "source_job_id": synth["id"],
+        "frequency_hz": F,
+        "period_mm": 6.4,
+        "eps_r": 2.2,
+        "tan_delta": 0.0009,
+        "thickness_mm": 1.575,
+        "polarization": "rhcp",
+        "mode": "single",
+        "max_flips": 15,
+        "frequency_check_percent": 2.0,
+        "port_beams": [[{"theta_deg": 30.0, "phi_deg": 45.0 + 90.0 * k}] for k in range(4)],
+    }
+    opt = wait(client.post("/api/sidelobes/optimize", json=req).json()["id"])
+    assert opt["status"] == "done", opt
+    info = opt["result"]["sidelobe_optimisation"]
+    assert info["mode"] == "single" and info["label"] == "MODEL_ONLY_SIDELOBE_OPTIMISATION"
+    assert set(info["before"]) == {"port1", "port2", "port3", "port4", "all"}
+    assert info["held_out_grid"] == {"theta_step_deg": 0.5, "phi_step_deg": 1.0}
+    assert sum(info["cells_changed"].values()) <= 4 * 15
+    assert set(info["frequency_check"]) == {"-2%", "+2%"}
+    for name in ("port1", "port2"):
+        b0, b1 = info["before"][name]["beams"][0], info["after"][name]["beams"][0]
+        assert b1["sll_global_db"] <= b0["sll_global_db"] + 0.05
+    # the optimised job drives the exact board export
+    export = wait(
+        client.post(
+            "/api/export/board",
+            json={
+                "source_job_id": opt["id"],
+                "period_mm": 6.4,
+                "eps_r": 2.2,
+                "tan_delta": 0.0009,
+                "thickness_mm": 1.575,
+                "frequency_hz": F,
+                "include_step": False,
+            },
+        ).json()["id"]
+    )
+    assert export["status"] == "done", export
+    n_new = sum(p["patch_count"] for p in opt["result"]["ports"])
+    assert export["result"]["n_patches"] == n_new

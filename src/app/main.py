@@ -58,6 +58,7 @@ def create_app():
     from .routers import library as library_router
     from .routers import pattern as pattern_router
     from .routers import reflectarray as reflectarray_router
+    from .routers import sidelobes as sidelobes_router
     from .routers import unit_cell as unit_cell_router
     from .routers import verify as verify_router
 
@@ -71,6 +72,7 @@ def create_app():
     app.include_router(hmsa_router.router)
     app.include_router(hfss_compare_router.router)
     app.include_router(verify_router.router)
+    app.include_router(sidelobes_router.router)
 
     @app.get("/api/health")
     def health():

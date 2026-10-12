@@ -442,6 +442,27 @@
         <p class="status" id="ports-isolation-summary"></p>
         <p class="status" id="ports-efficiency-note">Directivity-based aperture efficiency is an upper bound: it excludes residual surface-wave power, edge diffraction, feed loss and mismatch. Measured boards in the literature reach about 10–15% (Mishra et al., TVT 2026).</p>
         <div id="ports-state-table"></div>
+        <div id="sll-card" style="display:none">
+          <h3>Reduce sidelobes</h3>
+          <p class="status">Re-chooses individual 1-bit cell states to lower the highest co-polar sidelobe outside
+          each beam's main lobe, within a gain budget (Johnson et al., IEEE TAP 2015, sidelobe cancelling).
+          Model-only. Every number below is measured on a fine grid (0.5&deg; &times; 1&deg;) the optimiser never
+          used. Export and the pattern use the optimised states once it finishes.</p>
+          <label>Excitation to optimise for
+            <select id="sll-mode">
+              <option value="single">Each port on its own (one port at a time in HFSS)</option>
+              <option value="all">All ports together (cells and port phases)</option>
+              <option value="both">Both (worst case over single-port and all-ports)</option>
+            </select>
+          </label>
+          <label>Largest gain loss per beam <span class="unit">dB</span>
+            <input type="number" step="any" id="sll-max-loss" value="0.5" min="0" style="width:6rem" /></label>
+          <label>Iteration budget <span class="unit">cell changes</span>
+            <input type="number" step="1" id="sll-budget" value="400" min="1" style="width:6rem" /></label>
+          <button type="button" id="sll-run-btn">Reduce sidelobes</button>
+          <p class="status" id="sll-status"></p>
+          <div id="sll-results"></div>
+        </div>
         <div id="ports-per-port-results"></div>
       </div>
 
@@ -2110,6 +2131,11 @@
       const container = document.getElementById("ports-per-port-results");
       container.innerHTML = "";
       document.getElementById("ports-state-table").innerHTML = stateTableHtml(job.result);
+      // "Reduce sidelobes" applies to coded 1-bit multi-port boards
+      document.getElementById("sll-card").style.display =
+        (job.result.formulation === "coded" && job.result.n_bits === 1) ? "block" : "none";
+      document.getElementById("sll-results").innerHTML = "";
+      document.getElementById("sll-status").textContent = "";
       const refinements = job.result.refinement || [];
       for (const port of job.result.ports) {
         const card = document.createElement("div");
@@ -2230,6 +2256,63 @@
         addRow("Mean / max phase error", `${s.mean_deg.toFixed(1)}° / ${s.max_deg.toFixed(1)}°`);
       }
     }
+
+    function sllTableHtml(title, table) {
+      const rows = [];
+      Object.entries(table).forEach(([name, sc]) => {
+        sc.beams.forEach((b) => {
+          rows.push(`<tr><td>${name === "all" ? "all ports" : "port " + b.port}</td><td>${b.requested[0].toFixed(0)}&deg;, ${b.requested[1].toFixed(0)}&deg;</td>` +
+            `<td>${b.directivity_dbi}</td><td>${b.pointing_error_deg}</td><td>${b.sll_global_db}</td>` +
+            `<td>${b.sll_xcut_db}</td><td>${b.sll_ycut_db}</td><td>${b.xpd_db}</td></tr>`);
+        });
+      });
+      return `<h4>${title}</h4><table><thead><tr><th>Excitation</th><th>Beam (&theta;, &phi;)</th><th>Directivity (dBi)</th>` +
+        `<th>Pointing error (&deg;)</th><th>Co-pol SLL (dB)</th><th>SLL x-cut (dB)</th><th>SLL y-cut (dB)</th>` +
+        `<th>XPD (dB)</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+    }
+    document.getElementById("sll-run-btn").addEventListener("click", async () => {
+      const statusEl = document.getElementById("sll-status");
+      const btn = document.getElementById("sll-run-btn");
+      try {
+        btn.disabled = true;
+        const substrate = currentSubstrate();
+        const body = {
+          source_job_id: state.synthesizeJobId,
+          frequency_hz: parseFloat(document.getElementById("synthesis-frequency-ghz").value) * 1e9,
+          period_mm: parseFloat(document.getElementById("cell-size-mm").value),
+          eps_r: substrate.eps_r, tan_delta: substrate.tan_delta, thickness_mm: substrate.thickness_mm,
+          port_beams: state.ports.map((p) => p.beams.map((b) => ({ theta_deg: b.theta_deg, phi_deg: b.phi_deg }))),
+          polarization: (state.ports[0] && state.ports[0].beams[0].desired_polarization) || "rhcp",
+          mode: document.getElementById("sll-mode").value,
+          max_gain_loss_db: parseFloat(document.getElementById("sll-max-loss").value),
+          max_flips: parseInt(document.getElementById("sll-budget").value, 10),
+        };
+        statusEl.textContent = "Optimising (this takes a few minutes for a large board)...";
+        const submitted = await LWMOM.postJson("/api/sidelobes/optimize", body);
+        const job = await LWMOM.pollJob(submitted.id, {
+          onTick: (j) => { statusEl.textContent = `${j.status}: ${j.progress_message || ""}`; },
+        });
+        if (job.status !== "done") throw new Error(LWMOM.errorText(job.error, job.status));
+        const o = job.result.sidelobe_optimisation;
+        state.synthesizeJobId = submitted.id;   // pattern and export now use the optimised states
+        state.synthesizeResult = job.result;
+        if (job.result.patch_layout_png_url) document.getElementById("ports-patch-layout-img").src = job.result.patch_layout_png_url;
+        const changed = Object.entries(o.cells_changed).map(([k, v]) => `port ${+k + 1}: ${v}`).join(", ");
+        const alpha = o.mode !== "single"
+          ? "<p>Port phases to set in HFSS Edit Sources (degrees): " +
+            Object.entries(o.alpha_deg).map(([k, v]) => `P${+k + 1} = ${(+v).toFixed(1)}`).join(", ") + ".</p>" : "";
+        const freq = Object.entries(o.frequency_check || {}).map(([f, t]) => sllTableHtml(`Re-evaluated at ${f} (not re-optimised)`, t)).join("");
+        document.getElementById("sll-results").innerHTML =
+          `<p class="status">Cells changed &mdash; ${changed}. Held-out grid ${o.held_out_grid.theta_step_deg}&deg; &times; ${o.held_out_grid.phi_step_deg}&deg;.</p>` +
+          alpha + sllTableHtml("Before", o.before) + sllTableHtml("After", o.after) + freq +
+          `<p class="status">${o.frequency_check_note}</p>`;
+        statusEl.textContent = "Done. Pattern and export now use the optimised design.";
+      } catch (err) {
+        statusEl.textContent = `Error: ${err.message}`;
+      } finally {
+        btn.disabled = false;
+      }
+    });
 
     async function runPatternAndExport(synthResult) {
       const statusEl = document.getElementById("run-status");

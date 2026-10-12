@@ -115,7 +115,9 @@ def _digest(obj, h):
         h.update(b"nd" + str(obj.dtype).encode() + str(obj.shape).encode() + np.ascontiguousarray(obj).tobytes())
     elif isinstance(obj, dict):
         for k in sorted(obj, key=str):
-            if k in ("patch_layout_png_url",):
+            # the PNG URL carries the job id; `achieved_phase_deg` is a key ADDED in Phase 23 C (the exact
+            # phases of the two states) -- every pre-existing value is hashed
+            if k in ("patch_layout_png_url", "achieved_phase_deg"):
                 continue
             h.update(b"k" + str(k).encode())
             _digest(obj[k], h)

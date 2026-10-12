@@ -163,3 +163,42 @@ def test_malformed_data_row_raises(tmp_path):
         fh.write("1.0 2.0 3.0\n")  # only 3 columns, not 4
     with pytest.raises(ValueError, match="malformed data row"):
         fp.read_fld(path)
+
+
+def _write_raw(tmp_path, text, name="raw.fld", newline=None):
+    path = tmp_path / name
+    with open(path, "w", newline=newline) as fh:
+        fh.write(text)
+    return path
+
+
+_EXPR = 'X, Y, Z, Scalar data "CmplxPhase(ScalarZ(<Ex,Ey,Ez>))"'
+_ROWS = "".join(f"{x:.6e} {y:.6e} 1.7e+00 {0.1 * (i + 1):.6e}\n" for i, (x, y) in enumerate(
+    (x, y) for x in (-1.0, 0.0, 1.0) for y in (-1.0, 0.0, 1.0)))
+
+
+def test_header_without_cs_defaults_to_global(tmp_path):
+    h1 = 'Grid Output Min: [-1mm -1mm 1.7mm] Max: [1mm 1mm 1.7mm] Grid Size: [1mm 1mm 0mm] Unit: "mm"'
+    grid = fp.read_fld(_write_raw(tmp_path, h1 + "\n" + _EXPR + "\n" + _ROWS))
+    assert grid.header.coordinate_system == "Global"
+    assert grid.value.shape == (3, 3)
+    assert grid.header.step_m[0] == pytest.approx(1e-3)  # 1 mm grid
+
+
+def test_header_with_cs_keeps_its_name(tmp_path):
+    h1 = ('Grid Output Min: [-1mm -1mm 1.7mm] Max: [1mm 1mm 1.7mm] Grid Size: [1mm 1mm 0mm] '
+          'CS: "RelativeCS2" Unit: "mm"')
+    grid = fp.read_fld(_write_raw(tmp_path, h1 + "\n" + _EXPR + "\n" + _ROWS))
+    assert grid.header.coordinate_system == "RelativeCS2"
+
+
+def test_windows_crlf_file_and_trailing_spaces(tmp_path):
+    h1 = ('Grid Output Min: [-1mm -1mm 1.7mm]  Max: [1mm 1mm 1.7mm]   Grid Size: [1mm 1mm 0mm] '
+          'Unit: "mm"   ')
+    text = (h1 + "\n" + _EXPR + "  \n" + _ROWS).replace("\n", "\r\n")
+    path = tmp_path / "crlf.fld"
+    path.write_bytes(text.encode())
+    assert b"\r\n" in path.read_bytes()
+    grid = fp.read_fld(path)
+    assert grid.header.coordinate_system == "Global" and grid.header.unit == "mm"
+    assert grid.value.shape == (3, 3) and grid.header.expression.kind == "phase_rad"

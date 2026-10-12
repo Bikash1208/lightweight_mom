@@ -76,12 +76,31 @@ def test_upload_field_parses_the_real_example_file(client):
     body = resp.json()
     assert body["nx"] == 151 and body["ny"] == 151
     assert body["nan_count"] == 1  # the single feed-point NaN
+    assert body["coordinate_system"] == "RelativeCS2"  # shown in the Step 1 summary
     assert body["regularity"]["regular"] is True
     assert body["tm0_comparison"] is not None
     assert body["upload_id"]
     # 13C Step 1: "show immediately: a PNG of the reference phase map".
     assert body["phase_map_png_base64"]
     assert base64.b64decode(body["phase_map_png_base64"])[:8] == b"\x89PNG\r\n\x1a\n"
+
+
+def test_upload_field_without_cs_in_header_reports_global(client, tmp_path):
+    lines = ['Grid Output Min: [-5mm -5mm 1.7mm] Max: [5mm 5mm 1.7mm] Grid Size: [1mm 1mm 0mm] Unit: "mm"',
+             'X, Y, Z, Scalar data "CmplxPhase(ScalarZ(<Ex,Ey,Ez>))"']
+    for x in range(-5, 6):
+        for y in range(-5, 6):
+            lines.append(f"{x:.6e} {y:.6e} 1.7e+00 {0.05 * (x * x + y * y) ** 0.5:.6e}")
+    path = tmp_path / "global.fld"
+    path.write_bytes(("\r\n".join(lines) + "\r\n").encode())
+    with open(path, "rb") as fh:
+        resp = client.post(
+            "/api/hmsa/upload_field", files={"phase_file": ("global.fld", fh, "text/plain")},
+            data={"eps_r": "2.2", "thickness_mm": "1.575", "frequency_hz": "10.54e9"},
+        )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["coordinate_system"] == "Global" and body["nx"] == 11 and body["ny"] == 11
 
 
 def test_upload_field_rejects_a_malformed_file(client, tmp_path):

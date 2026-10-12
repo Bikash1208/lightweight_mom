@@ -587,6 +587,13 @@
         } else {
           tmEl.textContent = "";
         }
+        if (data.coordinate_system) {
+          const cs = document.createElement("span");
+          cs.className = "label";
+          cs.id = "upload-cs-label";
+          cs.textContent = `Coordinate system: ${data.coordinate_system}`;
+          labelsEl.appendChild(cs);
+        }
         if (data.nan_count > 0) {
           const span = document.createElement("span");
           span.className = "label";

@@ -116,6 +116,10 @@ def export_package(directory, name, result, table_row, alpha=None, notes=""):
     readme = build_board_readme(board, result, name, EPS_R, TAND, F0, files)
     extra = ["", "## Phase 23 model predictions on the held-out fine grid (theta 0.5 deg x phi 1 deg)", ""]
     extra += ["Model-only; none of these numbers has been compared with HFSS.", ""]
+
+    def plain(v):
+        return ", ".join(str(x) for x in v) if isinstance(v, list) else v
+
     for scen in ("port1", "port2", "port3", "port4", "all"):
         row = table_row.get(scen)
         if not row:

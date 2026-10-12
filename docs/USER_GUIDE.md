@@ -377,3 +377,31 @@ excluded from git — `docs/DEVELOPING.md`); the others need your own export.
 - **Surface-wave beta** options now have a one-line explanation each; each port's directivity is one consistent number
   (the fine 0.1° beam search).
 
+
+## Phase 23 additions: hexagonal ports and "Reduce sidelobes"
+
+- **4 hexagons** (Step 2, Ports > Multi-port > "4 hexagons"). Four regular hexagons in the compact two-row cluster, centred on
+  the origin, one monopole at each hexagon centre. Give the **hexagon side** (= circumradius, default 150 mm: flat-to-flat
+  259.8 mm, corner-to-corner 300 mm, area 58,457 mm², about 0.65× the 300.8 mm square) and the guard gap (0 = the
+  hexagons tile). "Two rows" (pointy-top) or "Two columns" (flat-top). Ports are numbered counter-clockwise from the
+  upper right (P1 upper row right, P2 upper row left, P3 lower row left, P4 lower row right), so the default beams
+  θ = 30°, φ = 45/135/225/315° point away from the cluster centre. Cells whose centre is outside every hexagon are empty. The
+  cells of all four hexagons sit on one shared 6.4 mm lattice. "Trim the board to the hexagon outline" makes the exported
+  substrate and ground follow the hexagons instead of the cluster's bounding rectangle.
+- **Hexagon exports.** Outlines are dashed in the layout PNG, on layer PORTS of the DXF and listed in the README; the STEP,
+  AEDT script, CSV and JSON work per cell as before. The trimmed-board AEDT script is generated but has not been run in AEDT.
+- **Reduce sidelobes** (Step 3, coded 1-bit multi-port boards). Re-chooses individual cell states to lower the highest co-polar
+  sidelobe outside each beam's main lobe (sidelobe cancelling, Johnson et al., IEEE TAP 2015). Choose what to optimise for:
+  *each port on its own* (HFSS Edit Sources one at a time), *all ports together* (cells and port phases), or *both* (worst case).
+  Gain loss per beam is limited (default 0.5 dB), pointing is held within 0.3° of the requested direction at the design
+  frequency, beam levels stay balanced and the point XPD does not fall by more than 1 dB. Run the design with
+  **Pointing correction** on first so the starting pointing is right.
+  The result shows before/after tables on a fine 0.5° × 1° grid the optimiser never used (directivity, pointing, co-pol SLL
+  globally and on the x/y cuts through each beam, XPD), the cells changed per port, and the same states re-evaluated at ±2 %
+  frequency with the two cells re-solved there. The pattern and exports then use the optimised states.
+- **Robust** (checkbox). Minimises the worst case over −2 % / 0 / +2 % frequency (cells re-solved at each) and, for all-ports,
+  over 20 seeded random port-phase errors of ±10°. Slower; the held-out table is reported at all three frequencies.
+- **All-ports sidelobe figures need one phase-locked source split four ways.** With independent per-port signals the
+  single-port figures apply.
+- Model-only. None of these numbers has been compared with an HFSS solve; the beam squints with frequency (about 0.5–1.5°
+  over ±2 %), so the 0.3° pointing figure is a design-frequency one.

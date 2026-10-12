@@ -1,16 +1,16 @@
 # four_port_hex150_opt_all
 
 4-port multi-port HMSA board, 10.54 GHz. Substrate eps_r 2.2, tan d 0.0009, 1.575 mm thick, PEC ground. Cells 6.4 mm. The board is 652.8 x 537.6 mm (x -326.4..326.4, y -268.8..268.8), one monopole per sub-aperture.
-2841 patches in total. Every coordinate is exact (rounded to 0.001 mm; the largest rounding applied was 0.0004736 mm), and each port's cells sit at that port's own positions, not on a shared lattice.
+2867 patches in total. Every coordinate is exact (rounded to 0.001 mm; the largest rounding applied was 0.0004736 mm), and each port's cells sit at that port's own positions, not on a shared lattice.
 
 ## Ports and feeds
 
 | Port | Feed (x, y) mm | Sub-aperture x mm | Sub-aperture y mm | Cells | Patches |
 |---|---|---|---|---|---|
 | 1 | (64.952, 112.5) | -70.4 .. 198.4 | -38.4 .. 268.8 | 1414 | 697 |
-| 2 | (-194.856, 112.5) | -326.4 .. -64 | -38.4 .. 268.8 | 1435 | 706 |
+| 2 | (-194.856, 112.5) | -326.4 .. -64 | -38.4 .. 268.8 | 1435 | 714 |
 | 3 | (-64.952, -112.5) | -198.4 .. 70.4 | -268.8 .. 38.4 | 1414 | 715 |
-| 4 | (194.856, -112.5) | 64 .. 326.4 | -268.8 .. 38.4 | 1435 | 723 |
+| 4 | (194.856, -112.5) | 64 .. 326.4 | -268.8 .. 38.4 | 1435 | 741 |
 
 ## Sub-aperture outlines
 
@@ -27,10 +27,10 @@ Polygon sub-apertures (cells whose centre is inside an outline carry the design;
 
 | Port | Beam | Target (θ, φ) | Predicted (θ, φ) | Pointing error ° | Directivity dBi | Cross-pol dB |
 |---|---|---|---|---|---|---|
-| 1 | 1 | (30.0°, 45.0°) | 29.5°, 45.0° | 0.50 | 25.3 | - |
-| 2 | 1 | (30.0°, 135.0°) | 29.5°, 135.2° | 0.51 | 25.4 | - |
-| 3 | 1 | (30.0°, 225.0°) | 29.5°, 225.4° | 0.54 | 25.2 | - |
-| 4 | 1 | (30.0°, 315.0°) | 29.6°, 315.0° | 0.40 | 25.5 | - |
+| 1 | 1 | (30.0°, 45.0°) | 29.7°, 44.6° | 0.36 | 25.1 | - |
+| 2 | 1 | (30.0°, 135.0°) | 29.9°, 134.8° | 0.14 | 25.3 | - |
+| 3 | 1 | (30.0°, 225.0°) | 29.8°, 224.6° | 0.28 | 25.1 | - |
+| 4 | 1 | (30.0°, 315.0°) | 29.9°, 315.0° | 0.10 | 25.4 | - |
 
 ## Cell states
 
@@ -67,15 +67,15 @@ Model-only: none of these numbers has been compared with an HFSS solve of this b
 
 Model-only; none of these numbers has been compared with HFSS.
 
-**port1**: directivity [25.32] dBi, pointing error [0.5] deg, co-pol SLL [-14.47] dB, x-cut [-15.08] dB, y-cut [-14.97] dB, XPD [18.9] dB
+**port1**: directivity 25.15 dBi, pointing error 0.36 deg, co-pol SLL -13.15 dB, x-cut -14.77 dB, y-cut -13.3 dB, XPD 18.6 dB
 
-**port2**: directivity [25.44] dBi, pointing error [0.51] deg, co-pol SLL [-14.45] dB, x-cut [-16.53] dB, y-cut [-14.45] dB, XPD [16.6] dB
+**port2**: directivity 25.35 dBi, pointing error 0.14 deg, co-pol SLL -11.86 dB, x-cut -11.87 dB, y-cut -16.04 dB, XPD 19.1 dB
 
-**port3**: directivity [25.17] dBi, pointing error [0.54] deg, co-pol SLL [-13.97] dB, x-cut [-16.3] dB, y-cut [-13.98] dB, XPD [17.5] dB
+**port3**: directivity 25.11 dBi, pointing error 0.28 deg, co-pol SLL -13.03 dB, x-cut -14.98 dB, y-cut -13.15 dB, XPD 17.1 dB
 
-**port4**: directivity [25.54] dBi, pointing error [0.4] deg, co-pol SLL [-15.56] dB, x-cut [-16.02] dB, y-cut [-15.8] dB, XPD [18.2] dB
+**port4**: directivity 25.42 dBi, pointing error 0.1 deg, co-pol SLL -12.47 dB, x-cut -12.5 dB, y-cut -15.13 dB, XPD 17.2 dB
 
-**all**: directivity [22.74, 22.95, 22.58, 22.99] dBi, pointing error [0.36, 0.7, 0.22, 0.3] deg, co-pol SLL [-22.98, -23.05, -22.78, -21.12] dB, x-cut [-24.68, -25.77, -25.96, -25.38] dB, y-cut [-22.89, -25.02, -23.99, -20.7] dB, XPD [16.9, 18.0, 16.9, 17.5] dB
+**all**: directivity 23.17, 22.8, 23.13, 23.13 dBi, pointing error 0.22, 0.71, 0.41, 0.73 deg, co-pol SLL -23.32, -23.08, -22.76, -21.66 dB, x-cut -24.56, -25.88, -24.64, -24.17 dB, y-cut -23.09, -23.36, -22.99, -20.67 dB, XPD 17.0, 22.1, 16.5, 21.5 dB
 
 ## Port phases for the all-ports case (HFSS > Excitations > Edit Sources)
 
@@ -88,4 +88,6 @@ Model-only; none of these numbers has been compared with HFSS.
 
 Port 1 is the 0 deg reference. For a one-port-at-a-time run set that port to 1 W and the others to 0 W (the cell states were optimised for the mode named in this file).
 
-Cell states optimised for: all four ports excited together (cells and port phases). Set the phases above in HFSS.
+Cell states optimised for ALL FOUR ports excited together.
+
+**All-ports SLL needs ONE phase-locked source split four ways** (the cell states and the port phases above were optimised for the four ports radiating coherently with fixed relative phases). If the four ports are driven by independent signals the all-ports sidelobe figures do not apply: use the single-port metric (each port on its own) instead.

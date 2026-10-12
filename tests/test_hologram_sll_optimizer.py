@@ -47,11 +47,11 @@ def test_recovers_the_known_optimum_of_a_small_array():
     port, beam, d, u = _linear_array(n)
     port.state[:] = (0, 0, 1, 0, 0, 1, 0, 0)  # a poor starting sequence
     cone_u = np.sin(np.radians(beam.cone_deg))
-    start_psl, start_peak = _psl_db(port.state, port.c_co, u, cone_u)
+    start_psl, start_peak = _psl_db(port.state, port.c_co[0], u, cone_u)
     # brute force over all 2^8 sequences with the same gain budget (peak within 3 dB of the start's)
     best = (np.inf, None)
     for bits in itertools.product((0, 1), repeat=n):
-        psl, peak = _psl_db(bits, port.c_co, u, cone_u)
+        psl, peak = _psl_db(bits, port.c_co[0], u, cone_u)
         if peak >= start_peak - 3.0 and psl < best[0] - 1e-12:
             best = (psl, bits)
     assert best[0] < start_psl - 2.0  # there is real room to improve
@@ -64,7 +64,7 @@ def test_recovers_the_known_optimum_of_a_small_array():
         seed=1,
     )
     res = optimise_sidelobes([port], [beam], [Scenario("only", (0,), (0,))], d, cfg)
-    got, peak = _psl_db(res.state[0], port.c_co, u, cone_u)
+    got, peak = _psl_db(res.state[0], port.c_co[0], u, cone_u)
     assert peak >= start_peak - 3.0 - 1e-6
     assert got == pytest.approx(best[0], abs=0.05)  # the optimum is found (the search space is exhaustible)
 
@@ -116,3 +116,42 @@ def test_same_seed_same_result():
         OptimiserConfig(max_gain_loss_db=2.0, anneal_steps=300, seed=8),
     )
     assert other.objective_after <= runs[0].objective_before
+
+
+def _two_frequency_array(n=10):
+    """The same array at two 'frequencies': element spacing 0.5 and 0.54 wavelengths."""
+    port, beam, d, u = _linear_array(n, spacing_wl=0.5)
+    idx = np.arange(n) - (n - 1) / 2.0
+    c2 = np.exp(1j * 2.0 * np.pi * 0.54 * np.outer(idx, u))
+    port.c_co.append(c2)
+    port.c_cross.append(port.c_cross[0].copy())
+    port.s_states.append(port.s_states[0].copy())
+    return port, beam, d, u
+
+
+def test_robust_scenarios_minimise_the_worst_frequency():
+    from src.hologram.sll_optimizer import Scenario
+
+    port, beam, d, _u = _two_frequency_array()
+    scs = [Scenario("f0", (0,), (0,), 1.0, None, 0), Scenario("f1", (0,), (0,), 1.0, None, 1)]
+    cfg = OptimiserConfig(max_gain_loss_db=3.0, max_pointing_shift_deg=2.0, max_level_spread_db=3.0)
+    port.state[:] = (0, 0, 1, 0, 0, 1, 0, 0, 1, 0)
+    res = optimise_sidelobes([port], [beam], scs, d, cfg)
+    assert set(res.after) == {"f0", "f1"}
+    worst_before = max(r.sll_db for r in res.before.values())
+    worst_after = max(r.sll_db for r in res.after.values())
+    assert worst_after < worst_before - 1.0
+    # the two instances share one set of cell states
+    assert res.flips[0]
+
+
+def test_absolute_pointing_constraint_holds_against_the_requested_direction():
+    port, beam, d, _u = _linear_array(10)
+    port.state[:] = (0, 0, 1, 0, 0, 1, 0, 0, 1, 0)
+    cfg = OptimiserConfig(
+        max_gain_loss_db=3.0, max_pointing_error_deg=0.3, max_pointing_shift_deg=9.0, max_level_spread_db=3.0
+    )
+    res = optimise_sidelobes([port], [beam], [Scenario("only", (0,), (0,))], d, cfg)
+    rep = res.after["only"]
+    # beam requested at broadside: the refined peak stays within the limit (small margin for the lattice)
+    assert rep.beam_shift_deg[0] <= 0.3 + 1e-6

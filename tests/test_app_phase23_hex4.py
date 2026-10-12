@@ -219,6 +219,20 @@ def test_sidelobe_endpoint_end_to_end(tmp_path, monkeypatch):
     from src.app.main import create_app
 
     monkeypatch.setenv("LWMOM_APP_DATA_DIR", str(tmp_path / "data"))
+    import types
+
+    import src.hologram.auto_states as auto_mod
+
+    def fake_auto_states(n_bits, substrate, f, period_m, fixed_L_mm=None, cache_dir=None, **_):
+        shift = (f - F) / 1e9 * 60.0  # no MoM in the fast suite: a linear stand-in for the re-solved cells
+        return types.SimpleNamespace(
+            states=[
+                types.SimpleNamespace(gamma=np.exp(1j * np.radians(138.0))),
+                types.SimpleNamespace(gamma=np.exp(1j * np.radians(-41.0 - shift))),
+            ]
+        )
+
+    monkeypatch.setattr(auto_mod, "auto_states", fake_auto_states)
     client = TestClient(create_app())
 
     def wait(job_id, timeout=300):
@@ -253,7 +267,7 @@ def test_sidelobe_endpoint_end_to_end(tmp_path, monkeypatch):
     assert set(info["before"]) == {"port1", "port2", "port3", "port4", "all"}
     assert info["held_out_grid"] == {"theta_step_deg": 0.5, "phi_step_deg": 1.0}
     assert sum(info["cells_changed"].values()) <= 4 * 15
-    assert set(info["frequency_check"]) == {"-2%", "+2%"}
+    assert set(info["frequency_check"]) == {"10.33 GHz", "10.75 GHz"}
     for name in ("port1", "port2"):
         b0, b1 = info["before"][name]["beams"][0], info["after"][name]["beams"][0]
         assert b1["sll_global_db"] <= b0["sll_global_db"] + 0.05

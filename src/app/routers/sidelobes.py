@@ -7,6 +7,7 @@ held-out grid the optimiser never saw (`hologram.sll_board`). Model-only."""
 
 from typing import Literal
 
+import numpy as np
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
@@ -17,11 +18,12 @@ from ...hologram.sll_board import (
     build_problem,
     cells_changed,
     evaluate,
+    evaluate_phase_error_draws,
     optimise,
 )
 from ...hologram.sll_optimizer import OptimiserConfig
 from ..jobs import JobStatus
-from ..storage import job_output_dir
+from ..storage import app_data_dir, job_output_dir
 
 router = APIRouter(prefix="/api/sidelobes", tags=["sidelobes"])
 
@@ -46,6 +48,12 @@ class SidelobeRequest(BaseModel):
     optimise_port_phases: bool = True  # all/both modes
     seed: int = 0
     frequency_check_percent: float = 2.0
+    # Robust: minimise the worst case over the design frequency and +-frequency_check_percent (the two
+    # cells re-solved at each) and, for all-ports mode, over seeded random port-phase errors.
+    robust: bool = False
+    n_phase_draws: int = 20
+    phase_error_deg: float = 10.0
+    max_pointing_error_deg: float = 0.3  # absolute, vs the requested direction, at the design frequency
 
 
 def _round(x):
@@ -85,15 +93,25 @@ def _run_optimize_job(job, source_result, body):
         raise config_invalid(message="Reduce sidelobes needs a coded 1-bit multi-port design")
     job.progress_message = "Building the cell-wise pattern model..."
     port_beams = [[(b["theta_deg"], b["phi_deg"]) for b in pb] for pb in body["port_beams"]]
+    f0 = body["frequency_hz"]
+    pct = body["frequency_check_percent"] / 100.0
+    # the shifted frequencies on a 10 MHz grid (10.54 GHz -> 10.33 / 10.75 GHz)
+    freqs = [round(f0 * (1 - pct) / 1e7) * 1e7, round(f0 * (1 + pct) / 1e7) * 1e7] if pct > 0 else []
+    draws = body["n_phase_draws"] if (body["robust"] and body["mode"] in ("all", "both")) else 0
     prob = build_problem(
         source_result,
-        body["frequency_hz"],
+        f0,
         body["eps_r"],
         body["tan_delta"],
         body["thickness_mm"],
         body["period_mm"],
         port_beams,
         polarization=body["polarization"],
+        extra_frequencies_hz=freqs,
+        states_cache_dir=app_data_dir() / "auto_states_cache",
+        n_phase_draws=draws,
+        phase_error_deg=body["phase_error_deg"],
+        progress=lambda m: setattr(job, "progress_message", m),
     )
     mode = body["mode"]
     if mode in ("all", "both") and n_ports < 2:
@@ -106,19 +124,28 @@ def _run_optimize_job(job, source_result, body):
         max_flips=body["max_flips"],
         optimise_alpha=bool(body["optimise_port_phases"]) and mode in ("all", "both"),
         seed=body["seed"],
+        max_pointing_error_deg=body["max_pointing_error_deg"],
     )
     job.progress_message = f"Optimising cell states ({mode}, up to {cfg.max_flips} changes)..."
-    levels, alpha, runs = optimise(prob, mode, cfg)
+    levels, alpha, runs = optimise(prob, mode, cfg, robust=body["robust"])
     job.progress_message = "Measuring the optimised design on the held-out grid..."
     after = evaluate(prob, levels, alpha, grid=grid)
     freq_checks = {}
-    pct = body["frequency_check_percent"] / 100.0
-    if pct > 0:
-        for sign in (-1, 1):
-            f = body["frequency_hz"] * (1 + sign * pct)
-            freq_checks[f"{sign * body['frequency_check_percent']:+g}%"] = _table(
-                evaluate(prob, levels, alpha, frequency_hz=f, grid=grid)
-            )
+    for f in freqs:
+        freq_checks[f"{f / 1e9:.2f} GHz"] = _table(evaluate(prob, levels, alpha, frequency_hz=f, grid=grid))
+    draw_stats = None
+    if draws and len(prob.ports) > 1:
+        ds = evaluate_phase_error_draws(prob, levels, alpha, grid=grid)
+        worst = [max(b["sll_global_db"] for b in d["beams"]) for d in ds]
+        draw_stats = {
+            "n": len(ds),
+            "sigma_deg": body["phase_error_deg"],
+            "worst_beam_sll_db": {
+                "median": _round(np.median(worst)),
+                "worst": _round(max(worst)),
+                "best": _round(min(worst)),
+            },
+        }
     new = apply_levels(source_result, prob, levels, alpha, evaluation=after)
     new["sidelobe_optimisation"].update(
         {
@@ -129,8 +156,14 @@ def _run_optimize_job(job, source_result, body):
             "before": _table(before),
             "after": _table(after),
             "frequency_check": freq_checks,
-            "frequency_check_note": "same cell states re-evaluated at the shifted frequency (reference wave and "
-            "far field moved, the two cells' own phases kept at the design frequency); not re-optimised",
+            "frequency_check_note": "the same cell states re-evaluated at each frequency with the two cells' "
+            "reflection coefficients RE-SOLVED there (Phase 22 automatic-states method) and the reference wave "
+            "moved; not re-optimised unless 'robust' was on",
+            "robust": body["robust"],
+            "phase_error_draws": draw_stats,
+            "starting_design_pointing_corrected": bool(source_result.get("refinement")),
+            "all_ports_note": "All-ports sidelobe figures need ONE phase-locked source split across the ports; "
+            "with independent per-port signals use the single-port figures.",
             "cells_changed": cells_changed(prob, levels),
             "label": "MODEL_ONLY_SIDELOBE_OPTIMISATION",
         }

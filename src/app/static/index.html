@@ -459,6 +459,12 @@
             <input type="number" step="any" id="sll-max-loss" value="0.5" min="0" style="width:6rem" /></label>
           <label>Iteration budget <span class="unit">cell changes</span>
             <input type="number" step="1" id="sll-budget" value="400" min="1" style="width:6rem" /></label>
+          <label style="display:flex;gap:0.5rem;align-items:center"><input type="checkbox" id="sll-robust" style="width:auto" />
+            Robust <span class="unit">(worst case over &minus;2 % / 0 / +2 % frequency with the two cells re-solved at each, and for all-ports
+            over 20 random port-phase errors of &plusmn;10&deg;; slower)</span></label>
+          <p class="status">Beam pointing is held within 0.3&deg; of the requested direction at the design frequency. For
+          that to be meaningful, run the design with &ldquo;Pointing correction&rdquo; on first. All-ports sidelobe figures need one
+          phase-locked source split across the ports; with independent per-port signals use the single-port figures.</p>
           <button type="button" id="sll-run-btn">Reduce sidelobes</button>
           <p class="status" id="sll-status"></p>
           <div id="sll-results"></div>
@@ -2286,6 +2292,7 @@
           mode: document.getElementById("sll-mode").value,
           max_gain_loss_db: parseFloat(document.getElementById("sll-max-loss").value),
           max_flips: parseInt(document.getElementById("sll-budget").value, 10),
+          robust: document.getElementById("sll-robust").checked,
         };
         statusEl.textContent = "Optimising (this takes a few minutes for a large board)...";
         const submitted = await LWMOM.postJson("/api/sidelobes/optimize", body);
@@ -2304,7 +2311,11 @@
         const freq = Object.entries(o.frequency_check || {}).map(([f, t]) => sllTableHtml(`Re-evaluated at ${f} (not re-optimised)`, t)).join("");
         document.getElementById("sll-results").innerHTML =
           `<p class="status">Cells changed &mdash; ${changed}. Held-out grid ${o.held_out_grid.theta_step_deg}&deg; &times; ${o.held_out_grid.phi_step_deg}&deg;.</p>` +
-          alpha + sllTableHtml("Before", o.before) + sllTableHtml("After", o.after) + freq +
+          alpha + (o.starting_design_pointing_corrected ? "" :
+            "<p class=\"status warn\">The starting design was not pointing-corrected; run it with Pointing correction on for a meaningful absolute-pointing constraint.</p>") +
+          (o.phase_error_draws ? `<p class="status">${o.phase_error_draws.n} random port-phase errors (&plusmn;${o.phase_error_draws.sigma_deg}&deg;): worst-beam SLL median ${o.phase_error_draws.worst_beam_sll_db.median} dB, worst ${o.phase_error_draws.worst_beam_sll_db.worst} dB.</p>` : "") +
+          `<p class="status">${o.all_ports_note}</p>` +
+          sllTableHtml("Before", o.before) + sllTableHtml("After", o.after) + freq +
           `<p class="status">${o.frequency_check_note}</p>`;
         statusEl.textContent = "Done. Pattern and export now use the optimised design.";
       } catch (err) {

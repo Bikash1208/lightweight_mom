@@ -1,16 +1,16 @@
 # four_port_hex150_opt_single
 
 4-port multi-port HMSA board, 10.54 GHz. Substrate eps_r 2.2, tan d 0.0009, 1.575 mm thick, PEC ground. Cells 6.4 mm. The board is 652.8 x 537.6 mm (x -326.4..326.4, y -268.8..268.8), one monopole per sub-aperture.
-2846 patches in total. Every coordinate is exact (rounded to 0.001 mm; the largest rounding applied was 0.0004736 mm), and each port's cells sit at that port's own positions, not on a shared lattice.
+2838 patches in total. Every coordinate is exact (rounded to 0.001 mm; the largest rounding applied was 0.0004736 mm), and each port's cells sit at that port's own positions, not on a shared lattice.
 
 ## Ports and feeds
 
 | Port | Feed (x, y) mm | Sub-aperture x mm | Sub-aperture y mm | Cells | Patches |
 |---|---|---|---|---|---|
-| 1 | (64.952, 112.5) | -70.4 .. 198.4 | -38.4 .. 268.8 | 1414 | 687 |
-| 2 | (-194.856, 112.5) | -326.4 .. -64 | -38.4 .. 268.8 | 1435 | 717 |
-| 3 | (-64.952, -112.5) | -198.4 .. 70.4 | -268.8 .. 38.4 | 1414 | 719 |
-| 4 | (194.856, -112.5) | 64 .. 326.4 | -268.8 .. 38.4 | 1435 | 723 |
+| 1 | (64.952, 112.5) | -70.4 .. 198.4 | -38.4 .. 268.8 | 1414 | 693 |
+| 2 | (-194.856, 112.5) | -326.4 .. -64 | -38.4 .. 268.8 | 1435 | 698 |
+| 3 | (-64.952, -112.5) | -198.4 .. 70.4 | -268.8 .. 38.4 | 1414 | 716 |
+| 4 | (194.856, -112.5) | 64 .. 326.4 | -268.8 .. 38.4 | 1435 | 731 |
 
 ## Sub-aperture outlines
 
@@ -27,10 +27,10 @@ Polygon sub-apertures (cells whose centre is inside an outline carry the design;
 
 | Port | Beam | Target (θ, φ) | Predicted (θ, φ) | Pointing error ° | Directivity dBi | Cross-pol dB |
 |---|---|---|---|---|---|---|
-| 1 | 1 | (30.0°, 45.0°) | 29.5°, 45.0° | 0.50 | 25.8 | - |
-| 2 | 1 | (30.0°, 135.0°) | 29.4°, 135.0° | 0.60 | 25.9 | - |
-| 3 | 1 | (30.0°, 225.0°) | 29.5°, 225.2° | 0.51 | 25.8 | - |
-| 4 | 1 | (30.0°, 315.0°) | 29.3°, 314.8° | 0.71 | 25.9 | - |
+| 1 | 1 | (30.0°, 45.0°) | 29.8°, 44.8° | 0.22 | 25.8 | - |
+| 2 | 1 | (30.0°, 135.0°) | 29.8°, 135.0° | 0.20 | 25.8 | - |
+| 3 | 1 | (30.0°, 225.0°) | 29.8°, 224.8° | 0.22 | 25.8 | - |
+| 4 | 1 | (30.0°, 315.0°) | 29.8°, 315.2° | 0.22 | 25.8 | - |
 
 ## Cell states
 
@@ -67,14 +67,14 @@ Model-only: none of these numbers has been compared with an HFSS solve of this b
 
 Model-only; none of these numbers has been compared with HFSS.
 
-**port1**: directivity [25.8] dBi, pointing error [0.5] deg, co-pol SLL [-16.97] dB, x-cut [-20.12] dB, y-cut [-17.73] dB, XPD [17.5] dB
+**port1**: directivity 25.76 dBi, pointing error 0.22 deg, co-pol SLL -17.25 dB, x-cut -18.22 dB, y-cut -17.31 dB, XPD 18.2 dB
 
-**port2**: directivity [25.88] dBi, pointing error [0.6] deg, co-pol SLL [-17.35] dB, x-cut [-19.17] dB, y-cut [-17.4] dB, XPD [17.2] dB
+**port2**: directivity 25.84 dBi, pointing error 0.2 deg, co-pol SLL -16.75 dB, x-cut -17.49 dB, y-cut -17.38 dB, XPD 18.3 dB
 
-**port3**: directivity [25.81] dBi, pointing error [0.51] deg, co-pol SLL [-16.83] dB, x-cut [-19.66] dB, y-cut [-17.36] dB, XPD [17.6] dB
+**port3**: directivity 25.75 dBi, pointing error 0.22 deg, co-pol SLL -17.24 dB, x-cut -18.58 dB, y-cut -17.29 dB, XPD 18.8 dB
 
-**port4**: directivity [25.85] dBi, pointing error [0.71] deg, co-pol SLL [-17.36] dB, x-cut [-19.59] dB, y-cut [-17.64] dB, XPD [17.5] dB
+**port4**: directivity 25.85 dBi, pointing error 0.22 deg, co-pol SLL -17.11 dB, x-cut -17.6 dB, y-cut -17.18 dB, XPD 17.8 dB
 
-**all**: directivity [20.01, 20.07, 19.8, 19.99] dBi, pointing error [0.58, 0.22, 0.67, 0.3] deg, co-pol SLL [-13.88, -13.87, -13.08, -14.27] dB, x-cut [-14.39, -13.86, -15.25, -15.66] dB, y-cut [-15.23, -16.38, -15.35, -16.98] dB, XPD [19.6, 15.8, 18.6, 16.2] dB
+**all**: directivity 20.28, 19.72, 20.24, 19.91 dBi, pointing error 0.67, 1.06, 0.72, 0.86 deg, co-pol SLL -12.38, -12.67, -12.62, -13.39 dB, x-cut -15.35, -14.23, -16.55, -14.2 dB, y-cut -16.85, -17.92, -18.14, -18.14 dB, XPD 17.4, 21.2, 18.7, 18.6 dB
 
-Cell states optimised for: each port excited on its own.
+Cell states optimised for each port excited on its own (one port at a time in HFSS).

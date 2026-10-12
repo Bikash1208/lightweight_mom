@@ -18,7 +18,12 @@ SLL definitions (documented because the repo's "Phase 18" metric text could not 
 of a beam is `beam_polarization_metrics`' (highest co-pol level outside the beam's first-null cone and
 nearer to it than to any other requested beam), relative to the beam's own fine-resolution peak. The
 x / y cut SLL is the same quantity along the line of directions through the beam parallel to the board x
-axis (v = v0) / y axis (u = u0) in the u-v plane.
+axis (v = v0) / y axis (u = u0) in the u-v plane. This is the Phase 18 cut definition (constant v / constant
+u through the beam peak: `sll_cut_along_x_db` / `sll_cut_along_y_db` in `scripts/adhoc/coded4.py` on branch
+`phase18-four-port-300mm`), with the main lobe excluded by the first-null cone.
+
+Frequency behaviour: `build_problem(extra_frequencies_hz=...)` RE-SOLVES the two cells at each frequency
+(Phase 22 `auto_states`, same square side) and moves the reference wave with the TM0 phase constant.
 """
 
 from dataclasses import dataclass, field
@@ -98,6 +103,18 @@ def _extent_m(ports, period_m):
     return float(max(xs.max() - xs.min(), ys.max() - ys.min()) + period_m)
 
 
+def _dbeta(problem, frequency_hz):
+    """Change of the TM0 surface-wave phase constant from the design frequency to `frequency_hz`."""
+    if abs(frequency_hz - problem.frequency_hz) <= 1e-3:
+        return 0.0
+    from ..dispersion.analytic_tm0 import tm0_beta
+
+    h = problem.substrate.thickness
+    return tm0_beta(frequency_hz, problem.substrate.eps_r, h) - tm0_beta(
+        problem.frequency_hz, problem.substrate.eps_r, h
+    )
+
+
 def build_problem(
     result,
     frequency_hz,
@@ -111,8 +128,21 @@ def build_problem(
     du_far=0.025,
     du_near=0.012,
     dtype=np.complex64,
+    extra_frequencies_hz=(),
+    states_cache_dir=None,
+    n_phase_draws=0,
+    phase_error_deg=10.0,
+    draw_seed=0,
+    progress=None,
 ):
-    """`port_beams`: `[[(theta, phi), ...], ...]` the requested beams of each port, in port order."""
+    """`port_beams`: `[[(theta, phi), ...], ...]` the requested beams of each port, in port order.
+
+    `extra_frequencies_hz`: more frequencies to model (frequency checks, robust optimisation). At each,
+    the two cells' reflection coefficients are RE-SOLVED with the Phase 22 automatic-states machinery
+    (the same square side as the design's state 1, the empty slab's exact value) and the reference wave
+    is moved with the TM0 phase constant; the design frequency is index 0. `n_phase_draws` seeded draws
+    of independent port-phase errors (uniform within +-`phase_error_deg`; the first port is the phase
+    reference) are kept for the all-ports scenario."""
     two_state = result.get("two_state")
     if not two_state or "achieved_phase_deg" not in two_state:
         raise ValueError("the sidelobe optimiser needs a coded 1-bit multi-port design result")
@@ -153,6 +183,19 @@ def build_problem(
         polarization,
         geometry,
     )
+    prob.frequencies_hz = (frequency_hz, *[float(f) for f in extra_frequencies_hz])
+    prob.freq_psi = {frequency_hz: psi}
+    if len(prob.frequencies_hz) > 1:
+        from .auto_states import auto_states
+
+        g1 = geometry[1]
+        if g1.get("kind") != "rectangle":
+            raise ValueError("per-frequency re-solving needs a square state 1 (rectangle geometry)")
+        for f in prob.frequencies_hz[1:]:
+            if progress:
+                progress(f"re-solving the two cell states at {f / 1e9:.3f} GHz")
+            a = auto_states(1, prob.substrate, f, period_m, fixed_L_mm=float(g1["L_mm"]), cache_dir=states_cache_dir)
+            prob.freq_psi[f] = tuple(float(np.angle(st.gamma)) for st in a.states)
     lam = free_space_wavelength(frequency_hz)
     prob.directions = uv_direction_set(
         du_far=du_far,
@@ -162,7 +205,6 @@ def build_problem(
         patch_radius_deg=3.5,
         patch_step=0.004,
     )
-    green = LayeredGreenFunction(prob.substrate, frequency_hz, backing="pec")
     patch_idx = np.nonzero(prob.directions.tag >= 0)[0]
     cross_pol = ORTHOGONAL_POLARIZATION[polarization]
     from ..pattern.cellwise_pattern import DirectionSet
@@ -170,78 +212,100 @@ def build_problem(
     patch_dirs = DirectionSet(
         *(getattr(prob.directions, k)[patch_idx] for k in ("theta_deg", "phi_deg", "u", "v", "tag"))
     )
+    greens = {f: LayeredGreenFunction(prob.substrate, f, backing="pec") for f in prob.frequencies_hz}
     for bp in ports:
         x = bp.x_m[bp.owned]
         y = bp.y_m[bp.owned]
-        c_co = cell_contributions(
-            x, y, bp.feed_xy_m, prob.directions, frequency_hz, green, period_m, period_m, polarization, dtype=dtype
-        )
-        c_x = cell_contributions(
-            x, y, bp.feed_xy_m, patch_dirs, frequency_hz, green, period_m, period_m, cross_pol, dtype=dtype
-        )
-        e = bp.e_ref[bp.owned]
-        s_states = np.stack([e * np.exp(1j * psi[0]), e * np.exp(1j * psi[1])], axis=1)
+        rho = np.hypot(x - bp.feed_xy_m[0], y - bp.feed_xy_m[1])
+        c_cos, c_xs, s_list = [], [], []
+        for f in prob.frequencies_hz:
+            c_cos.append(
+                cell_contributions(
+                    x, y, bp.feed_xy_m, prob.directions, f, greens[f], period_m, period_m, polarization, dtype=dtype
+                )
+            )
+            c_xs.append(
+                cell_contributions(
+                    x, y, bp.feed_xy_m, patch_dirs, f, greens[f], period_m, period_m, cross_pol, dtype=dtype
+                )
+            )
+            e = bp.e_ref[bp.owned] * np.exp(-1j * _dbeta(prob, f) * rho)
+            psi_f = prob.freq_psi[f]
+            s_list.append(np.stack([e * np.exp(1j * psi_f[0]), e * np.exp(1j * psi_f[1])], axis=1))
         amp = 1.0 if amplitudes is None else float(amplitudes[bp.port_id])
         prob.opt_ports.append(
-            OptPort(bp.port_id, c_co, c_x, s_states, bp.levels0[bp.owned].astype(int), bp.free.copy(), amp)
+            OptPort(bp.port_id, c_cos, c_xs, s_list, bp.levels0[bp.owned].astype(int), bp.free.copy(), amp)
         )
-    # beams / scenarios
-    own_extent = {}
-    for bp in ports:
-        one = [bp]
-        own_extent[bp.port_id] = _extent_m(one, period_m)
+    # beams / scenarios (a beam's main-lobe cone follows the extent of the sub-aperture that radiates it)
+    own_extent = {bp.port_id: _extent_m([bp], period_m) for bp in ports}
     for k, (th, ph, _pol) in enumerate(beams):
         prob.opt_beams.append(
             OptBeam(k, beam_port[k], th, ph, first_null_half_width_deg(own_extent[beam_port[k]], lam, th))
         )
+    rng = np.random.default_rng(draw_seed)
+    prob.draws = [
+        {
+            bp.port_id: (
+                0.0 if bp.port_id == ports[0].port_id else float(rng.uniform(-phase_error_deg, phase_error_deg))
+            )
+            for bp in ports
+        }
+        for _ in range(n_phase_draws)
+    ]
+    nf = len(prob.frequencies_hz)
+
+    def suffix(fi):
+        return "" if fi == 0 else f"@{prob.frequencies_hz[fi] / 1e9:.2f}GHz"
+
     for bp in ports:
         ids = tuple(k for k, pid in enumerate(beam_port) if pid == bp.port_id)
-        prob.scenarios.append(
-            Scenario(
-                f"port{bp.port_id + 1}",
-                (bp.port_id,),
-                ids,
-                1.0,
-                tuple(first_null_half_width_deg(own_extent[bp.port_id], lam, beams[k][0]) for k in ids),
-            )
-        )
+        cones = tuple(first_null_half_width_deg(own_extent[bp.port_id], lam, beams[k][0]) for k in ids)
+        for fi in range(nf):
+            prob.scenarios.append(Scenario(f"port{bp.port_id + 1}{suffix(fi)}", (bp.port_id,), ids, 1.0, cones, fi))
     if len(ports) > 1:
         ids = tuple(range(len(beams)))
-        prob.scenarios.append(
-            # each beam is radiated by its OWN sub-aperture, so its main-lobe cone follows that port's
-            # extent, not the whole board's (a board-sized cone would count a beam's own skirt as sidelobe)
-            Scenario(
-                "all",
-                tuple(bp.port_id for bp in ports),
-                ids,
-                1.0,
-                tuple(first_null_half_width_deg(own_extent[beam_port[k]], lam, beams[k][0]) for k in ids),
+        cones = tuple(first_null_half_width_deg(own_extent[beam_port[k]], lam, beams[k][0]) for k in ids)
+        all_ports = tuple(bp.port_id for bp in ports)
+        for fi in range(nf):
+            prob.scenarios.append(Scenario(f"all{suffix(fi)}", all_ports, ids, 1.0, cones, fi))
+        for j, errs in enumerate(prob.draws):
+            prob.scenarios.append(
+                Scenario(f"all@draw{j}", all_ports, ids, 1.0, cones, j % nf, tuple(errs.items()), False)
             )
-        )
     return prob
 
 
-def optimise(problem, mode, config=None, alpha_deg=None):
+def optimise(problem, mode, config=None, alpha_deg=None, robust=False):
     """`mode`: 'single' (each port alone, independent per-port problems), 'all' (all ports together,
     cells + port phases), 'both' (weighted worst case over the single-port scenarios and the all-ports
-    one). Returns `(levels_by_port, alpha_deg, OptimiserResult list)`; `levels_by_port` maps port id ->
-    (N,) int in `OptPort` order."""
+    one). `robust=True` minimises the worst case over every modelled frequency (cells re-solved there)
+    and, for 'all'/'both', over the seeded port-phase-error draws. Returns `(levels_by_port, alpha_deg,
+    OptimiserResult list)`; `levels_by_port` maps port id -> (N,) int in `OptPort` order."""
     cfg = config or OptimiserConfig()
-    by_name = {s.name: s for s in problem.scenarios}
     levels = {p.port_id: np.array(p.state, copy=True) for p in problem.opt_ports}
     alpha = {p.port_id: 0.0 for p in problem.opt_ports}
     if alpha_deg:
         alpha.update(alpha_deg)
+
+    def pick(pred):
+        out = [s for s in problem.scenarios if pred(s)]
+        if not robust:
+            out = [s for s in out if s.freq_index == 0 and s.constrain]
+        else:
+            # nominal instances first (they rank the candidates), then the phase-error draws
+            out = sorted(out, key=lambda s: (not s.constrain, s.freq_index))
+        return out
+
     results = []
     if mode == "single":
         for p in problem.opt_ports:
-            sc = by_name[f"port{p.port_id + 1}"]
+            scs = pick(lambda s, pid=p.port_id: s.ports == (pid,))
             sub_cfg = OptimiserConfig(**{**cfg.__dict__, "optimise_alpha": False})
-            res = optimise_sidelobes([p], problem.opt_beams, [sc], problem.directions, sub_cfg)
+            res = optimise_sidelobes([p], problem.opt_beams, scs, problem.directions, sub_cfg)
             levels[p.port_id] = res.state[p.port_id]
             results.append(res)
     elif mode in ("all", "both"):
-        scs = [by_name["all"]] if mode == "all" else list(problem.scenarios)
+        scs = pick(lambda s: len(s.ports) > 1) if mode == "all" else pick(lambda s: True)
         res = optimise_sidelobes(problem.opt_ports, problem.opt_beams, scs, problem.directions, cfg, alpha)
         levels = res.state
         alpha = res.alpha_deg
@@ -273,42 +337,52 @@ class HeldOutGrid:
     patch_step_deg: float = 0.1
 
 
-def _aperture(problem, bp: BoardPort, levels_flat, dbeta_rad_per_m=0.0):
+def _aperture(problem, bp: BoardPort, levels_flat, dbeta_rad_per_m=0.0, psi=None):
     """Scalar aperture field of port `bp` (zero outside its cells) for per-cell `levels_flat`.
-    `dbeta_rad_per_m` moves the reference wave to another frequency (`exp(-j dbeta rho)`); the two
-    states' own phases are kept at their design-frequency values."""
+    `dbeta_rad_per_m` moves the reference wave to another frequency (`exp(-j dbeta rho)`); `psi` is
+    the (state 0, state 1) phase pair at that frequency (default: the design frequency's)."""
+    psi = problem.psi_rad if psi is None else psi
     lev = np.zeros(bp.x_m.shape, dtype=int)
     lev[bp.owned] = levels_flat
-    psi = np.where(lev == 1, problem.psi_rad[1], problem.psi_rad[0])
+    psi_cell = np.where(lev == 1, psi[1], psi[0])
     e_ref = bp.e_ref
     if dbeta_rad_per_m:
         rho = np.hypot(bp.x_m - bp.feed_xy_m[0], bp.y_m - bp.feed_xy_m[1])
         e_ref = e_ref * np.exp(-1j * dbeta_rad_per_m * rho)
-    return np.where(bp.owned, e_ref * np.exp(1j * psi), 0.0)
+    return np.where(bp.owned, e_ref * np.exp(1j * psi_cell), 0.0)
+
+
+def _psi_at(problem, frequency_hz):
+    """The cells' phase pair at `frequency_hz`: re-solved values when the problem carries them for that
+    frequency, else the design-frequency pair (the caller should know which)."""
+    for f, psi in problem.freq_psi.items():
+        if abs(f - frequency_hz) <= 1.0:
+            return psi
+    return problem.psi_rad
 
 
 class _FarField:
-    """E_theta, E_phi of the whole board for a given per-port complex excitation."""
+    """E_theta, E_phi of the board for a per-port complex excitation (memoised per point set)."""
 
-    def __init__(self, problem, levels, alpha_deg, frequency_hz, active, amplitudes=None):
+    def __init__(self, problem, levels, alpha_deg, frequency_hz, active, amplitudes=None, weights=None):
         self.problem = problem
         self.f = frequency_hz
         self.green = LayeredGreenFunction(problem.substrate, frequency_hz, backing="pec")
         self.parts = []
-        dbeta = 0.0
-        if abs(frequency_hz - problem.frequency_hz) > 1e-3:
-            from ..dispersion.analytic_tm0 import tm0_beta
-
-            h = problem.substrate.thickness
-            dbeta = tm0_beta(frequency_hz, problem.substrate.eps_r, h) - tm0_beta(
-                problem.frequency_hz, problem.substrate.eps_r, h
-            )
+        self._memo = {}
+        dbeta = _dbeta(problem, frequency_hz)
+        psi = _psi_at(problem, frequency_hz)
         for bp in problem.ports:
             if bp.port_id not in active:
                 continue
-            a = 1.0 if amplitudes is None or len(active) == 1 else amplitudes[bp.port_id]
-            w = a * np.exp(1j * np.radians(alpha_deg[bp.port_id])) if len(active) > 1 else 1.0
-            s = _aperture(problem, bp, levels[bp.port_id], dbeta) * w
+            if weights is not None:
+                w = weights[bp.port_id]
+            elif len(active) > 1:
+                a = 1.0 if amplitudes is None else amplitudes[bp.port_id]
+                w = a * np.exp(1j * np.radians(alpha_deg[bp.port_id]))
+            else:
+                w = 1.0
+            s = _aperture(problem, bp, levels[bp.port_id], dbeta, psi) * w
             jx, jy = aperture_current_from_scalar(bp.x_m, bp.y_m, s, feed_xy_m=bp.feed_xy_m)
             sel = bp.owned
             self.parts.append((bp.x_m[sel], bp.y_m[sel], jx[sel], jy[sel]))
@@ -316,6 +390,9 @@ class _FarField:
     def __call__(self, theta_deg, phi_deg, chunk=3000):
         theta = np.asarray(theta_deg, dtype=float).ravel()
         phi = np.asarray(phi_deg, dtype=float).ravel()
+        key = (theta.size, float(theta[0]), float(theta[-1]), float(theta.sum()), float(phi.sum()))
+        if key in self._memo:
+            return self._memo[key]
         et = np.zeros(theta.size, dtype=complex)
         ep = np.zeros(theta.size, dtype=complex)
         dx = self.problem.period_m
@@ -325,6 +402,23 @@ class _FarField:
                 a, b = _vector_far_field(t, p, x, y, jx, jy, self.f, self.green, dx, dx)
                 et[lo : lo + chunk] += a
                 ep[lo : lo + chunk] += b
+        self._memo[key] = (et, ep)
+        return et, ep
+
+
+class _ComboFF:
+    """Weighted sum of single-port far fields (each memoised), for many port-phase draws at no extra cost."""
+
+    def __init__(self, port_ffs, weights):
+        self.port_ffs, self.weights = port_ffs, weights
+
+    def __call__(self, theta_deg, phi_deg):
+        et = ep = None
+        for pid, ff in self.port_ffs.items():
+            a, b = ff(theta_deg, phi_deg)
+            w = self.weights[pid]
+            et = w * a if et is None else et + w * a
+            ep = w * b if ep is None else ep + w * b
         return et, ep
 
 
@@ -339,10 +433,11 @@ def _ang(t1, p1, t0, p0):
     return np.degrees(np.arccos(np.clip(np.cos(a) * np.cos(c) + np.sin(a) * np.sin(c) * np.cos(b - d), -1, 1)))
 
 
-def _scenario_eval(problem, sc, levels, alpha_deg, frequency_hz, grid, amplitudes):
+def _scenario_eval(problem, sc, levels, alpha_deg, frequency_hz, grid, amplitudes, ff=None):
     lam = free_space_wavelength(frequency_hz)
     active = set(sc.ports)
-    ff = _FarField(problem, levels, alpha_deg, frequency_hz, active, amplitudes)
+    if ff is None:
+        ff = _FarField(problem, levels, alpha_deg, frequency_hz, active, amplitudes)
     active_ports = [bp for bp in problem.ports if bp.port_id in active]
     extent = _extent_m(active_ports, problem.period_m)  # reported only
     pol = problem.polarization
@@ -442,20 +537,45 @@ def _scenario_eval(problem, sc, levels, alpha_deg, frequency_hz, grid, amplitude
     }
 
 
+def _nominal_scenarios(problem):
+    return [s for s in problem.scenarios if s.freq_index == 0 and s.constrain]
+
+
 def evaluate(problem, levels=None, alpha_deg=None, frequency_hz=None, grid=None, scenarios=None, amplitudes=None):
-    """Held-out evaluation of every scenario (default: all of `problem.scenarios`). `levels`:
-    `{port_id: (N,) int}` (default: the starting states). Everything is computed with the vector far
-    field on `grid` (`HeldOutGrid`), never on the optimisation directions."""
+    """Held-out evaluation of the nominal scenarios (each port alone; all ports together with
+    `alpha_deg`) -- or of the named ones. `levels`: `{port_id: (N,) int}` (default: the starting
+    states). Everything is computed with the vector far field on `grid` (`HeldOutGrid`), never on the
+    optimisation directions. At `frequency_hz` != the design frequency the reference wave is moved and,
+    when the problem was built with that frequency in `extra_frequencies_hz`, the two cells use their
+    RE-SOLVED phases there (otherwise they are held at the design-frequency values)."""
     levels = levels or {p.port_id: p.state for p in problem.opt_ports}
     alpha_deg = alpha_deg or {p.port_id: 0.0 for p in problem.opt_ports}
     grid = grid or HeldOutGrid()
     f = frequency_hz or problem.frequency_hz
-    names = scenarios or [s.name for s in problem.scenarios]
+    names = scenarios or [s.name for s in _nominal_scenarios(problem)]
     return {
         sc.name: _scenario_eval(problem, sc, levels, alpha_deg, f, grid, amplitudes)
         for sc in problem.scenarios
         if sc.name in names
     }
+
+
+def evaluate_phase_error_draws(problem, levels, alpha_deg, frequency_hz=None, grid=None, errors=None):
+    """The all-ports scenario re-evaluated for each draw of independent port-phase errors (default:
+    `problem.draws`) on the held-out grid. The per-port far fields are computed once and recombined.
+    Returns a list of `_scenario_eval` dicts, one per draw."""
+    levels = levels or {p.port_id: p.state for p in problem.opt_ports}
+    alpha_deg = alpha_deg or {p.port_id: 0.0 for p in problem.opt_ports}
+    grid = grid or HeldOutGrid()
+    f = frequency_hz or problem.frequency_hz
+    errors = problem.draws if errors is None else errors
+    sc = next(s for s in problem.scenarios if s.name == "all")
+    port_ffs = {bp.port_id: _FarField(problem, levels, alpha_deg, f, {bp.port_id}) for bp in problem.ports}
+    out = []
+    for err in errors:
+        w = {pid: np.exp(1j * np.radians(alpha_deg[pid] + err.get(pid, 0.0))) for pid in port_ffs}
+        out.append(_scenario_eval(problem, sc, levels, alpha_deg, f, grid, None, ff=_ComboFF(port_ffs, w)))
+    return out
 
 
 def cells_changed(problem, levels):

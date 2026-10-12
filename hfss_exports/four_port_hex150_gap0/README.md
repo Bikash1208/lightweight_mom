@@ -7,10 +7,10 @@
 
 | Port | Feed (x, y) mm | Sub-aperture x mm | Sub-aperture y mm | Cells | Patches |
 |---|---|---|---|---|---|
-| 1 | (64.952, 112.5) | -70.4 .. 198.4 | -38.4 .. 268.8 | 1414 | 696 |
-| 2 | (-194.856, 112.5) | -326.4 .. -64 | -38.4 .. 268.8 | 1435 | 719 |
-| 3 | (-64.952, -112.5) | -198.4 .. 70.4 | -268.8 .. 38.4 | 1414 | 717 |
-| 4 | (194.856, -112.5) | 64 .. 326.4 | -268.8 .. 38.4 | 1435 | 715 |
+| 1 | (64.952, 112.5) | -70.4 .. 198.4 | -38.4 .. 268.8 | 1414 | 699 |
+| 2 | (-194.856, 112.5) | -326.4 .. -64 | -38.4 .. 268.8 | 1435 | 691 |
+| 3 | (-64.952, -112.5) | -198.4 .. 70.4 | -268.8 .. 38.4 | 1414 | 714 |
+| 4 | (194.856, -112.5) | 64 .. 326.4 | -268.8 .. 38.4 | 1435 | 743 |
 
 ## Sub-aperture outlines
 
@@ -27,10 +27,10 @@ Polygon sub-apertures (cells whose centre is inside an outline carry the design;
 
 | Port | Beam | Target (θ, φ) | Predicted (θ, φ) | Pointing error ° | Directivity dBi | Cross-pol dB |
 |---|---|---|---|---|---|---|
-| 1 | 1 | (30.0°, 45.0°) | 29.6°, 45.0° | 0.40 | 25.9 | -17.1 |
-| 2 | 1 | (30.0°, 135.0°) | 29.6°, 135.0° | 0.40 | 26.0 | -17.8 |
-| 3 | 1 | (30.0°, 225.0°) | 29.6°, 225.0° | 0.40 | 25.9 | -18.1 |
-| 4 | 1 | (30.0°, 315.0°) | 29.6°, 315.0° | 0.40 | 26.0 | -17.0 |
+| 1 | 1 | (30.0°, 45.0°) | 30.0°, 44.8° | 0.10 | 25.8 | -17.9 |
+| 2 | 1 | (30.0°, 135.0°) | 30.0°, 135.0° | 0.00 | 26.0 | -17.6 |
+| 3 | 1 | (30.0°, 225.0°) | 30.0°, 224.8° | 0.10 | 25.8 | -19.1 |
+| 4 | 1 | (30.0°, 315.0°) | 30.0°, 315.0° | 0.00 | 26.0 | -16.7 |
 
 ## Cell states
 
@@ -67,14 +67,14 @@ Model-only: none of these numbers has been compared with an HFSS solve of this b
 
 Model-only; none of these numbers has been compared with HFSS.
 
-**port1**: directivity [25.91] dBi, pointing error [0.4] deg, co-pol SLL [-13.86] dB, x-cut [-16.17] dB, y-cut [-13.87] dB, XPD [17.1] dB
+**port1**: directivity 25.84 dBi, pointing error 0.1 deg, co-pol SLL -13.67 dB, x-cut -17.0 dB, y-cut -14.36 dB, XPD 17.8 dB
 
-**port2**: directivity [25.98] dBi, pointing error [0.4] deg, co-pol SLL [-14.23] dB, x-cut [-16.43] dB, y-cut [-15.47] dB, XPD [17.0] dB
+**port2**: directivity 25.97 dBi, pointing error 0.0 deg, co-pol SLL -13.96 dB, x-cut -16.25 dB, y-cut -14.7 dB, XPD 16.6 dB
 
-**port3**: directivity [25.9] dBi, pointing error [0.4] deg, co-pol SLL [-13.73] dB, x-cut [-16.01] dB, y-cut [-13.74] dB, XPD [17.1] dB
+**port3**: directivity 25.83 dBi, pointing error 0.1 deg, co-pol SLL -13.72 dB, x-cut -16.84 dB, y-cut -14.22 dB, XPD 17.9 dB
 
-**port4**: directivity [25.99] dBi, pointing error [0.4] deg, co-pol SLL [-14.3] dB, x-cut [-16.51] dB, y-cut [-15.58] dB, XPD [17.0] dB
+**port4**: directivity 25.98 dBi, pointing error 0.0 deg, co-pol SLL -14.06 dB, x-cut -16.37 dB, y-cut -14.84 dB, XPD 16.5 dB
 
-**all**: directivity [20.05, 19.97, 20.02, 20.0] dBi, pointing error [0.36, 0.41, 0.45, 0.4] deg, co-pol SLL [-12.99, -12.58, -13.13, -12.48] dB, x-cut [-15.91, -15.33, -15.62, -15.24] dB, y-cut [-13.03, -16.66, -13.17, -16.85] dB, XPD [16.8, 18.1, 16.9, 17.9] dB
+**all**: directivity 20.26, 19.89, 20.23, 19.93 dBi, pointing error 0.41, 0.72, 0.54, 0.72 deg, co-pol SLL -13.31, -12.79, -13.42, -12.79 dB, x-cut -16.56, -13.7, -16.27, -13.71 dB, y-cut -15.42, -16.4, -15.61, -16.69 dB, XPD 16.5, 16.8, 16.9, 16.7 dB
 
-Starting design (no sidelobe optimisation).
+Starting design (Phase 16 pointing-corrected, no sidelobe optimisation).

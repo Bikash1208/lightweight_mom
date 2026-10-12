@@ -49,8 +49,8 @@ def test_problem_reproduces_the_designs_own_aperture_and_pattern(board):
 
     direct = copol_component(et, ep, "rhcp")
     op = prob.opt_ports[0]
-    s = op.s_states[np.arange(op.state.size), op.state]
-    cell = (s @ op.c_co)[:300]
+    s = op.s_states[0][np.arange(op.state.size), op.state]
+    cell = (s @ op.c_co[0])[:300]
     assert np.max(np.abs(cell - direct)) <= 1e-5 * np.max(np.abs(direct))  # complex64 storage
 
 
@@ -88,3 +88,81 @@ def test_all_ports_mode_chooses_port_phases_and_result_exports(board):
     assert new["sidelobe_optimisation"]["alpha_deg"][0] == 0.0
     # patch count = cells in state 1 of the optimised levels
     assert n == sum(int(np.sum(v == 1)) for v in levels.values())
+
+
+def test_per_frequency_states_robust_scenarios_and_phase_error_draws(board, monkeypatch):
+    """Cells re-solved per frequency (mocked: no MoM in the fast suite), scenario instances, seeded draws."""
+    import types
+
+    import src.hologram.auto_states as auto_mod
+    from src.hologram.sll_board import evaluate_phase_error_draws
+
+    res, _prob = board
+    calls = []
+
+    def fake_auto_states(n_bits, substrate, f, period_m, fixed_L_mm=None, cache_dir=None, **_):
+        calls.append((f, fixed_L_mm))
+        shift = (f - F) / 1e9 * 60.0  # degrees per GHz of the state-1 phase
+        g0 = np.exp(1j * np.radians(138.0))
+        g1 = np.exp(1j * np.radians(-41.0 - shift))
+        return types.SimpleNamespace(states=[types.SimpleNamespace(gamma=g0), types.SimpleNamespace(gamma=g1)])
+
+    monkeypatch.setattr(auto_mod, "auto_states", fake_auto_states)
+    beams = [[(30.0, 45.0 + 90.0 * k)] for k in range(4)]
+    f_lo, f_hi = 10.33e9, 10.75e9
+    prob = build_problem(
+        res,
+        F,
+        2.2,
+        0.0009,
+        1.575,
+        6.4,
+        beams,
+        du_far=0.05,
+        du_near=0.03,
+        extra_frequencies_hz=(f_lo, f_hi),
+        n_phase_draws=5,
+        phase_error_deg=10.0,
+        draw_seed=3,
+    )
+    assert [c[0] for c in calls] == [f_lo, f_hi] and all(c[1] == 5.85 for c in calls)
+    assert prob.frequencies_hz == (F, f_lo, f_hi) and set(prob.freq_psi) == {F, f_lo, f_hi}
+    assert all(len(p.c_co) == 3 and len(p.s_states) == 3 for p in prob.opt_ports)
+    names = [s.name for s in prob.scenarios]
+    assert "port1" in names and "port1@10.33GHz" in names and "all@10.75GHz" in names
+    assert sum(n.startswith("all@draw") for n in names) == 5
+    # seeded, bounded, port 1 is the phase reference
+    prob2 = build_problem(
+        res,
+        F,
+        2.2,
+        0.0009,
+        1.575,
+        6.4,
+        beams,
+        du_far=0.05,
+        du_near=0.03,
+        extra_frequencies_hz=(f_lo, f_hi),
+        n_phase_draws=5,
+        phase_error_deg=10.0,
+        draw_seed=3,
+    )
+    assert prob.draws == prob2.draws
+    assert all(d[0] == 0.0 and all(abs(v) <= 10.0 for v in d.values()) for d in prob.draws)
+    # an evaluation at f_hi uses the re-solved cell phases, not the design-frequency ones
+    held = evaluate(prob, frequency_hz=f_hi, grid=COARSE, scenarios=["port1"])["port1"]["beams"][0]
+    prob_held = build_problem(res, F, 2.2, 0.0009, 1.575, 6.4, beams, du_far=0.05, du_near=0.03)
+    held_phases = evaluate(prob_held, frequency_hz=f_hi, grid=COARSE, scenarios=["port1"])["port1"]["beams"][0]
+    assert held["directivity_dbi"] != pytest.approx(held_phases["directivity_dbi"], abs=1e-6)
+    # zero-error draw == the nominal all-ports evaluation
+    zero = evaluate_phase_error_draws(prob, None, None, grid=COARSE, errors=[{0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}])[0]
+    nominal = evaluate(prob, grid=COARSE, scenarios=["all"])["all"]
+    for a, b in zip(zero["beams"], nominal["beams"], strict=True):
+        assert a["directivity_dbi"] == pytest.approx(b["directivity_dbi"], abs=1e-9)
+        assert a["sll_global_db"] == pytest.approx(b["sll_global_db"], abs=1e-9)
+    # robust optimisation: instances = 3 frequencies (+ draws in all-ports mode), nominal ones constrained
+    cfg = OptimiserConfig(max_flips=10, q_schedule=(6.0, 12.0), max_pointing_error_deg=0.3)
+    levels, alpha, runs = optimise(prob, "single", cfg, robust=True)
+    assert set(runs[0].after) == {"port1", "port1@10.33GHz", "port1@10.75GHz"} or len(runs) == 4
+    levels_all, _a, runs_all = optimise(prob, "all", cfg, robust=True)
+    assert len(runs_all[0].after) == 3 + 5

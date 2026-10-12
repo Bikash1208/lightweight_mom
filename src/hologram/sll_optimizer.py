@@ -54,6 +54,13 @@ class OptPort:
     free: np.ndarray  # (N,) bool, False = fixed (e.g. under the feed)
     amplitude: float = 1.0  # excitation magnitude when several ports are excited together
 
+    def __post_init__(self):
+        # Phase 23 robust mode: `c_co`, `c_cross` and `s_states` may be lists with one entry per
+        # frequency (the cells' two states are re-solved at each); a bare array is one frequency.
+        for name in ("c_co", "c_cross", "s_states"):
+            v = getattr(self, name)
+            setattr(self, name, list(v) if isinstance(v, (list, tuple)) else [v])
+
 
 @dataclass(frozen=True)
 class Scenario:
@@ -62,12 +69,20 @@ class Scenario:
     beams: tuple  # beam ids radiated (the requested beams of those ports)
     weight: float = 1.0  # weight in the combined objective
     cone_deg: "tuple | None" = None  # main-lobe exclusion radius per beam in this scenario (default: OptBeam.cone_deg)
+    freq_index: int = 0  # which frequency's contributions / states this instance uses
+    phase_err_deg: "tuple | None" = None  # ((port_id, error_deg), ...) added to the port phases (draws)
+    constrain: bool = True  # False for random-phase-error draws: no gain / pointing constraints on them
 
 
 @dataclass
 class OptimiserConfig:
     max_gain_loss_db: float = 0.5
     max_pointing_shift_deg: float = 0.3
+    # Absolute pointing: when set, a beam's refined peak must lie within this angle of its REQUESTED
+    # direction (never looser than the starting design's own error), replacing the shift constraint.
+    max_pointing_error_deg: "float | None" = None
+    pointing_margin_deg: float = 0.05  # kept on the optimisation grid so the held-out grid also passes
+    rank_instances: int = 8  # robust mode: at most this many scenario instances rank the candidates
     max_level_spread_db: float = 0.5
     max_xpd_loss_db: float = 1.0
     max_flips: int = 600  # iteration budget: accepted single-cell changes
@@ -201,22 +216,24 @@ class _Evaluator:
     # -- fields
     def set_states(self, state_by_port):
         for pid, p in self.ports.items():
-            s = p.s_states[np.arange(p.state.size), state_by_port[pid]]
-            self.F[pid] = s @ p.c_co
-            self.Fx[pid] = s @ p.c_cross
+            for fi in range(len(p.c_co)):
+                s = p.s_states[fi][np.arange(p.state.size), state_by_port[pid]]
+                self.F[(pid, fi)] = s @ p.c_co[fi]
+                self.Fx[(pid, fi)] = s @ p.c_cross[fi]
 
     def weight(self, scenario, pid):
         if len(scenario.ports) == 1:
             return 1.0
-        return self.ports[pid].amplitude * np.exp(1j * np.radians(self.alpha[pid]))
+        err = dict(scenario.phase_err_deg or ())
+        return self.ports[pid].amplitude * np.exp(1j * np.radians(self.alpha[pid] + err.get(pid, 0.0)))
 
     def scenario_field(self, scenario, F=None):
         F = self.F if F is None else F
-        return sum(self.weight(scenario, pid) * F[pid] for pid in scenario.ports)
+        return sum(self.weight(scenario, pid) * F[(pid, scenario.freq_index)] for pid in scenario.ports)
 
     def scenario_cross_patch(self, scenario, Fx=None):
         Fx = self.Fx if Fx is None else Fx
-        return sum(self.weight(scenario, pid) * Fx[pid] for pid in scenario.ports)
+        return sum(self.weight(scenario, pid) * Fx[(pid, scenario.freq_index)] for pid in scenario.ports)
 
     # -- metrics
     def peaks(self, scenario, field, cross):
@@ -312,6 +329,13 @@ def optimise_sidelobes(ports, beams, scenarios, directions, config=None, alpha_d
     baseline = {name: {"levels": v["levels"], "peaks": v["peaks"]} for name, v in base.items()}
     spread0 = {name: (max(v["levels"]) - min(v["levels"])) if len(v["levels"]) > 1 else 0.0 for name, v in base.items()}
     xpd0 = {name: [p[3] for p in v["peaks"]] for name, v in base.items()}
+    err0 = {}
+    for sc in scenarios:  # the starting design's own absolute pointing error, per beam
+        err0[sc.name] = [
+            float(_angular_distance_deg(pk[1], pk[2], beams_by_id[bid].theta_deg, beams_by_id[bid].phi_deg))
+            for pk, bid in zip(base[sc.name]["peaks"], contexts[sc.name].beam_ids, strict=True)
+        ]
+    rank_scenarios = scenarios[: max(1, cfg.rank_instances)] if cfg.rank_instances else scenarios
     obj_before = ev.total_term(cfg.q_schedule[-1]) ** (1.0 / cfg.q_schedule[-1])
     n_eval = [0]
 
@@ -322,6 +346,8 @@ def optimise_sidelobes(ports, beams, scenarios, directions, config=None, alpha_d
             ev.alpha = alpha_override
         try:
             for sc in scenarios:
+                if not sc.constrain:
+                    continue
                 field = ev.scenario_field(sc, F)
                 cross = ev.scenario_cross_patch(sc, Fx)
                 pk = ev.peaks(sc, field, cross)
@@ -330,9 +356,17 @@ def optimise_sidelobes(ports, beams, scenarios, directions, config=None, alpha_d
                 for i in range(len(pk)):
                     if levels[i] - b0["levels"][i] < -cfg.max_gain_loss_db:
                         return False
-                    shift = _angular_distance_deg(pk[i][1], pk[i][2], b0["peaks"][i][1], b0["peaks"][i][2])
-                    if shift > cfg.max_pointing_shift_deg:
-                        return False
+                    # absolute pointing applies at the design frequency (index 0); off-frequency beams squint
+                    # in the starting design too, so there the peak may only move by the shift limit
+                    if cfg.max_pointing_error_deg is not None and sc.freq_index == 0:
+                        bm = beams_by_id[contexts[sc.name].beam_ids[i]]
+                        err = _angular_distance_deg(pk[i][1], pk[i][2], bm.theta_deg, bm.phi_deg)
+                        if err > max(cfg.max_pointing_error_deg - cfg.pointing_margin_deg, err0[sc.name][i]):
+                            return False
+                    else:
+                        shift = _angular_distance_deg(pk[i][1], pk[i][2], b0["peaks"][i][1], b0["peaks"][i][2])
+                        if shift > cfg.max_pointing_shift_deg:
+                            return False
                     if pk[i][3] < xpd0[sc.name][i] - cfg.max_xpd_loss_db:
                         return False
                 if len(levels) > 1 and max(levels) - min(levels) > max(cfg.max_level_spread_db, spread0[sc.name]):
@@ -344,11 +378,14 @@ def optimise_sidelobes(ports, beams, scenarios, directions, config=None, alpha_d
     def candidate_terms(pid, idx, q):
         """Total q-term if each cell in `idx` of port `pid` were flipped (others unchanged)."""
         p = ev.ports[pid]
-        delta = p.s_states[idx, 1 - state[pid][idx]] - p.s_states[idx, state[pid][idx]]
-        involved = [sc for sc in scenarios if pid in sc.ports]
-        others = sum(sc.weight * ev.q_term(sc, ev.scenario_field(sc), q) for sc in scenarios if pid not in sc.ports)
+        involved = [sc for sc in rank_scenarios if pid in sc.ports]
+        others = sum(
+            sc.weight * ev.q_term(sc, ev.scenario_field(sc), q) for sc in rank_scenarios if pid not in sc.ports
+        )
         totals = np.full(idx.size, others, dtype=float)
         for sc in involved:
+            fi = sc.freq_index
+            delta = p.s_states[fi][idx, 1 - state[pid][idx]] - p.s_states[fi][idx, state[pid][idx]]
             ctx = contexts[sc.name]
             base_field = ev.scenario_field(sc)
             w = ev.weight(sc, pid)
@@ -357,7 +394,7 @@ def optimise_sidelobes(ports, beams, scenarios, directions, config=None, alpha_d
             patch_split = np.cumsum([pi.size for pi in ctx.patch_idx])[:-1]
             for lo in range(0, idx.size, cfg.chunk):
                 sl = idx[lo : lo + cfg.chunk]
-                rows = p.c_co[sl]  # (K, D)
+                rows = p.c_co[fi][sl]  # (K, D)
                 dlt = (w * delta[lo : lo + cfg.chunk])[:, None]
                 p_patch = np.abs(base_field[patch_cat][None, :] + dlt * rows[:, patch_cat]) ** 2
                 peaks = np.stack([blk.max(axis=1) for blk in np.split(p_patch, patch_split, axis=1)], axis=1)  # (K, B)
@@ -370,9 +407,10 @@ def optimise_sidelobes(ports, beams, scenarios, directions, config=None, alpha_d
     def apply_flip(pid, n):
         p = ev.ports[pid]
         old, new = state[pid][n], 1 - state[pid][n]
-        d = p.s_states[n, new] - p.s_states[n, old]
-        ev.F[pid] = ev.F[pid] + d * p.c_co[n]
-        ev.Fx[pid] = ev.Fx[pid] + d * p.c_cross[n]
+        for fi in range(len(p.c_co)):
+            d = p.s_states[fi][n, new] - p.s_states[fi][n, old]
+            ev.F[(pid, fi)] = ev.F[(pid, fi)] + d * p.c_co[fi][n]
+            ev.Fx[(pid, fi)] = ev.Fx[(pid, fi)] + d * p.c_cross[fi][n]
         state[pid][n] = new
 
     def undo_flip(pid, n):
@@ -413,6 +451,7 @@ def optimise_sidelobes(ports, beams, scenarios, directions, config=None, alpha_d
     for q in cfg.q_schedule:
         t_cur = ev.total_term(q)
         for _round in range(10_000):
+            t_rank = sum(sc.weight * ev.q_term(sc, ev.scenario_field(sc), q) for sc in rank_scenarios)
             if accepted >= cfg.max_flips:
                 break
             ranked = []
@@ -422,7 +461,7 @@ def optimise_sidelobes(ports, beams, scenarios, directions, config=None, alpha_d
                 if idx.size == 0:
                     continue
                 terms = candidate_terms(pid, idx, q)
-                good = np.nonzero(terms < t_cur * (1.0 - 1e-12))[0]
+                good = np.nonzero(terms < t_rank * (1.0 - 1e-12))[0]
                 ranked += [(float(terms[g]), pid, int(idx[g])) for g in good]
             ranked.sort(key=lambda r: (r[0], r[1], r[2]))
             got = 0

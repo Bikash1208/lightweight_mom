@@ -5,6 +5,19 @@ summarize each phase's own write-up in `docs/history/`/`docs/history/`). No vers
 before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` for current
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
+## Unreleased - Phase 23 - hexagonal ports and the sidelobe-cancelling optimiser
+- A: `PortRegion` may be a convex polygon (`vertices_m`; rectangles unchanged and bit-identical); `layout_preset_hex4` (side or
+  flat-to-flat, gap, pointy/flat, shared 6.4 mm lattice, cells outside the hexagons empty); polygon overlap/gap/isolation; DXF
+  PORTS layer, outlines in the layout PNG, README table, optional trim-board STEP/AEDT; `hex4` in the UI and `/synthesize_ports`.
+- B: `src/pattern/cellwise_pattern.py`: per-cell co-/cross-pol contributions (verified against `_vector_far_field` to 1e-10),
+  u-v direction sets denser near the beams, combined multi-port excitation.
+- C: `src/hologram/sll_optimizer.py` (greedy q-norm cell flips, optional seeded annealing, gain/pointing/level/XPD constraints,
+  per-frequency scenario instances, random port-phase draws, absolute pointing), `sll_board.py` (job result <-> optimiser, held-out
+  grid evaluation, x/y-cut SLL as in Phase 18, cells re-solved per frequency), `/api/sidelobes/optimize`, Step 3 "Reduce sidelobes"
+  with a Robust option.
+- D: `scripts/research/phase23_compare_v2.py`, `results/phase23/`, `hfss_exports/four_port_hex150_*`, `four_port_square243_gap0`.
+- New key `two_state.achieved_phase_deg` in coded `/synthesize_ports` results (additive).
+
 ## Unreleased - Phase 22 - automatic coded-cell states
 - Exact multi-port STEP: `Feed1..FeedN` marker sheets (0.6 x 0.6 mm at z = 0, exact vertices) restored; optional `Monopole1..N` pins
   (checkbox on the Export card; verification then checks 3-D vertices and the pins' z/radius). Feed positions are listed in `feeds.csv`,

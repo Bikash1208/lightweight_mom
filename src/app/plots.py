@@ -132,16 +132,18 @@ _SUBSTRATE = "#D9DADC"
 _SUBSTRATE_EDGE = "#B8B9BC"
 
 
-def patch_layout_png(cells_mm, period_mm, nx, ny, path, title=None, feed_xy_mm=(0.0, 0.0)):
+def patch_layout_png(cells_mm, period_mm, nx, ny, path, title=None, feed_xy_mm=(0.0, 0.0), outlines_mm=None):
     """True-geometry board drawing (PHASE13D item 5): every patch at its real L x W and position,
     bright copper on a light-grey substrate, feed point marked, mm axes, size legend.
     `cells_mm`: iterable of `(x_mm, y_mm, l_mm, w_mm)` plain-patch centres/sizes, or (PHASE15 Part
     E) `(x_mm, y_mm, l_mm, w_mm, R_mm, r_mm)` for a patch with an annular slot -- drawn as the
     patch rectangle with the ring `[r_mm, R_mm]` punched out (substrate colour) and the inner disk
     (radius `r_mm`) restored as its own copper island on top, so a board using BOTH cell types
-    (Part E's own "the patch-layout PNG must show both geometries") renders each correctly."""
+    (Part E's own "the patch-layout PNG must show both geometries") renders each correctly.
+    `outlines_mm` (Phase 23): optional list of `[(x, y), ...]` polygons -- the sub-aperture outlines
+    (hexagon ports) drawn as dashed lines over the board."""
     from matplotlib.collections import PatchCollection
-    from matplotlib.patches import Circle, Rectangle
+    from matplotlib.patches import Circle, Polygon, Rectangle
 
     cells = [c for c in cells_mm if c[2] is not None and c[3] is not None]
     xs = np.array([c[0] for c in cells]) if cells else np.zeros(1)
@@ -175,6 +177,10 @@ def patch_layout_png(cells_mm, period_mm, nx, ny, path, title=None, feed_xy_mm=(
             ax.add_patch(
                 Circle((x, y), inner_r_mm, facecolor=_COPPER, edgecolor=_COPPER_EDGE, linewidth=0.15, zorder=3)
             )
+    for outline in outlines_mm or ():
+        ax.add_patch(
+            Polygon(outline, closed=True, fill=False, edgecolor=_ACCENT, linewidth=0.9, linestyle="--", zorder=4)
+        )
     if feed_xy_mm is not None:
         # one (x, y) feed, or a list of them (multi-port: labelled P1..PN)
         feeds = [feed_xy_mm] if np.ndim(feed_xy_mm) == 1 else list(feed_xy_mm)

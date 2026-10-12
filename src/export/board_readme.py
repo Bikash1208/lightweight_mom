@@ -68,6 +68,25 @@ def build_board_readme(board, result, name, eps_r, tan_delta, frequency_hz, file
             "| %d | (%s, %s) | %s .. %s | %s .. %s | %d | %d |"
             % (p["port_id"] + 1, fmt(fx), fmt(fy), fmt(x0), fmt(x1), fmt(y0), fmt(y1), p["n_cells"], p["patch_count"])
         )
+    if any(board.port_outlines_mm):
+        lines += [
+            "",
+            "## Sub-aperture outlines",
+            "",
+            "Polygon sub-apertures (cells whose centre is inside an outline carry the design; every other cell is "
+            "empty, state 0). Outlines are on layer PORTS of `layout.dxf`, dashed in `layout.png`. "
+            + (
+                "The substrate and ground are trimmed to these outlines."
+                if board.trim_board
+                else "The substrate and ground are the bounding rectangle of the cluster."
+            ),
+            "",
+            "| Port | Vertices (x, y) mm |",
+            "|---|---|",
+        ]
+        for k, o in enumerate(board.port_outlines_mm):
+            if o:
+                lines.append("| %d | %s |" % (k + 1, "; ".join("(%s, %s)" % (fmt(x), fmt(y)) for x, y in o)))
     beam_rows = _beam_rows(ports)
     lines += ["", "## Beams (model prediction, not an HFSS result)", ""]
     if beam_rows:

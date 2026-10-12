@@ -264,6 +264,7 @@ def _write_board_png(board, path):
         return patch_layout_png(
             cells, period, nx, ny, path, title=f"{len(board.feeds_mm)}-port board, {len(board.patches)} patches",
             feed_xy_mm=[(float(x), float(y)) for x, y in board.feeds_mm],
+            outlines_mm=[[(float(x), float(y)) for x, y in o] for o in board.port_outlines_mm if o] or None,
         )
     except Exception:
         return None

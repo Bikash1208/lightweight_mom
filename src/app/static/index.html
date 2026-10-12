@@ -86,6 +86,7 @@
               <button type="button" data-preset="2x2_plus_1_large" class="active">2×2 small + 1 large</button>
               <button type="button" data-preset="1xn">1×N strip</button>
               <button type="button" data-preset="grid">N×M grid</button>
+              <button type="button" data-preset="hex4">4 hexagons</button>
               <button type="button" data-preset="custom">Custom rectangles</button>
             </div>
           </label>
@@ -108,6 +109,26 @@
             <p class="status">Ports are numbered in a serpentine from the top-right: the top row runs
             right to left, the next row left to right, and so on. For 2×2 that is P1 (+,+), P2 (−,+),
             P3 (−,−), P4 (+,−). One feed sits at each sub-aperture centre.</p>
+          </div>
+          <div id="port-layout-hex4-fields" style="display:none">
+            <label>Hexagon side <span class="unit">mm (= circumradius; flat-to-flat is 1.732&times; this, corner-to-corner 2&times;)</span>
+              <input type="number" step="any" id="port-hex-side-mm" value="150" min="1" />
+            </label>
+            <label>Orientation
+              <div class="segmented" id="port-hex-orientation-control">
+                <button type="button" data-orientation="pointy" class="active">Two rows (pointy-top)</button>
+                <button type="button" data-orientation="flat">Two columns (flat-top)</button>
+              </div>
+            </label>
+            <label style="display:flex;gap:0.5rem;align-items:center"><input type="checkbox" id="port-hex-trim" style="width:auto" />
+              Trim the board to the hexagon outline <span class="unit">(off: the substrate and ground are the cluster's bounding rectangle)</span></label>
+            <p class="status" id="port-hex-info"></p>
+            <p class="status">Four regular hexagons in the compact two-row cluster, centred on the origin, one
+            feed at each hexagon centre. Ports are numbered counter-clockwise from the upper right: P1 upper
+            row right, P2 upper row left, P3 lower row left, P4 lower row right, so the default beams
+            &theta; = 30&deg;, &phi; = 45/135/225/315&deg; point away from the cluster centre. The guard gap
+            below is the distance between facing edges (0 = the hexagons tile). Cells whose centre is outside
+            every hexagon are empty.</p>
           </div>
           <div id="port-layout-custom-fields" style="display:none">
             <table id="port-custom-table">
@@ -854,6 +875,7 @@
     function currentPortCount() {
       const preset = currentPortLayoutPreset();
       if (preset === "2x2_plus_1_large") return 5;
+      if (preset === "hex4") return 4;
       if (preset === "grid") {
         const r = parseInt(document.getElementById("port-grid-rows").value, 10) || 1;
         const c = parseInt(document.getElementById("port-grid-cols").value, 10) || 1;
@@ -914,6 +936,9 @@
           theta_deg: 20 + j * 5, phi_deg: (j * 90) % 360, power_db: 0, desired_polarization: "rhcp", oam_charge: 0,
         }));
       }
+      if (currentPortLayoutPreset() === "hex4") {
+        return [{ theta_deg: 30, phi_deg: 45 + 90 * i, power_db: 0, desired_polarization: "rhcp", oam_charge: 0 }];
+      }
       return [{ theta_deg: 20 + i * 5, phi_deg: (i * 90) % 360, power_db: 0, desired_polarization: "rhcp", oam_charge: 0 }];
     }
     function renderPortsBeamTables() {
@@ -971,8 +996,11 @@
       document.getElementById("port-layout-2x2-fields").style.display = btn.dataset.preset === "2x2_plus_1_large" ? "block" : "none";
       document.getElementById("port-layout-1xn-fields").style.display = btn.dataset.preset === "1xn" ? "block" : "none";
       document.getElementById("port-layout-grid-fields").style.display = btn.dataset.preset === "grid" ? "block" : "none";
+      document.getElementById("port-layout-hex4-fields").style.display = btn.dataset.preset === "hex4" ? "block" : "none";
       document.getElementById("port-layout-custom-fields").style.display = btn.dataset.preset === "custom" ? "block" : "none";
-      document.getElementById("port-snap-label").style.display = btn.dataset.preset === "custom" ? "none" : "flex";
+      document.getElementById("port-snap-label").style.display = (btn.dataset.preset === "custom" || btn.dataset.preset === "hex4") ? "none" : "flex";
+      // the default beams belong to the layout: a preset switch re-seeds ports the user has not edited
+      if (btn.dataset.preset === "hex4") state.ports = [];
       if (btn.dataset.preset === "custom" && !document.querySelector("#port-custom-table tbody tr")) {
         addCustomRow([0, 300, 0, 300, "", ""]);
       }
@@ -1042,6 +1070,7 @@
       const betaAtF = state.betaMeasured * (f * 1e9 / state.uploadFrequencyHz);
       return (2 * Math.PI / betaAtF) * 1e3;
     }
+    function ff_or_nan(hs) { return hs > 0 ? Math.sqrt(3) * hs : NaN; }
     function setPortDefault(id, value) {
       const el = document.getElementById(id);
       if (value != null && !el.dataset.userEdited) el.value = value.toFixed(1);
@@ -1054,8 +1083,8 @@
         setPortDefault("port-1xn-side-mm", _PORT_SIDE_LAMBDA0 * l0);
         setPortDefault("port-grid-side-mm", _PORT_SIDE_LAMBDA0 * l0);
       }
-      setPortDefault("port-gap-mm", lsw);
       const preset = currentPortLayoutPreset();
+      setPortDefault("port-gap-mm", preset === "hex4" ? 0 : lsw);  // hexagons tile by default
       let side = parseFloat(preset === "2x2_plus_1_large"
         ? document.getElementById("port-small-side-mm").value
         : preset === "grid" ? document.getElementById("port-grid-side-mm").value
@@ -1064,10 +1093,22 @@
         const r = readCustomRegions()[0];
         side = r ? Math.min(r[1] - r[0], r[3] - r[2]) : NaN;
       }
+      if (preset === "hex4") {
+        const hs = parseFloat(document.getElementById("port-hex-side-mm").value);
+        const pmm = parseFloat(document.getElementById("cell-size-mm").value);
+        const info = document.getElementById("port-hex-info");
+        if (hs > 0) {
+          const ff = Math.sqrt(3) * hs, area = 1.5 * Math.sqrt(3) * hs * hs;
+          info.textContent = `Flat-to-flat ${ff.toFixed(1)} mm, corner-to-corner ${(2 * hs).toFixed(1)} mm, area ${area.toFixed(0)} mm²` +
+            (pmm > 0 ? ` (about ${Math.round(area / (pmm * pmm))} cells per port).` : ".");
+        } else { info.textContent = ""; }
+        side = ff_or_nan(hs);
+      }
       // "Snap side to whole cells": show what the run will use before it starts
       const snapEl = document.getElementById("port-snap-status");
       const periodMm = parseFloat(document.getElementById("cell-size-mm").value);
-      if (preset !== "custom" && document.getElementById("port-snap-side").checked && side > 0 && periodMm > 0) {
+      if (preset === "hex4") { snapEl.textContent = ""; }
+      else if (preset !== "custom" && document.getElementById("port-snap-side").checked && side > 0 && periodMm > 0) {
         const n = Math.max(1, Math.round(side / periodMm));
         snapEl.textContent = `side ${side.toFixed(1)} → ${(n * periodMm).toFixed(1)} mm (${n} cells)`;
       } else if (side > 0 && periodMm > 0) {
@@ -1088,7 +1129,13 @@
       warnEl.textContent = msgs.join(" ");
       warnEl.className = msgs.length ? "status warn" : "status";
     }
-    ["port-small-side-mm", "port-1xn-side-mm", "port-grid-side-mm", "port-gap-mm"].forEach((id) => {
+    document.getElementById("port-hex-orientation-control").addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button");
+      if (!btn) return;
+      document.querySelectorAll("#port-hex-orientation-control button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+    });
+    ["port-small-side-mm", "port-1xn-side-mm", "port-grid-side-mm", "port-gap-mm", "port-hex-side-mm"].forEach((id) => {
       document.getElementById(id).addEventListener("input", (ev) => {
         ev.target.dataset.userEdited = "1";
         refreshPortDefaults();
@@ -1937,6 +1984,11 @@
         layout.rows = parseInt(document.getElementById("port-grid-rows").value, 10);
         layout.cols = parseInt(document.getElementById("port-grid-cols").value, 10);
         layout.cell_side_mm = parseFloat(document.getElementById("port-grid-side-mm").value);
+      } else if (preset === "hex4") {
+        layout.side_mm = parseFloat(document.getElementById("port-hex-side-mm").value);
+        layout.orientation = document.querySelector("#port-hex-orientation-control button.active")?.dataset.orientation || "pointy";
+        layout.trim_board = document.getElementById("port-hex-trim").checked;
+        layout.snap_side_to_cells = false;
       } else if (preset === "custom") {
         const err = validateCustomRegions();
         if (err) throw new Error(`Custom layout: ${err}`);
@@ -2090,7 +2142,15 @@
           if (patternJob.status === "done") {
             const r = patternJob.result;
             if (r.pattern_uv_png_url) card.querySelector(".port-pattern-img").src = r.pattern_uv_png_url;
-            const areaM2 = ((port.x_max_mm - port.x_min_mm) * (port.y_max_mm - port.y_min_mm)) / 1e6;
+            let areaM2 = ((port.x_max_mm - port.x_min_mm) * (port.y_max_mm - port.y_min_mm)) / 1e6;
+            if (port.outline_mm) {  // polygon sub-aperture (hexagon): shoelace area
+              let twice = 0;
+              port.outline_mm.forEach(([x0, y0], k) => {
+                const [x1, y1] = port.outline_mm[(k + 1) % port.outline_mm.length];
+                twice += x0 * y1 - x1 * y0;
+              });
+              areaM2 = Math.abs(twice) / 2 / 1e6;
+            }
             const lambdaM = 299792458 / frequencyHz;
             const dmaxLin = (4 * Math.PI * areaM2) / (lambdaM * lambdaM);
             // One directivity per port: the server's fine (0.1 degree) beam search when it has one; the

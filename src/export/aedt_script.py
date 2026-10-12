@@ -87,11 +87,7 @@ def subtract(blank, tools, keep):
                      ["NAME:SubtractParameters", "KeepOriginals:=", keep])
 
 x_lo = "(" + CX + "-" + WX + "/2)"; y_lo = "(" + CY + "-" + WY + "/2)"
-# substrate
-oEditor.CreateBox(["NAME:BoxParameters", "XPosition:=", x_lo, "YPosition:=", y_lo, "ZPosition:=", "0mm",
-    "XSize:=", WX, "YSize:=", WY, "ZSize:=", H], attrs("Substrate", "HMSA_substrate", True, "(0 128 0)", 0.6))
-# ground
-rect("Ground", x_lo, y_lo, "0mm", WX, WY, "(128 128 128)")
+@@SUBSTRATE_AND_GROUND@@
 # patches, united in blocks of 100 then into one body
 names = []
 for k, (x, y, pw, ph) in enumerate(PATCHES):
@@ -163,6 +159,37 @@ oDesktop.AddMessage(oProject.GetName(), "@@NAME@@", 0, "Built: @@N@@ patches, @@
 '''.lstrip("\n")
 
 
+_RECT_BOARD = '''# substrate
+oEditor.CreateBox(["NAME:BoxParameters", "XPosition:=", x_lo, "YPosition:=", y_lo, "ZPosition:=", "0mm",
+    "XSize:=", WX, "YSize:=", WY, "ZSize:=", H], attrs("Substrate", "HMSA_substrate", True, "(0 128 0)", 0.6))
+# ground
+rect("Ground", x_lo, y_lo, "0mm", WX, WY, "(128 128 128)")'''
+
+_TRIMMED_BOARD = '''# Phase 23: the board is trimmed to the sub-aperture outlines (a union of convex polygons)
+OUTLINES = [@@OUTLINES@@]   # one [(x, y), ...] mm polygon per sub-aperture
+def poly_sheet(name, pts, z, color, material="vacuum"):
+    pl = ["NAME:PolylineParameters", "IsPolylineCovered:=", True, "IsPolylineClosed:=", True,
+          ["NAME:PolylinePoints"] + [["NAME:PLPoint", "X:=", mm(x), "Y:=", mm(y), "Z:=", z] for (x, y) in pts + [pts[0]]],
+          ["NAME:PolylineSegments"] + [["NAME:PLSegment", "SegmentType:=", "Line", "StartIndex:=", k, "NoOfPoints:=", 2]
+                                       for k in range(len(pts))],
+          ["NAME:PolylineXSection", "XSectionType:=", "None", "XSectionOrient:=", "Auto", "XSectionWidth:=", "0mm",
+           "XSectionTopWidth:=", "0mm", "XSectionHeight:=", "0mm", "XSectionNumSegments:=", "0", "XSectionBendType:=", "Corner"]]
+    oEditor.CreatePolyline(pl, attrs(name, material, True, color))
+sub_names = []; gnd_names = []
+for k, pts in enumerate(OUTLINES):
+    poly_sheet("SubstrateP%d" % k, pts, "0mm", "(0 128 0)", "HMSA_substrate")
+    oEditor.SweepAlongVector(["NAME:Selections", "Selections:=", "SubstrateP%d" % k, "NewPartsModelFlag:=", "Model"],
+        ["NAME:VectorSweepParameters", "DraftAngle:=", "0deg", "DraftType:=", "Round", "CheckFaceFaceIntersection:=", False,
+         "SweepVectorX:=", "0mm", "SweepVectorY:=", "0mm", "SweepVectorZ:=", H])
+    poly_sheet("GroundP%d" % k, pts, "0mm", "(128 128 128)")
+    sub_names.append("SubstrateP%d" % k); gnd_names.append("GroundP%d" % k)
+if len(sub_names) > 1:
+    unite(sub_names); unite(gnd_names)
+for old, new in ((sub_names[0], "Substrate"), (gnd_names[0], "Ground")):
+    oEditor.ChangeProperty(["NAME:AllTabs", ["NAME:Geometry3DAttributeTab", ["NAME:PropServers", old],
+        ["NAME:ChangedProps", ["NAME:Name", "Value:=", new]]]])'''
+
+
 def generate_aedt_script(board, name, eps_r, tan_delta, frequency_hz, r_pin_mm=DEFAULT_R_PIN_MM, r_out_mm=DEFAULT_R_OUT_MM,
                        mono_h_mm=DEFAULT_MONO_H_MM):
     """The script text. `name` becomes the HFSS design and project name (letters, digits, _)."""
@@ -192,7 +219,18 @@ def generate_aedt_script(board, name, eps_r, tan_delta, frequency_hz, r_pin_mm=D
         "FEEDS": feeds,
         "PATCHES": patches,
     }
-    text = _TEMPLATE
+    if board.trim_board and any(board.port_outlines_mm):
+        outlines = [
+            o if o else ((r[0], r[2]), (r[1], r[2]), (r[1], r[3]), (r[0], r[3]))
+            for o, r in zip(board.port_outlines_mm, board.port_rects_mm, strict=True)
+        ]
+        block = _TRIMMED_BOARD.replace(
+            "@@OUTLINES@@",
+            ", ".join("[" + ",".join("(%s,%s)" % (fmt(x), fmt(y)) for x, y in o) + "]" for o in outlines),
+        )
+    else:
+        block = _RECT_BOARD
+    text = _TEMPLATE.replace("@@SUBSTRATE_AND_GROUND@@", block)
     for key, value in values.items():
         text = text.replace("@@%s@@" % key, value)
     return text

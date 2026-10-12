@@ -60,6 +60,8 @@ from ...hologram.multi_port_synthesis import (
     combined_board_lw_grid_m,
     export_frame_feeds_and_rects_mm,
     export_frame_offset_m,
+    mask_design_to_region,
+    region_cell_mask,
     synthesize_ports,
 )
 from ...hologram.pointing_correction import measure_beam_aims, refine_design
@@ -69,6 +71,7 @@ from ...hologram.ports import (
     layout_preset_1xn,
     layout_preset_2x2_plus_1_large,
     layout_preset_grid,
+    layout_preset_hex4,
     snap_side_to_cells,
 )
 from ...hologram.two_state_cells import (
@@ -1010,6 +1013,14 @@ class PortLayoutRequest(BaseModel):
     gap_mm: float = 0.0
     regions_mm: "list[list[float]] | None" = None
     snap_side_to_cells: bool = False
+    # Phase 23, preset "hex4": four regular hexagons (two offset rows). `side_mm` = hexagon side =
+    # circumradius, or `flat_to_flat_mm` instead; `gap_mm` is shared with the other presets;
+    # `orientation` "pointy" (two rows) or "flat" (two columns); `trim_board` cuts the exported
+    # substrate/ground to the hexagon outline instead of the cluster's bounding rectangle.
+    side_mm: "float | None" = None
+    flat_to_flat_mm: "float | None" = None
+    orientation: str = "pointy"
+    trim_board: bool = False
 
 
 class HmsaSynthesizePortsRequest(BaseModel):
@@ -1087,6 +1098,19 @@ def _build_port_regions(layout: dict, period_mm=None):
             )
         except ValueError as exc:
             raise config_invalid(message=str(exc)) from exc
+    if preset == "hex4":
+        if (layout["side_mm"] is None) == (layout["flat_to_flat_mm"] is None):
+            raise config_invalid(message="layout preset 'hex4' needs exactly one of side_mm and flat_to_flat_mm")
+        try:
+            return layout_preset_hex4(
+                side_m=None if layout["side_mm"] is None else layout["side_mm"] * 1e-3,
+                flat_to_flat_m=None if layout["flat_to_flat_mm"] is None else layout["flat_to_flat_mm"] * 1e-3,
+                gap_m=layout["gap_mm"] * 1e-3,
+                orientation=layout["orientation"],
+                period_m=None if period_mm is None else period_mm * 1e-3,
+            )
+        except ValueError as exc:
+            raise config_invalid(message=str(exc)) from exc
     if preset == "custom":
         if not layout["regions_mm"]:
             raise config_invalid(message="layout preset 'custom' needs regions_mm")
@@ -1098,7 +1122,7 @@ def _build_port_regions(layout: dict, period_mm=None):
             raise config_invalid(message=f"custom layout: {exc}") from exc
         return regions
     raise config_invalid(
-        message=f"unknown layout preset {preset!r}; expected '2x2_plus_1_large', '1xn', 'grid', or 'custom'"
+        message=f"unknown layout preset {preset!r}; expected '2x2_plus_1_large', '1xn', 'grid', 'hex4', or 'custom'"
     )
 
 
@@ -1406,6 +1430,17 @@ def _run_synthesize_ports_job(job, body: dict):
     else:
         raise config_invalid(message=f"formulation must be 'A', 'B' or 'coded', got {body['formulation']!r}")
 
+    # Phase 23: a polygon port keeps only the cells inside its outline (`synthesize_ports` passes
+    # `region=` for polygons only, so a rectangle layout's calls are exactly as before).
+    synthesize_one_unmasked = synthesize_one
+
+    def synthesize_one(ref, beams, feed_xy_m, region=None):
+        design = synthesize_one_unmasked(ref, beams, feed_xy_m)
+        if region is None:
+            return design
+        earlier = [r for r in regions if r.port_id < region.port_id]
+        return mask_design_to_region(design, region_cell_mask(region, design.x_m, design.y_m, earlier))
+
     refinement_reports = []
     per_port = synthesize_one
     region_ids = [r.port_id for r in regions]
@@ -1420,13 +1455,13 @@ def _run_synthesize_ports_job(job, body: dict):
         port_substrate = Substrate("user", body["port_eps_r"], body["port_tan_delta"], body["port_thickness_mm"] * 1e-3)
         port_green = LayeredGreenFunction(port_substrate, body["frequency_hz"], backing="pec")
 
-        def per_port(ref, beams, feed_xy_m):
+        def per_port(ref, beams, feed_xy_m, region=None):
             def measure(design, beams_now):
                 return measure_beam_aims(design, beams_now, port_green, period_m, body["frequency_hz"], feed_xy_m)
 
             design, _used, report = refine_design(
                 beams,
-                lambda bs: synthesize_one(ref, bs, feed_xy_m),
+                lambda bs: synthesize_one(ref, bs, feed_xy_m, region),
                 measure,
                 pointing=body["pointing_correction"],
                 balance=body["balance_levels"],
@@ -1521,6 +1556,8 @@ def _run_synthesize_ports_job(job, body: dict):
             out_dir / "patch_layout.png",
             title=f"Multi-port board — {len(multi.ports)} ports, {n_x} × {n_y} cells",
             feed_xy_mm=[(p.feed_xy_m[0] * 1e3, p.feed_xy_m[1] * 1e3) for p in multi.ports],
+            outlines_mm=[[(x * 1e3, y * 1e3) for x, y in p.region.vertices_m] for p in multi.ports if p.region.is_polygon]
+            or None,
         )
         patch_layout_png_url = f"/api/files/{job.id}/{path.name}"
     except Exception:
@@ -1545,6 +1582,11 @@ def _run_synthesize_ports_job(job, body: dict):
                 "x_max_mm": p.region.x_max_m * 1e3,
                 "y_min_mm": p.region.y_min_m * 1e3,
                 "y_max_mm": p.region.y_max_m * 1e3,
+                **(
+                    {"outline_mm": [[x * 1e3, y * 1e3] for x, y in p.region.vertices_m]}
+                    if p.region.is_polygon
+                    else {}
+                ),
                 "unreachable_fraction": p.design.unreachable_fraction,
                 "labels": p.design.labels,
                 "n_cells": len(p.design.cells),
@@ -1573,6 +1615,7 @@ def _run_synthesize_ports_job(job, body: dict):
         "export_feeds_mm": export_frame_feeds_and_rects_mm(multi, board)[0],
         "export_offset_mm": [v * 1e3 for v in export_frame_offset_m(multi, board)],
         "lw_grid_m": board.lw_grid_m,
+        **({"layout_preset": "hex4", "trim_board": bool(body["layout"]["trim_board"])} if any(r.is_polygon for r in regions) else {}),
     }
 
 

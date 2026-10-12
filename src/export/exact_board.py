@@ -57,6 +57,11 @@ class ExactBoard:
     thickness_mm: Decimal
     period_mm: Decimal
     max_rounding_mm: float  # largest change made by snapping to the 0.001 mm grid
+    # Phase 23: per-port polygon outline `((x, y), ...)` in mm (counter-clockwise), `None` for a
+    # rectangular port; `()` when no port is a polygon. `trim_board`: substrate/ground follow the
+    # outlines (union) instead of the bounding rectangle.
+    port_outlines_mm: tuple = ()
+    trim_board: bool = False
 
     @property
     def width_mm(self):
@@ -102,17 +107,33 @@ def exact_board_from_ports_result(result, period_mm, thickness_mm):
             cy = y_mid + (Decimal(c["i"]) - Decimal(ny - 1) / 2) * period
             x0, y0 = snap(cx - w / 2), snap(cy - h / 2)
             patches.append(ExactPatch(p["port_id"] + 1, c["i"], c["j"], x0, y0, snap(cx + w / 2), snap(cy + h / 2)))
+    outlines = ()
+    trim = False
+    if any("outline_mm" in p for p in ports):
+        # a shared hexagon corner is snapped from numerically equal inputs, so neighbours still coincide
+        outlines = tuple(
+            tuple((snap(x), snap(y)) for x, y in p["outline_mm"]) if p.get("outline_mm") else None for p in ports
+        )
+        trim = bool(result.get("trim_board", False))
+    x_min, x_max = min(r[0] for r in rects), max(r[1] for r in rects)
+    y_min, y_max = min(r[2] for r in rects), max(r[3] for r in rects)
+    if trim:
+        pts = [pt for o, r in zip(outlines, rects, strict=True) for pt in (o if o else ((r[0], r[2]), (r[1], r[3])))]
+        x_min, x_max = min(q[0] for q in pts), max(q[0] for q in pts)
+        y_min, y_max = min(q[1] for q in pts), max(q[1] for q in pts)
     return ExactBoard(
         patches=tuple(patches),
         feeds_mm=tuple(feeds),
         port_rects_mm=tuple(rects),
-        x_min=min(r[0] for r in rects),
-        x_max=max(r[1] for r in rects),
-        y_min=min(r[2] for r in rects),
-        y_max=max(r[3] for r in rects),
+        x_min=x_min,
+        x_max=x_max,
+        y_min=y_min,
+        y_max=y_max,
         thickness_mm=quantize(thickness_mm),
         period_mm=period,
         max_rounding_mm=float(worst),
+        port_outlines_mm=outlines,
+        trim_board=trim,
     )
 
 
@@ -197,12 +218,32 @@ def write_exact_step(board, path, include_pins=False, r_pin_mm=DEFAULT_R_PIN_MM,
         wire = cq.Wire.makePolygon([vec(x0, y0, z), vec(x1, y0, z), vec(x1, y1, z), vec(x0, y1, z)], close=True)
         return cq.Face.makeFromWires(wire)
 
+    def polygon_face(points, z):
+        # The plane origin is pinned to the first vertex: `Face.makeFromWires` would put it at the
+        # polygon's centroid, a CARTESIAN_POINT that is not on the 0.001 mm grid.
+        from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeFace
+        from OCP.gp import gp_Dir, gp_Pln, gp_Pnt
+
+        wire = cq.Wire.makePolygon([vec(x, y, z) for x, y in points], close=True)
+        plane = gp_Pln(gp_Pnt(float(points[0][0]), float(points[0][1]), float(z)), gp_Dir(0, 0, 1))
+        return cq.Face(BRepBuilderAPI_MakeFace(plane, wire.wrapped).Face())
+
     h = board.thickness_mm
-    substrate = cq.Solid.makeBox(float(board.width_mm), float(board.height_mm), float(h), vec(board.x_min, board.y_min, 0))
-    if board.x_min == -board.x_max and board.y_min == -board.y_max:
-        ground = cq.Face.makePlane(float(board.width_mm), float(board.height_mm), cq.Vector(0, 0, 0), cq.Vector(0, 0, 1))
+    if board.trim_board and any(board.port_outlines_mm):
+        # substrate = the port outlines extruded to the thickness, ground = their faces. Kept as
+        # separate prisms in one compound (a boolean union would create new, off-grid vertices where
+        # snapped edges meet) -- they touch edge to edge and carry the exact vertex coordinates.
+        outlines = [o if o else ((r[0], r[2]), (r[1], r[2]), (r[1], r[3]), (r[0], r[3]))
+                    for o, r in zip(board.port_outlines_mm, board.port_rects_mm, strict=True)]
+        prisms = [cq.Solid.extrudeLinear(polygon_face(o, 0), cq.Vector(0, 0, float(h))) for o in outlines]
+        substrate = cq.Compound.makeCompound(prisms)
+        ground = cq.Compound.makeCompound([polygon_face(o, 0) for o in outlines])
     else:
-        ground = rect(board.x_min, board.y_min, board.x_max, board.y_max, 0)
+        substrate = cq.Solid.makeBox(float(board.width_mm), float(board.height_mm), float(h), vec(board.x_min, board.y_min, 0))
+        if board.x_min == -board.x_max and board.y_min == -board.y_max:
+            ground = cq.Face.makePlane(float(board.width_mm), float(board.height_mm), cq.Vector(0, 0, 0), cq.Vector(0, 0, 1))
+        else:
+            ground = rect(board.x_min, board.y_min, board.x_max, board.y_max, 0)
     patches = cq.Compound.makeCompound([rect(p.x0, p.y0, p.x1, p.y1, h) for p in board.patches])
     assembly = cq.Assembly(name="HMSA_board")
     assembly.add(substrate, name="Substrate")
@@ -246,13 +287,19 @@ def write_layout_json(board, path):
             for p in board.patches
         ],
     }
+    if any(board.port_outlines_mm):
+        data["port_outlines"] = [
+            None if o is None else [[fmt(x), fmt(y)] for x, y in o] for o in board.port_outlines_mm
+        ]
+        data["trim_board"] = board.trim_board
     Path(path).write_text(json.dumps(data, indent=1))
     return Path(path)
 
 
 def write_layout_dxf(board, path):
     """DXF R12 (millimetres): patch outlines on layer PATCHES, the board outline on BOARD, and one marker
-    (CIRCLE r = 0.3 mm plus a "P<k>" label) per feed on layer FEEDS."""
+    (CIRCLE r = 0.3 mm plus a "P<k>" label) per feed on layer FEEDS. A board with polygon (hexagon)
+    ports adds layer PORTS: every sub-aperture's outline (Phase 23)."""
     parts = ["0", "SECTION", "2", "HEADER", "9", "$ACADVER", "1", "AC1009", "0", "ENDSEC", "0", "SECTION", "2", "ENTITIES"]
 
     def line(layer, x1, y1, x2, y2):
@@ -262,7 +309,22 @@ def write_layout_dxf(board, path):
         return (line(layer, x0, y0, x1, y0) + line(layer, x1, y0, x1, y1) + line(layer, x1, y1, x0, y1)
                 + line(layer, x0, y1, x0, y0))
 
-    parts += rectangle("BOARD", board.x_min, board.y_min, board.x_max, board.y_max)
+    def polygon(layer, pts):
+        out = []
+        for k in range(len(pts)):
+            (xa, ya), (xb, yb) = pts[k], pts[(k + 1) % len(pts)]
+            out += line(layer, xa, ya, xb, yb)
+        return out
+
+    has_outlines = any(board.port_outlines_mm)
+    if has_outlines and board.trim_board:
+        for o, r in zip(board.port_outlines_mm, board.port_rects_mm, strict=True):
+            parts += polygon("BOARD", o) if o else rectangle("BOARD", r[0], r[2], r[1], r[3])
+    else:
+        parts += rectangle("BOARD", board.x_min, board.y_min, board.x_max, board.y_max)
+    if has_outlines:  # Phase 23: every sub-aperture's outline on its own layer
+        for o, r in zip(board.port_outlines_mm, board.port_rects_mm, strict=True):
+            parts += polygon("PORTS", o) if o else rectangle("PORTS", r[0], r[2], r[1], r[3])
     for p in board.patches:
         parts += rectangle("PATCHES", p.x0, p.y0, p.x1, p.y1)
     for k, (fx, fy) in enumerate(board.feeds_mm, start=1):

@@ -31,23 +31,24 @@ clean:
 	find . -type d -name "__pycache__" -not -path "./.venv/*" -exec rm -rf {} +
 	rm -rf .pytest_cache .ruff_cache
 
-# Everything `clean` removes plus the build/venv leftovers and the HEAVY regenerable data. The unit-cell
-# library solve (results/unit_cell_library/_solve|database|geometry, ~550 MB, hours to rebuild with
-# examples/build_unit_cell_library.py) and the FSS coefficient cache (~1 h) are only removed with
-# CONFIRM=1 (docs/DEVELOPING.md "Cleaning"). Never touches tracked files, hfss_exports/ or ~/.lwmom.
+# `clean` plus build/ and dist/. With CONFIRM=1 it also removes the HEAVY regenerable data (the unit-cell
+# library solve results/unit_cell_library/{_solve,database,geometry}, ~550 MB, hours to rebuild with
+# examples/build_unit_cell_library.py, and the FSS coefficient cache, ~1 h): it prints the paths and the
+# total size and asks y/N first. Never touches tracked files, hfss_exports/ or ~/.lwmom.
+HEAVY = results/unit_cell_library/_solve results/unit_cell_library/database \
+        results/unit_cell_library/geometry scripts/adhoc/fss/coef
 distclean: clean
 	rm -rf build dist
-	@if [ "$(CONFIRM)" = "1" ]; then \
-	  rm -rf results/unit_cell_library/_solve results/unit_cell_library/database \
-	         results/unit_cell_library/geometry scripts/adhoc/fss/coef; \
-	  echo "removed the unit-cell library solve and the FSS coefficient cache"; \
-	else \
-	  echo "kept results/unit_cell_library/{_solve,database,geometry} and scripts/adhoc/fss/coef" \
-	       "(slow to regenerate); run 'make distclean CONFIRM=1' to remove them too"; \
-	fi
+ifeq ($(CONFIRM),1)
+	@du -sh $(wildcard $(HEAVY)); du -ch $(wildcard $(HEAVY)) | tail -1
+	@printf "Delete the paths above? [y/N] "; read ans; \
+	  if [ "$$ans" = "y" ] || [ "$$ans" = "Y" ]; then rm -rf $(HEAVY); echo removed; else echo kept; fi
+else
+	@echo "kept $(HEAVY) (slow to regenerate); 'make distclean CONFIRM=1' lists them and asks before deleting"
+endif
 
-# The app's own job outputs under ~/.lwmom/app_outputs (one folder per job). Removes folders not touched
-# for DAYS days (default 14); the downloads of a recent run are kept.
+# Job folders in ~/.lwmom/app_outputs not touched for DAYS days (default 14), except those a registered
+# library lives in (library_registry.json). `make clean-app-outputs DRY=--dry-run` only reports.
 DAYS ?= 14
 clean-app-outputs:
-	find "$${LWMOM_APP_DATA_DIR:-$$HOME/.lwmom}/app_outputs" -mindepth 1 -maxdepth 1 -type d -mtime +$(DAYS) -exec rm -rf {} +
+	$(VENV)/python scripts/clean_app_outputs.py --days $(DAYS) $(DRY)

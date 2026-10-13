@@ -19,10 +19,17 @@ real HFSS results exist for it. Raw HFSS Touchstone exports (`*.s36p`, `*.s4p`) 
 | `nylon_lens_28ghz_dual30/` | 28 GHz all-dielectric (nylon) horn-fed transmitarray lens, ±30° dual beam, 150 mm octagon, 25 mm thick (`examples/export_nylon_lens_28ghz.py`) | **Awaiting HFSS** (model-only; its README carries the Monte Carlo error bar on the prediction, the pitch estimate and the exact-coordinate record). `lens.step`/`lens.stl` gitignored, regenerable. |
 | `nylon_cells_28ghz/` | Six optional single nylon cells spanning the phase range with RCWA reference CSV (`examples/export_nylon_cell_checkset_28ghz.py`) | **Awaiting HFSS** (optional spot check). |
 
-## `*.step` files and git
+## What a new package commits (growth policy, Phase 24)
 
-`hfss_exports/**/*.step` is gitignored **except** the STEP files already tracked before this rule
-was added (`phase12_grounded_8mm/`, `two_beam_20deg_phi0_180/`) — those stay tracked. Any new
-package's own `.step` (large, binary, fully regenerable from its `layout.json` via the app's
-Export page or the generating script above) is not committed; everything else in the package
-(README, CSV, JSON, PNG) is.
+| Committed | Not committed (gitignored; regenerate) |
+|---|---|
+| `README.md`, `design_report.json`, PNGs, the small `layout.csv` / `feeds.csv`, the AEDT script | `*.step`, `*.stl`, and `layout.dxf` / `layout.json` (1-4 MB each on a 300 mm board) |
+
+- `hfss_exports/**/*.step`, `**/layout.dxf` and `**/layout.json` are in `.gitignore`. Files **already tracked**
+  stay tracked (`phase12_grounded_8mm/`, `two_beam_20deg_phi0_180/`, the Phase 18-23 packages whose layouts
+  were committed); gitignore never untracks. A layout under 1 MB may still be committed on purpose with
+  `git add -f`.
+- Every package README (and its row in the index above) names the command that regenerates the ignored files:
+  the app's Export page on the matching `/synthesize_ports` request, or the generating script.
+- Nothing tracked was removed; no history was rewritten.
+

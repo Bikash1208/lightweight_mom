@@ -1,11 +1,24 @@
 # Status — single source of truth for *now*
 
-**Last updated:** 2026-10-13, by Claude (Phase 24 curation finished: phases 18-24 are merged into `main`, tagged `v1.1-handoff`). **Rule: every phase updates this
+**Last updated:** 2026-10-13, by Claude (Phase 24 curation finished: phases 18-24 are merged into `main`, tagged `v1.1-handoff`; Phase 25 locality caveat added on branch `phase25-butler-sector`). **Rule: every phase updates this
 file** (last release tag/commit, capability matrix, open next steps) as part of its own final commit.
 
 **Last milestone tags:** `v1.1-handoff` (this state), `phase23-complete` (hexagon ports + sidelobe optimiser), `phase22-complete`, `phase21-complete`,
 `phase19-partD`, `phase16-complete`; `pre-cleanup-2026-10-07` / `pre-cleanup-2026-10-13` mark the two cleanups and
 `submission-2026-10-06` is the frozen submission snapshot. Tags are never moved or deleted.
+
+> **Caveat for every Phase 21–23 coded board (added in Phase 25, 2026-10-13): local periodicity is poorly supported
+> for the 0.55 mm-gap 1-bit pair.** The boards use empty | 5.85 mm square on a 6.4 mm cell (gap 0.55 mm). In the repo's
+> only full-array MoM (periodic supercell, normal-incidence plane wave) the isolated-cell model of that pair is off by
+> 42–69 percentage points in the worst Floquet-order power on 5×5 blocks, with the error growing as the gap shrinks
+> (3–10 pp at 1.07 mm, 12–30 pp at 0.80 mm, 33–57 pp at 0.64 mm); small 1×2 / 2×2 blocks at 2× finer mesh give the
+> same picture, so it is not a mesh artefact. It is not an HFSS result and not a surface-wave-fed board, so the size of
+> the effect on the real boards is **unknown**, but every "model-only" pattern number for these boards (directivity,
+> pointing, SLL, level matching) rests on an assumption that check does not support. Details, tables and the named
+> state `LOCAL_PERIODICITY_POOR_AT_DESIGN_GAP_PLANE_WAVE_CHECK`: [`results/phase25/README.md`](../results/phase25/README.md).
+> The error tracks the empty-vs-square phase separation, not the gap: at 6.4 mm no square with a ≥ 1.0 mm gap reaches
+> 90° separation (73–90°; its locality error is 4–12 pp), and an 8.0 mm cell with a 6.85 mm square reaches 178.7° but
+> is still 11–55 pp off. No pair with ≥ 150° separation and small locality error was found.
 
 ## Capability matrix
 
@@ -70,7 +83,11 @@ Order of work, with what each needs from the user (HFSS runs are the user's):
    4. earlier boards: `four_port_1bit_gap0/`, `_gap28/`, `four_port_1bit_300mm_gap0/`, `_gap28/`, `three_port_25deg/`.
 4. **HFSS run, Phase 19**: `hfss_exports/nylon_lens_28ghz_dual30/lens.step` (beam angle/gain/level), optionally the six cells in
    `hfss_exports/nylon_cells_28ghz/`; then decide Part E (transmitarray in the app).
-5. **Housekeeping**: the Phase 24 branch `phase24-cleanup` can be deleted once the user is happy with `v1.1-handoff`
+5. **HFSS neighbour-coupling check (Phase 25)**: `hfss_exports/cell_pair_locality_check/` — 1×2, 2×2 and 5×5/4×4
+   square | empty supercells for the current 6.4 mm pair and two candidates (6.4 mm / 5.33 mm square, locality-best;
+   8.0 mm / 6.85 mm square, separation-best), with the MoM reference CSVs. Run this before trusting any Phase 21–23
+   board number or choosing a new pair.
+6. **Housekeeping**: the Phase 24 branch `phase24-cleanup` can be deleted once the user is happy with `v1.1-handoff`
    (`git branch -d phase24-cleanup`; the tag preserves it). The 2550-test count assumes the gitignored data is present: a fresh
    clone runs 2441 passed / 129 skipped (the Phase 7 library checkpoint, real HFSS exports and playwright are absent) — see
    `docs/DEVELOPING.md`.

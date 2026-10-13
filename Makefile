@@ -36,7 +36,7 @@ clean:
 # examples/build_unit_cell_library.py) and the FSS coefficient cache (~1 h) are only removed with
 # CONFIRM=1 (docs/DEVELOPING.md "Cleaning"). Never touches tracked files, hfss_exports/ or ~/.lwmom.
 distclean: clean
-	rm -rf lwmom.egg-info build dist
+	rm -rf build dist
 	@if [ "$(CONFIRM)" = "1" ]; then \
 	  rm -rf results/unit_cell_library/_solve results/unit_cell_library/database \
 	         results/unit_cell_library/geometry scripts/adhoc/fss/coef; \

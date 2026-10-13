@@ -73,22 +73,28 @@ Order of work, with what each needs from the user (HFSS runs are the user's):
 5. **Housekeeping the user owns**: approve the `main` merge, branch deletion (merged branches are preserved by the milestone tags) and
    the `v1.1-handoff` tag (`docs/briefs/PHASE24_CURATION_AND_CLEANUP.md`).
 
-## Hygiene (Phase 17 §4 findings — report only, not acted on)
+## Hygiene (Phase 24 §7 findings — report only, not bulk-fixed)
 
-- **Dead code**: an import-graph scan (`ast`-based, resolves relative imports, checked against
-  `src/`+`tests/`+`scripts/`+`examples/`) found no module under `src/` that is both never imported
-  and never covered by a test. None found, none removed.
-- **Lint debt**: `ruff check src tests examples scripts` has ~95 pre-existing findings predating
-  Phase 17 (mostly `B905` bare `zip()`, `F841` unused locals, `B023`/`B007` loop-variable closures,
-  a handful of `SIM105`/`SIM115`/`E731`/`E701`/`B017`/`B018`/`I001`/`F401`) spread across `src/`
-  (40), `tests/` (42) and `scripts/` (12). Each needs per-site judgement (e.g. adding `zip(...,
-  strict=True)` can change behaviour if lengths ever mismatch) rather than a bulk `--fix`, so it's
-  left as a punch list for the user to triage rather than silently edited. Only genuinely safe,
-  zero-behaviour-change items were fixed as part of this phase: 34 intentional `E402` cases
-  (`pytest.importorskip`/`sys.path.insert` guard patterns — annotated `# noqa: E402`, or two stray
-  imports moved to the top of their file) and a repo-wide `ruff format` pass (whitespace only).
-- No stray debug `print()` or unowned `TODO`/`FIXME`/`XXX` found anywhere in `src/`, `tests/`,
-  `scripts/`, or `examples/`.
+Measured 2026-10-13 on `phase24-cleanup` (ruff 0.16.9, Python 3.14, macOS):
+
+- **Fast suite**: 2550 passed, 20 skipped, 117 deselected in **6 min 18 s** (target < 5 min is not met). The time is spread over
+  many tests rather than a few slow ones; the slowest, in order: `test_phase8c_data_source::test_load_full_database_has_324_cells...`
+  (20 s setup), `test_app_phase23_hex4::test_sidelobe_endpoint_end_to_end` (15 s), `test_pattern_beam_polarization_metrics`
+  two-beam fixture (8 s), `test_hologram_multi_port_beam_pointing::test_1x3_rhcp_board...` (6.6 s), then ~15 tests at 4-6 s
+  (the 300 mm board acceptance tests, exact-board STEP fixtures, Phase 8E/9 run tests). Left unchanged on purpose.
+- **Lint debt**: `ruff check src tests examples scripts` reports **207** findings (the Phase 17 tag, same ruff version, reports 122; the
+  "~95" earlier figure came from an older ruff). Growth is in the Phase 18-23 code: `scripts/adhoc/square4/*` (~58, incl. 8
+  `invalid-syntax` in `aedt_template.py`, which is an IronPython template, not importable Python), `src/export/board_readme.py` and
+  `aedt_script.py` (24, mostly `UP031` %-formatting inside generated text), and tests of Phases 21-22 (~25). Top rules: `B905` bare
+  `zip` 41, `UP031` 28, `F841` 22, `F811` 19, `I001` 16. Each needs per-site judgement; no bulk `--fix`.
+  `ruff format --check` would reformat 24 files (mostly `scripts/adhoc/`); not applied.
+- **Dead code**: the import-graph scan (`ast`, relative imports resolved, over `src/`, `tests/`, `scripts/`, `examples/`) finds
+  284 modules and none that is never imported (`src.pattern` is a package only imported through its submodules). The Phase 19
+  packages `src/dielectric_cell` and `src/transmitarray` are imported only by `examples/`, `scripts/` and tests, not by the app (by design).
+- **Debug prints / TODOs**: none in `src/` outside the CLI report printer `src/phase8c/run.py`; no unowned `TODO`/`FIXME`/`XXX`.
+- **Platform-sensitive test fixed**: `tests/test_phase.py::test_branch_cut_negative_real_axis_is_plus_180_for_both_signed_zeros`
+  built the negative zero with the literal `-1 - 0j`, whose imaginary sign depends on the Python version (it failed on Linux
+  Python 3.12). It now uses `complex(-1.0, -0.0)`; the asserted behaviour of `principal_phase_deg` is unchanged.
 
 ## Parked ideas (`docs/briefs/_parked/`)
 

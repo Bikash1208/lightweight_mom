@@ -61,6 +61,9 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
    - `hfss_exports/three_port_25deg/` — 1×3 port board, 25° RHCP beams.
    - `hfss_exports/four_port_1bit_gap0/` and `four_port_1bit_gap28/` — 4-port 1-bit coded boards,
      two guard-gap variants.
+   - `hfss_exports/four_port_1bit_300mm_gap0/` and `four_port_1bit_300mm_gap28/` — the same 4-port
+     board with 300.8 mm sub-apertures (601.6 / 629.6 mm boards), for the minimum-gap (isolation)
+     study: compare S21/S41 between the two. Model: 27.6 dBi/port, co-pol SLL −11 to −12 dB.
 2. **Unit-cell check of the 10.54 GHz 1-bit pair** used by the walk-through board (the two-state
    cell pair's own phase separation/|S11| match at that specific frequency, not yet run through
    HFSS single-cell comparison the way G1–G6 were for the continuous library).

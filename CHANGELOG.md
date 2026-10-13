@@ -52,6 +52,14 @@ validation numbers and open next steps; this file is the per-phase "what changed
   volume change 1.7e-16); the old "no float noise" check had a blind spot below 1e-13 (34,764 inexact literals were in the first STEP).
 - Docs: `docs/theory/DIELECTRIC_CELL_RCWA.md`. Everything is labelled model-only (HFSS: `NOT_AVAILABLE_FROM_CURRENT_DATA`).
 
+## Unreleased - Phase 18 - 300 mm four-port boards (minimum-gap study)
+- `hfss_exports/four_port_1bit_300mm_gap0/` and `_gap28/`: 4-port 1-bit coded boards with 300.8 mm
+  sub-apertures for a minimum-gap/isolation study in HFSS (model-only predictions in each README).
+- `scripts/adhoc/coded4.py`: optional `port_side_mm` argument; fine-grid (0.5 x 1 deg) per-port
+  metrics and x/y-cut figure (`port_cuts.png`). No solver changes.
+- `examples/make_paper_board_26ghz.py`: board-layout figure title uses the actual frequency
+  (was hard-coded "26 GHz"; unchanged output at 26 GHz).
+
 ## 0.17.0 - Phase 17 - handoff-ready repo (no physics/solver changes)
 - Onboarding rewrite: `README.md`, `docs/START_HERE.md` (new), `docs/STATUS.md` (new, single
   source of truth for current validation state), `CLAUDE.md` (rewritten to ≤80 lines),

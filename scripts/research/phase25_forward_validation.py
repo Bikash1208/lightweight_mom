@@ -251,15 +251,16 @@ ALIGNED_PATCH_CELLS = {12: 10, 16: 14, 20: 18, 24: 22}
 MOM_CASES = ((12, 5), (16, 5), (20, 5), (24, 5))
 
 
-def part_two(res, mesh_per_cell, n_cells, seed=25):
+def part_two(res, mesh_per_cell, n_cells, seed=25, period_mm=None, patch_cells=None, tag=""):
     from src.materials import Metal, Substrate
 
     substrate = Substrate("user", EPS_R, TAND, H_MM * 1e-3)
     metal = Metal(model="pec")
-    p_m = PERIOD * 1e-3
+    period_mm = PERIOD if period_mm is None else period_mm
+    p_m = period_mm * 1e-3
     side_design = float(res["two_state"]["states"][1]["geometry"]["L_mm"])
-    h_mm = PERIOD / mesh_per_cell
-    side = ALIGNED_PATCH_CELLS[mesh_per_cell] * h_mm  # the side the mesh actually represents (aligned)
+    h_mm = period_mm / mesh_per_cell
+    side = (patch_cells or ALIGNED_PATCH_CELLS[mesh_per_cell]) * h_mm  # the side the mesh actually represents (aligned)
     tiny = 1e-6  # mm: "no patch" (a zero-size patch is rejected by `Geometry`; it covers no mesh cell)
     t0 = time.time()
     g_empty = _empty_gamma(substrate, F0)
@@ -292,7 +293,8 @@ def part_two(res, mesh_per_cell, n_cells, seed=25):
         "n_cells": n_cells,
         "design_patch_side_mm": side_design,
         "patch_side_mm_represented": side,
-        "gap_mm_represented": PERIOD - side,
+        "gap_mm_represented": period_mm - side,
+        "period_mm": period_mm,
         "gap_mm_design": PERIOD - side_design,
         "isolated_gamma_empty": [abs(g_empty), float(np.degrees(np.angle(g_empty)))],
         "isolated_gamma_square": [abs(g_patch), float(np.degrees(np.angle(g_patch)))],
@@ -348,7 +350,7 @@ def part_two(res, mesh_per_cell, n_cells, seed=25):
             "forward_power_in_evanescent_orders_percent": 100.0 * (1.0 - total_fwd / total_mom),
         }
         print(
-            f"[mom {name}] {out['cases'][name]['seconds']}s worst order error "
+            f"[mom {tag}{name}] {out['cases'][name]['seconds']}s worst order error "
             f"{out['cases'][name]['worst_order_error_percentage_points']:.1f} pp, forward model radiates "
             f"{total_fwd:.3f} of the incident power (MoM {total_mom:.3f})",
             flush=True,

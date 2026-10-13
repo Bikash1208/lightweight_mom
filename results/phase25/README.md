@@ -50,3 +50,65 @@ reflection differs strongly from the isolated one. The check is plane-wave, norm
 it does not prove the surface-wave-fed board is equally wrong, and it does not show the pattern model's *relative*
 beam shapes are wrong; it shows the cell-wise Γ model is not supported at this patch gap by the repo's only full-array
 solver. HFSS of the 1-bit pair as one cell (STATUS open step 2) and of a small block is the way to settle it.
+
+---
+
+## Follow-ups (2026-10-13), requested after the stop at A
+
+### 1. Is it a mesh artefact? (`block_locality.json`, `scripts/research/phase25_block_locality.py`)
+
+Small square | empty supercells of the design pair, the 5.867 mm square (= 22 cells at mesh 24 = 44 cells at mesh 48,
+gap 0.533 mm), normal-incidence plane wave, full periodic solves (the 1×2 stripe is a 2×2 supercell with identical
+rows). Isolated square: −32.4° at mesh 24, −40.6° at mesh 48 (Phase 22's Richardson value is −41.4°); empty +138.1°.
+Specular |S11_xx| (all that propagates for a 12.8 mm period), MoM vs the isolated-cell model:
+
+| block | mesh 24: MoM / model | mesh 48: MoM / model | worst Floquet-order complex error (mesh 24 → 48) |
+|---|---|---|---|
+| 1×2 stripes | 0.999 / 0.083 | 0.999 / 0.011 | 1.06 → 1.04 |
+| 2×2 checkerboard | 0.999 / 0.083 | 0.999 / 0.011 | 1.04 → 1.03 |
+| 2×2, three squares + one empty | 0.996 / 0.502 | 0.996 / 0.497 | 1.93 → 1.91 |
+
+Halving the mesh moves the isolated phases by ~8° and does not change the disagreement: **not a mesh artefact.**
+Caveat on reading it: a period below λ radiates everything into the specular order, so |S11| ≈ 1 by energy
+conservation for any pattern, and the isolated-cell model (|mean Γ| < 1, the rest in evanescent orders) is *forced*
+to disagree whenever the two states are far apart. These blocks show the isolated model cannot describe the near
+field of adjacent states; the 5×5 blocks above (propagating orders) are the more representative test, and the
+quantity HFSS can check on the small blocks is the **phase** of S11 (package below).
+
+### 2. Pairs with a minimum gap (`gap_pair_study.json`, `pair_locality.json`)
+
+Phase 22 `auto_states`, 1-bit (empty + the square closest to empty + 180°), 6.4 mm cell, substrate as above:
+
+| min gap | 10.33 GHz | 10.54 GHz | 10.75 GHz | d(phase)/d(side) at 10.54 | mesh uncertainty |
+|---|---|---|---|---|---|
+| 0.2 mm (current) | 5.90 mm, 178.6° | 5.85 mm, 179.6° | 5.80 mm, 178.5° | 265°/mm | 5.0° |
+| 1.0 mm | 5.40 mm, 72.7° | 5.40 mm, 81.0° | 5.40 mm, 90.1° | 126°/mm | 1.3° |
+| 1.1 mm | 5.20 mm, 53.5° | 5.20 mm, 59.4° | 5.20 mm, 65.8° | 85°/mm | 1.3° |
+| (8.0 mm cell, gap ≥ 1.0) | 6.95 mm, 175.8° | 6.85 mm, 178.7° | 6.80 mm, 177.2° | 174°/mm | 4.0° |
+| (7.0 mm cell, gap ≥ 1.0) | 5.87 mm, 89.9° | 5.87 mm, 100.5° | 5.87 mm, 111.8° | 149°/mm | 1.7° |
+
+(separation between the empty cell and the square; the 1.0 mm, 1.1 mm and 7.0 mm rows are `UNREACHABLE_LEVEL`: the
+square is capped at P − gap before the phase reaches 180° away.) **At the 6.4 mm period no square with a ≥ 1.0 mm gap gets past 90°.**
+
+Locality error of each candidate in the same plane-wave check (worst Floquet-order power error, percentage points;
+designed block / port-3 block / seeded random):
+
+| pair (isolated separation at the checked mesh) | gap | D | error |
+|---|---|---|---|
+| 6.4 mm, 5.33 mm square (68°) | 1.07 mm | 1.12 λ | 3.7 / 12.2 / 5.1 |
+| 6.4 mm, 5.60 mm square (102°) | 0.80 mm | 1.12 λ | 11.9 / 30.4 / 15.3 |
+| 6.4 mm, 5.76 mm square (141°) | 0.64 mm | 1.12 λ | 32.6 / 57.2 / 42.4 |
+| 6.4 mm, 5.87 mm square (172°, the current pair) | 0.53 mm | 1.12 λ | 42.1 / 64.5 / 68.6 |
+| 8.0 mm, 6.86 mm square (172°) | 1.14 mm | 1.12 λ (4×4) | 29.3 / 10.9 / 55.3 |
+
+**The error tracks the separation, not the gap or the period.** A ~180° contrast needs the patch near resonance
+(hundreds of degrees per mm), and a resonant patch is detuned by whatever sits next to it. The 8 mm cell fixes the
+gap and the separation but not the locality.
+
+**Recommendation: no pair satisfies "separation ≥ ~150° with small locality error" with a resonant square at this
+substrate and frequency** (6.4 mm: separation and locality trade directly; 8.0 mm: 172° but 11–55 pp). The two
+candidates the package carries are the ends of that trade-off: the 6.4 mm / 5.33 mm square (locality-best: 3.7–12 pp,
+≈ 65° separation, ≈ −5.4 dB main-beam amplitude relative to a 180° pair, from `sin(Δ/2)` — arithmetic, not a
+simulation) and the 8.0 mm / 6.85 mm square (separation-best, poor locality). Choosing between them, or looking for a
+different cell (non-resonant states, other shapes, a thinner or higher-ε substrate), is a design decision that needs
+the HFSS check below first. All of this is plane-wave, normal incidence, 4×4/5×5 blocks, model-only.

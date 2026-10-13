@@ -1,0 +1,115 @@
+{
+ "inputs": {
+  "freq_hz": 28000000000.0,
+  "d_flats_mm": 150.0,
+  "pitch_mm": 5.0,
+  "focal_mm": 180.0,
+  "beam_deg": 30.0,
+  "edge_taper_db": 10.0,
+  "q": 14.383478270034338,
+  "plate_mm": 0.6,
+  "total_mm": 25.0,
+  "through_hole": true,
+  "d_seam_deg": 230.0,
+  "cap_fill": 0.8044,
+  "n_harm": 8,
+  "eps_r": 2.45,
+  "tan_delta": 0.0185
+ },
+ "pass1": {
+  "pass_name": "pass1",
+  "psi0_deg": 228.0,
+  "n_cells": 756,
+  "n_pillar": 520,
+  "n_hole": 236,
+  "residual_deg": {
+   "max_abs": 0.7596365281096951,
+   "rms": 0.08611137329515,
+   "n_over_1deg": 0
+  },
+  "symmetry_dev_deg": 0.0,
+  "synthesis": {
+   "window_lambda_over_d_used": 0.7,
+   "synthesised": {
+    "peak_angle_deg": 29.999999999999996,
+    "peak_over_ideal_single": 0.39385418098391756,
+    "window_1p2_lambda_over_d_efficiency": 0.8167195311861786
+   },
+   "binary_baseline": {
+    "peak_angle_deg": 30.347949325364453,
+    "peak_over_ideal_single": 0.4032530482818069,
+    "window_1p2_lambda_over_d_efficiency": 0.7984632091934276
+   },
+   "ideal_equal_split_peak_over_ideal_single": 0.5
+  },
+  "pattern": {
+   "beam_phi0": {
+    "peak_gain_dbi": 25.62158484165845,
+    "theta_deg": 30.0,
+    "phi_deg": 0.0,
+    "cross_at_peak_dbi": -300.0
+   },
+   "beam_phi180": {
+    "peak_gain_dbi": 25.621584841658454,
+    "theta_deg": 30.0,
+    "phi_deg": 180.0,
+    "cross_at_peak_dbi": -300.0
+   },
+   "level_difference_db": -3.552713678800501e-15,
+   "sll_db": -9.71305095714006,
+   "max_cross_dbi": -19.286104861322162,
+   "aperture_power_fraction_of_horn": 0.7519598178501599,
+   "aperture_transmission_mean": 0.8169854652882295,
+   "radiated_power_fraction_of_horn": 0.5958591130446957
+  }
+ },
+ "pass2": {
+  "pass_name": "pass2",
+  "psi0_deg": 228.0,
+  "n_cells": 756,
+  "n_pillar": 520,
+  "n_hole": 236,
+  "residual_deg": {
+   "max_abs": 0.9187535252794987,
+   "rms": 0.09548142478619917,
+   "n_over_1deg": 0
+  },
+  "symmetry_dev_deg": 0.0,
+  "synthesis": {
+   "window_lambda_over_d_used": 0.7,
+   "synthesised": {
+    "peak_angle_deg": 30.01654124564447,
+    "peak_over_ideal_single": 0.39347842274645756,
+    "window_1p2_lambda_over_d_efficiency": 0.8142829486533603
+   },
+   "binary_baseline": {
+    "peak_angle_deg": 30.364549102710043,
+    "peak_over_ideal_single": 0.40335576079510266,
+    "window_1p2_lambda_over_d_efficiency": 0.7964773641663052
+   },
+   "ideal_equal_split_peak_over_ideal_single": 0.5
+  },
+  "pattern": {
+   "beam_phi0": {
+    "peak_gain_dbi": 25.62077495359777,
+    "theta_deg": 30.0,
+    "phi_deg": 0.0,
+    "cross_at_peak_dbi": -300.0
+   },
+   "beam_phi180": {
+    "peak_gain_dbi": 25.62077495359777,
+    "theta_deg": 30.0,
+    "phi_deg": 180.0,
+    "cross_at_peak_dbi": -300.0
+   },
+   "level_difference_db": 0.0,
+   "sll_db": -9.705598553848832,
+   "max_cross_dbi": -19.288027833826817,
+   "aperture_power_fraction_of_horn": 0.7519711685004422,
+   "aperture_transmission_mean": 0.8169977974848205,
+   "radiated_power_fraction_of_horn": 0.5958030123173775
+  }
+ },
+ "chosen": "pass1",
+ "hfss_comparison": "NOT_AVAILABLE_FROM_CURRENT_DATA"
+}

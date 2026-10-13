@@ -125,3 +125,13 @@ def test_nan_at_feed_point_does_not_propagate_through_the_whole_row():
     # far from the feed point, beta should be finite and near the plateau value
     assert np.isfinite(beta[0, 0])
     assert np.isfinite(beta[-1, -1])
+
+
+def test_cell_centers_whole_cell_side_keeps_all_cells():
+    """Phase 21 C1: 300.8 mm / 6.4 mm is 46.999... in floating point and used to floor to 46."""
+    centers, n = rfg._cell_centers(-0.1504, 0.1504, 6.4e-3)
+    assert n == 47 and len(centers) == 47
+    assert centers[0] == pytest.approx(-0.1504 + 3.2e-3)
+    # Also for an off-origin span and for the 300 mm / 8 mm docstring example (37, not 38).
+    assert rfg._cell_centers(0.0, 0.3008, 6.4e-3)[1] == 47
+    assert rfg._cell_centers(-0.15, 0.15, 8e-3)[1] == 37

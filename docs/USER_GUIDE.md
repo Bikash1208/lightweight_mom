@@ -120,7 +120,7 @@ information, not a fault: isolation comes mainly from the holograms themselves r
 surface wave away, not from edge distance alone — confirm with an HFSS S-parameter solve either
 way. Each port is designed against its own analytic surface wave; there is no per-port field
 upload yet, so expect more unreachable cells than a single aperture built from an HFSS field. The
-Coded method is not offered for multi-port designs.
+Coded (1-bit / 2-bit / 3-bit) is available for multi-port designs; see "Phase 21 additions" below.
 
 *Worked example — a 2-port board*: pick "Multiple ports" → "a row of N ports" → N=2 (or a custom
 2-port list for unequal sizes/spacing); give each port its own beam table (e.g. two different RHCP
@@ -337,3 +337,71 @@ excluded from git — `docs/DEVELOPING.md`); the others need your own export.
 - **(Phase 15) Explicit feed-position override has no Step 2 UI control** — the backend accepts
   `feed_x_mm`/`feed_y_mm` (`/api/hmsa/synthesize`), but the app always auto-detects from the
   uploaded field's own NaN/singularity; script against the API directly if you need to override it.
+
+## Phase 21 additions: multi-port layouts, coded multi-port, exact export
+
+- **Layouts** (Step 2, Ports > Multi-port): "2×2 small + 1 large" (always 5 ports, Mishra's board),
+  "1×N strip", **"N×M grid"** (rows, columns, side, gap; ports numbered in a serpentine from the
+  top-right, so a 2×2 is P1 (+,+), P2 (−,+), P3 (−,−), P4 (+,−)) and **"Custom rectangles"** (an
+  editable table: x/y min/max in mm and an optional feed position; rectangles may touch but not
+  overlap). **Snap side to whole cells** (default on) rounds a side to a whole number of cells and
+  shows e.g. "side 300.0 → 300.8 mm (47 cells)".
+- **Coded in multi-port**: pick the Coded method with Multi-port. 1-bit uses the same two-state
+  sources as single-port (the "enter two measured values" source takes a cell shape for each state,
+  at least a rectangle for state 1) plus a surface-wave beta mode (model, the default, or each state's own);
+  2-bit and 3-bit match the phase levels against the square-patch library. **Feed keep-out**
+  (1-bit, default on) forces the cell(s) under each feed empty and reports how many changed per port.
+  Each port reports its beam direction, pointing error, directivity, cross-pol and patch count; the
+  cell pair's (or the N levels') phase table is shown once.
+- **Export** (Step 3, multi-port): "Build STEP" writes an exact STEP (every vertex at its exact
+  coordinate, each port's cells at their own positions, verified after writing), and
+  **"HFSS script (.py)"** writes an AEDT IronPython script that builds the whole board natively,
+  plus layout.csv and a README with the port/beam/cell-pair tables. Rectangular patches only.
+
+## Phase 22 additions: automatic coded-cell states
+
+- **Coded > Two-state cells > "Automatic" (default).** You choose only the substrate, cell size, frequency and bits;
+  the app finds the cell states itself: the empty cell plus square patches (1-bit: one square about 180° from the empty
+  cell; 2-/3-bit: 4/8 states 90°/45° apart). "Compute cell states" shows the table before you design anything: cell,
+  |Γ| and phase **at the patch plane**, target, separation, phase sensitivity (°/0.01 mm), mesh uncertainty and labels
+  (`NEAR_RESONANCE`: above 1°/0.01 mm, a warning; `UNREACHABLE_LEVEL`: no square reaches that level, the closest is used).
+  The first run solves the squares with the project's own MoM (about 80 s for a 1-bit pair; 2-/3-bit add a few solves);
+  results are cached, so a re-run is instant. "Use these as uploaded values" copies the pair into "Enter two measured
+  values" so you can override it with HFSS numbers. Advanced > "Fix the square's side" computes that square instead of searching.
+- **How the side is found.** The MoM mesh only builds even-width squares (a requested 5.85 mm is 5.8 mm on the 0.1 mm mesh),
+  so the app interpolates the Richardson-corrected phase curve between mesh-aligned solves and snaps the side to 0.05 mm.
+  The reported Γ is that curve at the snapped side. Model-only; check the pair with one HFSS unit cell.
+- **Multi-port without Step 1.** Step 1 has a "Skip to Step 2 (multi-port)" button: multi-port boards are fed by analytic
+  monopoles, so no reference file is needed and the Frequency field is editable. Single-port designs still need the file.
+- **Unit cell tool:** a "∠S11 at the patch plane" column (reported phase + 2·k0·5 mm) that can be pasted into the measured-value fields.
+- **Surface-wave beta** options now have a one-line explanation each; each port's directivity is one consistent number
+  (the fine 0.1° beam search).
+
+
+## Phase 23 additions: hexagonal ports and "Reduce sidelobes"
+
+- **4 hexagons** (Step 2, Ports > Multi-port > "4 hexagons"). Four regular hexagons in the compact two-row cluster, centred on
+  the origin, one monopole at each hexagon centre. Give the **hexagon side** (= circumradius, default 150 mm: flat-to-flat
+  259.8 mm, corner-to-corner 300 mm, area 58,457 mm², about 0.65× the 300.8 mm square) and the guard gap (0 = the
+  hexagons tile). "Two rows" (pointy-top) or "Two columns" (flat-top). Ports are numbered counter-clockwise from the
+  upper right (P1 upper row right, P2 upper row left, P3 lower row left, P4 lower row right), so the default beams
+  θ = 30°, φ = 45/135/225/315° point away from the cluster centre. Cells whose centre is outside every hexagon are empty. The
+  cells of all four hexagons sit on one shared 6.4 mm lattice. "Trim the board to the hexagon outline" makes the exported
+  substrate and ground follow the hexagons instead of the cluster's bounding rectangle.
+- **Hexagon exports.** Outlines are dashed in the layout PNG, on layer PORTS of the DXF and listed in the README; the STEP,
+  AEDT script, CSV and JSON work per cell as before. The trimmed-board AEDT script is generated but has not been run in AEDT.
+- **Reduce sidelobes** (Step 3, coded 1-bit multi-port boards). Re-chooses individual cell states to lower the highest co-polar
+  sidelobe outside each beam's main lobe (sidelobe cancelling, Johnson et al., IEEE TAP 2015). Choose what to optimise for:
+  *each port on its own* (HFSS Edit Sources one at a time), *all ports together* (cells and port phases), or *both* (worst case).
+  Gain loss per beam is limited (default 0.5 dB), pointing is held within 0.3° of the requested direction at the design
+  frequency, beam levels stay balanced and the point XPD does not fall by more than 1 dB. Run the design with
+  **Pointing correction** on first so the starting pointing is right.
+  The result shows before/after tables on a fine 0.5° × 1° grid the optimiser never used (directivity, pointing, co-pol SLL
+  globally and on the x/y cuts through each beam, XPD), the cells changed per port, and the same states re-evaluated at ±2 %
+  frequency with the two cells re-solved there. The pattern and exports then use the optimised states.
+- **Robust** (checkbox). Minimises the worst case over −2 % / 0 / +2 % frequency (cells re-solved at each) and, for all-ports,
+  over 20 seeded random port-phase errors of ±10°. Slower; the held-out table is reported at all three frequencies.
+- **All-ports sidelobe figures need one phase-locked source split four ways.** With independent per-port signals the
+  single-port figures apply.
+- Model-only. None of these numbers has been compared with an HFSS solve; the beam squints with frequency (about 0.5–1.5°
+  over ±2 %), so the 0.3° pointing figure is a design-frequency one.

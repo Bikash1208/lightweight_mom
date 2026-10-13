@@ -30,7 +30,7 @@ exact way. `coded_phase_map_deg` therefore implements ONE quantization formula f
 not two.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 
@@ -92,6 +92,7 @@ class CodedDesign:
     unreachable_fraction: float = 0.0  # every cell takes one of the two real states, so none is unreachable
     path_iterations: int = 0  # state-dependent beta iterations used (0 when beta was not path-integrated)
     path_converged: bool = True
+    keepout_cells_changed: int = 0  # cells forced to state 0 under the feed (apply_feed_keepout_one_bit)
 
 
 MAX_PATH_ITERATIONS = 10
@@ -200,6 +201,50 @@ def synthesize_coded_one_bit(
         two_state_states=states,
         path_iterations=path_iterations,
         path_converged=path_converged,
+    )
+
+
+FEED_KEEPOUT_FRACTION = 0.6  # a cell is "under the feed" when its centre is within 0.6 periods of it
+# in x AND y: a feed at a cell centre touches 1 cell, on an edge 2 cells, on a corner 4 cells
+
+
+def apply_feed_keepout_one_bit(design, feed_xy_m, period_m):
+    """Phase 21 C2: force the cell(s) under the feed to state 0 (the empty cell -- a monopole's
+    coax passes through the board there, so no patch can sit on it). Returns `(design, n_changed)`:
+    `n_changed` counts only cells that were state 1 before. The radiated `aperture_field` of a
+    changed cell is rebuilt with state 0's own measured phase (its reference-wave amplitude and
+    phase are kept), so the pattern prediction sees the real, keep-out-corrected board."""
+    if design.n_bits != 1 or design.two_state_states is None:
+        raise ValueError("apply_feed_keepout_one_bit needs a 1-bit coded design with two_state_states")
+    fx, fy = feed_xy_m
+    limit = FEED_KEEPOUT_FRACTION * period_m
+    state_0 = design.two_state_states[0]
+    achieved_0 = float(principal_phase_deg(state_0.value))
+    cells = list(design.cells)
+    level_map = np.array(design.level_map, copy=True)
+    aperture_field = np.array(design.aperture_field, copy=True)
+    n_changed = 0
+    for k, c in enumerate(cells):
+        if abs(c.x_m - fx) >= limit or abs(c.y_m - fy) >= limit or int(c.geometry_param) == 0:
+            continue
+        n_changed += 1
+        aperture_field[c.i, c.j] *= np.exp(1j * np.radians(achieved_0 - c.achieved_value))
+        level_map[c.i, c.j] = 0
+        cells[k] = replace(
+            c,
+            geometry_param=0.0,
+            achieved_value=achieved_0,
+            phase_error_deg=float(abs(wrapped_difference_deg(achieved_0, c.control_value))),
+        )
+    return (
+        replace(
+            design,
+            cells=tuple(cells),
+            level_map=level_map,
+            aperture_field=aperture_field,
+            keepout_cells_changed=n_changed,
+        ),
+        n_changed,
     )
 
 

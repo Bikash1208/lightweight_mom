@@ -51,6 +51,9 @@
         <p class="status" id="upload-status"></p>
 
         <button type="button" id="upload-btn">Analyze</button>
+        <p class="status" style="margin-top:1rem">Designing a <b>multi-port</b> board? Each port is fed by its own
+        analytic monopole, so no reference file is needed:
+        <button type="button" class="secondary" id="skip-to-multiport-btn" style="margin-top:0">Skip to Step 2 (multi-port)</button></p>
 
         <div id="upload-result" style="display:none">
           <img class="plot" id="phase-map-img" alt="Reference phase map" />
@@ -82,8 +85,14 @@
             <div class="segmented" id="port-layout-control">
               <button type="button" data-preset="2x2_plus_1_large" class="active">2×2 small + 1 large</button>
               <button type="button" data-preset="1xn">1×N strip</button>
+              <button type="button" data-preset="grid">N×M grid</button>
+              <button type="button" data-preset="hex4">4 hexagons</button>
+              <button type="button" data-preset="custom">Custom rectangles</button>
             </div>
           </label>
+          <p class="status" id="port-layout-help">Fixed port count: "2×2 small + 1 large" is Mishra's
+          5-port board by definition. "1×N strip" and "N×M grid" take their port count from the fields
+          below; "Custom rectangles" has one port per table row.</p>
           <div id="port-layout-2x2-fields">
             <label>Small sub-aperture side <span class="unit">mm, active aperture (the large one is 2x this; the guard gap sits outside it)</span>
               <input type="number" step="any" id="port-small-side-mm" value="" />
@@ -93,6 +102,48 @@
             <label>Number of ports <input type="number" step="1" min="2" max="8" id="port-1xn-n" value="2" /></label>
             <label>Each port's side <span class="unit">mm, active aperture (the guard gap sits outside it)</span> <input type="number" step="any" id="port-1xn-side-mm" value="" /></label>
           </div>
+          <div id="port-layout-grid-fields" style="display:none">
+            <label>Rows <input type="number" step="1" min="1" max="6" id="port-grid-rows" value="2" style="width:6rem" /></label>
+            <label>Columns <input type="number" step="1" min="1" max="6" id="port-grid-cols" value="2" style="width:6rem" /></label>
+            <label>Each port's side <span class="unit">mm, active aperture (the guard gap sits outside it)</span> <input type="number" step="any" id="port-grid-side-mm" value="" /></label>
+            <p class="status">Ports are numbered in a serpentine from the top-right: the top row runs
+            right to left, the next row left to right, and so on. For 2×2 that is P1 (+,+), P2 (−,+),
+            P3 (−,−), P4 (+,−). One feed sits at each sub-aperture centre.</p>
+          </div>
+          <div id="port-layout-hex4-fields" style="display:none">
+            <label>Hexagon side <span class="unit">mm (= circumradius; flat-to-flat is 1.732&times; this, corner-to-corner 2&times;)</span>
+              <input type="number" step="any" id="port-hex-side-mm" value="150" min="1" />
+            </label>
+            <label>Orientation
+              <div class="segmented" id="port-hex-orientation-control">
+                <button type="button" data-orientation="pointy" class="active">Two rows (pointy-top)</button>
+                <button type="button" data-orientation="flat">Two columns (flat-top)</button>
+              </div>
+            </label>
+            <label style="display:flex;gap:0.5rem;align-items:center"><input type="checkbox" id="port-hex-trim" style="width:auto" />
+              Trim the board to the hexagon outline <span class="unit">(off: the substrate and ground are the cluster's bounding rectangle)</span></label>
+            <p class="status" id="port-hex-info"></p>
+            <p class="status">Four regular hexagons in the compact two-row cluster, centred on the origin, one
+            feed at each hexagon centre. Ports are numbered counter-clockwise from the upper right: P1 upper
+            row right, P2 upper row left, P3 lower row left, P4 lower row right, so the default beams
+            &theta; = 30&deg;, &phi; = 45/135/225/315&deg; point away from the cluster centre. The guard gap
+            below is the distance between facing edges (0 = the hexagons tile). Cells whose centre is outside
+            every hexagon are empty.</p>
+          </div>
+          <div id="port-layout-custom-fields" style="display:none">
+            <table id="port-custom-table">
+              <thead><tr><th>Port</th><th>x min</th><th>x max</th><th>y min</th><th>y max</th>
+              <th>feed x</th><th>feed y</th><th></th></tr></thead>
+              <tbody></tbody>
+            </table>
+            <button type="button" class="secondary" id="port-custom-add-btn">Add rectangle</button>
+            <p class="status">Millimetres, in board coordinates. Feed x/y are optional (blank = the
+            rectangle's centre). Rectangles must not overlap; touching edges are fine.</p>
+            <p class="status warn" id="port-custom-error"></p>
+          </div>
+          <label style="display:flex;gap:0.5rem;align-items:center" id="port-snap-label"><input type="checkbox" id="port-snap-side" checked style="width:auto" />
+            Snap side to whole cells <span class="unit">(off-grid sides make the combined board resample cells by nearest neighbour)</span></label>
+          <p class="status" id="port-snap-status"></p>
           <label>Guard gap between ports <span class="unit">mm</span>
             <input type="number" step="any" id="port-gap-mm" value="" min="0" />
           </label>
@@ -203,11 +254,35 @@
           <div id="coded-one-bit-fields">
             <label>Two-state cells
               <div class="segmented" id="coded-two-state-control">
-                <button type="button" data-source="square_only" class="active">Best pair from the square-patch library</button>
-                <button type="button" data-source="square_and_annular">Square patch + patch-with-annular-slot</button>
-                <button type="button" data-source="uploaded">Enter two measured values</button>
+                <button type="button" data-source="auto" class="active">Automatic (squares; computed from the cell size)</button>
+                <button type="button" data-source="square_only" data-label-one="Best pair from the square-patch library" data-label-many="Square-patch library (nearest phase)">Best pair from the square-patch library</button>
+                <button type="button" data-source="square_and_annular" data-onebit-only="1">Square patch + patch-with-annular-slot</button>
+                <button type="button" data-source="uploaded" data-onebit-only="1">Enter two measured values</button>
               </div>
             </label>
+            <div id="coded-auto-fields">
+              <p class="status">The app finds the cell states itself from the Board section's substrate,
+              cell size and frequency: the empty cell plus square patches (1-bit: one square about 180° from the
+              empty cell; 2-/3-bit: 4/8 states, 90°/45° apart). Squares are solved with this project's own method
+              of moments, mesh-corrected and snapped to a 0.05 mm grid. Model-only; verify the pair with one HFSS
+              unit cell and override with "Enter two measured values" if it differs.</p>
+              <button type="button" class="secondary" id="coded-auto-compute-btn">Compute cell states</button>
+              <details class="advanced" id="coded-auto-advanced">
+                <summary>Advanced</summary>
+                <div id="coded-auto-fixed-wrap">
+                  <label>Fix the square's side <span class="unit">mm, 1-bit only; blank = search for the best</span>
+                    <input type="number" step="any" id="coded-auto-fixed-L" value="" placeholder="e.g. 5.85" style="width:8rem" />
+                  </label>
+                  <p class="status">Use this when you have a fabricated cell size in mind: the app computes that
+                  square's reflection coefficient instead of searching.</p>
+                </div>
+                <label>Minimum gap between patches <span class="unit">mm; a square is at most cell size − gap wide</span>
+                  <input type="number" step="any" id="coded-auto-min-gap" value="0.2" min="0" style="width:8rem" />
+                </label>
+              </details>
+              <p class="status" id="coded-auto-status"></p>
+              <div id="coded-auto-table"></div>
+            </div>
             <div id="coded-annular-fields" style="display:none">
               <p class="status">A real, separate unit cell &mdash; a square patch with a concentric
               annular slot &mdash; solved by this project's own method of moments, the same way the
@@ -216,6 +291,8 @@
               <label>Slot inner radius <span class="unit">mm</span> <input type="number" step="any" id="coded-annular-r-mm" value="1.0" /></label>
             </div>
             <div id="coded-uploaded-fields" style="display:none">
+              <p class="status">Phase at the patch plane: de-embed the Floquet port to the top face of the
+              substrate (the Unit cell tool's "patch plane" column is already de-embedded).</p>
               <label>State 0 reflection coefficient <span class="unit">real, imag (e.g. from HFSS)</span>
                 <input type="number" step="any" id="coded-uploaded-0-real" value="1.0" style="width:6rem" />
                 <input type="number" step="any" id="coded-uploaded-0-imag" value="0.0" style="width:6rem" />
@@ -224,7 +301,38 @@
                 <input type="number" step="any" id="coded-uploaded-1-real" value="-1.0" style="width:6rem" />
                 <input type="number" step="any" id="coded-uploaded-1-imag" value="0.0" style="width:6rem" />
               </label>
+              <label>State 0 cell
+                <select id="coded-uploaded-geom-0">
+                  <option value="empty" selected>empty (no patch)</option>
+                  <option value="rectangle">rectangle</option>
+                </select>
+                <span id="coded-uploaded-geom-0-dims" style="display:none">
+                  L <input type="number" step="any" id="coded-uploaded-0-L-mm" value="5.0" style="width:5rem" /> ×
+                  W <input type="number" step="any" id="coded-uploaded-0-W-mm" value="5.0" style="width:5rem" /> <span class="unit">mm</span>
+                </span>
+              </label>
+              <label>State 1 cell: rectangle
+                L <input type="number" step="any" id="coded-uploaded-1-L-mm" value="5.85" style="width:5rem" /> ×
+                W <input type="number" step="any" id="coded-uploaded-1-W-mm" value="5.85" style="width:5rem" /> <span class="unit">mm</span>
+              </label>
+              <p class="status">The geometry is what the export draws; the values above are taken at the patch plane.</p>
             </div>
+          </div>
+          <div id="coded-multi-fields" style="display:none">
+            <label>Surface-wave beta used for the phase
+              <div class="segmented" id="coded-beta-mode-control">
+                <button type="button" data-beta="model" class="active">Model (mixed 1-bit surface)</button>
+                <button type="button" data-beta="state">Each state's own</button>
+              </div>
+            </label>
+            <ul class="status" id="coded-beta-help" style="margin-top:0;padding-left:1.2rem">
+              <li><b>Model (default):</b> β of the actual mixed surface of both states, solved by the app. The most accurate.</li>
+              <li><b>Each state's own:</b> β is path-integrated cell by cell from each state's own β. Use it only when both states are far from resonance.</li>
+            </ul>
+            <label style="display:flex;gap:0.5rem;align-items:center"><input type="checkbox" id="coded-feed-keepout" checked style="width:auto" />
+              Feed keep-out <span class="unit">(1-bit: the cell(s) under each feed are forced empty; the count per port is reported)</span></label>
+            <p class="status">Every port shares the same cell states. With 2+ bits the phase levels are
+            found automatically, or matched against the square-patch library.</p>
           </div>
           <p class="status" id="coded-range-status"></p>
         </div>
@@ -333,6 +441,34 @@
         <img class="plot" id="ports-patch-layout-img" alt="Multi-port patch layout" />
         <p class="status" id="ports-isolation-summary"></p>
         <p class="status" id="ports-efficiency-note">Directivity-based aperture efficiency is an upper bound: it excludes residual surface-wave power, edge diffraction, feed loss and mismatch. Measured boards in the literature reach about 10–15% (Mishra et al., TVT 2026).</p>
+        <div id="ports-state-table"></div>
+        <div id="sll-card" style="display:none">
+          <h3>Reduce sidelobes</h3>
+          <p class="status">Re-chooses individual 1-bit cell states to lower the highest co-polar sidelobe outside
+          each beam's main lobe, within a gain budget (Johnson et al., IEEE TAP 2015, sidelobe cancelling).
+          Model-only. Every number below is measured on a fine grid (0.5&deg; &times; 1&deg;) the optimiser never
+          used. Export and the pattern use the optimised states once it finishes.</p>
+          <label>Excitation to optimise for
+            <select id="sll-mode">
+              <option value="single">Each port on its own (one port at a time in HFSS)</option>
+              <option value="all">All ports together (cells and port phases)</option>
+              <option value="both">Both (worst case over single-port and all-ports)</option>
+            </select>
+          </label>
+          <label>Largest gain loss per beam <span class="unit">dB</span>
+            <input type="number" step="any" id="sll-max-loss" value="0.5" min="0" style="width:6rem" /></label>
+          <label>Iteration budget <span class="unit">cell changes</span>
+            <input type="number" step="1" id="sll-budget" value="400" min="1" style="width:6rem" /></label>
+          <label style="display:flex;gap:0.5rem;align-items:center"><input type="checkbox" id="sll-robust" style="width:auto" />
+            Robust <span class="unit">(worst case over &minus;2 % / 0 / +2 % frequency with the two cells re-solved at each, and for all-ports
+            over 20 random port-phase errors of &plusmn;10&deg;; slower)</span></label>
+          <p class="status">Beam pointing is held within 0.3&deg; of the requested direction at the design frequency. For
+          that to be meaningful, run the design with &ldquo;Pointing correction&rdquo; on first. All-ports sidelobe figures need one
+          phase-locked source split across the ports; with independent per-port signals use the single-port figures.</p>
+          <button type="button" id="sll-run-btn">Reduce sidelobes</button>
+          <p class="status" id="sll-status"></p>
+          <div id="sll-results"></div>
+        </div>
         <div id="ports-per-port-results"></div>
       </div>
 
@@ -349,6 +485,7 @@
         </div>
         <div id="cuts-imgs"></div>
         <ul class="result-list" id="results-list"></ul>
+        <div id="coded-auto-results"></div>
         <h3 id="per-beam-heading" style="display:none">Per-beam results</h3>
         <table id="per-beam-table" style="display:none">
           <thead><tr><th>Beam</th><th>Direction</th><th>Polarization requested</th><th>Beam type requested</th>
@@ -369,6 +506,12 @@
         synthesis finishes. STEP (CAD) is a separate, optional step &mdash; it can take minutes and
         produce a large file (100+ MB for a big array).</p>
         <button type="button" class="secondary" id="build-step-btn">Build STEP (CAD)</button>
+        <button type="button" class="secondary" id="build-hfss-script-btn" style="display:none">HFSS script (.py)</button>
+        <label id="include-pins-label" style="display:none;gap:0.5rem;align-items:center"><input type="checkbox" id="include-pins" style="width:auto" />
+          Include monopole pins in STEP <span class="unit">(PEC cylinders, radius 0.635 mm, 7.1 mm tall, at each feed; off by default)</span></label>
+        <p class="status" id="exact-export-note" style="display:none">Multi-port boards: STEP is built from exact
+        vertex coordinates (verified after writing), each port's cells at their own positions. The HFSS script
+        builds the whole board natively in AEDT (Tools &gt; Run Script).</p>
         <p class="status" id="export-status"></p>
         <ul class="result-list" id="export-links"></ul>
       </div>
@@ -492,6 +635,13 @@
         } else {
           tmEl.textContent = "";
         }
+        if (data.coordinate_system) {
+          const cs = document.createElement("span");
+          cs.className = "label";
+          cs.id = "upload-cs-label";
+          cs.textContent = `Coordinate system: ${data.coordinate_system}`;
+          labelsEl.appendChild(cs);
+        }
         if (data.nan_count > 0) {
           const span = document.createElement("span");
           span.className = "label";
@@ -513,6 +663,21 @@
     document.getElementById("upload-btn").addEventListener("click", () => analyzeReferenceField());
 
     document.getElementById("to-step-2-btn").addEventListener("click", () => showStep(2));
+
+    // Multi-port boards do not use the Step 1 reference file: Step 2 is reachable without it, with the
+    // Frequency field enabled (single-port behaviour is unchanged: it still needs the upload).
+    document.getElementById("skip-to-multiport-btn").addEventListener("click", () => {
+      stepReached[2] = true;
+      const freqEl = document.getElementById("synthesis-frequency-ghz");
+      freqEl.disabled = false;
+      freqEl.placeholder = "e.g. 10.54";
+      document.getElementById("unlock-frequency-btn").style.display = "none";
+      document.getElementById("cell-size-mm").placeholder = "e.g. 6.4";
+      document.getElementById("aperture-mm").closest("label").style.display = "none";
+      portModeControl.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.mode === "multi"));
+      updatePortModeVisibility();
+      showStep(2);
+    });
 
     // ---------------------------------------------------------------- Step 2
     // Optional stages of a design: the substrate for the pattern check, the pointing correction and
@@ -735,8 +900,60 @@
       return portLayoutControl.querySelector("button.active")?.dataset.preset || "2x2_plus_1_large";
     }
     function currentPortCount() {
-      if (currentPortLayoutPreset() === "2x2_plus_1_large") return 5;
+      const preset = currentPortLayoutPreset();
+      if (preset === "2x2_plus_1_large") return 5;
+      if (preset === "hex4") return 4;
+      if (preset === "grid") {
+        const r = parseInt(document.getElementById("port-grid-rows").value, 10) || 1;
+        const c = parseInt(document.getElementById("port-grid-cols").value, 10) || 1;
+        return Math.max(1, r) * Math.max(1, c);
+      }
+      if (preset === "custom") return document.querySelectorAll("#port-custom-table tbody tr").length || 1;
       return parseInt(document.getElementById("port-1xn-n").value, 10) || 2;
+    }
+    // ---- custom rectangles table
+    function addCustomRow(vals) {
+      const tbody = document.querySelector("#port-custom-table tbody");
+      const tr = document.createElement("tr");
+      const v = vals || [-50, 50, -50, 50, "", ""];
+      tr.innerHTML = `<td class="custom-port-no"></td>` +
+        v.map((x, k) => `<td><input type="number" step="any" class="custom-v" data-k="${k}" value="${x}" style="width:5.5rem" /></td>`).join("") +
+        `<td><button type="button" class="secondary custom-del">remove</button></td>`;
+      tbody.appendChild(tr);
+      tr.querySelector(".custom-del").addEventListener("click", () => {
+        if (tbody.children.length > 1) { tr.remove(); afterCustomChange(); }
+      });
+      tr.querySelectorAll("input").forEach((el) => el.addEventListener("input", afterCustomChange));
+      afterCustomChange(true);
+    }
+    function readCustomRegions() {
+      return Array.from(document.querySelectorAll("#port-custom-table tbody tr")).map((tr) => {
+        const v = Array.from(tr.querySelectorAll("input.custom-v")).map((el) => parseFloat(el.value));
+        const rect = v.slice(0, 4);
+        return (Number.isFinite(v[4]) && Number.isFinite(v[5])) ? [...rect, v[4], v[5]] : rect;
+      });
+    }
+    function validateCustomRegions() {
+      const rects = readCustomRegions();
+      for (let i = 0; i < rects.length; i++) {
+        const [x0, x1, y0, y1] = rects[i];
+        if (![x0, x1, y0, y1].every(Number.isFinite)) return `Port ${i + 1}: fill in x min/max and y min/max.`;
+        if (!(x1 > x0 && y1 > y0)) return `Port ${i + 1}: each side must be greater than 0 (max > min).`;
+      }
+      for (let i = 0; i < rects.length; i++) for (let j = i + 1; j < rects.length; j++) {
+        const ox = Math.min(rects[i][1], rects[j][1]) - Math.max(rects[i][0], rects[j][0]);
+        const oy = Math.min(rects[i][3], rects[j][3]) - Math.max(rects[i][2], rects[j][2]);
+        if (ox > 1e-9 && oy > 1e-9) return `Ports ${i + 1} and ${j + 1} overlap.`;
+      }
+      return "";
+    }
+    function afterCustomChange(skipRender) {
+      document.querySelectorAll("#port-custom-table tbody tr").forEach((tr, i) => {
+        tr.querySelector(".custom-port-no").textContent = i + 1;
+      });
+      document.getElementById("port-custom-error").textContent = validateCustomRegions();
+      if (skipRender !== true) renderPortsBeamTables();
+      refreshPortDefaults();
     }
     function defaultPortBeams(i) {
       // The 2x2+1 preset's large port 5 (index 4) illuminates the same quadrant as ports 1-4,
@@ -745,6 +962,9 @@
         return [0, 1, 2, 3].map((j) => ({
           theta_deg: 20 + j * 5, phi_deg: (j * 90) % 360, power_db: 0, desired_polarization: "rhcp", oam_charge: 0,
         }));
+      }
+      if (currentPortLayoutPreset() === "hex4") {
+        return [{ theta_deg: 30, phi_deg: 45 + 90 * i, power_db: 0, desired_polarization: "rhcp", oam_charge: 0 }];
       }
       return [{ theta_deg: 20 + i * 5, phi_deg: (i * 90) % 360, power_db: 0, desired_polarization: "rhcp", oam_charge: 0 }];
     }
@@ -785,15 +1005,7 @@
       const multi = currentPortMode() === "multi";
       document.getElementById("ports-fields").style.display = multi ? "block" : "none";
       document.getElementById("single-port-beams-fields").style.display = multi ? "none" : "block";
-      // Coded isn't wired for multi-port designs in this version -- hide it rather than offer a
-      // combination that would fail.
-      const codedBtn = methodControl.querySelector('button[data-method="coded"]');
-      codedBtn.style.display = multi ? "none" : "";
-      if (multi && currentMethod() === "coded") {
-        methodControl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
-        methodControl.querySelector('button[data-method="eigenmode"]').classList.add("active");
-        updateMethodVisibility();
-      }
+      updateCodedMultiVisibility();
       if (multi) renderPortsBeamTables();
     }
     portModeControl.addEventListener("click", (ev) => {
@@ -810,9 +1022,23 @@
       btn.classList.add("active");
       document.getElementById("port-layout-2x2-fields").style.display = btn.dataset.preset === "2x2_plus_1_large" ? "block" : "none";
       document.getElementById("port-layout-1xn-fields").style.display = btn.dataset.preset === "1xn" ? "block" : "none";
+      document.getElementById("port-layout-grid-fields").style.display = btn.dataset.preset === "grid" ? "block" : "none";
+      document.getElementById("port-layout-hex4-fields").style.display = btn.dataset.preset === "hex4" ? "block" : "none";
+      document.getElementById("port-layout-custom-fields").style.display = btn.dataset.preset === "custom" ? "block" : "none";
+      document.getElementById("port-snap-label").style.display = (btn.dataset.preset === "custom" || btn.dataset.preset === "hex4") ? "none" : "flex";
+      // the default beams belong to the layout: a preset switch re-seeds ports the user has not edited
+      if (btn.dataset.preset === "hex4") state.ports = [];
+      if (btn.dataset.preset === "custom" && !document.querySelector("#port-custom-table tbody tr")) {
+        addCustomRow([0, 300, 0, 300, "", ""]);
+      }
       renderPortsBeamTables();
+      refreshPortDefaults();
     });
     document.getElementById("port-1xn-n").addEventListener("change", renderPortsBeamTables);
+    document.getElementById("port-grid-rows").addEventListener("change", renderPortsBeamTables);
+    document.getElementById("port-grid-cols").addEventListener("change", renderPortsBeamTables);
+    document.getElementById("port-custom-add-btn").addEventListener("click", () => addCustomRow());
+    document.getElementById("port-snap-side").addEventListener("change", () => refreshPortDefaults());
 
     document.getElementById("unlock-frequency-btn").addEventListener("click", () => {
       const freqEl = document.getElementById("synthesis-frequency-ghz");
@@ -852,6 +1078,8 @@
       refreshMethodPreview();
     });
     document.getElementById("cell-size-mm").addEventListener("change", () => refreshMethodPreview());
+    document.getElementById("cell-size-mm").addEventListener("input", () => refreshPortDefaults());
+    document.getElementById("cell-size-mm").addEventListener("change", () => refreshPortDefaults());
 
     // PHASE15 Part C gap-fill, defaults: a port's side is 5 lambda0 and the guard gap is 1 lambda_sw,
     // both at the design frequency. lambda_sw scales from Step 1's measured TM0 beta (beta ~ k0 for a
@@ -869,6 +1097,7 @@
       const betaAtF = state.betaMeasured * (f * 1e9 / state.uploadFrequencyHz);
       return (2 * Math.PI / betaAtF) * 1e3;
     }
+    function ff_or_nan(hs) { return hs > 0 ? Math.sqrt(3) * hs : NaN; }
     function setPortDefault(id, value) {
       const el = document.getElementById(id);
       if (value != null && !el.dataset.userEdited) el.value = value.toFixed(1);
@@ -879,11 +1108,40 @@
       if (l0 != null) {
         setPortDefault("port-small-side-mm", _PORT_SIDE_LAMBDA0 * l0);
         setPortDefault("port-1xn-side-mm", _PORT_SIDE_LAMBDA0 * l0);
+        setPortDefault("port-grid-side-mm", _PORT_SIDE_LAMBDA0 * l0);
       }
-      setPortDefault("port-gap-mm", lsw);
-      const side = parseFloat(currentPortLayoutPreset() === "2x2_plus_1_large"
+      const preset = currentPortLayoutPreset();
+      setPortDefault("port-gap-mm", preset === "hex4" ? 0 : lsw);  // hexagons tile by default
+      let side = parseFloat(preset === "2x2_plus_1_large"
         ? document.getElementById("port-small-side-mm").value
+        : preset === "grid" ? document.getElementById("port-grid-side-mm").value
         : document.getElementById("port-1xn-side-mm").value);
+      if (preset === "custom") {
+        const r = readCustomRegions()[0];
+        side = r ? Math.min(r[1] - r[0], r[3] - r[2]) : NaN;
+      }
+      if (preset === "hex4") {
+        const hs = parseFloat(document.getElementById("port-hex-side-mm").value);
+        const pmm = parseFloat(document.getElementById("cell-size-mm").value);
+        const info = document.getElementById("port-hex-info");
+        if (hs > 0) {
+          const ff = Math.sqrt(3) * hs, area = 1.5 * Math.sqrt(3) * hs * hs;
+          info.textContent = `Flat-to-flat ${ff.toFixed(1)} mm, corner-to-corner ${(2 * hs).toFixed(1)} mm, area ${area.toFixed(0)} mm²` +
+            (pmm > 0 ? ` (about ${Math.round(area / (pmm * pmm))} cells per port).` : ".");
+        } else { info.textContent = ""; }
+        side = ff_or_nan(hs);
+      }
+      // "Snap side to whole cells": show what the run will use before it starts
+      const snapEl = document.getElementById("port-snap-status");
+      const periodMm = parseFloat(document.getElementById("cell-size-mm").value);
+      if (preset === "hex4") { snapEl.textContent = ""; }
+      else if (preset !== "custom" && document.getElementById("port-snap-side").checked && side > 0 && periodMm > 0) {
+        const n = Math.max(1, Math.round(side / periodMm));
+        snapEl.textContent = `side ${side.toFixed(1)} → ${(n * periodMm).toFixed(1)} mm (${n} cells)`;
+      } else if (side > 0 && periodMm > 0) {
+        snapEl.textContent = `side ${side.toFixed(1)} mm = ${(side / periodMm).toFixed(2)} cells` +
+          (Math.abs(side / periodMm - Math.round(side / periodMm)) > 1e-6 ? " (not a whole number of cells)" : "");
+      } else { snapEl.textContent = ""; }
       const gap = parseFloat(document.getElementById("port-gap-mm").value);
       const msgs = [];
       const minSide = Math.round(_PORT_MIN_SIDE_LAMBDA0 * (l0 || 0) * 10) / 10;
@@ -898,7 +1156,13 @@
       warnEl.textContent = msgs.join(" ");
       warnEl.className = msgs.length ? "status warn" : "status";
     }
-    ["port-small-side-mm", "port-1xn-side-mm", "port-gap-mm"].forEach((id) => {
+    document.getElementById("port-hex-orientation-control").addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button");
+      if (!btn) return;
+      document.querySelectorAll("#port-hex-orientation-control button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+    });
+    ["port-small-side-mm", "port-1xn-side-mm", "port-grid-side-mm", "port-gap-mm", "port-hex-side-mm"].forEach((id) => {
       document.getElementById(id).addEventListener("input", (ev) => {
         ev.target.dataset.userEdited = "1";
         refreshPortDefaults();
@@ -938,6 +1202,7 @@
       document.getElementById("eigenmode-fields").style.display = eigenmode ? "block" : "none";
       document.getElementById("impedance-method-fields").style.display = eigenmode ? "block" : "none";
       document.getElementById("coded-fields").style.display = coded ? "block" : "none";
+      updateCodedMultiVisibility();
       document.getElementById("method-hint").textContent = eigenmode
         ? "Recommended for monopole-fed boards: the control variable is the board's own surface-wave impedance."
         : coded
@@ -980,11 +1245,151 @@
       return parseInt(codedBitsControl.querySelector("button.active")?.dataset.bits || "1", 10);
     }
     function currentCodedTwoStateSource() {
-      return codedTwoStateControl.querySelector("button.active")?.dataset.source || "square_only";
+      return codedTwoStateControl.querySelector("button.active")?.dataset.source || "auto";
+    }
+    function autoTwoState() {
+      const v = parseFloat(document.getElementById("coded-auto-fixed-L").value);
+      const body = { source: "auto" };
+      if (currentCodedBits() === 1 && Number.isFinite(v) && v > 0) body.auto_fixed_L_mm = v;
+      const gap = parseFloat(document.getElementById("coded-auto-min-gap").value);
+      if (Number.isFinite(gap) && gap >= 0) body.auto_min_gap_mm = gap;
+      return body;
+    }
+    function fmtDeg(v, d = 1) { return v == null ? "—" : v.toFixed(d); }
+    // Phase 22: the automatically found cell states (state, geometry, |Gamma|, phase at the patch plane, ...)
+    function autoStatesTableHtml(auto, withUseButton) {
+      if (!auto) return "";
+      const rows = auto.states.map((s) => {
+        const geom = s.geometry.kind === "empty" ? "empty" : `${s.geometry.L_mm.toFixed(2)} × ${s.geometry.W_mm.toFixed(2)} mm square`;
+        const labels = (s.labels || []).map((l) => `<span class="label" title="${l}">${l}</span>`).join(" ");
+        return `<tr><td>${s.level}</td><td>${geom}</td><td>${s.magnitude_db.toFixed(3)}</td>` +
+          `<td>${fmtDeg(s.phase_deg_patch_plane)}</td><td>${fmtDeg(s.target_phase_deg)}</td>` +
+          `<td>${s.separation_deg != null ? s.separation_deg.toFixed(1) + "°" : "—"}</td>` +
+          `<td>${fmtDeg(s.sensitivity_deg_per_0p01mm)}</td><td>${s.mesh_uncertainty_deg != null ? "±" + s.mesh_uncertainty_deg.toFixed(1) + "°" : "—"}</td>` +
+          `<td>${labels}</td></tr>` +
+          (s.message ? `<tr><td></td><td colspan="8" class="status warn">${s.message}</td></tr>` : "");
+      }).join("");
+      let fixedBanner = "";
+      if (auto.fixed_L_mm != null && auto.n_bits === 1) {
+        const sep = auto.states[1].separation_deg;
+        fixedBanner = `<p class="status fixed-side-separation" style="font-size:1.15rem;font-weight:600">` +
+          `Separation with the fixed ${auto.fixed_L_mm.toFixed(2)} mm square: ${sep.toFixed(1)}°</p>`;
+      }
+      const warnings = (auto.warnings || []).map((w) => `<p class="status warn auto-states-warning">${w}</p>`).join("");
+      const useBtn = withUseButton && auto.n_bits === 1
+        ? `<button type="button" class="secondary use-auto-as-uploaded">Use these as uploaded values</button>` : "";
+      window.__lastAutoStates = auto;
+      return `<h4>Cell states found automatically (${auto.n_bits}-bit)</h4>` + fixedBanner + warnings +
+        `<div style="overflow-x:auto"><table><thead><tr><th>State</th><th>Cell</th><th>|Γ| (dB)</th><th>Phase at the patch plane (°)</th>` +
+        `<th>Target (°)</th><th>Separation</th><th>Sensitivity (°/0.01 mm)</th><th>Mesh uncertainty</th><th>Labels</th></tr></thead>` +
+        `<tbody>${rows}</tbody></table></div>` +
+        `<p class="status">Reference plane: the patch plane. ${auto.n_solves} MoM solve(s) run, ${auto.n_cached} served from the cache, ` +
+        `${auto.solve_seconds.toFixed(1)} s. Model-only: mesh-corrected MoM (0.2/0.1 mm Richardson), side snapped to 0.05 mm, ` +
+        `Γ interpolated between mesh-aligned solves.</p>` + useBtn;
+    }
+    // "Use these as uploaded values": copy the found pair into the "Enter two measured values" fields to edit/override
+    function useAutoAsUploaded() {
+      const auto = window.__lastAutoStates;
+      if (!auto || auto.n_bits !== 1) return;
+      const [s0, s1] = auto.states;
+      const set = (id, v) => { document.getElementById(id).value = v; };
+      set("coded-uploaded-0-real", s0.gamma_real); set("coded-uploaded-0-imag", s0.gamma_imag);
+      set("coded-uploaded-1-real", s1.gamma_real); set("coded-uploaded-1-imag", s1.gamma_imag);
+      const geomSel = document.getElementById("coded-uploaded-geom-0");
+      geomSel.value = s0.geometry.kind === "empty" ? "empty" : "rectangle";
+      geomSel.dispatchEvent(new Event("change"));
+      if (s0.geometry.kind !== "empty") { set("coded-uploaded-0-L-mm", s0.geometry.L_mm); set("coded-uploaded-0-W-mm", s0.geometry.W_mm); }
+      set("coded-uploaded-1-L-mm", s1.geometry.L_mm); set("coded-uploaded-1-W-mm", s1.geometry.W_mm);
+      codedTwoStateControl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      codedTwoStateControl.querySelector('button[data-source="uploaded"]').classList.add("active");
+      updateCodedTwoStateVisibility();
+    }
+    document.addEventListener("click", (ev) => { if (ev.target.closest(".use-auto-as-uploaded")) useAutoAsUploaded(); });
+    // Cell size and Frequency (Board section) must be set before anything is sent to the API
+    function checkBoardValues() {
+      const cell = document.getElementById("cell-size-mm");
+      const freq = document.getElementById("synthesis-frequency-ghz");
+      const empty = [];
+      if (!Number.isFinite(parseFloat(cell.value)) || !(parseFloat(cell.value) > 0)) empty.push(cell);
+      if (!Number.isFinite(parseFloat(freq.value)) || !(parseFloat(freq.value) > 0)) empty.push(freq);
+      if (!empty.length) return null;
+      empty[0].scrollIntoView({ behavior: "smooth", block: "center" });
+      empty[0].focus();
+      return "Set Cell size and Frequency in the Board section first.";
+    }
+    document.getElementById("coded-auto-compute-btn").addEventListener("click", async () => {
+      const statusEl = document.getElementById("coded-auto-status");
+      const substrate = currentSubstrate();
+      const missing = checkBoardValues();
+      if (missing) { statusEl.textContent = missing; statusEl.className = "status err"; return; }
+      statusEl.className = "status";
+      statusEl.textContent = "Solving the cell states (about a minute the first time, instant after that)...";
+      try {
+        const body = {
+          eps_r: substrate.eps_r, tan_delta: substrate.tan_delta, thickness_mm: substrate.thickness_mm,
+          period_mm: parseFloat(document.getElementById("cell-size-mm").value),
+          frequency_hz: parseFloat(document.getElementById("synthesis-frequency-ghz").value) * 1e9,
+          n_bits: currentCodedBits(),
+        };
+        const fixed = autoTwoState().auto_fixed_L_mm;
+        if (fixed) body.fixed_L_mm = fixed;
+        const minGap = autoTwoState().auto_min_gap_mm;
+        if (minGap != null) body.min_gap_mm = minGap;
+        const submitted = await LWMOM.postJson("/api/hmsa/auto_states", body);
+        const job = await LWMOM.pollJob(submitted.id, { onTick: (j) => { statusEl.textContent = j.progress_message || "Solving..."; } });
+        if (job.status !== "done") throw new Error(LWMOM.errorText(job.error, job.status));
+        document.getElementById("coded-auto-table").innerHTML = autoStatesTableHtml(job.result, true);
+        statusEl.textContent = "";
+      } catch (err) { statusEl.textContent = err.message; statusEl.className = "status err"; }
+    });
+    function updateCodedMultiVisibility() {
+      const show = currentPortMode() === "multi" && currentMethod() === "coded";
+      document.getElementById("coded-multi-fields").style.display = show ? "block" : "none";
+      // beta mode and the feed keep-out only apply to the two-state (1-bit) path
+      const oneBit = currentCodedBits() === 1;
+      document.getElementById("coded-beta-mode-control").closest("label").style.display = oneBit ? "" : "none";
+      document.getElementById("coded-feed-keepout").closest("label").style.display = oneBit ? "flex" : "none";
+    }
+    function currentCodedBetaMode() {
+      return document.getElementById("coded-beta-mode-control").querySelector("button.active")?.dataset.beta || "model";
+    }
+    document.getElementById("coded-beta-mode-control").addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button");
+      if (!btn) return;
+      ev.currentTarget.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+    });
+    document.getElementById("coded-uploaded-geom-0").addEventListener("change", (ev) => {
+      document.getElementById("coded-uploaded-geom-0-dims").style.display = ev.target.value === "rectangle" ? "inline" : "none";
+    });
+    // The `two_state` request for the uploaded source, including the cell shapes the export draws.
+    function readUploadedTwoState() {
+      const num = (id) => parseFloat(document.getElementById(id).value);
+      const rect0 = document.getElementById("coded-uploaded-geom-0").value === "rectangle";
+      return {
+        source: "uploaded",
+        uploaded_value_0_real: num("coded-uploaded-0-real"), uploaded_value_0_imag: num("coded-uploaded-0-imag"),
+        uploaded_value_1_real: num("coded-uploaded-1-real"), uploaded_value_1_imag: num("coded-uploaded-1-imag"),
+        uploaded_label_0: rect0 ? `rectangle ${num("coded-uploaded-0-L-mm")} x ${num("coded-uploaded-0-W-mm")} mm` : "empty (bare substrate)",
+        uploaded_label_1: `rectangle ${num("coded-uploaded-1-L-mm")} x ${num("coded-uploaded-1-W-mm")} mm`,
+        uploaded_geometry_0: rect0 ? { kind: "rectangle", L_mm: num("coded-uploaded-0-L-mm"), W_mm: num("coded-uploaded-0-W-mm") } : { kind: "empty" },
+        uploaded_geometry_1: { kind: "rectangle", L_mm: num("coded-uploaded-1-L-mm"), W_mm: num("coded-uploaded-1-W-mm") },
+      };
     }
     function updateCodedTwoStateVisibility() {
-      document.getElementById("coded-one-bit-fields").style.display = currentCodedBits() === 1 ? "block" : "none";
+      const oneBit = currentCodedBits() === 1;
+      // 2-/3-bit offer "Automatic" or the continuous square library; the annular and uploaded sources are two-state only
+      codedTwoStateControl.querySelectorAll("button[data-onebit-only]").forEach((b) => { b.style.display = oneBit ? "" : "none"; });
+      codedTwoStateControl.querySelectorAll("button[data-label-one]").forEach((b) => { b.textContent = oneBit ? b.dataset.labelOne : b.dataset.labelMany; });
+      if (!oneBit && ["square_and_annular", "uploaded"].includes(currentCodedTwoStateSource())) {
+        codedTwoStateControl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+        codedTwoStateControl.querySelector('button[data-source="auto"]').classList.add("active");
+      }
       const source = currentCodedTwoStateSource();
+      document.getElementById("coded-auto-fields").style.display = source === "auto" ? "block" : "none";
+      // Advanced stays visible for every bit count (the minimum gap matters most for 2-/3-bit); only the
+      // "fix the square's side" option is one-bit only
+      document.getElementById("coded-auto-fixed-wrap").style.display = oneBit ? "" : "none";
       document.getElementById("coded-annular-fields").style.display = source === "square_and_annular" ? "block" : "none";
       document.getElementById("coded-uploaded-fields").style.display = source === "uploaded" ? "block" : "none";
     }
@@ -994,6 +1399,7 @@
       codedBitsControl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       updateCodedTwoStateVisibility();
+      updateCodedMultiVisibility();
     });
     codedTwoStateControl.addEventListener("click", (ev) => {
       const btn = ev.target.closest("button");
@@ -1065,7 +1471,7 @@
         });
         if (token !== _previewToken) return;
         if (done.status !== "done") {
-          eigenEl.textContent = done.error ? done.error.message : done.status;
+          eigenEl.textContent = LWMOM.errorText(done.error, done.status);
           eigenEl.className = "status err";
           return;
         }
@@ -1252,6 +1658,8 @@
       try {
         if (currentPortMode() === "multi") {
           await runPortsDesign();
+        } else if (!state.uploadId) {
+          throw new Error("A single-port design needs the Step 1 reference file: go back to Step 1 and analyze one, or switch Ports to Multi-port.");
         } else if (currentMethod() === "coded") {
           await runCodedDesign();
         } else {
@@ -1304,7 +1712,7 @@
           const libDone = await LWMOM.pollJob(libJob.id, {
             onTick: (j) => { statusEl.textContent = `Preparing the board's unit-cell data: ${j.progress_message || "..."}`; },
           });
-          if (libDone.status !== "done") throw new Error(libDone.error ? libDone.error.message : "could not prepare the board's unit-cell data");
+          if (libDone.status !== "done") throw new Error(LWMOM.errorText(libDone.error, "could not prepare the board's unit-cell data"));
           body.formulation = "B";
           body.library_id = libDone.result.library_id;
         } else if (currentEigenmodeSource() === "upload") {
@@ -1329,7 +1737,7 @@
           const dispDone = await LWMOM.pollJob(dispJob.id, {
             onTick: (j) => { statusEl.textContent = `Preparing the board's own surface-wave dispersion: ${j.progress_message || "..."}`; },
           });
-          if (dispDone.status !== "done") throw new Error(dispDone.error ? dispDone.error.message : "could not prepare the board's own surface-wave dispersion");
+          if (dispDone.status !== "done") throw new Error(LWMOM.errorText(dispDone.error, "could not prepare the board's own surface-wave dispersion"));
           body.formulation = "A";
           body.dispersion_id = dispDone.result.dispersion_id;
           body.x_avg_ohm = parseFloat(document.getElementById("x-avg-ohm").value);
@@ -1343,7 +1751,7 @@
         const job = await LWMOM.pollJob(submitted.id, {
           onTick: (j) => { statusEl.textContent = `${j.status}: ${j.progress_message || ""}`; },
         });
-        if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
+        if (job.status !== "done") throw new Error(LWMOM.errorText(job.error, job.status));
         state.synthesizeResult = job.result;
         document.getElementById("refinement-status").textContent = refinementText(job.result.refinement);
         const labelsEl = document.getElementById("labels");
@@ -1388,14 +1796,16 @@
         accuracy: currentAccuracy(),
       };
 
-      if (nBits === 1) {
-        const source = currentCodedTwoStateSource();
+      const codedSource = currentCodedTwoStateSource();
+      if (codedSource === "auto") {
+        // Phase 22: the cell states are found by the backend from the Board section's values; no library is needed
+        body.two_state = autoTwoState();
+        statusEl.textContent = "Finding the cell states (first run about a minute, then cached)...";
+      } else if (nBits === 1) {
+        const source = codedSource;
         body.two_state = { source };
         if (source === "uploaded") {
-          body.two_state.uploaded_value_0_real = parseFloat(document.getElementById("coded-uploaded-0-real").value);
-          body.two_state.uploaded_value_0_imag = parseFloat(document.getElementById("coded-uploaded-0-imag").value);
-          body.two_state.uploaded_value_1_real = parseFloat(document.getElementById("coded-uploaded-1-real").value);
-          body.two_state.uploaded_value_1_imag = parseFloat(document.getElementById("coded-uploaded-1-imag").value);
+          body.two_state = readUploadedTwoState();
         } else {
           statusEl.textContent = "Preparing the square-patch library...";
           const libJob = await LWMOM.postJson("/api/hmsa/ensure_library", {
@@ -1405,7 +1815,7 @@
           const libDone = await LWMOM.pollJob(libJob.id, {
             onTick: (j) => { statusEl.textContent = `Preparing the square-patch library: ${j.progress_message || "..."}`; },
           });
-          if (libDone.status !== "done") throw new Error(libDone.error ? libDone.error.message : "could not prepare the square-patch library");
+          if (libDone.status !== "done") throw new Error(LWMOM.errorText(libDone.error, "could not prepare the square-patch library"));
           body.library_id = libDone.result.library_id;
           if (source === "square_and_annular") {
             statusEl.textContent = "Solving the patch-with-annular-slot cell...";
@@ -1419,7 +1829,7 @@
             const annularDone = await LWMOM.pollJob(annularJob.id, {
               onTick: (j) => { statusEl.textContent = `Solving the patch-with-annular-slot cell: ${j.progress_message || "..."}`; },
             });
-            if (annularDone.status !== "done") throw new Error(annularDone.error ? annularDone.error.message : "could not solve the annular-slot cell");
+            if (annularDone.status !== "done") throw new Error(LWMOM.errorText(annularDone.error, "could not solve the annular-slot cell"));
             body.two_state.annular_slot_library_id = annularDone.result.annular_slot_library_id;
           }
         }
@@ -1432,7 +1842,7 @@
         const libDone = await LWMOM.pollJob(libJob.id, {
           onTick: (j) => { statusEl.textContent = `Preparing the phase-lookup library: ${j.progress_message || "..."}`; },
         });
-        if (libDone.status !== "done") throw new Error(libDone.error ? libDone.error.message : "could not prepare the phase-lookup library");
+        if (libDone.status !== "done") throw new Error(LWMOM.errorText(libDone.error, "could not prepare the phase-lookup library"));
         body.library_id = libDone.result.library_id;
       }
 
@@ -1442,7 +1852,7 @@
       const job = await LWMOM.pollJob(submitted.id, {
         onTick: (j) => { statusEl.textContent = `${j.status}: ${j.progress_message || ""}`; },
       });
-      if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
+      if (job.status !== "done") throw new Error(LWMOM.errorText(job.error, job.status));
       state.synthesizeResult = job.result;
       document.getElementById("refinement-status").textContent = refinementText(job.result.refinement);
 
@@ -1460,6 +1870,8 @@
       addRow("Design method", `Coded (${nBits}-bit)`);
       addRow("Cells used", job.result.cells.length);
       renderCodedChecks(job.result, addRow);
+      document.getElementById("coded-auto-results").innerHTML =
+        autoStatesTableHtml((job.result.two_state && job.result.two_state.auto) || job.result.auto_states, true);
       const layoutImg = document.getElementById("layout-img");
       if (job.result.layout_png_url) { layoutImg.src = job.result.layout_png_url; layoutImg.style.display = ""; }
       else { layoutImg.style.display = "none"; }
@@ -1530,6 +1942,53 @@
       }
     }
 
+    // Phase 21 B3: the per-port design report (beam direction, pointing error, directivity, cross-pol, patches)
+    function portReportHtml(port) {
+      const fmt = (v, d = 1) => (v != null ? v.toFixed(d) : "—");
+      let html = `<p class="status">${port.patch_count} patches`;
+      if (port.keepout_cells_changed != null) html += ` &middot; feed keep-out changed ${port.keepout_cells_changed} cell(s)`;
+      html += `</p>`;
+      if (!port.report) return html;
+      html += `<table class="port-report-table"><thead><tr><th>Beam</th><th>Requested (θ, φ)</th><th>Predicted (θ, φ)</th>` +
+        `<th>Pointing error (°)</th><th>Directivity (dBi)</th><th>Cross-pol (dB)</th></tr></thead><tbody>` +
+        port.report.beams.map((b, k) =>
+          `<tr><td>${k + 1}</td><td>${fmt(b.requested_theta_deg)}°, ${fmt(b.requested_phi_deg)}°</td>` +
+          `<td>${fmt(b.theta_deg)}°, ${fmt(b.phi_deg)}°</td><td>${fmt(b.pointing_error_deg, 2)}</td>` +
+          `<td>${fmt(b.directivity_dbi)}</td><td>${fmt(b.cross_pol_level_db)}</td></tr>`).join("") +
+        `</tbody></table>`;
+      return html;
+    }
+    function stateTableHtml(result) {
+      if (result.formulation !== "coded") return "";
+      const auto = (result.two_state && result.two_state.auto) || result.auto_states;
+      if (auto) {
+        let html = autoStatesTableHtml(auto, true);
+        if (result.two_state) {
+          html += `<p class="status">Achieved separation ${result.two_state.achieved_separation_deg.toFixed(1)}°; beta used ` +
+            `${result.two_state.beta_used_rad_per_m != null ? result.two_state.beta_used_rad_per_m.toFixed(1) + " rad/m (" + result.two_state.beta_mode + ")" : "each state's own"}.</p>`;
+        }
+        return html;
+      }
+      if (result.two_state && result.two_state.states) {
+        return `<h4>Cell states (shared by every port)</h4><table><thead><tr><th>State</th><th>Cell</th><th>|Γ| (dB)</th>` +
+          `<th>Phase at the patch plane (°)</th></tr></thead><tbody>` +
+          result.two_state.states.map((s, k) =>
+            `<tr><td>${k}</td><td>${s.label}</td><td>${s.magnitude_db.toFixed(3)}</td><td>${s.phase_deg_patch_plane.toFixed(1)}</td></tr>`).join("") +
+          `</tbody></table><p class="status">Achieved separation ${result.two_state.achieved_separation_deg.toFixed(1)}°; ` +
+          `beta used ${result.two_state.beta_used_rad_per_m != null ? result.two_state.beta_used_rad_per_m.toFixed(1) + " rad/m (" + result.two_state.beta_mode + ")" : "each state's own"}.</p>`;
+      }
+      if (result.state_table) {
+        return `<h4>Phase levels (${result.n_bits}-bit, shared by every port)</h4><table><thead><tr><th>Level</th><th>Target phase (°)</th>` +
+          `<th>Cells</th><th>Mean achieved (°)</th><th>Mean error (°)</th></tr></thead><tbody>` +
+          result.state_table.map((r) =>
+            `<tr><td>${r.level}</td><td>${r.target_phase_deg.toFixed(0)}</td><td>${r.n_cells}</td>` +
+            `<td>${r.mean_achieved_phase_deg != null ? r.mean_achieved_phase_deg.toFixed(1) : "—"}</td>` +
+            `<td>${r.mean_phase_error_deg != null ? r.mean_phase_error_deg.toFixed(1) : "—"}</td></tr>`).join("") +
+          `</tbody></table>`;
+      }
+      return "";
+    }
+
     // PHASE15 Part C gap-fill: multi-port sub-apertures
     async function runPortsDesign() {
       const statusEl = document.getElementById("run-status");
@@ -1537,7 +1996,7 @@
       const cellSizeMm = parseFloat(document.getElementById("cell-size-mm").value);
       const frequencyHz = parseFloat(document.getElementById("synthesis-frequency-ghz").value) * 1e9;
       const accuracy = currentAccuracy();
-      const method = currentMethod();  // "eigenmode" or "reflection" only -- Coded is hidden here
+      const method = currentMethod();  // "eigenmode", "reflection" or "coded"
 
       document.querySelectorAll(".port-beams-table").forEach((table, pi) => {
         state.ports[pi] = { beams: readMiniBeamsFromTable(table.querySelector("tbody")) };
@@ -1545,8 +2004,22 @@
 
       const preset = currentPortLayoutPreset();
       const layout = { preset, gap_mm: parseFloat(document.getElementById("port-gap-mm").value) || 0 };
+      layout.snap_side_to_cells = document.getElementById("port-snap-side").checked;
       if (preset === "2x2_plus_1_large") {
         layout.small_side_mm = parseFloat(document.getElementById("port-small-side-mm").value);
+      } else if (preset === "grid") {
+        layout.rows = parseInt(document.getElementById("port-grid-rows").value, 10);
+        layout.cols = parseInt(document.getElementById("port-grid-cols").value, 10);
+        layout.cell_side_mm = parseFloat(document.getElementById("port-grid-side-mm").value);
+      } else if (preset === "hex4") {
+        layout.side_mm = parseFloat(document.getElementById("port-hex-side-mm").value);
+        layout.orientation = document.querySelector("#port-hex-orientation-control button.active")?.dataset.orientation || "pointy";
+        layout.trim_board = document.getElementById("port-hex-trim").checked;
+        layout.snap_side_to_cells = false;
+      } else if (preset === "custom") {
+        const err = validateCustomRegions();
+        if (err) throw new Error(`Custom layout: ${err}`);
+        layout.regions_mm = readCustomRegions();
       } else {
         layout.n = parseInt(document.getElementById("port-1xn-n").value, 10);
         layout.cell_side_mm = parseFloat(document.getElementById("port-1xn-side-mm").value);
@@ -1566,7 +2039,47 @@
         balance_levels: document.getElementById("port-balance-levels").checked,
       };
 
-      if (method === "reflection") {
+      if (method === "coded") {
+        const nBits = currentCodedBits();
+        body.formulation = "coded";
+        body.n_bits = nBits;
+        body.beta_mode = currentCodedBetaMode();
+        body.feed_keepout = document.getElementById("coded-feed-keepout").checked;
+        const source = currentCodedTwoStateSource();
+        if (source === "auto") {
+          body.two_state = autoTwoState();  // Phase 22: no library needed; the backend finds the states
+          statusEl.textContent = "Finding the cell states (first run about a minute, then cached)...";
+        } else if (nBits === 1 && source === "uploaded") {
+          body.two_state = readUploadedTwoState();
+        } else {
+          statusEl.textContent = "Preparing the square-patch library...";
+          const libJob = await LWMOM.postJson("/api/hmsa/ensure_library", {
+            period_mm: cellSizeMm, eps_r: substrate.eps_r, tan_delta: substrate.tan_delta,
+            thickness_mm: substrate.thickness_mm, frequency_hz: frequencyHz, accuracy: accuracy,
+          });
+          const libDone = await LWMOM.pollJob(libJob.id, {
+            onTick: (j) => { statusEl.textContent = `Preparing the square-patch library: ${j.progress_message || "..."}`; },
+          });
+          if (libDone.status !== "done") throw new Error(LWMOM.errorText(libDone.error, "could not prepare the square-patch library"));
+          body.library_id = libDone.result.library_id;
+          if (nBits === 1) {
+            body.two_state = { source };
+            if (source === "square_and_annular") {
+              statusEl.textContent = "Solving the patch-with-annular-slot cell...";
+              const aMm = parseFloat(document.getElementById("coded-annular-a-mm").value);
+              const rMm = parseFloat(document.getElementById("coded-annular-r-mm").value);
+              const annularJob = await LWMOM.postJson("/api/hmsa/ensure_annular_slot_library", {
+                period_mm: cellSizeMm, eps_r: substrate.eps_r, tan_delta: substrate.tan_delta,
+                thickness_mm: substrate.thickness_mm, frequency_hz: frequencyHz,
+                a_mm: aMm, b_mm: aMm, r_mm: rMm, accuracy: accuracy,
+              });
+              const annularDone = await LWMOM.pollJob(annularJob.id);
+              if (annularDone.status !== "done") throw new Error(LWMOM.errorText(annularDone.error, "could not solve the annular-slot cell"));
+              body.two_state.annular_slot_library_id = annularDone.result.annular_slot_library_id;
+            }
+          }
+        }
+      } else if (method === "reflection") {
         statusEl.textContent = "Preparing the board's unit-cell data...";
         const libJob = await LWMOM.postJson("/api/hmsa/ensure_library", {
           period_mm: cellSizeMm, eps_r: substrate.eps_r, tan_delta: substrate.tan_delta,
@@ -1575,7 +2088,7 @@
         const libDone = await LWMOM.pollJob(libJob.id, {
           onTick: (j) => { statusEl.textContent = `Preparing the board's unit-cell data: ${j.progress_message || "..."}`; },
         });
-        if (libDone.status !== "done") throw new Error(libDone.error ? libDone.error.message : "could not prepare the board's unit-cell data");
+        if (libDone.status !== "done") throw new Error(LWMOM.errorText(libDone.error, "could not prepare the board's unit-cell data"));
         body.formulation = "B";
         body.library_id = libDone.result.library_id;
       } else {
@@ -1587,7 +2100,7 @@
         const dispDone = await LWMOM.pollJob(dispJob.id, {
           onTick: (j) => { statusEl.textContent = `Preparing the board's own surface-wave dispersion: ${j.progress_message || "..."}`; },
         });
-        if (dispDone.status !== "done") throw new Error(dispDone.error ? dispDone.error.message : "could not prepare the board's own surface-wave dispersion");
+        if (dispDone.status !== "done") throw new Error(LWMOM.errorText(dispDone.error, "could not prepare the board's own surface-wave dispersion"));
         body.formulation = "A";
         body.dispersion_id = dispDone.result.dispersion_id;
         body.x_avg_ohm = parseFloat(document.getElementById("x-avg-ohm").value);
@@ -1601,7 +2114,7 @@
       const job = await LWMOM.pollJob(submitted.id, {
         onTick: (j) => { statusEl.textContent = `${j.status}: ${j.progress_message || ""}`; },
       });
-      if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
+      if (job.status !== "done") throw new Error(LWMOM.errorText(job.error, job.status));
       state.synthesizeResult = job.result;
 
       const labelsEl = document.getElementById("labels");
@@ -1623,6 +2136,12 @@
 
       const container = document.getElementById("ports-per-port-results");
       container.innerHTML = "";
+      document.getElementById("ports-state-table").innerHTML = stateTableHtml(job.result);
+      // "Reduce sidelobes" applies to coded 1-bit multi-port boards
+      document.getElementById("sll-card").style.display =
+        (job.result.formulation === "coded" && job.result.n_bits === 1) ? "block" : "none";
+      document.getElementById("sll-results").innerHTML = "";
+      document.getElementById("sll-status").textContent = "";
       const refinements = job.result.refinement || [];
       for (const port of job.result.ports) {
         const card = document.createElement("div");
@@ -1632,6 +2151,7 @@
           `<p class="status">Feed at (${port.feed_x_mm.toFixed(1)}, ${port.feed_y_mm.toFixed(1)}) mm &middot; ` +
           `${port.n_cells} cells &middot; ${(port.unreachable_fraction * 100).toFixed(0)}% unreachable</p>` +
           `<p class="status port-aim-status"></p>` +
+          portReportHtml(port) +
           `<img class="plot port-pattern-img" alt="Port ${port.port_id + 1} pattern" />` +
           `<p class="status port-pattern-status"></p>` +
           `<table class="port-beam-table" style="display:none"><thead><tr><th>Beam</th><th>Requested</th>` +
@@ -1654,14 +2174,31 @@
           if (patternJob.status === "done") {
             const r = patternJob.result;
             if (r.pattern_uv_png_url) card.querySelector(".port-pattern-img").src = r.pattern_uv_png_url;
-            const areaM2 = ((port.x_max_mm - port.x_min_mm) * (port.y_max_mm - port.y_min_mm)) / 1e6;
+            let areaM2 = ((port.x_max_mm - port.x_min_mm) * (port.y_max_mm - port.y_min_mm)) / 1e6;
+            if (port.outline_mm) {  // polygon sub-aperture (hexagon): shoelace area
+              let twice = 0;
+              port.outline_mm.forEach(([x0, y0], k) => {
+                const [x1, y1] = port.outline_mm[(k + 1) % port.outline_mm.length];
+                twice += x0 * y1 - x1 * y0;
+              });
+              areaM2 = Math.abs(twice) / 2 / 1e6;
+            }
             const lambdaM = 299792458 / frequencyHz;
             const dmaxLin = (4 * Math.PI * areaM2) / (lambdaM * lambdaM);
-            const effUpper = Math.pow(10, r.result.directivity_estimate_dbi / 10) / dmaxLin;
+            // One directivity per port: the server's fine (0.1 degree) beam search when it has one; the
+            // coarse 41x49 plot grid under-samples the peak and would read ~1 dB lower, so it is only a fallback.
+            const best = port.report && port.report.beams.length
+              ? port.report.beams.reduce((m, b) => (b.directivity_dbi > m.directivity_dbi ? b : m)) : null;
+            const dirDbi = best ? best.directivity_dbi : r.result.directivity_estimate_dbi;
+            const peakTheta = best ? best.theta_deg : r.result.main_beam_theta_deg;
+            const peakPhi = best ? best.phi_deg : r.result.main_beam_phi_deg;
+            const effUpper = Math.pow(10, dirDbi / 10) / dmaxLin;
             card.querySelector(".port-pattern-status").textContent =
-              `Directivity ${r.result.directivity_estimate_dbi.toFixed(1)} dBi; directivity-based aperture efficiency ` +
-              `(upper bound) ${effUpper.toFixed(2)}; peak at θ=${r.result.main_beam_theta_deg.toFixed(1)}°, ` +
-              `φ=${r.result.main_beam_phi_deg.toFixed(1)}° (${areaM2.toFixed(4)} m² aperture).`;
+              `Directivity ${dirDbi.toFixed(1)} dBi; directivity-based aperture efficiency ` +
+              `(upper bound) ${effUpper.toFixed(2)}; peak at θ=${peakTheta.toFixed(1)}°, ` +
+              `φ=${peakPhi.toFixed(1)}° (${areaM2.toFixed(4)} m² aperture). ` +
+              (best ? "Numbers from the fine (0.1°) beam search; the plot above is a coarse 41×49 grid." :
+                      "Numbers from the coarse 41×49 plot grid (no fine search without a loss tangent).");
             // one card line per requested beam: where it points, how strong, and its XPD
             const fmt = (v) => (v != null ? v.toFixed(1) : "—");
             const beamTable = card.querySelector(".port-beam-table");
@@ -1672,7 +2209,7 @@
             ).join("");
             beamTable.style.display = (r.per_beam || []).length ? "table" : "none";
           } else {
-            card.querySelector(".port-pattern-status").textContent = patternJob.error ? patternJob.error.message : patternJob.status;
+            card.querySelector(".port-pattern-status").textContent = LWMOM.errorText(patternJob.error, patternJob.status);
           }
         } catch (err) {
           card.querySelector(".port-pattern-status").textContent = `Pattern prediction failed: ${err.message}`;
@@ -1725,6 +2262,68 @@
         addRow("Mean / max phase error", `${s.mean_deg.toFixed(1)}° / ${s.max_deg.toFixed(1)}°`);
       }
     }
+
+    function sllTableHtml(title, table) {
+      const rows = [];
+      Object.entries(table).forEach(([name, sc]) => {
+        sc.beams.forEach((b) => {
+          rows.push(`<tr><td>${name === "all" ? "all ports" : "port " + b.port}</td><td>${b.requested[0].toFixed(0)}&deg;, ${b.requested[1].toFixed(0)}&deg;</td>` +
+            `<td>${b.directivity_dbi}</td><td>${b.pointing_error_deg}</td><td>${b.sll_global_db}</td>` +
+            `<td>${b.sll_xcut_db}</td><td>${b.sll_ycut_db}</td><td>${b.xpd_db}</td></tr>`);
+        });
+      });
+      return `<h4>${title}</h4><table><thead><tr><th>Excitation</th><th>Beam (&theta;, &phi;)</th><th>Directivity (dBi)</th>` +
+        `<th>Pointing error (&deg;)</th><th>Co-pol SLL (dB)</th><th>SLL x-cut (dB)</th><th>SLL y-cut (dB)</th>` +
+        `<th>XPD (dB)</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+    }
+    document.getElementById("sll-run-btn").addEventListener("click", async () => {
+      const statusEl = document.getElementById("sll-status");
+      const btn = document.getElementById("sll-run-btn");
+      try {
+        btn.disabled = true;
+        const substrate = currentSubstrate();
+        const body = {
+          source_job_id: state.synthesizeJobId,
+          frequency_hz: parseFloat(document.getElementById("synthesis-frequency-ghz").value) * 1e9,
+          period_mm: parseFloat(document.getElementById("cell-size-mm").value),
+          eps_r: substrate.eps_r, tan_delta: substrate.tan_delta, thickness_mm: substrate.thickness_mm,
+          port_beams: state.ports.map((p) => p.beams.map((b) => ({ theta_deg: b.theta_deg, phi_deg: b.phi_deg }))),
+          polarization: (state.ports[0] && state.ports[0].beams[0].desired_polarization) || "rhcp",
+          mode: document.getElementById("sll-mode").value,
+          max_gain_loss_db: parseFloat(document.getElementById("sll-max-loss").value),
+          max_flips: parseInt(document.getElementById("sll-budget").value, 10),
+          robust: document.getElementById("sll-robust").checked,
+        };
+        statusEl.textContent = "Optimising (this takes a few minutes for a large board)...";
+        const submitted = await LWMOM.postJson("/api/sidelobes/optimize", body);
+        const job = await LWMOM.pollJob(submitted.id, {
+          onTick: (j) => { statusEl.textContent = `${j.status}: ${j.progress_message || ""}`; },
+        });
+        if (job.status !== "done") throw new Error(LWMOM.errorText(job.error, job.status));
+        const o = job.result.sidelobe_optimisation;
+        state.synthesizeJobId = submitted.id;   // pattern and export now use the optimised states
+        state.synthesizeResult = job.result;
+        if (job.result.patch_layout_png_url) document.getElementById("ports-patch-layout-img").src = job.result.patch_layout_png_url;
+        const changed = Object.entries(o.cells_changed).map(([k, v]) => `port ${+k + 1}: ${v}`).join(", ");
+        const alpha = o.mode !== "single"
+          ? "<p>Port phases to set in HFSS Edit Sources (degrees): " +
+            Object.entries(o.alpha_deg).map(([k, v]) => `P${+k + 1} = ${(+v).toFixed(1)}`).join(", ") + ".</p>" : "";
+        const freq = Object.entries(o.frequency_check || {}).map(([f, t]) => sllTableHtml(`Re-evaluated at ${f} (not re-optimised)`, t)).join("");
+        document.getElementById("sll-results").innerHTML =
+          `<p class="status">Cells changed &mdash; ${changed}. Held-out grid ${o.held_out_grid.theta_step_deg}&deg; &times; ${o.held_out_grid.phi_step_deg}&deg;.</p>` +
+          alpha + (o.starting_design_pointing_corrected ? "" :
+            "<p class=\"status warn\">The starting design was not pointing-corrected; run it with Pointing correction on for a meaningful absolute-pointing constraint.</p>") +
+          (o.phase_error_draws ? `<p class="status">${o.phase_error_draws.n} random port-phase errors (&plusmn;${o.phase_error_draws.sigma_deg}&deg;): worst-beam SLL median ${o.phase_error_draws.worst_beam_sll_db.median} dB, worst ${o.phase_error_draws.worst_beam_sll_db.worst} dB.</p>` : "") +
+          `<p class="status">${o.all_ports_note}</p>` +
+          sllTableHtml("Before", o.before) + sllTableHtml("After", o.after) + freq +
+          `<p class="status">${o.frequency_check_note}</p>`;
+        statusEl.textContent = "Done. Pattern and export now use the optimised design.";
+      } catch (err) {
+        statusEl.textContent = `Error: ${err.message}`;
+      } finally {
+        btn.disabled = false;
+      }
+    });
 
     async function runPatternAndExport(synthResult) {
       const statusEl = document.getElementById("run-status");
@@ -1856,6 +2455,10 @@
     function renderExportLinks(exportJob) {
       if (exportJob.status !== "done") return;
       document.getElementById("export-card").style.display = "block";
+      const exact = isExactBoardDesign();
+      document.getElementById("build-hfss-script-btn").style.display = exact ? "" : "none";
+      document.getElementById("exact-export-note").style.display = exact ? "" : "none";
+      document.getElementById("include-pins-label").style.display = exact ? "flex" : "none";
       const links = document.getElementById("export-links");
       links.innerHTML = "";
       const addLink = (label, url) => {
@@ -1870,8 +2473,62 @@
       addLink("HFSS setup notes", exportJob.result.readme_download_url);
     }
 
+    function isExactBoardDesign() {
+      const r = state.synthesizeResult;
+      return currentPortMode() === "multi" && r && r.ports && r.ports[0] && r.ports[0].patches_mm;
+    }
+    // Phase 21 D: exact STEP / AEDT script / README for a multi-port board
+    async function runBoardExport(includeStep) {
+      const substrate = currentSubstrate();
+      const submitted = await LWMOM.postJson("/api/export/board", {
+        source_job_id: state.synthesizeJobId,
+        period_mm: parseFloat(document.getElementById("cell-size-mm").value),
+        eps_r: substrate.eps_r, tan_delta: substrate.tan_delta, thickness_mm: substrate.thickness_mm,
+        frequency_hz: parseFloat(document.getElementById("synthesis-frequency-ghz").value) * 1e9,
+        include_step: includeStep, name: "HMSA_board",
+        include_pins: includeStep && document.getElementById("include-pins").checked,
+      });
+      const job = await LWMOM.pollJob(submitted.id);
+      if (job.status !== "done") throw new Error(LWMOM.errorText(job.error, job.status));
+      const links = document.getElementById("export-links");
+      const add = (label, url) => {
+        if (!url) return;
+        const li = document.createElement("li");
+        li.innerHTML = `<span class="k">${label}</span><a href="${url}">Download</a>`;
+        links.appendChild(li);
+      };
+      add("Exact board (STEP)", job.result.step_download_url);
+      add("HFSS script (AEDT .py)", job.result.hfss_script_download_url);
+      add("Exact layout (CSV)", job.result.layout_csv_download_url);
+      add("Feed positions (CSV)", job.result.feeds_csv_download_url);
+      add("Layout (DXF, feeds on layer FEEDS)", job.result.layout_dxf_download_url);
+      add("Layout (JSON)", job.result.layout_json_download_url);
+      add("Layout drawing with feeds (PNG)", job.result.layout_png_download_url);
+      add("Board README", job.result.readme_download_url);
+      return job;
+    }
+    document.getElementById("build-hfss-script-btn").addEventListener("click", async () => {
+      const statusEl = document.getElementById("export-status");
+      statusEl.textContent = "Building the HFSS script...";
+      statusEl.className = "status";
+      try {
+        const job = await runBoardExport(false);
+        statusEl.textContent = `HFSS script built (${job.result.n_patches} patches).`;
+        statusEl.className = "status ok";
+      } catch (err) { statusEl.textContent = err.message; statusEl.className = "status err"; }
+    });
     document.getElementById("build-step-btn").addEventListener("click", async () => {
       const statusEl = document.getElementById("export-status");
+      if (isExactBoardDesign()) {
+        statusEl.textContent = "Building the exact STEP...";
+        statusEl.className = "status";
+        try {
+          const job = await runBoardExport(true);
+          statusEl.textContent = `Exact STEP built (${job.result.n_patches} patches, largest rounding ${job.result.max_rounding_mm.toExponential(1)} mm).`;
+          statusEl.className = "status ok";
+        } catch (err) { statusEl.textContent = err.message; statusEl.className = "status err"; }
+        return;
+      }
       if (!state.synthesizeResult || (!state.synthesizeResult.assignments && !state.synthesizeResult.lw_grid_m)) {
         statusEl.textContent = "Run synthesis first (STEP needs a completed design).";
         statusEl.className = "status err";
@@ -1884,7 +2541,7 @@
         const job = await LWMOM.pollJob(jobId, {
           onTick: (j) => { statusEl.textContent = j.progress_message || "Building STEP (CAD)..."; },
         });
-        if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
+        if (job.status !== "done") throw new Error(LWMOM.errorText(job.error, job.status));
         state.exportJobId = jobId;
         renderExportLinks(job);
         const sizeMb = job.result.file_size_bytes ? (job.result.file_size_bytes / 1e6).toFixed(1) + " MB" : "";
@@ -1907,7 +2564,7 @@
         if (state.synthesizeJobId) body.synthesize_job_id = state.synthesizeJobId;
         const submitted = await LWMOM.postJson("/api/export/package", body);
         const job = await LWMOM.pollJob(submitted.id);
-        if (job.status !== "done") throw new Error(job.error ? job.error.message : job.status);
+        if (job.status !== "done") throw new Error(LWMOM.errorText(job.error, job.status));
         window.location = job.result.download_url;
         statusEl.textContent = "";
       } catch (err) {

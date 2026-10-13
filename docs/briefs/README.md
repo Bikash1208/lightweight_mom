@@ -19,8 +19,11 @@ and reports back against its own acceptance checks.
 
 ## What's here now
 
-- Active: whatever hasn't been merged/archived yet (check `docs/STATUS.md` for the current one).
-- `_parked/` — deferred ideas, each its own file, not current work.
+- Active: `PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md` (Parts A–D done; Parts E/F wait on the user's decision whether
+  ±30.00° is a hard specification and on an HFSS run of the lens — see `docs/STATUS.md` "Open next steps") and
+  `PHASE24_CURATION_AND_CLEANUP.md` (the consolidation pass in progress).
+- `_parked/` — deferred ideas, each its own file, not current work: the unit-cell/FSS S-parameter tool (Phase 16) and
+  the RIS roadmap + R1 brief (Phase 20, paused, not started).
 
 See `docs/history/briefs/` for every completed brief (phases 12A onward; phases 1–11's own task
 descriptions are narrated inline in `docs/history/PROJECT_HISTORY.md` instead, predating this

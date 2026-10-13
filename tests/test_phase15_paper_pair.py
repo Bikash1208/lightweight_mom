@@ -1,4 +1,4 @@
-"""Phase 15 Part E: the paper's 26 GHz cell pair helpers (beta modes, empty-state geometry).
+"""Phase 15 Part E: the paper's 26 GHz cell pair helpers (mixed-surface beta, empty-state geometry).
 
 The pair values are the patch-plane reflections from examples/make_paper_board_26ghz.py (26 GHz,
 2.57 mm period); the beta checks use the analytic bare-slab TM0 root, so they run without a MoM solve."""
@@ -10,7 +10,7 @@ from src.app.routers.hmsa import _two_state_geometry_to_cell_m
 from src.dispersion.analytic_tm0 import tm0_beta
 from src.dispersion.sheet_model import find_beta_from_gamma
 from src.frequency import free_space_wavenumber
-from src.hologram.two_state_cells import TwoStateCell, TwoStateChoice, mixed_surface_mode, paper_surface_wave_beta
+from src.hologram.two_state_cells import TwoStateCell, TwoStateChoice, mixed_surface_mode
 from src.materials import Substrate
 
 FREQ = 26e9
@@ -21,11 +21,6 @@ def _bare_slab_gamma(frequency_hz, eps_r, thickness_m):
     eta0 = 376.730313668
     z = 1j * eta0 / np.sqrt(eps_r) * np.tan(free_space_wavenumber(frequency_hz) * np.sqrt(eps_r) * thickness_m)
     return complex((z - eta0) / (z + eta0))
-
-
-def test_paper_beta_is_mishra_eq1():
-    assert paper_surface_wave_beta(FREQ, 2.2) == pytest.approx(free_space_wavenumber(FREQ) * np.sqrt(1.6), rel=1e-12)
-    assert paper_surface_wave_beta(FREQ, 2.2) == pytest.approx(689.27, abs=0.05)
 
 
 def test_mixed_surface_of_identical_states_is_the_single_state_beta():

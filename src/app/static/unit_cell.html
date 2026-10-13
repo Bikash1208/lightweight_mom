@@ -56,10 +56,13 @@
       <div id="labels" class="labels"></div>
       <table id="table">
         <thead>
-          <tr><th>f (GHz)</th><th>|S11| (dB)</th><th>&ang;S11 (deg)</th><th>|S21| (dB)</th><th>&ang;S21 (deg)</th></tr>
+          <tr><th>f (GHz)</th><th>|S11| (dB)</th><th>&ang;S11 (deg)</th><th>&ang;S11 at the patch plane (deg)</th><th>|S21| (dB)</th><th>&ang;S21 (deg)</th></tr>
         </thead>
         <tbody></tbody>
       </table>
+      <p class="status">&ang;S11 is referenced 5 mm above the patch. The patch-plane column moves it to the
+      patch itself (+2&middot;k<sub>0</sub>&middot;5 mm), which is what the Coded method's "Enter two measured
+      values" fields expect &mdash; paste it directly.</p>
       <details>
         <summary>Raw job result</summary>
         <pre id="raw"></pre>
@@ -110,7 +113,7 @@
           statusEl.className = "status ok";
           onDone(job.result);
         } else {
-          statusEl.textContent = `${job.status}: ${job.error ? job.error.message : ""}`;
+          statusEl.textContent = `${job.status}: ${LWMOM.errorText(job.error, "")}`;
           statusEl.className = "status err";
         }
       } catch (err) {
@@ -141,8 +144,12 @@
           const conv = point.convergence;
           const phaseErr = result.mode === "richardson" && conv && conv.phase.value_inf_error != null
             ? ` &plusmn; ${conv.phase.value_inf_error.toFixed(3)}&deg;` : "";
+          // phase at the patch plane: the stored S11 is referenced `top_air_thickness` (5 mm) above the patch
+          const k0 = 2 * Math.PI * r.frequency_hz / 299792458;
+          const patchPlane = (((r["S11_xx_phase_deg"] + (2 * k0 * 5.0e-3 * 180 / Math.PI) + 180) % 360) + 360) % 360 - 180;
           tr.innerHTML = `<td>${(r.frequency_hz / 1e9).toFixed(3)}</td><td>${toDb(r["S11_xx_mag"])}</td>` +
-            `<td>${r["S11_xx_phase_deg"].toFixed(2)}${phaseErr}</td><td>${s21mag}</td><td>${s21phase}</td>`;
+            `<td>${r["S11_xx_phase_deg"].toFixed(2)}${phaseErr}</td><td>${patchPlane.toFixed(2)}</td>` +
+            `<td>${s21mag}</td><td>${s21phase}</td>`;
           tbody.appendChild(tr);
         }
         LWMOM.renderLabels(document.getElementById("labels"), [...allLabels], [...allWarnings]);

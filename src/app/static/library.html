@@ -147,7 +147,7 @@
           onTick: (j) => { statusEl.textContent = `${j.status}: ${j.progress_message || ""}`; },
         });
         if (job.status !== "done") {
-          statusEl.textContent = `${job.status}: ${job.error ? job.error.message : ""}`;
+          statusEl.textContent = `${job.status}: ${LWMOM.errorText(job.error, "")}`;
           statusEl.className = "status err";
           return;
         }

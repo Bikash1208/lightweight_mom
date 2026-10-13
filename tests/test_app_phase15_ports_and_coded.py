@@ -422,14 +422,30 @@ def _synthesize_ports_coded_paper_pair(client, beta_mode):
     return _wait_for_job(client, resp.json()["id"], timeout=60.0)
 
 
-def test_synthesize_ports_coded_paper_beta_mode_accepts_the_paper_pair(client):
-    job = _synthesize_ports_coded_paper_pair(client, "paper")
+def test_synthesize_ports_coded_model_beta_mode_accepts_the_paper_pair(client):
+    job = _synthesize_ports_coded_paper_pair(client, "model")
     assert job["status"] == "done", job
     two_state = job["result"]["two_state"]
-    assert two_state["beta_mode"] == "paper"
-    assert two_state["beta_used_rad_per_m"] == pytest.approx(689.27, abs=0.5)
+    assert two_state["beta_mode"] == "model"
+    assert two_state["beta_used_rad_per_m"] == pytest.approx(two_state["beta_model_rad_per_m"])
     assert 640.0 < two_state["beta_model_rad_per_m"] < 700.0
     assert two_state["state_betas_rad_per_m"][0] < two_state["state_betas_rad_per_m"][1]
+    assert "beta_paper_rad_per_m" not in two_state
+
+
+def test_synthesize_ports_coded_paper_beta_mode_was_removed(client):
+    for n_bits in (1, 2):
+        body = {"formulation": "coded", "n_bits": n_bits, "frequency_hz": 26e9, "period_mm": 2.57,
+                "layout": {"preset": "1xn", "n": 1, "cell_side_mm": 10.0, "gap_mm": 0.0},
+                "ports": [{"beams": [{"theta_deg": 20.0, "phi_deg": 0.0, "desired_polarization": "lhcp"}]}],
+                "port_eps_r": 2.2, "port_thickness_mm": 1.575, "port_tan_delta": 0.0009,
+                "two_state": _paper_pair_uploaded(), "beta_mode": "paper"}
+        job = _wait_for_job(client, client.post("/api/hmsa/synthesize_ports", json=body).json()["id"], timeout=60.0)
+        assert job["status"] == "failed"
+        assert "beta_mode 'paper' was removed; use 'model'" in str(job)
+    bad = {**body, "n_bits": 1, "beta_mode": "bogus"}
+    job = _wait_for_job(client, client.post("/api/hmsa/synthesize_ports", json=bad).json()["id"], timeout=60.0)
+    assert job["status"] == "failed" and "'state' or 'model'" in str(job)
 
 
 def test_synthesize_ports_coded_state_beta_mode_refuses_the_paper_pair_on_beta_spread(client):
@@ -449,7 +465,7 @@ def test_synthesize_ports_pointing_correction_reports_before_and_after(client):
         "port_thickness_mm": 1.575,
         "port_tan_delta": 0.0009,
         "two_state": _paper_pair_uploaded(),
-        "beta_mode": "paper",
+        "beta_mode": "model",
         "pointing_correction": True,
         "pointing_iterations": 2,
     }
@@ -480,7 +496,7 @@ def _two_beam_balance_body():
         "port_thickness_mm": 1.575,
         "port_tan_delta": 0.0009,
         "two_state": _paper_pair_uploaded(),
-        "beta_mode": "paper",
+        "beta_mode": "model",
     }
 
 

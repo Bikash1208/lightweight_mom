@@ -16,7 +16,19 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 from ...errors import config_invalid
+from ...export.aedt_script import generate_aedt_script
 from ...export.array_export import export_array, export_multi_port_array
+from ...export.board_readme import build_board_readme
+from ...export.exact_board import (
+    DEFAULT_MONO_H_MM,
+    DEFAULT_R_PIN_MM,
+    exact_board_from_ports_result,
+    write_exact_step,
+    write_feeds_csv,
+    write_layout_csv,
+    write_layout_dxf,
+    write_layout_json,
+)
 from ...materials import Metal, Substrate
 from ..jobs import JobStatus
 from ..jsonutil import to_jsonable
@@ -203,6 +215,7 @@ def _run_export_job(job, source_result, params):
         "layout_csv_download_url": _download(job.id, result.layout_csv_path),
         "layout_json_download_url": _download(job.id, result.layout_json_path),
         "layout_dxf_download_url": _download(job.id, result.layout_dxf_path),
+        "feeds_csv_download_url": _download(job.id, result.feeds_csv_path) if result.feeds_csv_path else None,
         "readme_download_url": _download(job.id, result.readme_path),
     }
 
@@ -219,6 +232,108 @@ def export_reflectarray(body: ExportRequest, request: Request):
         raise HTTPException(422, f"source job {body.source_job_id!r} did not produce cell assignments")
 
     job = request.app.state.jobs.submit("array_export", _run_export_job, source.result, body.model_dump())
+    return job.to_dict()
+
+
+class BoardExportRequest(BaseModel):
+    """Phase 21 D: exact export of a multi-port board (STEP from exact vertex coordinates, layout CSV,
+    AEDT/HFSS script, README) from a completed `/synthesize_ports` job."""
+
+    source_job_id: str
+    period_mm: float
+    eps_r: float
+    tan_delta: float
+    thickness_mm: float
+    frequency_hz: float
+    include_step: bool = True
+    include_pins: bool = False  # add PEC monopole pins (cylinders) to the STEP
+    r_pin_mm: float = float(DEFAULT_R_PIN_MM)
+    mono_h_mm: float = float(DEFAULT_MONO_H_MM)
+    name: str = "HMSA_board"
+
+
+def _write_board_png(board, path):
+    """Patch layout with every feed marked and labelled (best effort: a plotting failure never fails the export)."""
+    try:
+        from ..plots import patch_layout_png
+
+        period = float(board.period_mm)
+        cells = [(float((p.x0 + p.x1) / 2), float((p.y0 + p.y1) / 2), float(p.x1 - p.x0), float(p.y1 - p.y0)) for p in board.patches]
+        nx = max(1, round(float(board.width_mm) / period))
+        ny = max(1, round(float(board.height_mm) / period))
+        return patch_layout_png(
+            cells, period, nx, ny, path, title=f"{len(board.feeds_mm)}-port board, {len(board.patches)} patches",
+            feed_xy_mm=[(float(x), float(y)) for x, y in board.feeds_mm],
+            outlines_mm=[[(float(x), float(y)) for x, y in o] for o in board.port_outlines_mm if o] or None,
+        )
+    except Exception:
+        return None
+
+
+def _run_board_export_job(job, source_result, params):
+    out_dir = job_output_dir(job.id)
+    board = exact_board_from_ports_result(source_result, params["period_mm"], params["thickness_mm"])
+    files = []
+    step_path = None
+    if params["include_step"]:
+        job.progress_message = "Writing the exact STEP..."
+        step_path = write_exact_step(
+            board,
+            out_dir / "board.step",
+            include_pins=params["include_pins"],
+            r_pin_mm=params["r_pin_mm"],
+            mono_h_mm=params["mono_h_mm"],
+        )
+        files.append("board.step")
+    csv_path = write_layout_csv(board, out_dir / "layout.csv")
+    feeds_path = write_feeds_csv(board, out_dir / "feeds.csv")
+    json_path = write_layout_json(board, out_dir / "layout.json")
+    dxf_path = write_layout_dxf(board, out_dir / "layout.dxf")
+    files += ["layout.csv", "feeds.csv", "layout.json", "layout.dxf"]
+    png_path = _write_board_png(board, out_dir / "layout.png")
+    if png_path:
+        files.append("layout.png")
+    script_path = out_dir / "hfss_build_board.py"
+    script_path.write_text(
+        generate_aedt_script(board, params["name"], params["eps_r"], params["tan_delta"], params["frequency_hz"])
+    )
+    files.append("hfss_build_board.py")
+    readme_path = out_dir / "README.md"
+    files.append("README.md")
+    readme_path.write_text(
+        build_board_readme(
+            board, source_result, params["name"], params["eps_r"], params["tan_delta"], params["frequency_hz"], files,
+            with_pins=bool(params["include_step"] and params["include_pins"]),
+        )
+    )
+    return {
+        "n_patches": len(board.patches),
+        "board_width_mm": float(board.width_mm),
+        "board_height_mm": float(board.height_mm),
+        "max_rounding_mm": board.max_rounding_mm,
+        "step_download_url": _download(job.id, step_path),
+        "layout_csv_download_url": _download(job.id, csv_path),
+        "feeds_csv_download_url": _download(job.id, feeds_path),
+        "layout_json_download_url": _download(job.id, json_path),
+        "layout_dxf_download_url": _download(job.id, dxf_path),
+        "layout_png_download_url": _download(job.id, png_path) if png_path else None,
+        "has_monopole_pins": bool(params["include_step"] and params["include_pins"]),
+        "hfss_script_download_url": _download(job.id, script_path),
+        "readme_download_url": _download(job.id, readme_path),
+    }
+
+
+@router.post("/board")
+def export_board(body: BoardExportRequest, request: Request):
+    source = request.app.state.jobs.get(body.source_job_id)
+    if source is None:
+        raise HTTPException(404, f"job {body.source_job_id!r} not found")
+    if source.status != JobStatus.DONE:
+        raise HTTPException(409, f"source job {body.source_job_id!r} is {source.status.value}, not done")
+    ports = (source.result or {}).get("ports")
+    if not ports or "patches_mm" not in ports[0]:
+        raise HTTPException(422, f"source job {body.source_job_id!r} is not a multi-port design")
+    job = request.app.state.jobs.submit("board_export", _run_board_export_job, source.result, body.model_dump())
     return job.to_dict()
 
 
@@ -260,6 +375,9 @@ def _run_package_job(job, export_result, pattern_result, synthesize_result):
             ("layout_json_download_url", "layout.json"),
             ("layout_dxf_download_url", "layout.dxf"),
             ("readme_download_url", "HFSS_README.md"),
+            ("hfss_script_download_url", "hfss_build_board.py"),
+            ("feeds_csv_download_url", "feeds.csv"),
+            ("layout_png_download_url", "layout_board.png"),
         ):
             src = _download_url_to_path(export_result.get(key))
             if src is not None and src.is_file():

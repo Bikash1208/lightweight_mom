@@ -40,7 +40,9 @@ from ...fields.reference_field_grid import (
     resample_to_cell_grid,
 )
 from ...green_function import LayeredGreenFunction
+from ...hologram.auto_states import auto_states
 from ...hologram.coded_synthesis import (
+    apply_feed_keepout_one_bit,
     aperture_coupling_loss_db,
     continuous_reference_aperture_field,
     synthesize_coded_n_bit,
@@ -58,10 +60,20 @@ from ...hologram.multi_port_synthesis import (
     combined_board_lw_grid_m,
     export_frame_feeds_and_rects_mm,
     export_frame_offset_m,
+    mask_design_to_region,
+    region_cell_mask,
     synthesize_ports,
 )
 from ...hologram.pointing_correction import measure_beam_aims, refine_design
-from ...hologram.ports import custom_layout, layout_preset_1xn, layout_preset_2x2_plus_1_large
+from ...hologram.ports import (
+    check_no_overlap,
+    custom_layout,
+    layout_preset_1xn,
+    layout_preset_2x2_plus_1_large,
+    layout_preset_grid,
+    layout_preset_hex4,
+    snap_side_to_cells,
+)
 from ...hologram.two_state_cells import (
     BETA_SPREAD_LIMIT_FRACTION,
     EDGE_PHASE_WARNING_DEG,
@@ -73,13 +85,13 @@ from ...hologram.two_state_cells import (
     candidates_from_square_library,
     lambda_sw_over_cell,
     mixed_surface_mode,
-    paper_surface_wave_beta,
     patch_plane_gamma,
     resonance_proximity_patch_plane_deg,
     screen_candidates,
     separation_warning,
 )
 from ...labels import (
+    EXPERIMENTAL,
     FEED_REGION_MASKED,
     MULTI_PORT_SHARED_METHOD,
     PORT_ISOLATION_NOT_FULL_WAVE,
@@ -98,8 +110,13 @@ from ...library_sweep import (
 )
 from ...materials import Metal, Substrate
 from ...pattern.vector_aperture_pattern import (
+    ORTHOGONAL_POLARIZATION,
     aperture_current_from_scalar,
+    aperture_efficiency_estimate,
+    beam_local_peak_fine,
+    beam_polarization_metrics,
     compute_vector_pattern,
+    copol_component,
     first_null_half_width_deg,
     mirror_beam_level_db,
     strongest_secondary_beam,
@@ -113,7 +130,7 @@ from ..jobs import config_hash
 from ..jsonutil import to_jsonable
 from ..library_query import available_frequencies_hz, library_candidates_at_frequency
 from ..plots import layout_map_png, patch_layout_png, reference_phase_map_png
-from ..storage import job_output_dir, upload_dir
+from ..storage import app_data_dir, job_output_dir, upload_dir
 
 # PHASE13C/13D: the wizard never sends the user to a separate Library page -- these are the fixed
 # square-patch geometry family and mesh the auto-built board library always uses. Mesh-aligned BY
@@ -953,6 +970,12 @@ class TwoStateSourceRequest(BaseModel):
     uploaded_value_1_imag: "float | None" = None
     uploaded_geometry_0: "dict | None" = None  # optional cell geometry (two_state_cells' own dict format, mm)
     uploaded_geometry_1: "dict | None" = None
+    # Phase 22: source "auto" finds the cell states itself (empty + squares, MoM, mesh-corrected, snapped to
+    # a 0.05 mm grid) from the substrate, cell size, frequency and number of bits. `auto_fixed_L_mm` (1-bit)
+    # computes that square's Gamma instead of searching.
+    auto_fixed_L_mm: "float | None" = None
+    # smallest gap left between neighbouring patches (a fabrication limit): a square is at most P - gap wide
+    auto_min_gap_mm: float = 0.2
 
 
 class PortBeamSpec(BaseModel):
@@ -975,15 +998,29 @@ class PortSpec(BaseModel):
 
 class PortLayoutRequest(BaseModel):
     """`preset`: `"2x2_plus_1_large"` (Mishra's own layout, needs `small_side_mm`),
-    `"1xn"` (needs `n`/`cell_side_mm`), or `"custom"` (needs `regions_mm`, each either
-    `[x_min,x_max,y_min,y_max]` or `[x_min,x_max,y_min,y_max,feed_x,feed_y]`, millimetres)."""
+    `"1xn"` (needs `n`/`cell_side_mm`), `"grid"` (needs `rows`, `cols`, `cell_side_mm`: an N x M grid of
+    equal sub-apertures, serpentine port order from the top-right), or `"custom"` (needs `regions_mm`,
+    each either `[x_min,x_max,y_min,y_max]` or `[x_min,x_max,y_min,y_max,feed_x,feed_y]`, millimetres).
+    `snap_side_to_cells` rounds the preset's side to a whole number of cells (off by default here so
+    existing requests are unchanged; the app sends it on)."""
 
     preset: str
     small_side_mm: "float | None" = None
     n: "int | None" = None
+    rows: "int | None" = None
+    cols: "int | None" = None
     cell_side_mm: "float | None" = None
     gap_mm: float = 0.0
     regions_mm: "list[list[float]] | None" = None
+    snap_side_to_cells: bool = False
+    # Phase 23, preset "hex4": four regular hexagons (two offset rows). `side_mm` = hexagon side =
+    # circumradius, or `flat_to_flat_mm` instead; `gap_mm` is shared with the other presets;
+    # `orientation` "pointy" (two rows) or "flat" (two columns); `trim_board` cuts the exported
+    # substrate/ground to the hexagon outline instead of the cluster's bounding rectangle.
+    side_mm: "float | None" = None
+    flat_to_flat_mm: "float | None" = None
+    orientation: str = "pointy"
+    trim_board: bool = False
 
 
 class HmsaSynthesizePortsRequest(BaseModel):
@@ -1011,8 +1048,8 @@ class HmsaSynthesizePortsRequest(BaseModel):
     port_tan_delta: "float | None" = None
     two_state: TwoStateSourceRequest = TwoStateSourceRequest()
     # "coded" only: the surface-wave beta the phase is built with. "state": each state's own solved
-    # beta (pair must agree within BETA_SPREAD_LIMIT_FRACTION). "paper": Mishra eq. (1),
-    # k0*sqrt((eps_r+1)/2), one value for both states. "model": beta of the mixed 1-bit surface.
+    # beta (pair must agree within BETA_SPREAD_LIMIT_FRACTION). "model": beta of the mixed 1-bit surface.
+    # ("paper", Mishra eq. 1, was removed in Phase 22.)
     beta_mode: str = "state"
     min_lambda_sw: float = 1.0
     # Optional pointing correction (off by default): re-aim each beam by its measured miss, 1-2 passes.
@@ -1020,9 +1057,29 @@ class HmsaSynthesizePortsRequest(BaseModel):
     pointing_iterations: int = 2
     # Match the requested relative beam levels (2+ beams per port), on by default.
     balance_levels: bool = True
+    # "coded" only: 1 = two states (`two_state`), >1 = 2**n_bits phase levels matched against the
+    # continuous library `library_id` (as /synthesize_coded does for a single aperture).
+    n_bits: int = 1
+    # "coded" 1-bit only: force the cell(s) under each feed to state 0 (empty) -- the coax passes
+    # through the board there. The number of cells changed is reported per port.
+    feed_keepout: bool = True
 
 
-def _build_port_regions(layout: dict):
+def _snap_layout_sides(layout: dict, period_mm):
+    """Returns `(layout, notes)`: with `snap_side_to_cells`, the preset's side rounded to the nearest
+    whole number of cells (`notes`: one `{requested_mm, snapped_mm, n_cells}` per snapped side)."""
+    if not layout.get("snap_side_to_cells") or period_mm is None or layout["preset"] == "custom":
+        return layout, []
+    key = "small_side_mm" if layout["preset"] == "2x2_plus_1_large" else "cell_side_mm"
+    if layout.get(key) is None:
+        return layout, []
+    snapped_m, n_cells = snap_side_to_cells(layout[key] * 1e-3, period_mm * 1e-3)
+    note = {"requested_mm": layout[key], "snapped_mm": snapped_m * 1e3, "n_cells": n_cells}
+    return {**layout, key: snapped_m * 1e3}, [note]
+
+
+def _build_port_regions(layout: dict, period_mm=None):
+    layout, _notes = _snap_layout_sides(layout, period_mm)
     preset = layout["preset"]
     if preset == "2x2_plus_1_large":
         if layout["small_side_mm"] is None:
@@ -1032,12 +1089,41 @@ def _build_port_regions(layout: dict):
         if layout["n"] is None or layout["cell_side_mm"] is None:
             raise config_invalid(message="layout preset '1xn' needs n and cell_side_mm")
         return layout_preset_1xn(layout["n"], layout["cell_side_mm"] * 1e-3, gap_m=layout["gap_mm"] * 1e-3)
+    if preset == "grid":
+        if layout["rows"] is None or layout["cols"] is None or layout["cell_side_mm"] is None:
+            raise config_invalid(message="layout preset 'grid' needs rows, cols and cell_side_mm")
+        try:
+            return layout_preset_grid(
+                layout["rows"], layout["cols"], layout["cell_side_mm"] * 1e-3, gap_m=layout["gap_mm"] * 1e-3
+            )
+        except ValueError as exc:
+            raise config_invalid(message=str(exc)) from exc
+    if preset == "hex4":
+        if (layout["side_mm"] is None) == (layout["flat_to_flat_mm"] is None):
+            raise config_invalid(message="layout preset 'hex4' needs exactly one of side_mm and flat_to_flat_mm")
+        try:
+            return layout_preset_hex4(
+                side_m=None if layout["side_mm"] is None else layout["side_mm"] * 1e-3,
+                flat_to_flat_m=None if layout["flat_to_flat_mm"] is None else layout["flat_to_flat_mm"] * 1e-3,
+                gap_m=layout["gap_mm"] * 1e-3,
+                orientation=layout["orientation"],
+                period_m=None if period_mm is None else period_mm * 1e-3,
+            )
+        except ValueError as exc:
+            raise config_invalid(message=str(exc)) from exc
     if preset == "custom":
         if not layout["regions_mm"]:
             raise config_invalid(message="layout preset 'custom' needs regions_mm")
         rects_m = [tuple(v * 1e-3 for v in r) for r in layout["regions_mm"]]
-        return custom_layout(rects_m)
-    raise config_invalid(message=f"unknown layout preset {preset!r}; expected '2x2_plus_1_large', '1xn', or 'custom'")
+        try:
+            regions = custom_layout(rects_m)
+            check_no_overlap(regions)
+        except ValueError as exc:
+            raise config_invalid(message=f"custom layout: {exc}") from exc
+        return regions
+    raise config_invalid(
+        message=f"unknown layout preset {preset!r}; expected '2x2_plus_1_large', '1xn', 'grid', 'hex4', or 'custom'"
+    )
 
 
 def _port_cell_to_m(formulation, period_mm):
@@ -1057,8 +1143,145 @@ def _port_cell_to_m(formulation, period_mm):
     return cell_m
 
 
+def _geometry_mm(geometry_m):
+    """One `cell_geometry_m` entry (metres) -> mm for the result: `[L, W]`, an annular-slot dict, or
+    `None` for "no patch"."""
+    if geometry_m is None:
+        return None
+    if isinstance(geometry_m, dict):
+        return {k: (v if k == "kind" else round(v * 1e3, 9)) for k, v in geometry_m.items()}
+    length_m, width_m = geometry_m
+    if length_m <= 0.0 or width_m <= 0.0:
+        return None
+    return [round(length_m * 1e3, 9), round(width_m * 1e3, 9)]  # m -> mm without float residue
+
+
+def _port_patches_mm(port, cell_geometry_m, period_mm):
+    """Phase 21 C3: this port's own cells at their OWN exact positions, for export -- no shared
+    lattice. `cells` lists only cells that carry a patch, as `{i, j, geometry}` (geometry in mm);
+    the cell centre is `x_mid + (j - (nx-1)/2)*period`, `y_mid + (i - (ny-1)/2)*period`, with
+    `(x_mid, y_mid)` the sub-aperture's centre (the design grid is centred in its rectangle)."""
+    ny, nx = port.design.x_m.shape
+    cells = []
+    for c in port.design.cells:
+        geometry = _geometry_mm(cell_geometry_m(c))
+        if geometry is not None:
+            cells.append({"i": c.i, "j": c.j, "geometry": geometry})
+    region = port.region
+    layout = {
+        "nx": nx,
+        "ny": ny,
+        "period_mm": period_mm,
+        "x_mid_mm": (region.x_min_m + region.x_max_m) / 2.0 * 1e3,
+        "y_mid_mm": (region.y_min_m + region.y_max_m) / 2.0 * 1e3,
+        "cells": cells,
+    }
+    return layout, len(cells)
+
+
+def _ports_reports(multi, port_beams, body, cell_geometry_m):
+    """Phase 21 B3: per port, per requested beam: where the beam actually points, the pointing error,
+    its directivity and its cross-pol, from the port's own vector pattern. `{}` when the loss tangent
+    is unknown (the pattern needs the substrate)."""
+    if body["port_tan_delta"] is None:
+        return {}
+    f = body["frequency_hz"]
+    period_m = body["period_mm"] * 1e-3
+    substrate = Substrate("user", body["port_eps_r"], body["port_tan_delta"], body["port_thickness_mm"] * 1e-3)
+    green = LayeredGreenFunction(substrate, f, backing="pec")
+    wavelength_m = 299792458.0 / f
+    reports = {}
+    for p in multi.ports:
+        design = p.design
+        x_m, y_m = design.x_m, design.y_m
+        jx, jy = aperture_current_from_scalar(x_m, y_m, design.aperture_field, feed_xy_m=p.feed_xy_m)
+        dx = float(x_m[0, 1] - x_m[0, 0])
+        dy = float(y_m[1, 0] - y_m[0, 0])
+        pat = compute_vector_pattern(x_m, y_m, jx, jy, f, green, dx, dy)
+        total = np.abs(pat.e_theta) ** 2 + np.abs(pat.e_phi) ** 2
+        peak_power = float(total.max())
+        extent_m = float(x_m.max() - x_m.min()) + dx
+        beams = port_beams[p.port_id]
+        aims = [
+            beam_local_peak_fine(x_m, y_m, jx, jy, f, green, dx, dy, b.theta_deg, b.phi_deg) for b in beams
+        ]
+        fine_peak = max((a[2] for a in aims), default=0.0)
+        per_beam = []
+        for idx, (b, (theta_a, phi_a, power)) in enumerate(zip(beams, aims, strict=True)):
+            req = _unit_vector(b.theta_deg, b.phi_deg)
+            got = _unit_vector(theta_a, phi_a)
+            pointing_error = float(np.degrees(np.arccos(np.clip(float(req @ got), -1.0, 1.0))))
+            pol = b.desired_polarization
+            cross_level_db = xpd_db = None
+            if pol in ORTHOGONAL_POLARIZATION:
+                gi = int(np.argmin(np.abs(pat.theta_deg[:, 0] - theta_a)))
+                gj = int(np.argmin(np.abs(((pat.phi_deg[0, :] - phi_a + 180.0) % 360.0) - 180.0)))
+                cross = copol_component(pat.e_theta, pat.e_phi, ORTHOGONAL_POLARIZATION[pol])
+                cross_level_db = float(20.0 * np.log10(max(abs(cross[gi, gj]), 1e-12) / np.sqrt(peak_power)))
+                others = [(o.theta_deg, o.phi_deg) for k, o in enumerate(beams) if k != idx]
+                xpd_db = beam_polarization_metrics(pat, pol, b.theta_deg, b.phi_deg, extent_m, wavelength_m, others).point_xpd_db
+            level_db = float(10.0 * np.log10(max(power, 1e-30) / fine_peak)) if fine_peak > 0.0 else None
+            per_beam.append(
+                {
+                    "requested_theta_deg": b.theta_deg,
+                    "requested_phi_deg": b.phi_deg,
+                    "theta_deg": float(theta_a),
+                    "phi_deg": float(phi_a),
+                    "pointing_error_deg": pointing_error,
+                    "level_db": level_db,
+                    "directivity_dbi": float(pat.directivity_estimate_dbi + 10.0 * np.log10(max(power, 1e-30) / peak_power)),
+                    "polarization": pol,
+                    "cross_pol_level_db": cross_level_db,
+                    "xpd_db": xpd_db,
+                }
+            )
+        eff, _dmax = aperture_efficiency_estimate(pat.directivity_estimate_dbi, p.region.area_m2, f)
+        reports[p.port_id] = {
+            "peak_directivity_dbi": float(pat.directivity_estimate_dbi),
+            "aperture_efficiency_upper_bound": eff,
+            "beams": per_beam,
+        }
+    return reports
+
+
+def _unit_vector(theta_deg, phi_deg):
+    t, p = np.radians(theta_deg), np.radians(phi_deg)
+    return np.array([np.sin(t) * np.cos(p), np.sin(t) * np.sin(p), np.cos(t)])
+
+
+def _state_table(multi, body):
+    """The phase table of a coded multi-port design, reported ONCE (every port shares it): for 1 bit
+    the two states' own phases (see `two_state`); for N bits one row per level -- its ideal phase,
+    how many cells (all ports) use it, and the mean achieved phase / error of those cells."""
+    n_bits = body["n_bits"]
+    if n_bits == 1:
+        return None  # `two_state.states` carries the pair
+    step = 360.0 / 2**n_bits
+    rows = []
+    for level in range(2**n_bits):
+        errors, achieved = [], []
+        for p in multi.ports:
+            lm = np.asarray(p.design.level_map)
+            for c in p.design.cells:
+                if int(lm[c.i, c.j]) == level and c.achieved_value is not None:
+                    achieved.append(c.achieved_value)
+                    errors.append(c.phase_error_deg if c.phase_error_deg is not None else 0.0)
+        rows.append(
+            {
+                "level": level,
+                "target_phase_deg": level * step,
+                "n_cells": len(achieved),
+                "mean_achieved_phase_deg": float(np.degrees(np.angle(np.mean(np.exp(1j * np.radians(achieved))))))
+                if achieved
+                else None,
+                "mean_phase_error_deg": float(np.mean(errors)) if errors else None,
+            }
+        )
+    return rows
+
+
 def _run_synthesize_ports_job(job, body: dict):
-    regions = _build_port_regions(body["layout"])
+    regions = _build_port_regions(body["layout"], body["period_mm"])
     if len(body["ports"]) != len(regions):
         raise config_invalid(
             message=f"layout '{body['layout']['preset']}' has {len(regions)} port(s) but "
@@ -1122,43 +1345,101 @@ def _run_synthesize_ports_job(job, body: dict):
                 cp_phase_offset_deg=body["cp_phase_offset_deg"],
             )
     elif body["formulation"] == "coded":
-        if body["port_tan_delta"] is None:
-            raise config_invalid(
-                message="formulation 'coded' needs port_tan_delta (the surface-wave check needs the loss tangent)"
-            )
-        if body["beta_mode"] not in ("state", "paper", "model"):
-            raise config_invalid(message=f"beta_mode must be 'state', 'paper' or 'model', got {body['beta_mode']!r}")
-        substrate = Substrate("user", body["port_eps_r"], body["port_tan_delta"], body["port_thickness_mm"] * 1e-3)
-        # paper/model: one beta for the whole mixed surface, so the states' own betas need not agree
-        spread_limit = BETA_SPREAD_LIMIT_FRACTION if body["beta_mode"] == "state" else float("inf")
-        choice, refusals = _resolve_two_state_choice(
-            body["two_state"],
-            body["library_id"],
-            body["frequency_hz"],
-            substrate,
-            period_m,
-            beta_spread_limit=spread_limit,
-        )
-        beta_paper = paper_surface_wave_beta(body["frequency_hz"], body["port_eps_r"])
-        beta_model = mixed_surface_mode(choice, substrate, body["frequency_hz"], period_m).beta_rad_per_m
-        if body["beta_mode"] == "state":
-            betas = (choice.surface_wave_0.beta_rad_per_m, choice.surface_wave_1.beta_rad_per_m)
-        else:
-            betas = (beta_paper, beta_paper) if body["beta_mode"] == "paper" else (beta_model, beta_model)
-
-        def synthesize_one(ref, beams, feed_xy_m):
-            return synthesize_coded_one_bit(
-                ref,
-                beams,
+        n_bits = body["n_bits"]
+        auto_n_bit_info = {}
+        if body["beta_mode"] == "paper":
+            raise config_invalid(message="beta_mode 'paper' was removed; use 'model'")
+        if n_bits < 1:
+            raise config_invalid(message=f"n_bits must be >= 1, got {n_bits!r}")
+        if n_bits == 1:
+            if body["port_tan_delta"] is None:
+                raise config_invalid(
+                    message="formulation 'coded' needs port_tan_delta (the surface-wave check needs the loss tangent)"
+                )
+            if body["beta_mode"] not in ("state", "model"):
+                raise config_invalid(message=f"beta_mode must be 'state' or 'model', got {body['beta_mode']!r}")
+            substrate = Substrate("user", body["port_eps_r"], body["port_tan_delta"], body["port_thickness_mm"] * 1e-3)
+            # model: one beta for the whole mixed surface, so the states' own betas need not agree
+            spread_limit = BETA_SPREAD_LIMIT_FRACTION if body["beta_mode"] == "state" else float("inf")
+            auto_info = {}
+            choice, refusals = _resolve_two_state_choice(
+                body["two_state"],
+                body["library_id"],
                 body["frequency_hz"],
-                choice,
+                substrate,
                 period_m,
-                feed_xy_m=feed_xy_m,
-                cp_phase_offset_deg=body["cp_phase_offset_deg"],
-                surface_wave_betas_rad_per_m=betas,
+                beta_spread_limit=spread_limit,
+                beta_mode=body["beta_mode"],
+                job=job,
+                auto_info_out=auto_info,
             )
+            beta_model = mixed_surface_mode(choice, substrate, body["frequency_hz"], period_m).beta_rad_per_m
+            if body["beta_mode"] == "state":
+                betas = (choice.surface_wave_0.beta_rad_per_m, choice.surface_wave_1.beta_rad_per_m)
+            else:
+                betas = (beta_model, beta_model)
+
+            def synthesize_one(ref, beams, feed_xy_m):
+                design = synthesize_coded_one_bit(
+                    ref,
+                    beams,
+                    body["frequency_hz"],
+                    choice,
+                    period_m,
+                    feed_xy_m=feed_xy_m,
+                    cp_phase_offset_deg=body["cp_phase_offset_deg"],
+                    surface_wave_betas_rad_per_m=betas,
+                )
+                if body["feed_keepout"]:
+                    design, _n_changed = apply_feed_keepout_one_bit(design, feed_xy_m, period_m)
+                return design
+        else:
+            if body["two_state"]["source"] == "auto":
+                # Phase 22: the 2**n_bits states are found automatically (no library needed)
+                if body["port_tan_delta"] is None:
+                    raise config_invalid(message="automatic cell states need port_tan_delta (the MoM solve needs it)")
+                auto_substrate = Substrate(
+                    "user", body["port_eps_r"], body["port_tan_delta"], body["port_thickness_mm"] * 1e-3
+                )
+                auto = _compute_auto_states(n_bits, body["two_state"], auto_substrate, body["frequency_hz"], period_m, job)
+                auto_n_bit_info.update(auto_states_to_dict(auto))
+                candidates = auto.library_candidates()
+            else:
+                # same validation messages as the single-aperture /synthesize_coded N-bit path
+                if body["library_id"] is None:
+                    raise config_invalid(message="n_bits > 1 needs library_id (a continuous phase library)")
+                lib = UnitCellLibrary.from_json(library_registry.resolve_path(body["library_id"]))
+                candidates = library_candidates_at_frequency(lib, body["library_id"], body["frequency_hz"])
+                if not candidates:
+                    raise library_frequency_unavailable(
+                        f"library {body['library_id']!r} has no record at {body['frequency_hz'] / 1e9:g} GHz"
+                    )
+
+            def synthesize_one(ref, beams, feed_xy_m):
+                return synthesize_coded_n_bit(
+                    ref,
+                    beams,
+                    body["frequency_hz"],
+                    n_bits,
+                    candidates,
+                    period_m,
+                    feed_xy_m=feed_xy_m,
+                    cp_phase_offset_deg=body["cp_phase_offset_deg"],
+                )
+
     else:
         raise config_invalid(message=f"formulation must be 'A', 'B' or 'coded', got {body['formulation']!r}")
+
+    # Phase 23: a polygon port keeps only the cells inside its outline (`synthesize_ports` passes
+    # `region=` for polygons only, so a rectangle layout's calls are exactly as before).
+    synthesize_one_unmasked = synthesize_one
+
+    def synthesize_one(ref, beams, feed_xy_m, region=None):
+        design = synthesize_one_unmasked(ref, beams, feed_xy_m)
+        if region is None:
+            return design
+        earlier = [r for r in regions if r.port_id < region.port_id]
+        return mask_design_to_region(design, region_cell_mask(region, design.x_m, design.y_m, earlier))
 
     refinement_reports = []
     per_port = synthesize_one
@@ -1174,13 +1455,13 @@ def _run_synthesize_ports_job(job, body: dict):
         port_substrate = Substrate("user", body["port_eps_r"], body["port_tan_delta"], body["port_thickness_mm"] * 1e-3)
         port_green = LayeredGreenFunction(port_substrate, body["frequency_hz"], backing="pec")
 
-        def per_port(ref, beams, feed_xy_m):
+        def per_port(ref, beams, feed_xy_m, region=None):
             def measure(design, beams_now):
                 return measure_beam_aims(design, beams_now, port_green, period_m, body["frequency_hz"], feed_xy_m)
 
             design, _used, report = refine_design(
                 beams,
-                lambda bs: synthesize_one(ref, bs, feed_xy_m),
+                lambda bs: synthesize_one(ref, bs, feed_xy_m, region),
                 measure,
                 pointing=body["pointing_correction"],
                 balance=body["balance_levels"],
@@ -1206,12 +1487,17 @@ def _run_synthesize_ports_job(job, body: dict):
         isolation_edge_distance(f.port_a, f.port_b, f.gap_lambda_sw) for f in multi.isolation_flags if f.flagged
     )
 
-    if body["formulation"] == "coded":
+    if body["formulation"] == "coded" and body["n_bits"] > 1:
+        cell_geometry_m = _port_cell_to_m("B", body["period_mm"])
+        board = combined_board_lw_grid_m(multi, cell_geometry_m)
+        two_state_info = None
+    elif body["formulation"] == "coded":
 
         def coded_cell_m(cell):
             state = choice.state_0 if int(cell.geometry_param) == 0 else choice.state_1
             return _two_state_geometry_to_cell_m(state.geometry)
 
+        cell_geometry_m = coded_cell_m
         board = combined_board_lw_grid_m(multi, coded_cell_m)
         two_state_info = {
             "achieved_separation_deg": choice.achieved_separation_deg,
@@ -1220,12 +1506,29 @@ def _run_synthesize_ports_job(job, body: dict):
             "refused_states": refusals,
             "beta_mode": body["beta_mode"],
             "beta_used_rad_per_m": betas[0] if body["beta_mode"] != "state" else None,
-            "beta_paper_rad_per_m": beta_paper,
             "beta_model_rad_per_m": beta_model,
             "state_betas_rad_per_m": [choice.surface_wave_0.beta_rad_per_m, choice.surface_wave_1.beta_rad_per_m],
+            "auto": auto_info or None,
+            # the exact phases the aperture field was built with (state.value, not the patch-plane shift);
+            # Phase 23's sidelobe optimiser rebuilds each cell's two possible aperture values from them
+            "achieved_phase_deg": [
+                float(principal_phase_deg(choice.state_0.value)),
+                float(principal_phase_deg(choice.state_1.value)),
+            ],
+            # the phase table, once for the whole board (every port shares the pair)
+            "states": [
+                {
+                    "label": st.label,
+                    "geometry": st.geometry,
+                    "magnitude_db": float(20.0 * np.log10(abs(st.value))),
+                    "phase_deg_patch_plane": float(np.degrees(np.angle(st.patch_plane_value(body["frequency_hz"])))),
+                }
+                for st in (choice.state_0, choice.state_1)
+            ],
         }
     else:
-        board = combined_board_lw_grid_m(multi, _port_cell_to_m(body["formulation"], body["period_mm"]))
+        cell_geometry_m = _port_cell_to_m(body["formulation"], body["period_mm"])
+        board = combined_board_lw_grid_m(multi, cell_geometry_m)
         two_state_info = None
     patch_layout_png_url = None
     try:
@@ -1258,16 +1561,26 @@ def _run_synthesize_ports_job(job, body: dict):
             n_y,
             out_dir / "patch_layout.png",
             title=f"Multi-port board — {len(multi.ports)} ports, {n_x} × {n_y} cells",
-            feed_xy_mm=None,
+            feed_xy_mm=[(p.feed_xy_m[0] * 1e3, p.feed_xy_m[1] * 1e3) for p in multi.ports],
+            outlines_mm=[[(x * 1e3, y * 1e3) for x, y in p.region.vertices_m] for p in multi.ports if p.region.is_polygon]
+            or None,
         )
         patch_layout_png_url = f"/api/files/{job.id}/{path.name}"
     except Exception:
         patch_layout_png_url = None
 
+    reports = _ports_reports(multi, port_beams, body, cell_geometry_m)
     ports_result = []
     for p in multi.ports:
+        patches, n_patches = _port_patches_mm(p, cell_geometry_m, body["period_mm"])
         ports_result.append(
             {
+                "report": reports.get(p.port_id),
+                "patch_count": n_patches,
+                "patches_mm": patches,
+                "keepout_cells_changed": getattr(p.design, "keepout_cells_changed", None)
+                if body["formulation"] == "coded" and body["n_bits"] == 1 and body["feed_keepout"]
+                else None,
                 "port_id": p.port_id,
                 "feed_x_mm": p.feed_xy_m[0] * 1e3,
                 "feed_y_mm": p.feed_xy_m[1] * 1e3,
@@ -1275,6 +1588,11 @@ def _run_synthesize_ports_job(job, body: dict):
                 "x_max_mm": p.region.x_max_m * 1e3,
                 "y_min_mm": p.region.y_min_m * 1e3,
                 "y_max_mm": p.region.y_max_m * 1e3,
+                **(
+                    {"outline_mm": [[x * 1e3, y * 1e3] for x, y in p.region.vertices_m]}
+                    if p.region.is_polygon
+                    else {}
+                ),
                 "unreachable_fraction": p.design.unreachable_fraction,
                 "labels": p.design.labels,
                 "n_cells": len(p.design.cells),
@@ -1290,7 +1608,10 @@ def _run_synthesize_ports_job(job, body: dict):
         "isolation": isolation,
         "labels": (MULTI_PORT_SHARED_METHOD, PORT_ISOLATION_NOT_FULL_WAVE, *isolation_labels),
         "formulation": body["formulation"],
+        "n_bits": body["n_bits"] if body["formulation"] == "coded" else None,
         "two_state": two_state_info,
+        "state_table": _state_table(multi, body) if body["formulation"] == "coded" else None,
+        "auto_states": (auto_n_bit_info or None) if body["formulation"] == "coded" and body["n_bits"] > 1 else None,
         "refinement": refinement_reports,
         "period_mm": body["period_mm"],
         "patch_layout_png_url": patch_layout_png_url,
@@ -1300,6 +1621,7 @@ def _run_synthesize_ports_job(job, body: dict):
         "export_feeds_mm": export_frame_feeds_and_rects_mm(multi, board)[0],
         "export_offset_mm": [v * 1e3 for v in export_frame_offset_m(multi, board)],
         "lw_grid_m": board.lw_grid_m,
+        **({"layout_preset": "hex4", "trim_board": bool(body["layout"]["trim_board"])} if any(r.is_polygon for r in regions) else {}),
     }
 
 
@@ -1420,15 +1742,96 @@ def ensure_annular_slot_library(body: EnsureAnnularSlotLibraryRequest, request: 
     return job.to_dict()
 
 
+def _compute_auto_states(n_bits, two_state, substrate, frequency_hz, period_m, job=None):
+    """Phase 22: the automatic cell states, cached on disk under the app data dir (a re-run is instant)."""
+
+    def progress(message):
+        if job is not None:
+            job.progress_message = message
+
+    return auto_states(
+        n_bits,
+        substrate,
+        frequency_hz,
+        period_m,
+        fixed_L_mm=two_state.get("auto_fixed_L_mm") if n_bits == 1 else None,
+        min_gap_mm=two_state.get("auto_min_gap_mm", 0.2),
+        cache_dir=app_data_dir() / "auto_states_cache",
+        progress=progress,
+    )
+
+
+WEAK_PAIR_SEPARATION_DEG = 150.0  # a fixed-side 1-bit pair below this separation is flagged
+
+
+def auto_states_to_dict(auto):
+    """JSON form of an `AutoStates`: the table the UI shows (state, geometry, |Gamma|, patch-plane phase,
+    separation, sensitivity, labels) plus timings."""
+    states = auto.states
+    rows = []
+    for s in states:
+        sep = None
+        if len(states) == 2 and s.level == 1:
+            sep = abs(wrapped_difference_deg(states[0].phase_deg, s.phase_deg))
+        rows.append(
+            {
+                "level": s.level,
+                "label": s.label,
+                "geometry": s.geometry,
+                "gamma_real": s.gamma.real,
+                "gamma_imag": s.gamma.imag,
+                "magnitude_db": s.magnitude_db,
+                "phase_deg_patch_plane": s.phase_deg,
+                "target_phase_deg": float(((s.target_phase_deg + 180.0) % 360.0) - 180.0),
+                "phase_error_deg": s.phase_error_deg,
+                "separation_deg": sep,
+                "sensitivity_deg_per_0p01mm": s.sensitivity_deg_per_0p01mm,
+                "mesh_uncertainty_deg": s.mesh_uncertainty_deg,
+                "labels": list(s.labels),
+                "message": s.message,
+            }
+        )
+    warnings = []
+    if auto.fixed_L_mm is not None and auto.n_bits == 1 and rows[1]["separation_deg"] < WEAK_PAIR_SEPARATION_DEG:
+        warnings.append(
+            f"Weak pair: {auto.fixed_L_mm:.2f} mm gives {rows[1]['separation_deg']:.0f}° separation "
+            f"(below {WEAK_PAIR_SEPARATION_DEG:.0f}°); leave the fixed side blank to search."
+        )
+    return {
+        "n_bits": auto.n_bits,
+        "fixed_L_mm": auto.fixed_L_mm,
+        "warnings": warnings,
+        "states": rows,
+        "solve_seconds": auto.solve_seconds,
+        "n_solves": auto.n_solves,
+        "n_cached": auto.n_cached,
+        "min_gap_mm": auto.min_gap_mm,
+        "reference_plane": "patch plane (z = 0)",
+    }
+
+
 def _resolve_two_state_choice(
-    two_state: dict, library_id, frequency_hz, substrate, period_m, beta_spread_limit=BETA_SPREAD_LIMIT_FRACTION
+    two_state: dict,
+    library_id,
+    frequency_hz,
+    substrate,
+    period_m,
+    beta_spread_limit=BETA_SPREAD_LIMIT_FRACTION,
+    beta_mode="state",
+    job=None,
+    auto_info_out=None,
 ):
     """Every candidate state is screened first (`screen_candidates`: TM0 root, clear of
     patch-plane resonance, inside the sheet model's range); the pair is then
     the best one whose BOTH states pass with agreeing betas (`best_valid_pair`), never the raw
     best-separated pair. Returns `(choice, refusals)`, `refusals` naming every refused state."""
     source = two_state["source"]
-    if source == "uploaded":
+    if source == "auto":
+        auto = _compute_auto_states(1, two_state, substrate, frequency_hz, period_m, job)
+        if auto_info_out is not None:
+            auto_info_out.update(auto_states_to_dict(auto))
+        candidates = auto.cells()
+    elif source == "uploaded":
         for key in ("uploaded_value_0_real", "uploaded_value_0_imag", "uploaded_value_1_real", "uploaded_value_1_imag"):
             if two_state[key] is None:
                 raise config_invalid(message=f"two_state source 'uploaded' needs {key}")
@@ -1461,7 +1864,9 @@ def _resolve_two_state_choice(
             candidates = candidates + candidates_from_annular_slot_library(annular_cells, frequency_hz / 1e9)
         else:
             raise config_invalid(message=f"unknown two_state source {source!r}")
-    modes, reasons = screen_candidates(candidates, frequency_hz, substrate, period_m)
+    # an automatic pair with one beta for the whole mixed surface (model/paper) may sit on the patch resonance
+    refuse_resonance = not (source == "auto" and beta_mode != "state")
+    modes, reasons = screen_candidates(candidates, frequency_hz, substrate, period_m, refuse_resonance)
     choice = best_valid_pair(
         candidates,
         modes,
@@ -1531,6 +1936,39 @@ def _frequency_row(f_hz, gamma_0, gamma_1):
         "state_1_phase_patch_deg": float(np.degrees(np.angle(gamma_1))),
         "separation_deg": float(sep),
     }
+
+
+class AutoStatesRequest(BaseModel):
+    """Phase 22: find the coded-cell states for a substrate/cell/frequency/bits without designing anything
+    (the Coded panel's "Compute cell states" button; results are cached, so the later design run reuses them)."""
+
+    eps_r: float
+    tan_delta: float
+    thickness_mm: float
+    period_mm: float
+    frequency_hz: float
+    n_bits: int = 1
+    fixed_L_mm: "float | None" = None
+    min_gap_mm: float = 0.2
+
+
+def _run_auto_states_job(job, body: dict):
+    substrate = Substrate("user", body["eps_r"], body["tan_delta"], body["thickness_mm"] * 1e-3)
+    two_state = {"auto_fixed_L_mm": body["fixed_L_mm"], "auto_min_gap_mm": body["min_gap_mm"]}
+    auto = _compute_auto_states(body["n_bits"], two_state, substrate, body["frequency_hz"], body["period_mm"] * 1e-3, job)
+    return {**auto_states_to_dict(auto), "labels": (EXPERIMENTAL,)}
+
+
+@router.post("/auto_states")
+def auto_states_endpoint(body: AutoStatesRequest, request: Request):
+    if body.n_bits < 1 or body.n_bits > 3:
+        raise HTTPException(422, f"n_bits must be 1, 2 or 3, got {body.n_bits}")
+    if body.fixed_L_mm is not None and body.n_bits != 1:
+        raise HTTPException(422, "fixed_L_mm is for 1-bit designs")
+    if not (0.0 <= body.min_gap_mm < body.period_mm / 2.0):
+        raise HTTPException(422, f"min_gap_mm must be in [0, period/2), got {body.min_gap_mm}")
+    job = request.app.state.jobs.submit("hmsa_auto_states", _run_auto_states_job, body.model_dump())
+    return job.to_dict()
 
 
 class HmsaSynthesizeCodedRequest(BaseModel):
@@ -1699,6 +2137,7 @@ def _run_synthesize_coded_job(job, body: dict):
     extra_checks = {}
 
     state_labels = ()
+    auto_n_bit_info = {}
     if n_bits == 1:
         if substrate is None:
             raise config_invalid(
@@ -1708,8 +2147,15 @@ def _run_synthesize_coded_job(job, body: dict):
             raise config_invalid(
                 message="the 1-bit coded method with multiple feeds is not supported yet (one feed defines the surface-wave reference)"
             )
+        auto_info = {}
         choice, refusals = _resolve_two_state_choice(
-            body["two_state"], body["library_id"], body["frequency_hz"], substrate, period_m
+            body["two_state"],
+            body["library_id"],
+            body["frequency_hz"],
+            substrate,
+            period_m,
+            job=job,
+            auto_info_out=auto_info,
         )
         beta_bar = choice.beta_bar_rad_per_m
         design, refinement = _refined_design(
@@ -1787,6 +2233,7 @@ def _run_synthesize_coded_job(job, body: dict):
             "beta_spread_limit_fraction": BETA_SPREAD_LIMIT_FRACTION,
             "beta_edge_phase_error_deg": edge_error_deg,
             "refused_states": refusals,
+            "auto": auto_info or None,
             "path_iterations": design.path_iterations,
             "path_converged": design.path_converged,
             "cell_size_mm": body["period_mm"],
@@ -1803,14 +2250,22 @@ def _run_synthesize_coded_job(job, body: dict):
             state = choice.state_0 if int(c.geometry_param) == 0 else choice.state_1
             lw_grid_m[c.i][c.j] = _two_state_geometry_to_cell_m(state.geometry)
     else:
-        if body["library_id"] is None:
-            raise config_invalid(message="n_bits > 1 needs library_id (a continuous phase library)")
-        lib = UnitCellLibrary.from_json(library_registry.resolve_path(body["library_id"]))
-        candidates = library_candidates_at_frequency(lib, body["library_id"], body["frequency_hz"])
-        if not candidates:
-            raise library_frequency_unavailable(
-                f"library {body['library_id']!r} has no record at {body['frequency_hz'] / 1e9:g} GHz"
-            )
+        if body["two_state"]["source"] == "auto":
+            # Phase 22: the 2**n_bits states are found automatically (no library needed)
+            if substrate is None:
+                raise config_invalid(message="automatic cell states need the substrate (eps_r, tan_delta, thickness_mm)")
+            auto = _compute_auto_states(n_bits, body["two_state"], substrate, body["frequency_hz"], period_m, job)
+            auto_n_bit_info.update(auto_states_to_dict(auto))
+            candidates = auto.library_candidates()
+        else:
+            if body["library_id"] is None:
+                raise config_invalid(message="n_bits > 1 needs library_id (a continuous phase library)")
+            lib = UnitCellLibrary.from_json(library_registry.resolve_path(body["library_id"]))
+            candidates = library_candidates_at_frequency(lib, body["library_id"], body["frequency_hz"])
+            if not candidates:
+                raise library_frequency_unavailable(
+                    f"library {body['library_id']!r} has no record at {body['frequency_hz'] / 1e9:g} GHz"
+                )
         design, refinement = _refined_design(
             body,
             beams,
@@ -1915,6 +2370,7 @@ def _run_synthesize_coded_job(job, body: dict):
         "cells": design.cells,
         "assignments": assignments,
         "two_state": two_state_info,
+        "auto_states": auto_n_bit_info or None,
         "quantization": quantization,
         "pattern_checks": extra_checks or None,
         "labels": labels,

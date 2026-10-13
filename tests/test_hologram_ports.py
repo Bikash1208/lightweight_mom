@@ -172,3 +172,74 @@ def test_isolation_estimate_requires_positive_k_swg():
         isolation_estimate(regions, None)
     with pytest.raises(ValueError):
         isolation_estimate(regions, 0.0)
+
+
+# ======================================================================= Phase 21: grid, snap, overlap
+
+
+def test_grid_2x2_matches_the_reference_board_port_order_and_geometry():
+    from src.hologram.ports import layout_preset_grid
+
+    s, g = 0.3008, 0.028
+    regions = layout_preset_grid(2, 2, s, g)
+    centre = (s + g) / 2.0
+    assert [(r.feed_x_m > 0, r.feed_y_m > 0) for r in regions] == [(True, True), (False, True), (False, False), (True, False)]
+    for r in regions:
+        assert abs(r.feed_x_m) == pytest.approx(centre) and abs(r.feed_y_m) == pytest.approx(centre)
+        assert r.width_m == pytest.approx(s) and r.height_m == pytest.approx(s)
+        assert r.feed_x_m == pytest.approx((r.x_min_m + r.x_max_m) / 2.0)
+    assert regions[0].x_min_m == pytest.approx(g / 2.0)  # 14 mm for a 28 mm gap
+    assert [r.port_id for r in regions] == [0, 1, 2, 3]
+
+
+def test_grid_is_centred_serpentine_and_gap_free_tiles():
+    from src.hologram.ports import layout_preset_grid
+
+    regions = layout_preset_grid(2, 3, 0.1, 0.0)
+    assert len(regions) == 6
+    assert min(r.x_min_m for r in regions) == pytest.approx(-0.15) and max(r.x_max_m for r in regions) == pytest.approx(0.15)
+    assert min(r.y_min_m for r in regions) == pytest.approx(-0.1) and max(r.y_max_m for r in regions) == pytest.approx(0.1)
+    # top row right->left, second row left->right
+    assert [round(r.feed_x_m, 3) for r in regions] == [0.1, 0.0, -0.1, -0.1, 0.0, 0.1]
+    assert [round(r.feed_y_m, 3) for r in regions] == [0.05] * 3 + [-0.05] * 3
+
+
+def test_grid_1x1_and_validation():
+    from src.hologram.ports import layout_preset_grid
+
+    assert len(layout_preset_grid(1, 1, 0.2)) == 1
+    for bad in ((0, 2, 0.1, 0.0), (2, 2, 0.0, 0.0), (2, 2, 0.1, -1.0), (2.5, 2, 0.1, 0.0)):
+        with pytest.raises(ValueError):
+            layout_preset_grid(*bad)
+
+
+def test_snap_side_to_cells():
+    from src.hologram.ports import snap_side_to_cells
+
+    side, n = snap_side_to_cells(0.300, 0.0064)
+    assert n == 47 and side == pytest.approx(0.3008)
+    assert snap_side_to_cells(0.0001, 0.0064)[1] == 1
+
+
+def test_check_no_overlap():
+    from src.hologram.ports import check_no_overlap
+
+    check_no_overlap(custom_layout([(0, 1, 0, 1), (1, 2, 0, 1)]))  # touching is fine
+    with pytest.raises(ValueError, match="ports 1 and 2 overlap"):
+        check_no_overlap(custom_layout([(0, 1, 0, 1), (0.5, 2, 0.5, 2)]))
+
+
+def test_build_port_regions_grid_snap_and_custom_validation():
+    from src.app.routers.hmsa import _build_port_regions
+
+    base = {"preset": "grid", "rows": 2, "cols": 2, "cell_side_mm": 300.0, "gap_mm": 0.0, "snap_side_to_cells": True,
+            "small_side_mm": None, "n": None, "regions_mm": None}
+    snapped = _build_port_regions(base, 6.4)
+    assert snapped[0].width_m == pytest.approx(0.3008)
+    unsnapped = _build_port_regions({**base, "snap_side_to_cells": False}, 6.4)
+    assert unsnapped[0].width_m == pytest.approx(0.3)
+    overlap = {**base, "preset": "custom", "regions_mm": [[0, 10, 0, 10], [5, 15, 5, 15]]}
+    with pytest.raises(Exception, match="overlap"):
+        _build_port_regions(overlap, 6.4)
+    with pytest.raises(Exception, match="rows, cols"):
+        _build_port_regions({**base, "rows": None}, 6.4)

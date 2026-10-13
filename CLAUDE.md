@@ -39,7 +39,7 @@ with one write-up per phase alongside it in `docs/history/`; active work items a
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -e ".[dev,app,cad]"
 make app                                               # local web app, http://127.0.0.1:8000
-make test-fast                                         # pytest -m "not slow", < 5 min
+make test-fast                                         # pytest -m "not slow", ~6-7 min
 make test-full                                         # everything, tens of minutes
 .venv/bin/python -m pytest tests/test_mom_matrix.py -q # a single file, from the project root
 make lint / make format                                # ruff check / ruff check --fix + format

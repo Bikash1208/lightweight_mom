@@ -131,7 +131,7 @@ def resonance_proximity_patch_plane_deg(gamma):
     return abs(wrapped_difference_deg(principal_phase_deg(gamma), RESONANCE_PHASE_PATCH_PLANE_DEG))
 
 
-def screen_gamma(gamma, substrate, frequency_hz, period_m=None):
+def screen_gamma(gamma, substrate, frequency_hz, period_m=None, refuse_near_resonance=True):
     """The pair-validity screen for one patch-plane reflection coefficient. Returns
     `(sheet_model_mode, None)` for a usable state, or `(None, reason)` with `reason` one of the
     `REFUSED_*` names. Checks run in order: a TM0 root must exist (Phase 14 sheet model), the
@@ -147,7 +147,7 @@ def screen_gamma(gamma, substrate, frequency_hz, period_m=None):
         mode = find_beta_from_gamma(gamma, substrate, frequency_hz, period_m=period_m)
     except LwmomError:
         return None, REFUSED_NO_SURFACE_WAVE
-    if resonance_proximity_patch_plane_deg(gamma) <= RESONANCE_REFUSAL_DEG:
+    if refuse_near_resonance and resonance_proximity_patch_plane_deg(gamma) <= RESONANCE_REFUSAL_DEG:
         return None, REFUSED_NEAR_RESONANCE
     if period_m is not None:
         wavelength_m = 299792458.0 / frequency_hz
@@ -156,17 +156,24 @@ def screen_gamma(gamma, substrate, frequency_hz, period_m=None):
     return mode, None
 
 
-def screen_state(cell, frequency_hz, substrate, period_m=None):
+def screen_state(cell, frequency_hz, substrate, period_m=None, refuse_near_resonance=True):
     """`screen_gamma` applied to one `TwoStateCell`'s patch-plane value."""
-    return screen_gamma(cell.patch_plane_value(frequency_hz), substrate, frequency_hz, period_m)
+    return screen_gamma(
+        cell.patch_plane_value(frequency_hz), substrate, frequency_hz, period_m, refuse_near_resonance
+    )
 
 
-def screen_candidates(candidates, frequency_hz, substrate, period_m=None):
+def screen_candidates(candidates, frequency_hz, substrate, period_m=None, refuse_near_resonance=True):
     """`screen_state` over every candidate: `(modes, reasons)`, both aligned with `candidates`
-    (`modes[i]` None and `reasons[i]` a `REFUSED_*` name for a refused state)."""
+    (`modes[i]` None and `reasons[i]` a `REFUSED_*` name for a refused state).
+
+    `refuse_near_resonance=False` (Phase 22, the automatic pair with beta_mode "model"): the
+    near-resonance refusal exists because a state's own beta is only trustworthy away from the patch
+    resonance; with one beta for the whole mixed surface (model) that reason does not apply, and
+    the 180 degree partner of the empty cell is often exactly a near-resonant square."""
     modes, reasons = [], []
     for cell in candidates:
-        mode, reason = screen_state(cell, frequency_hz, substrate, period_m)
+        mode, reason = screen_state(cell, frequency_hz, substrate, period_m, refuse_near_resonance)
         modes.append(mode)
         reasons.append(reason)
     return modes, reasons
@@ -175,11 +182,6 @@ def screen_candidates(candidates, frequency_hz, substrate, period_m=None):
 def surface_wave_of_state(cell, frequency_hz, substrate, period_m=None):
     """The screened TM0 solution for one state (`screen_state`), or `None` if the state is refused."""
     return screen_state(cell, frequency_hz, substrate, period_m)[0]
-
-
-def paper_surface_wave_beta(frequency_hz, eps_r):
-    """Mishra eq. (1): beta_sw = k0 * sqrt((eps_r + 1) / 2), one value for the whole mixed surface."""
-    return free_space_wavenumber(frequency_hz) * np.sqrt((eps_r + 1.0) / 2.0)
 
 
 def mixed_surface_mode(choice, substrate, frequency_hz, period_m):

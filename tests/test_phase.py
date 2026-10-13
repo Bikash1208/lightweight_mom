@@ -72,11 +72,15 @@ def test_wrap_rejects_non_finite(bad):
 
 
 def test_branch_cut_negative_real_axis_is_plus_180_for_both_signed_zeros():
-    """arg(-1 + 0j) = +pi but arg(-1 - 0j) = -pi in numpy: the database must hold one spelling."""
-    assert np.degrees(np.angle(-1 - 0j)) == -180.0  # documents the numpy behaviour
-    assert principal_phase_deg(-1 + 0j) == 180.0
-    assert principal_phase_deg(-1 - 0j) == 180.0
-    assert principal_phase_deg(1e-3 * (-1 - 0j)) == 180.0
+    """arg(-1 + 0j) = +pi but arg(-1 - 0j) = -pi in numpy: the database must hold one spelling.
+
+    The negative zero is built with `complex(-1.0, -0.0)`: the literal `-1 - 0j` yields +0.0 or -0.0 in the
+    imaginary part depending on the Python version's int/complex arithmetic and constant folding."""
+    neg_zero = complex(-1.0, -0.0)
+    assert np.degrees(np.angle(neg_zero)) == -180.0  # documents the numpy behaviour
+    assert principal_phase_deg(complex(-1.0, 0.0)) == 180.0
+    assert principal_phase_deg(neg_zero) == 180.0
+    assert principal_phase_deg(1e-3 * neg_zero) == 180.0
 
 
 def test_principal_phase_of_axes_and_quadrants():

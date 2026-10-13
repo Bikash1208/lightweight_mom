@@ -20,6 +20,9 @@ regenerable folders are gitignored (noted below).
 | `phase13_part0/` | Phase 13 Part 0 carry-overs | `scripts/research/run_phase13_part0.py` |
 | `validation_cases/` | Phase 6 STEP/JSON/CSV validation-case exports | `scripts/research/export_validation_cases.py` |
 | `unit_cell_library/` | Phase 7 production unit-cell library | `examples/build_unit_cell_library.py` (long-running, resumable). **Gitignored**: `_solve/`, `database/`, `geometry/` (~554 MB) — only `manifest.json`/reports/plots are committed. |
+| `nylon_cells_28ghz/` | Phase 19 Part B: 28 GHz nylon octagon cell library (RCWA, model-only) | `examples/build_nylon_cell_library_28ghz.py` (~3 min) |
+| `transmitarray_dual30/` | Phase 19 Parts C-D: dual-beam ±30° nylon lens design, local-periodicity and error-bar records (model-only) | `scripts/research/phase19_design.py` (~15 min), then `phase19_local_periodicity.py` (~10 min); see its README |
+| `phase23/` | Phase 23: square vs hexagon vs hexagon + sidelobe optimiser comparison on the held-out grid; the rectangle bit-identical gate | `scripts/research/phase23_compare_v2.py`; gate `scripts/research/phase23_rect_snapshot.py` |
 | `universal_database/` | Phase 8D-REV universal database architecture demo | `scripts/research/run_phase8d_rev_universal_database.py` |
 | `hfss_compare_ledger.json` (not a folder) | Every HFSS-vs-MoM comparison run through the app's HFSS compare page | append-only; see `src/hfss_compare/service.py` |
 | `submission_work/` | **Untracked scratch** (Oct 5–6 2026), not part of the repo | its reusable scripts moved to `scripts/adhoc/` in Phase 17; see that folder's own README |

@@ -5,6 +5,61 @@ summarize each phase's own write-up in `docs/history/`/`docs/history/`). No vers
 before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` for current
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
+## Unreleased - Phase 23 - hexagonal ports and the sidelobe-cancelling optimiser
+- A: `PortRegion` may be a convex polygon (`vertices_m`; rectangles unchanged and bit-identical); `layout_preset_hex4` (side or
+  flat-to-flat, gap, pointy/flat, shared 6.4 mm lattice, cells outside the hexagons empty); polygon overlap/gap/isolation; DXF
+  PORTS layer, outlines in the layout PNG, README table, optional trim-board STEP/AEDT; `hex4` in the UI and `/synthesize_ports`.
+- B: `src/pattern/cellwise_pattern.py`: per-cell co-/cross-pol contributions (verified against `_vector_far_field` to 1e-10),
+  u-v direction sets denser near the beams, combined multi-port excitation.
+- C: `src/hologram/sll_optimizer.py` (greedy q-norm cell flips, optional seeded annealing, gain/pointing/level/XPD constraints,
+  per-frequency scenario instances, random port-phase draws, absolute pointing), `sll_board.py` (job result <-> optimiser, held-out
+  grid evaluation, x/y-cut SLL as in Phase 18, cells re-solved per frequency), `/api/sidelobes/optimize`, Step 3 "Reduce sidelobes"
+  with a Robust option.
+- D: `scripts/research/phase23_compare_v2.py`, `results/phase23/`, `hfss_exports/four_port_hex150_*`, `four_port_square243_gap0`.
+- New key `two_state.achieved_phase_deg` in coded `/synthesize_ports` results (additive).
+
+## Unreleased - Phase 22 - automatic coded-cell states
+- Exact multi-port STEP: `Feed1..FeedN` marker sheets (0.6 x 0.6 mm at z = 0, exact vertices) restored; optional `Monopole1..N` pins
+  (checkbox on the Export card; verification then checks 3-D vertices and the pins' z/radius). Feed positions are listed in `feeds.csv`,
+  `layout.json`, layer FEEDS of `layout.dxf`, the layout PNG (P1..PN) and the board README; the standard multi-port export gets them too.
+- `src/hologram/auto_states.py`: empty + mesh-corrected squares (0.2/0.1 mm MoM + Richardson, interpolated, snapped to 0.05 mm),
+  1-/2-/3-bit, disk cache; `auto` two-state source in `/synthesize_ports` and `/synthesize_coded`, `/api/hmsa/auto_states`;
+  the near-resonance refusal is skipped for the auto pair unless beta_mode is "state".
+- Follow-up: squares up to period - min gap (default 0.2 mm, Advanced setting) via a 0.1 mm-mesh extension past the 6.0 mm coarse-scan limit
+  (2-bit level 1 on the reference board: 6.2 mm, -126.0 deg, 5.9 deg error instead of 6.0 mm / 49 deg); the gap is named in UNREACHABLE_LEVEL messages.
+- `beta_mode 'paper'` removed (Mishra eq. 1): the API accepts only 'model' and 'state' ('paper' fails with "beta_mode 'paper' was removed; use 'model'"); `paper_surface_wave_beta` and `beta_paper_rad_per_m` are gone; the UI offers Model (default) and Each state's own.
+- A level within 10% of the level step counts as reached (UNREACHABLE_LEVEL above that); the Advanced section (minimum gap) stays visible for 2-/3-bit.
+- UI: "Automatic" default, results table, "use as uploaded values", fix-L; unit-cell tool patch-plane column; multi-port reachable
+  without Step 1; one directivity per port; beta help text.
+
+## Unreleased - Phase 21 - multi-port layouts, coded multi-port, exact board export
+- C1: `_cell_centers` floors with a 1e-6 tolerance (300.8 mm / 6.4 mm is 47 cells, not 46); the earlier `four_port_1bit_300mm_*`
+  boards were affected. One test fixture that relied on the float noise now builds its 61x61 grid explicitly.
+- A: `layout_preset_grid` (N x M, serpentine port order), custom-rectangles table with overlap check, snap-side-to-whole-cells.
+- B/C2: coded 1-bit and N-bit in `/synthesize_ports` (`n_bits`, `feed_keepout`), per-port report, shared state table.
+- C3/D: per-port exact cell positions, exact verified STEP, AEDT script generator, per-export README, `/api/export/board`.
+
+## Unreleased - Phase 19 - 3D-printed nylon transmitarray (model-only; Parts A-D)
+- New `src/dielectric_cell/`: minimal RCWA for air | z-invariant extruded layers (octagonal pillar / pocket) | air, oblique TE/TM,
+  normal-vector field factorisation, multi-region supercell strips. MoM core untouched.
+- New `src/transmitarray/`: lens layout, cos^q horn, symmetric dual-beam aperture-phase synthesis, direct per-cell octagon-radius
+  solve with the full 2x2 Jones response, Huygens far-field model, one-solid STEP/STL export with re-import verification.
+- 28 GHz nylon cell library (`results/nylon_cells_28ghz/`), plate-thickness / through-hole study, 150 mm +-30 deg lens design
+  (`results/transmitarray_dual30/`), local-periodicity supercell check, package `hfss_exports/nylon_lens_28ghz_dual30/`.
+- Part D-bis: Monte Carlo error bar on the lens prediction from the measured neighbour-coupling error (exact 1x4 / alternating / 2x2 supercells, real 9-cell window
+  check, `src/transmitarray/uncertainty.py`, `scripts/research/phase19_*`); pitch-lever estimate; the inter-beam 0.00 dB relabelled as a layout identity.
+  STEP coordinates made exact (snap to design values within 1e-7 mm, shortest round-trip reals, explicit 1e-6 mm uncertainty, verified: no merged vertices, valid solid,
+  volume change 1.7e-16); the old "no float noise" check had a blind spot below 1e-13 (34,764 inexact literals were in the first STEP).
+- Docs: `docs/theory/DIELECTRIC_CELL_RCWA.md`. Everything is labelled model-only (HFSS: `NOT_AVAILABLE_FROM_CURRENT_DATA`).
+
+## Unreleased - Phase 18 - 300 mm four-port boards (minimum-gap study)
+- `hfss_exports/four_port_1bit_300mm_gap0/` and `_gap28/`: 4-port 1-bit coded boards with 300.8 mm
+  sub-apertures for a minimum-gap/isolation study in HFSS (model-only predictions in each README).
+- `scripts/adhoc/coded4.py`: optional `port_side_mm` argument; fine-grid (0.5 x 1 deg) per-port
+  metrics and x/y-cut figure (`port_cuts.png`). No solver changes.
+- `examples/make_paper_board_26ghz.py`: board-layout figure title uses the actual frequency
+  (was hard-coded "26 GHz"; unchanged output at 26 GHz).
+
 ## 0.17.0 - Phase 17 - handoff-ready repo (no physics/solver changes)
 - Onboarding rewrite: `README.md`, `docs/START_HERE.md` (new), `docs/STATUS.md` (new, single
   source of truth for current validation state), `CLAUDE.md` (rewritten to ≤80 lines),

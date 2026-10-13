@@ -580,9 +580,40 @@ local grid after a live review found it stalling on the shared, coarser plotting
 rather than a fault, and unified the per-beam table's own measurement with the pointing/
 level-matching report so the two always agree.
 
-**Phase 17** (this phase) is a handoff/cleanup pass — no physics or solver changes. It rewrites
+**Phase 17** was a handoff/cleanup pass — no physics or solver changes. It rewrites
 the onboarding docs (`docs/START_HERE.md`, `docs/STATUS.md`, this reorganized `docs/history/`),
 moves research drivers and one-off scripts out of the user-facing `examples/`, and indexes every
 generated-output folder (`results/README.md`, `hfss_exports/README.md`) so a fresh clone is
-legible in minutes. Brief: `docs/briefs/PHASE17_HANDOFF_AND_CLEANUP.md` (archive it to
+legible in minutes. Brief: `docs/history/briefs/PHASE17_HANDOFF_AND_CLEANUP.md` (archived to
 `docs/history/briefs/` once a later phase confirms this one is fully settled).
+
+**Phase 18** (branch `phase18-four-port-300mm`, plus `phase18-one-bit-cell-check`) scaled the 4-port 1-bit coded board
+to 300.8 mm (10.6 λ0) sub-apertures at guard gaps of 0 and 28 mm (`hfss_exports/four_port_1bit_300mm_gap*`) for a
+minimum-gap/isolation HFSS study, added the held-out fine-grid per-port metrics to `scripts/adhoc/coded4.py` (the x/y-cut
+co-pol SLL definition every later phase cites) and hand-built the square-cell-only variants (`scripts/adhoc/square4/`,
+`hfss_exports/four_port_1bit_square_*`). A single-cell check of the 10.54 GHz 1-bit pair was started and parked.
+
+**Phase 19** (`phase19-transmitarray`, tag `phase19-partD`) added a model-only 28 GHz all-dielectric (3D-printed nylon)
+transmitarray: an RCWA unit-cell solver (`src/dielectric_cell/`, checked against analytic slab formulas to ~1e-14), a cell
+library, a horn-fed dual-beam ±30° lens design with local-periodicity and Monte Carlo error-bar studies (`src/transmitarray/`,
+`results/transmitarray_dual30/`) and an HFSS package (`hfss_exports/nylon_lens_28ghz_dual30/`). Parts E/F (app wiring, HFSS
+comparison) wait on the user's ±30.00° decision and an HFSS run. Brief: `briefs/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md`.
+
+**Phase 20** (RIS: 2-bit PIN-diode reconfigurable metasurface) was only roadmapped and then paused; the briefs are in
+`briefs/_parked/`. Nothing is implemented.
+
+**Phase 21** (`phase21-complete`) made multi-port boards buildable in the app: N×M grid and custom-rectangle layouts, coded
+1-bit/N-bit multi-port synthesis, an exact-coordinate board STEP, AEDT script and per-export README; it also fixed a
+float floor bug that had cost the 300 mm boards one cell column (`docs/STATUS.md` known limitations).
+
+**Phase 22** (`phase22-complete`) replaced hand-picked coded-cell states with automatic ones: an empty cell plus
+mesh-corrected (Richardson) squares interpolated from mesh-aligned MoM solves, 1/2/3-bit, with a disk cache.
+
+**Phase 23** (`phase23-complete`) added convex polygon (hexagon) port regions and the sidelobe-cancelling 1-bit optimiser:
+a cell-wise far-field model, greedy q-norm flips (single-port, all-ports with port phases, robust over frequency and phase
+error) measured on a held-out grid, with rectangle layouts reproducing bit-identically
+(`results/phase23/`, `hfss_exports/four_port_hex150_*`).
+
+**Phase 24** is this curation pass: branch consolidation into `main`, briefs and untracked outputs tidied, cache/clean targets,
+an export-package growth policy, docs refreshed to describe phases 18-23. No computed result changed
+(`docs/briefs/PHASE24_CURATION_AND_CLEANUP.md`).

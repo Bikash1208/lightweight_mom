@@ -17,6 +17,28 @@ import numpy as np
 from .ports import IsolationFlag, PortRegion, isolation_estimate
 
 
+def region_cell_mask(region: PortRegion, x_m, y_m, earlier_regions=()):
+    """Phase 23: which cells of a port's design grid belong to the port -- cell centre inside the
+    region's polygon and not inside an EARLIER port's region (a centre exactly on a shared edge is
+    owned by the lower-numbered port only, so no cell is built twice). Every cell for a rectangle."""
+    mask = region.contains_array(x_m, y_m)
+    for other in earlier_regions:
+        mask &= ~other.contains_array(x_m, y_m)
+    return mask
+
+
+def mask_design_to_region(design, mask):
+    """A copy of `design` (`HmsaDesign` or `CodedDesign`) with every cell outside `mask` removed: its
+    `aperture_field` is zero there (nothing radiates from outside the sub-aperture) and it is dropped
+    from `cells` (so exports place no patch there -- the empty state). `level_map`/`x_m`/`y_m` keep the
+    full cropping-box grid."""
+    field = None
+    if design.aperture_field is not None:
+        field = np.where(mask, design.aperture_field, 0.0)
+    kept = tuple(c for c in design.cells if bool(mask[c.i, c.j]))
+    return replace(design, cells=kept, aperture_field=field)
+
+
 def port_native_grid(region: PortRegion, resolution_m):
     """A grid spanning `region` at `resolution_m` pitch (finer than the eventual unit-cell period
     -- `synthesize_formulation_a/b`'s own `resample_to_cell_grid` resamples this down to the
@@ -92,7 +114,15 @@ def synthesize_ports(
             raise ValueError(f"port {region.port_id}: at least one beam is required")
         ref_field = port_reference_field(region, resolution_m, k_swg, uploaded_fields.get(region.port_id))
         feed_xy_m = (region.feed_x_m, region.feed_y_m)
-        design = per_port_synthesize(ref_field, beams, feed_xy_m)
+        if region.is_polygon:
+            # Phase 23: the synthesis callable may take `region=` to see only the cells inside the
+            # polygon while it measures/refines; the result is then masked here regardless.
+            design = per_port_synthesize(ref_field, beams, feed_xy_m, region=region)
+            earlier = [r for r in port_regions if r is not region and r.port_id < region.port_id]
+            mask = region_cell_mask(region, design.x_m, design.y_m, earlier)
+            design = mask_design_to_region(design, mask)
+        else:
+            design = per_port_synthesize(ref_field, beams, feed_xy_m)
         results.append(PortSynthesisResult(region.port_id, region, design, feed_xy_m))
     isolation_flags = isolation_estimate(port_regions, k_swg, min_lambda_sw) if k_swg else ()
     return MultiPortDesign(tuple(results), isolation_flags, period_m)

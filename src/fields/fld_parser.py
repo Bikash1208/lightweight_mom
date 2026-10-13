@@ -9,8 +9,8 @@ X, Y, Z, Scalar data "CmplxPhase(ScalarZ(<Ex,Ey,Ez>))"
 ...
 ```
 
-Line 1: grid extent/step (with per-axis units, e.g. ``-150mm``), the named coordinate system, and
-the display unit. Line 2: the field-calculator expression that produced the scalar column. Line
+Line 1: grid extent/step (with per-axis units, e.g. ``-150mm``), the named coordinate system
+(omitted by HFSS for the Global CS, then reported as ``"Global"``), and the display unit. Line 2: the field-calculator expression that produced the scalar column. Line
 3+: whitespace-separated ``X Y Z value`` rows. Ordering (X- or Y-major) is DETECTED from the data,
 never assumed (PHASE13_WEBAPP_PROMPT.md's explicit instruction).
 
@@ -32,8 +32,9 @@ _LENGTH_TOKEN_RE = re.compile(r"([-+0-9.eE]+)\s*([a-zA-Z]+)")
 _TRIPLE_RE = re.compile(r"\[\s*([^\]]+?)\s*\]")
 _HEADER1_RE = re.compile(
     r"Grid Output Min:\s*\[(?P<min>[^\]]+)\]\s*Max:\s*\[(?P<max>[^\]]+)\]\s*"
-    r"Grid Size:\s*\[(?P<step>[^\]]+)\]\s*CS:\s*\"(?P<cs>[^\"]*)\"\s*Unit:\s*\"(?P<unit>[^\"]*)\""
+    r"Grid Size:\s*\[(?P<step>[^\]]+)\]\s*(?:CS:\s*\"(?P<cs>[^\"]*)\"\s*)?Unit:\s*\"(?P<unit>[^\"]*)\""
 )
+DEFAULT_COORDINATE_SYSTEM = "Global"  # HFSS leaves `CS: "..."` out of line 1 for the Global CS
 _EXPRESSION_RE = re.compile(r'"(?P<expr>[^"]+)"\s*$')
 _OUTER_FN_RE = re.compile(r"^(?P<fn>CmplxPhase|CmplxMag|CmplxReal|CmplxImag|Mag)\((?P<inner>.*)\)$")
 _SCALAR_RE = re.compile(r"^Scalar(?P<comp>[XYZ])\(")
@@ -97,6 +98,7 @@ class FldHeader:
 
 
 def _parse_header(line1, line2):
+    line1, line2 = line1.strip(), line2.strip()  # CRLF files, trailing blanks
     m1 = _HEADER1_RE.search(line1)
     if not m1:
         raise ValueError(f".fld file: unparseable header line 1: {line1!r}")
@@ -107,7 +109,7 @@ def _parse_header(line1, line2):
         min_m=_parse_triple_m(m1.group("min")),
         max_m=_parse_triple_m(m1.group("max")),
         step_m=_parse_triple_m(m1.group("step")),
-        coordinate_system=m1.group("cs"),
+        coordinate_system=m1.group("cs") or DEFAULT_COORDINATE_SYSTEM,
         unit=m1.group("unit"),
         expression=parse_expression(m2.group("expr")),
     )

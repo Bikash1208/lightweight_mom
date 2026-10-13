@@ -32,13 +32,23 @@ lives at `inputs/reference_fields/efl_phase_EzZ_example.fld` (see `inputs/README
 |---|---|---|
 | `src/` (flat modules) | Core periodic MoM solver: geometry, basis functions, Green's function, MoM matrix, S-parameters, unit-cell database | changing solver physics (rare — see `CLAUDE.md`'s reuse rule) |
 | `src/dispersion/`, `src/fields/`, `src/hologram/`, `src/pattern/`, `src/reflectarray/`, `src/export/`, `src/verify/`, `src/hfss_compare/` | HMSA design layer: surface-wave dispersion, `.fld` import, hologram synthesis, far-field pattern, CAD/CSV export, full-array verification | adding a design capability |
+| `src/hologram/ports.py`, `auto_states.py`, `sll_optimizer.py`, `sll_board.py`; `src/pattern/cellwise_pattern.py`; `src/export/exact_board.py`, `aedt_script.py` | Phases 21-23: multi-port layouts incl. polygon/hexagon ports (`hex4`), automatic coded-cell states, the cell-wise far-field model and the sidelobe optimiser ("Reduce sidelobes", `/api/sidelobes/optimize`), exact STEP + AEDT script for boards | multi-port, coded or sidelobe work (the Phase 23 rectangle gate: `scripts/research/phase23_rect_snapshot.py`) |
+| `src/dielectric_cell/`, `src/transmitarray/` | Phase 19 (model-only): RCWA unit cell for 3D-printed dielectric (nylon) cells and the horn-fed transmitarray lens design/error-bar code; not wired into the app | the nylon lens (`docs/briefs/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md`) |
 | `src/phase8b/ … src/phase13/` | Frozen research-phase packages, still imported by the app (`docs/ARCHITECTURE.md` has the who-imports-what table) | **don't rename or move these** — document, don't refactor |
 | `src/app/` | FastAPI backend + static HTML/JS frontend | adding/changing a page or endpoint |
 | `tests/` | One `test_<module>.py` per module; `test_app_*.py` for the app | every change needs a test |
 | `docs/` | `START_HERE.md` (this file), `STATUS.md`, `ARCHITECTURE.md`, `USER_GUIDE.md`, `theory/` (conventions), `validation/` (numbers + where), `history/` (phase write-ups + completed briefs), `briefs/` (active work items) | see `docs/README.md` for the full index |
 | `examples/` | User-facing scripts (`make_paper_board_26ghz.py`, `build_unit_cell_library.py`, ...) | `scripts/research/` has the one-off research drivers instead |
 | `configs/`, `inputs/` | Config-file presets; the example reference field | |
+| `scripts/` | `research/` (per-phase drivers: `run_phase*.py`, `phase19_*.py`, `phase23_*.py`), `adhoc/` (rescued one-offs: `coded4.py`, `square4/`, FSS tools) — see each folder's README | reproducing a published number |
 | `results/`, `hfss_exports/` | Generated outputs and HFSS export packages (each with its own `README.md` indexing status) | read `results/README.md` / `hfss_exports/README.md` before assuming something is stale |
+
+## Where things are in the repo (depth 1)
+
+`src/` code · `tests/` · `docs/` (this file, `STATUS.md`, `ARCHITECTURE.md`, `USER_GUIDE.md`, `DEVELOPING.md`, `theory/`, `validation/`,
+`history/`, `briefs/`, `submission/`) · `examples/` · `scripts/` · `configs/`, `inputs/` · `results/` · `hfss_exports/` ·
+`CHANGELOG.md`, `CLAUDE.md`, `Makefile` (`make clean`, `make distclean`, `make clean-app-outputs`: `docs/DEVELOPING.md` "Cleaning").
+Active work: `docs/briefs/README.md` lists what is active and what is parked.
 
 ## How to run / test
 

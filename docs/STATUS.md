@@ -1,10 +1,11 @@
 # Status — single source of truth for *now*
 
-**Last updated:** 2026-10-12, by Claude (Phase 23 A-E, branch `phase23-hex-sll` from `phase22-auto-cell-states`, not yet merged/tagged; Phase 19 Parts A-D on `phase19-transmitarray` as before). **Rule: every phase updates this
+**Last updated:** 2026-10-13, by Claude (Phase 24 curation: phases 18-23 consolidated on branch `phase24-cleanup`; `main` merge and `v1.1-handoff` tag pending the user's approval). **Rule: every phase updates this
 file** (last release tag/commit, capability matrix, open next steps) as part of its own final commit.
 
-**Last release tag:** `phase16-complete` (commit `1c5ebfb`). The submission snapshot tag
-`submission-2026-10-06` is a separate, frozen checkpoint — never move it.
+**Last milestone tags:** `phase23-complete` (hexagon ports + sidelobe optimiser), `phase22-complete`, `phase21-complete`,
+`phase19-partD`, `phase16-complete`; `pre-cleanup-2026-10-07` / `pre-cleanup-2026-10-13` mark the two cleanups and
+`submission-2026-10-06` is the frozen submission snapshot. Tags are never moved or deleted.
 
 ## Capability matrix
 
@@ -18,6 +19,7 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
 | Vortex↔pencil physics (Phase 15 Part A/B) | Independently cross-checked (this project's own vector far-field model, not HFSS) | RHCP/LHCP pencil XPD **21.4 dB**; HP/VP pencil XPD 62–341 dB (scalar-cell ceiling); deliberate OAM request: winding **−1 matches charge −1**, null **−31 dB** (`docs/history/PHASE15_POLARIZATION_VORTEX.md`) |
 | Hexagonal (polygon) multi-port sub-apertures, `hex4` preset (Phase 23 A, `src/hologram/ports.py`) | Model-only; geometry checked against analytic area/membership, rectangle layouts reproduce **bit-identically** (`results/phase23/rect_snapshot_*.json`); hexagon STEP exact (verified); the trimmed-board AEDT script is generated and unit-tested but not run in AEDT | 4 × 150 mm-side hexagons, gap 0: 58,457 mm² each, 1414–1435 cells, directivity 25.8–26.0 dBi (−1.8 dB vs the 300.8 mm square), co-pol SLL −14.1…−13.7 dB vs −11.5…−11.1 dB for the square and −11.2…−10.9 dB for the equal-area 243.2 mm square (held-out 0.5°×1° grid, pointing-corrected starts) — `results/phase23/comparison_v2_held_out.json` |
 | Sidelobe-cancelling 1-bit optimiser: single-port, all-ports (cells + port phases), robust (Phase 23 B/C, `src/pattern/cellwise_pattern.py`, `src/hologram/sll_optimizer.py`, `sll_board.py`) | Model-only; every number on a held-out fine grid the optimiser never saw, cells re-solved (Phase 22) at 10.33/10.54/10.75 GHz; **not HFSS-validated**. The all-ports figure needs ONE phase-locked source split four ways (independent per-port signals: use the single-port metric); the beam squints with frequency (0.5–1.5° over ±2 %), the 0.3° absolute pointing limit holds at the design frequency in single-port mode only (all-ports starts at 0.4–0.7° and is not made worse) | hex4, single-port: SLL −17.2…−16.8 dB (from −14.1…−13.7), −0.1 dB directivity, 47–56 cells/port; at 10.33/10.75 GHz −13.4…−12.5 / −16.6…−16.1 (robust version: −14.2…−13.7 / −15.8…−15.6 at ±2 %, −16.2…−15.6 at 10.54). all-ports: −23.3…−21.7 dB at 10.54, −18.3…−15.8 at 10.33, −18.9…−16.3 at 10.75 (robust −22.5…−22.0 / −20.7…−19.1 / −19.3…−18.0); 20 random ±10° port-phase errors: worst-beam median −21.7 dB (−17.9 robust at 10.75). Chosen port phases 0°/0°/0°/0° |
+| Four-port 1-bit boards, 300.8 mm sub-apertures, gap 0 vs 28 mm: minimum-gap (isolation) study (Phase 18, `scripts/adhoc/coded4.py`, `scripts/adhoc/square4/`) | Model-only. The Phase 18 "x/y-cut co-pol SLL" metric (`sll_cut_along_x/y_db`) is the one Phase 23 reports | 27.6 dBi per port, pointing ≤ 0.5°, SLL −11…−12 dB; `hfss_exports/four_port_1bit_{300mm,square_300mm}_gap*` awaiting HFSS |
 | Automatic coded-cell states (Phase 22, `src/hologram/auto_states.py`) | Model-only: mesh-corrected MoM (Richardson) interpolated between mesh-aligned solves; the 1-bit reference pair is empty +138.1° + square 5.85 mm −41.4° (separation 179.6°), the 4-port 300 mm run with it gives 27.7–27.8 dBi, beams within 0.3° | `tests/test_hologram_auto_states.py`, `tests/test_app_phase22_*.py` |
 | Multi-port layouts: N×M grid, custom rectangles, coded 1-/N-bit, exact STEP + AEDT script (Phase 21) | Model-only; the 4-port 300.8 mm square-cell board is reproduced (47×47 cells/port, beams θ=30° within 0.3°, 27.7–27.8 dBi, 4416 patches, layout identical to the hand-built reference) | `tests/test_app_phase21_multiport.py`, `tests/test_export_exact_board.py` |
 | Multi-port sub-apertures (Phase 15 Part C gap-fill) | Model-only; reproduces Mishra et al.'s *target directions*, not yet checked against that paper's measured isolation/gain | Mishra 26 GHz 5-port reproduction: pointing error 0–11°, port-5 beam levels matched to ≤0.1 dB after equalisation (`docs/submission/paper26/comparison.md`); **HFSS packages awaiting simulation**, see below |
@@ -32,6 +34,10 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
   boards were affected: 46 cells per port were stretched onto 47 in the combined board. A
   whole-cell side now keeps all its cells; `test_pattern_beam_polarization_metrics`'s two-beam
   fixture had relied on the same float noise and now builds its 61x61 grid explicitly.
+- **Phase 23 limits**: the hexagon trim-board AEDT script is generated and unit-tested but has never been run in AEDT; an
+  all-ports sidelobe figure holds only for ONE phase-locked source split across the ports (independent per-port signals: use the
+  single-port figure); every optimiser number is a model, held-out grid, not HFSS.
+- **RIS (Phase 20)** is paused, not started: nothing in `src/` implements PIN-diode loads or oblique incidence in the MoM core.
 - Normal incidence only; single substrate layer; PEC zero-thickness metal model (a real HFSS
   patch has finite thickness — see the G4/G6 residual above).
 - Transmitarray support is **model-only** (Phase 19, dielectric horn-fed lens; no HFSS comparison yet); the MoM solver itself remains reflectarray/metasurface only. No finite-array (N×N, N not a power of a small factor) full-wave MoM
@@ -48,27 +54,24 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
 
 ## Open next steps
 
--1. **Phase 23 (hexagons + sidelobe optimiser)**: run `hfss_exports/four_port_hex150_*` in HFSS (one port at a time first; the
-   `*_opt_all*` boards also with the port phases in their README from one phase-locked source) and compare the SLL/directivity
-   tables in each README with the held-out model numbers; the equal-area `four_port_square243_gap0` is the square control. Open
-   follow-ups: all-ports absolute pointing is 0.2–0.7° (not ≤ 0.3°) because the ports' sidelobes interfere in the beams;
-   the optimiser moves cells only (a pointing penalty term or a Phase 16 pass on the all-ports pattern would fix it).
+Order of work, with what each needs from the user (HFSS runs are the user's):
 
-0. **Phase 19 (nylon lens)**: decide whether ±30.00° is a hard specification (the error bar puts the beam at ≈30.3° median in the primary model and 0.4° typical pointing error; Parts E/F wait on this); run `hfss_exports/nylon_lens_28ghz_dual30/lens.step` in HFSS and report beam angle/gain/level difference, and optionally the six single cells in `hfss_exports/nylon_cells_28ghz/`; then decide Part E (app integration) and close out (tag `phase19-complete`, move the brief to `docs/history/briefs/`).
-
-1. **HFSS checks awaiting simulation** (packages committed, `*.step` files present locally but
-   gitignored — see `hfss_exports/README.md`):
-   - `hfss_exports/three_port_25deg/` — 1×3 port board, 25° RHCP beams.
-   - `hfss_exports/four_port_1bit_gap0/` and `four_port_1bit_gap28/` — 4-port 1-bit coded boards,
-     two guard-gap variants.
-   - `hfss_exports/four_port_1bit_300mm_gap0/` and `four_port_1bit_300mm_gap28/` — the same 4-port
-     board with 300.8 mm sub-apertures (601.6 / 629.6 mm boards), for the minimum-gap (isolation)
-     study: compare S21/S41 between the two. Model: 27.6 dBi/port, co-pol SLL −11 to −12 dB.
-2. **Unit-cell check of the 10.54 GHz 1-bit pair** used by the walk-through board (the two-state
-   cell pair's own phase separation/|S11| match at that specific frequency, not yet run through
-   HFSS single-cell comparison the way G1–G6 were for the continuous library).
-3. **2-bit multi-port wiring** (parked, see below) — if a future phase needs > 1-bit coding on a
-   multi-port layout.
+1. **Decision, Phase 19**: is ±30.00° a hard specification for the nylon lens? The error bar puts the beam at ≈30.3° median in the
+   primary model (0.4° typical pointing error). Parts E/F of `docs/briefs/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md` wait on this.
+2. **HFSS run, one unit-cell check first**: the 10.54 GHz 1-bit pair (empty +138.1° and the 5.85 mm square −41.4°) as a single cell
+   (`scripts/adhoc/one_bit_pair_cells.py` writes the check package; not yet run) — every coded board below depends on this pair.
+3. **HFSS runs of the 4-port 1-bit boards**, in this order (each README lists model numbers to compare against):
+   1. `hfss_exports/four_port_1bit_square_gap0/` and `_gap28/` (140.8 mm sub-apertures; cheapest);
+   2. `hfss_exports/four_port_1bit_square_300mm_gap0/` and `_gap28/` — compare S21/S41 between the two (minimum-gap study);
+   3. Phase 23: `four_port_hex150_gap0/` (baseline), then `four_port_hex150_opt_single/`, `_opt_all/` (with the port phases of its README
+      from ONE phase-locked source) and the `_robust` pair; `four_port_square243_gap0/` is the equal-area square control. Open follow-up:
+      all-ports absolute pointing is 0.2–0.7° (not ≤ 0.3°) because the ports' sidelobes interfere in the beams; the optimiser moves cells
+      only (a pointing penalty term or a Phase 16 pass on the all-ports pattern would fix it);
+   4. earlier boards: `four_port_1bit_gap0/`, `_gap28/`, `four_port_1bit_300mm_gap0/`, `_gap28/`, `three_port_25deg/`.
+4. **HFSS run, Phase 19**: `hfss_exports/nylon_lens_28ghz_dual30/lens.step` (beam angle/gain/level), optionally the six cells in
+   `hfss_exports/nylon_cells_28ghz/`; then decide Part E (transmitarray in the app).
+5. **Housekeeping the user owns**: approve the `main` merge, branch deletion (merged branches are preserved by the milestone tags) and
+   the `v1.1-handoff` tag (`docs/briefs/PHASE24_CURATION_AND_CLEANUP.md`).
 
 ## Hygiene (Phase 17 §4 findings — report only, not acted on)
 

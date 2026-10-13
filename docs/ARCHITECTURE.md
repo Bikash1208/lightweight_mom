@@ -13,10 +13,12 @@ router calls an already-tested function below it. See "The app" below for its ow
 |---|---|
 | `src/dispersion/` | Surface-wave dispersion (analytic TM0, HFSS-table import, sheet-admittance model; a MoM eigenmode scaffold, not implemented) |
 | `src/fields/` | HFSS field-calculator `.fld` import (the monopole reference-wave upload) |
-| `src/hologram/` | Hologram synthesis (both formulations), two-state/coded cells, multi-port layouts, polarization compensation, pointing correction/level matching |
-| `src/pattern/` | Far-field pattern (scalar legacy + vector polarization-aware model), SLL/XPD/vortex measurement |
+| `src/hologram/` | Hologram synthesis (both formulations), two-state/coded cells, multi-port layouts (`ports.py`: rectangles and convex polygons/hexagons), automatic coded-cell states (`auto_states.py`, Phase 22), polarization compensation, pointing correction/level matching, and the sidelobe optimiser (`sll_optimizer.py` greedy q-norm cell flips; `sll_board.py` job result <-> optimiser, held-out grid; Phase 23) |
+| `src/pattern/` | Far-field pattern (scalar legacy + vector polarization-aware model), SLL/XPD/vortex measurement; `cellwise_pattern.py` (Phase 23) the same vector far field as a linear function of each cell's contribution |
 | `src/reflectarray/` | Standalone reflectarray designer (phase-gradient lookup, not HMSA) |
-| `src/export/` | CSV/JSON/DXF/STEP layout export |
+| `src/export/` | CSV/JSON/DXF/STEP layout export; `exact_board.py` / `aedt_script.py` / `board_readme.py` (Phase 21-23): exact-coordinate multi-port board STEP, AEDT IronPython script and per-export README |
+| `src/dielectric_cell/` | Phase 19: RCWA solver for dielectric (nylon) unit cells and the cell library; **not imported by the app** (model-only, used by `src/transmitarray/` and `examples/`/`scripts/research/phase19_*`) |
+| `src/transmitarray/` | Phase 19: horn-fed transmitarray lens design, local-periodicity coupling models, Monte Carlo error bar; imports `src/dielectric_cell/` only, not wired into the app |
 | `src/verify/` | Real full-supercell MoM check of the local-periodicity forward model |
 | `src/hfss_compare/` | HFSS-vs-MoM single-cell comparison ledger |
 | `src/library_sweep.py` | Generalizes `library_builder.py`'s sweep to an arbitrary (incl. grounded) config — not new physics, see its own docstring |
@@ -72,6 +74,8 @@ Browser (static HTML/JS, src/app/static/)
    | fetch() JSON, multipart uploads
 FastAPI routers (src/app/routers/*.py) -- thin HTTP glue, one file per page
    | calls directly, or via the job queue for anything slower than ~1s
+   |   (`routers/hmsa.py`: synthesis incl. `/synthesize_ports`, `/auto_states`; `routers/export.py`: board export;
+   |    `routers/sidelobes.py`: `/api/sidelobes/optimize`, Phase 23; no router touches `dielectric_cell`/`transmitarray`)
 Job queue (src/app/jobs.py) -- ThreadPoolExecutor, in-process, config-hash cache
    | calls
 Service layer (src/*, src/dispersion, src/fields, src/hologram, src/reflectarray,

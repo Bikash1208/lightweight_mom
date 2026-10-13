@@ -20,8 +20,8 @@ and reports back against its own acceptance checks.
 ## What's here now
 
 - Active: `PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md` (Parts A–D done; Parts E/F wait on the user's decision whether
-  ±30.00° is a hard specification and on an HFSS run of the lens — see `docs/STATUS.md` "Open next steps") and
-  `PHASE24_CURATION_AND_CLEANUP.md` (the consolidation pass in progress).
+  ±30.00° is a hard specification and on an HFSS run of the lens — see `docs/STATUS.md` "Open next steps").
+  Nothing else is active; `PHASE24_CURATION_AND_CLEANUP.md` is finished and archived in `docs/history/briefs/`.
 - `_parked/` — deferred ideas, each its own file, not current work: the unit-cell/FSS S-parameter tool (Phase 16) and
   the RIS roadmap + R1 brief (Phase 20, paused, not started).
 

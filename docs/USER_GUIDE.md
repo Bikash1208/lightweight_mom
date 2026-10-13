@@ -208,9 +208,9 @@ empty) and reproduces the pre-Phase-15 pattern exactly.
    (G1–G6 style) through HFSS and use the **HFSS compare** page (below) rather than eyeballing it —
    it computes mean/max phase and magnitude differences the same way every existing validation
    number in `docs/validation/README.md` was produced.
-5. For a multi-port or coded design, see `docs/STATUS.md` "Open next steps" — the `hfss_exports/`
-   packages already committed for exactly this (`three_port_25deg`, `four_port_1bit_gap0/28`) are
-   awaiting that HFSS run; add your own result (STEP + Touchstone + README) there when done.
+5. For a multi-port or coded design, see `docs/STATUS.md` "Open next steps" for the ordered list of
+   `hfss_exports/` packages awaiting an HFSS run (the 1-bit square/300 mm/hexagon boards, the older
+   4-port and 3-port boards, the nylon lens); add your own result (STEP + Touchstone + README) there when done.
 
 ## More tools
 
@@ -379,6 +379,18 @@ excluded from git — `docs/DEVELOPING.md`); the others need your own export.
 
 
 ## Phase 23 additions: hexagonal ports and "Reduce sidelobes"
+
+**Recipe: 4-port hexagonal board with sidelobe optimisation, in the app.**
+1. `make app`; on Step 1 click **Skip to Step 2 (multi-port)**.
+2. Step 2: Ports > **Multi-port** > layout **4 hexagons** (side 150 mm, gap 0 by default); Design method **Coded**, 1 bit, cell states
+   **Automatic** (press "Compute cell states", ~80 s the first time); cell size 6.4 mm, frequency 10.54 GHz (click "Use a different
+   frequency"); tick **Pointing correction**; **Continue**.
+3. Step 3: **Design antenna**. The multi-port card shows the per-port beams, directivity and the layout picture.
+4. In the same card, **Reduce sidelobes**: choose the excitation (each port on its own / all ports / both), optionally **Robust**,
+   then press the button; read the held-out before/after tables.
+5. Export card: **Build STEP**, **HFSS script (.py)**, **Download package** (README with the port table and, for "all ports", the
+   port phases from one phase-locked source). Then follow "Taking a design to HFSS" above.
+
 
 - **4 hexagons** (Step 2, Ports > Multi-port > "4 hexagons"). Four regular hexagons in the compact two-row cluster, centred on
   the origin, one monopole at each hexagon centre. Give the **hexagon side** (= circumradius, default 150 mm: flat-to-flat

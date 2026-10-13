@@ -1,9 +1,9 @@
 # Status — single source of truth for *now*
 
-**Last updated:** 2026-10-13, by Claude (Phase 24 curation: phases 18-23 consolidated on branch `phase24-cleanup`; `main` merge and `v1.1-handoff` tag pending the user's approval). **Rule: every phase updates this
+**Last updated:** 2026-10-13, by Claude (Phase 24 curation finished: phases 18-24 are merged into `main`, tagged `v1.1-handoff`). **Rule: every phase updates this
 file** (last release tag/commit, capability matrix, open next steps) as part of its own final commit.
 
-**Last milestone tags:** `phase23-complete` (hexagon ports + sidelobe optimiser), `phase22-complete`, `phase21-complete`,
+**Last milestone tags:** `v1.1-handoff` (this state), `phase23-complete` (hexagon ports + sidelobe optimiser), `phase22-complete`, `phase21-complete`,
 `phase19-partD`, `phase16-complete`; `pre-cleanup-2026-10-07` / `pre-cleanup-2026-10-13` mark the two cleanups and
 `submission-2026-10-06` is the frozen submission snapshot. Tags are never moved or deleted.
 
@@ -70,14 +70,16 @@ Order of work, with what each needs from the user (HFSS runs are the user's):
    4. earlier boards: `four_port_1bit_gap0/`, `_gap28/`, `four_port_1bit_300mm_gap0/`, `_gap28/`, `three_port_25deg/`.
 4. **HFSS run, Phase 19**: `hfss_exports/nylon_lens_28ghz_dual30/lens.step` (beam angle/gain/level), optionally the six cells in
    `hfss_exports/nylon_cells_28ghz/`; then decide Part E (transmitarray in the app).
-5. **Housekeeping the user owns**: approve the `main` merge, branch deletion (merged branches are preserved by the milestone tags) and
-   the `v1.1-handoff` tag (`docs/briefs/PHASE24_CURATION_AND_CLEANUP.md`).
+5. **Housekeeping**: the Phase 24 branch `phase24-cleanup` can be deleted once the user is happy with `v1.1-handoff`
+   (`git branch -d phase24-cleanup`; the tag preserves it). The 2550-test count assumes the gitignored data is present: a fresh
+   clone runs 2441 passed / 129 skipped (the Phase 7 library checkpoint, real HFSS exports and playwright are absent) — see
+   `docs/DEVELOPING.md`.
 
 ## Hygiene (Phase 24 §7 findings — report only, not bulk-fixed)
 
 Measured 2026-10-13 on `phase24-cleanup` (ruff 0.16.9, Python 3.14, macOS):
 
-- **Fast suite**: 2550 passed, 20 skipped, 117 deselected in **6 min 18 s** (target < 5 min is not met). The time is spread over
+- **Fast suite**: 2550 passed, 20 skipped, 117 deselected in **6 min 18 s** (a fresh clone with the gitignored data absent: 2441 passed, 129 skipped in 6 min 42 s; the earlier < 5 min target is not met). The time is spread over
   many tests rather than a few slow ones; the slowest, in order: `test_phase8c_data_source::test_load_full_database_has_324_cells...`
   (20 s setup), `test_app_phase23_hex4::test_sidelobe_endpoint_end_to_end` (15 s), `test_pattern_beam_polarization_metrics`
   two-beam fixture (8 s), `test_hologram_multi_port_beam_pointing::test_1x3_rhcp_board...` (6.6 s), then ~15 tests at 4-6 s

@@ -82,6 +82,9 @@ convention.
 - `hfss_exports/**/*.s36p`, `*.s4p` — real HFSS Touchstone exports (~24 MB each). Not regenerable
   from this repo's own code; obtain from wherever the original HFSS runs are archived. `hfss_data`
   -marked tests skip cleanly without them.
+- **Consequence for a fresh clone**: tests that need the Phase 7 checkpoint/production library, the real HFSS exports or
+  playwright skip cleanly. The fast suite on a fresh clone is 2441 passed / 129 skipped (about 6.5 min); with the library
+  present, 2550 passed / 20 skipped.
 - `.venv/`, `__pycache__/`, `.pytest_cache/`, `.ruff_cache/`, OS/IDE files — standard, regenerate
   via `make setup` / normal tool usage.
 - The app's own runtime state (`~/.lwmom/`: logs, job outputs, uploads, the library registry) is

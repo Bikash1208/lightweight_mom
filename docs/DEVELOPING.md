@@ -14,7 +14,7 @@ python3 -m venv .venv && .venv/bin/pip install -e ".[dev,app,cad]"
 ## Running tests
 
 ```bash
-make test-fast   # pytest -m "not slow"  -- 2090+ tests, ~3.5 min on this machine
+make test-fast   # pytest -m "not slow"  -- 2550 tests, ~6-7 min on this machine
 make test-full   # pytest                -- everything, ~35-40 min (real MoM solves)
 .venv/bin/python -m pytest tests/test_mom_matrix.py -q   # a single file
 ```

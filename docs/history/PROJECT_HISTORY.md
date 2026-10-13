@@ -584,5 +584,5 @@ level-matching report so the two always agree.
 the onboarding docs (`docs/START_HERE.md`, `docs/STATUS.md`, this reorganized `docs/history/`),
 moves research drivers and one-off scripts out of the user-facing `examples/`, and indexes every
 generated-output folder (`results/README.md`, `hfss_exports/README.md`) so a fresh clone is
-legible in minutes. Brief: `docs/briefs/PHASE17_HANDOFF_AND_CLEANUP.md` (archive it to
+legible in minutes. Brief: `docs/history/briefs/PHASE17_HANDOFF_AND_CLEANUP.md` (archived to
 `docs/history/briefs/` once a later phase confirms this one is fully settled).

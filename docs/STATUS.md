@@ -92,5 +92,7 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
 - `PHASE16_UNIT_CELL_SPARAM_TOOL.md` — a unit-cell/FSS tool with plane-defined S-parameters (the
   measurement-plane technique `scripts/adhoc/fss/plane_s.py` prototyped for the
   square-loop FSS reference, `hfss_exports/fss_square_loop_10mm/`). Not implemented.
+- `PHASE20_RIS_ROADMAP.md` and `PHASE20_R1_SOLVER_LOADS_OBLIQUE.md` — the 2-bit PIN-diode reconfigurable-metasurface (RIS)
+  roadmap and its first item (solver loads + oblique incidence). **Paused, not started**; nothing in `src/` implements it.
 - Also parked, no brief written yet: transmitarray support in the app (Phase 19 Part E), oblique incidence in the MoM core, tensor
   (anisotropic) unit cells (would relax the scalar-cell XPD ceiling above), 2-bit multi-port.

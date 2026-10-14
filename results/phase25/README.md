@@ -112,3 +112,90 @@ candidates the package carries are the ends of that trade-off: the 6.4 mm / 5.33
 simulation) and the 8.0 mm / 6.85 mm square (separation-best, poor locality). Choosing between them, or looking for a
 different cell (non-resonant states, other shapes, a thinner or higher-ε substrate), is a design decision that needs
 the HFSS check below first. All of this is plane-wave, normal incidence, 4×4/5×5 blocks, model-only.
+
+---
+
+## 3. The continuous, modest-modulation family (`continuous_family.json`, `scripts/research/phase25_continuous_family.py`)
+
+Question: does the classic route — a continuous square-patch library restricted to a non-resonant size range, with a
+smooth sinusoidal-type modulation of moderate depth — give a local-periodicity picture the isolated-cell model can
+live with? Same plane-wave 5×5 supercell, mesh 24 (squares are even numbers of 0.267 mm cells), 10.54 GHz,
+grounded RT/duroid 5880. Everything is MODEL_ONLY.
+
+### Library range, phase and reactance span
+
+Isolated patch-plane Γ of each even-cell square (mesh 24; mesh 48 agrees to ≤ 3° up to 4.8 mm):
+
+| side | 0 | 2.13 | 3.20 | 3.73 | 4.27 | 4.80 | 5.33 |
+|---|---|---|---|---|---|---|---|
+| phase | 138.1° | 136.8° | 132.7° | 128.3° | 120.6° | 105.7° | 70.0° |
+| normalised sheet reactance X = Im[(1+Γ)/(1−Γ)] | 0.38 | 0.40 | 0.44 | 0.48 | 0.57 | 0.76 | 1.43 |
+| local slope | ~1°/mm | | | 12°/mm | 29°/mm | 28→68°/mm | resonance onset |
+
+**Non-resonant range used: empty … 4.80 mm (gap ≥ 1.6 mm): phase 138.1° → 105.7° (span 32°), X 0.38 → 0.76, |Γ| ≥ 0.999.**
+Allowing 5.33 mm (gap 1.07 mm, slope ~70–90°/mm, X 1.43) extends the span to 68° and is the edge of the resonance
+(the 5.6 mm square is already at 25° and 5.87 mm at −41°). Known answer (uniform 4.80 mm block): 0 error.
+
+### Blocks and depths
+
+Centre phase 112°; depth = peak-to-peak phase swing 15° / 30° / 50° (the 50° case needs the 5.33 mm square).
+`x_p1`: m = cos(2πx/D) (modulation along the incident E); `diag_p11`: m = cos(2π(x+y)/D); `hex_crop`: the Fong-type
+pattern m = cos(k_sw ρ − k0 sinθ (x cosφ + y sinφ)) of the hex150 port-1 beam (30°, 45°) on a 5×5 crop of the
+real design's cells (non-periodic: the supercell has one seam). The exact hex150 neighbourhoods are therefore
+reproduced up to that seam; the local gradient range of the real pattern (115–335 rad/m) brackets the two periodic
+harmonics (196, 277 rad/m).
+
+| depth | block | worst propagating-order power error | dominant modulated order | MoM \|A\| / model \|A\| | phase MoM − model | specular error |
+|---|---|---|---|---|---|---|
+| 15° | x_p1 | 2.4 pp | (±1,0) | 0.040 / 0.084 = **0.47** | −1° | 0.008 |
+| 15° | diag_p11 | 0.0 (evanescent) | (±1,±1) | 0.035 / 0.084 = 0.41 | +34° | 0.010 |
+| 15° | hex_crop | 0.3 pp | (0,1) / (±1,0) | 0.051 / 0.052 = **0.98** / 0.45 | +20° / −5° | 0.008 |
+| 30° | x_p1 | 3.9 pp | (±1,0) | 0.055 / 0.111 = 0.49 | −2° | 0.012 |
+| 30° | diag_p11 | 0.0 | (±1,±1) | 0.048 / 0.111 = 0.43 | +32° | 0.015 |
+| 30° | hex_crop | 0.6 pp | (0,1) / (±1,0) | 0.074 / 0.072 = 1.02 / 0.47 | +18° / −7° | 0.012 |
+| 50° | x_p1 | 5.8 pp | (±1,0) | 0.073 / 0.139 = 0.52 | −3° | 0.019 |
+| 50° | diag_p11 | 0.0 | (±1,±1) | 0.064 / 0.139 = 0.46 | +30° | 0.025 |
+| 50° | hex_crop | 1.8 pp | (0,1) / (±1,0) | 0.148 / 0.152 = 0.97 / 0.44 | +23° / −4° | 0.039 |
+
+Reading it:
+* **Power-level locality is no longer a problem**: ≤ 6 pp in every propagating order (the 1-bit pairs: 42–69 pp at the
+  current gap, 4–12 pp only at ~65° separation), specular order to ≤ 4 % in amplitude, and it degrades gently with depth.
+* **Amplitude is not reproduced where the modulation runs along the incident E**: the isolated-cell model
+  over-predicts the first-order amplitude by ≈ 2× (ratio 0.41–0.52, depth-independent), the order along y
+  (⊥ E) to 2–3 %. Phase is within a few degrees for the E-parallel order but 20–34° off for the y and diagonal ones.
+  The incident field here is a plane wave polarised along x; a surface wave's E is radial, so a board sees a
+  position-dependent mixture of the two cases, and a polarisation-averaged correction is not something this check
+  can supply.
+
+### Expected beam-amplitude cost versus the ideal 1-bit 180° pair
+
+Ideal sinusoidal phase modulation of peak-to-peak swing Δ puts J1(Δ/2) into each first order; an ideal 0/180°
+square wave puts 2/π = 0.637. Cost = 20 log10(J1(Δ/2) / 0.637):
+
+| depth Δ | ideal J1 | cost vs ideal 1-bit 180° | measured in the MoM (E ∥ modulation / E ⊥ modulation) |
+|---|---|---|---|
+| 15° | 0.065 | −19.8 dB | −24.1 / −21.9 dB |
+| 30° | 0.130 | −13.8 dB | −21.3 / −18.7 dB |
+| 50° | 0.212 | −9.5 dB | −18.8 / −12.7 dB |
+
+For comparison the 65° locality-best 1-bit pair gives 2 sin(Δ/2)/π ⇒ −5.1 dB (arithmetic). A multiplexed hologram
+that carries four beams shares the same total swing, costing roughly another 6–12 dB per beam. Not captured here
+and not obtainable from this repo: the radiated *fraction* of the surface-wave power. A weak modulation leaks little
+per wavelength, and a 150 mm aperture is only ~5 surface wavelengths, so a modest-depth design may leave most of the
+guided power unradiated (the model's `aperture_field` has unit amplitude everywhere and no leakage term). Absolute
+gain and efficiency of this family are `NOT_AVAILABLE_FROM_CURRENT_DATA`.
+
+### Recommendation for B/C
+
+**Use the continuous modest-modulation family if B/C is run at all, and only as a relative study; do not use
+1-bit pairs.** It is the only family here for which the cell-wise forward model has support (power errors ≤ 6 pp,
+specular ≤ 4 %). Conditions:
+1. Treat the forward model's modulated-order amplitudes as upper bounds along E (×~0.5 measured), report beam
+   *shapes*, spacing, crosstalk and steering trajectories, and label every absolute gain/efficiency number
+   `NOT_AVAILABLE_FROM_CURRENT_DATA`.
+2. Keep the library to the non-resonant range (≤ 4.80 mm; ≤ 5.33 mm only at the deepest depth) and re-run this
+   plane-wave check on the actual synthesised board's neighbourhoods before quoting anything.
+3. The honest outcome may be "the sector scanner is not worth building with a passive modest-modulation board":
+   multiplexing four beams at 10–25 dB below a 1-bit pair, with unknown leakage, will probably be radiating a
+   small fraction of the feed power. The HFSS locality package (current pair first) and one HFSS run of a
+   modest-depth modulated block would settle whether the continuous family's 0.5× amplitude factor is real.

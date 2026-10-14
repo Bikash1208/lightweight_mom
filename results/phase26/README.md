@@ -232,3 +232,94 @@ required rises again. The gain estimate inside the region is 24–26 dBi (e.g. 2
 the first-order formula was checked to 3 % in item A — the true region will move; the Floquet balance is the
 check once cells exist. Compared with the non-resonant database (δ ≤ 0.4 mS, Y ≤ 2.6 mS) the target needs
 **10× the anisotropy at 3–4× the mean loading**.
+
+## B2.2–B2.3 Slotted-circle family and Bloch extraction at the operating point (**stop point**)
+
+Code: `src/dispersion/slotted_cells.py` (`SlottedCircularPatch`, `SlottedSquarePatch`, `CellRow`; duck-typed
+`Geometry`), `tensor_sheet.bloch_sheet_tensor / bloch_beta / bloch_frequencies`, tests
+`tests/test_dispersion_bloch_sheet.py`; drivers `phase26_slotted_family.py`, `phase26_ramp_locality.py`,
+`phase26_eigenmode_package.py`; data `slotted_family.json` (mesh 48, 19 cells), `slotted_family_mesh64.json`,
+`ramp_locality*.json`. MODEL_ONLY.
+
+**Extraction.** The cell is driven by an impressed unit tangential field in the (0,0) Floquet harmonic at the
+Bloch wavenumber `(kx0, ky0)` (any `kt`, including `kt > k0`); the cell-mean current and the total field
+`E_tot = E_stack + G_00 J_00` (`G_00` contains the slab pole) give `Y_s(kt) = J E_tot^-1`, and the dispersion zero is
+`det Im(Y_s(kt) + A pp^T + B qq^T) = 0`. At `kt = 0` it equals the normal-incidence tensor to 1e-8 (tested); the
+solver needed no change for `kt > k0` — the old eigen-search problem of `mom_scaffold` does not arise because
+the slab pole sits in `G_00`, not in the solved matrix. Spatial dispersion matters: at `kt = 1.05 k0` even a
+bare circle has `Y_longitudinal != Y_transverse` (2.5 vs 1.8 mS for D 5.0 mm).
+
+**How far is the normal-incidence sheet model off for these cells?** `beta(normal) - beta(Bloch)` [k0], mesh 48:
+along the slot ≤ 0.005 (negligible); at 45° / 90° to the slot: D 5.6, 4.6 × 1.2: −0.001 / −0.003; D 5.6,
+5.0 × 1.6: +0.02 / −0.02; D 5.8, 5.0 × 1.6: −0.09 / −0.02; D 5.8, 5.0 × 2.0: −0.13 / −0.04; D 6.0, 5.0 × 2.0:
+−0.14 / −0.05; D 6.0, 5.4 × 1.6: −0.20 / −0.08; slotted squares up to −0.30 / −0.13. A bare circle: ≤ 0.003. **The normal-incidence model under-estimates the loading
+of exactly the cells that are in the target region, by up to ~15 % of β.**
+
+**Mesh sensitivity (the dominant numerical caveat).** A slot that ends 0.2–0.3 mm from the circle edge leaves a
+copper bridge of about one mesh cell: Y_yy of D 5.8, 5.0 × 2.0 is 12.4 (mesh 48), 11.1 (64), and at mesh 32 the
+bridge is lost entirely (Y_xx 0.7 vs 13.6 mS). Bridges ≥ 0.4 mm are stable (D 6.0, 4.8 × 2.0: Y_yy 10.6 / 11.0 at
+mesh 48 / 64). The joint cell-and-wave rotation check of the circular outline shows 5–7 % staircase scatter
+(exact at 90°).
+
+**Coverage vs the required map** (operating point kt = 1.05 k0; Ȳ = (Y_∥ + Y_⊥)/2 across/along the slot,
+δ = half the difference; required δ interpolated from `required_map.json`; first-order conversion over the
+hexagon):
+
+| Cell (circle D, slot L × W) | bridge | mesh | Ȳ [mS] | δ [mS] | δ required | conversion est. |
+|---|---|---|---|---|---|---|
+| 6.0, 4.8 × 1.6 | 0.5 mm | 64 | 8.1 | 2.7 | 4.5 | 0.58 |
+| 5.8, 4.8 × 2.0 | 0.3 mm | 64 | 7.3 | 2.8 | 4.5 | 0.60 |
+| 6.0, 4.8 × 2.0 | 0.4 mm | 64 | 8.8 | 3.3 | 5.0 | 0.72 |
+| 6.0, 5.0 × 1.6 | 0.39 mm* | 64 / 48 | 9.0 / 9.1 | 3.6 / 4.0 | 5.0 | 0.76 / 0.82 |
+| 5.8, 5.0 × 2.0 | 0.22 mm* | 64 / 48 | 8.6 / 9.4 | 4.1 / 5.0 | 5.0 | 0.86 / 0.92 |
+| 6.0, 5.0 × 2.0 | 0.33 mm* | 48 | 10.6 | 5.5 | 5.6 | 0.88 |
+| 6.0, 5.4 × 1.6 | 0.19 mm* | 48 | 12.8 | 7.8 | 7.8 | 0.89 |
+| square 5.4, 5.0 × 1.6 | — | 48 | 14.6 | 9.3 | 10.2 | 0.84 (β 1.04 → 1.32) |
+
+(* numerically fragile: mesh 48 → 64 moves Y by 10–25 %, and a 0.2–0.3 mm bridge is a fabrication risk.)
+**Result:** with mesh-stable bridges the family reaches 65–85 % of the required anisotropy (conversion ≈ 0.6–0.75
+first order, short of 0.85); the 0.85+ cells are the thin-bridge ones. Slotted squares reach the δ but with a
+β contrast of 1.04 → 1.32 across the slot (one cell goes past resonance, no bound root at 90°): not usable.
+Operating-point caveat: the leakage coupling uses Y at the radiated harmonic's kt ≈ 0.5 k0 as well; the
+formulas here use the surface-wave kt only (a refinement for item C).
+
+**Large directional dispersion.** For the in-region cells β/k₀ is 1.04 along the slot and 1.10–1.20 across
+it: the local phase velocity of the surface wave varies by 8–15 % with the slot angle. The reference-wave
+phase of a hologram must be solved with the local tensor dispersion (eikonal), not a fixed β — and the
+launch region (feed at the centre, slot angle varying around it) is strongly anisotropic.
+
+## B2.4 Locality of continuous modulation (`ramp_locality*.json`)
+
+Supercell MoM (one periodic solve, Bloch `kx0 = β`, own Floquet orders) vs the adiabatic sum of the local
+cells' β along the ramp; wave along the ramp; slot-angle ramps are exactly periodic (0 → 180°). Gate: ≤ 15°.
+
+| Ramp (mesh 24 unless noted) | local β/k₀ range | super β/k₀ | mean local | accumulated phase error | gate |
+|---|---|---|---|---|---|
+| angle 0→180°, 8 cells, D 5.6, 4.4 × 1.2 | 1.031–1.040 | 1.0363 | 1.0365 | −0.1° | PASS |
+| angle 0→180°, 8 cells, D 6.0, 4.6 × 1.6 | 1.041–1.105 | 1.0640 | 1.0754 | **−7.4°** | PASS |
+| angle 0→180°, 8 cells, **D 6.0, 4.8 × 2.0** (target-like) | 1.041–1.170 | **1.0593** | 1.1286 | **−44.9°** | **FAIL** |
+| size 5.2→5.8→5.2, 10 cells | 1.028–1.038 | 1.0321 | 1.0322 | −0.1° | PASS |
+| size 5.6→6.0→5.6, 10 cells | 1.031–1.041 | 1.0372 | 1.0373 | −0.1° | PASS |
+| size 5.2→6.1→5.2, 10 cells | 1.025–1.044 | 1.0330 | 1.0333 | −0.3° | PASS |
+
+(Second-start roots agree to 1e-8; D 6.2 mm has no bound root at mesh 24 — the 0.2 mm neighbour gap is below
+one mesh cell. A ramp of the in-region D 5.8, 5.0 × 2.0 cell at mesh 32 is invalid: its slot bridge is not
+resolved there, see above.)
+
+**Reading.** Weak-to-moderate modulation (size ramps, Δβ ≤ 0.07 k₀) is local to < 8°. A strongly anisotropic
+rotating slot — the regime that meets the conversion target (β varying 1.04 → 1.17 over the cycle) — is **not
+local**: the supercell's β is 0.07 k₀ (6 %) below the average of the local β's, −45° accumulated over 8 cells
+(51 mm ≈ 1.9 guided wavelengths: the slot rotates through 180° inside two guided wavelengths, which is the
+rate the hologram needs). An effective-medium predictor — the area-averaged local tensor — does much better
+(β 1.085 vs 1.059, +17° — just outside the gate) and is the natural "local model" for item C, but it is not
+adiabatic ray optics. Phase 25's abrupt 1-bit failure is not repeated for gentle modulation; it is for the
+modulation depth the conversion target requires.
+
+## B2.5 HFSS eigenmode ground truth (`hfss_exports/slotted_cell_eigenmode/`)
+
+Five master/slave unit-cell scripts (D 5.8 / 6.0 mm × slot 0° / 45° + bare D 5.8), two Bloch settings each
+(β = 1.04 k₀ along x: 84.2° per cell; on the diagonal 59.5° + 59.5°); predictions written before any run
+(`predictions.json`, README table): the bound TM-like mode at 10.17–10.57 GHz (bare circle 10.566 / 10.556 GHz;
+D 5.8 slot 0°: 10.574 along x, 10.27–10.32 on the diagonal; slot 45° swaps them; D 6.0: 10.535 / 10.19 and
+10.21 / 10.515), a TE-like neighbour 0.04–0.3 GHz above on the slotted cells; mesh 48 vs 64 agree to ≤ 0.05 GHz.
+The scripts have not been run in AEDT (boundary property names may need a manual assignment; README).

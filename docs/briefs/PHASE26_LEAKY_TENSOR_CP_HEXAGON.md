@@ -80,6 +80,7 @@ family and extraction:
 5. *HFSS ground truth:* five unit-cell eigenmode scripts (master/slave, phase = beta a along x and along the
    diagonal; two diameters x two slot angles + one bare patch) with the eigenfrequencies predicted beforehand.
 6. *Stop and report* coverage vs the step-1 map, locality result, eigenmode predictions. Do not start C.
+   **Status 2026-10-14:** steps 1-6 done, results in `results/phase26/README.md` (B2.1-B2.5); stopped at B2.6.
 
 **C. CP tensor synthesis with leakage/amplitude control (one hexagon).**
 - Target aperture field: pure RHCP pencil at (30°, 225°) with an amplitude taper (choose for SLL ≤ −15 dB) and leakage

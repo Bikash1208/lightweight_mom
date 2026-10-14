@@ -323,3 +323,44 @@ Five master/slave unit-cell scripts (D 5.8 / 6.0 mm × slot 0° / 45° + bare D 
 D 5.8 slot 0°: 10.574 along x, 10.27–10.32 on the diagonal; slot 45° swaps them; D 6.0: 10.535 / 10.19 and
 10.21 / 10.515), a TE-like neighbour 0.04–0.3 GHz above on the slotted cells; mesh 48 vs 64 agree to ≤ 0.05 GHz.
 The scripts have not been run in AEDT (boundary property names may need a manual assignment; README).
+
+## B2.4b Corrected locality gate: Floquet balance of the modulated tensor sheet (`ramp_floquet.json`, `database_crosscheck.json`) — **gate FAILS for the target cell**
+
+Labels: `SOLVER_INTERNAL`, `MODEL_ONLY`, `NOT_HFSS_VALIDATED` (the HFSS eigenmode package was not run, by decision).
+
+**Why B2.4's reference was wrong.** The Floquet constant of a modulated surface is not the mean of the local
+constants. The reference is now the harmonic balance of the staircase sheet built from the LOCAL cell tensors
+(`src/dispersion/tensor_floquet.py`, the tensor twin of `leakage_model.floquet_complex_beta`, reusing its
+harmonic blocks unmodified; unit tests: uniform-tensor limit = `find_beta_tensor`, scalar two-level staircase =
+the scalar balance to 1e-8, Fourier series reconstruct the profile). Cell tensors are the Bloch tensors
+`Y_s(kt)` at one wavenumber for every harmonic. Gate: |β_Floquet − β_supercell| ≤ 0.01 k₀.
+
+| Ramp (8 cells, slot 0→157.5°, mesh 24) | β_super/k₀ | local mean | effective medium | **Floquet (tensors at β_super)** | Floquet (own β_i) | gate |
+|---|---|---|---|---|---|---|
+| D 5.6, 4.4×1.2 (weak) | 1.0363 | 1.0365 | 1.0359 | 1.0363 (err −0.0000) | 1.0363 | PASS |
+| D 6.0, 4.6×1.6 (moderate) | 1.0640 | 1.0754 | 1.0643 | 1.0667 (err +0.0028) | 1.0669 | PASS |
+| **D 6.0, 4.8×2.0 (primary / target)** | **1.0593** | 1.1286 | 1.0850 | **1.0763 (err +0.0170 k₀)** | 1.0773 | **FAIL** |
+
+* The Floquet balance is a real improvement on the local mean (error 0.069 k₀ → 0.017 k₀) and on the
+  effective medium (0.026 → 0.017), and is within 0.003 k₀ for moderate anisotropy. For the primary cell it
+  still over-predicts β by 0.017 k₀ — over 8 cells (51.2 mm) that is **+11° accumulated phase**, inside the old
+  15° phase gate but outside the 0.01 k₀ gate set for this step. n_max 6 vs 10 agree to 1e-4 k₀; tensors at β_super
+  vs each cell's own β_i differ by 0.001 k₀ (not the cause).
+* **α agreement** (supercell α is one Newton step of the complex MoM tensor determinant — radiation into n = −1
+  and dielectric loss, an estimate, not a converged complex root): target 4.1 Np/m (Floquet) vs 2.8 (supercell);
+  moderate 2.2 vs 2.7; weak 0.07 vs 0.09. Same ordering, ±50 % at the target — not an agreement to build on.
+* Not tested here, the likely residual: (i) the same tensor for every harmonic although the n = ±1 harmonics
+  see kt = β ± K (spatial dispersion, large for this cell family); (ii) a cell's tensor changes when its
+  neighbours differ (mutual coupling is in the supercell MoM, not in a per-cell tensor).
+
+## B2.4c Database Bloch β vs uniform-supercell solve (`database_crosscheck.json`) — PASS (`SOLVER_INTERNAL`)
+
+D 6.0, 4.8×2.0, slot 0° / 45° / 90°, propagation 0° and 45°, 4 identical cells in one MoM (orders 4m × m):
+|Δβ| ≤ 1e-9 k₀ in all six cases (gate 0.005 k₀). This is a self-consistency check (a uniform supercell must
+reproduce the cell: Floquet-order truncation, staircase masks, root selection), **not** physical validation, and
+it does not test the modulated case. Along the diagonal slot 0° and slot 90° coincide (1.1082 k₀) as the mirror
+symmetry requires; β/k₀ for slot 0° is 1.041 along x, 1.138 for slot 90° along x.
+
+## Stop condition
+Step 1 of the B2.4b instruction fails for the primary cell (0.017 k₀ > 0.01 k₀); per the instruction, item C is
+not started. Not yet done: step 3 (mesh-stable restriction recomputation, which only restates the primary cell).

@@ -1,3 +1,5 @@
+> **Status: optional package, NOT run.** By decision the project relies on the internal solver (validated against HFSS earlier); these scripts and predictions remain for anyone who wants the check.
+
 # slotted_cell_eigenmode -- HFSS unit-cell eigenmode checks of the slotted-circle family (Phase 26 B2.5)
 
 Purpose: ground truth for the model's dispersion of near-resonant cells (the Bloch sheet tensor at kt > k0,

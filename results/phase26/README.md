@@ -133,3 +133,74 @@ unmatched while the HFSS one is −16 dB: it is a model-internal ranking, not a 
 `hfss_exports/launcher_calibration/` (A: current pin, B: 5 mm resonant pin, C: tall pin + top-hat): the bare
 grounded board, one feed at port 3's position, a radial line 1 mm above the surface (rho 10–140 mm, phi
 225°). README lists the exports requested and the extraction (launch fraction from the E_z decay).
+
+## B. Tensor cell family, tensor sheet extraction, database coverage (**stop point**)
+
+Code: `src/dispersion/tensor_sheet.py` (extraction + tensor transverse resonance),
+`leakage_model.leakage_alpha_first_order_tensor`, tests `tests/test_dispersion_tensor_sheet.py`, drivers
+`scripts/research/phase26_tensor_database.py`, `phase26_tensor_coverage.py`; data `tensor_database.json`
+(140 rows: 20 (L, W) families × rotations 0–180° in 15° steps, mesh 64), `tensor_coverage.json`,
+`tensor_coverage.png`. MODEL_ONLY, `TENSOR_SHEET_FROM_NORMAL_INCIDENCE`.
+
+**Extraction.** The cell is a rotated rectangular PEC patch on the 6.4 mm cell (`Geometry.rotation`, grounded
+RT/duroid 5880, 10.54 GHz). The MoM's full 2 × 2 normal-incidence reflection at the patch plane gives
+`Y_in = Y0 (I − Γ)(I + Γ)⁻¹` and the patch layer's tensor `Y_s = Y_in − Y_slab I`. The dispersion along azimuth φ
+is the root of `(Y_kk + A(β))(Y_ss + B(β)) − Y_ks² = 0` (TM / TE background admittances); for a sheet diagonal in
+the propagation frame it IS `sheet_model`'s equation, and the code path is the same (bit-identical at φ = 0).
+`sheet_model.py` and `mom_scaffold.py` are untouched.
+
+**Validation.**
+
+| Check | Result |
+|---|---|
+| square patch → isotropic tensor | off-diagonal and anisotropy < 1e-9 (also for a 45°-rotated square) |
+| scalar limit vs `sheet_model` | β bit-identical (φ = 0), 1e-12 rotated frame; tensor of a square = the scalar extraction to 1e-9 |
+| reciprocity (symmetric tensor) | max `|Y_xy − Y_yx|/|Y_iso|` = 9e-16 over all 140 entries |
+| quarter turn ≡ swapped length/width | identical to 1e-9 (mask-exact) |
+| principal axis of the rotated cell | max error 1.8°, rms 0.6° over all rotations and families |
+| rotation equivariance `Y(a) = R(a) Y(0) Rᵀ(a)` | median 1.7 %, max 7.8 % — **not** exact: the neighbour gap of a rotated rectangle in a square lattice depends on the angle, so the isotropic part rises up to ≈ 7 % towards 45°; the database holds the actual tensors rather than assuming the rotation law |
+| staircase scatter of the rotated mask (mesh 32 / 48 / 64 / 96) | δ and Y_iso ±2–3 % at mesh ≥ 48 (up to 8 % at mesh 32); mesh 64 used |
+| mixed-polarisation dispersion | principal-axis β are the scalar β of Y_xx / Y_yy; at 45° to the axes the mode is a TM/TE hybrid (TE content 5 % for 4.0 × 2.4 mm) and β lies between |
+
+**The non-resonant window.** Phase 25's locality criterion (rotated bounding box ≤ 4.8 mm, gap ≥ 1.6 mm)
+restricts rotation: a rectangle rotates through every angle only if `√(L² + W²) ≤ 4.8 mm` (12 of the 20
+families, e.g. 4.0 × 2.4, 4.0 × 1.6, 3.2 × 1.6). Longer patches only exist at 0° / 90°.
+
+**Coverage (what item C can ask the database for).** A constant-anisotropy, rotating-axis tensor surface
+`Y = Ȳ I + δ R(α) diag(1, −1) Rᵀ(α)`, `α = ψ/2` (Fong 2010 / Minatti 2016, impedance definition: sheet
+admittance of the penetrable patch layer on the grounded slab) needs one (L, W) per `(Ȳ, δ)`; α is then free.
+
+| full-rotation family (L × W, mm) | Ȳ_iso [mS] | δ [mS] | Ȳ, δ spread over rotation | first-order CP conversion over 0.14 m |
+|---|---|---|---|---|
+| 4.0 × 2.4 | 0.92 | 0.38 | 2.6 %, 3.2 % | 0.07 % |
+| 4.0 × 1.6 | 0.60 | 0.38 | 4.8 %, 3.4 % | 0.06 % |
+| 4.0 × 0.8 | 0.34 | 0.30 | 2.6 %, 3.1 % | 0.03 % |
+| 3.2 × 1.6 | 0.36 | 0.18 | 3.2 %, 3.4 % | 0.01 % |
+| axis-aligned only: 4.8 × 3.2 | 1.94 | 0.72 | — | 0.4 % |
+
+**The map is empty where it matters.** The CP leakage constant of a rotating-axis tensor sheet is
+`α ≈ 0.003 Np/m` for the best fully rotatable family (0.015 for 4.8 × 3.2, axis-aligned) — against 1.06 Np/m
+for the 1-bit pair of the existing board (which already converts only 25 %) and 8 Np/m needed for 90 % over
+0.14 m. Converting 50 % / 90 % at the sheet loading of those families needs δ ≈ 13 mS / 23 mS; the
+non-resonant window offers δ ≤ 0.4 mS (0.8 mS axis-aligned). Relaxing the window towards resonance
+(axis-aligned, gap 0.4 mm: 6.0 × 3.2 mm) reaches δ = 2.6 mS and 14 %; the first-order formula (checked ≤ 3 %
+against the Floquet balance in item A at this depth) is more accurate for these smaller modulations.
+Leakage rises steeply with the MEAN sheet loading (`Ȳ_iso`): at δ = 2.5 mS, 2.0 % conversion at Ȳ = 0, 14 % at
+4 mS, 38 % at 6 mS, 54 % at 8 mS (β/k₀ 1.018 → 1.067), because the wave is then more tightly bound.
+
+Consequences / options (a decision for you before item C):
+1. Allow loaded, near-resonant elements (mean sheet 4–8 mS, δ ≈ 2–3 mS): the conversion is reachable but this
+   is the regime where Phase 25 found the isolated-cell/locality assumption failing; each element would need
+   the supercell MoM treatment (and the extraction here is normal-incidence, isotropic-in-angle).
+2. Change the board: a thicker or higher-ε substrate binds TM0 tighter at the same patch loading (the model is
+   ready: only `Substrate` changes). This is the cheapest lever; not applied here.
+3. Accept a low-conversion CP design (≤ 1 % non-resonant): the gain would sit 20–30 dB below the aperture
+   directivity (conversion 0.1–1 %), i.e. not useful.
+4. Longer / bigger aperture than 150 mm hexagon sides: conversion ∝ 1 − exp(−2αρ); still needs α ≳ 1 Np/m.
+
+**Known gap (noted, not built).** The launch model assumes a bare slab; on the real board the pin is
+surrounded by the patterned surface. Estimate with the sheet model's loaded β around the feed
+(`launch_fraction.json: loaded_slab_mean_sheet_mS`): at the hologram's mean sheet (≈ 4 mS) β/k₀ rises
+1.018 → 1.033 and the launch fraction 0.592 → 0.664 (0.600 → 0.691 for the other pin reading), i.e. +0.5 dB;
+8 mS (strongly loaded cells) 0.74 / 0.80. The keep-out cell under the feed and the pin impedance change are not
+modelled; `PinLaunch(..., y_sheet_s=...)` is the additive hook.

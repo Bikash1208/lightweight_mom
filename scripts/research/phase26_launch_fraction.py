@@ -46,6 +46,18 @@ def main(out):
         f"{t * 1e3:.2f}": split(f, t, n_seg=16)
         for t in (-0.8e-3, 0.0, 0.6e-3, 1.2e-3, 2.0e-3, 3.0e-3, 4.4e-3, 6.0e-3, 8.0e-3, 10.0e-3)
     }
+    # Phase 26 B note: the pin sits inside the patterned surface. The loaded slab (mean patch-sheet admittance
+    # around the feed, a shunt sheet at the surface) binds TM0 more tightly; the keep-out cell under the feed
+    # is not modelled. Mean sheet of the hex150 hologram: 0.505 x 7.9 mS = 4.0 mS.
+    loaded = {}
+    for rname, top in readings.items():
+        rows = {}
+        for y_ms in (0.0, 1.0, 2.0, 4.0, 6.0, 8.0):
+            pl = PinLaunch(f, EPS_R, H, Launcher(top, PIN_R, 0.0), n_seg=24, y_sheet_s=1j * y_ms * 1e-3)
+            r = pl.split()
+            rows[f"{y_ms:g}"] = {k: float(v) for k, v in r.items() if k in ("launch_fraction", "beta_over_k0", "r_rad_ohm", "x_est_ohm")}
+        loaded[rname] = rows
+    res["loaded_slab_mean_sheet_mS"] = loaded
     # item-A bracket with the launch fraction
     a = json.loads((ROOT / "results" / "phase26" / "hex150_leakage.json").read_text())
     hfss = a["hfss"]["peak_realized_gain_rhcp_dbi"]

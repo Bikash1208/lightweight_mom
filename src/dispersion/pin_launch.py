@@ -67,8 +67,9 @@ class Launcher:
 class _Layer:
     """The grounded slab at one `kt`: left / right solutions and `D`."""
 
-    def __init__(self, kt, k0, eps_c, h):
+    def __init__(self, kt, k0, eps_c, h, y_sheet=0.0):
         self.kt, self.h = kt, h
+        self.y_sheet = y_sheet
         self.omega = k0 * 299792458.0
         self.k0 = k0
         self.eps_c = eps_c
@@ -80,7 +81,12 @@ class _Layer:
         self.w_e0 = w_e0
         self.il0 = np.cos(self.kz1 * h)
         self.vl0 = -1j * self.z1 * np.sin(self.kz1 * h)
-        self.d = self.z0 * self.il0 + 1j * self.z1 * np.sin(self.kz1 * h)
+        if y_sheet == 0.0:
+            self.d = self.z0 * self.il0 + 1j * self.z1 * np.sin(self.kz1 * h)
+            self.il0_air = self.il0
+        else:  # a shunt sheet admittance at z = 0: the H_y jump is -Y V
+            self.il0_air = self.il0 - y_sheet * self.vl0
+            self.d = self.z0 * self.il0_air - self.vl0
 
     @staticmethod
     def _propagate(v0, i0, kz, w_eps, z):
@@ -93,7 +99,7 @@ class _Layer:
         if z <= 0.0:
             s = z + self.h
             return np.cos(self.kz1 * s), -1j * self.z1 * np.sin(self.kz1 * s)
-        v, i = self._propagate(self.vl0, self.il0, self.kz0, self.w_e0, z)
+        v, i = self._propagate(self.vl0, self.il0_air, self.kz0, self.w_e0, z)
         return i, v
 
     def right(self, z):
@@ -101,7 +107,7 @@ class _Layer:
         if z >= 0.0:
             e = np.exp(-1j * self.kz0 * z)
             return e, self.z0 * e
-        v, i = self._propagate(self.z0, 1.0, self.kz1, self.w_e0 * self.eps_c, z)
+        v, i = self._propagate(self.z0, 1.0 + self.y_sheet * self.z0, self.kz1, self.w_e0 * self.eps_c, z)
         return i, v
 
 
@@ -135,8 +141,9 @@ def _disk_f(kt, a, i_top):
 class PinLaunch:
     """Reusable evaluator for one `(frequency, substrate, launcher)`."""
 
-    def __init__(self, frequency_hz, eps_r, thickness_m, launcher: Launcher, tan_delta=0.0, n_seg=24):
+    def __init__(self, frequency_hz, eps_r, thickness_m, launcher: Launcher, tan_delta=0.0, n_seg=24, y_sheet_s=0.0):
         self.f, self.eps_r, self.h = frequency_hz, eps_r, thickness_m
+        self.y_sheet = y_sheet_s  # patch layer around the feed, shunt sheet admittance [S] (0 = bare slab)
         self.k0 = free_space_wavenumber(frequency_hz)
         self.omega = angular_frequency(frequency_hz)
         self.eps_c = eps_r * (1.0 - 1j * tan_delta)
@@ -159,7 +166,7 @@ class PinLaunch:
 
     # ------------------------------------------------------------------------------------------
     def s_of_kt(self, kt):
-        lay = _Layer(kt, self.k0, self.eps_c, self.h)
+        lay = _Layer(kt, self.k0, self.eps_c, self.h, self.y_sheet)
         zs = list(self.zs)
         a_disk = self.launcher.disk_radius_m
         dv = list(kt * self.i_seg * self.dz / (self.omega * self.eps_seg))
@@ -200,7 +207,7 @@ class PinLaunch:
         eps = self.eps_r
 
         def f(kt):
-            lay = _Layer(kt, self.k0, eps, self.h)
+            lay = _Layer(kt, self.k0, eps, self.h, self.y_sheet)
             return (lay.d / 1j).real
 
         return float(brentq(f, self.k0 * (1 + 1e-9), self.k0 * np.sqrt(eps) * (1 - 1e-9)))
@@ -250,7 +257,9 @@ class PinLaunch:
     def power_balance(self, tan_delta=1e-3, kt_max_over_k0=None, n_per_k0=4000):
         """Independent numerical total: `-1/2 (1/2 pi) int Re[S] kt dkt` over the whole real axis with a
         lossy slab (the pole is then a finite-width resonance). Compare with `p_space + p_sw`."""
-        lossy = PinLaunch(self.f, self.eps_r, self.h, self.launcher, tan_delta=tan_delta, n_seg=len(self.zs))
+        lossy = PinLaunch(
+            self.f, self.eps_r, self.h, self.launcher, tan_delta=tan_delta, n_seg=len(self.zs), y_sheet_s=self.y_sheet
+        )
         k_hi = (kt_max_over_k0 or 1.6 * np.sqrt(self.eps_r)) * self.k0
         beta = self.beta()
         pts = np.unique(np.concatenate([np.linspace(0, k_hi, n_per_k0), beta + np.linspace(-0.02, 0.02, 4001) * self.k0]))

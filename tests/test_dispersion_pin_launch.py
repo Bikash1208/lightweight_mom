@@ -91,3 +91,21 @@ def test_zero_radius_disk_is_no_disk():
     a = PinLaunch(F, 2.2, H, Launcher(top_above_surface_m=2e-3, disk_radius_m=0.0), n_seg=12).split()
     b = PinLaunch(F, 2.2, H, Launcher(top_above_surface_m=2e-3, disk_radius_m=1e-9), n_seg=12).split()
     assert a["launch_fraction"] == pytest.approx(b["launch_fraction"], rel=1e-4)
+
+
+def test_loaded_slab_pole_is_the_sheet_model_beta_and_zero_sheet_is_unchanged():
+    from src.dispersion.sheet_model import find_beta_from_sheet_admittance
+    from src.materials import Substrate
+
+    y = 1j * 4e-3
+    launcher = Launcher(top_above_surface_m=1.2e-3)
+    loaded = PinLaunch(F, 2.2, H, launcher, n_seg=16, y_sheet_s=y)
+    ref = find_beta_from_sheet_admittance(y, Substrate("s", 2.2, 0.0, H), F).beta_rad_per_m
+    assert loaded.beta() == pytest.approx(ref, rel=1e-8)
+    bare = PinLaunch(F, 2.2, H, launcher, n_seg=16).split()
+    zero = PinLaunch(F, 2.2, H, launcher, n_seg=16, y_sheet_s=0.0).split()
+    assert bare == zero
+    r = loaded.split()
+    total = r["p_space_w_per_a2"] + r["p_sw_w_per_a2"]
+    assert loaded.power_balance(tan_delta=1e-3, n_per_k0=2000) == pytest.approx(total, rel=0.03)
+    assert r["beta_over_k0"] > bare["beta_over_k0"]

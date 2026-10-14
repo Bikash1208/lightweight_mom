@@ -124,6 +124,31 @@ def leakage_alpha_first_order(beta, y_sheet_mean, c1_siemens, theta_rad, zeta_ra
     return float(p_rad_per_h2 / (2.0 * w))
 
 
+def leakage_alpha_first_order_tensor(beta, y_sheet_mean, delta_siemens, theta_rad, substrate, frequency_hz):
+    """`alpha` [Np/m] for a ROTATING-AXIS tensor sheet `Y = Y_bar I + delta R(a) diag(1, -1) R(a)^T` whose axis
+    angle advances with the modulation phase, `a = psi / 2` (Fong / Minatti tensor impedance surface). The
+    n = -1 harmonic of the tensor is `(delta/2) [[1, j], [j, -1]]`, which acting on the surface wave's field
+    `E_0 rho_hat` gives a circular current of magnitude `delta E_0 / sqrt(2)`: equal TM and TE parts in
+    quadrature, whatever the propagation direction (so no `zeta` dependence), each radiating with its own
+    `Re(Y_up)/|Y_total|^2` -- the circularly polarised leakage. The caller supplies the mean-sheet `beta`."""
+    omega = angular_frequency(frequency_hz)
+    k0 = free_space_wavenumber(frequency_hz)
+    kappa = np.sqrt(beta**2 - k0**2)
+    e0_per_h = ETA0 * kappa / k0
+    kt = k0 * np.sin(theta_rad)
+    kz_air = k0 * np.cos(theta_rad)
+    kz_sub = np.sqrt(substrate.eps_complex * k0**2 - kt**2)
+    cot = 1.0 / np.tan(kz_sub * substrate.thickness)
+    y_up_tm = omega * EPS0 / kz_air
+    y_up_te = kz_air / (omega * MU0)
+    y_tm = y_up_tm - 1j * (omega * EPS0 * substrate.eps_complex / kz_sub) * cot + y_sheet_mean
+    y_te = y_up_te - 1j * (kz_sub / (omega * MU0)) * cot + y_sheet_mean
+    j_part = 0.5 * delta_siemens * e0_per_h  # |J_TM| = |J_TE| = delta E_0 / 2
+    p_rad_per_h2 = 0.5 * j_part**2 * (y_up_tm / abs(y_tm) ** 2 + y_up_te / abs(y_te) ** 2)
+    w = surface_wave_power_per_h2(beta, substrate.eps_r, substrate.thickness, frequency_hz)
+    return float(p_rad_per_h2 / (2.0 * w))
+
+
 def two_level_c1(v0, v1, duty=0.5):
     """n = +-1 Fourier amplitude of a two-level (binary) profile of duty `duty` (fraction of the period in
     level 1): `|v1 - v0| sin(pi duty) / pi`."""

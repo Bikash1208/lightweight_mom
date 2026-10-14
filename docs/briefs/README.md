@@ -19,10 +19,10 @@ and reports back against its own acceptance checks.
 
 ## What's here now
 
-- Active: `PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md` (Parts A–D done; Parts E/F wait on the user's decision whether
+- Active: `PHASE26_LEAKY_TENSOR_CP_HEXAGON.md` (leakage-calibrated tensor-cell pure-CP hexagon, model-only until HFSS); `PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md` (Parts A–D done; Parts E/F wait on the user's decision whether
   ±30.00° is a hard specification and on an HFSS run of the lens — see `docs/STATUS.md` "Open next steps").
   Nothing else is active; `PHASE24_CURATION_AND_CLEANUP.md` is finished and archived in `docs/history/briefs/`.
-- `_parked/` — deferred ideas, each its own file, not current work: the unit-cell/FSS S-parameter tool (Phase 16) and
+- `_parked/` — deferred ideas, each its own file, not current work: the Phase 25 Butler sector scanner (B/C paused 2026-10-14), the unit-cell/FSS S-parameter tool (Phase 16) and
   the RIS roadmap + R1 brief (Phase 20, paused, not started).
 
 See `docs/history/briefs/` for every completed brief (phases 12A onward; phases 1–11's own task

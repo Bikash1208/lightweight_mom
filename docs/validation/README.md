@@ -80,6 +80,32 @@ plane in front of/behind a finite panel and moves the phase back to the substrat
 **self-consistency check between two measurement techniques in this project, not an HFSS
 comparison** — no HFSS data exists for this geometry yet (`hfss_exports/README.md`).
 
+## 6. First HFSS run of an app-designed board: `four_port_hex150_gap0`, port 3 alone (Phase 26)
+
+The user's HFSS solve of `hfss_exports/four_port_hex150_gap0/` (4 × 150 mm-side hexagons, 1-bit pair empty |
+5.85 mm square, RT/duroid 5880 1.575 mm, λ/4-class monopole per port), data in `hfss_results/hex150_gap0/`:
+
+| File | What | Committed |
+|---|---|---|
+| `port3_antenna_params_8_10p5GHz.txt` | HFSS antenna-parameter table, port 3 excited, 8 GHz and 10.5 GHz | yes |
+| `port3_realized_gain_RHCP_LHCP_10p5GHz.csv` | realized gain RHCP / LHCP, 10.5 GHz, θ 0–180° and φ −180…180° in 2° steps | yes |
+| `HEX_HFSSDesign1.s4p` | 4-port S-parameters 8–12 GHz | **no** (gitignored Touchstone, stays local) |
+
+Numbers as reported (S-parameters from the local `.s4p`; the rest from the two committed files):
+
+- S11…S44 −13.9 / −17.6 / −16.4 / −14.6 dB at 10.54 GHz, −10 dB band ≈ 8.5–11.4 GHz (minimum near 9.6–10 GHz: the
+  monopole is slightly long); coupling ≤ −50 dB at 10.54 GHz and ≤ −41.7 dB anywhere in 8–12 GHz.
+- Port 3 alone, 10.5 GHz: beam at (θ 30°, φ 224°) (design 30°, 225°); peak realized gain RHCP **19.85 dBi**
+  (table: directivity 99.4 = 20.0 dBi, realized gain 97.2 = 19.9 dBi, total efficiency 97.7 %); XPD at the peak
+  22.3 dB; model (Phase 23 cell-wise) predicted 25.8–26.0 dBi.
+- Integrated power budget from the CSV (2° grid, 1.05 × accepted power, ±5 %): within 8° of the beam 19.4 %, within
+  20° 34.7 %, θ > 70° 38 %, back hemisphere 14 %, LHCP 48 %. Table quirk: radiation efficiency 1.016 and radiated
+  power (977 mW) above accepted power (962 mW) — HFSS integration/mesh noise at the percent level; the ±5 %
+  above covers it.
+- Model comparison: `results/phase26/README.md` — the leakage model brackets the realized gain (16.9–19.9 dBi
+  depending on the in-context contrast, launch fraction not modelled), it does not validate it. Named state
+  `LEAKAGE_MODEL_BRACKETS_HFSS_NOT_DISCRIMINATING`.
+
 ## Regenerating
 
 - Phase 12 HFSS comparisons: re-run through the app's **HFSS compare** page, or

@@ -1,6 +1,6 @@
 # Phase 25 — Butler-fed sector scanner: one shared multiplexed hologram, 4 monopoles (model study)
 
-**Status:** active brief, written 2026-10-13. Read `docs/START_HERE.md`, `docs/STATUS.md`, `CLAUDE.md` first. Branch
+**Status:** PARKED 2026-10-14 — parts B/C are paused (Phase 25 follow-ups 1–5 stay on `phase25-butler-sector`); active work is `docs/briefs/PHASE26_LEAKY_TENSOR_CP_HEXAGON.md`. Originally: active brief, written 2026-10-13. Read `docs/START_HERE.md`, `docs/STATUS.md`, `CLAUDE.md` first. Branch
 `phase25-butler-sector` from `main` (`v1.1-handoff`). All repo rules apply (one commit per item, fast suite green before
 each, physics tests, honest labels, no solver-core changes, model-only until the user's HFSS run).
 

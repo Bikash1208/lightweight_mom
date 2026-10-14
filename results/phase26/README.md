@@ -364,3 +364,51 @@ symmetry requires; β/k₀ for slot 0° is 1.041 along x, 1.138 for slot 90° al
 ## Stop condition
 Step 1 of the B2.4b instruction fails for the primary cell (0.017 k₀ > 0.01 k₀); per the instruction, item C is
 not started. Not yet done: step 3 (mesh-stable restriction recomputation, which only restates the primary cell).
+
+## B2.4d Harmonic-dependent tensors (`ramp_floquet_dispersive*.json`) — gate still FAILS for the primary cell
+
+Coupling of harmonics n <- q uses the cell Bloch tensors at kt = beta_super + (n+q)K/2 (`floquet_complex_beta_dispersive`,
+n_max 3; n_max 4 identical to 1e-4). Same three 8-cell slot-angle ramps, mesh 24:
+
+| Ramp | beta_super/k0 | constant-tensor Floquet | **harmonic-dependent** | error [k0] | alpha [Np/m] (super est.) | gate 0.01 k0 |
+|---|---|---|---|---|---|---|
+| D 6.0, 4.8x2.0 (primary) | 1.0593 | 1.0769 | **1.0720** | **+0.0127** | 2.58 (2.77) | **FAIL** |
+| D 6.0, 4.6x1.6 | 1.0640 | 1.0668 | 1.0633 | -0.0006 | 2.26 (2.68) | PASS |
+| D 5.6, 4.4x1.2 | 1.0363 | 1.0363 | 1.0363 | -0.0001 | 0.08 (0.09) | PASS |
+
+The dispersion between harmonics removes about a quarter of the primary-cell residual (0.017 -> 0.0127 k0, and
+makes alpha agree to 7 %) but not enough: the rest is cell-environment dependence (a cell's tensor changes with
+its neighbours), which a per-cell database cannot carry. Per the instruction, the Floquet-of-local-tensors model is
+**not** used for item C; the SOLVER_SUPERCELL table below replaces it.
+
+## B2.4e SOLVER_SUPERCELL table (`supercell_table_*.json`)
+
+Slot-angle-rotating row (slot angle 180 i/N deg, i = 0..N-1; modulation vector parallel to propagation,
+gamma = 0), circle D 6.0 mm, mesh 24/cell, propagation period N P, K = 2 pi / (N P). The complex root
+beta - j alpha is found by analytic continuation of f(beta) = det(Y_s(beta) + diag(A, B)) (7 real-axis MoM
+points, degree-6 polynomial; the degree-5 root agrees to <= 6e-5 k0 in all 20 cells and the polynomial's own
+value at Re(root) matches the MoM to 1e-7 relative). The real-axis root of Im det differs from Re(root) by up
+to 0.01 k0 where leakage is strong — it is not the complex root. alpha_leak = alpha - alpha of the uniform
+row of the slot-0 cell (dielectric loss; 0.03-0.2 Np/m).
+
+| slot L x W [mm] | uniform beta/k0 | N=3 (K 1.48 k0) beta / alpha_leak | N=4 (1.11) | N=5 (0.89) | N=6 (0.74) | N=8 (0.56) |
+|---|---|---|---|---|---|---|
+| 4.8 x 2.0 | 1.0305 | 1.0679 / 4.20 | 1.0637 / 2.40 | 1.0660 / 2.97 | 1.0728 / 2.08 | 1.0686 / 2.80 |
+| 4.8 x 1.6 | 1.0405 | 1.0626 / 4.26 | 1.0592 / 2.51 | 1.0608 / 2.82 | 1.0611 / 3.00 | 1.0632 / 3.15 |
+| 4.6 x 1.6 | 1.0405 | 1.0620 / 2.99 | 1.0592 / 2.51 | 1.0580 / 1.94 | 1.0608 / 2.67 | 1.0628 / 2.69 |
+| 4.4 x 1.2 | 1.0407 | 1.0538 / 0.67 | 1.0509 / 0.47 | 1.0538 / 0.79 | 1.0522 / 0.58 | 1.0516 / 0.42 |
+
+alpha_leak in Np/m. alpha is not monotone in period (a resonance of the row's periodicity with the cells' own
+dispersion: dips at N = 4 and 5-6) and depends on depth only weakly above 4.6 x 1.6; the table is not smooth
+enough to interpolate across periods with confidence — nearest-grid values are what it supports.
+(4.8 x 1.6 and 4.6 x 1.6 coincide at N=4: 2.51; checked, same root.)
+
+## B2.4f Reachable conversion (`table_reach.json`) — TARGET NOT REACHABLE with this family on this board
+
+Best case: every ray of the 150 mm hexagon (beam 30 deg / 225 deg, beta 1.065 k0, K = 0.565-1.565 k0) uses the
+largest alpha_leak of the table at its local K. alpha_available (mean) = 3.4 Np/m; 85 % conversion on every ray
+needs 7.0 Np/m. **Best-case conversion 0.60 (rays 0.48-0.72), against the 0.85 target** — before the launch
+fraction (0.66-0.88 with the loaded slab, 0.59 bare) and before the oblique-modulation (gamma != 0) approximation.
+Gain estimate then: aperture directivity ~26 dBi + 10 log(0.60 x ~0.7) ~ 22 dBi, above the HFSS 19.85 dBi of the
+1-bit board but well below the 24 dBi requirement and without the >= 85 % conversion. Mesh-stable cells cannot
+carry more modulation on 1.575 mm RT5880 (bridge >= 0.35 mm).

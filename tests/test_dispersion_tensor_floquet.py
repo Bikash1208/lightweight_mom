@@ -48,3 +48,16 @@ def test_scalar_two_level_staircase_equals_the_scalar_floquet_balance():
     tens = np.array([y0 * np.eye(2), y1 * np.eye(2)])
     got, _ = floquet_complex_beta_tensor(tens, period, SUB, F, b0, n_max=4)
     assert got == pytest.approx(scal, rel=1e-8)
+
+
+def test_harmonic_dependent_balance_reduces_to_the_constant_tensor_balance():
+    from src.dispersion.tensor_floquet import floquet_complex_beta_dispersive
+
+    rng = np.random.default_rng(5)
+    tens = 1j * np.array([np.diag([8e-3, 6e-3]) + 1e-3 * (r + r.T) for r in rng.normal(size=(4, 2, 2))])
+    n_max = 3
+    ref, _ = ts.find_beta_tensor(tens.mean(axis=0), 0.0, SUB, F)
+    const, _ = floquet_complex_beta_tensor(tens, 25.6e-3, SUB, F, ref, n_max=n_max)
+    c = staircase_fourier_tensor(tens, n_max)
+    disp, _ = floquet_complex_beta_dispersive({s: c for s in range(-2 * n_max, 2 * n_max + 1)}, 25.6e-3, SUB, F, ref, n_max)
+    assert disp == pytest.approx(const, rel=1e-8)

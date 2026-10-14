@@ -90,3 +90,45 @@ def mean_tensor_beta(tensors, substrate, frequency_hz, n_scan=2000):
 
     ym = np.mean(np.asarray(tensors, dtype=complex), axis=0)
     return find_beta_tensor(ym, 0.0, substrate, frequency_hz, n_scan=n_scan)[0]
+
+
+# ---------------------------------------------------------------------------------- harmonic-dependent tensors
+def floquet_complex_beta_dispersive(y_by_m, period_m, substrate, frequency_hz, beta_start, n_max, steps=8, tol=1e-10):
+    """As `floquet_complex_beta_tensor`, but the coupling of harmonics `n <- q` uses the tensor staircase
+    evaluated at the MEAN transverse wavenumber `beta + (n + q) K / 2` (symmetric, reciprocal-preserving).
+    `y_by_m[s]`, `s = n + q = -2 n_max .. 2 n_max`: Fourier coefficients (`staircase_fourier_tensor`, shape
+    `(4 n_max + 1, 2, 2)`) of the cells' tensors at `kx = beta_ref + s K / 2`."""
+    k_mod = 2.0 * np.pi / period_m
+    omega = angular_frequency(frequency_hz)
+    k0 = free_space_wavenumber(frequency_hz)
+    size = 2 * n_max + 1
+    beta = complex(beta_start)
+    its = 0
+    for s_scale in np.linspace(1.0 / steps, 1.0, steps):
+
+        def det(b, s_scale=s_scale):
+            m = np.zeros((2 * size, 2 * size), dtype=complex)
+            for i, n in enumerate(range(-n_max, n_max + 1)):
+                for j, q in enumerate(range(-n_max, n_max + 1)):
+                    c = np.array(y_by_m[n + q][(n - q) + 2 * n_max])
+                    if n != q:
+                        c = c * s_scale
+                    m[2 * i : 2 * i + 2, 2 * j : 2 * j + 2] = c
+                m[2 * i : 2 * i + 2, 2 * i : 2 * i + 2] += _harmonic_block(
+                    b, n, k_mod, 0.0, substrate.eps_complex, substrate.thickness, omega, k0
+                )
+            sign, logdet = np.linalg.slogdet(m)
+            return sign * np.exp(logdet)
+
+        b0, b1 = beta, beta * (1.0 + 1e-5) + 1e-3j
+        f0, f1 = det(b0), det(b1)
+        for its in range(1, 80):
+            if f1 == f0:
+                break
+            b2 = b1 - f1 * (b1 - b0) / (f1 - f0)
+            b0, f0, b1 = b1, f1, b2
+            f1 = det(b1)
+            if abs(b1 - b0) < tol * abs(b1):
+                break
+        beta = b1
+    return beta, its

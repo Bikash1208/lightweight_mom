@@ -64,3 +64,72 @@ within 20° of the beam, 15 % at 20–70° outside that cone); XPD at the RHCP p
 Gate result: `LEAKAGE_MODEL_BRACKETS_HFSS_NOT_DISCRIMINATING` (central contrast −0.6 dB, pessimistic edge −3.0 dB,
 launch fraction unmodelled). The brief's stop criterion (> 2 dB miss) is neither cleanly met nor cleanly avoided, so
 Phase 26 stops here for the user's decision before item B.
+
+## A2. Launch fraction of the actual pin (`launch_fraction.json`)
+
+Code: `src/dispersion/pin_launch.py`, tests `tests/test_dispersion_pin_launch.py`, driver
+`scripts/research/phase26_launch_fraction.py`. The pin is a vertical current filament through the grounded
+slab (the same TM transmission line along z as `LayeredGreenFunction`), optionally ending in a top-hat disk;
+the radiated power splits into the TM0 pole residue and the `kt <= k0` space-wave integral.
+
+Checks: no-slab short dipole over ground 0.2 % from `eta0 k0^2 (IL)^2/(6 pi)`; pin + top-hat + ground images
+against an independent free-space far-field integral 0.01–0.1 %; TM0 pole = `tm0_beta` to 1e-9; lossy-slab
+numerical total vs `P_space + P_sw` within 1 %; thin-slab limit launches < 0.1 % and recovers the no-slab
+power; launch fraction grows with slab thickness; converged in segments (12 → 48) and angles to < 1 %.
+
+| Reading of "PinLength 110 mil, radius 12 mil" | top above the surface | launch fraction (TM0 share of radiated power) | R_rad | X (thin-wire TL est.) |
+|---|---|---|---|---|
+| from the ground plane (`mono_h` convention) | 1.219 mm | **0.592** | 1.7 Ω | −115 Ω |
+| above the substrate surface | 2.794 mm | **0.600** | 6.5 Ω | −67 Ω |
+
+The launch fraction is **insensitive to pin height** (0.587 at −0.8 mm, 0.61 at 4.4 mm, 0.69 at 10 mm): a thin
+slab (h = 0.055 λ) puts roughly 60 % of a vertical dipole's radiated power into TM0 whatever the pin.
+Consistency flag: either reading has R_rad of a few ohms and a large capacitive X, i.e. |S11| of −0.1…−3 dB, while
+the HFSS S11 of port 3 is −16.4 dB and the −10 dB band 8.5–11.4 GHz. The model's thin-wire estimate resonates
+at 6.4 mm total pin length (R ≈ 23–26 Ω). So the feed in the HFSS project is electrically not a 110 mil bare
+pin in this model's sense (a longer effective pin, a gap/annulus, a feed structure) — the launch fraction of
+that feed is therefore still an estimate, and `hfss_exports/launcher_calibration/` measures it.
+
+### Item-A bracket re-run with the launch fraction (launch 0.592 / 0.600)
+
+| Case | gain (launch 1, A) | gain with launch | vs HFSS 19.85 dBi |
+|---|---|---|---|
+| leaky, isolated contrast κ = 1 | 19.3 | **17.0 / 17.1** | −2.8 / −2.8 dB |
+| leaky, MoM context low κ = 0.86 | 16.9 | **14.6 / 14.7** | −5.2 / −5.2 dB |
+| leaky, MoM context high κ = 1.04 | 19.9 | **17.6 / 17.7** | −2.2 / −2.2 dB |
+
+With a physical launch fraction the model **under**-predicts HFSS by 2.2–5.2 dB. The launch fraction explains
+about 2.3 dB of the 5.9 dB between the old phase-only 25.7 dBi and HFSS, the leakage conversion (25 %) about
+6.0 dB, and the remaining ≈ 2.5 dB is power that reaches the HFSS beam and the model does not account for. The
+HFSS needs a converted fraction of about 0.48 of the launched TM0 power against the model's 0.25 (κ = 1), i.e.
+a leakage rate ≈ 2.3× larger (equivalently a sheet-contrast ratio ≈ 1.5; the 4-cell-period supercell MoM gave
+1.52 but that cell is not a valid homogenisation). Named state:
+`LEAKAGE_PLUS_LAUNCH_MODEL_UNDERPREDICTS_HFSS`. Candidate causes, none excluded by the data: the pin's direct
+radiation grazing over the patterned aperture and scattering into the beam (a reflectarray-like path the
+surface-wave picture omits); a feed whose TM0 share is not 0.6; the first-order leakage rate (±40 % at this
+depth); the hologram's non-stripe local structure.
+
+## A3. Launcher as a design variable (`launcher_sweep.json`)
+
+`scripts/research/phase26_launcher_sweep.py`: 10.54 GHz, pin top −1.2…+10 mm about the substrate surface
+(negative = fully inside the substrate), top-hat radius 0–5 mm, plus the thin-wire resonant-tuned heights.
+Match is the thin-wire estimate (`MATCH_ESTIMATE_THIN_WIRE_TL`, tens of ohms), only a guide.
+
+| Option | launch fraction | est. |S11| | launched share of accepted power | recovery vs current pin (launch fraction) |
+|---|---|---|---|---|
+| current pin (1.2 mm above the surface) | 0.594 | −0.1 dB | 0.013 | — |
+| bare pin, resonant: 5.0 mm above the surface | 0.617 | −9.6 dB | **0.549** (best) | **+0.17 dB** |
+| 10 mm pin, 4 mm top-hat | **0.821** | −1.3 dB | 0.208 | +1.4 dB, only if matched by other means |
+| pin fully inside the substrate | 0.587 | worse | — | −0.05 dB |
+
+**The launcher is not the lever**: the best matched option recovers 0.2 dB and even an unmatched ideal one
+1.4 dB, against a 2.2–2.8 dB model deficit. A top-hat helps the fraction (0.69 → 0.82 for a 10 mm pin) but
+its match is what the model cannot judge; pin fully inside the substrate is no better than the current pin.
+Note the share column is large for the 5 mm pin because the *model's* estimate of the current pin is
+unmatched while the HFSS one is −16 dB: it is a model-internal ranking, not a prediction of HFSS gain.
+
+## A4. HFSS calibration package
+
+`hfss_exports/launcher_calibration/` (A: current pin, B: 5 mm resonant pin, C: tall pin + top-hat): the bare
+grounded board, one feed at port 3's position, a radial line 1 mm above the surface (rho 10–140 mm, phi
+225°). README lists the exports requested and the extraction (launch fraction from the E_z decay).

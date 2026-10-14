@@ -62,6 +62,25 @@ Scalar cells cannot meet the CP target → this phase needs **tensor (anisotropi
 - Database: (L, W, rotation) → tensor; report coverage of the tensor space needed by item C. **■ Stop with the coverage
   map and the extraction validation.**
 
+**B2. Near-resonant tensor cell family (added after the B stop; board stays RT/duroid 5880 1.575 mm).** B showed
+non-resonant rotated rectangles convert <= 0.4 % over the hexagon. Option 1 of that report, with a different
+family and extraction:
+1. *Required map first* (`results/phase26/required_map.json`): the (mean loading, anisotropy) region that
+   converts >= 85 % over the hexagon with the current launch fraction, as beta/k0 and delta ranges.
+2. *Cell family:* fixed-outline circular patch (diameter -> mean loading) with a rectangular slot (length /
+   width -> anisotropy, slot angle -> axis); slotted square as the comparison. Rotation-invariant outline, so
+   every angle at every size; the 4.8 mm window is dropped.
+3. *Extraction at the operating point:* periodic MoM with the transverse Bloch wavenumber kt = beta > k0
+   (`tensor_sheet.bloch_sheet_tensor`: sheet admittance J/E_tot from the (0,0) Floquet harmonic) along
+   phi = 0, 45, 90 deg to the slot; dispersion zero `det(Y_s(kt) + Y_bg(kt)) = 0`. Show the error of the
+   normal-incidence sheet model for these cells.
+4. *Locality check for continuous modulation:* 8-10-cell supercell ramps (slot angle 0 -> 180 deg at fixed
+   size; triangular size ramp at fixed angle) vs the adiabatic sum of local betas. Gate: accumulated phase
+   error <= 15 deg across the ramp.
+5. *HFSS ground truth:* five unit-cell eigenmode scripts (master/slave, phase = beta a along x and along the
+   diagonal; two diameters x two slot angles + one bare patch) with the eigenfrequencies predicted beforehand.
+6. *Stop and report* coverage vs the step-1 map, locality result, eigenmode predictions. Do not start C.
+
 **C. CP tensor synthesis with leakage/amplitude control (one hexagon).**
 - Target aperture field: pure RHCP pencil at (30°, 225°) with an amplitude taper (choose for SLL ≤ −15 dB) and leakage
   profile α(ρ) so ≥ 85–90 % of the surface wave is radiated within the hexagon.

@@ -204,3 +204,31 @@ surrounded by the patterned surface. Estimate with the sheet model's loaded β a
 1.018 → 1.033 and the launch fraction 0.592 → 0.664 (0.600 → 0.691 for the other pin reading), i.e. +0.5 dB;
 8 mS (strongly loaded cells) 0.74 / 0.80. The keep-out cell under the feed and the pin impedance change are not
 modelled; `PinLaunch(..., y_sheet_s=...)` is the additive hook.
+
+## B2.1 Required map (`required_map.json`, `required_map.png`)
+
+`scripts/research/phase26_required_map.py`: for a mean sheet `Y_bar = j y mS` (→ β/k₀) and a rotating-axis tensor
+anisotropy δ, first-order CP leakage (`leakage_alpha_first_order_tensor`, beam at θ = 30°) integrated over the
+150 mm hexagon's azimuths; launch fraction from `pin_launch` with the loaded slab (current pin, both PinLength
+readings); aperture directivity of the illuminated hexagon (continuous phase, ρ^-½ e^(−αρ), cos θ₀) — an
+estimate. Target: converted fraction ≥ 85 %.
+
+| mean loading y [mS] | β/k₀ | δ required [mS] | modulation depth δ/\|Y_down\| | launch fraction (from ground / above surface) |
+|---|---|---|---|---|
+| 4 | 1.034 | 9 | 0.89 | 0.665 / 0.693 |
+| 5 | 1.040 | 7 | 0.75 | 0.681 / 0.717 |
+| 6 | 1.047 | 6 | 0.70 | 0.696 / 0.742 |
+| 7 | 1.056 | 5 | 0.64 | 0.714 / 0.771 |
+| **8** | **1.067** | **4** (min) | 0.56 | 0.738 / 0.805 |
+| 9 | 1.079 | 5 | 0.77 | 0.770 / 0.844 |
+| 10 | 1.093 | 5 | 0.83 | 0.807 / 0.882 |
+| 12 | 1.123 | 7 | 1.35 | 0.877 / 0.943 |
+
+**Target region: mean loading 5–11 mS (β/k₀ 1.04–1.11), anisotropy δ ≥ 4–7 mS** (minimum 4 mS at 8 mS /
+β/k₀ 1.067; δ steps of 1 mS). Beyond ≈ 9 mS the radiated harmonic's own loading suppresses the leakage, so δ
+required rises again. The gain estimate inside the region is 24–26 dBi (e.g. 25.3 dBi at 8 / 4 mS: D_ap 27.3 dBi,
+η 0.85, launch 0.74) — at the edge of the 24 dBi target; the launch fraction improves with mean loading
+(0.59 bare → 0.74–0.88). Caveat: the modulation depth δ/|Y_down| is 0.55–0.9 in the region, beyond the 0.4 where
+the first-order formula was checked to 3 % in item A — the true region will move; the Floquet balance is the
+check once cells exist. Compared with the non-resonant database (δ ≤ 0.4 mS, Y ≤ 2.6 mS) the target needs
+**10× the anisotropy at 3–4× the mean loading**.

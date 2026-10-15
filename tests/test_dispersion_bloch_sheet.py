@@ -107,3 +107,19 @@ def test_slotted_square_keeps_square_outline_when_slot_turns():
     b = SlottedSquarePatch(5.0e-3, 3.0e-3, 0.8e-3, 0.9)
     assert np.allclose(a.corners(), b.corners())
     assert a.feature_area == pytest.approx(25e-6 - 3.0e-3 * 0.8e-3)
+
+
+def test_cross_slotted_circle_is_isotropic_and_quarter_turn_invariant():
+    from src.dispersion.slotted_cells import CrossSlottedCircularPatch
+
+    c = CrossSlottedCircularPatch(6.0e-3, 4.4e-3, 1.6e-3, 0.0)
+    assert c.feature_area == pytest.approx(np.pi * 3.0e-3**2 - (2 * 4.4e-3 * 1.6e-3 - 1.6e-3**2), rel=1e-12)
+    x = np.linspace(-3.2e-3, 3.2e-3, 129)
+    xx, yy = np.meshgrid(x, x)
+    m = c.in_feature(xx, yy)
+    assert np.mean(m != m.T) < 0.005  # symmetric under x <-> y (grid-edge rounding only)
+    assert np.mean(m != m[::-1, ::-1]) < 0.005
+    cell = _cell(c)
+    y = ts.bloch_sheet_tensor(cell, F, MESH, 0.0, 0.0)
+    assert y[0, 0] == pytest.approx(y[1, 1], rel=1e-9)
+    assert abs(y[0, 1]) < 1e-9 * abs(y[0, 0])

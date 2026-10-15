@@ -8,10 +8,10 @@ TM0 share of the radiated power; direct space wave = 1 - launch fraction.
 
 Feed calibration (HFSS_CALIBRATED, single board, not validated physics). The HFSS S11 sweep of
 `hfss_results/hex150_tensor_cp_single` (min -27.3 dB at 10.10 GHz, -15.0 dB at 10.54, band 8.8-11.6 GHz) is
-matched by the thin-wire model only for a pin about 5.5 mm above the surface (7.1 mm from the ground: the
-old exporter default, NOT the 110 mil = 2.794 mm of the scripted README) and only if the model's input
-resistance is multiplied by a factor `R_SCALE` (fit below): the thin-wire radiated-power resistance is about
-half the HFSS one. The redesigns are judged with the same R_SCALE and the same series-reactance model; S11 is an
+matched by the thin-wire model for the user's pin (6.0 mm above the surface, 7.6 mm from the ground; NOT the
+110 mil = 2.794 mm of the old README) only with an effective radius of ~1.5 mm (0.635 mm: resonance 5 % low) and an
+input resistance multiplied by `R_SCALE` (fit below, ~1.3): the thin-wire radiated-power resistance is about
+3/4 of the HFSS one. The redesigns are judged with the same R_SCALE and the same series-reactance model; S11 is an
 ESTIMATE (tens of ohms), the HFSS run is the arbiter.
 """
 
@@ -28,8 +28,8 @@ sys.path.insert(0, str(ROOT))
 from src.dispersion.pin_launch import Launcher, PinLaunch  # noqa: E402
 
 F0, H, EPS_R = 10.54e9, 1.575e-3, 2.2
-R_PIN = 0.635e-3
-TOP_BASE = 5.525e-3  # 7.1 mm from the ground
+R_PIN = 1.5e-3  # EFFECTIVE radius of the fit (project pin 0.635 mm; see README: the connector/gap acts as a thicker pin)
+TOP_BASE = 6.0e-3  # 6.0 mm above the surface (7.6 mm from the ground), as reported by the user
 N_SEG = 10
 S11_CSV = ROOT / "hfss_results/hex150_tensor_cp_single/S11_8_12GHz.csv"
 

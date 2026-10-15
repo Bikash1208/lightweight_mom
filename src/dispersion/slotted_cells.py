@@ -117,6 +117,58 @@ class SlottedSquarePatch:
 
 
 @dataclass(frozen=True)
+class CrossSlottedCircularPatch:
+    """Circular patch with TWO orthogonal centred rectangular slots (a cross): the 4-fold-symmetric, isotropic-
+    tensor way of adding the slot loading (Phase 26 V2 launch pad). `slot_angle` rotates the cross (no effect on
+    the tensor, kept for the exporter)."""
+
+    diameter: float
+    slot_length: float
+    slot_width: float
+    slot_angle: float = 0.0
+    center_x: float = 0.0
+    center_y: float = 0.0
+
+    kind = "patch_circle_cross_slot"
+
+    def __post_init__(self):
+        for name in ("diameter", "slot_length", "slot_width", "slot_angle", "center_x", "center_y"):
+            object.__setattr__(self, name, finite_real(name, getattr(self, name)))
+        if self.diameter <= 0.0:
+            raise ValueError("diameter must be > 0")
+        if self.slot_length < 0.0 or self.slot_width < 0.0:
+            raise ValueError("slot_length and slot_width must be >= 0")
+
+    @property
+    def polarity(self):
+        return "metal"
+
+    @property
+    def rotation(self):
+        return 0.0
+
+    @property
+    def feature_area(self):
+        area = math.pi * self.diameter**2 / 4.0
+        if self.slot_length > 0 and self.slot_width > 0:
+            area -= 2.0 * self.slot_length * self.slot_width - self.slot_width**2
+        return area
+
+    def corners(self):
+        r = self.diameter / 2.0
+        return np.array([[r, r], [-r, r], [-r, -r], [r, -r]]) + np.array([self.center_x, self.center_y])
+
+    def in_feature(self, x, y):
+        dx = np.asarray(x, dtype=float) - self.center_x
+        dy = np.asarray(y, dtype=float) - self.center_y
+        inside = np.hypot(dx, dy) <= self.diameter / 2.0
+        if self.slot_length > 0.0 and self.slot_width > 0.0:
+            inside &= ~_in_slot(dx, dy, self.slot_angle, self.slot_length, self.slot_width)
+            inside &= ~_in_slot(dx, dy, self.slot_angle + math.pi / 2.0, self.slot_length, self.slot_width)
+        return inside
+
+
+@dataclass(frozen=True)
 class CellRow:
     """A row of `cells` (each a slotted patch centred in its own `pitch`-wide cell) as ONE supercell pattern:
     cell i sits at `x = -N pitch / 2 + (i + 1/2) pitch`. Duck-types `Geometry` like the cells it holds, so a

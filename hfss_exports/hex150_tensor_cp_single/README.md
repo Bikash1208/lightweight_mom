@@ -19,9 +19,9 @@ use: 4.8x1.6 (869 cells), 4.6x1.6 (339), 4.8x2.0 (195), 4.4x1.2 (27); smallest f
 
 ## HFSS setup
 - One lumped port (50 ohm) on the coax annulus r_pin .. r_out = 0.305 .. 2.05 mm at z = 0; radiation boundary on the padded air box (15 mm sides/bottom, 30 mm top).
-- **Feed:** `mono_h` = 110 mil = 2.794 mm and `r_pin` = 12 mil = 0.305 mm, the HFSS variables of the `hex150_gap0` run. The real pin height above the
-  ground is still to be confirmed (the old exporter default was 7.1 mm; the launcher-calibration package carries both readings). Edit `mono_h` after the build if it differs.
-  Section A2 of the results README showed the launch fraction barely depends on the pin height (0.59 bare slab) — the pin's direct space wave (~41 %) is a property of the monopole.
+- **Feed:** pin 6.0 mm above the substrate surface = `mono_h` 7.575 mm from the ground, `r_pin` 0.635 mm (the project value), as reported
+  for the HFSS run of this board (the earlier "110 mil = 2.794 mm" reading is dropped: it is electrically too short to give the
+  measured S11, see results README section I). Edit `mono_h`/`r_pin` after the build if your connector model differs.
 - Export: antenna parameters table at 10.54 GHz and 10.01-11.07 GHz, realized-gain RHCP/LHCP and axial ratio over the sphere (1 deg CSV), the S11 sweep. For the
   surface-wave decay: Mag_E and complex Ez along rho = 10..140 mm at phi = 225 deg, 1 mm above the board (as in the calibration package).
 - Run AEDT: Tools > Run Script > `hfss_build_board.py`; building 1430 circle/slot subtractions takes a few minutes.
@@ -55,7 +55,7 @@ the beam < 0.8, decay alpha outside 2-4 Np/m) and a power budget of the radiated
 (theta <= 70), grazing (70-90), back hemisphere, LHCP. Missing exports are `NOT_PROVIDED`; the match has `NO_PREDICTION`.
 
 **Feed.** You may replace the scripted pin by your own connector model from `hex150_gap0`; the comparison accepts either (`--pin` only records the
-label). The predictions assume the thin-wire pin: with a different connector the launch fraction (hence the predicted gain bracket 23.5 .. 25.2 dBi
+label). The predictions assume the thin-wire pin of 6.0 mm: with a different connector the launch fraction (hence the predicted gain bracket 23.5 .. 25.2 dBi
 and the pin-direct-radiation share ~0.41) can change; read the gain against the whole bracket and look at the grazing/back and LHCP lines of the budget,
 which carry the pin's direct radiation. The script was smoke-tested on the `hex150_gap0` exports (a different board: it reproduces 19.85 dBi, 30/224 deg,
 XPD 22 dB, S33 -16.4 dB at 10.54 GHz); `tests/test_compare_single_hex.py` checks it on synthetic data with known answers.

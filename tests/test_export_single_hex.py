@@ -27,4 +27,4 @@ def test_generated_script_is_valid_python_with_every_cell():
     cells = [{"x_mm": 0.0, "y_mm": 6.4, "slot_L_mm": 4.8, "slot_W_mm": 2.0, "slot_angle_deg": 12.5}] * 3
     src = _m.aedt_script(cells)
     compile(src, "hfss_build_board.py", "exec")
-    assert src.count("(0.000, 6.400, 4.800, 2.000, 12.5000)") == 3
+    assert src.count("(0.000, 6.400, 4.800, 2.000, 12.5000, 0)") == 3

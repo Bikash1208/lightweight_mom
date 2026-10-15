@@ -588,3 +588,22 @@ surface = the patterned surface around the feed; pin top tuned for X = 0 (series
 * Recommended HFSS variants (not exported): V0 current design with the pin 4.8 mm above the surface; V1 as V0 with the keep-out
   reduced to the feed cell (r < 3.2 mm, cells filled with the hologram's states as computed); V2 as V1 with the cells of
   r < 30 mm replaced by an unslotted 6.0 mm circle (the high-loading "launch pad", ~12-16 mS).
+
+### I2. Refit with the reported pin (6.0 mm above the surface = 7.575 mm from the ground, 0.635 mm)
+
+The thin-wire model with this pin resonates at 9.4-9.6 GHz against HFSS 10.10 GHz (5 % low); free input-resistance factor 1.35, rms
+5.4 dB over 8-12 GHz (6.5 dB unscaled): worse than the 5.5 mm / 0.635 mm fit (1.66, 2.4 dB). With a larger EFFECTIVE radius (0.305 / 0.635 / 1.0 / 1.5 mm:
+rms 6.7 / 5.4 / 4.4 / 3.4 dB, resonance 9.2 / 9.4 / 9.6 / 9.8 GHz) the fit improves: the feed (connector body, coax annulus) behaves like a
+thicker pin. **The resistance factor is still needed: 1.30 (1.5 mm effective radius; 1.35 for 0.635 mm).** Calibration used from here
+on (HFSS_CALIBRATED, one board): top 6.0 mm, effective radius 1.5 mm, R x 1.30: model -13.5 dB at 10.54 (HFSS -15.1), baseline launch 0.627.
+Table with that calibration (`launcher_redesign.json`): launch 0.63 / 0.74 / 0.90 / 0.98 at 0 / 4 / 8 / 12 mS of uniform loading; resonant pin
+4.77 mm: 0.62 / 0.72 / 0.87 / 0.98 with est. S11 -12 / -17 / -28 / -42 dB. The 110 mil (2.794 mm) reading is dropped from the export READMEs.
+
+## J. V2: graded launch pad (`v2_pad_design.json`, `v2_pad_loading.json`, `hfss_exports/hex150_tensor_cp_single_v2_pad/`)
+
+Mean loading (Bloch tensor, kt 1.06-1.10 k0, mesh 24): unslotted circle D 6.0 **4.4 mS**, D 6.1 4.7 mS, D 6.2 no bound root; slotted cells
+(angle-averaged) 4.4x1.2 5.4, 4.6x1.6 6.5, 4.8x1.6 6.7, 4.8x2.0 7.8 mS; cross-slotted D 6.0 L 4.8: W 0.8 / 1.2 / 1.6 / 2.0 -> 6.4 / 6.8 / 7.3 / 7.6 mS.
+The highest isotropic loading at stable bridges is 7.6 mS, only 0.7 mS above the hologram's local mean (6.9 mS): V2 mainly fills the bare keep-out.
+A new additive geometry `CrossSlottedCircularPatch` (tested: 4-fold symmetric, isotropic tensor). Export: pad r < 30 mm, ~68 cross cells, rest of
+the hologram unchanged. Predictions (gain 22.7 / 23.5 / 24.1 dBi for launch unchanged / central / infinite-sheet; grazing + back 0.56 / 0.53 / 0.50; LHCP 0.33 / 0.31 / 0.29;
+S11 -13.5 ... -11.5 dB est.) are in the export README. A plain 12-16 mS "unslotted" pad proposed earlier is withdrawn (4.4 mS only).

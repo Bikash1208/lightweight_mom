@@ -65,3 +65,23 @@ def test_decay_fit_recovers_alpha(tmp_path):
     f = tmp_path / "ez.csv"
     f.write_text("Distance [mm],Mag_E [V_per_m]\n" + "\n".join(f"{r:.3f},{v:.6e}" for r, v in zip(rho, e)))
     assert cmp_.fit_decay(f)["alpha_np_per_m"] == pytest.approx(3.0, rel=1e-3)
+
+
+def test_sweep_parsers_s11_csv_and_ar_sweep_and_re_field(tmp_path):
+    s = tmp_path / "s11.csv"
+    s.write_text('"Freq [GHz]","dB(S(1,1)) []"\n' + "\n".join(f"{f:.2f},{-20 + 40 * abs(f - 10.0):.3f}" for f in np.arange(9.0, 11.01, 0.1)))
+    r = cmp_.read_s_parameter(s)
+    assert r["s_db_at_design"] == pytest.approx(-20 + 40 * 0.5, abs=0.1)  # nearest grid point to 10.54 is 10.5
+    assert r["f_at_min_ghz"] == pytest.approx(10.0, abs=0.06)
+    a = tmp_path / "ar.csv"
+    rows = ['"Freq [GHz]","Phi [deg]","Theta [deg]","dB(AxialRatioValue) []"']
+    for f, v in ((10.0, 2.0), (10.5, 1.0), (11.0, 4.0)):
+        for t in range(0, 61, 10):
+            rows.append(f"{f},224,{t},{v + abs(t - 30) / 10.0:.3f}")
+    a.write_text("\n".join(rows))
+    sw = cmp_.read_ar_sweep(a)
+    assert sw["ar_at_beam_theta_db"] == pytest.approx([2.0, 1.0, 4.0])
+    assert sw["contiguous_3db_band_around_design_ghz"] == [10.0, 10.5]
+    p = tmp_path / "p.txt"
+    p.write_text("rE Field   Freq   Value   (Theta, Phi)\nRHCP     10.5GHz     109.75 V    (30deg,225deg)\nLHCP          9.40 V   (40deg,279deg)\n")
+    assert cmp_.read_re_field(p)["RHCP"] == (109.75, 30.0, 225.0)

@@ -83,13 +83,19 @@ def read_params(path):
 
 
 def read_s_parameter(path, port=1, f_ghz=F_DESIGN):
-    sys.path.insert(0, str(ROOT))
-    from src.phase9.hfss_reference import read_touchstone
+    """Touchstone `.sNp` (S[port, port]) or an HFSS sweep CSV (`Freq [GHz]`, `dB(S(1,1))`)."""
+    if str(path).lower().endswith(".csv"):
+        rows = list(csv.reader(open(path, newline="")))[1:]
+        a = np.array([[float(v) for v in r[:2]] for r in rows if r])
+        f, db = a[:, 0], a[:, 1]
+    else:
+        sys.path.insert(0, str(ROOT))
+        from src.phase9.hfss_reference import read_touchstone
 
-    net = read_touchstone(path)
-    s = net.component(port, port)
-    f = net.frequency_hz / 1e9
-    db = 20 * np.log10(np.maximum(np.abs(s), 1e-12))
+        net = read_touchstone(path)
+        s = net.component(port, port)
+        f = net.frequency_hz / 1e9
+        db = 20 * np.log10(np.maximum(np.abs(s), 1e-12))
     i = int(np.argmin(np.abs(f - f_ghz)))
     below = f[db <= -10.0]
     out = {"s_db_at_design": float(db[i]), "f_nearest_ghz": float(f[i]), "min_s_db": float(db.min()),
@@ -100,6 +106,57 @@ def read_s_parameter(path, port=1, f_ghz=F_DESIGN):
     else:
         out["band_below_minus10_db_ghz"] = None
         out["design_inside_minus10_db"] = False
+    return out
+
+
+def read_ar_sweep(path, theta0=BEAM[0], f_ghz=F_DESIGN):
+    """HFSS AR export with `Freq`, `Phi`, `Theta`, `dB(AxialRatioValue)` columns (a frequency sweep at one phi cut):
+    AR vs frequency at the beam theta, the 3 dB AR band there, and the cut at the frequency nearest `f_ghz`.
+    Returns None if the file has no frequency column."""
+    rows = list(csv.reader(open(path, newline="")))
+    head = [h.strip().lower() for h in rows[0]]
+    if not any("freq" in h for h in head):
+        return None
+    ifq = next(i for i, h in enumerate(head) if "freq" in h)
+    ipp = next(i for i, h in enumerate(head) if "phi" in h)
+    ith = next(i for i, h in enumerate(head) if "theta" in h)
+    iar = next(i for i, h in enumerate(head) if "axial" in h)
+    a = np.array([[float(r[i]) for i in (ifq, ipp, ith, iar)] for r in rows[1:] if r])
+    fs = np.unique(a[:, 0])
+    ar_at_theta = []
+    for f in fs:
+        m = a[a[:, 0] == f]
+        ar_at_theta.append(float(np.interp(theta0, m[:, 2], m[:, 3])))
+    ar_at_theta = np.array(ar_at_theta)
+    f_use = float(fs[np.argmin(np.abs(fs - f_ghz))])
+    cut = a[a[:, 0] == f_use]
+    ok = fs[ar_at_theta <= 3.0]
+    return {"phi_cut_deg": float(a[0, 1]), "frequencies_ghz": fs.tolist(), "ar_at_beam_theta_db": ar_at_theta.tolist(),
+            "frequency_used_ghz": f_use, "ar_at_beam_theta_at_used_freq_db": float(np.interp(theta0, cut[:, 2], cut[:, 3])),
+            "min_ar_in_cut_db": float(cut[:, 3].min()), "min_ar_theta_deg": float(cut[np.argmin(cut[:, 3]), 2]),
+            "freqs_with_ar_le_3db_at_beam_theta_ghz": ok.tolist(),
+            "contiguous_3db_band_around_design_ghz": _contiguous_band(fs, ar_at_theta <= 3.0, f_use)}
+
+
+def _contiguous_band(fs, ok, f0):
+    i0 = int(np.argmin(np.abs(fs - f0)))
+    if not ok[i0]:
+        return None
+    lo = hi = i0
+    while lo > 0 and ok[lo - 1]:
+        lo -= 1
+    while hi < fs.size - 1 and ok[hi + 1]:
+        hi += 1
+    return [float(fs[lo]), float(fs[hi])]
+
+
+def read_re_field(path):
+    """`{label: (V, theta_deg, phi_deg)}` from the `rE Field` block of an HFSS antenna-parameter table (last column)."""
+    out = {}
+    for line in open(path, encoding="utf-8", errors="replace"):
+        m = re.match(r"^\s*([A-Za-z0-9/ ]+?)\s+(?:[\d.]+GHz\s+)?([-+]?\d+\.?\d*)\s*V\s+\((\d+)deg,(\d+)deg\)\s*$", line.rstrip())
+        if m:
+            out[m.group(1).strip()] = (float(m.group(2)), float(m.group(3)), float(m.group(4)))
     return out
 
 
@@ -192,8 +249,51 @@ def analyse(g):
     return out, (tg, pg, ar)
 
 
+def compare_params_only(args, pred):
+    """Checks that need only the antenna-parameter table (no gain CSV): peak realized gain, directivity, pointing,
+    a LOWER BOUND of the XPD (RHCP peak vs the largest LHCP anywhere) and the efficiencies."""
+    p = read_params(args.params)
+    re_f = read_re_field(args.params)
+    ap = pred["aperture_pattern"]
+    gp = pred["realized_gain_rhcp_dbi"]
+    lo, hi = gp["launch_bare_0.592"], gp["launch_loaded_0.66_to_0.88"][1]
+    rep = {"labels": ["HFSS_USER_EXPORT", "COMPARISON_ONLY_NO_MODELLING"], "pin_model": args.pin, "gain_csv": "NOT_PROVIDED",
+           "note": "antenna-parameter table only: no gain CSV, so no pattern budget, SLL or beam-purity integrals",
+           "measured": {}, "checks": {}}
+    pk = 10 * np.log10(p["Peak Realized Gain"])
+    state = ("MODEL_FALSIFIED_PEAK_GAIN_BELOW_1BIT_BOARD" if pk < GAIN_FALSIFIER_DBI else "GAIN_BELOW_PREDICTION" if pk < lo - GAIN_TOL_DB
+             else "GAIN_ABOVE_PREDICTION" if pk > hi + GAIN_TOL_DB else "GAIN_WITHIN_PREDICTED_RANGE")
+    rep["checks"]["peak_gain"] = {"hfss_dbi": pk, "predicted_dbi_bare_launch": lo, "predicted_dbi_loaded_launch_max": hi,
+                                  "tolerance_db": GAIN_TOL_DB, "falsifier_dbi": GAIN_FALSIFIER_DBI, "state": state,
+                                  "delta_vs_bare_launch_db": pk - lo}
+    d_dbi = 10 * np.log10(p["Peak Directivity"])
+    rep["checks"]["directivity_dbi"] = {"hfss": d_dbi, "model_aperture_only": ap["directivity_ap_rhcp_dbi"],
+                                        "ratio_to_aperture_directivity": 10 ** ((d_dbi - ap["directivity_ap_rhcp_dbi"]) / 10),
+                                        "model_main_beam_share_of_accepted": pred["accepted_power_budget"]["launch_bare_0.592"]["main_beam_8deg"]}
+    if "RHCP" in re_f:
+        _, t, ph = re_f["RHCP"]
+        err = float(_angle_to(t, ph, *BEAM))
+        rep["checks"]["pointing"] = {"hfss_peak_rhcp_theta_phi_deg": [t, ph], "hfss_deg": err, "tolerance_deg": POINTING_TOL_DEG,
+                                     "state": "OK" if err <= POINTING_TOL_DEG else "POINTING_FALSIFIED"}
+    if "RHCP" in re_f and "LHCP" in re_f:
+        rep["checks"]["xpd_lower_bound_db"] = {
+            "hfss_rhcp_peak_over_largest_lhcp_anywhere_db": 20 * np.log10(re_f["RHCP"][0] / re_f["LHCP"][0]),
+            "lhcp_max_at_theta_phi_deg": [re_f["LHCP"][1], re_f["LHCP"][2]], "predicted_xpd_at_peak_db": ap["xpd_at_peak_db"], "brief_target_db": 25.0,
+            "note": "XPD at the beam peak is >= this bound (the largest LHCP lies elsewhere)"}
+    for k in ("Total Efficiency", "Radiation Efficiency"):
+        if k in p:
+            rep["checks"][k.lower().replace(" ", "_")] = p[k]
+    rep["antenna_params_frequency_note"] = "table computed at 10.5 GHz (design 10.54)"
+    rep["antenna_params"] = p
+    return rep
+
+
 def compare(args):
     pred = json.loads(Path(args.pred).read_text())
+    if not args.gain:
+        rep = compare_params_only(args, pred)
+        _attach_sweeps(rep, args)
+        return rep
     g = read_gain_csv(args.gain)
     a, (tg, pg, ar) = analyse(g)
     rep = {"labels": ["HFSS_USER_EXPORT", "COMPARISON_ONLY_NO_MODELLING"], "pin_model": args.pin,
@@ -248,17 +348,31 @@ def compare(args):
                 rep.setdefault("antenna_params_selected", {})[k] = p[k]
     else:
         rep["antenna_params"] = "NOT_PROVIDED"
+    _attach_sweeps(rep, args)
+    return rep
+
+
+def _attach_sweeps(rep, args):
     if args.s11:
         rep["s_parameter"] = read_s_parameter(args.s11, args.port)
         rep["s_parameter"]["prediction"] = "NO_PREDICTION (match not modelled; the pin is the scripted/connector feed)"
+        rep["s_parameter"]["brief_target"] = "S11 <= -10 dB at 10.54 GHz (launcher redesign constraint)"
     else:
         rep["s_parameter"] = "NOT_PROVIDED"
     if args.ar:
-        t, arv = read_ar_cut(args.ar)
-        rep["ar_cut"] = {"min_db": float(arv.min()), "at_theta_deg": float(t[np.argmin(arv)]),
-                         "theta_of_peak_value_db": float(np.interp(a["peak_theta_phi_deg"][0], t, arv))}
+        sw = read_ar_sweep(args.ar)
+        if sw is not None:
+            rep["ar_sweep"] = sw
+            rep["ar_cut"] = "SEE ar_sweep"
+        else:
+            t, arv = read_ar_cut(args.ar)
+            rep["ar_cut"] = {"min_db": float(arv.min()), "at_theta_deg": float(t[np.argmin(arv)])}
     else:
         rep["ar_cut"] = "NOT_PROVIDED"
+    _ez(rep, args)
+
+
+def _ez(rep, args):
     if args.ez:
         d = fit_decay(args.ez)
         d["predicted_alpha_range_np_per_m"] = [2.0, 4.0]
@@ -266,10 +380,34 @@ def compare(args):
         rep["surface_wave_decay"] = d
     else:
         rep["surface_wave_decay"] = "NOT_PROVIDED"
-    return rep
+
+
+def markdown_params_only(rep):
+    c = rep["checks"]
+    g, d = c["peak_gain"], c["directivity_dbi"]
+    L = [f"# hex150_tensor_cp_single: HFSS vs prediction (pin model: {rep['pin_model']}) -- antenna-parameter table only", "",
+         "| Quantity | HFSS | Predicted | Target / falsifier | State |", "|---|---|---|---|---|",
+         f"| Peak RHCP realized gain [dBi] | {g['hfss_dbi']:.2f} | {g['predicted_dbi_bare_launch']:.1f} (bare launch) .. {g['predicted_dbi_loaded_launch_max']:.1f} (loaded) | >= 24; falsified < {g['falsifier_dbi']:g} | {g['state']} ({g['delta_vs_bare_launch_db']:+.2f} dB vs bare) |",
+         f"| Peak directivity [dBi] | {d['hfss']:.2f} | aperture-only {d['model_aperture_only']:.1f} | | HFSS/aperture = {d['ratio_to_aperture_directivity']:.2f} (model main-beam share {d['model_main_beam_share_of_accepted']:.2f}) |"]
+    if "pointing" in c:
+        L.append(f"| Peak RHCP direction [deg] | {c['pointing']['hfss_peak_rhcp_theta_phi_deg']} | 30, 224 | within {POINTING_TOL_DEG:g} of 30, 225 | {c['pointing']['state']} ({c['pointing']['hfss_deg']:.1f}) |")
+    if "xpd_lower_bound_db" in c:
+        x = c["xpd_lower_bound_db"]
+        L.append(f"| XPD at peak [dB] | >= {x['hfss_rhcp_peak_over_largest_lhcp_anywhere_db']:.1f} (bound) | {x['predicted_xpd_at_peak_db']:.1f} | >= 25 | |")
+    if "total_efficiency" in c:
+        L.append(f"| Total / radiation efficiency | {c['total_efficiency']:.3f} / {c.get('radiation_efficiency', float('nan')):.3f} | | | |")
+    L.append("")
+    for k in ("s_parameter", "ar_sweep", "ar_cut", "surface_wave_decay"):
+        if k in rep:
+            L.append(f"- {k}: `{json.dumps(rep[k], default=float)}`")
+    L.append("")
+    L.append("Power budget (beam / sidelobes / grazing / back / LHCP): NOT_AVAILABLE_FROM_CURRENT_DATA -- needs the realized-gain RHCP/LHCP CSV.")
+    return "\n".join(L) + "\n"
 
 
 def markdown(rep):
+    if rep["gain_csv"] == "NOT_PROVIDED":
+        return markdown_params_only(rep)
     c, m = rep["checks"], rep["measured"]
     b = m["budget_of_radiated"]
     L = [f"# hex150_tensor_cp_single: HFSS vs prediction (pin model: {rep['pin_model']})", ""]
@@ -294,7 +432,7 @@ def markdown(rep):
     L.append(f"| Back hemisphere | {b['back_hemisphere_gt_90']:.3f} | (in the above) |")
     L.append(f"| LHCP, all angles | {b['lhcp_total_all_angles']:.3f} | {pb['model_lhcp_aperture_only']:.3f} (aperture only) |")
     L.append("")
-    for k in ("s_parameter", "ar_cut", "surface_wave_decay", "antenna_params_selected"):
+    for k in ("s_parameter", "ar_sweep", "ar_cut", "surface_wave_decay", "antenna_params_selected"):
         if k in rep:
             L.append(f"- {k}: `{json.dumps(rep[k], default=float)}`")
     L.append("")
@@ -304,7 +442,7 @@ def markdown(rep):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--gain", required=True)
+    ap.add_argument("--gain")
     ap.add_argument("--s11")
     ap.add_argument("--port", type=int, default=1)
     ap.add_argument("--params")

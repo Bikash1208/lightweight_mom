@@ -473,3 +473,46 @@ purity is a result of the sum, not an input.
 * Budget of the accepted power (bare 0.592 launch): pin direct space wave 0.41 (outside the beam by assumption),
   unconverted at the edge 0.27, aperture-radiated 0.32, in the 8 deg beam 0.30 (RHCP 0.30), LHCP total 0.008.
   The pin's direct radiation is the largest single loss and is unaffected by the cells.
+
+## S. Substrate study (`results/phase26/substrate/`: `prelim.json`, `sizing.json`, `table_*.json`, `verify_*_mesh32.json`, `reach.json`)
+
+Labels: SOLVER_SUPERCELL, MODEL_ONLY, NOT_HFSS_VALIDATED, GAMMA_0_COLLINEAR_ONLY. Script `scripts/research/phase26_substrate_study.py`
+(`size`, `prelim`, `table`, `reach`). No design was made on any new board.
+
+**Method (every choice stated).** Same slotted-circle family. Pitch P = 2 pi / (3 (beta_target + k0/2)) so the shortest
+modulation period of the hexagon is three cells; circle D = the LARGEST D whose uniform deep-slot cell still has a bound root
+with beta <= beta_target + 0.06 k0 (beta_target = bare + 0.012 k0, as the 5880 1.575 control), gap >= 0.35 mm — the control
+also sits at its largest feasible D, just below the resonance edge. For 5880 3.175 the first pick (D 5.25 mm, far from the
+edge, alpha_leak <= 0.7) was superseded by D 5.65 (gap 0.35; `_superseded/`). Slots keep the 5880 family's L/D, W/D (deep,
+mid). Table points N = 3, 4, 5, 6 (deep and mid) and 8 (deep) at mesh 24, complex root by analytic continuation (as B2.4e).
+Quality gates for a table point: alpha_leak > 0, deg-6 vs deg-5 roots agree to 1e-3 k0, complex root within 0.03 k0 of the
+real-axis root. Reachable conversion: best case, nearest-K grid of the QC-passing points, alpha constant along each ray,
+`1 - exp(-2 alpha rho_edge)` averaged over the hexagon; gain estimate = 28.5 dBi (idealised aperture directivity of item C)
++ 10 log(launch x conversion). TE1 cutoff of the grounded slab = c / (4 h sqrt(eps - 1)): **no board is excluded** (all > 10.54 GHz).
+
+| Board | TE1 cutoff | P / D [mm] | smallest feature [mm] | launch (pin, bare slab) | table points passing QC | alpha_leak [Np/m] | reachable conversion (best case) | gain estimate [dBi] |
+|---|---|---|---|---|---|---|---|---|
+| RT5880 1.575 (control, existing table) | 43.4 GHz | 6.4 / 6.0 | 0.43 bridge | 0.59 | 20/20 | 0.4-4.3 (max per K 2.5-4.3) | **0.60** (C design: 0.54) | 24.0 (C: 23.5) |
+| **RT5880 3.175** | 21.5 GHz | 6.0 / 5.65 | 0.35 | **0.82** | 9/9 | 0.6-1.1 | 0.23 | 21.3 |
+| RO3006 1.28 | 25.8 GHz | 6.1 / 4.275 | 0.32 | 0.71 | 3/9 | 0.08-6.9 (K 0.93: 6.9, 0.78: 4.1, 1.55: 0.08) | 0.49 — K gaps, **not reproduced at mesh 32** | 23.9 — unverified |
+| RO3006 1.52 | 21.7 GHz | 6.0 / 4.05 | 0.28 | 0.79 | 3/8 (K 0.95 and 1.58 only) | 12.6-17.6 (mesh 32: 14.4-14.6) | 0.98 if that alpha held over all K — **not shown** | 27 — NOT CREDIBLE as an estimate |
+| RO3010 1.27 | 19.5 GHz | 6.1 / 3.5 | 0.25 | 0.78 | 4/8 | 0.9-1.5 (N=8: 6.3, not reproduced at mesh 32) | 0.35 | 22.8 |
+| RT6010 1.90 | 13.0 GHz (margin 1.23x; loaded-slab TE cutoff is lower: not checked) | 5.3 / 2.125 | 0.15 | 0.96 | 8/8 | 0.4-0.6 | 0.12 | 19.1 |
+
+(smallest feature = min of circle gap, slot width, slot-end bridge. Mesh-stable features need >= 0.35 mm: only the two RT5880
+boards qualify. The launch column is the thin-wire pin model at the slab surface; pin top flush vs 1.22 mm above differ by < 0.01.)
+
+**Reading.**
+* **RT5880 3.175 mm (first candidate): launch rises to 0.82, but the conversion falls to 0.23.** The thicker slab binds
+  the wave more loosely and the cells, at the largest D the 0.35 mm gap allows, are further from resonance: alpha_leak
+  0.6-1.1 Np/m against 2.5-4.3 on the 1.575 mm board. Net launch x conversion 0.19 against 0.35 — worse. The table is clean (mesh-
+  insensitive roots, 9/9 QC); a larger pitch/diameter (>= 6.4 / 6.05) is not tried and could change this.
+* **The high-eps boards only reach large alpha where the cell is almost resonant** (RO3006: beta jumps by 0.2-0.25 k0 from the
+  uniform row, alpha 4-17 Np/m). Two of those points (RO3006 1.52, K 0.95 and 1.58) reproduce at mesh 32 to within 20 % in alpha;
+  the RO3006 1.28 and RO3010 points do not (the root is lost). Features are 0.15-0.32 mm (mesh- and etch-fragile) and the
+  uniform-cell beta itself moves 0.05 k0 between mesh 24 and 32 for RO3006 1.52. A credible estimate would need the
+  column of K = 0.6-1.6 filled with reproducible points, which this sizing rule does not deliver.
+* RT6010 1.9 mm: weak (the sizing rule drives D to 2.1 mm to hold beta; features 0.15 mm).
+* **Nothing reaches the 0.85 conversion of the brief on a mesh-stable family**; the only large-alpha candidate (RO3006 1.52)
+  is fragile and incompletely mapped. Honest recommendation: RT5880 1.575 remains the best *verified* board
+  (0.60 / 24 dBi best case); a re-sized RO3006 1.52 family (larger bridges, K grid filled) is the one worth a second study.

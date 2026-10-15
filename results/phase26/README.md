@@ -607,3 +607,26 @@ The highest isotropic loading at stable bridges is 7.6 mS, only 0.7 mS above the
 A new additive geometry `CrossSlottedCircularPatch` (tested: 4-fold symmetric, isotropic tensor). Export: pad r < 30 mm, ~68 cross cells, rest of
 the hologram unchanged. Predictions (gain 22.7 / 23.5 / 24.1 dBi for launch unchanged / central / infinite-sheet; grazing + back 0.56 / 0.53 / 0.50; LHCP 0.33 / 0.31 / 0.29;
 S11 -13.5 ... -11.5 dB est.) are in the export README. A plain 12-16 mS "unslotted" pad proposed earlier is withdrawn (4.4 mS only).
+
+## K. Aperture-size study, model only (`scaling_study.json`, `scripts/research/phase26_scaling_study.py`)
+
+Single hexagon, side (= circumradius) 150/200/250/300 mm, same cell family (nearest-grid SOLVER_SUPERCELL table, mesh-stable slots),
+pin, board and centre feed, theta 30 / phi 225. Design march re-run per size (eta_design 0.7/0.9/0.99 x taper 0.5/0.8; best gain with SLL <= -13 dB);
+the far field of the cell currents is summed (5692 cells at 300 mm). HFSS anchor: 150 mm = 23.03 dBi at launch 0.62 -> offset -0.68 dB to the
+model, main-beam factor 0.857; grazing+back and LHCP shares = the HFSS split of the non-beam power (0.731, 0.425), an ASSUMPTION until the E-field
+line separates pin-direct from edge power. (A first pass truncated the lattice at +/-192 mm for the 250/300 mm sizes; fixed and re-run.)
+
+| Side [mm] | cells | conversion (rays) | D_ap RHCP [dBi] | **gain [dBi] (anchored)** | main <= 8 deg | grazing+back | LHCP | XPD / AR peak, worst [dB] | SLL [dB] | 4-hex board [mm] |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 150 (HFSS) | 1430 | 0.54 (0.44-0.64) | 28.5 | **23.0** | 0.27 | 0.53 | 0.31 | 16.9 / 2.5, 3.1 | -22.8 | 650 x 525 |
+| 200 | 2560 | 0.63 (0.53-0.73) | 30.9 | **26.1** | 0.32 | 0.50 | 0.29 | 16.6 / 2.6, 3.0 | -23.7 | 866 x 700 |
+| 250 | 3936 | 0.69 (0.59-0.78) | 32.7 | **28.4** | 0.36 | 0.47 | 0.27 | 17.0 / 2.5, 2.8 | -25.9 | 1083 x 875 |
+| **300** | 5692 | 0.74 (0.65-0.82) | 34.2 | **30.2** | 0.38 | 0.45 | 0.26 | 16.9 / 2.5, 2.7 | -27.3 | **1299 x 1050** |
+
+* ~30 dBi realized needs the **300 mm side** (30.2 dBi; 250 mm gives 28.4). The 4-hex board (2 x 2 honeycomb, extent 2.5 sqrt(3) s x 3.5 s, margins
+  excluded; the 150 mm board of Phase 25 is 650 x 525 mm) is then about **1.30 x 1.05 m**.
+* Gain grows ~ +3.1 dB per step of 50 mm at the start and +1.8 dB at the end: the aperture efficiency vs 4 pi A cos(30)/lambda^2 stays 0.26-0.33 because
+  the launch fraction (0.62) and the table-limited conversion (alpha <= 3-4 Np/m) are fixed; a larger aperture converts more of the surface wave
+  (0.54 -> 0.74) but the pin's direct radiation (0.38 of the accepted power) does not shrink, so grazing+back stays at 0.45-0.53 and LHCP at 0.26-0.31.
+* Model caveats carried to the larger apertures: idealised phase (no cell-to-cell phase error over 300 mm = 8.5 lambda; the nearest-K table error
+  and the oblique-modulation approximation accumulate with path length), constant -0.68 dB calibration offset, pin direct and edge power not yet separated.

@@ -42,7 +42,7 @@ def hexagon():
 
 
 def lattice_cells(poly):
-    n = 30
+    n = int(np.ceil(R_HEX / PITCH)) + 3  # lattice wide enough for any hexagon size
     k = np.arange(-n, n + 1)
     xg, yg = np.meshgrid(PITCH * k, PITCH * k)
     x, y = xg.ravel(), yg.ravel()

@@ -412,3 +412,64 @@ fraction (0.66-0.88 with the loaded slab, 0.59 bare) and before the oblique-modu
 Gain estimate then: aperture directivity ~26 dBi + 10 log(0.60 x ~0.7) ~ 22 dBi, above the HFSS 19.85 dBi of the
 1-bit board but well below the 24 dBi requirement and without the >= 85 % conversion. Mesh-stable cells cannot
 carry more modulation on 1.575 mm RT5880 (bridge >= 0.35 mm).
+
+## C. Pure-RHCP rotating-slot tensor hologram, single 150 mm hexagon (`tensor_cp_hexagon.json`, `tensor_cp_hexagon_cells.json`)
+
+Labels: SOLVER_SUPERCELL, MODEL_ONLY, NOT_HFSS_VALIDATED, GAMMA_0_COLLINEAR_ONLY (the table has modulation parallel to
+propagation only; the hexagon's rays have modulation vectors at angles up to ~60 deg to the wave: |K| is used,
+the obliquity is an approximation, not a result). Module `src/hologram/tensor_leaky_cp.py` (tests:
+`tests/test_hologram_tensor_leaky_cp.py`: energy conservation of the march, table-capped conversion, decomposition into
+an in-phase circular component and an evanescent one), script `scripts/research/phase26_tensor_cp_hexagon.py`.
+
+**Design.** 1430 cells on the 6.4 mm lattice (D 6.0 circle; feed cell and r < 6.5 mm empty), hexagon circumradius 150 mm
+(vertex at +/-y, port-3 orientation), feed at the centre, beam theta 30 / phi 225, 10.54 GHz. A radial march (720 rays,
+0.25 mm) takes, at every point, the table column of the NEAREST modulation wavenumber K = |beta rho_hat - k_t|
+(grid 0.556, 0.741, 0.889, 1.111, 1.481 k0 — no interpolation across periods), the slot (4.4x1.2 / 4.6x1.6 / 4.8x1.6 /
+4.8x2.0, all bridges >= 0.43 mm) whose alpha_leak is nearest the required one, accumulates the table's beta into the
+reference phase and decays the power per radian by exp(-2 alpha rho). Slot axis a = (chi + phi_ray)/2,
+chi = phi_ref - k_t.r (current direction `chi = 2a - phi_ray`: the rotating-axis sheet reflects the surface-wave E
+about the slot axis); `J = sqrt(2 alpha W/rho) exp(-j phi_ref) (cos chi, sin chi)`. hand = -1 produces an LHCP beam
+(RHCP fraction 0.025), hand = +1 the RHCP one. The far field is computed from the 1430 currents (grounded-slab dyad), so
+purity is a result of the sum, not an input.
+
+| eta_design | taper c | conversion | D_ap RHCP [dBi] | gain (launch 0.592) [dBi] | XPD at peak [dB] | AR at peak [dB] | RHCP SLL [dB] |
+|---|---|---|---|---|---|---|---|
+| 0.5 | 0.0 | 0.418 | 28.82 | 22.75 | 17.0 | 2.47 | -19.8 |
+| 0.5 | 0.5 | 0.464 | 28.69 | 23.08 | 16.6 | 2.57 | -22.8 |
+| 0.5 | 0.8 | 0.464 | 28.21 | 22.60 | 17.0 | 2.47 | -23.1 |
+| 0.7 | 0.0 | 0.472 | 28.73 | 23.19 | 16.7 | 2.56 | -22.0 |
+| 0.7 | 0.5 | 0.519 | 28.58 | 23.45 | 17.0 | 2.47 | -22.9 |
+| 0.7 | 0.8 | 0.524 | 28.24 | 23.16 | 16.9 | 2.51 | -23.0 |
+| 0.9 | 0.0 | 0.500 | 28.64 | 23.36 | 16.7 | 2.55 | -22.8 |
+| **0.9** | **0.5** | **0.538** | **28.48** | **23.51** | **16.9** | **2.50** | **-22.8** |
+| 0.9 | 0.8 | 0.548 | 28.28 | 23.39 | 16.7 | 2.54 | -21.9 |
+
+(selected: highest gain with RHCP fraction > 0.5 and SLL <= -13 dB; conversion by ray 0.44-0.64.)
+
+**Selected design vs the brief's targets** (aperture pattern; gain referred to the accepted power = D_ap x launch x conversion):
+
+| Quantity | Predicted | Target | |
+|---|---|---|---|
+| Beam direction | 30 / 224 deg (grid 2 deg) | 30 / 225 | ok |
+| Peak RHCP gain, launch 0.592 (bare slab) | **23.5 dBi** (loaded-slab launch 0.66-0.88: 24.0-25.2) | >= 24 | **short by 0.5 dB (bare)** |
+| Aperture efficiency (gain / (4 pi A cos30 / lambda^2) = 23.5 / 29.0 dBi) | 0.28 (0.32 launch x conversion; D_ap alone 0.88) | >= 35 % | not met |
+| Axial ratio at peak / max over the -3 dB beam | 2.50 / 3.07 dB | <= 3 dB | marginal: 0.07 dB over |
+| Peak XPD | **16.9 dB** | >= 25 | **not met** |
+| RHCP fraction of the aperture pattern; LHCP | 0.975 ; 0.025 | >= 0.9 in beam, LHCP <= 10 % | ok (in the aperture pattern) |
+| RHCP fraction of power within 8 deg | 0.928 / 0.948 | >= 90 % | ok |
+| Co-pol SLL | -22.8 dB | <= -15 | ok |
+| Surface-wave power converted in the hexagon | **0.54** (0.44-0.64 by ray) | >= 0.85 | **not met** (table-limited, B2.4f) |
+| Grazing + back power | <= 0.68 of accepted power, NOT MODELLED (pin direct 0.41 + unconverted 0.27) | <= 15 % | not met / unknown |
+| Frequencies 10.33 / 10.75 GHz | NOT_AVAILABLE_FROM_CURRENT_DATA | | table at 10.54 only |
+
+* **XPD is limited by the grounded slab's element factor, not by the hologram.** At theta = 30 deg the TM and TE
+  fields of a circular current differ by ~2.5 dB (AR 2.5 dB = XPD 16.9 dB). Pre-compensating the current
+  ellipticity at the beam direction (J' = g(k_t)^-1 J, an UPPER BOUND not realised by this cell family: it needs a second,
+  independently controlled modulation) gives AR 1.25 dB, XPD 22.9 dB, RHCP fraction 0.989.
+* The aperture model is idealised (phase-perfect, no feed-region scattering, no edge diffraction, no cell-to-cell
+  phase error): D_ap 28.5 dBi is 85 % of the geometric limit. The earlier board's model predicted 25.8 and HFSS gave
+  19.85 dBi; this gain is therefore an UPPER-BIAS number for the aperture part, while the leakage/launch parts are
+  calibrated only against that one board (they under-predicted it).
+* Budget of the accepted power (bare 0.592 launch): pin direct space wave 0.41 (outside the beam by assumption),
+  unconverted at the edge 0.27, aperture-radiated 0.32, in the 8 deg beam 0.30 (RHCP 0.30), LHCP total 0.008.
+  The pin's direct radiation is the largest single loss and is unaffected by the cells.

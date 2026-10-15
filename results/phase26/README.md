@@ -818,3 +818,14 @@ Question: can flattening the aperture amplitude across the shared edges bring th
 **28.6 dBi RHCP (28.4 with s = 1.7), AR 2.5 dB at peak / 3.0 worst in beam, XPD 16.9 dB** (model; HFSS single hexagon was 23 dB / 1.3 dB), +5.5 dB over one
 port (ideal +6.0), first lobes -11 dB at 5-6 deg (outline sidelobes of the 23-lambda board; -13.2 with the quiet-zone variant at 1.2 dB less). The RHCP lobes beyond 20 deg are
 <= -26 dB. This board needs only the in-phase 1:4 divider (no Butler) and is the cleaner use of board B.
+
+## P. Decision: board B = combined-beam board; Butler scanning on this layout is shelved
+
+* **Board B** is the "combined-beam board": all four ports equal amplitude and equal phase (an ideal 1:4 in-phase divider, 0.25 W per port), one beam at
+  (30, 225) RHCP. Design = the baseline of N/O (eta_design 0.9, taper 0.5, global phase reference; slot rotations vs the single hexagon +37.0 / -4.3 / -37.0 / +4.3 deg
+  for ports 1..4): **28.6 dBi (model), AR 2.5 / 3.0 dB, XPD 16.9 dB (model), first lobes -11 dB.** The quiet-zone variant (-13.2 dB lobes, -1.2 dB gain) is recorded
+  as an OPTION only, not exported.
+* **Butler scanning on the 4-hex layout is shelved.** Reason: quantisation lobes from one feed phase per 260 mm tile (a 4-step staircase of the linear ramp;
+  section O: 1L -8.4 / 1R -6.7 dB even with ideal uniform amplitude, +/-135 deg inputs no single beam). A clean Butler scan needs feed spacing of about lambda/2
+  (a different architecture, not this board). Sections N's Butler tables are kept for reference only; no Butler Edit Sources table is to be used.
+* **Export of board B is held** until the board A HFSS results are in (board A being run by the user).

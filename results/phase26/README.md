@@ -516,3 +516,75 @@ boards qualify. The launch column is the thin-wire pin model at the slab surface
 * **Nothing reaches the 0.85 conversion of the brief on a mesh-stable family**; the only large-alpha candidate (RO3006 1.52)
   is fragile and incompletely mapped. Honest recommendation: RT5880 1.575 remains the best *verified* board
   (0.60 / 24 dBi best case); a re-sized RO3006 1.52 family (larger bridges, K grid filled) is the one worth a second study.
+
+## H. HFSS of the single hexagon (`hfss_results/hex150_tensor_cp_single/`, `hex150_tensor_cp_single_hfss_comparison.json/.md`)
+
+Feed field of the user's note was left unfilled ("[scripted pin / my connector]"): recorded as `[user to state]`. The
+antenna-parameter table is at **10.5 GHz** (design 10.54); the realized-gain CSV is the 10.5 GHz, 1-degree export. The
+E-field line (surface-wave decay) was not delivered: `NOT_PROVIDED`.
+
+| Quantity | HFSS (10.5 GHz) | Prediction (10.54) | State |
+|---|---|---|---|
+| Peak RHCP realized gain | **23.03 dBi** (table 23.05; directivity 23.16 dBi, total efficiency 0.975) | 23.5 (bare launch 0.592) .. 25.2 (loaded) | GAIN_WITHIN_PREDICTED_RANGE (-0.5 dB vs bare) |
+| Peak direction | (30, 225) | (30, 224) | OK |
+| XPD at the peak | **23.0 dB** | 16.9 | better by 6 dB; target 25 not met |
+| AR at the peak / worst over the -3 dB beam | 1.23 / 1.58 dB (cut phi 224: <= 3 dB over 9.5-11.5 GHz at theta 30) | 2.50 / 3.07 | better; target met |
+| RHCP share of the power within 8 deg | 0.994 | 0.979 | ok |
+| RHCP SLL (outside 15 deg) | -18.5 dB | -22.8 | worse by 4 dB; target <= -15 met |
+| S11 | -15.0 dB at 10.54; min -27.3 dB at 10.08; <= -10 dB over 8.81-11.59 GHz | NO_PREDICTION | ok |
+
+Power budget (fractions of the radiated power; radiation efficiency 1.004, so also of the accepted power):
+
+| Region | HFSS | Model (of accepted power, bare launch) |
+|---|---|---|
+| Main beam <= 8 deg (RHCP) | **0.271** | 0.302 |
+| 8-20 deg | 0.024 | in the aperture pattern (0.03) |
+| Far sidelobes theta <= 70 | 0.171 | in the aperture pattern |
+| Grazing 70-90 deg | 0.264 | lumped with the back in the upper bound 0.68 (pin direct 0.41 + unconverted 0.27) |
+| Back hemisphere | 0.269 | |
+| **LHCP, all angles** | **0.310** | 0.008 (aperture only; the pin's direct radiation is not given a polarisation) |
+
+* The beam, its purity and its AR are better than predicted; the gain is 0.5 dB under the bare-launch value, as the
+  launch fraction (0.59-0.62) plus the 0.54 conversion say. The non-beam power is 0.70 (far sidelobes + grazing + back)
+  against the model's 0.68 + aperture sidelobes: **the model's loss accounting is confirmed in total**; the split between
+  the pin's direct radiation (0.38-0.41) and the unconverted edge power (0.27) is not separable from these exports (needs the E-field
+  decay line).
+* **0.31 of the power is LHCP**, essentially all outside the beam (RHCP is 0.994 of the power within 8 deg): the pin's direct
+  space wave (a vertical monopole is not circularly polarised) and the edge diffraction. This, not the hologram, is why
+  the integrated LHCP misses the brief's <= 10 %.
+
+## I. Launcher redesign on the loaded surface (`launcher_redesign.json`, `scripts/research/phase26_launcher_redesign.py`) -- STOP, no export
+
+Labels: MODEL_ONLY, HFSS_CALIBRATED_FEED_R_SCALE, MATCH_ESTIMATE_THIN_WIRE_TL, NOT_HFSS_VALIDATED.
+
+**Which pin did the HFSS run have?** The S11 sweep (min -27 dB at 10.10 GHz, -15 dB at 10.54, band 8.8-11.6 GHz) is reproduced
+by the thin-wire model only for a pin ~5.5 mm above the surface (7.1 mm from the ground, 0.635 mm radius: the OLD exporter default) and
+an input resistance 1.64x the model's radiated-power resistance (rms 2.5 dB over 8-12 GHz, 6.6 dB without the factor; model
+-13.8 dB at 10.54 vs HFSS -15.1). A 110 mil (2.794 mm) pin, as written in the README of the export, would be
+capacitive with R of a few ohms and could not give -15 dB. **Please confirm the pin height used**; the redesign below
+uses 7.1 mm / 0.635 mm as the baseline.
+
+**Result.** Direct space-wave share = 1 - launch fraction (TM0 share of the pin's radiated power). Uniform shunt sheet at the
+surface = the patterned surface around the feed; pin top tuned for X = 0 (series resonance) or fixed:
+
+| surface loading at the feed [mS] | baseline pin (5.5 mm above the surface) launch / est. S11 | resonant pin (4.8 mm) launch / S11 | top-hat 1.5 mm (resonant 2.2 mm) launch / S11 | top-hat 3 mm (resonant 1.2 mm) launch / S11 |
+|---|---|---|---|---|
+| 0 (bare slab: the current keep-out, r < 6.5 mm) | 0.62 / -13.8 dB | 0.62 / -17 dB | 0.60 / -9.0 | 0.59 / -4.9 |
+| 4 (about the hologram mean sheet) | 0.74 / -12.6 | 0.72 / -31 | 0.70 / -13.4 | 0.68 / -7.7 |
+| 8 (the primary cell, D 6.0 4.8x2.0) | 0.89 / -11.2 | 0.87 / -22.5 | 0.83 / -23.6 | 0.79 / -13.3 |
+| 12 (beyond the family, near-resonant cells) | 0.98 / -10.9 | 0.98 / -19.3 | 0.97 / -54 | 0.93 / -19.1 |
+
+* **The lever is the surface around the pin, not the pin.** The pin height and a top-hat do not reduce the direct radiation at a
+  matched condition (a hat lowers the launch fraction by 0.02-0.08 once the pin is retuned); loading the surface right up to the
+  pin raises it from 0.62 to 0.74-0.89, i.e. the pin's direct radiation falls from 38 % to 11-26 % of the accepted power.
+  With the HFSS gain as anchor (23.05 dBi at launch 0.62): +0.7 dB (4 mS) to +1.5 dB (8 mS) -> 23.8-24.6 dBi.
+* S11 <= -10 dB is kept in every row with loading (the estimate is good to a few dB; HFSS decides). A resonant pin of 4.8 mm is the
+  better-matched choice at every loading (-17...-31 dB estimated) with essentially the same launch fraction.
+* **Caveats.** (1) The model's sheet is uniform and infinite; the real situation is a finite pad around the pin followed by the
+  hologram, so these are bounds: bare slab (0.62, which the HFSS gain is consistent with) and infinite sheet; the radius needed
+  for the effect is not modelled. (2) The loaded surface binds TM0 more tightly near the pad; a mismatch to the hologram's
+  beta 1.06 k0 at the pad edge is not modelled. (3) The Phase 26 C design leaves a bare disk r < 6.5 mm around the feed: the
+  cells inside it (about 8 cells) and a feed-cell keep-out of r < 3.2 mm are the candidate change.
+* Recommended HFSS variants (not exported): V0 current design with the pin 4.8 mm above the surface; V1 as V0 with the keep-out
+  reduced to the feed cell (r < 3.2 mm, cells filled with the hologram's states as computed); V2 as V1 with the cells of
+  r < 30 mm replaced by an unslotted 6.0 mm circle (the high-loading "launch pad", ~12-16 mS).

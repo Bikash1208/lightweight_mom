@@ -784,3 +784,37 @@ HFSS normalises gain to the total incident power, check the "Incident power" row
 
 First check in HFSS: 1L must move the beam to smaller theta/larger phi (28.9, 227); if it moves the other way, negate all phases (convention check).
 Labels: MODEL_ONLY, NOT_HFSS_VALIDATED, SOLVER_SUPERCELL; the pickup uses the cells' designed alpha for the crossing wave (ASSUMPTION).
+
+## O. Board B: tile-amplitude equalisation (`fourhex/tile_equalise.json`, `scripts/research/phase26_tile_equalise.py`) -- TARGETS NOT REACHED
+
+Question: can flattening the aperture amplitude across the shared edges bring the tile/grating lobes to <= -15 dB (equal phase) and <= -10 dB
+(+/-45 deg Butler inputs)? Metric: strongest RHCP local maximum 4-20 deg from the peak, dB re peak, main patterns without the pickup
+(baseline -10.3 here vs -11 in section N, which also had the pickup and a 9 deg cone). Additive solver hook: `march_rays(..., density_fn=)`
+(default `None` is bit-identical; tested).
+
+| design (target density change only; cells stay table-limited) | radiated eta | equal-phase gain / lobe | 1L gain / lobe | 1R gain / lobe | 2R / 2L lobe |
+|---|---|---|---|---|---|
+| baseline (eta_design 0.9, taper 0.5) | 0.54 | 29.1 / -10.3 | 28.7 / -7.4 | 28.4 / -5.6 | -0.9 / -0.1 |
+| uniform target density | 0.50 | 28.9 / -10.8 | 28.6 / -7.8 | 28.2 / -6.0 | -0.9 / -0.1 |
+| outward boost b = 4 (flatten the depletion) | 0.39 | 28.0 / -12.6 | 27.5 / -8.5 | 27.2 / -6.8 | -1.0 / -0.1 |
+| taper only toward free (outer) edges, 60 mm | 0.52 | 28.9 / -10.4 | 28.6 / -7.5 | 28.3 / -5.7 | -0.9 / -0.1 |
+| low target density eta_design 0.4 / 0.3 | 0.37 / 0.29 | 27.8 / -12.4; 26.7 / -12.5 | 27.4 / -8.4; 26.3 / -8.5 | 27.1 / -6.8; 26.0 / -6.8 | -1.1 / -0.0 |
+| board-wide cos^2 taper (330 x 270 mm), eta_design 0.9 / 0.3 | 0.48 / 0.30 | 28.1 / -11.0; 26.2 / -11.3 | 27.8 / -7.8; 25.8 / -8.0 | 27.4 / -5.9; 25.5 / -6.2 | -1.0 / -0.2 |
+| quiet zone: no radiation within 50 mm of each pin (ideal: cells kept, currents removed) | 0.38 | 27.4 / **-13.2** | 26.9 / -8.6 | 26.6 / -7.0 | -1.1 / -0.0 |
+
+**Result: no variant reaches -15 dB (equal phase) or -10 dB (+/-45 deg); the best is -13.2 / -8.6 / -7.0 dB, at 1.5-2 dB gain cost.**
+
+**Why (two floors that amplitude shaping cannot move):**
+1. *Outline floor.* An IDEAL uniform-amplitude, ideal-phase circular aperture on the same 5685 cells has its first lobes at **-12.3 dB** (the board outline
+   is 650 x 525 mm, ~23 lambda: uniform-aperture sidelobes). Only an ideal smooth board-wide taper would reach -18.9 dB (reference in the JSON), and the
+   feed/cell family cannot produce it: the table's alpha window is 0.42-4.3 Np/m, so the radiated density near each pin cannot go below ~90 (units of the design amplitude^2)
+   while it saturates at 26-40 over the outer 60 % of each tile (alpha 3.4 Np/m x depleted W / rho). The envelope is peaked at the four pins; lowering the
+   target only trades gain for a -12.5 dB lobe.
+2. *Staircase floor for the Butler inputs.* With uniform amplitude and the SAME phases the steered inputs still give 1L -8.4 / 1R -6.7 dB and the +/-135 deg inputs
+   no clean beam (-1.1 / -0.0 dB): one feed phase per 260 mm tile is a 4-step staircase of a linear phase ramp (45 deg or 135 deg per 130 mm of tile centre),
+   which is a quantisation lobe, not an amplitude effect. No amplitude equalisation changes this.
+
+**The equal-phase case on its own, "combined-beam board" (1:4 in-phase divider, 0.25 W per port; model with pickup, section N):** one beam at (29.9, 225.0),
+**28.6 dBi RHCP (28.4 with s = 1.7), AR 2.5 dB at peak / 3.0 worst in beam, XPD 16.9 dB** (model; HFSS single hexagon was 23 dB / 1.3 dB), +5.5 dB over one
+port (ideal +6.0), first lobes -11 dB at 5-6 deg (outline sidelobes of the 23-lambda board; -13.2 with the quiet-zone variant at 1.2 dB less). The RHCP lobes beyond 20 deg are
+<= -26 dB. This board needs only the in-phase 1:4 divider (no Butler) and is the cleaner use of board B.

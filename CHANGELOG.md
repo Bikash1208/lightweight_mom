@@ -15,6 +15,7 @@ validation numbers and open next steps; this file is the per-phase "what changed
 - C/D: `src/hologram/tensor_leaky_cp.py` (supercell-table design march, rotating-slot currents, far field) and the exact single-hexagon
   export `hfss_exports/hex150_tensor_cp_single/` (+ V2 graded-pad variant, on hold); HFSS run: 23.03 dBi RHCP, AR 1.3 dB, XPD 23 dB
   (`docs/validation/README.md` §7).
+- Board B tile-amplitude equalisation study (`phase26_tile_equalise.py`; additive `march_rays(density_fn=)`), 4-hex HFSS comparison script (`phase26_compare_fourhex.py`). Targets not reached; see `results/phase26/README.md` O.
 - 4-hex tensor-CP boards: `phase26_fourhex_design.py` (boards A/B on one shared 6.4 mm lattice, edge-power bookkeeping, pickup of the unconverted wave, Butler combinations), `phase26_export_fourhex.py` -> `hfss_exports/hex4_tensor_cp_static/` (board A, DRIVE_PORT option), `results/phase26/fourhex/`; board B scoped only. Model only, not HFSS-validated.
 - Studies (model only): substrate study (RT5880 3.175, RO3006, RO3010, RT6010), launcher redesign, aperture-size study, 4-hex scope;
   `scripts/research/phase26_*.py`, results in `results/phase26/`.

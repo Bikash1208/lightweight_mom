@@ -75,16 +75,21 @@ def modulation_k(beta_over_k0, phi_ray, theta0_rad, phi0_rad):
 
 
 def march_rays(table, vertices_m, feed_xy_m, k0, theta0_rad, phi0_rad, eta_design, taper_c=0.0,
-               rho_min_m=0.007, n_psi=720, drho_m=0.25e-3, beta0_over_k0=1.065):
+               rho_min_m=0.007, n_psi=720, drho_m=0.25e-3, beta0_over_k0=1.065, density_fn=None):
     """Ray-by-ray design march (module docstring). Returns a dict of `(n_psi, n_rho)` arrays plus the ray
     axis. `eta_design`: the conversion the target profile asks for (the realised one is lower where the
-    table saturates). `taper_c`: amplitude taper `g = 1 - c (rho/rho_edge)^2` of the target density."""
+    table saturates). `taper_c`: amplitude taper `g = 1 - c (rho/rho_edge)^2` of the target density.
+    `density_fn(psi, rho, r_edge) -> (n_psi, n_rho)` (optional, additive): an extra amplitude factor multiplying `g`
+    (default None: unchanged, bit-identical))."""
     psi = np.linspace(-np.pi, np.pi, n_psi, endpoint=False)
     r_edge = polygon_ray_distance(vertices_m, feed_xy_m, psi)
     n_rho = int(np.ceil(r_edge.max() / drho_m)) + 1
     rho = np.arange(n_rho) * drho_m
     x = rho[None, :] / r_edge[:, None]
-    g2 = np.clip(1.0 - taper_c * x**2, 0.0, None) ** 2
+    g = np.clip(1.0 - taper_c * x**2, 0.0, None)
+    if density_fn is not None:
+        g = g * np.asarray(density_fn(psi, rho, r_edge), dtype=float)
+    g2 = g**2
     inside = rho[None, :] <= r_edge[:, None]
     # q0 per ray so that the UNSATURATED target converts eta_design: int q rho drho = eta W0
     w0 = 1.0

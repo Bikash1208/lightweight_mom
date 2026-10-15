@@ -43,7 +43,7 @@ def hex_of_point(x, y):
     return 0
 
 
-def design_board(board, table):
+def design_board(board, table, taper_c=0.5, eta_design=0.9, density_factory=None):
     """cells (global mm) + per-port march/design, `board` 'A' or 'B'."""
     phis = PHI_A if board == "A" else PHI_B
     poly0 = cp.hexagon()
@@ -53,7 +53,8 @@ def design_board(board, table):
         keep = np.hypot(xs - f[0], ys - f[1]) >= KEEP_FEED_MM
         xs, ys = xs[keep], ys[keep]
         th0, ph0 = np.radians(30.0), np.radians(phis[j])
-        m = march_rays(table, poly0, (0.0, 0.0), cp.K0, th0, ph0, 0.9, taper_c=0.5, n_psi=720)
+        m = march_rays(table, poly0, (0.0, 0.0), cp.K0, th0, ph0, eta_design, taper_c=taper_c, n_psi=720,
+                       density_fn=None if density_factory is None else density_factory(j))
         xr, yr = (xs - f[0]) * 1e-3, (ys - f[1]) * 1e-3
         d = cell_design(m, table, xr, yr, (0.0, 0.0), cp.K0, th0, ph0, hand=+1)
         if board == "B":  # global phase reference: the board centre instead of this feed

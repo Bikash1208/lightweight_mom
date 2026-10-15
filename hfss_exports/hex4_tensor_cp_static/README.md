@@ -35,6 +35,12 @@ r_pin 0.635 mm, as the single-hexagon run.
 4. Optional, decisive for the edge model: Mag_E along the shared edge of one driven hexagon, 1 mm above the surface
    (the 4-hex equivalent of the single-hexagon E-line).
 
+## Comparison
+`python scripts/research/phase26_compare_fourhex.py --s4p board.s4p --gain 3=gain_port3.csv --gain 2=gain_port2.csv
+[--params 3=params3.txt --params 2=params2.txt] --out report.json` -- per-port gain/AR/XPD/SLL, the neighbour LHCP lobe at the
+predicted direction and the strongest LHCP lobe, and S_ii plus the five adjacent-pair couplings against the estimates
+(named states, no modelling). Tested on synthetic exports (`tests/test_fourhex_design.py`).
+
 ## Predictions (port driven alone, anchored to the single-hexagon HFSS result; s = scale of the unconverted edge power)
 | port | beam (theta, phi) | model peak | gain dBi (s=1 / s=1.7) | XPD dB | AR peak / worst-in-beam dB | neighbour LHCP lobe (rel. main peak, direction) |
 |---|---|---|---|---|---|---|

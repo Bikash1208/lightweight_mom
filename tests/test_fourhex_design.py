@@ -53,3 +53,56 @@ def test_export_script_is_valid_python_with_four_ports_and_drive_option(tmp_path
     ast.parse(src)
     assert "DRIVE_PORT = 0" in src and "def set_sources" in src and src.count("Port%d") >= 2 and "FEEDS = [(64.952, 112.500)" in src
     assert "(\"mono_h\", \"7.575mm\")" in src
+
+
+def test_march_density_fn_default_is_bit_identical_and_factor_acts(boards):
+    from src.hologram.tensor_leaky_cp import march_rays
+
+    table = SupercellTable.from_files(cp.TABLE_GLOB)
+    a = march_rays(table, cp.hexagon(), (0.0, 0.0), cp.K0, np.radians(30), np.radians(225), 0.9, taper_c=0.5, n_psi=90)
+    b = march_rays(table, cp.hexagon(), (0.0, 0.0), cp.K0, np.radians(30), np.radians(225), 0.9, taper_c=0.5, n_psi=90, density_fn=None)
+    assert np.array_equal(a["w"], b["w"]) and np.array_equal(a["slot"], b["slot"])
+    c = march_rays(table, cp.hexagon(), (0.0, 0.0), cp.K0, np.radians(30), np.radians(225), 0.9, taper_c=0.5, n_psi=90,
+                   density_fn=lambda psi, rho, r_edge: np.broadcast_to(1.0 + 4.0 * rho[None, :] / rho.max(), (psi.size, rho.size)))
+    assert not np.array_equal(a["w"], c["w"])  # the target-density shape is honoured (a constant is renormalised away)
+    k = np.full((psi_n := 90, a["rho"].size), 0.5)
+    d = march_rays(table, cp.hexagon(), (0.0, 0.0), cp.K0, np.radians(30), np.radians(225), 0.9, taper_c=0.5, n_psi=psi_n, density_fn=lambda *_: k)
+    assert np.array_equal(a["w"], d["w"])
+
+
+def test_compare_fourhex_on_synthetic_exports(tmp_path):
+    import importlib.util
+
+    p = ROOT / "scripts/research/phase26_compare_fourhex.py"
+    s = importlib.util.spec_from_file_location("p26_cmp4", p)
+    m = importlib.util.module_from_spec(s)
+    sys.modules["p26_cmp4"] = m
+    s.loader.exec_module(m)
+    th, ph = np.arange(0.0, 180.0 + 1e-9, 2.0), np.arange(-180.0, 180.0 + 1e-9, 2.0)
+    lines = ['"Freq [GHz]","Phi [deg]","Theta [deg]","dB(RealizedGainLHCP) []","dB(RealizedGainRHCP) []"']
+    for q in ph:
+        for t in th:
+            d = m.single._angle_to(t, np.mod(q, 360.0), 30.0, 225.0)
+            r = 23.0 - 12.0 * (d / 8.0) ** 2
+            lh = 23.0 - 25.0 - 12.0 * (d / 8.0) ** 2
+            dl = m.single._angle_to(t, np.mod(q, 360.0), 30.0, 255.0)
+            lh = max(lh, 23.0 - 21.0 - 12.0 * (dl / 5.0) ** 2)
+            lines.append(f"10.54,{q:g},{t:g},{lh:.3f},{max(r, -30.0):.3f}")
+    (tmp_path / "g3.csv").write_text("\n".join(lines) + "\n")
+    # 4-port Touchstone with S_ij = -55 dB everywhere off-diagonal, S_ii = -15 dB
+    rows = ["# GHZ S DB R 50"]
+    for f in (10.0, 10.54, 11.0):
+        vals = []
+        for i in range(4):
+            for j in range(4):
+                vals += [(-15.0 if i == j else -55.0), 0.0]
+        rows.append(f"{f} " + " ".join(f"{v}" for v in vals[:8]))
+        for k in range(1, 4):
+            rows.append(" ".join(f"{v}" for v in vals[8 * k:8 * k + 8]))
+    (tmp_path / "b.s4p").write_text("\n".join(rows) + "\n")
+    rep = m.main(["--s4p", str(tmp_path / "b.s4p"), "--gain", f"3={tmp_path / 'g3.csv'}", "--pred", str(ROOT / "hfss_exports/hex4_tensor_cp_static/predictions.json")])
+    c = rep["ports"]["3"]["checks"]
+    assert c["peak_gain"]["state"] == "GAIN_WITHIN_PREDICTED_RANGE"
+    assert c["neighbour_lhcp_lobe"]["hfss_at_predicted_direction_db"] == pytest.approx(-21.0, abs=1.0)
+    assert rep["coupling"]["pairs"]["1-2"]["s_ij_db"] == pytest.approx(-55.0, abs=0.1)
+    assert rep["coupling"]["pairs"]["1-2"]["state"] == "COUPLING_BELOW_RAW_ESTIMATE"

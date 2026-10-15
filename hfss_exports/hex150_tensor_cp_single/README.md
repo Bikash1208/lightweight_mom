@@ -43,3 +43,19 @@ What would falsify the model: peak gain below ~19 dBi (the 1-bit board's HFSS va
 or a decay of the surface wave along the 225 deg line much slower than exp(-alpha rho) with alpha ~ 2-4 Np/m (fit from the Ez cut).
 The aperture part of the model is idealised (no feed scattering, perfect phases); the previous HFSS comparison says the leakage/launch parts under-predicted, so
 a value above 23.5 dBi would not be a surprise and a value below 20 dBi would point at the cell/locality model.
+
+## Comparing your HFSS run (no modelling)
+```
+python scripts/research/phase26_compare_single_hex.py --gain <realized_gain_RHCP_LHCP_1deg.csv> \
+    [--s11 <file.s1p|.s4p> --port N] [--params <antenna_params.txt>] [--ar <ar_cut.csv>] [--ez <Mag_E_or_Ez_line.csv>] \
+    --pin scripted|connector --out report.json     # also writes report.md
+```
+It reports each quantity against `predictions.json` and the falsifiers above (peak gain below 19 dBi, pointing off by > 2 deg, RHCP fraction in
+the beam < 0.8, decay alpha outside 2-4 Np/m) and a power budget of the radiated power: main beam (<= 8 deg, RHCP and total), 8-20 deg, far sidelobes
+(theta <= 70), grazing (70-90), back hemisphere, LHCP. Missing exports are `NOT_PROVIDED`; the match has `NO_PREDICTION`.
+
+**Feed.** You may replace the scripted pin by your own connector model from `hex150_gap0`; the comparison accepts either (`--pin` only records the
+label). The predictions assume the thin-wire pin: with a different connector the launch fraction (hence the predicted gain bracket 23.5 .. 25.2 dBi
+and the pin-direct-radiation share ~0.41) can change; read the gain against the whole bracket and look at the grazing/back and LHCP lines of the budget,
+which carry the pin's direct radiation. The script was smoke-tested on the `hex150_gap0` exports (a different board: it reproduces 19.85 dBi, 30/224 deg,
+XPD 22 dB, S33 -16.4 dB at 10.54 GHz); `tests/test_compare_single_hex.py` checks it on synthetic data with known answers.

@@ -686,3 +686,101 @@ pad of 15 mm and a 30 mm top air box: about 4.3 x the single-hexagon volume and 
 (a few 10^7 tetrahedra and >100 GB at the 0.2 mm feature mesh the single run needed if it used lambda/3 refinement), solve time x 5-8 for the adaptive
 passes. Options to keep it tractable: one port at a time with the others terminated (needed anyway for the gain), initial mesh seeded on the patch
 sheets (0.5 mm) with the substrate at 1 mm, or domain decomposition / HPC. Not measured: take the real figure from your single-hex solve.
+
+## M. Edge finding from the single-hexagon E-line, and board A (static beams) -- EXPORTED (`fourhex/`, `hfss_exports/hex4_tensor_cp_static/`)
+
+**E-line** (`hfss_results/hex150_tensor_cp_single/efield_line_magE_phi225_1mm.csv`, |E| at 1 mm above the surface, phi 225, 1 mm steps, 10.5 GHz,
+board edge ~142 mm). Binned `rho |E|^2` (proportional to the power through the arc; bound wave, leaky field and pin space wave all mix at 1 mm, so it
+oscillates by factors of ~2 bin to bin): 20-40 mm 1.1e4; 40-60 mm 0.8e4; 60-80 mm 1.7e4; 80-100 mm 0.6e4; 100-120 mm 1.2e4; 120-135 mm 0.77e4;
+135-142 mm 0.22e4; 150-170 mm 0.03e4. **Reading:** substantial power reaches the rim and then drops ~10x outside the board (free-edge diffraction);
+rim/inner ratio 0.7 (120-135 vs 20-40 mm) against the model's W(127)/W(30) = 0.54 along this ray: consistent within the bin scatter, NOT
+discriminating (alpha cannot be fitted). The model's edge power (0.46 of the launched wave, 0.29 of the accepted power) is therefore
+used with a sensitivity scale s = 1 (design march) and s = 1.7 (upper reading); neither is a fit.
+
+**Where the unconverted power goes (design march, fraction of the launched surface-wave power; x 0.62 for the accepted power):**
+
+| hexagon | free (outer) edge | to hex 1 | to hex 2 | to hex 3 | to hex 4 | total |
+|---|---|---|---|---|---|---|
+| 1 | 0.252 | - | 0.065 | 0.065 | 0.079 | 0.462 |
+| 2 | 0.331 | 0.065 | - | 0.065 | 0 | 0.462 |
+| 3 | 0.252 | 0.065 | 0.079 | - | 0.065 | 0.462 |
+| 4 | 0.331 | 0.065 | 0 | 0.065 | - | 0.462 |
+
+Hexagon 1 and 3 hand 0.21 of the launched wave to neighbours (0.13 of accepted); 2 and 4 hand 0.13 (0.08 of accepted). The rest leaves the board edge.
+
+**Board A prediction** (shared 6.4 mm lattice, 5685 cells, port driven alone; HFSS-anchored, s = 1 / 1.7; `fourhex_design.json`; 1 deg grid):
+
+| port | beam | model peak (theta, phi) | gain dBi | XPD dB | AR peak / worst in beam | pickup / main power | neighbour LHCP lobe (vs main RHCP peak) |
+|---|---|---|---|---|---|---|---|
+| 1 | (30, 45) | (29.7, 45.0) | 23.1 / 23.1 | 16.4 / 16.3 | 2.65 / 3.9 | 0.13 / 0.22 | -19.9 / -17.6 dB at (30, 75), 15 deg off |
+| 2 | (30, 135) | (29.7, 135.2) | 23.0 / 23.0 | 16.4 / 16.0 | 2.65 / 3.4 | 0.09 / 0.16 | -21.7 / -19.4 dB at (21, 206), 30 deg off |
+| 3 | (30, 225) | (29.7, 225.0) | 23.1 / 23.1 | 16.4 / 16.3 | 2.65 / 3.9 | 0.13 / 0.22 | -19.9 / -17.6 dB at (30, 255), 15 deg off |
+| 4 | (30, 315) | (29.7, 315.2) | 23.0 / 23.0 | 16.4 / 16.0 | 2.65 / 3.4 | 0.09 / 0.16 | -21.7 / -19.4 dB at (21, 26), 30 deg off |
+
+**Correction to section L:** the strongest neighbour LHCP lobes are 15 deg (ports 1, 3) and 30 deg (ports 2, 4) from the driven beam, not "30-50 deg"
+(that range is the pickup's RHCP lobes at 39-40 deg, -27...-30 dB). With s = 1.7 the lobes rise to -17.6 / -19.4 dB. XPD/AR values are the pessimistic
+model values (HFSS single hexagon: 23 dB / 1.3 dB). Coupling and size notes as in L. Export README and `predictions.json` carry the check items
+(gain +-1 dB, neighbour LHCP level and direction, adjacent-pair coupling, AR, S11).
+
+## N. Board B (Butler-ready): same lattice, cells and pin, all four hexagons at (30, 225) RHCP, phase-coherent -- SCOPE ONLY, NOT exported
+
+**Design.** The same march per hexagon (eta_design 0.9, taper 0.5, hand +1). The only change from the single-hexagon design is the phase
+reference of the polarisation rotation `chi = phi_ref - kt u.(r - r_ref)`: `r_ref` is the board centre instead of the hexagon's feed. Equal-phase feed
+then gives ONE continuous aperture phase `exp(-j kt u.r)` over the board. Consequence: every slot of hexagon j is rotated by the constant
+`-1/2 kt u.r_j` (mod 180 deg) relative to the single-hexagon design: port 1 +37.0 deg, port 2 -4.3, port 3 -37.0, port 4 +4.3 (checked on port 3
+against board A: -37.03 deg uniform, `board_B_minus_A_slot_angle_offset_deg`). Cell sizes, alphas, positions and the pin are unchanged.
+Export files (when asked): `results/phase26/fourhex/fourhex_B_cells.json` (5685 cells).
+
+**Port order for the Butler outputs.** The four feed x positions are -194.9 (port 2), -64.95 (port 3), +64.95 (port 1), +194.9 (port 4) mm: equally spaced by
+129.9 mm. A Butler output n has phase n*step, so the outputs must be ordered along the x axis: **Butler outputs 1, 2, 3, 4 = ports 2, 3, 1, 4.**
+That is the only ordering (up to reversal) for which the phase is linear in position (the projection of the rhombic 2x2 arrangement onto x is
+the only equally spaced one), so the beam moves in `u = sin(theta) cos(phi)` only (v fixed). The staggered rows (y = +/-112.5 mm) need no
+correction: the board-centre phase reference already contains them. Reversal of the order = reversal of all steps.
+
+**Per port alone (a port driven alone, others terminated; s = 1 / 1.7):**
+
+| port | peak (theta, phi) | gain dBi | XPD | AR peak / worst |
+|---|---|---|---|---|
+| 1 | (28.7, 224.2) | 22.9 / 22.9 | 17.0 / 16.4 | 2.5 / 3.4 |
+| 2 | (29.9, 223.2) | 22.8 / 22.8 | 17.0 / 17.1 | 2.5 / 3.9 |
+| 3 | (30.1, 226.2) | 22.6 / 22.5 | 17.3 / 16.9 | 2.4 / 3.1 |
+| 4 | (29.4, 226.7) | 22.9 / 22.9 | 17.8 / 17.9 | 2.3 / 3.3 |
+
+(each hexagon alone has a beam 12 deg wide and sits within 1.6 deg of the design direction; pickup/main power 0.11-0.15, s = 1.7: 0.19-0.26.)
+
+**Ideal 4 x 4 Butler, equal amplitude (0.5 each, 1 W accepted in total), model, s = 1 (s = 1.7 in brackets where different):**
+
+| input (step) | port phases (deg) p1 / p2 / p3 / p4 | array theory (theta, phi) | model peak (theta, phi) | RHCP gain dBi | AR peak / worst | XPD | strongest other RHCP lobes (dB re peak; offset in u, v) |
+|---|---|---|---|---|---|---|---|
+| equal phase | 0 / 0 / 0 / 0 | (30.0, 225.0) | (29.9, 225.0) | 28.6 (28.4) | 2.5 / 3.0 | 16.9 | -11 (-0.01, +0.09), -14 (+0.09, -0.05), -14 (-0.09, +0.06) |
+| 1L (-45) | -90 / 0 / -45 / -135 | (28.75, 227.3) | (28.9, 227.2) | 28.6 | 2.3 / 2.7 | 17.5 | -8 (-0.08, -0.04), -9 (-0.09, +0.06), -11 |
+| 1R (+45) | 90 / 0 / 45 / 135 | (31.3, 222.9) | (30.9, 223.0) | 28.3 | 2.6 / 3.1 | 16.7 | -6 (+0.09, +0.04), -8 (+0.09, -0.06), -11 |
+| 2R (+135) | -90 / 0 / 135 / 45 | (34.1, 219.1) | **(27.1, 222.6)** | 26.9 (27.0) | 2.1 / 3.0 | 18.3 | **-0.9 at (31, 231)**, -3 at (33, 220) |
+| 2L (-135) | 90 / 0 / -135 / -45 | (26.5, 232.5) | **(29.2, 218.7)** | 26.2 | 2.3 / 3.4 | 17.7 | **-0.1 at (33, 227)**, -1.4 at (27, 231) |
+
+**Beam direction.** The 1D steering law is `du = -step / (k d)` with the outputs 129.9 mm apart: ideal beam shifts are **+/-1.7 deg for +/-45 deg and
++/-5.1 deg for +/-135 deg** (in angle; u shifts +/-0.027 and +/-0.082) -- not +/-0.9 / +/-2.7 deg. Your numbers are exactly what the 259.8 mm spacing of
+the same-row pair (ports 2-1 or 3-4) gives (lambda/259.8 = 0.110 in u -> 6.3 deg grating lobes): **the 7 deg grating-lobe estimate is confirmed,
+but it belongs to the tile period, not to the 129.9 mm output spacing.** The model confirms the +/-45 deg inputs to 0.4 deg (28.9 vs 28.75; 30.9 vs 31.3).
+
+**Grating lobes / tile lattice.** The four hexagons are tiles of period 259.8 mm (a1 = (259.8, 0), a2 = (129.9, 225)): lobes of the tile-amplitude
+modulation sit at du = lambda/259.8 = 0.110 (6.3 deg), seen at -11...-14 dB with equal phase and at -6...-9 dB for the +/-45 deg inputs (the steered beam moves
+toward one of them, where the tile element pattern is higher). For +/-135 deg the intended beam (shifted 5 deg) and the neighbouring tile lobe have comparable level:
+**the model gives no clean single beam at the nominal 5 deg shift**: the strongest lobe is at (27, 223)/(29, 219) (gain 26.9/26.2 dBi), with a second lobe -0.9/-0.1 dB
+at 8-9 deg away. Honest summary: 1L and 1R work as a +/-1.7 deg scan at 28.3-28.6 dBi with first lobe 6-8 dB down; 2R and 2L do not produce a single beam
+on this board (peak 26-27 dBi, split in two lobes). The 4 x 4 Butler's +/-135 deg beams therefore need either a tile-period amplitude equaliser (a taper that
+continues across the shared edges) or acceptance of the split beam. Mutual coupling at -37 ... -60 dB moves the port phases by < 1 deg: negligible.
+
+**Ports-to-Butler Edit Sources table** (HFSS e^{j omega t}, which is the convention of the model: the wave is exp(-j beta rho); equal magnitude, e.g. 1 W each --
+HFSS normalises gain to the total incident power, check the "Incident power" row of the antenna-parameter table):
+
+| Butler input | Port 1 | Port 2 | Port 3 | Port 4 | expected beam (theta, phi) |
+|---|---|---|---|---|---|
+| 1L (-45) | -90 deg | 0 deg | -45 deg | -135 deg | (28.9, 227.2) |
+| 2R (+135) | -90 deg | 0 deg | 135 deg | 45 deg | (27.1, 222.6) + (31, 231) lobe |
+| 2L (-135) | 90 deg | 0 deg | -135 deg | -45 deg | (29.2, 218.7) + (33, 227) lobe |
+| 1R (+45) | 90 deg | 0 deg | 45 deg | 135 deg | (30.9, 223.0) |
+| equal phase (reference) | 0 | 0 | 0 | 0 | (29.9, 225.0), 28.6 dBi |
+
+First check in HFSS: 1L must move the beam to smaller theta/larger phi (28.9, 227); if it moves the other way, negate all phases (convention check).
+Labels: MODEL_ONLY, NOT_HFSS_VALIDATED, SOLVER_SUPERCELL; the pickup uses the cells' designed alpha for the crossing wave (ASSUMPTION).

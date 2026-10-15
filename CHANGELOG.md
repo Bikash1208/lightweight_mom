@@ -5,6 +5,19 @@ summarize each phase's own write-up in `docs/history/`/`docs/history/`). No vers
 before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` for current
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
+## Unreleased - Phase 26 - leakage-controlled tensor-CP hexagon
+- A: `src/dispersion/leakage_model.py` (first-order and Floquet-balance leakage of the n = -1 harmonic, scalar and tensor sheets),
+  `src/hologram/leaky_forward.py`, `src/dispersion/pin_launch.py` (monopole launch fraction, loaded sheet); HFSS data of
+  `four_port_hex150_gap0` indexed in `docs/validation/README.md` §6.
+- B/B2: `src/dispersion/tensor_sheet.py` (tensor sheet from the 2x2 reflection, Bloch kt > k0 extraction, tensor transverse resonance),
+  `slotted_cells.py` (slotted circle/square, cross-slotted circle, `CellRow`), `tensor_floquet.py` (Floquet balance of a modulated tensor
+  sheet); solver modules untouched, every pre-existing result bit-identical (Phase 23 snapshot).
+- C/D: `src/hologram/tensor_leaky_cp.py` (supercell-table design march, rotating-slot currents, far field) and the exact single-hexagon
+  export `hfss_exports/hex150_tensor_cp_single/` (+ V2 graded-pad variant, on hold); HFSS run: 23.03 dBi RHCP, AR 1.3 dB, XPD 23 dB
+  (`docs/validation/README.md` §7).
+- Studies (model only): substrate study (RT5880 3.175, RO3006, RO3010, RT6010), launcher redesign, aperture-size study, 4-hex scope;
+  `scripts/research/phase26_*.py`, results in `results/phase26/`.
+
 ## Unreleased - Phase 23 - hexagonal ports and the sidelobe-cancelling optimiser
 - A: `PortRegion` may be a convex polygon (`vertices_m`; rectangles unchanged and bit-identical); `layout_preset_hex4` (side or
   flat-to-flat, gap, pointy/flat, shared 6.4 mm lattice, cells outside the hexagons empty); polygon overlap/gap/isolation; DXF

@@ -1,6 +1,6 @@
 # Status — single source of truth for *now*
 
-**Last updated:** 2026-10-13, by Claude (Phase 24 curation finished: phases 18-24 are merged into `main`, tagged `v1.1-handoff`; Phase 25 locality caveat added on branch `phase25-butler-sector`). **Rule: every phase updates this
+**Last updated:** 2026-10-15, by Claude (Phase 26 on branch `phase26-leaky-tensor-cp`, from `phase25-butler-sector`: single-hexagon tensor-CP board checked against HFSS; 4-hex board scoped; Phase 24 curation merged into `main`, tagged `v1.1-handoff`; the Phase 25 locality caveat below stands). **Rule: every phase updates this
 file** (last release tag/commit, capability matrix, open next steps) as part of its own final commit.
 
 **Last milestone tags:** `v1.1-handoff` (this state), `phase23-complete` (hexagon ports + sidelobe optimiser), `phase22-complete`, `phase21-complete`,
@@ -39,6 +39,10 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
 | 1-bit / N-bit coded (Phase 15 Part E) | Model-only; cell-pair phase separation is mesh-sensitive | Paper-mode pair at 26 GHz: 173–179° separation across 25–27 GHz; **HFSS check of this exact cell pair not yet done** |
 | Level matching / pointing correction (Phase 16 follow-ups) | Self-consistent (one measurement method used everywhere, Phase 16 live-review round) | 4-beam single port: level spread 6.4 dB → 0.5 dB in 2 passes; pointing miss converges to <0.3° on a fine 0.1° local grid |
 | Polarization efficiency (scalar, isotropic unit cells) | Documented physical ceiling, not a bug | ≈ 50% co-pol power fraction for a linearly-polarized compensated beam (`docs/history/PHASE15_POLARIZATION_VORTEX.md` "Scalar, isotropic unit cells cap achievable XPD") |
+| Surface-wave leakage + launch model for a monopole-fed hologram (Phase 26 A, `src/dispersion/leakage_model.py`, `pin_launch.py`, `src/hologram/leaky_forward.py`) | Model; closed-form first-order α validated against a truncated TM+TE Floquet balance (≤ 0.5 %); the pin launch split against free-space integrals (0.01–0.1 %). Against HFSS: brackets the 1-bit board (16.9–19.9 vs 19.85 dBi, `LEAKAGE_MODEL_BRACKETS_HFSS_NOT_DISCRIMINATING`), and with the tensor-CP board the gain bookkeeping launch 0.59–0.62 × conversion 0.54 agrees to 0.5 dB | `results/phase26/README.md` A–A4, H |
+| Tensor (anisotropic) cells: rotating-slot circles, Bloch (kt > k0) sheet tensor, supercell β/α table (Phase 26 B/B2, `src/dispersion/tensor_sheet.py`, `slotted_cells.py`, `tensor_floquet.py`) | Solver-internal (`SOLVER_INTERNAL` / `SOLVER_SUPERCELL`), no solver change; the normal-incidence tensor is off by up to 15 % of β across a slot; a Floquet balance of the cells' local tensors does NOT reproduce the supercell for the strongly anisotropic primary cell (0.013 k0 > 0.01 k0 gate), so the design uses the supercell table (nearest grid, collinear modulation only) | `results/phase26/README.md` B–B2.4f; mesh-fragile cells (bridge < 0.35 mm) excluded |
+| **Single-hexagon pure-RHCP tensor-CP board, `hex150_tensor_cp_single` (Phase 26 C/D)** | **HFSS-validated prediction (one run, 10.5 GHz, one board)**: 23.03 dBi RHCP at (30°, 225°), AR 1.2–1.3 dB, XPD 23 dB, SLL −18.2 dB (user figure), S11 −15.0 dB; model predicted 23.5 dBi / AR 2.5 / XPD 16.9 / SLL −22.8. Unconverted surface wave + pin direct radiation = 0.70 of the power (grazing 0.26, back 0.27, LHCP 0.31) | `docs/validation/README.md` §7, `hfss_results/hex150_tensor_cp_single/`, `hfss_exports/hex150_tensor_cp_single/` |
+| Launcher on the loaded surface, graded pad V2 (Phase 26 item 5), aperture-size study | Model-only, **V2 not run (on hold)**; feed calibrated to the HFSS S11 sweep (R × 1.30, effective pin radius 1.5 mm, `HFSS_CALIBRATED`, one board); size study HFSS-anchored: 300 mm side ≈ 30.2 dBi (model) | `results/phase26/README.md` I, I2, J, K; `hfss_exports/hex150_tensor_cp_single_v2_pad/` |
 
 ## Known limitations
 
@@ -69,6 +73,7 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
 
 Order of work, with what each needs from the user (HFSS runs are the user's):
 
+0. **Phase 26 (branch `phase26-leaky-tensor-cp`, brief `docs/briefs/PHASE26_LEAKY_TENSOR_CP_HEXAGON.md`)**: send the E-field line (Mag_E along φ = 225°, ρ = 10–140 mm, 1 mm above the surface) of the solved single-hex run to fit α and split pin-direct vs edge power; V2 graded launch pad is exported and on hold until then; the 4-hex tensor-CP board is scoped (`results/phase26/README.md` L), not exported. Merge/tag of the branch and the move of the brief to `docs/history/briefs/` follow the 4-hex decision.
 1. **Decision, Phase 19**: is ±30.00° a hard specification for the nylon lens? The error bar puts the beam at ≈30.3° median in the
    primary model (0.4° typical pointing error). Parts E/F of `docs/briefs/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md` wait on this.
 2. **HFSS run, one unit-cell check first**: the 10.54 GHz 1-bit pair (empty +138.1° and the 5.85 mm square −41.4°) as a single cell

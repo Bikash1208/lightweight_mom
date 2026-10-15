@@ -106,6 +106,30 @@ Numbers as reported (S-parameters from the local `.s4p`; the rest from the two c
   depending on the in-context contrast, launch fraction not modelled), it does not validate it. Named state
   `LEAKAGE_MODEL_BRACKETS_HFSS_NOT_DISCRIMINATING`.
 
+## 7. HFSS run of the single-hexagon tensor-CP board `hex150_tensor_cp_single` (Phase 26)
+
+The user's HFSS solve of `hfss_exports/hex150_tensor_cp_single/` (one 150 mm-side hexagon, 1430 rotating-slot circles
+D 6.0 mm on RT/duroid 5880 1.575 mm, pure-RHCP pencil beam θ 30° / φ 225°, monopole at the centre, pin 6.0 mm above
+the surface), data in `hfss_results/hex150_tensor_cp_single/` (antenna parameters, S11 8–12 GHz, AR φ = 224° 8–12 GHz,
+realized-gain RHCP/LHCP 1° CSV at 10.5 GHz; all committed; the E-field line is still to come):
+
+| Quantity | HFSS (10.5 GHz) | Model (written before the run) |
+|---|---|---|
+| Peak RHCP realized gain | **23.03 dBi** (table 23.05; directivity 23.16 dBi; total efficiency 0.975) | 23.5 (launch 0.592) … 25.2 dBi |
+| Beam | θ 30°, φ 225° | 30°, 224° |
+| AR at the peak / worst over the −3 dB beam | **1.2–1.3 dB** / 1.6 dB (≤ 3 dB over 9.5–11.5 GHz at θ 30°) | 2.5 / 3.1 dB |
+| XPD at the peak | **23.0 dB** | 16.9 dB |
+| RHCP SLL | **−18.2 dB** (user; −18.5 dB with the 15° exclusion of the comparison script) | −22.8 dB |
+| S11 at 10.54 GHz | −15.0 dB (−10 dB band 8.8–11.6 GHz) | not modelled |
+| Power budget (of radiated) | main beam ≤ 8° 0.27; grazing 0.26; back 0.27; far sidelobes 0.17; LHCP (all angles) 0.31 | 0.30; (pin direct 0.41 + unconverted 0.27 lumped) |
+
+This is a **prediction check of the leakage + launch + supercell-table model on one board, one frequency, one run**: the
+gain is within 0.5 dB of the model's bare-launch value, the loss accounting agrees in total (non-beam power 0.70 vs 0.68),
+beam purity, AR and XPD are better than predicted. It does not separate pin-direct radiation from unconverted edge power
+(needs the E-field line), and the model's frequency behaviour is untested (the table is at 10.54 GHz only).
+Comparison + budget: `scripts/research/phase26_compare_single_hex.py`, `results/phase26/hex150_tensor_cp_single_hfss_comparison.json`,
+`results/phase26/README.md` section H.
+
 ## Regenerating
 
 - Phase 12 HFSS comparisons: re-run through the app's **HFSS compare** page, or

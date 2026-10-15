@@ -65,13 +65,13 @@ def pattern(design, x, y, green, theta_deg, phi_deg):
     return et.reshape(tg.shape), ep.reshape(tg.shape)
 
 
-def metrics(et, ep, theta, phi, label_launch=LAUNCH_BARE, eta_conv=1.0):
-    b = pattern_budget(theta, phi, et, ep, 30.0, 225.0, (8.0, 20.0))
+def metrics(et, ep, theta, phi, label_launch=LAUNCH_BARE, eta_conv=1.0, beam=(30.0, 225.0)):
+    b = pattern_budget(theta, phi, et, ep, beam[0], beam[1], (8.0, 20.0))
     er, el = circular_components(et, ep)
     rh = np.abs(copol_component(et, ep, "rhcp")) ** 2
     lh = np.abs(copol_component(et, ep, "lhcp")) ** 2
     tg, pg = np.meshgrid(theta, phi, indexing="ij")
-    t0, p0 = np.radians(30.0), np.radians(225.0)
+    t0, p0 = np.radians(beam[0]), np.radians(beam[1])
     cosd = np.cos(np.radians(tg)) * np.cos(t0) + np.sin(np.radians(tg)) * np.sin(t0) * np.cos(np.radians(pg) - p0)
     dist = np.degrees(np.arccos(np.clip(cosd, -1, 1)))
     near = dist <= 6.0

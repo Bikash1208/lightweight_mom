@@ -630,3 +630,59 @@ line separates pin-direct from edge power. (A first pass truncated the lattice a
   (0.54 -> 0.74) but the pin's direct radiation (0.38 of the accepted power) does not shrink, so grazing+back stays at 0.45-0.53 and LHCP at 0.26-0.31.
 * Model caveats carried to the larger apertures: idealised phase (no cell-to-cell phase error over 300 mm = 8.5 lambda; the nearest-K table error
   and the oblique-modulation approximation accumulate with path length), constant -0.68 dB calibration offset, pin direct and edge power not yet separated.
+
+## L. 4-hexagon tensor-CP board: scope (`fourhex_scope.json`, `scripts/research/phase26_fourhex_scope.py`) -- NOT exported
+
+Layout of `four_port_hex150_gap0` (feeds (64.952, 112.5), (-194.856, 112.5), (-64.952, -112.5), (194.856, -112.5) mm; hexagon side 150 mm, gap 0),
+beams theta 30 at phi 45 / 135 / 225 / 315, all RHCP, pin 6.0 mm above the surface, same cell family (nearest-grid table). Model only.
+
+**Lattices (this decides the layout).** With every port's lattice centred on its own feed (as in `four_port_hex150_gap0`, where cells
+were 5.85 mm squares with a 0.55 mm gap) the D 6.0 mm circles of adjacent hexagons overlap: **64 cells of one hexagon lie closer than
+6.0 mm to a cell of its neighbour (minimum centre distance 2.2 mm)** because the feed spacing (129.9, 225) mm is not a multiple of 6.4 mm. A
+shared 6.4 mm lattice with cells assigned by hexagon (centre inside) has no overlap (minimum distance 6.4 mm) and 5684 cells (4 x 1408-1434).
+=> **use ONE lattice for the board**; the feed pins then fall off cell centres: remove cells within 3.2 mm of a feed (done).
+
+**Per-port prediction, driven hexagon alone** (anchored to the 150 mm HFSS run; same table, march and pattern as the single hexagon):
+
+| Port | beam phi | cells | conversion | gain [dBi] | AR peak / worst in -3 dB beam [dB] | XPD [dB] | SLL [dB] |
+|---|---|---|---|---|---|---|---|
+| 1 | 45 | 1434 | 0.54 | 23.0 | 2.6 / 3.2 | 16.7 | -22.8 |
+| 2 | 135 | 1408 | 0.54 | 22.95 | 2.4 / 3.0 | 17.1 | -22.5 |
+| 3 | 225 | 1434 | 0.54 | 23.0 | 2.6 / 3.2 | 16.7 | -22.8 |
+| 4 | 315 | 1408 | 0.54 | 22.95 | 2.4 / 3.0 | 17.1 | -22.5 |
+
+(Model XPD/AR are pessimistic vs the single-hex HFSS: 23 dB and 1.3 dB. The hexagon is symmetric under 180 deg rotation: ports 1 = 3, 2 = 4;
+ports 1/2 differ only by the angle of the beam to the hexagon's vertices.)
+
+**Unconverted surface wave crossing into the neighbours.** Of the accepted power, 0.62 launched x (1 - 0.54) = 0.29 reaches the hexagon edge. The
+neighbours' cells are rotating-slot cells of THEIR design: the wave arrives travelling toward their feed (counter to their design), so
+it is NOT absorbed by loss alone: it excites the opposite circular harmonic with the cells' own alpha (ASSUMPTION: the same alpha as designed)
+and radiates as an LHCP-dominated secondary lobe, not as part of the beam. Model, driven port alone, all three neighbours' cells excited
+(`crossing` in the JSON):
+
+| Driven port | pickup power / main aperture power | share of accepted power | strongest pickup lobe (theta, phi), level vs main peak | main beam with pickup: gain change, AR worst, XPD |
+|---|---|---|---|---|
+| 1 and 3 | 0.126 | 0.042 | LHCP (29, 76) / (29, 256): -20.0 dB (RHCP lobes <= -29.7 dB) | -0.5 dB (directivity), 4.3 dB (from 3.2), 16.5 dB |
+| 2 and 4 | 0.093 | 0.031 | LHCP (21, 206) / (21, 26): -21.6 dB (RHCP <= -29.4 dB) | -0.4 dB, 3.4 dB (from 3.0), 16.0 dB |
+
+The pickup is 3-4 % of the accepted power, 77-79 % of it LHCP, in lobes 20-22 dB below the main peak and 30-50 deg from the driven beam; it costs about 0.5 dB
+of aperture directivity (the main beam's 8 deg share 0.95 -> 0.85-0.87), leaves the SLL (-22 dB) and XPD alone and worsens the worst AR over the beam by 0.4-1.1 dB.
+**A boundary row of cells or a gap strip is not indicated** by these numbers: a bare strip carries the wave unchanged (alpha 0, so more arrives),
+and no cell in this family absorbs it. Stopping the crossing needs lower edge power (higher alpha near the boundary, table-limited at ~3-4 Np/m) or an
+absorber; neither is justified for a -20 dB LHCP lobe. If all four ports are fed at once, port k's LHCP pickup lands near the other
+beams and adds to their cross-polar floor at the -20 dB level.
+
+**Port-to-port coupling (estimate).** Capture width of a launcher with TM0 share 0.62 = 2.65 mm; the driven wave's power per radian decays
+through its own hexagon (unconverted 0.40-0.60 on the rays to the neighbours' feeds) and through the neighbour's cells (alpha of the cells) over
+the 259.8 mm to the neighbour's feed (cylindrical spreading included): **raw estimate -36.3 ... -37.9 dB for all five adjacent pairs**
+(1-2, 1-3, 1-4, 2-3, 3-4; 2-4 is 450 mm). The same estimate applied to the HFSS 1-bit board gives -32.6 dB where the HFSS `.s4p`
+has -51.5 ... -73.5 dB at 10.54 GHz (<= -41.7 dB over 8-12 GHz): the raw method is ~26 dB pessimistic there, so applying that bias gives
+**about -62 ... -64 dB**. Expected range for the tensor board: -37 dB (conservative, raw) to -60 dB; both are below the -10 dB-class concerns, but
+the bias is one board's and unexplained, so it is an estimate, not a result. Reciprocal pair values are equal; the unconverted power
+is 0.4 (diagonal pairs) and 0.6 (the pair 1-4 across the vertical edge: the apothem ray is shorter).
+
+**HFSS size (order of magnitude).** 5684 slotted circles (each ~28 arc facets + 4 slot edges, features 0.4 mm bridges) on a 650 x 525 x 1.575 mm board with a
+pad of 15 mm and a 30 mm top air box: about 4.3 x the single-hexagon volume and 4 x its cells. Scale your single-hexagon run: tetrahedra and RAM x 4-5
+(a few 10^7 tetrahedra and >100 GB at the 0.2 mm feature mesh the single run needed if it used lambda/3 refinement), solve time x 5-8 for the adaptive
+passes. Options to keep it tractable: one port at a time with the others terminated (needed anyway for the gain), initial mesh seeded on the patch
+sheets (0.5 mm) with the substrate at 1 mm, or domain decomposition / HPC. Not measured: take the real figure from your single-hex solve.

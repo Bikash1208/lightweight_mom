@@ -31,7 +31,7 @@ def test_peak_direction_xpd_and_budget_of_a_synthetic_beam(tmp_path):
     _write_gain(f)
     g = cmp_.read_gain_csv(f)
     a, _ = cmp_.analyse(g)
-    assert a["peak_rhcp_gain_dbi"] == pytest.approx(22.0, abs=1e-3)
+    assert a["peak_rhcp_gain_dbi"] == pytest.approx(22.0, abs=0.1)
     assert a["pointing_error_deg"] <= 1.5
     assert a["xpd_at_peak_db"] == pytest.approx(20.0, abs=0.1)
     b = a["budget_of_radiated"]

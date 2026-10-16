@@ -252,6 +252,32 @@ The incident wave's phase reference stays at `z = 0` (Section 2).
   (`sheet_fields`, `stack_fields`); the bottom-port excitation is `stack_tangential_field(..., port="bottom")`.
 - Finite metal conductivity and metal thickness: not modelled.
 
+## 14. Lumped RLC loads (Phase 20 R1 item 2; `src/loads.py`)
+
+A load is an axis-aligned rectangle of the cell, length `ℓ` along its direction (say x) and width `w` across it, that the mesh treats as
+conductor: rooftop basis functions cross it. It carries the series impedance `Z_L(ω) = R + jωL + 1/(jωC)` (`exp(+jωt)`), i.e. the
+**sheet impedance** `Z_s = Z_L · w/ℓ` [ohm/sq] for current along x (a rectangle of length ℓ and width w has `Z_L = Z_s ℓ/w`).
+The impedance boundary condition on the region is `E_tan,total = Z_s J`. In the Galerkin system (`V_i − (Z I)_i = ⟨f_i, Z_s J⟩`) this
+is
+
+    (Z + Z_load) I = V,        Z_load,ij = Z_s ∫_region f_i · f_j dA     (x-directed f_i, f_j only),
+
+with the exact overlap of two rooftops (tent in x times a rectangle of height Δy in y) over the region: the product of two tents is
+piecewise quadratic and is integrated exactly (2-point Gauss on each piece); the y factor is the overlap of the basis row with the
+region (rows are disjoint, so only same-row pairs couple). No per-edge scaling constant is needed: the "N parallel edges across the
+gap" statement is automatic. Normalisation check (tested at 10, 20, 40 cells): a uniform current `J = 1 A/m` through the region
+carries `I_tot = w` and gives `I^H Z_load I = Z_L w²`, i.e. dissipation `½ R I_tot²`; two side-by-side halves of width `w/2` with
+`2 Z_L` are identical to one load (same `Z_s`).
+
+Transverse to the direction the region is a perfect conductor by default (the brief's model). `transverse_conducts=False` adds a
+huge sheet impedance (`OPEN_OHM`) for the transverse basis functions of the region (a lumped element conducts along its axis only);
+`open_circuit=True` does that AND sets `Z_L = OPEN_OHM`, which reproduces the geometry with the gap empty (tested to 2e-5). A finite
+but large `|Z_L|` with the transverse conduction kept leaves a floating metal strip in the gap and is NOT the empty gap (S11 differs
+by ~0.09 in the test cell). Without loads (`UnitCell.loads == ()`, the default) none of this runs. Absorbed power:
+`½ Re(I^H Z_load I)`; for a lossless substrate it equals `1 − Σ|S|²` of the incident mode (tested at 0° and 40°). Limits: regions must
+lie at least one mesh cell inside the unit cell (images of the boundary rooftops), edges should lie on mesh lines (warning otherwise),
+no vertical (via) currents.
+
 ## 13. References (method; equations here are derived, see Section 0)
 
 1. R. F. Harrington, *Field Computation by Moment Methods*, Macmillan, 1968. (Galerkin MoM.)

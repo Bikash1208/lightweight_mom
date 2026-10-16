@@ -176,7 +176,8 @@ class UnitCell:
     adds a PEC ground plane at z = -h (a reflectarray/grounded-metasurface stack); the bottom
     port then does not exist (GREEN_FUNCTION.md, S_PARAMETERS.md). This field only selects which
     closed form ``LayeredGreenFunction`` uses; it does not change ``Geometry`` or metal-pattern
-    handling at z = 0.
+    handling at z = 0. ``loads`` (Phase 20 R1, default empty): lumped RLC loads bridging gaps in the metal
+    (``loads.LumpedLoad``); with none, the cell and every result are exactly as before.
     """
 
     lattice: RectangularLattice
@@ -184,10 +185,13 @@ class UnitCell:
     substrate: Substrate
     metal: Metal
     backing: str = "air"
+    loads: tuple = ()  # Phase 20 R1: lumped RLC loads (src/loads.py); empty = none (every pre-existing cell)
 
     def __post_init__(self):
         if self.backing not in _BACKINGS:
             raise ValueError(f"backing must be one of {_BACKINGS}, got {self.backing!r}")
+        if self.loads:
+            object.__setattr__(self, "loads", tuple(self.loads))
         px, py = self.lattice.period_x, self.lattice.period_y
         tol = _BOUNDS_RTOL * max(px, py)
         xy = self.geometry.corners()

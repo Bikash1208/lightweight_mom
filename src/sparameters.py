@@ -31,6 +31,7 @@ from .constants import C0, EPS0, ETA0, MU0
 from .excitation import PlaneWaveExcitation, ReferencePlanes, stack_tangential_field
 from .geometry import UnitCell
 from .green_function import LayeredGreenFunction
+from .loads import check_load_geometry, load_matrix
 from .mom_matrix import assemble_excitation_vector, assemble_impedance_matrix
 from .solver import solve
 
@@ -391,6 +392,15 @@ def _warn_if_surface_wave_near(unit_cell, green, floquet_order):
         )
 
 
+def _add_loads(z_matrix, unit_cell, basis, green, mesh):
+    """Phase 20 R1: add the lumped-load matrix; a cell without loads returns `z_matrix` unchanged (the same object)."""
+    loads = getattr(unit_cell, "loads", ())
+    if not loads:
+        return z_matrix
+    check_load_geometry(loads, unit_cell, mesh.cells_x, mesh.cells_y)
+    return z_matrix + load_matrix(basis, loads, green.omega)
+
+
 def compute_s_parameters(
     unit_cell: UnitCell,
     frequency,
@@ -421,6 +431,7 @@ def compute_s_parameters(
         _warn_if_surface_wave_near(unit_cell, green, mesh.floquet_order)
     basis = RooftopBasis(unit_cell, mesh.cells_x, mesh.cells_y)
     z_matrix = assemble_impedance_matrix(basis, green, 0.0, 0.0, mesh.floquet_order)
+    z_matrix = _add_loads(z_matrix, unit_cell, basis, green, mesh)
 
     ports = ("top",) if backing == "pec" else PORTS
     v = np.empty((basis.n_unknowns, 2 * len(ports)), dtype=complex)
@@ -518,6 +529,7 @@ class ObliqueSParameters:
     incoming_residual: float
     mean_currents: np.ndarray  # (n_ports, 2 modes, 2) J~_00 [A/m]
     higher_orders_propagate: bool
+    currents: "np.ndarray | None" = None  # solved rooftop coefficients (n_unknowns, 2 * n_ports): columns (port, mode)
 
     @property
     def k0(self):
@@ -661,6 +673,7 @@ def compute_s_parameters_oblique(
         _warn_if_surface_wave_near(unit_cell, green, mesh.floquet_order)
     basis = RooftopBasis(unit_cell, mesh.cells_x, mesh.cells_y)
     z_matrix = assemble_impedance_matrix(basis, green, kx0, ky0, mesh.floquet_order)
+    z_matrix = _add_loads(z_matrix, unit_cell, basis, green, mesh)
     q, p = oblique_basis_vectors(phi)
     e_inc = (q, p)
     ports = ("top",) if backing == "pec" else PORTS
@@ -674,7 +687,7 @@ def compute_s_parameters_oblique(
     for pi in range(len(ports)):
         for mode in range(2):
             mean[pi, mode] = basis.current_coefficients(currents[:, 2 * pi + mode], kx0, ky0)
-    return _oblique_scattering(green, planes, mean, kx0, ky0, theta, phi, higher)
+    return replace(_oblique_scattering(green, planes, mean, kx0, ky0, theta, phi, higher), currents=currents)
 
 
 def sweep_s_parameters_oblique(unit_cell, frequencies, mesh, planes, theta, phi=0.0):

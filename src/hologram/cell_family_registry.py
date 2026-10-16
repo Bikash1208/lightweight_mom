@@ -1,0 +1,265 @@
+"""Phase 27 item 2: cell-family / state-library registry, described by DOMAIN OF VALIDITY, not by code path.
+
+A `CellFamily` states what a family was characterised for -- substrate, backing, period, frequencies with data, incidence
+range, what the data *is* (scalar reflection, 2x2 Jones/tensor, supercell beta/alpha table, discrete switchable states) --
+plus its validation label, known biases and fabrication rules. `check_request` answers whether a design request lies inside
+that domain; outside it the answer is the named state `NOT_AVAILABLE_FROM_CURRENT_DATA` with the reasons, never an
+extrapolation.
+
+Discrete-state libraries (the RIS case, roadmap R4) are `CellFamily` entries with `data_kind="discrete_states"` and one
+`StateSpec` per state; each state carries a `ResponseGrid` (a 2x2 reflection matrix versus frequency, theta, phi). No schema
+change is needed to register N states (`tests/test_cell_family_registry.py` registers a synthetic 4-state family).
+"""
+
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+
+NOT_AVAILABLE = "NOT_AVAILABLE_FROM_CURRENT_DATA"
+AVAILABLE = "AVAILABLE"
+
+DATA_KINDS = ("scalar_gamma", "jones_2x2", "supercell_beta_alpha_table", "discrete_states")
+RESPONSE_KINDS = ("scalar_gamma", "reflection_2x2", "beta_alpha_table")
+VALIDATION_LABELS = (
+    "HFSS_VALIDATED",
+    "HFSS_VALIDATED_ONE_RUN",
+    "HFSS_CALIBRATED",
+    "SOLVER_SUPERCELL",
+    "SOLVER_INTERNAL",
+    "MODEL_ONLY",
+    "NOT_HFSS_VALIDATED",
+)
+_TOL_EPS, _TOL_TAN, _TOL_H_MM, _TOL_F_GHZ, _TOL_P_MM = 1e-6, 1e-6, 1e-4, 5e-3, 1e-6
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+@dataclass(frozen=True)
+class SubstrateSpec:
+    name: str
+    eps_r: float
+    tan_d: float
+    h_mm: float
+
+
+@dataclass(frozen=True)
+class ResponseGrid:
+    """What a state's data cover. `reflection_2x2`: a 2x2 Jones matrix (linear x/y basis) per (f, theta, phi)."""
+
+    kind: str
+    f_ghz: tuple
+    theta_deg: tuple = (0.0,)
+    phi_deg: tuple = (0.0,)
+    basis: str = "linear_xy"
+    data_path: "str | None" = None
+
+
+@dataclass(frozen=True)
+class StateSpec:
+    state_id: str
+    label: str
+    response: ResponseGrid
+    bias: "dict | None" = None  # e.g. {"diode_1": "on", "diode_2": "off"} or a geometry description
+    note: str = ""
+
+
+@dataclass(frozen=True)
+class CellFamily:
+    name: str
+    geometry_type: str
+    substrate: SubstrateSpec
+    backing: str  # "pec" (grounded) | "air"
+    period_mm: float
+    data_kind: str
+    validation_label: str
+    frequencies_ghz: tuple = ()  # discrete frequencies with data ...
+    frequency_band_ghz: "tuple | None" = None  # ... or a continuous band the solver can build on demand
+    incidence_max_theta_deg: float = 0.0  # 0: normal incidence (or the beam's kt) only
+    states: tuple = ()
+    known_biases: tuple = ()
+    fabrication_rules: dict = field(default_factory=dict)
+    data_paths: tuple = ()
+    validation_evidence: tuple = ()
+    notes: str = ""
+
+    def to_dict(self):
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class RequestCheck:
+    state: str  # AVAILABLE | NOT_AVAILABLE_FROM_CURRENT_DATA
+    reasons: tuple
+    family: str
+    validation_label: str
+    known_biases: tuple
+
+    def to_dict(self):
+        return asdict(self)
+
+
+_REGISTRY = {}
+
+
+def validate_family(f):
+    """Schema checks; raises ValueError on a malformed entry. Returns `f`."""
+    if f.data_kind not in DATA_KINDS:
+        raise ValueError(f"{f.name}: data_kind {f.data_kind!r} not in {DATA_KINDS}")
+    if f.validation_label not in VALIDATION_LABELS:
+        raise ValueError(f"{f.name}: validation_label {f.validation_label!r} not in {VALIDATION_LABELS}")
+    if not f.frequencies_ghz and f.frequency_band_ghz is None:
+        raise ValueError(f"{f.name}: needs frequencies_ghz or frequency_band_ghz")
+    if f.backing not in ("pec", "air"):
+        raise ValueError(f"{f.name}: backing must be 'pec' or 'air'")
+    if f.data_kind == "discrete_states":
+        if len(f.states) < 2:
+            raise ValueError(f"{f.name}: a discrete-state family needs >= 2 states")
+        ids = [s.state_id for s in f.states]
+        if len(set(ids)) != len(ids):
+            raise ValueError(f"{f.name}: duplicate state ids {ids}")
+        for s in f.states:
+            if s.response.kind not in RESPONSE_KINDS:
+                raise ValueError(f"{f.name}/{s.state_id}: response kind {s.response.kind!r}")
+            grid_f = set(round(v, 6) for v in s.response.f_ghz)
+            need = set(round(v, 6) for v in f.frequencies_ghz)
+            if need and not need <= grid_f:
+                raise ValueError(
+                    f"{f.name}/{s.state_id}: response grid misses family frequencies {sorted(need - grid_f)}"
+                )
+    elif f.states:
+        raise ValueError(f"{f.name}: states only belong to data_kind 'discrete_states'")
+    return f
+
+
+def register(family):
+    """Add (or replace) a family; returns it."""
+    _REGISTRY[family.name] = validate_family(family)
+    return family
+
+
+def unregister(name):
+    _REGISTRY.pop(name, None)
+
+
+def get(name):
+    if name not in _REGISTRY:
+        raise KeyError(f"no registered cell family {name!r}")
+    return _REGISTRY[name]
+
+
+def list_families():
+    return dict(_REGISTRY)
+
+
+def check_request(name, substrate=None, f_ghz=None, period_mm=None, theta_deg=None):
+    """Is a design request inside the family's domain of validity? Unspecified items are not checked.
+    `substrate`: `(eps_r, tan_d, h_mm)` or a `SubstrateSpec`."""
+    f = get(name)
+    why = []
+    if substrate is not None:
+        e, t, h = (
+            (substrate.eps_r, substrate.tan_d, substrate.h_mm) if isinstance(substrate, SubstrateSpec) else substrate
+        )
+        s = f.substrate
+        if abs(e - s.eps_r) > _TOL_EPS or abs(t - s.tan_d) > _TOL_TAN or abs(h - s.h_mm) > _TOL_H_MM:
+            why.append(
+                f"substrate (eps_r {e:g}, tan_d {t:g}, h {h:g} mm) is not the characterised one (eps_r {s.eps_r:g}, tan_d {s.tan_d:g}, h {s.h_mm:g} mm)"
+            )
+    if period_mm is not None and abs(period_mm - f.period_mm) > _TOL_P_MM:
+        why.append(f"period {period_mm:g} mm is not the characterised {f.period_mm:g} mm")
+    if f_ghz is not None:
+        ok = any(abs(f_ghz - v) <= _TOL_F_GHZ for v in f.frequencies_ghz)
+        if not ok and f.frequency_band_ghz is not None:
+            ok = f.frequency_band_ghz[0] <= f_ghz <= f.frequency_band_ghz[1]
+        if not ok:
+            have = list(f.frequencies_ghz) or list(f.frequency_band_ghz)
+            why.append(f"frequency {f_ghz:g} GHz has no data (have {have})")
+    if theta_deg is not None and abs(theta_deg) > f.incidence_max_theta_deg + 1e-9:
+        why.append(f"incidence {theta_deg:g} deg exceeds the characterised {f.incidence_max_theta_deg:g} deg")
+    return RequestCheck(NOT_AVAILABLE if why else AVAILABLE, tuple(why), f.name, f.validation_label, f.known_biases)
+
+
+def _builtin():
+    rt5880 = SubstrateSpec("Rogers RT/duroid 5880", 2.2, 0.0009, 1.575)
+    register(
+        CellFamily(
+            name="tensor_slotted_circle_rt5880_6p4",
+            geometry_type="slotted circular patch (D 6.0 mm, rotating rectangular slot L x W)",
+            substrate=rt5880,
+            backing="pec",
+            period_mm=6.4,
+            data_kind="supercell_beta_alpha_table",
+            validation_label="SOLVER_SUPERCELL",
+            frequencies_ghz=(10.54,),
+            incidence_max_theta_deg=0.0,
+            known_biases=(
+                "SLL optimistic by about 4 dB (model -22.8 dB vs HFSS -18.2/-18.5 dB, one hexagon)",
+                "AR and XPD pessimistic (model 2.5 dB / 16.9 dB vs HFSS 1.3 dB / 23 dB, one hexagon)",
+                "gain anchored to one HFSS run (-0.68 dB offset); conversion eta 0.54 (target 0.85 not reachable on this board)",
+                "launch fraction is HFSS_CALIBRATED on one board (pin 6.0 mm above the surface, R x 1.30)",
+                "GAMMA_0_COLLINEAR_ONLY: beta/alpha table for propagation along the supercell axis",
+            ),
+            fabrication_rules={"min_bridge_mm": 0.35, "table_slots_min_bridge_mm": 0.43, "diameter_mm": 6.0},
+            data_paths=(
+                "results/phase26/supercell_table_4p4x1p2.json",
+                "results/phase26/supercell_table_4p6x1p6.json",
+                "results/phase26/supercell_table_4p8x1p6.json",
+                "results/phase26/supercell_table_4p8x2p0.json",
+            ),
+            validation_evidence=(
+                "hfss_results/hex150_tensor_cp_single/: 23.03 dBi RHCP, AR 1.3 dB, XPD 23 dB, S11 -15.0 dB at 10.54 GHz (one run)",
+            ),
+            notes="table cells chosen nearest-grid (no cross-period interpolation); other substrates were studied model-only (results/phase26/substrate/)",
+        )
+    )
+    register(
+        CellFamily(
+            name="onebit_empty_square585_rt5880_6p4",
+            geometry_type="1-bit pair: empty cell | 5.85 mm square patch (gap 0.55 mm)",
+            substrate=rt5880,
+            backing="pec",
+            period_mm=6.4,
+            data_kind="discrete_states",
+            validation_label="NOT_HFSS_VALIDATED",
+            frequencies_ghz=(10.54,),
+            states=(
+                StateSpec(
+                    "0",
+                    "empty",
+                    ResponseGrid("scalar_gamma", (10.54,)),
+                    note="reflection phase +138.1 deg at 10.54 GHz",
+                ),
+                StateSpec(
+                    "1",
+                    "square 5.85 mm",
+                    ResponseGrid("scalar_gamma", (10.54,)),
+                    note="reflection phase -41.4 deg at 10.54 GHz",
+                ),
+            ),
+            known_biases=(
+                "LOCAL_PERIODICITY_POOR_AT_DESIGN_GAP_PLANE_WAVE_CHECK (Phase 25): isolated-cell model overstates the contrast of the 0.55 mm-gap pair",
+                "4-port hex150 board in HFSS: 19.85 dBi vs model 25.8-26.0 dBi; ~40 % grazing power",
+            ),
+            fabrication_rules={"gap_mm": 0.55},
+            data_paths=("src/hologram/auto_states.py",),
+            validation_evidence=("hfss_results/hex150_gap0/ (4-port board, port 3 alone): 19.85 dBi at (30, 224)",),
+            notes="states are computed on demand by auto_states.py (mesh-corrected MoM); only the 10.54 GHz phases are recorded here",
+        )
+    )
+    register(
+        CellFamily(
+            name="square_patch_grounded_rt5880_8mm",
+            geometry_type="rectangular PEC patch L x W, grounded (Phase 12C design point)",
+            substrate=rt5880,
+            backing="pec",
+            period_mm=8.0,
+            data_kind="scalar_gamma",
+            validation_label="MODEL_ONLY",
+            frequency_band_ghz=(10.0, 15.0),
+            known_biases=("near resonance: mesh-convergence residual 3.9 deg unexplained (G4 case, ungrounded)",),
+            data_paths=("configs/config_phase12c_grounded_8mm.yaml",),
+            notes="library built on demand by the app's auto-library; period chosen in Phase 12B",
+        )
+    )
+
+
+_builtin()

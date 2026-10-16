@@ -102,3 +102,88 @@ def test_hex4_static_full_grid_matches_the_phase26_board_a_numbers():
     r = svc.run_design({"board": "hex4_static"})
     g = [p["gain_rhcp_or_lhcp_dbi"] for p in r["ports"]]
     assert g == pytest.approx([23.11, 22.97, 23.11, 22.97], abs=0.05)
+
+
+# ----------------------------------------------------------------------------------- item 4: exports
+from pathlib import Path  # noqa: E402
+
+from src.export.tensor_cp_export import export_app_result  # noqa: E402
+
+_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _dxf_entities(path):
+    """Geometry of a DXF as comparable tuples. ezdxf's text output is not byte-stable (timestamps, GUIDs, and the
+    order of two internal objects change between runs), so entities are compared, not bytes."""
+    import ezdxf
+
+    out = []
+    for e in ezdxf.readfile(path).modelspace():
+        if e.dxftype() == "CIRCLE":
+            out.append(
+                ("CIRCLE", e.dxf.layer, round(e.dxf.center.x, 6), round(e.dxf.center.y, 6), round(e.dxf.radius, 6))
+            )
+        else:
+            out.append((e.dxftype(), e.dxf.layer, tuple((round(x, 6), round(y, 6)) for x, y, *_ in e.get_points())))
+    return out
+
+
+def test_app_export_of_the_single_hexagon_matches_the_committed_phase26_folder(tmp_path):
+    r = svc.run_design({"board": "single"})
+    names = export_app_result(r, tmp_path)
+    assert {
+        "hfss_build_board.py",
+        "layout.csv",
+        "layout.json",
+        "layout.dxf",
+        "layout.png",
+        "predictions.json",
+        "README.md",
+    } <= set(names)
+    ref = _ROOT / "hfss_exports/hex150_tensor_cp_single"
+    for f in ("hfss_build_board.py", "layout.csv", "layout.json", "predictions.json", "layout.png"):
+        assert (tmp_path / f).read_bytes() == (ref / f).read_bytes(), f
+    assert _dxf_entities(tmp_path / "layout.dxf") == _dxf_entities(ref / "layout.dxf")
+
+
+def test_app_export_hex4_has_drive_port_option_and_four_ports(tmp_path):
+    r = svc.run_design({"board": "hex4_combined", "quick": True})
+    export_app_result(r, tmp_path, drive_port=3)
+    src = (tmp_path / "hfss_build_board.py").read_text()
+    assert "DRIVE_PORT = 3" in src and src.count("AssignLumpedPort") == 1 and "FEEDS = [(64.952, 112.500)" in src
+    compile(src, "hfss_build_board.py", "exec")
+    import json
+
+    pred = json.loads((tmp_path / "predictions.json").read_text())
+    assert pred["board"] == "hex4_combined" and pred["state"] == "PREDICTION_NOT_HFSS_VALIDATED"
+
+
+def test_export_refuses_an_unavailable_design(tmp_path):
+    with pytest.raises(ValueError):
+        export_app_result(svc.run_design({"board": "single", "frequency_ghz": 9.0}), tmp_path)
+
+
+def test_app_export_endpoint_produces_downloadable_files():
+    pytest.importorskip("fastapi")
+    from fastapi.testclient import TestClient
+
+    from src.app.main import create_app
+
+    client = TestClient(create_app())
+
+    def wait(job):
+        for _ in range(600):
+            st = client.get(f"/api/jobs/{job['id']}").json()
+            if st["status"] in ("done", "failed"):
+                return st
+            time.sleep(0.2)
+        raise AssertionError("job timed out")
+
+    d = wait(client.post("/api/tensor_cp/design", json={"board": "single", "quick": True}).json())
+    assert d["status"] == "done"
+    e = wait(client.post("/api/tensor_cp/export", json={"job_id": d["id"]}).json())
+    assert e["status"] == "done" and "hfss_build_board.py" in e["result"]["files"]
+    r = client.get(e["result"]["download"]["hfss_build_board.py"])
+    assert r.status_code == 200 and b"InsertDesign" in r.content
+    assert client.post("/api/tensor_cp/export", json={"job_id": "nope"}).status_code == 404
+    assert client.post("/api/tensor_cp/export", json={"job_id": d["id"], "drive_port": 7}).status_code == 400

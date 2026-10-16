@@ -324,6 +324,69 @@ def pol_metrics(et, ep, theta, phi, beam):
     }
 
 
+def _scan_record(table, poly, x, y, green, theta, phi, eta_design, taper, hand, beam, n_psi):
+    """One design of the Phase 26 C scan: march, cell design, aperture pattern, metrics. Returns `(rec, d, m, (et, ep))`;
+    `hand` -1 (LHCP) evaluates the RHCP metrics on `(E_theta, -E_phi)`."""
+    th0, ph0 = np.radians(beam[0]), np.radians(beam[1])
+    m = march_rays(table, poly, (0.0, 0.0), K0, th0, ph0, eta_design, taper_c=taper, n_psi=n_psi)
+    d = cell_design(m, table, x, y, (0.0, 0.0), K0, th0, ph0, hand=hand)
+    et, ep = pattern(d, x, y, green, theta, phi)
+    if hand < 0:
+        ep = -ep
+    mt = metrics(et, ep, theta, phi, beam=tuple(beam))
+    eta = m["eta_conv"]
+    rec = {
+        "hand": hand,
+        "eta_design": eta_design,
+        "taper_c": taper,
+        "eta_conv": eta,
+        "eta_conv_by_ray_min_max": [float(m["eta_conv_by_ray"].min()), float(m["eta_conv_by_ray"].max())],
+        "metrics_ap": mt,
+        "gain_rhcp_dbi_launch_bare": mt["directivity_ap_rhcp_dbi"] + 10 * np.log10(LAUNCH_BARE * eta),
+        "gain_rhcp_dbi_launch_loaded": [mt["directivity_ap_rhcp_dbi"] + 10 * np.log10(l * eta) for l in LAUNCH_LOADED],
+    }
+    return rec, d, m, (et, ep)
+
+
+def _selected_blocks(rec, d, green, x, y, theta, phi, beam, hand):
+    """Accepted-power budget and the ideal-polarisation-compensation bound of a selected design (Phase 26 C)."""
+    mt, eta = rec["metrics_ap"], rec["eta_conv"]
+    bud = {}
+    for tag, lf in (
+        ("launch_bare_0.592", LAUNCH_BARE),
+        ("launch_loaded_0.66", LAUNCH_LOADED[0]),
+        ("launch_loaded_0.88", LAUNCH_LOADED[1]),
+    ):
+        bud[tag] = {
+            "pin_direct_space_wave_assumed_outside_beam": 1 - lf,
+            "unconverted_reaches_edge": lf * (1 - eta),
+            "aperture_radiated": lf * eta,
+            "main_beam_8deg": lf * eta * mt["within_8deg_fraction"],
+            "main_beam_8deg_rhcp": lf * eta * mt["within_8deg_rhcp_fraction"],
+            "lhcp_total_in_aperture_pattern": lf * eta * mt["lhcp_fraction"],
+            "grazing_plus_back_upper_bound_unmodelled": (1 - lf) + lf * (1 - eta),
+        }
+    th0, ph0 = np.radians(beam[0]), np.radians(beam[1])
+    kx0 = K0 * np.sin(th0) * np.cos(ph0)
+    ky0 = K0 * np.sin(th0) * np.sin(ph0)
+    g = np.asarray(green.spectral_dyad(np.array(kx0), np.array(ky0)))
+    mmat = np.linalg.inv(g)
+    jc = np.stack([d["jx"], d["jy"]], axis=-1) @ mmat.T
+    dc = dict(d)
+    dc["jx"], dc["jy"] = jc[:, 0], jc[:, 1]
+    etc, epc = pattern(dc, x, y, green, theta, phi)
+    if hand < 0:
+        epc = -epc
+    mc = metrics(etc, epc, theta, phi, beam=tuple(beam))
+    ideal = {
+        "label": "UPPER_BOUND_NOT_REALISED_BY_THE_CELL_FAMILY",
+        "metrics_ap": mc,
+        "note": "J' = g(k_t,beam)^-1 J per cell: removes the grounded slab's TM/TE element-factor ellipticity at the beam "
+        "direction; needs an independently controlled second modulation (not designed here).",
+    }
+    return bud, ideal
+
+
 def design_single_hexagon(quick=False, table_glob=None, log=print):
     """The Phase 26 C single-hexagon design scan. Returns `(res, cells)`; `res` is the content of `tensor_cp_hexagon.json`
     (without `seconds`-independent file I/O), `cells` that of `tensor_cp_hexagon_cells.json`."""
@@ -349,25 +412,10 @@ def design_single_hexagon(quick=False, table_glob=None, log=print):
     for hand in (+1,):
         for eta_design in (0.5, 0.7, 0.9):
             for taper in (0.0, 0.5, 0.8):
-                m = march_rays(
-                    table, poly, (0.0, 0.0), K0, THETA0, PHI0, eta_design, taper_c=taper, n_psi=360 if quick else 720
+                rec, d, m, _ = _scan_record(
+                    table, poly, x, y, green, theta, phi, eta_design, taper, hand, (30.0, 225.0), 360 if quick else 720
                 )
-                d = cell_design(m, table, x, y, (0.0, 0.0), K0, THETA0, PHI0, hand=hand)
-                et, ep = pattern(d, x, y, green, theta, phi)
-                mt = metrics(et, ep, theta, phi)
-                eta = m["eta_conv"]
-                rec = {
-                    "hand": hand,
-                    "eta_design": eta_design,
-                    "taper_c": taper,
-                    "eta_conv": eta,
-                    "eta_conv_by_ray_min_max": [float(m["eta_conv_by_ray"].min()), float(m["eta_conv_by_ray"].max())],
-                    "metrics_ap": mt,
-                    "gain_rhcp_dbi_launch_bare": mt["directivity_ap_rhcp_dbi"] + 10 * np.log10(LAUNCH_BARE * eta),
-                    "gain_rhcp_dbi_launch_loaded": [
-                        mt["directivity_ap_rhcp_dbi"] + 10 * np.log10(l * eta) for l in LAUNCH_LOADED
-                    ],
-                }
+                mt, eta = rec["metrics_ap"], rec["eta_conv"]
                 res["scan"].append(rec)
                 log(
                     f"hand {hand:+d} eta_d {eta_design} taper {taper}: eta_conv {eta:.3f}  D_ap {mt['directivity_ap_rhcp_dbi']:.2f}  "
@@ -379,40 +427,11 @@ def design_single_hexagon(quick=False, table_glob=None, log=print):
                     best = (key, rec, d, m)
     _, rec, d, m = best
     res["selected"] = {k: v for k, v in rec.items()}
-    # ---- budget of the ACCEPTED power (assumptions stated, nothing invented) ---------------------
-    mt, eta = rec["metrics_ap"], rec["eta_conv"]
-    bud = {}
-    for tag, lf in (
-        ("launch_bare_0.592", LAUNCH_BARE),
-        ("launch_loaded_0.66", LAUNCH_LOADED[0]),
-        ("launch_loaded_0.88", LAUNCH_LOADED[1]),
-    ):
-        bud[tag] = {
-            "pin_direct_space_wave_assumed_outside_beam": 1 - lf,
-            "unconverted_reaches_edge": lf * (1 - eta),
-            "aperture_radiated": lf * eta,
-            "main_beam_8deg": lf * eta * mt["within_8deg_fraction"],
-            "main_beam_8deg_rhcp": lf * eta * mt["within_8deg_rhcp_fraction"],
-            "lhcp_total_in_aperture_pattern": lf * eta * mt["lhcp_fraction"],
-            "grazing_plus_back_upper_bound_unmodelled": (1 - lf) + lf * (1 - eta),
-        }
-    res["accepted_power_budget"] = bud
-    # ---- element-factor check: ideal polarization pre-compensation (NOT realised by the cell family) ----
-    kx0 = K0 * np.sin(THETA0) * np.cos(PHI0)
-    ky0 = K0 * np.sin(THETA0) * np.sin(PHI0)
-    g = np.asarray(green.spectral_dyad(np.array(kx0), np.array(ky0)))
-    mmat = np.linalg.inv(g)
-    jc = np.stack([d["jx"], d["jy"]], axis=-1) @ mmat.T
-    dc = dict(d)
-    dc["jx"], dc["jy"] = jc[:, 0], jc[:, 1]
-    etc, epc = pattern(dc, x, y, green, theta, phi)
-    mc = metrics(etc, epc, theta, phi)
-    res["ideal_polarization_compensation"] = {
-        "label": "UPPER_BOUND_NOT_REALISED_BY_THE_CELL_FAMILY",
-        "metrics_ap": mc,
-        "note": "J' = g(k_t,beam)^-1 J per cell: removes the grounded slab's TM/TE element-factor ellipticity at the beam "
-        "direction; needs an independently controlled second modulation (not designed here).",
-    }
+    mt = rec["metrics_ap"]
+    res["accepted_power_budget"], res["ideal_polarization_compensation"] = _selected_blocks(
+        rec, d, green, x, y, theta, phi, (30.0, 225.0), +1
+    )
+    mc = res["ideal_polarization_compensation"]["metrics_ap"]
     log(
         f"uncompensated XPD {mt['xpd_at_peak_db']:.1f} AR {mt['ar_at_peak_db']:.2f} | ideal-compensated XPD {mc['xpd_at_peak_db']:.1f} "
         f"AR {mc['ar_at_peak_db']:.2f} dB RHCPfrac {mc['rhcp_fraction']:.3f}"
@@ -607,13 +626,13 @@ def single_hexagon_cells(table, eta_design=0.9, taper_c=0.5, beam_deg=(30.0, 225
     ]
 
 
-def single_hex_predictions(res):
+def single_hex_predictions(res, beam=(30.0, 225.0), hand=+1):
     """`predictions.json` content of the single-hexagon export from the design-scan result `res` (`tensor_cp_hexagon.json`)."""
     sel = res["selected"]
     pred = {
         "labels": res["labels"],
         "state": "PREDICTION_NOT_HFSS_VALIDATED",
-        "beam_target_theta_phi_deg": [30.0, 225.0],
+        "beam_target_theta_phi_deg": [float(beam[0]), float(beam[1])],
         "frequency_ghz": 10.54,
         "selected_design": {
             k: sel[k] for k in ("hand", "eta_design", "taper_c", "eta_conv", "eta_conv_by_ray_min_max")
@@ -627,6 +646,8 @@ def single_hex_predictions(res):
         "ideal_polarization_compensation_upper_bound": res["ideal_polarization_compensation"]["metrics_ap"],
         "frequencies_10p33_10p75": "NOT_AVAILABLE_FROM_CURRENT_DATA (supercell table is at 10.54 GHz only)",
     }
+    if hand < 0:
+        pred["handedness"] = "lhcp"
     return pred
 
 
@@ -696,3 +717,35 @@ def fourhex_a_predictions(design, scope, n_cells):
         ],
     }
     return pred
+
+
+def single_selected(table, beam=(30.0, 225.0), hand=+1, eta_design=0.9, taper_c=0.5, quick=False):
+    """The selected single-hexagon design only, with the blocks `single_hex_predictions` needs. Returns `(res, cells)`;
+    for the default arguments `res` equals the committed scan result's `labels`/`selected`/budget/ideal-compensation entries."""
+    poly = hexagon()
+    x, y = lattice_cells(poly)
+    green = LayeredGreenFunction(SUB, F, backing="pec")
+    theta = np.arange(0.0, 90.0 + 1e-9, 2.0 if quick else 1.0)
+    phi = np.arange(0.0, 360.0, 3.0 if quick else 2.0)
+    rec, d, _, _ = _scan_record(
+        table, poly, x, y, green, theta, phi, eta_design, taper_c, hand, beam, 360 if quick else 720
+    )
+    bud, ideal = _selected_blocks(rec, d, green, x, y, theta, phi, beam, hand)
+    res = {
+        "labels": ["SOLVER_SUPERCELL", "MODEL_ONLY", "NOT_HFSS_VALIDATED", "GAMMA_0_COLLINEAR_ONLY"],
+        "selected": rec,
+        "accepted_power_budget": bud,
+        "ideal_polarization_compensation": ideal,
+    }
+    cells = [
+        {
+            "x_mm": float(x[i] * 1e3),
+            "y_mm": float(y[i] * 1e3),
+            "slot_L_mm": float(d["slot_L_mm"][i]),
+            "slot_W_mm": float(d["slot_W_mm"][i]),
+            "slot_angle_deg": float(np.degrees(d["slot_angle_rad"][i])),
+            "alpha_np_per_m": float(d["alpha"][i]),
+        }
+        for i in range(x.size)
+    ]
+    return res, cells

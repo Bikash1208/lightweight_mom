@@ -49,6 +49,9 @@
       <details open><summary>Power budget</summary><pre id="budget"></pre></details>
       <details open><summary>Known biases (registry)</summary><ul id="biases"></ul></details>
       <p id="warnings"></p>
+      <p id="export-box"><label>Drive port (four-hexagon boards; 0 = HFSS default)<input type="number" id="drive" min="0" max="4" value="0" /></label>
+        <button type="button" id="export-btn">Export for HFSS</button> <span id="export-status"></span></p>
+      <ul id="downloads"></ul>
       <img id="cellmap" alt="cell map" style="max-width:48%" />
       <img id="pattern" alt="pattern cut" style="max-width:48%" />
     </div>
@@ -77,7 +80,23 @@
     if (job.status !== "done") { $("status").textContent = "Failed: " + JSON.stringify(job.error); return; }
     show(job);
   });
+  let lastJob = null;
+  $("export-btn").addEventListener("click", async () => {
+    $("export-status").textContent = "Exporting...";
+    const r = await fetch("/api/tensor_cp/export", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ job_id: lastJob, drive_port: +$("drive").value }) });
+    if (!r.ok) { $("export-status").textContent = "Rejected: " + (await r.json()).detail; return; }
+    let job = await r.json();
+    while (!["done", "failed", "cancelled"].includes(job.status)) {
+      await new Promise((s) => setTimeout(s, 1000));
+      job = await (await fetch("/api/jobs/" + job.id)).json();
+    }
+    if (job.status !== "done") { $("export-status").textContent = "Failed: " + JSON.stringify(job.error); return; }
+    $("export-status").textContent = "Done.";
+    $("downloads").innerHTML = Object.entries(job.result.download).map(([n, u]) => `<li><a href="${u}">${n}</a></li>`).join("");
+  });
   function show(job) {
+    lastJob = job.id;
     const res = job.result;
     $("status").textContent = "Done.";
     $("results").style.display = "";

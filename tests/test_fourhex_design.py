@@ -49,7 +49,7 @@ def test_global_phase_reference_only_rotates_slots_of_a_hexagon_with_same_beam(b
 
 def test_export_script_is_valid_python_with_four_ports_and_drive_option(tmp_path):
     cells = [{"x_mm": 10.0, "y_mm": 12.8, "slot_L_mm": 4.8, "slot_W_mm": 2.0, "slot_angle_deg": 33.0, "port": 1}]
-    src = ex.aedt_script(cells, beams="test")
+    src = ex.aedt_script_fourhex(cells, beams="test")
     ast.parse(src)
     assert "DRIVE_PORT = 0" in src and "def set_sources" in src and src.count("Port%d") >= 2 and "FEEDS = [(64.952, 112.500)" in src
     assert "(\"mono_h\", \"7.575mm\")" in src

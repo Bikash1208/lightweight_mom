@@ -10,6 +10,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
+from ...export.tensor_cp_export import export_app_result
 from ...hologram import cell_family_registry as registry
 from ...hologram import tensor_cp_service as service
 from ..jobs import config_hash
@@ -44,6 +45,37 @@ def _run_job(job, body):
     result = service.run_design(body, out_dir=out, progress=progress, cancelled=lambda: job.cancelled)
     job.progress, job.progress_message = 1.0, "done"
     return result
+
+
+class TensorCPExportRequest(BaseModel):
+    job_id: str  # a finished /design job
+    drive_port: int = 0  # four-hexagon boards: 0 = HFSS default sources, 1..4 = one port driven, the others 50 ohm
+    with_step: bool = False  # single hexagon only: also write board.step (CadQuery; tens of MB)
+
+
+def _export_job(job, source_result, body):
+    job.progress_message = "writing the board files"
+    names = export_app_result(
+        source_result, job_output_dir(body["job_id"]), drive_port=body["drive_port"], with_step=body["with_step"]
+    )
+    job.progress = 1.0
+    return {
+        "job_id": body["job_id"],
+        "files": names,
+        "download": {n: f"/api/files/{body['job_id']}/{n}" for n in names},
+    }
+
+
+@router.post("/export")
+def export(body: TensorCPExportRequest, request: Request):
+    if body.drive_port not in (0, 1, 2, 3, 4):
+        raise HTTPException(400, "drive_port must be 0..4")
+    source = request.app.state.jobs.get(body.job_id)
+    if source is None or source.kind != "tensor_cp_design":
+        raise HTTPException(404, f"no finished tensor_cp_design job {body.job_id!r}")
+    if source.status.value != "done" or (source.result or {}).get("state") != "OK":
+        raise HTTPException(409, "the design job is not finished with state OK")
+    return request.app.state.jobs.submit("tensor_cp_export", _export_job, source.result, body.model_dump()).to_dict()
 
 
 @router.get("/defaults")

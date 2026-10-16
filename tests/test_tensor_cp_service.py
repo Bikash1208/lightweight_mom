@@ -187,3 +187,86 @@ def test_app_export_endpoint_produces_downloadable_files():
     assert r.status_code == 200 and b"InsertDesign" in r.content
     assert client.post("/api/tensor_cp/export", json={"job_id": "nope"}).status_code == 404
     assert client.post("/api/tensor_cp/export", json={"job_id": d["id"], "drive_port": 7}).status_code == 400
+
+
+# ----------------------------------------------------------------------------------- item 5: HFSS comparison
+_HFSS = _ROOT / "hfss_results/hex150_tensor_cp_single"
+
+
+def test_app_compare_reproduces_the_committed_single_hexagon_hfss_numbers():
+    pytest.importorskip("fastapi")
+    from fastapi.testclient import TestClient
+
+    from src.app.main import create_app
+
+    client = TestClient(create_app())
+    files = {
+        "gain_csv": ("g.csv", (_HFSS / "realized_gain_RHCP_LHCP_10p5GHz_1deg.csv").read_bytes()),
+        "params_txt": ("p.txt", (_HFSS / "antenna_params_10p5GHz.txt").read_bytes()),
+        "s_param": ("S11.csv", (_HFSS / "S11_8_12GHz.csv").read_bytes()),
+        "ar_csv": ("ar.csv", (_HFSS / "axial_ratio_phi224_8_12GHz.csv").read_bytes()),
+    }
+    r = client.post("/api/tensor_cp/compare", data={"board": "single", "pin": "scripted"}, files=files)
+    assert r.status_code == 200, r.text
+    rep = r.json()["report"]
+    assert rep["measured"]["peak_rhcp_gain_dbi"] == pytest.approx(23.03, abs=0.01)
+    assert rep["measured"]["xpd_at_peak_db"] == pytest.approx(23.0, abs=0.1)
+    assert rep["checks"]["peak_gain"]["state"] == "GAIN_WITHIN_PREDICTED_RANGE"
+    assert rep["s_parameter"]["s_db_at_design"] == pytest.approx(-15.0, abs=0.05)
+    assert "GAIN_WITHIN_PREDICTED_RANGE" in r.json()["markdown"]
+    assert client.post("/api/tensor_cp/compare", data={"board": "single"}).status_code == 400  # nothing uploaded
+
+
+def test_compare_module_matches_the_old_script_numbers_and_fourhex_beam_argument():
+    from src.hologram import tensor_cp_compare as cmpm
+
+    g = cmpm.read_gain_csv(_HFSS / "realized_gain_RHCP_LHCP_10p5GHz_1deg.csv")
+    a, _ = cmpm.analyse(g)
+    b, _ = cmpm.analyse(g, beam=(30.0, 225.0))
+    assert a == b
+    c, _ = cmpm.analyse(g, beam=(30.0, 45.0))
+    assert c["pointing_error_deg"] > 50.0  # the beam argument is honoured (no hidden global)
+
+
+def test_app_compare_hex4_with_synthetic_exports(tmp_path):
+    pytest.importorskip("fastapi")
+    import numpy as np
+    from fastapi.testclient import TestClient
+
+    from src.app.main import create_app
+    from src.hologram import tensor_cp_compare as cmpm
+
+    th, ph = np.arange(0.0, 180.0 + 1e-9, 2.0), np.arange(-180.0, 180.0 + 1e-9, 2.0)
+    lines = ['"Freq [GHz]","Phi [deg]","Theta [deg]","dB(RealizedGainLHCP) []","dB(RealizedGainRHCP) []"']
+    for q in ph:
+        for t in th:
+            d = cmpm._angle_to(t, np.mod(q, 360.0), 30.0, 135.0)
+            lines.append(
+                f"10.54,{q:g},{t:g},{23.0 - 25.0 - 12.0 * (d / 8.0) ** 2:.3f},{max(23.0 - 12.0 * (d / 8.0) ** 2, -30.0):.3f}"
+            )
+    rows = ["# GHZ S DB R 50"]
+    for f in (10.0, 10.54, 11.0):
+        vals = []
+        for i in range(4):
+            for j in range(4):
+                vals += [(-15.0 if i == j else -55.0), 0.0]
+        rows.append(f"{f} " + " ".join(str(v) for v in vals[:8]))
+        rows += [" ".join(str(v) for v in vals[8 * k : 8 * k + 8]) for k in range(1, 4)]
+    client = TestClient(create_app())
+    r = client.post(
+        "/api/tensor_cp/compare",
+        data={"board": "hex4", "gain_ports": "2"},
+        files=[("gain_files", ("g2.csv", "\n".join(lines).encode())), ("s_param", ("b.s4p", "\n".join(rows).encode()))],
+    )
+    assert r.status_code == 200, r.text
+    rep = r.json()["report"]
+    assert rep["ports"]["2"]["checks"]["peak_gain"]["state"] == "GAIN_WITHIN_PREDICTED_RANGE"
+    assert rep["coupling"]["pairs"]["1-2"]["state"] == "COUPLING_BELOW_RAW_ESTIMATE"
+    assert (
+        client.post(
+            "/api/tensor_cp/compare",
+            data={"board": "hex4", "gain_ports": "2,3"},
+            files=[("gain_files", ("g.csv", b"x"))],
+        ).status_code
+        == 400
+    )

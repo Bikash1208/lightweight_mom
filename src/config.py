@@ -187,8 +187,8 @@ def config_from_dict(data):
         optional=("theta_deg", "phi_deg", "polarization"),
     )
     theta_deg = _number("excitation.theta_deg", exc.get("theta_deg", 0.0))
-    if theta_deg != 0.0:
-        raise ConfigError("excitation.theta_deg: Phase 1 supports normal incidence only (theta_deg must be 0)")
+    if not 0.0 <= theta_deg < 90.0:  # Phase 20 R1: oblique incidence allowed (S-parameters in the TE/TM basis)
+        raise ConfigError("excitation.theta_deg: must satisfy 0 <= theta_deg < 90")
     try:
         frequency = units.parse_frequency(exc["frequency"], "excitation.frequency")
     except ValueError as e:

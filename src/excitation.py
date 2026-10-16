@@ -10,8 +10,8 @@ Geometry/direction convention (documented in CONVENTIONS.md):
       kx0 = k0*sin(theta)*cos(phi),  ky0 = k0*sin(theta)*sin(phi),
       kz0 = k0*cos(theta).
 
-* Polarization is the direction of the incident E-field: 'x' or 'y'. It must be
-  perpendicular to k_inc (checked). TE/TM labels are not defined yet.
+* Polarization is the direction of the incident E-field: 'x' or 'y' (must be perpendicular to k_inc, checked),
+  or (Phase 20 R1) 'te' / 'tm' relative to the plane of incidence (see _OBLIQUE_LABELS).
 * Amplitude: the incident field has unit amplitude, |E_inc| = 1 V/m, *evaluated at
   the pattern plane z = 0* (phase reference). Moving the phase reference to the
   S-parameter reference planes is a later (de-embedding) step.
@@ -36,6 +36,9 @@ from .frequency import (
 from .green_function import LayeredGreenFunction
 
 _POLARIZATIONS = {"x": (1.0, 0.0, 0.0), "y": (0.0, 1.0, 0.0)}
+# Phase 20 R1: "te" / "tm" are defined relative to the plane of incidence (azimuth phi): TE = E along q = z x p,
+# TM = E in the plane of incidence with tangential part along p = (cos phi, sin phi).  At theta = 0, phi = 0: TE = y, TM = x.
+_OBLIQUE_LABELS = ("te", "tm")
 
 
 @dataclass(frozen=True)
@@ -51,8 +54,10 @@ class PlaneWaveExcitation:
             object.__setattr__(self, name, finite_real(name, getattr(self, name)))
         if not 0.0 <= self.theta < math.pi / 2:
             raise ValueError(f"theta must satisfy 0 <= theta < pi/2, got {self.theta}")
-        if self.polarization not in _POLARIZATIONS:
-            raise ValueError(f"polarization must be one of {sorted(_POLARIZATIONS)}, got {self.polarization!r}")
+        if self.polarization not in _POLARIZATIONS and self.polarization not in _OBLIQUE_LABELS:
+            raise ValueError(
+                f"polarization must be one of {sorted(_POLARIZATIONS) + list(_OBLIQUE_LABELS)}, got {self.polarization!r}"
+            )
         k_hat = np.asarray(self.wavevector) / self.k0
         if abs(np.dot(self.e_field_direction, k_hat)) > 1e-12:
             raise ValueError(
@@ -87,6 +92,12 @@ class PlaneWaveExcitation:
     @property
     def e_field_direction(self):
         """Unit vector of the incident E-field."""
+        if self.polarization == "te":
+            return np.array([-math.sin(self.phi), math.cos(self.phi), 0.0])
+        if self.polarization == "tm":
+            return np.array(
+                [math.cos(self.theta) * math.cos(self.phi), math.cos(self.theta) * math.sin(self.phi), math.sin(self.theta)]
+            )
         return np.array(_POLARIZATIONS[self.polarization])
 
 

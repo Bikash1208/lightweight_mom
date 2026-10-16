@@ -42,7 +42,11 @@ of them and add a test. Nothing below may change silently between modules.
   part of `k_inc` from +x toward +y:
   `kx0 = k0 sinθ cosφ`, `ky0 = k0 sinθ sinφ`, `kz0 = k0 cosθ`.
 - Polarization = direction of the incident E-field (`x` or `y`), must be ⟂ `k_inc`.
-  TE/TM and circular-polarization labels are **not yet defined**.
+- **TE / TM (Phase 20 R1)**, relative to the plane of incidence (azimuth `φ`): `p = (cosφ, sinφ)`, `q = ẑ × p = (−sinφ, cosφ)`.
+  TE: `E ∥ q` (⟂ plane of incidence). TM: tangential `E ∥ p` (E in the plane of incidence; `E = (cosθ cosφ, cosθ sinφ, sinθ)`).
+  At `θ = 0, φ = 0`: **TE = y, TM = x**; in general the pair is the x/y pair rotated by `φ`. S-parameters at oblique
+  incidence are given in this basis, index 0 = TE, 1 = TM (`ObliqueSParameters`, S_PARAMETERS.md Sec. 11).
+  Circular-polarization labels are defined in DATABASE.md Sec. 7.
 
 ## Floquet modes and the kz branch
 - Quasi-periodicity: `E(x+Px, y) = E(x, y)·exp(−j·kx0·Px)` (same for y).
@@ -123,4 +127,4 @@ of them and add a test. Nothing below may change silently between modules.
 ## Not yet fixed (decide in later phases, then document here)
 - Which handedness naming (IEEE right-hand rule as used here, or the optics naming) the holographic synthesis and any
   measurement/simulation reference will use; the basis vectors themselves are fixed above.
-- Oblique-incidence port definitions.
+- (Oblique-incidence port definitions: fixed in Phase 20 R1, see above and S_PARAMETERS.md Sec. 11.)

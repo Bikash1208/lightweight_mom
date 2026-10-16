@@ -1,9 +1,10 @@
-> **PARKED 2026-10-13 (Phase 24):** the RIS work (Phase 20) is paused, not started. Nothing below is current work until the user re-activates it.
-
 # Phase 20 / R1 — MoM solver: lumped loads, oblique incidence, composite geometry
 
-**Status:** active brief. Read `docs/START_HERE.md`, `docs/STATUS.md`, `CLAUDE.md`, then
-`docs/briefs/PHASE20_RIS_ROADMAP.md` for context. Work on a new branch `phase20-ris` from `main`.
+**Status:** active brief (re-activated 2026-10-16; written 2026-10-09). Starts **after Phase 27 closes**. Read
+`docs/START_HERE.md`, `docs/STATUS.md`, `CLAUDE.md`, then `docs/briefs/PHASE20_RIS_ROADMAP.md` (especially "What Phase
+26/27 give RIS"). Work on a new branch `phase20-ris` from the **Phase 27 branch head** (`phase27-app-tensor-cp`), not from
+`main`: the Phase 26 Bloch/tensor code and the Phase 27 registry are not on `main` yet. Record the base commit in the
+first commit message.
 
 ## Why
 A 2-bit PIN-diode RIS cell (roadmap) needs three things the periodic MoM does not have: a diode (lumped RLC) across a
@@ -23,6 +24,13 @@ exceptions".
 ## Work items (one commit each, `make test-fast` green before each)
 
 **1. Oblique incidence (grounded and ungrounded stacks).**
+- **First, audit what already works.** Phase 26 B2 drove the MoM at real transverse wavenumbers kt > k0 with an
+  impressed field and no solver change (`src/dispersion/tensor_sheet.py`). Write down, with a test for each, which parts
+  of the (kx0, ky0) path (Green's function, assembly, excitation vector, current coefficients) are already correct at
+  kt < k0, and change only what is missing (port modes, field decomposition, config, S-parameter output). Report the
+  audit in the commit message.
+- **Output the full 2×2 reflection** (co- and cross-pol, TE/TM basis) at oblique incidence, not only the co-pol term;
+  the RIS state library (R4) stores 2×2 per state.
 - Thread `(kx0, ky0)` from the excitation through assembly, excitation vector, current coefficients and the (0,0)
   field decomposition. Define the port modes at oblique incidence as **TE and TM** (with respect to the plane of
   incidence), document the basis and reference planes in `docs/theory/S_PARAMETERS.md` and
@@ -74,3 +82,4 @@ model-only until the user's HFSS numbers exist; known-limitations list: remove "
 - Change any result for an existing config (bit-identical at θ = 0 and with no loads is a hard gate).
 - Model vias or vertical currents (out of scope; the RIS cell's centre via is handled as a labelled approximation).
 - Start R2–R6.
+- Touch the Phase 27 app code beyond what R1 needs (nothing in R1 needs the app).

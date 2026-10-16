@@ -125,7 +125,6 @@ Measured 2026-10-13 on `phase24-cleanup` (ruff 0.16.9, Python 3.14, macOS):
 - `PHASE16_UNIT_CELL_SPARAM_TOOL.md` — a unit-cell/FSS tool with plane-defined S-parameters (the
   measurement-plane technique `scripts/adhoc/fss/plane_s.py` prototyped for the
   square-loop FSS reference, `hfss_exports/fss_square_loop_10mm/`). Not implemented.
-- `PHASE20_RIS_ROADMAP.md` and `PHASE20_R1_SOLVER_LOADS_OBLIQUE.md` — the 2-bit PIN-diode reconfigurable-metasurface (RIS)
-  roadmap and its first item (solver loads + oblique incidence). **Paused, not started**; nothing in `src/` implements it.
+- (The Phase 20 RIS roadmap and R1 brief were **re-activated 2026-10-16** and moved to `docs/briefs/`; R1 starts after Phase 27 closes. Nothing in `src/` implements them yet.)
 - Also parked, no brief written yet: transmitarray support in the app (Phase 19 Part E), oblique incidence in the MoM core, tensor
-  (anisotropic) unit cells (would relax the scalar-cell XPD ceiling above), 2-bit multi-port.
+  (anisotropic) unit cells in the app (done in research code, Phase 26; app wiring is Phase 27), 2-bit multi-port.

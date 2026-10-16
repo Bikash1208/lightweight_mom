@@ -139,8 +139,9 @@ def hex_of_point(x, y):
     return 0
 
 
-def design_board(board, table, taper_c=0.5, eta_design=0.9, density_factory=None):
-    """cells (global mm) + per-port march/design, `board` 'A' or 'B'."""
+def design_board(board, table, taper_c=0.5, eta_design=0.9, density_factory=None, beams=None, hand=+1):
+    """cells (global mm) + per-port march/design, `board` 'A' or 'B'. `beams`: optional `{port: (theta_deg, phi_deg)}`
+    (default theta 30 and the board's phi); `hand` +1 RHCP, -1 LHCP (project convention)."""
     phis = PHI_A if board == "A" else PHI_B
     poly0 = hexagon()
     out = {}
@@ -148,7 +149,8 @@ def design_board(board, table, taper_c=0.5, eta_design=0.9, density_factory=None
         xs, ys = lattice_cells_mm(f, shared=True)
         keep = np.hypot(xs - f[0], ys - f[1]) >= KEEP_FEED_MM
         xs, ys = xs[keep], ys[keep]
-        th0, ph0 = np.radians(30.0), np.radians(phis[j])
+        th_deg, ph_deg = (30.0, phis[j]) if beams is None else beams[j]
+        th0, ph0 = np.radians(th_deg), np.radians(ph_deg)
         m = march_rays(
             table,
             poly0,
@@ -162,11 +164,11 @@ def design_board(board, table, taper_c=0.5, eta_design=0.9, density_factory=None
             density_fn=None if density_factory is None else density_factory(j),
         )
         xr, yr = (xs - f[0]) * 1e-3, (ys - f[1]) * 1e-3
-        d = cell_design(m, table, xr, yr, (0.0, 0.0), K0, th0, ph0, hand=+1)
+        d = cell_design(m, table, xr, yr, (0.0, 0.0), K0, th0, ph0, hand=hand)
         if board == "B":  # global phase reference: the board centre instead of this feed
             kt = K0 * np.sin(th0)
             kdotr = kt * (xs * 1e-3 * np.cos(ph0) + ys * 1e-3 * np.sin(ph0))
-            chi = d["phi_ref"] - kdotr
+            chi = hand * (d["phi_ref"] - kdotr)
             axis = 0.5 * (chi + d["phi"])
             jj = d["amp"] * np.exp(-1j * d["phi_ref"])
             d = dict(d)

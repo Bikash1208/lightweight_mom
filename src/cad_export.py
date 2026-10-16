@@ -158,6 +158,10 @@ def build_unit_cell_solids(unit_cell: UnitCell, metal_export_thickness_m=DEFAULT
     else:  # "aperture" (slot): full-period plate minus the feature
         plate = cq.Workplane("XY").rect(px_mm, py_mm).extrude(t_mm)
         metal = plate.cut(_feature_solid(geo, t_mm, 0.0))
+    for ld in unit_cell.loads:  # Phase 20 R1: the MoM treats a load region as conductor; in CAD it is the gap the Load_<k> sheet bridges
+        x0, x1, y0, y1 = (units.to_mm(v) for v in ld.region())
+        cutter = cq.Workplane("XY").center(0.5 * (x0 + x1), 0.5 * (y0 + y1)).rect(x1 - x0, y1 - y0).extrude(t_mm)
+        metal = metal.cut(cutter)
     return substrate, metal
 
 

@@ -105,6 +105,17 @@ def check_load_geometry(loads, unit_cell, nx=None, ny=None):
             or y1 > py / 2 - my + 1e-12
         ):
             raise ValueError(f"load {k} must lie at least one mesh cell inside the unit cell (basis-function images)")
+        # the region must be conductor in the pattern: otherwise no rooftop crosses it and the load has no effect at all
+        xs = np.linspace(x0, x1, 9)[1:-1]
+        ys = np.linspace(y0, y1, 9)[1:-1]
+        gx, gy = np.meshgrid(xs, ys, indexing="ij")
+        if not np.all(unit_cell.is_metal(gx, gy)):
+            warnings.warn(
+                f"load {k}: part of its region is not metal in the unit-cell pattern, so no basis function crosses it there "
+                "and the load has no (or a partial) effect: include the region in the geometry as conductor",
+                UserWarning,
+                stacklevel=3,
+            )
         if nx and ny:
             for v, p, n in ((x0, px, nx), (x1, px, nx), (y0, py, ny), (y1, py, ny)):
                 u = (v + p / 2) / (p / n)

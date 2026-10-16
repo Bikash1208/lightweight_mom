@@ -706,6 +706,62 @@ def compute_s_parameters_oblique(
     return replace(_oblique_scattering(green, planes, mean, kx0, ky0, theta, phi, higher), currents=currents)
 
 
+def compute_s_parameters_oblique_over_loads(
+    unit_cell: UnitCell,
+    frequency,
+    mesh: MeshSettings,
+    planes: ReferencePlanes,
+    theta,
+    phi,
+    load_sets,
+    warn_grating=False,
+    warn_surface_wave=False,
+):
+    """`compute_s_parameters_oblique` for several load configurations of the SAME cell: Z (the expensive part) and the right-hand
+    sides are assembled once, `Z + Z_load(load_set)` is solved for each entry of `load_sets` (an iterable of load tuples; `()` = the
+    cell's geometry with no load impedance). `unit_cell.loads` is ignored; the geometry (including the load regions as conductor)
+    is `unit_cell.geometry`. Returns a list of `ObliqueSParameters`, one per load set, identical to calling
+    `compute_s_parameters_oblique` on `replace(unit_cell, loads=load_set)` (tested)."""
+    if not 0.0 <= theta < math.pi / 2:
+        raise ValueError(f"theta must satisfy 0 <= theta < pi/2, got {theta}")
+    backing = getattr(unit_cell, "backing", "air")
+    green = LayeredGreenFunction(unit_cell.substrate, frequency, backing=backing)
+    _check_planes(green, planes)
+    k0 = green.k0
+    kx0, ky0 = k0 * math.sin(theta) * math.cos(phi), k0 * math.sin(theta) * math.sin(phi)
+    higher = _higher_orders_at(unit_cell, green, kx0, ky0)
+    if warn_grating and higher:
+        _warn_if_grating_orders(unit_cell, green, kx0, ky0)
+    if warn_surface_wave and backing == "pec":
+        _warn_if_surface_wave_near(unit_cell, green, mesh.floquet_order)
+    _warn_if_composite_misaligned(unit_cell, mesh)
+    basis = RooftopBasis(unit_cell, mesh.cells_x, mesh.cells_y)
+    z0 = assemble_impedance_matrix(basis, green, kx0, ky0, mesh.floquet_order)
+    q, p = oblique_basis_vectors(phi)
+    e_inc = (q, p)
+    ports = ("top",) if backing == "pec" else PORTS
+    v = np.empty((basis.n_unknowns, 2 * len(ports)), dtype=complex)
+    for pi, port in enumerate(ports):
+        for mode in range(2):
+            e_stack = green.stack_fields(kx0, ky0, e_inc[mode].astype(complex), 0.0, port)[0]
+            v[:, 2 * pi + mode] = assemble_excitation_vector(basis, e_stack, kx0, ky0)
+    out = []
+    for load_set in load_sets:
+        load_set = tuple(load_set)
+        if load_set:
+            check_load_geometry(load_set, unit_cell, mesh.cells_x, mesh.cells_y)
+            z_matrix = z0 + load_matrix(basis, load_set, green.omega)
+        else:
+            z_matrix = z0
+        currents = solve(z_matrix, v)
+        mean = np.empty((len(ports), 2, 2), dtype=complex)
+        for pi in range(len(ports)):
+            for mode in range(2):
+                mean[pi, mode] = basis.current_coefficients(currents[:, 2 * pi + mode], kx0, ky0)
+        out.append(replace(_oblique_scattering(green, planes, mean, kx0, ky0, theta, phi, higher), currents=currents))
+    return out
+
+
 def sweep_s_parameters_oblique(unit_cell, frequencies, mesh, planes, theta, phi=0.0):
     """`compute_s_parameters_oblique` over frequencies; returns `(results, records)` where each record carries
     `higher_orders_propagate` for that frequency (warnings suppressed: the flag is the record)."""

@@ -214,3 +214,24 @@ def test_config_loads_block():
         config_from_dict({**base, "loads": [{"x": 0, "y": 0, "length": 2e-3, "width": 6e-3}]})  # direction missing
     with pytest.raises(ConfigError):
         config_from_dict({**base, "loads": [{"x": 0, "y": 0, "length": 2e-3, "width": 6e-3, "direction": "x", "Q": 1}]})
+
+
+def test_shared_assembly_over_load_sets_equals_separate_solves():
+    from dataclasses import replace
+
+    from src.sparameters import compute_s_parameters_oblique_over_loads
+
+    sets = [
+        (),
+        (_load(R=30.0, transverse_conducts=False),),
+        (_load(C=0.2e-12, L=1e-9, transverse_conducts=False),),
+        (_load(open_circuit=True),),
+    ]
+    base = _cell(True)
+    mesh = MeshSettings(20, 20, 10)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        shared = compute_s_parameters_oblique_over_loads(base, F, mesh, PLANES, math.radians(35.0), 0.4, sets)
+        for ls, got in zip(sets, shared, strict=True):
+            want = compute_s_parameters_oblique(replace(base, loads=ls), F, mesh, PLANES, math.radians(35.0), 0.4)
+            assert np.array_equal(got.s11, want.s11)

@@ -15,6 +15,8 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+from src.hologram.tensor_cp_design import single_hex_predictions  # noqa: E402
 CELLS = ROOT / "results/phase26/tensor_cp_hexagon_cells.json"
 RESULTS = ROOT / "results/phase26/tensor_cp_hexagon.json"
 OUT = ROOT / "hfss_exports/hex150_tensor_cp_single"
@@ -232,16 +234,7 @@ def write_all(cells_path=CELLS, results_path=RESULTS, out=OUT, name="hex150_tens
         (out / "predictions.json").write_text(json.dumps(predictions, indent=1, default=float))
         return cells, None, res
     sel = res["selected"]
-    pred = {
-        "labels": res["labels"], "state": "PREDICTION_NOT_HFSS_VALIDATED",
-        "beam_target_theta_phi_deg": [30.0, 225.0], "frequency_ghz": 10.54,
-        "selected_design": {k: sel[k] for k in ("hand", "eta_design", "taper_c", "eta_conv", "eta_conv_by_ray_min_max")},
-        "aperture_pattern": sel["metrics_ap"],
-        "realized_gain_rhcp_dbi": {"launch_bare_0.592": sel["gain_rhcp_dbi_launch_bare"], "launch_loaded_0.66_to_0.88": sel["gain_rhcp_dbi_launch_loaded"]},
-        "accepted_power_budget": res["accepted_power_budget"],
-        "ideal_polarization_compensation_upper_bound": res["ideal_polarization_compensation"]["metrics_ap"],
-        "frequencies_10p33_10p75": "NOT_AVAILABLE_FROM_CURRENT_DATA (supercell table is at 10.54 GHz only)",
-    }
+    pred = single_hex_predictions(res)
     (out / "predictions.json").write_text(json.dumps(pred, indent=1, default=float))
     return cells, sel, res
 

@@ -31,34 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import phase26_tensor_cp_hexagon as cp  # noqa: E402
 from src.hologram.tensor_leaky_cp import SupercellTable, cell_design, march_rays  # noqa: E402
 
-FEEDS = {1: (64.952, 112.5), 2: (-194.856, 112.5), 3: (-64.952, -112.5), 4: (194.856, -112.5)}
-PHI = {1: 45.0, 2: 135.0, 3: 225.0, 4: 315.0}
-P_MM = 6.4
-LAUNCH, OFFSET_DB = 0.62, -0.6826632782724573
-BETA_NB = 1.06
-
-
-def hex_poly_mm(c):
-    return np.array([[c[0] + 150 * np.cos(np.radians(90 + 60 * i)), c[1] + 150 * np.sin(np.radians(90 + 60 * i))] for i in range(6)])
-
-
-def inside(poly, x, y, tol=1e-9):
-    ok = np.ones(np.shape(x), dtype=bool)
-    for a, b in zip(poly, np.roll(poly, -1, axis=0), strict=True):
-        ok &= (b[0] - a[0]) * (y - a[1]) - (b[1] - a[1]) * (x - a[0]) >= -tol
-    return ok
-
-
-def lattice_cells_mm(centre, shared, keepout=6.5):
-    n = 70  # +/- 448 mm: covers the whole 650 x 525 mm board for the shared lattice
-    k = np.arange(-n, n + 1)
-    if shared:
-        xg, yg = np.meshgrid(P_MM * k, P_MM * k)
-    else:
-        xg, yg = np.meshgrid(centre[0] + P_MM * k, centre[1] + P_MM * k)
-    x, y = xg.ravel(), yg.ravel()
-    m = inside(hex_poly_mm(centre), x, y) & (np.hypot(x - centre[0], y - centre[1]) >= keepout)
-    return x[m], y[m]
+from src.hologram.tensor_cp_design import BETA_NB, FEEDS, LAUNCH, OFFSET_DB, PHI, P_MM, hex_poly_mm, inside, lattice_cells_mm  # noqa: E402,F401
 
 
 def main(out):

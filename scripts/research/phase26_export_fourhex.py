@@ -15,9 +15,11 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from phase26_export_single_hex import D_MM, H_MM, slot_corners  # noqa: E402
 from phase26_fourhex_scope import FEEDS, PHI, hex_poly_mm  # noqa: E402
+from src.hologram.tensor_cp_design import board_a_predictions, fourhex_a_predictions  # noqa: E402
 
 OUT = ROOT / "hfss_exports/hex4_tensor_cp_static"
 BOARD_X, BOARD_Y = 652.8, 537.6  # as four_port_hex150_gap0
@@ -207,28 +209,6 @@ def write_layout(cells, out, title):
         (out / "layout.png.NOT_WRITTEN.txt").write_text(f"{type(exc).__name__}: {exc}\n")
 
 
-def board_a_predictions(design):
-    a = design["board_A"]
-    pa = a["ports_alone"]
-    cond = {}
-    for s_key in pa:
-        cond[s_key] = {}
-        for j, v in pa[s_key].items():
-            cond[s_key][j] = {
-                "beam_target_theta_phi_deg": [30.0, PHI[int(j)]],
-                "model_peak_theta_phi_deg": [round(v["peak_theta_deg"], 1), round(v["peak_phi_deg"], 1)],
-                "realized_gain_rhcp_dbi_anchored": round(v["rhcp_gain_dbi"], 2),
-                "xpd_at_peak_db": round(v["xpd_db"], 1), "ar_at_peak_db": round(v["ar_peak_db"], 2),
-                "ar_worst_in_minus3db_beam_db": round(v["ar_worst_in_minus3db_beam_db"], 2),
-                "main_only_gain_dbi": round(v["main_only"]["rhcp_gain_dbi"], 2),
-                "pickup_over_main_radiated_power": round(v["pickup_over_main_radiated_power"], 3),
-                "check_item_neighbour_lhcp_lobe": {
-                    "rel_to_main_rhcp_peak_db": round(v["pickup_only"]["lhcp_peak_rel_main_rhcp_peak_db"], 1),
-                    "theta_phi_deg": v["pickup_only"]["lhcp_peak_theta_phi_deg"], "deg_from_beam": round(v["pickup_only"]["lhcp_peak_deg_from_beam"], 1)},
-            }
-    return cond
-
-
 README = """# hex4_tensor_cp_static -- 4-hexagon tensor-CP board A (static beams), Phase 26
 
 **State: PREDICTION_NOT_HFSS_VALIDATED (MODEL_ONLY, SOLVER_SUPERCELL cells).** Four 150 mm hexagons on RT/duroid 5880
@@ -296,21 +276,7 @@ def main(design_dir, out=OUT):
     write_layout(cells, out, f"hex4_tensor_cp_static: {len(cells)} slotted circles (D {D_MM} mm), shared 6.4 mm lattice")
     scope = json.loads((ROOT / "results/phase26/fourhex_scope.json").read_text())
     cond = board_a_predictions(design)
-    pred = {
-        "labels": design["labels"], "state": "PREDICTION_NOT_HFSS_VALIDATED", "board": "A: static beams phi 45/135/225/315, theta 30, RHCP",
-        "frequency_ghz": 10.54, "n_cells": len(cells), "feed": {"pin_top_above_surface_mm": 6.0, "mono_h_from_ground_mm": 7.575, "r_pin_mm": 0.635},
-        "per_port_alone_by_edge_power_scale": cond,
-        "edges_unconverted_power_fraction_of_launched_wave": design["board_A"]["crossing_unconverted_power_fraction_of_launched_wave"],
-        "edge_note": "multiply by the launch fraction 0.62 for the fraction of the accepted power; E-line of the single hexagon: rim/inner power ratio "
-                     "0.7 +- factor 2 vs model 0.54 (non-discriminating): s=1.7 is the upper reading",
-        "coupling": {"adjacent_pairs": {k: {kk: vv for kk, vv in v.items() if kk in ("distance_mm", "raw_estimate_db", "calibrated_estimate_db")}
-                                        for k, v in scope["coupling"]["estimates"].items() if v.get("adjacent")},
-                     "one_bit_board_hfss_range_db": [-73.5, -51.5], "state": "ESTIMATE_BIAS_FROM_ONE_BOARD"},
-        "hfss_size": {"cells": len(cells), "ratio_vs_single_hexagon_cells": round(len(cells) / 1430.0, 2),
-                      "note": "scale the user's single-hexagon tetrahedra/RAM/time by ~4x / ~4x / 5-8x; NOT measured"},
-        "check_items": ["gain per port within +-1 dB of the table (23.0 dBi)", "neighbour LHCP lobe level/direction (table)", "adjacent-pair coupling vs estimate",
-                        "AR at peak <= 3 dB per port", "S11 per port vs the single-hexagon -15 dB at 10.54 GHz"],
-    }
+    pred = fourhex_a_predictions(design, scope, len(cells))
     (out / "predictions.json").write_text(json.dumps(pred, indent=1, default=float))
     lines = ["| port | beam (theta, phi) | model peak | gain dBi (s=1 / s=1.7) | XPD dB | AR peak / worst-in-beam dB | neighbour LHCP lobe (rel. main peak, direction) |", "|---|---|---|---|---|---|---|"]
     for j in ("1", "2", "3", "4"):

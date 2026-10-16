@@ -392,6 +392,20 @@ def _warn_if_surface_wave_near(unit_cell, green, floquet_order):
         )
 
 
+def _warn_if_composite_misaligned(unit_cell, mesh):
+    """Phase 20 R1: a composite geometry with an edge off the mesh grid is staircased -- warn (no effect on other geometries)."""
+    geo = unit_cell.geometry
+    if hasattr(geo, "misaligned_edges"):
+        bad = geo.misaligned_edges(unit_cell.lattice, mesh)
+        if bad:
+            warnings.warn(
+                f"{len(bad)} composite-geometry edge(s) are off the {mesh.cells_x} x {mesh.cells_y} mesh grid "
+                f"(first: {bad[0][0]} = {bad[0][1]:.6g} m): the pattern is staircased to the mesh",
+                UserWarning,
+                stacklevel=3,
+            )
+
+
 def _add_loads(z_matrix, unit_cell, basis, green, mesh):
     """Phase 20 R1: add the lumped-load matrix; a cell without loads returns `z_matrix` unchanged (the same object)."""
     loads = getattr(unit_cell, "loads", ())
@@ -430,6 +444,7 @@ def compute_s_parameters(
     if warn_surface_wave and backing == "pec":
         _warn_if_surface_wave_near(unit_cell, green, mesh.floquet_order)
     basis = RooftopBasis(unit_cell, mesh.cells_x, mesh.cells_y)
+    _warn_if_composite_misaligned(unit_cell, mesh)
     z_matrix = assemble_impedance_matrix(basis, green, 0.0, 0.0, mesh.floquet_order)
     z_matrix = _add_loads(z_matrix, unit_cell, basis, green, mesh)
 
@@ -672,6 +687,7 @@ def compute_s_parameters_oblique(
     if warn_surface_wave and backing == "pec":
         _warn_if_surface_wave_near(unit_cell, green, mesh.floquet_order)
     basis = RooftopBasis(unit_cell, mesh.cells_x, mesh.cells_y)
+    _warn_if_composite_misaligned(unit_cell, mesh)
     z_matrix = assemble_impedance_matrix(basis, green, kx0, ky0, mesh.floquet_order)
     z_matrix = _add_loads(z_matrix, unit_cell, basis, green, mesh)
     q, p = oblique_basis_vectors(phi)

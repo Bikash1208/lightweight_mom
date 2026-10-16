@@ -128,8 +128,8 @@ def _pred_for_job(request, job_id):
     req = res["request"]
     hand = +1 if req["handedness"] == "rhcp" else -1
     beam = tuple(req["beams_deg"][0])
-    sel, _ = design.single_selected(
-        design.SupercellTable.from_files(design.TABLE_GLOB), beam=beam, hand=hand, quick=req.get("quick", False)
+    sel, _ = design_mod.single_selected(
+        design_mod.SupercellTable.from_files(design_mod.TABLE_GLOB), beam=beam, hand=hand, quick=req.get("quick", False)
     )
     return design_mod.single_hex_predictions(sel, beam=beam, hand=hand)
 

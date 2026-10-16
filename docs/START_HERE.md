@@ -25,6 +25,7 @@ monopole .fld (Step 1)  ->  beams & board (Step 2)  ->  pattern & export (Step 3
 
 Run it: `make app`, then walk the 3-step wizard at `http://127.0.0.1:8000`. One worked example
 lives at `inputs/reference_fields/efl_phase_EzZ_example.fld` (see `inputs/README.md`).
+The pure-circular-polarisation, monopole-fed flow (Phase 26/27) is a separate page, "Tensor CP (monopole-fed)" under More tools (`/tensor_cp.html`): design -> HFSS export -> comparison with your HFSS exports. Its cell families and their domains of validity live in `src/hologram/cell_family_registry.py`.
 
 ## Repo map
 

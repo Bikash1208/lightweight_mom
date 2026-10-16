@@ -5,6 +5,22 @@ summarize each phase's own write-up in `docs/history/`/`docs/history/`). No vers
 before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` for current
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
+## Unreleased - Phase 27 - tensor-CP design flow in the app (branch `phase27-app-tensor-cp`)
+- 1: the Phase 26 design flow as `src/hologram/tensor_cp_design.py` (single hexagon, boards A / B on the shared lattice, prediction builders); the
+  `scripts/research/phase26_*` design scripts are wrappers. Regenerated layouts, cells, results JSON and `predictions.json` are **exactly** the committed ones.
+- 2: `src/hologram/cell_family_registry.py`, a cell-family / state-library registry by domain of validity (substrate, period, frequencies with data,
+  incidence, data kind, validation label, known biases, fabrication rules); out-of-domain requests give `NOT_AVAILABLE_FROM_CURRENT_DATA`; the schema takes
+  discrete N-state libraries (2x2 reflection per state vs f, theta, phi) unchanged -- the slot for RIS (Phase 20 R4).
+- 3: "Tensor CP (monopole-fed)" mode: `src/hologram/tensor_cp_service.py`, `/api/tensor_cp/{design,defaults,families}` (background job), page `tensor_cp.html`.
+  Boards: single hexagon, four hexagons with one beam per port, four hexagons combined; RHCP/LHCP; pin height; every number source-labelled with the registry's biases.
+  The 1-bit HMSA flow is untouched.
+- 4: `src/export/tensor_cp_export.py`, `/api/tensor_cp/export` (AEDT script with `DRIVE_PORT`, layout CSV/JSON/DXF/PNG, optional STEP, `predictions.json`, README);
+  the single-hexagon export equals the committed `hfss_exports/hex150_tensor_cp_single/` files (DXF compared by entities: ezdxf text is not byte-stable). The committed
+  `layout.csv` gained the `cross_slot` column the generator writes (cell data unchanged).
+- 5: `src/hologram/tensor_cp_compare.py`, `/api/tensor_cp/compare` (upload the HFSS exports; named states and power budget); with the committed HFSS files it gives 23.03 dBi,
+  XPD 23.0 dB, S11 -15.0 dB at 10.54 GHz. Fixed in item 6: the `design_job_id` option of `/compare` (found by the end-to-end test).
+- 6: end-to-end test `tests/test_app_phase27_tensor_cp.py`; STATUS / START_HERE updated. Additive hooks only: `march_rays(density_fn=)`, `design_board(beams=, hand=)`.
+
 ## Unreleased - Phase 26 - leakage-controlled tensor-CP hexagon
 - A: `src/dispersion/leakage_model.py` (first-order and Floquet-balance leakage of the n = -1 harmonic, scalar and tensor sheets),
   `src/hologram/leaky_forward.py`, `src/dispersion/pin_launch.py` (monopole launch fraction, loaded sheet); HFSS data of

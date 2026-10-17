@@ -131,6 +131,21 @@ def smp1345_off(r_p=None):
     return DiodeModel(name, L_s=_LS.value, C_T=ct.value, R_p=r_p, provenance={"C_T": ct, "L_s": _LS, "R_p": rp})
 
 
+def diode_load(model, x, y, length, width, direction="x", transverse_conducts=False):
+    """A `LumpedLoad` for `model` on a region of `length` (along `direction`) x `width` (across), centred at (x, y) [m].
+
+    The region is the diode/pad footprint: a parameter, not a constant. `transverse_conducts=False` is the physical lumped
+    element (R1 finding: a transversely conducting strip is not the empty gap). A model without R_p is a plain series RLC and
+    becomes the R1 R/L/C load itself (bit-identical); with R_p the load calls `model.impedance(f)` at every frequency.
+    """
+    from ..loads import LumpedLoad
+
+    kw = dict(x=x, y=y, length=length, width=width, direction=direction, transverse_conducts=transverse_conducts)
+    if model.R_p is None:
+        return LumpedLoad(R=model.R_s, L=model.L_s, C=model.C_T, **kw)
+    return LumpedLoad(z_of_f=model.impedance, **kw)
+
+
 def bias_current_budget(n_cells, fraction_on, i_forward=10e-3, v_forward=0.89):
     """Board DC bias implication: (total forward current [A], total DC power [W]) for `n_cells` cells, one diode each,
     `fraction_on` of them ON at `i_forward` (datasheet: V_F = 0.89 V typ at 10 mA, Table 3). Bias-network losses are not included."""

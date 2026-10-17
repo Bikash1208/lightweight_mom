@@ -34,6 +34,7 @@ class LumpedLoad:
     C: "float | None" = None  # series capacitance [F] > 0, or None for no capacitor term
     open_circuit: bool = False  # Z_L = OPEN_OHM AND no conduction transverse to `direction`: the region is an empty gap
     transverse_conducts: bool = True  # False: no current transverse to `direction` in the region (a lumped element only conducts along its axis)
+    z_of_f: "object" = None  # optional callable f[Hz] -> Z_L [ohm] replacing R, L, C (Phase 20 R2: diode models with a parallel branch)
 
     def __post_init__(self):
         for name in ("x", "y", "length", "width", "R", "L"):
@@ -57,6 +58,8 @@ class LumpedLoad:
     def impedance(self, omega):
         if self.open_circuit:
             return complex(OPEN_OHM)
+        if self.z_of_f is not None:
+            return complex(self.z_of_f(omega / (2.0 * np.pi)))
         z = complex(self.R, omega * self.L)
         if self.C is not None:
             z += 1.0 / (1j * omega * self.C)

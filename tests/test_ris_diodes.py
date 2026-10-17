@@ -90,3 +90,72 @@ def test_input_validation():
 def test_bias_budget():
     i, p = bias_current_budget(5685, 0.5)
     assert i == pytest.approx(5685 * 0.5 * 10e-3) and p == pytest.approx(i * 0.89)
+
+
+# ---- item 2: diode -> LumpedLoad ----
+import math  # noqa: E402
+import warnings  # noqa: E402
+
+from src.basis_functions import MeshSettings  # noqa: E402
+from src.composite_geometry import AxisRect, CompositeGeometry  # noqa: E402
+from src.excitation import ReferencePlanes  # noqa: E402
+from src.geometry import UnitCell  # noqa: E402
+from src.loads import LumpedLoad  # noqa: E402
+from src.materials import Metal, Substrate  # noqa: E402
+from src.periodic_bc import RectangularLattice  # noqa: E402
+from src.ris.diodes import diode_load  # noqa: E402
+from src.sparameters import compute_s_parameters_oblique, sweep_s_parameters_oblique  # noqa: E402
+
+SUB = Substrate("rt5880", 2.2, 0.0, 1.575e-3)
+PLANES = ReferencePlanes(2e-3, None, SUB.thickness)
+MESH = MeshSettings(20, 20, 10)
+
+
+def _cell(loads):
+    # two arms joined only by the diode bridge (1 mm along x, 1 mm across): the load is the only conduction path across the gap
+    geo = CompositeGeometry(
+        metal=(
+            AxisRect(-2.25e-3, 0.0, 3.5e-3, 6e-3),
+            AxisRect(2.25e-3, 0.0, 3.5e-3, 6e-3),
+            AxisRect(0.0, 0.0, 1e-3, 1e-3),
+        )
+    )
+    return UnitCell(RectangularLattice(10e-3, 10e-3), geo, SUB, Metal(), backing="pec", loads=tuple(loads))
+
+
+def _s(cell, f=10e9, theta=0.0, phi=0.0):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return compute_s_parameters_oblique(cell, f, MESH, PLANES, theta, phi)
+
+
+def test_series_rlc_diode_is_exactly_the_r1_load():
+    m = DiodeModel("c", 2.0, 0.7e-9, 0.19e-12)
+    ld = diode_load(m, 0, 0, 1e-3, 1e-3)
+    assert (ld.R, ld.L, ld.C, ld.z_of_f, ld.transverse_conducts) == (2.0, 0.7e-9, 0.19e-12, None, False)
+    r1 = LumpedLoad(0, 0, 1e-3, 1e-3, "x", R=2.0, L=0.7e-9, C=0.19e-12, transverse_conducts=False)
+    assert ld == r1
+    assert np.array_equal(
+        _s(_cell([ld]), 10e9, math.radians(30), 0.2).s11, _s(_cell([r1]), 10e9, math.radians(30), 0.2).s11
+    )
+
+
+def test_parallel_branch_uses_model_impedance_at_each_frequency():
+    m = smp1345_off(3e3)
+    ld = diode_load(m, 0, 0, 1e-3, 1e-3)
+    for f in (8e9, 10e9, 12e9):
+        assert ld.impedance(2 * math.pi * f) == pytest.approx(m.impedance(f), rel=1e-12)
+    # a constant z_of_f reproduces the equivalent R1 load
+    const = LumpedLoad(0, 0, 1e-3, 1e-3, "x", z_of_f=lambda f: 5.0 + 0j, transverse_conducts=False)
+    plain = LumpedLoad(0, 0, 1e-3, 1e-3, "x", R=5.0, transverse_conducts=False)
+    assert np.array_equal(_s(_cell([const])).s11, _s(_cell([plain])).s11)
+
+
+def test_sweep_8_to_12_ghz_runs_the_load_per_frequency_and_on_off_differ():
+    freqs = [8e9, 10e9, 12e9]
+    on, _ = sweep_s_parameters_oblique(_cell([diode_load(smp1345_on(), 0, 0, 1e-3, 1e-3)]), freqs, MESH, PLANES, 0.0)
+    off, _ = sweep_s_parameters_oblique(_cell([diode_load(smp1345_off(), 0, 0, 1e-3, 1e-3)]), freqs, MESH, PLANES, 0.0)
+    for f, a, b in zip(freqs, on, off, strict=True):
+        single = _s(_cell([diode_load(smp1345_on(), 0, 0, 1e-3, 1e-3)]), f)
+        assert np.array_equal(a.s11, single.s11)  # the sweep evaluates Z_L(f) at each frequency
+        assert abs(a.s11[1, 1] - b.s11[1, 1]) > 0.05  # TM = x, across the x-directed gap

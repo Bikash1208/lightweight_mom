@@ -5,6 +5,13 @@ summarize each phase's own write-up in `docs/history/`/`docs/history/`). No vers
 before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` for current
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
+## Unreleased - Phase 20 R1 - loads and oblique incidence in the MoM (branch `phase20-ris`, from `phase27-app-tensor-cp` 4b87212; MODEL_ONLY)
+- 1: oblique incidence: audit (19 tests; Green function, stack fields, excitation and currents were already right for kt < k0), full 2x2 TE/TM power-wave S-parameters `compute_s_parameters_oblique`, per-frequency grating-order warning, config accepts 0 <= theta < 90.
+- 2: lumped RLC loads (`src/loads.py`, `UnitCell.loads`, config `loads`); `open_circuit` / `transverse_conducts=False` (a conducting transverse strip is not the empty gap).
+- 3: `CompositeGeometry` (union of metal rectangles minus apertures; one rectangle bit-identical to `rectangle`), mesh-alignment warning, STEP export with `Load_<k>` sheets.
+- 4: demo `results/phase20_r1_demo/` and HFSS check package `hfss_exports/phase20_r1_loaded_cell/` (Richardson-extrapolated MoM reference with per-row uncertainty).
+- Additive only: theta = 0 without loads is bit-identical to the pre-R1 solver (hex-float reference test) and the Phase 23 snapshot is unchanged.
+
 ## Unreleased - Phase 27 - tensor-CP design flow in the app (branch `phase27-app-tensor-cp`)
 - 1: the Phase 26 design flow as `src/hologram/tensor_cp_design.py` (single hexagon, boards A / B on the shared lattice, prediction builders); the
   `scripts/research/phase26_*` design scripts are wrappers. Regenerated layouts, cells, results JSON and `predictions.json` are **exactly** the committed ones.

@@ -43,3 +43,8 @@ is 1/(1/R + jwC) (parallel). If HFSS combines them differently, R_p cannot be ad
   representation uncertainty of OFF in this cell; the HFSS-vs-ideal comparison should not be expected to do better.
 * **Pads are required.** With the boundaries touching the wide arms the 2-D current crowding makes the OFF chain differs by up to 67° from
   the ideal model (ON is insensitive); with 0.5 mm of strip on each side it is 6°; with 1 mm it is 1.4° (separate probe).
+
+## Demo (item 4)
+`DEMO.md` (ON/OFF phase, loss, ±20 % sensitivity, mesh 40 vs 80, bias-current budget), data in `demo_sweep.csv`, `demo_sensitivity.json`,
+`demo_convergence.json`, `bias_budget.json`; regenerate with `python scripts/research/phase20_r2_demo.py`. The HFSS check package for the ON and
+OFF cell (`hfss_exports/phase20_r2_diode_cell/`) is NOT written: it waits for the user's agreement.

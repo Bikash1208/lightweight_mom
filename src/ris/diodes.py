@@ -146,6 +146,54 @@ def diode_load(model, x, y, length, width, direction="x", transverse_conducts=Fa
     return LumpedLoad(z_of_f=model.impedance, **kw)
 
 
+def hfss_chain(model, x, y, element_length, island_length, width, direction="x"):
+    """The HFSS representation of a series diode circuit as a chain of single-type lumped boundaries (Phase 20 R2 item 3).
+
+    HFSS lumped RLC boundaries are not guaranteed to combine R, L, C in series (the semantics differ by version/setup), so the
+    series circuit is built from SEPARATE boundaries, each carrying ONE element type (R, or L, or C, or C parallel R_p -- an
+    unambiguous parallel pair), joined end to end by small perfect-conductor islands. Order along `direction`: R_s, C_T(||R_p), L_s
+    (elements with value 0 / None are omitted). Returns `(loads, islands)`: `LumpedLoad`s (MoM equivalents of the boundaries,
+    `transverse_conducts=False`) and `(cx, cy, length, width)` island rectangles (perfect conductor, in the MoM and in HFSS).
+    """
+
+    elems = []
+    if model.R_s > 0:
+        elems.append(dict(R=model.R_s))
+    if model.C_T is not None:
+        elems.append(dict(C=model.C_T) if model.R_p is None else dict(z_of_f=_cap_par_r(model.C_T, model.R_p)))
+    if model.L_s > 0:
+        elems.append(dict(L=model.L_s))
+    if not elems:
+        raise ValueError("model has no elements (an ideal short needs no boundary)")
+    n = len(elems)
+    total = n * element_length + (n - 1) * island_length
+    pos = -total / 2.0
+    loads, islands = [], []
+    for k, e in enumerate(elems):
+        c = pos + element_length / 2.0
+        loads.append(_chain_load(direction, x, y, c, element_length, width, e))
+        pos += element_length
+        if k < n - 1:
+            islands.append(_chain_rect(direction, x, y, pos + island_length / 2.0, island_length, width))
+            pos += island_length
+    return loads, islands
+
+
+def _cap_par_r(c, r):
+    return lambda f: 1.0 / (1.0 / r + 2j * np.pi * f * c)
+
+
+def _chain_load(direction, x, y, offset, length, width, elem):
+    from ..loads import LumpedLoad
+
+    cx, cy = (x + offset, y) if direction == "x" else (x, y + offset)
+    return LumpedLoad(cx, cy, length, width, direction, transverse_conducts=False, **elem)
+
+
+def _chain_rect(direction, x, y, offset, length, width):
+    return (x + offset, y, length, width) if direction == "x" else (x, y + offset, width, length)
+
+
 def bias_current_budget(n_cells, fraction_on, i_forward=10e-3, v_forward=0.89):
     """Board DC bias implication: (total forward current [A], total DC power [W]) for `n_cells` cells, one diode each,
     `fraction_on` of them ON at `i_forward` (datasheet: V_F = 0.89 V typ at 10 mA, Table 3). Bias-network losses are not included."""

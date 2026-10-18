@@ -159,3 +159,44 @@ def test_sweep_8_to_12_ghz_runs_the_load_per_frequency_and_on_off_differ():
         single = _s(_cell([diode_load(smp1345_on(), 0, 0, 1e-3, 1e-3)]), f)
         assert np.array_equal(a.s11, single.s11)  # the sweep evaluates Z_L(f) at each frequency
         assert abs(a.s11[1, 1] - b.s11[1, 1]) > 0.05  # TM = x, across the x-directed gap
+
+
+# ---- item 3: HFSS chain representation vs the ideal series model ----
+import importlib.util  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+from src.ris.diodes import hfss_chain  # noqa: E402
+
+
+def _repr_script():
+    p = Path(__file__).resolve().parents[1] / "scripts" / "research" / "phase20_r2_hfss_representation.py"
+    spec = importlib.util.spec_from_file_location("phase20_r2_hfss_representation", p)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_chain_structure_and_total_impedance():
+    for m in (smp1345_on(), smp1345_off(), smp1345_off(3e3)):
+        loads, islands = hfss_chain(m, 0.0, 0.0, 0.25e-3, 0.5e-3, 0.5e-3)
+        assert len(loads) == 2 and len(islands) == 1 and not any(ld.transverse_conducts for ld in loads)
+        z = sum(ld.impedance(2 * np.pi * 10e9) for ld in loads)
+        assert z == pytest.approx(m.impedance(10e9), rel=1e-12)  # the series sum of the boundaries is the diode's Z_L
+        xs = sorted(ld.x for ld in loads)
+        assert xs[0] == pytest.approx(-0.375e-3) and xs[1] == pytest.approx(0.375e-3)
+        assert islands[0][0] == pytest.approx(0.0) and islands[0][2] == pytest.approx(0.5e-3)
+    with pytest.raises(ValueError):
+        hfss_chain(DiodeModel("empty"), 0, 0, 1e-3, 1e-3, 1e-3)
+
+
+def test_hfss_chain_equals_ideal_series_model_with_pads_and_not_without():
+    mod = _repr_script()
+    with_pad = mod.compare(0.5e-3, 40)
+    no_pad = mod.compare(0.0, 40)
+    on = [r for r in with_pad if r["model"].startswith("ON")]
+    off = [r for r in with_pad if r["model"].startswith("OFF")]
+    assert max(abs(r["d_phase_deg"]) for r in on) < 0.5 and max(abs(r["d_abs"]) for r in on) < 1e-3
+    # OFF: a systematic ~6 deg from where the C and L sit along the span (not a mesh effect: 40 and 80 agree to < 1 deg, see results/phase20_r2)
+    assert max(abs(r["d_phase_deg"]) for r in off) < 8.0 and max(abs(r["d_abs"]) for r in off) < 0.02
+    # elements touching the wide arms are a different (2-D current crowding) problem: the pads are required
+    assert max(abs(r["d_phase_deg"]) for r in no_pad) > 5 * max(abs(r["d_phase_deg"]) for r in with_pad)

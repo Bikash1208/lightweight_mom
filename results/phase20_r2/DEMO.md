@@ -46,7 +46,7 @@ R_p entries are `ASSUMED_SENSITIVITY_NOT_DEVICE_DATA`; `on:1mA` is the datasheet
 * OFF TM: max |phase(80) - phase(40)| = 2.02 deg (at 10 GHz, theta 60); max |d abs| 0.0002
 * OFF TE: max |phase(80) - phase(40)| = 7.54 deg (at 10 GHz, theta 60); max |d abs| 0.0011
 
-R1's practice (Richardson with the observed order from three meshes) could not be repeated: meshes 60 and 100 put the strip edges mid-cell (the solver warns) and gave non-monotone results (the OFF TM phase read -157 / -180 / -156 deg on 40 / 60 / 80), so they were dropped; with two meshes no order is observable and **no extrapolation is made**. The stated uncertainty of the tables above is therefore the 40 -> 80 difference. TE phase at 60 deg is the worst (several degrees); the ON-OFF TE statement above is robust to it because ON and OFF share the same TE error.
+Meshes 60 and 100 put the strip edges mid-cell (the solver warns) and gave non-monotone results (the OFF TM phase read -157 / -180 / -156 deg on 40 / 60 / 80), so they were dropped. The sweep tables above are mesh 40 (stated error: the 40 -> 80 differences listed here, a lower bound); the 10 GHz extrapolation table (meshes 40/80/120, observed order) is the better number. TE phase at 60 deg is the least converged (several degrees); the ON-OFF TE statement above is robust to it because ON and OFF share the same TE error.
 
 ## Bias-current implication (one diode per cell; V_F = 0.89 V at 10 mA, Table 3; V_F at 1 mA is not given, the 10 mA value is used: an overestimate; bias network excluded)
 | cells | fraction ON | I_F per diode | total current | DC power |

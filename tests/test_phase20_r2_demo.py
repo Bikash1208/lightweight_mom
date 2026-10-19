@@ -46,3 +46,32 @@ def test_committed_sensitivity_and_bias():
     bud = json.loads((OUT / "bias_budget.json").read_text())["rows"]
     r = next(b for b in bud if b["n_cells"] == 1000 and b["fraction_on"] == 0.5 and b["i_forward_a"] == 10e-3)
     assert r["total_current_a"] == pytest.approx(5.0) and r["dc_power_w"] == pytest.approx(5.0 * 0.89)
+
+
+def test_hfss_package_files_and_predictions():
+    pkg = ROOT / "hfss_exports" / "phase20_r2_diode_cell"
+    readme = (pkg / "README.md").read_text()
+    assert readme.index("one-line RLC-boundary check") < readme.index("## The cell")  # the check comes first
+    assert "PREDICTION_NOT_HFSS_VALIDATED" in readme and "PROVISIONAL_DATASHEET" in readme
+    with open(pkg / "mom_reference.csv", newline="") as fh:
+        rows = list(csv.DictReader(fh))
+    assert len(rows) == 2 * 2 * 9 * 2 * 2  # {ON, OFF} x {chain, ideal} x 9 freqs x 2 angles x 2 modes
+    assert {float(r["theta_deg"]) for r in rows} == {0.0, 30.0} and {r["floquet_mode"] for r in rows} == {
+        "1 (TE)",
+        "2 (TM)",
+    }
+    chain = [r for r in rows if r["model"] == "hfss_chain"]
+    assert all(float(r["uncertainty_phase_deg"]) < 15.0 for r in chain)
+    parts = json.loads((pkg / "step_parts.json").read_text())
+    assert parts["parts"]["Metal"]["n_solids"] == 3 and {"Load_1", "Load_2", "Substrate", "Ground"} <= set(
+        parts["parts"]
+    )
+    assert len(parts["load_bboxes_mm"]) == 2
+
+
+def test_mesh120_extrapolation_uses_observed_order_below_two():
+    ext = json.loads((OUT / "demo_extrapolation.json").read_text())
+    assert len(ext) == 12
+    p = [e["observed_order"] for e in ext]
+    assert all(q is not None and 0.8 < q < 2.2 for q in p) and np.median(p) < 2.0  # not the second order R1 assumed
+    assert all(e["uncertainty_phase_deg"] < 3.0 for e in ext)

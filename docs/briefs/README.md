@@ -22,7 +22,7 @@ and reports back against its own acceptance checks.
 - Active: `PHASE26_LEAKY_TENSOR_CP_HEXAGON.md` (leakage-calibrated tensor-cell pure-CP hexagon, model-only until HFSS); `PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md` (Parts A–D done; Parts E/F wait on the user's decision whether
   ±30.00° is a hard specification and on an HFSS run of the lens — see `docs/STATUS.md` "Open next steps").
   Also active (2026-10-16): `PHASE27_APP_TENSOR_CP.md` (tensor-CP design flow in the app, branch `phase27-app-tensor-cp`; do now) and the RIS track
-  `PHASE20_RIS_ROADMAP.md` + `PHASE20_R2_DIODE_MODELS.md` (R1 is finished and archived in `docs/history/briefs/`; R2 in progress on `phase20-ris`).
+  `PHASE20_RIS_ROADMAP.md` (R1 and R2 are finished and archived in `docs/history/briefs/`; R3 waits for its brief, branch `phase20-ris`).
   Nothing else is active; `PHASE24_CURATION_AND_CLEANUP.md` is finished and archived in `docs/history/briefs/`.
 - `_parked/` — deferred ideas, each its own file, not current work: the Phase 25 Butler sector scanner (B/C paused 2026-10-14), and the unit-cell/FSS S-parameter tool (Phase 16).
 

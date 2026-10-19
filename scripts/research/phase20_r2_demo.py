@@ -161,6 +161,80 @@ def convergence(out, freqs=(8e9, 9e9, 10e9, 11e9, 12e9)):
     return rows
 
 
+def fine_mesh(out, f=10e9):
+    """Mesh 120 (aligned: n a multiple of 40 puts the 0.25 mm strip half-width on cell edges) at 10 GHz for theta 0/30/60, ON and OFF.
+    ~4 min and ~16 GB per angle (dense Z of 28800 unknowns). Mesh 160 would need ~42 GB for Z alone: not feasible on a 36 GiB machine."""
+    rows = []
+    for th in ANGLES:
+        r = solve([smp1345_on(), smp1345_off()], f, th, 120, floquet=61)
+        for k, name in enumerate(("ON", "OFF")):
+            for i, mode in enumerate(MODES):
+                z = _co(r[k], i)
+                rows.append(
+                    dict(state=name, theta_deg=th, mode=mode, mesh=120, abs=abs(z), phase_deg=math.degrees(np.angle(z)))
+                )
+    (out / "demo_mesh120.json").write_text(json.dumps(rows, indent=1))
+    return rows
+
+
+def extrapolate(out, f_ghz=10.0):
+    """10 GHz, meshes 40/80/120 (Floquet 24/41/61): observed order p per row from S(n) = S_inf + c / n^p, extrapolated value with that p,
+    and an uncertainty = distance to the extrapolation with p = 1 (first order) and to the 120 mesh, whichever is larger (degrees of phase)."""
+    from scipy.optimize import brentq
+
+    conv = json.loads((out / "demo_convergence.json").read_text())
+    fine = json.loads((out / "demo_mesh120.json").read_text())
+    ns = (40.0, 80.0, 120.0)
+    res = []
+    for fr in fine:
+        c = next(
+            x
+            for x in conv
+            if x["state"] == fr["state"]
+            and x["f_ghz"] == f_ghz
+            and x["theta_deg"] == fr["theta_deg"]
+            and x["mode"] == fr["mode"]
+        )
+        z = [
+            c["mesh40_abs"] * np.exp(1j * np.radians(c["mesh40_phase"])),
+            c["mesh80_abs"] * np.exp(1j * np.radians(c["mesh80_phase"])),
+            fr["abs"] * np.exp(1j * np.radians(fr["phase_deg"])),
+        ]
+        d1, d2 = abs(z[0] - z[1]), abs(z[1] - z[2])
+        p = None
+        if d1 > 1e-9 and d2 > 1e-9:
+            try:
+                p = float(
+                    brentq(lambda q, r=d1 / d2: (ns[0] ** -q - ns[1] ** -q) / (ns[1] ** -q - ns[2] ** -q) - r, 0.1, 8.0)
+                )
+            except ValueError:
+                p = None
+
+        def ext(q, z=z):
+            return (ns[2] ** q * z[2] - ns[1] ** q * z[1]) / (ns[2] ** q - ns[1] ** q)
+
+        e_obs = ext(p) if p else ext(1.0)
+        e1 = ext(1.0)
+        unc = max(abs(np.degrees(np.angle(e1 / e_obs))), abs(np.degrees(np.angle(z[2] / e_obs))))
+        res.append(
+            dict(
+                state=fr["state"],
+                theta_deg=fr["theta_deg"],
+                mode=fr["mode"],
+                observed_order=p,
+                phase40=c["mesh40_phase"],
+                phase80=c["mesh80_phase"],
+                phase120=fr["phase_deg"],
+                extrap_phase_deg=float(np.degrees(np.angle(e_obs))),
+                extrap_abs=float(abs(e_obs)),
+                extrap_phase_p2_deg=float(np.degrees(np.angle(ext(2.0)))),
+                uncertainty_phase_deg=float(unc),
+            )
+        )
+    (out / "demo_extrapolation.json").write_text(json.dumps(res, indent=1))
+    return res
+
+
 def bias(out):
     rows = []
     for n in (100, 1000, 5685):  # 5685 = the board A cell count (an example of a board size, not an RIS design)
@@ -250,10 +324,9 @@ def write_summary(out):
             )
     L += [
         "",
-        "R1's practice (Richardson with the observed order from three meshes) could not be repeated: meshes 60 and 100 put the strip edges mid-cell "
-        "(the solver warns) and gave non-monotone results (the OFF TM phase read -157 / -180 / -156 deg on 40 / 60 / 80), so they were dropped; with two meshes no order is observable "
-        "and **no extrapolation is made**. The stated uncertainty of the tables above is therefore the 40 -> 80 difference. TE phase at 60 deg is the worst (several degrees); "
-        "the ON-OFF TE statement above is robust to it because ON and OFF share the same TE error.",
+        "Meshes 60 and 100 put the strip edges mid-cell (the solver warns) and gave non-monotone results (the OFF TM phase read -157 / -180 / -156 deg on 40 / 60 / 80), so they were dropped. "
+        "The sweep tables above are mesh 40 (stated error: the 40 -> 80 differences listed here, a lower bound); the 10 GHz extrapolation table (meshes 40/80/120, observed order) is the better number. "
+        "TE phase at 60 deg is the least converged (several degrees); the ON-OFF TE statement above is robust to it because ON and OFF share the same TE error.",
         "",
         "## Bias-current implication (one diode per cell; V_F = 0.89 V at 10 mA, Table 3; V_F at 1 mA is not given, the 10 mA value is used: an overestimate; bias network excluded)",
         "| cells | fraction ON | I_F per diode | total current | DC power |",
@@ -276,6 +349,8 @@ def main(out_dir, quick=False):
         convergence(out)
     bias(out)
     if not quick:
+        if (out / "demo_mesh120.json").exists():
+            extrapolate(out)
         write_summary(out)
 
 

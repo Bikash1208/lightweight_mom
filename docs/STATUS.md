@@ -56,7 +56,7 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
 - **Phase 23 limits**: the hexagon trim-board AEDT script is generated and unit-tested but has never been run in AEDT; an
   all-ports sidelobe figure holds only for ONE phase-locked source split across the ports (independent per-port signals: use the
   single-port figure); every optimiser number is a model, held-out grid, not HFSS.
-- **RIS (Phase 20)**: R1 is done (lumped RLC loads, oblique TE/TM incidence, composite geometry; `MODEL_ONLY`, HFSS check package pending). PIN-diode models (R2) are in progress; nothing models bias networks or vias.
+- **RIS (Phase 20)**: R1 is done (lumped RLC loads, oblique TE/TM incidence, composite geometry; `MODEL_ONLY`, HFSS check package pending). PIN-diode ON/OFF models (R2, SMP1345-079LF, `PROVISIONAL_DATASHEET`) are done; nothing models bias networks or vias.
 - Single substrate layer (the normal-incidence S-parameter path is x/y-polarised; oblique incidence uses the TE/TM basis); PEC zero-thickness metal model (a real HFSS
   patch has finite thickness — see the G4/G6 residual above).
 - Transmitarray support is **model-only** (Phase 19, dielectric horn-fed lens; no HFSS comparison yet); the MoM solver itself remains reflectarray/metasurface only. No finite-array (N×N, N not a power of a small factor) full-wave MoM
@@ -81,6 +81,12 @@ Order of work, with what each needs from the user (HFSS runs are the user's):
    - the R1 demo load is a full-width 8 mm strip: TE drives circulating currents through it and absorbs up to 0.68 at 60 deg. A narrow diode should not (R2 checks this);
    - phase converges slowly with mesh (20x20 up to 25 deg off); use meshes >= 40 and extrapolate; the stated extrapolation uncertainty (<= 0.73 deg) is understated where the observed order is < 2;
    - HFSS lumped RLC boundaries put R, L, C in **parallel**, a PIN diode is series: the package uses only pure R, pure C, short and open loads; the series representation is R2 item 3.
+0c. **Phase 20 R2 -> HFSS check (user's run)**: `hfss_exports/phase20_r2_diode_cell/` (SMP1345-079LF ON and OFF as a chain of single-type RLC boundaries with 0.5 mm pads; predictions in `mom_reference.csv`, one-line RLC-boundary check first in its README). Diode values are `PROVISIONAL_DATASHEET` (datasheet 200046U covers 10 MHz-6 GHz, used at 8-12 GHz; R_p `NOT_AVAILABLE_FROM_CURRENT_DATA`; C_T at 0 V not given). Findings that R3 must respect (`results/phase20_r2/DEMO.md`):
+   - the OFF state sits near its series resonance (13.8 GHz) and moves 20-100 deg for +-20 % in C_T or L_s: **R3's objective must include robustness to diode tolerance (+-20 % C_T, L_s), not only four states ~90 deg apart**; ON is robust (L_s +-1.5 deg, R_s irrelevant);
+   - the HFSS series chain differs from the ideal series model by ~6 deg (OFF) with 0.5 mm pads and up to 67 deg without pads;
+   - a 0.5 mm diode bridge removes the TE absorption of the R1 8 mm strip (TE ON-OFF <= 0.6 deg, absorption <= 0.03);
+   - mesh: aligned meshes are n = 40, 80, 120 only (160 needs ~42 GB); observed convergence order at 10 GHz is 1.2-1.65 (not 2), phases at mesh 40 are off by up to ~2 deg (TM) and several deg (TE); extrapolated values are in `DEMO.md`;
+   - board bias current: 1000 cells half ON at 10 mA = 5 A (~4.5 W, bias network excluded).
 1. **Decision, Phase 19**: is ±30.00° a hard specification for the nylon lens? The error bar puts the beam at ≈30.3° median in the
    primary model (0.4° typical pointing error). Parts E/F of `docs/briefs/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md` wait on this.
 2. **HFSS run, one unit-cell check first**: the 10.54 GHz 1-bit pair (empty +138.1° and the 5.85 mm square −41.4°) as a single cell
@@ -132,6 +138,6 @@ Measured 2026-10-13 on `phase24-cleanup` (ruff 0.16.9, Python 3.14, macOS):
 - `PHASE16_UNIT_CELL_SPARAM_TOOL.md` — a unit-cell/FSS tool with plane-defined S-parameters (the
   measurement-plane technique `scripts/adhoc/fss/plane_s.py` prototyped for the
   square-loop FSS reference, `hfss_exports/fss_square_loop_10mm/`). Not implemented.
-- (The Phase 20 RIS roadmap was re-activated 2026-10-16; R1 is finished and archived; R2 is active.)
+- (The Phase 20 RIS roadmap was re-activated 2026-10-16; R1 and R2 are finished and archived; R3 waits for its brief.)
 - Also parked, no brief written yet: transmitarray support in the app (Phase 19 Part E), tensor
   (anisotropic) unit cells in the app (done in research code, Phase 26; app wiring is Phase 27), 2-bit multi-port.

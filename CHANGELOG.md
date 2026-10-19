@@ -5,6 +5,13 @@ summarize each phase's own write-up in `docs/history/`/`docs/history/`). No vers
 before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` for current
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
+## Unreleased - Phase 20 R2 - PIN-diode models (branch `phase20-ris`; MODEL_ONLY, PROVISIONAL_DATASHEET)
+- 1: `src/ris/diodes.py`: SMP1345-079LF ON (R_s + L_s) / OFF (C_T + L_s, optional parallel R_p) with per-value provenance (datasheet 200046U); R_p `NOT_AVAILABLE_FROM_CURRENT_DATA`.
+- 2: `diode_load` -> `LumpedLoad` per frequency; additive `LumpedLoad.z_of_f` (default None: every pre-existing result unchanged); a series-RLC diode is exactly the R1 load.
+- 3: `hfss_chain` (HFSS series representation as single-type boundaries joined by islands) and its MoM check against the ideal series model (ON 0.2 deg, OFF ~6 deg with pads).
+- 4: ON/OFF demo `results/phase20_r2/DEMO.md` (8-12 GHz, theta 0/30/60, sensitivity +-20 %, mesh 40/80/120 at 10 GHz with the observed order, bias budget).
+- 5: HFSS check package `hfss_exports/phase20_r2_diode_cell/` (predictions first; the RLC-boundary check first in its README).
+
 ## Unreleased - Phase 20 R1 - loads and oblique incidence in the MoM (branch `phase20-ris`, from `phase27-app-tensor-cp` 4b87212; MODEL_ONLY)
 - 1: oblique incidence: audit (19 tests; Green function, stack fields, excitation and currents were already right for kt < k0), full 2x2 TE/TM power-wave S-parameters `compute_s_parameters_oblique`, per-frequency grating-order warning, config accepts 0 <= theta < 90.
 - 2: lumped RLC loads (`src/loads.py`, `UnitCell.loads`, config `loads`); `open_circuit` / `transverse_conducts=False` (a conducting transverse strip is not the empty gap).

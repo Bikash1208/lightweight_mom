@@ -60,7 +60,7 @@ unless the user says otherwise.
 |---|---|---|
 | **R1** | Solver: lumped RLC loads across gaps + oblique incidence (TE/TM, θ ≤ 60°) + a composite-rectangle geometry for gapped patches | extended MoM, tests |
 | R2 | Diode models (PIN ON/OFF; varactor C(V) optional) | `src/ris/diodes.py` |
-| R3 | 2-bit cell design: asymmetric two-gap patch on 5880, 10 mm; optimise for four states ~90° apart, balanced \|Γ\|, stable to 60° both pols; **locality test of the cell under 2-bit codings (moved forward from R6)**; one HFSS single-cell check package (user runs it) | cell geometry + state responses |
+| R3 | 2-bit cell design: asymmetric two-gap patch on 5880, 10 mm; optimise for four states ~90° apart, balanced \|Γ\|, stable to 60° both pols; **and robust to diode tolerance: the objective must include ±20 % on C_T and L_s (R2 finding: the OFF state sits near its series resonance, 13.8 GHz, and moves 20–100° for ±20 %), not only four states 90° apart**; **locality test of the cell under 2-bit codings (moved forward from R6)**; one HFSS single-cell check package (user runs it) | cell geometry + state responses |
 | R4 | State library vs f (8–12 GHz), θ, φ, pol (full 2×2 per state); metrics: phase error, magnitude spread, 90°-step bandwidth, angular stability; registered in the Phase 27 registry | library + report |
 | R5 | RIS design mode in the app (on the Phase 27 registry): plane-wave and offset-horn illumination, 2-bit coding map from each cell's real oblique response, quantisation-lobe report (+ random-offset suppression), predicted pattern/gain; HFSS export of a coded board | design module + app path |
 | R6 | Coupling check on real 2-bit coding patterns at array scale (supercell / full-array tools), building on the R3 locality test | report |

@@ -51,7 +51,7 @@ make lint / make format                                # ruff check / ruff check
 - Config is strict: no electrical value has a code default; unknown keys are errors.
 - **Documented, additive exceptions** to "reuse frozen modules unmodified": Phase 12A (optional PEC
   ground plane), 12B (mesh alignment/duplicate audit), 12C (grounded supercells), 12D (general
-  N-port Touchstone reader) and Phase 20 R1 (oblique incidence `compute_s_parameters_oblique`, lumped loads `UnitCell.loads`/`src/loads.py`, `CompositeGeometry`, load sheets in `cad_export`; the normal-incidence path only gains no-op hooks, θ=0 without loads is bit-identical to the pre-R1 solver, checked against `tests/data/r1_theta0_reference.json`) each extend a core module directly, always additively, verified
+  N-port Touchstone reader) and Phase 20 R1 (oblique incidence `compute_s_parameters_oblique`, lumped loads `UnitCell.loads`/`src/loads.py`, `CompositeGeometry`, load sheets in `cad_export`; R2 adds the optional `LumpedLoad.z_of_f`, default `None` = unchanged; the normal-incidence path only gains no-op hooks, θ=0 without loads is bit-identical to the pre-R1 solver, checked against `tests/data/r1_theta0_reference.json`) each extend a core module directly, always additively, verified
   bit-identical for every pre-existing case (see each `docs/history/PHASE12*.md`). `src/phase13/
   convergence.py`'s Richardson extrapolation is the one permitted additive numerics option, app-only.
 - Tests check mathematical/numerical properties (reciprocity, energy conservation, symmetry,

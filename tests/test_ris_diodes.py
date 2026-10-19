@@ -200,3 +200,33 @@ def test_hfss_chain_equals_ideal_series_model_with_pads_and_not_without():
     assert max(abs(r["d_phase_deg"]) for r in off) < 8.0 and max(abs(r["d_abs"]) for r in off) < 0.02
     # elements touching the wide arms are a different (2-D current crowding) problem: the pads are required
     assert max(abs(r["d_phase_deg"]) for r in no_pad) > 5 * max(abs(r["d_phase_deg"]) for r in with_pad)
+
+
+# ---- R3: MACOM MADP-000907-14020 ----
+from src.ris.diodes import madp_000907_off, madp_000907_on  # noqa: E402
+
+
+def test_madp_values_and_provenance():
+    on, off = madp_000907_on(), madp_000907_off()
+    assert on.R_s == 5.2 and on.provenance["R_s"].maximum == 7.0 and "1 GHz" in on.provenance["R_s"].condition
+    assert pytest.approx(0.025e-12) == off.C_T and off.provenance["C_T"].maximum == pytest.approx(0.030e-12)
+    assert on.provenance["R_s"].status == PROVISIONAL and off.provenance["C_T"].status == PROVISIONAL
+    assert (
+        on.L_s == 0.0 and on.provenance["L_s"].status == NOT_AVAILABLE
+    )  # not in the datasheet: stated assumption, never a data claim
+    assert off.provenance["R_p"].status == NOT_AVAILABLE
+    # the datasheet maximum C_T is exactly the +20 % tolerance corner
+    assert off.provenance["C_T"].maximum / off.C_T == pytest.approx(1.2)
+    s = madp_000907_off(l_s=0.1e-9)
+    assert s.L_s == 0.1e-9 and s.provenance["L_s"].status == ASSUMED
+
+
+def test_madp_is_passive_and_off_resonance_depends_on_the_assumed_inductance():
+    assert np.all(madp_000907_off(0.2e-9).impedance(F).real >= 0.0) and np.all(
+        madp_000907_on(0.2e-9).impedance(F).real >= 0.0
+    )
+    assert madp_000907_off().series_resonance_hz is None  # L_s = 0: no series resonance until an inductance is assumed
+    f0 = madp_000907_off(0.2e-9).series_resonance_hz
+    assert f0 == pytest.approx(1 / (2 * np.pi * np.sqrt(0.2e-9 * 0.025e-12)), rel=1e-12) and f0 > 40e9
+    # at 10 GHz the MADP OFF is far more open (|Z| ~ 640 ohm) than the SMP1345 OFF (|Z| ~ 40 ohm)
+    assert abs(madp_000907_off().impedance(10e9)) > 10 * abs(smp1345_off().impedance(10e9))

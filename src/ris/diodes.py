@@ -29,6 +29,7 @@ class Provenance:
     status: str
     source: str
     condition: str = ""
+    maximum: "float | None" = None  # datasheet maximum, where one is given (tolerance bounds)
 
 
 @dataclass(frozen=True)
@@ -129,6 +130,63 @@ def smp1345_off(r_p=None):
     )
     name = "SMP1345-079LF OFF" + ("" if r_p is None else f" (R_p = {r_p:g} ohm assumed)")
     return DiodeModel(name, L_s=_LS.value, C_T=ct.value, R_p=r_p, provenance={"C_T": ct, "L_s": _LS, "R_p": rp})
+
+
+MACOM_DOC = "MACOM MADP-000907-14020x datasheet Rev V8 (DC-0004063)"
+MACOM_RANGE_NOTE = (
+    "datasheet: Rs at 10 mA / 1 GHz, CT at -10 V / 1 MHz, 'useable up to 70 GHz' (so 8-12 GHz is inside the stated usable range, but "
+    "Rs is specified at 1 GHz and no measured de-embedding exists)"
+)
+
+
+def _madp_ls(l_s):
+    """L_s of the flip-chip MADP-000907: not in the datasheet (no package/bump/air-bridge inductance is specified)."""
+    if l_s is None:
+        return 0.0, Provenance(
+            0.0,
+            "H",
+            NOT_AVAILABLE,
+            f"{MACOM_DOC}: no series/package inductance specified",
+            "L_s = 0 is a stated ASSUMPTION for the nominal runs; sweep it",
+        )
+    return float(l_s), Provenance(float(l_s), "H", ASSUMED, "assumed sensitivity value, not device data", "")
+
+
+def madp_000907_on(l_s=None):
+    """MADP-000907-14020 forward-biased: R_s = 5.2 ohm typ (7.0 max), 10 mA, 1 GHz (page 2). `l_s=None`: L_s = 0 (NOT_AVAILABLE)."""
+    rs = Provenance(
+        5.2,
+        "ohm",
+        PROVISIONAL,
+        f"{MACOM_DOC}, Electrical Specifications (p. 2)",
+        f"I_F = 10 mA, F = 1 GHz, typ; {MACOM_RANGE_NOTE}",
+        maximum=7.0,
+    )
+    ls, ls_p = _madp_ls(l_s)
+    return DiodeModel("MADP-000907-14020 ON (10mA)", R_s=rs.value, L_s=ls, provenance={"R_s": rs, "L_s": ls_p})
+
+
+def madp_000907_off(l_s=None, r_p=None):
+    """MADP-000907-14020 reverse-biased: C_T = 0.025 pF typ (0.030 max), -10 V, 1 MHz (page 2). R_p is not specified."""
+    ct = Provenance(
+        0.025e-12,
+        "F",
+        PROVISIONAL,
+        f"{MACOM_DOC}, Electrical Specifications (p. 2)",
+        f"V = -10 V, F = 1 MHz, typ; {MACOM_RANGE_NOTE}",
+        maximum=0.030e-12,
+    )
+    rp = (
+        Provenance(
+            None, "ohm", NOT_AVAILABLE, f"{MACOM_DOC}: no parallel resistance specified", "OFF modelled lossless"
+        )
+        if r_p is None
+        else Provenance(r_p, "ohm", ASSUMED, "assumed sensitivity value, not device data", "")
+    )
+    ls, ls_p = _madp_ls(l_s)
+    return DiodeModel(
+        "MADP-000907-14020 OFF", L_s=ls, C_T=ct.value, R_p=r_p, provenance={"C_T": ct, "L_s": ls_p, "R_p": rp}
+    )
 
 
 def diode_load(model, x, y, length, width, direction="x", transverse_conducts=False):

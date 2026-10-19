@@ -42,7 +42,7 @@ unless the user says otherwise.
 | Cell | patch with two PIN diodes across gaps at the two ends, one via patch-centre → ground (DC bias return); bias lines on a layer behind the ground | topology may change (diode count/positions, slots) if 2-bit isn't reachable |
 | Diode | Skyworks SMP1345-079LF (SC-79); ON = R_s + L_s, OFF = C_T + L_s from the datasheet, labelled provisional | any X-band PIN diode in a pick-and-place package |
 | States | 2-bit: four diode combinations → four phases ≈ 0/90/180/270° | fixed (2-bit) |
-| Polarisation | single linear | dual later; **CP RIS is a decision point at R3** (user's HMSA work requires pure CP; ask before R3 whether the RIS must be CP) |
+| Polarisation | **LP and CP as user-selectable cell families** (decided 2026-10-19) | dual-pol later |
 | Steering | beam 0°–60°; illumination: plane wave and offset horn ≈ 25°, F ≈ 240–300 mm (R5) | horn offset/distance free |
 
 ## Engineering constraints carried into every brief
@@ -69,3 +69,4 @@ unless the user says otherwise.
 | Date | Phase | Item | Old → new | Result that forced it |
 |---|---|---|---|---|
 | 2026-10-16 | roadmap | R6 locality check | after R5 → first part moved into R3 | Phase 25: isolated-cell model fails for abrupt neighbour changes |
+| 2026-10-19 | R3 | polarisation | single linear → **LP and CP as user-selectable families** (two cell families on the same technology; R5 lets the user pick) | user decision at the R3 decision point (the HMSA work requires pure CP; the RIS must serve both) |

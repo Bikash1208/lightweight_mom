@@ -124,6 +124,23 @@ of them and add a test. Nothing below may change silently between modules.
 - Frequency grids and parameter ranges include both end points; the span must be an integer number of steps.
 - A database record is the linear-basis 4×4 S-matrix at the stored reference planes; files are deterministic (no timestamps).
 
+## Circular basis for the RIS cells (Phase 20 R3; `src/ris/polarization.py`)
+The Phase 5 circular basis above labels the **transverse vector** (`e_R = (e_x + j e_y)/√2` for incident and scattered alike), so a reflection
+`RR` reverses handedness. The RIS work needs the other, propagation-relative labelling, because the quantity of interest is the
+**handedness-preserving** reflection of a CP feed. Definition (IEEE right-hand rule about each wave's OWN propagation direction, `exp(+jωt)`):
+
+| wave | travels | RHCP | LHCP |
+|---|---|---|---|
+| incident | −z | `(x + j y)/√2 = (TM + j TE)/√2` | `(x − j y)/√2` |
+| reflected | +z | `(x − j y)/√2 = (TM − j TE)/√2` | `(x + j y)/√2` |
+
+`circular_reflection(s11)[a, b]` (reflected `a`, incident `b`, `a, b ∈ {R, L}`) is built from the R1 power-wave `s11` in the (TE, TM) basis
+(TM = tangential E along p, TE along q; the same relations hold at oblique incidence because the TE/TM amplitudes carry the same √cos θ). It
+equals the Phase 5 `S11_circ` with the REFLECTED index swapped (R↔L). A metal plate has `r_LR = r_RL = −1`, `r_RR = r_LL = 0`; an anisotropic
+cell with a 180° x′/y′ phase difference (half-wave plate) rotated by α has `r_RR = e^{+j2α}`, `r_LL = e^{−j2α}` and no flipped terms
+(tested): rotating the element by α advances the handedness-preserving phase by 2α (Pancharatnam–Berry). The Cartesian helper
+`cartesian_reflection(s11, φ)` maps (TE, TM) to a fixed (x, y) frame at normal incidence for an incidence plane at azimuth φ.
+
 ## Not yet fixed (decide in later phases, then document here)
 - Which handedness naming (IEEE right-hand rule as used here, or the optics naming) the holographic synthesis and any
   measurement/simulation reference will use; the basis vectors themselves are fixed above.

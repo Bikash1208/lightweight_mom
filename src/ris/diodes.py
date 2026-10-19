@@ -241,15 +241,30 @@ def _cap_par_r(c, r):
     return lambda f: 1.0 / (1.0 / r + 2j * np.pi * f * c)
 
 
+def _axis_offsets(direction, offset):
+    """Unit vector of the conduction direction ('x', 'y' or an angle in degrees) scaled by `offset` along it."""
+    ang = {"x": 0.0, "y": 90.0}.get(direction, float(direction) if not isinstance(direction, str) else None)
+    if ang is None:
+        raise ValueError(f"direction must be 'x', 'y' or an angle in degrees, got {direction!r}")
+    a = np.radians(ang)
+    return offset * np.cos(a), offset * np.sin(a)
+
+
 def _chain_load(direction, x, y, offset, length, width, elem):
     from ..loads import LumpedLoad
 
-    cx, cy = (x + offset, y) if direction == "x" else (x, y + offset)
-    return LumpedLoad(cx, cy, length, width, direction, transverse_conducts=False, **elem)
+    ox, oy = _axis_offsets(direction, offset)
+    return LumpedLoad(x + ox, y + oy, length, width, direction, transverse_conducts=False, **elem)
 
 
 def _chain_rect(direction, x, y, offset, length, width):
-    return (x + offset, y, length, width) if direction == "x" else (x, y + offset, width, length)
+    """Island rectangle `(cx, cy, length_x, width_y)` for an axis-aligned chain; `(cx, cy, length, width, angle_deg)` for a rotated one."""
+    if direction == "x":
+        return (x + offset, y, length, width)
+    if direction == "y":
+        return (x, y + offset, width, length)
+    ox, oy = _axis_offsets(direction, offset)
+    return (x + ox, y + oy, length, width, float(direction))
 
 
 def bias_current_budget(n_cells, fraction_on, i_forward=10e-3, v_forward=0.89):

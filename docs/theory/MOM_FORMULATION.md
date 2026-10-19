@@ -278,6 +278,23 @@ by ~0.09 in the test cell). Without loads (`UnitCell.loads == ()`, the default) 
 lie at least one mesh cell inside the unit cell (images of the boundary rooftops), edges should lie on mesh lines (warning otherwise),
 no vertical (via) currents.
 
+## 15. Rotated loads and polygon patches (Phase 20 R3 item 2; `src/loads.py`, `src/polygon_geometry.py`)
+
+A load may have its conduction axis at an angle α from +x (`LumpedLoad(direction=α [deg])`; 0 and 90 are the x and y loads, bit-identical). The
+region is the rectangle of length ℓ along `u = (cos α, sin α)` and width w along `v = (−sin α, cos α)`; the sheet impedance is a tensor,
+
+    Z_s u uᵀ  (+ OPEN_OHM · v vᵀ when the transverse conduction is blocked),   Z_s = Z_L w/ℓ,
+
+and `Z_load,ij = ∫_region f_iᵀ (tensor) f_j dA` with the SAME rooftops as Section 14 (x-directed and y-directed functions couple through
+`u_x u_y`). The region's edges cut the mesh cells arbitrarily, so the integral is a composite 2-point Gauss rule on sub-cells of side ≤ h/4 (convergent,
+not exact). Normalisation (tested at 24 and 48 cells, 30°, 45°, 135°): the rooftops of each family partition unity, so the uniform current
+`J = u` has a pointwise-constant integrand and dissipates exactly `½ R I_tot²`; with the 10¹² Ω transverse penalty the rounding noise is ~10⁻⁶.
+
+**Known numerical limit.** On a diagonal strip only a few cells wide the Cartesian rooftops can satisfy the transverse block (`v·J = 0`) only if
+`J_x = J_y` pointwise, which they cannot do on a staircase, so `transverse_conducts=False` also kills the longitudinal current (tested: the 45° stub of the CP-2
+cell has no effect with the block, a clean 90° phase ladder without it). Rotated diode regions therefore conduct transversely (a full-width sheet over a narrow strip).
+Polygon patches (`PolyComposite`: octagon, oriented rectangles) are staircased by the mesh; `edges_aligned` is False when any edge is not axis-aligned.
+
 ## 13. References (method; equations here are derived, see Section 0)
 
 1. R. F. Harrington, *Field Computation by Moment Methods*, Macmillan, 1968. (Galerkin MoM.)

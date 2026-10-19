@@ -121,6 +121,26 @@ def _composite_metal_solid(geo, t_mm):
     return metal
 
 
+def _poly_solid(poly, t_mm, z0_mm):
+    pts = [(units.to_mm(x), units.to_mm(y)) for x, y in poly.vertices]
+    return cq.Workplane("XY").workplane(offset=z0_mm).polyline(pts).close().extrude(t_mm)
+
+
+def _poly_composite_metal_solid(geo, t_mm):
+    """Phase 20 R3: `PolyComposite` (polygons and axis-aligned rectangles, minus apertures) as one Metal part."""
+    from .polygon_geometry import Poly
+
+    def solid(shape):
+        return _poly_solid(shape, t_mm, 0.0) if isinstance(shape, Poly) else _axis_rect_solid(shape, t_mm, 0.0)
+
+    metal = solid(geo.metal[0])
+    for r in geo.metal[1:]:
+        metal = metal.union(solid(r))
+    for r in geo.apertures:
+        metal = metal.cut(solid(r))
+    return metal
+
+
 def build_load_sheets(unit_cell: UnitCell, metal_export_thickness_m=DEFAULT_METAL_EXPORT_THICKNESS_M):
     """Phase 20 R1: one zero-thickness sheet (a single face) per `unit_cell.loads` entry, in the plane z = t/2 (mid-height of the
     exported metal slab, so the sheet bridges the gap between the side faces of the adjacent metal bodies), covering the load
@@ -130,11 +150,13 @@ def build_load_sheets(unit_cell: UnitCell, metal_export_thickness_m=DEFAULT_META
     t_mm = units.to_mm(_check_thickness(metal_export_thickness_m))
     sheets = []
     for ld in unit_cell.loads:
-        x0, x1, y0, y1 = (units.to_mm(v) for v in ld.region())
         z = t_mm / 2.0
-        wire = cq.Wire.makePolygon(
-            [cq.Vector(x0, y0, z), cq.Vector(x1, y0, z), cq.Vector(x1, y1, z), cq.Vector(x0, y1, z)], close=True
-        )
+        if ld.is_rotated:  # Phase 20 R3: a load on a non-axis-aligned conduction line is a rotated rectangle
+            corners = [cq.Vector(units.to_mm(x), units.to_mm(y), z) for x, y in ld.corners()]
+        else:
+            x0, x1, y0, y1 = (units.to_mm(v) for v in ld.region())
+            corners = [cq.Vector(x0, y0, z), cq.Vector(x1, y0, z), cq.Vector(x1, y1, z), cq.Vector(x0, y1, z)]
+        wire = cq.Wire.makePolygon(corners, close=True)
         sheets.append(cq.Workplane("XY").add(cq.Face.makeFromWires(wire)))
     return sheets
 
@@ -153,14 +175,20 @@ def build_unit_cell_solids(unit_cell: UnitCell, metal_export_thickness_m=DEFAULT
 
     if geo.kind == "composite":  # Phase 20 R1: union of metal rectangles minus aperture rectangles (one Metal part)
         metal = _composite_metal_solid(geo, t_mm)
+    elif geo.kind == "poly_composite":  # Phase 20 R3: polygons (octagon, 45-degree lines) and rectangles
+        metal = _poly_composite_metal_solid(geo, t_mm)
     elif geo.polarity == "metal":
         metal = _feature_solid(geo, t_mm, 0.0)
     else:  # "aperture" (slot): full-period plate minus the feature
         plate = cq.Workplane("XY").rect(px_mm, py_mm).extrude(t_mm)
         metal = plate.cut(_feature_solid(geo, t_mm, 0.0))
     for ld in unit_cell.loads:  # Phase 20 R1: the MoM treats a load region as conductor; in CAD it is the gap the Load_<k> sheet bridges
-        x0, x1, y0, y1 = (units.to_mm(v) for v in ld.region())
-        cutter = cq.Workplane("XY").center(0.5 * (x0 + x1), 0.5 * (y0 + y1)).rect(x1 - x0, y1 - y0).extrude(t_mm)
+        if ld.is_rotated:
+            pts = [(units.to_mm(x), units.to_mm(y)) for x, y in ld.corners()]
+            cutter = cq.Workplane("XY").polyline(pts).close().extrude(t_mm)
+        else:
+            x0, x1, y0, y1 = (units.to_mm(v) for v in ld.region())
+            cutter = cq.Workplane("XY").center(0.5 * (x0 + x1), 0.5 * (y0 + y1)).rect(x1 - x0, y1 - y0).extrude(t_mm)
         metal = metal.cut(cutter)
     return substrate, metal
 

@@ -8,7 +8,7 @@ zero-thickness metal, bias via and bias network omitted. Nothing here is an HFSS
 
 | family | best cell | verdict |
 |---|---|---|
-| **CP-2** (MADP-000907-14020, period 15 mm) | octagon circumradius 4.60 mm, stub line 2.48 mm, stub width 1.37 mm (other dimensions as `Cp2Cell` defaults: diode span 0.75, pad 0.25, overlap 0.1) | **meets phase, amplitude and tolerance targets at θ = 0 and 30° within the extrapolation uncertainty; misses opposite-handed isolation by ~1.4 dB; degrades at 60°** |
+| **CP-2** (MADP-000907-14020, period 15 mm) | octagon circumradius 4.60 mm, stub line **1.75 mm (the optimiser parameter, 2.48 mm, is clamped to the cell-edge limit, see below)**, stub width 1.37 mm (other dimensions as `Cp2Cell` defaults: diode span 0.75, pad 0.25, overlap 0.1) | **meets phase, amplitude and tolerance targets at θ = 0 and 30° within the extrapolation uncertainty; misses opposite-handed isolation by ~1.4 dB; degrades at 60°** |
 | **LP-3** (3 diodes, MADP) | patch 6.53 × 3.37 mm, period 14.97 mm; codes (000),(010),(011),(110) | nearest LP miss: phase deviation 21.7° (target 15°), amplitude −1.74 dB (target −1.5), spread 1.7 dB (target 1), tolerance step errors 30–49° (target 20°) |
 | **LP-2** (2 diodes, MADP) | best of 17 starts | **misses**: phase deviation 48° (period 12 mm) / 58° (period free), tolerance step errors 58–71° |
 | **LP-1** (2 diodes, MADP) | best of 16 starts | **misses**: phase deviation 79°, ladder order destroyed under the diode corners |
@@ -17,7 +17,7 @@ zero-thickness metal, bias via and bias network omitted. Nothing here is an HFSS
 
 Stage 1 (single-state PB condition, stub-0 diode ON, three OFF: x′/y′ reflection-phase difference 180° ± 10°, |r| ≥ −1 dB, widest band) → stage 2 (full 4-state objective incl. θ = 30° and
 the tolerance corners, Nelder–Mead on circumradius / line / stub width at period 15 mm) → mesh-90 polish → finalist correction (aligned meshes 60/90/120, pitch 0.25/0.167/0.125 mm,
-observed-order extrapolation, R2 practice; corners on meshes 60/90 corrected by the nominal extrapolation ratio per state). The period went to the top of the allowed 6–15 mm range:
+observed-order extrapolation, R2 practice; corners on meshes 60/90 corrected by the nominal extrapolation ratio per state). **The stub-line parameter the optimiser returns (2.48 mm) exceeds the room in the cell: `make_cell` clamps the line so that the axis-aligned stubs end 0.25 mm from the cell boundary, i.e. to 1.748 mm. Every number in this note, the HFSS package and the locality test use the clamped cell (1.748 mm); the optimum sits ON this constraint, so it would take a longer stub (larger period than the allowed 15 mm, or a meandered stub) to go further.** The period went to the top of the allowed 6–15 mm range:
 stub extension is the limit (an axis-aligned stub must stay clear of the cell boundary), so the period-15 optimum sits against a constraint.
 
 **Finalist A** (stage-2 optimum; `cp2_madp_final.json`), corrected values, r_RR (handedness-preserving) in the propagation-relative basis:
@@ -35,7 +35,7 @@ to 10.0–10.75 GHz on the 0.25 GHz grid (**0.75 GHz, ~7 %**; the true edges are
 
 **Uncertainty — read before trusting the margins.** The observed Richardson order was unusable (non-monotone convergence on the staircased octagon) for 10 of 12 nominal values; those fall back to
 first order. The resulting phase uncertainty is 3.5–8.3° per state for A. The raw fine-mesh values differ from the extrapolated ones by about as much as the margins (A, nominal θ=0 lattice
-deviation: mesh 60 → 9.0°, 90 → 7.3°, 120 → 8.6° raw; 12.1° extrapolated). **The polished finalist B** (`cp2_madp_final2.json`, circumradius 4.605 / line 2.485 / width 1.372 mm — a 0.01 mm
+deviation: mesh 60 → 9.0°, 90 → 7.3°, 120 → 8.6° raw; 12.1° extrapolated). **The polished finalist B** (`cp2_madp_final2.json`, circumradius 4.605 / line parameter 2.485 (clamped to 1.75) / width 1.372 mm — a 0.01 mm
 change) has the same raw numbers but extrapolates to deviation 15.2° and tolerance step errors 25.6–34.3°: the two points are indistinguishable at the mesh uncertainty, and the choice of A
 over B rests on the extrapolation noise. **Do not read the CP-2 margins as better than about ±10°.** HFSS (item 5) is the real test. The opposite-handed miss is robust: −13.5 to −15.2 dB on every
 mesh and corner (the three OFF stubs break mirror symmetry).

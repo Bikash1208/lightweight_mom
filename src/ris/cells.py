@@ -179,6 +179,60 @@ class Lp2Cell:
 
 # ======================================================================================================================
 @dataclass(frozen=True)
+class Lp3Cell:
+    """LP-3 (proposal of this project; the brief's 3-diode fallback if no 2-diode LP cell reaches 90 +- 15 deg steps): a rectangular patch with
+    one diode-switched stub on the -x side (diode d1) and a CHAIN of two diode-switched segments on the +x side (d2 connects segment 1, d3
+    connects segment 2 behind it). 8 diode codes (d1, d2, d3); the physically distinct ones are 6 ((d2, d3) = (0,1) is (0,0) with a floating
+    segment), from which the optimiser picks the 4 closest to the 0/90/180/270 lattice. Single layer, in-plane diodes."""
+
+    period: float = 14.0e-3
+    patch_length: float = 5.0e-3
+    patch_width: float = 3.5e-3
+    stub_width: float = 1.0e-3
+    diode_span: float = 1.0e-3
+    pad: float = 0.25e-3
+    left_length: float = 0.5e-3  # conductor beyond d1
+    right1_length: float = 0.5e-3  # conductor beyond d2
+    right2_length: float = 0.5e-3  # conductor beyond d3
+    left_y: float = 0.0
+    right_y: float = 0.0
+
+    kind = "lp3"
+    n_diodes = 3
+
+    def states(self):
+        return [(a, b, c) for a in (OFF, ON) for b in (OFF, ON) for c in (OFF, ON)]
+
+    def _chain(self, sign, y, lengths):
+        """Rectangles and diode sites of a chain of (pad | diode | pad | metal) segments starting at the patch edge, direction `sign`."""
+        rects, sites, cur = [], [], sign * self.patch_length / 2
+        for length in lengths:
+            d0 = cur + sign * self.pad
+            d1 = d0 + sign * self.diode_span
+            end = d1 + sign * (self.pad + length)
+            rects.append(AxisRect(0.5 * (cur + end), y, abs(end - cur), self.stub_width))
+            sites.append((0.5 * (d0 + d1), y, self.diode_span, self.stub_width, "x"))
+            cur = end
+        return rects, sites
+
+    def geometry(self):
+        left, _ = self._chain(-1, self.left_y, [self.left_length])
+        right, _ = self._chain(+1, self.right_y, [self.right1_length, self.right2_length])
+        return CompositeGeometry((AxisRect(0.0, 0.0, self.patch_length, self.patch_width), *left, *right))
+
+    def diode_sites(self):
+        _, ls = self._chain(-1, self.left_y, [self.left_length])
+        _, rs = self._chain(+1, self.right_y, [self.right1_length, self.right2_length])
+        return [*ls, *rs]
+
+    def unit_cell(self, state, kit):
+        _check_states(state, 3)
+        loads = [diode_load(kit.model(s), *site) for s, site in zip(state, self.diode_sites(), strict=True)]
+        return _cell(self.period, self.geometry(), loads)
+
+
+# ======================================================================================================================
+@dataclass(frozen=True)
 class Cp2Cell:
     """CP-2: regular octagonal patch (flat edges facing 0/45/90/135/... deg) with four radial delay-line stubs at 45 deg spacing,
     one diode each; one-hot state k = the diode of stub k ON, the other three OFF. Pancharatnam-Berry: the ON stub sets the anisotropy axis, so

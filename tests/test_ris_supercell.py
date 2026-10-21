@@ -91,3 +91,17 @@ def test_supercell_geometry_translates_loads_and_metal():
     assert len(sc.loads) == 16
     xs = sorted({round(ld.x, 9) for ld in sc.loads})
     assert xs[0] < -c.period / 4 and xs[-1] > c.period / 4
+
+
+def test_normal_incidence_azimuth_is_a_pure_frame_rotation():
+    """R4 item 1: at theta = 0 the incidence azimuth phi only relabels the TE/TM frame, so the Cartesian reflection is phi independent (one solve per state suffices)."""
+    from src.ris.polarization import cartesian_reflection
+
+    uc = CELL.unit_cell((ON, OFF), madp_kit())
+    out = []
+    for phi in (0.0, math.radians(37.0), math.radians(120.0)):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            s = compute_s_parameters_oblique(uc, 10e9, _mesh(1, 1), PL, 0.0, phi).s11
+        out.append(cartesian_reflection(s, phi))
+    assert np.allclose(out[0], out[1], atol=1e-9) and np.allclose(out[0], out[2], atol=1e-9)

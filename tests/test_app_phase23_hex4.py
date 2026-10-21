@@ -236,12 +236,12 @@ def test_sidelobe_endpoint_end_to_end(tmp_path, monkeypatch):
     client = TestClient(create_app())
 
     def wait(job_id, timeout=300):
-        t0 = time.time()
+        t0 = time.monotonic()
         while True:
             job = client.get(f"/api/jobs/{job_id}").json()
             if job["status"] in ("done", "failed", "cancelled"):
                 return job
-            assert time.time() - t0 < timeout
+            assert time.monotonic() - t0 < timeout
             time.sleep(0.1)
 
     body = _request({"preset": "hex4", "side_mm": 50.0, "gap_mm": 0.0})

@@ -38,8 +38,8 @@ def live_server(tmp_path_factory):
     server = uvicorn.Server(uvicorn.Config(create_app(), host="127.0.0.1", port=port, log_level="error"))
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
-    deadline = time.time() + 20
-    while not server.started and time.time() < deadline:
+    deadline = time.monotonic() + 20
+    while not server.started and time.monotonic() < deadline:
         time.sleep(0.05)
     yield f"http://127.0.0.1:{port}/"
     server.should_exit = True

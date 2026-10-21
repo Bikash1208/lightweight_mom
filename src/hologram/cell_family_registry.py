@@ -261,5 +261,88 @@ def _builtin():
         )
     )
 
+    _ris_builtin(rt5880)
+
+
+def _ris_builtin(rt5880):
+    """Phase 20 R3 close-out: the two RIS cell families (MODEL_ONLY, discrete states, 2x2 reflection per state). Data: the MoM predictions of the HFSS
+    check package (8-12 GHz in 0.5 GHz steps, theta 0 and 30 deg, phi 0); NOT the R4 production-density library."""
+    freqs = tuple(8.0 + 0.5 * k for k in range(9))
+    thetas = (0.0, 30.0)
+    data = "hfss_exports/phase20_r3_cp_cell/mom_reference.csv"
+    cp_grid = ResponseGrid(
+        "reflection_2x2", freqs, theta_deg=thetas, phi_deg=(0.0,), basis="te_tm_power_wave", data_path=data
+    )
+    biases = (
+        "MODEL_ONLY: no HFSS number yet (check package hfss_exports/phase20_r3_cp_cell/ pending); mesh uncertainty of the isolated-cell phases ~10 deg (staircased octagon)",
+        "PROVISIONAL_DATASHEET: MADP-000907-14020 (MACOM Rev V8) R_s 5.2 ohm typ, C_T 0.025 pF typ (max 0.030 = +20 %); L_s NOT_AVAILABLE_FROM_CURRENT_DATA, 0 assumed",
+        "flip-chip part: assembly not confirmed with fabrication (fallback: re-optimise around a packaged low-capacitance PIN diode, C_T <= ~0.05 pF)",
+        "VIA_OMITTED_APPROXIMATION; bias network not modelled",
+        "opposite-handed (plate-like) reflection -13.6 / -14.0 dB at theta 0 / 30 deg against the -15 dB target; min amplitude -1.60 dB at theta 30 (target -1.5)",
+        "isolated-cell predictions are reliable for regular gradients but NOT for random codings at this 15 mm pitch (order levels off 1-4 dB, up to ~10 dB): verify codings at array level (supercell/coupling-aware)",
+        "theta = 60 deg degrades (amplitudes down to -7 dB, opposite-handed -3 dB): not characterised for use",
+    )
+    register(
+        CellFamily(
+            name="ris_cp2_octagon_madp_rt5880_15",
+            geometry_type="CP-2: regular octagon (circumradius 4.60 mm) + four 45-degree radial stubs (width 1.375 mm, line 1.748 mm), one MADP-000907 diode each; one-hot state = Pancharatnam-Berry turn 0/45/90/135 deg",
+            substrate=rt5880,
+            backing="pec",
+            period_mm=15.0,
+            data_kind="discrete_states",
+            validation_label="MODEL_ONLY",
+            frequencies_ghz=freqs,
+            incidence_max_theta_deg=30.0,
+            states=tuple(
+                StateSpec(
+                    f"cp{k + 1}",
+                    f"diode {k + 1} ON (stub {45 * k} deg), others OFF; r_RR phase ~ {90 * k} deg + const",
+                    cp_grid,
+                    bias={f"diode_{i + 1}": ("on" if i == k else "off") for i in range(4)},
+                    note="handedness-preserving r_RR is the wanted term (propagation-relative circular basis, docs/theory/CONVENTIONS.md); phases at 10 GHz on the optimisation mesh: -104 / -10 / 98 / 178 deg",
+                )
+                for k in range(4)
+            ),
+            known_biases=biases,
+            fabrication_rules={
+                "diode": "MACOM MADP-000907-14020 (flip-chip)",
+                "diodes_per_cell": 4,
+                "one_hot": True,
+                "period_mm_max_allowed": 15.0,
+            },
+            data_paths=(data, "results/phase20_r3/OPTIMISATION.md", "results/phase20_r3/LOCALITY.md"),
+            validation_evidence=(),
+            notes="CP family; effective stub line is clamped by the cell edge (the optimum sits on this constraint: pitch vs stub length is an open item)",
+        )
+    )
+    lp_grid = ResponseGrid("reflection_2x2", freqs, theta_deg=thetas, phi_deg=(0.0,), basis="linear_xy", data_path=data)
+    register(
+        CellFamily(
+            name="ris_lp_1bit_from_cp2_madp_rt5880_15",
+            geometry_type="LP interim: 1-bit linear-polarisation codes of the CP-2 cell (LP -> co-LP: states 1 vs 3; LP -> cross-LP: states 2 vs 4)",
+            substrate=rt5880,
+            backing="pec",
+            period_mm=15.0,
+            data_kind="discrete_states",
+            validation_label="MODEL_ONLY",
+            frequencies_ghz=freqs,
+            incidence_max_theta_deg=30.0,
+            states=(
+                StateSpec("co_0", "LP->co-LP code, bit 0 (CP-2 state 1)", lp_grid, bias={"cp2_state": 1}),
+                StateSpec("co_1", "LP->co-LP code, bit 1 (CP-2 state 3)", lp_grid, bias={"cp2_state": 3}),
+                StateSpec("cross_0", "LP->cross-LP code, bit 0 (CP-2 state 2)", lp_grid, bias={"cp2_state": 2}),
+                StateSpec("cross_1", "LP->cross-LP code, bit 1 (CP-2 state 4)", lp_grid, bias={"cp2_state": 4}),
+            ),
+            known_biases=biases
+            + (
+                "1-bit only: a 2-bit LP cell did not meet the targets (LP-1/LP-2/LP-3 with MADP); 2-bit LP is a future phase needing a multilayer / slot-coupled cell",
+                "phase difference of the co-LP code 163 / 157 deg at theta 0 (x / y), 178 / 173 deg at 30 deg; cross-pol 12-23 dB below the wanted term (results/phase20_r3/LP_INTERIM.md)",
+            ),
+            fabrication_rules={"diode": "MACOM MADP-000907-14020 (flip-chip)", "diodes_per_cell": 4, "one_hot": True},
+            data_paths=(data, "results/phase20_r3/LP_INTERIM.md", "results/phase20_r3/lp_interim.json"),
+            notes="the same physical cell as ris_cp2_octagon_madp_rt5880_15: the user selects the polarisation family, not a different geometry",
+        )
+    )
+
 
 _builtin()

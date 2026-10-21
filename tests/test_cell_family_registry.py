@@ -101,3 +101,21 @@ def test_malformed_entries_are_rejected():
         reg.validate_family(reg.CellFamily(**{**fam.__dict__, "data_kind": "scalar_gamma"}))
     with pytest.raises(KeyError):
         reg.check_request("no_such_family")
+
+
+def test_ris_families_are_registered_model_only_discrete_states_with_their_domain_and_biases():
+    cp = reg.get("ris_cp2_octagon_madp_rt5880_15")
+    lp = reg.get("ris_lp_1bit_from_cp2_madp_rt5880_15")
+    for fam, n_states in ((cp, 4), (lp, 4)):
+        reg.validate_family(fam)
+        assert (
+            fam.data_kind == "discrete_states" and fam.validation_label == "MODEL_ONLY" and len(fam.states) == n_states
+        )
+        assert fam.period_mm == 15.0 and fam.incidence_max_theta_deg == 30.0
+        assert all(s.response.kind == "reflection_2x2" for s in fam.states)
+        assert any("flip-chip" in b for b in fam.known_biases) and any("random codings" in b for b in fam.known_biases)
+        json.dumps(fam.to_dict())
+    assert [s.bias["diode_1"] for s in cp.states] == ["on", "off", "off", "off"]  # one-hot
+    assert reg.check_request(cp.name, f_ghz=10.0, theta_deg=30.0, period_mm=15.0).state == reg.AVAILABLE
+    out = reg.check_request(cp.name, f_ghz=10.0, theta_deg=60.0, period_mm=6.4)
+    assert out.state == reg.NOT_AVAILABLE and len(out.reasons) == 2  # 60 deg and the wrong period, both reported

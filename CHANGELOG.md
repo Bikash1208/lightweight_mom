@@ -5,6 +5,15 @@ summarize each phase's own write-up in `docs/history/`/`docs/history/`). No vers
 before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` for current
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
+## Unreleased - Phase 20 R3 - 2-bit RIS cells (branch `phase20-ris`; MODEL_ONLY, PROVISIONAL_DATASHEET)
+- 1: literature / topology selection (`results/phase20_r3/LITERATURE.md`, `PAPER_NOTES.md`): CP lead = CP-2 (octagon + four 45-degree delay lines), CP-1 benchmark, CP-3 alternative; LP-1 and the new single-layer LP-2.
+- 2: rotated lumped loads (`LumpedLoad.direction` = angle; 0/90/180 unchanged), `PolyComposite` polygon patches with STEP export (`src/polygon_geometry.py`), propagation-relative circular basis (`src/ris/polarization.py`), cells LP-1 / LP-2 / CP-2 (`src/ris/cells.py`); MACOM MADP-000907-14020 diode model (L_s NOT_AVAILABLE, assumed-sensitivity sweep).
+- 3: optimisation (Nelder-Mead outside the solver core, tolerance corners in the objective, aligned meshes 60/90/120): CP-2 with MADP meets phase / amplitude / tolerance targets within ~10 deg model uncertainty, misses opposite-handed (-13.6 / -14.0 dB vs -15) and the theta-30 amplitude (-1.60 dB); LP-1 / LP-2 (2 diodes) and LP-3 (3 diodes) miss (`results/phase20_r3/OPTIMISATION.md`). MADP is the CP-family diode (flip-chip, assembly unconfirmed).
+- 4: locality test: supercell MoM with per-site diode states and Floquet-order extraction (`src/ris/supercell.py`): gradient passes the 1 dB / 15 deg gate, random 4x4 codings 2 of 10 (`LOCALITY.md`).
+- 5: HFSS check package `hfss_exports/phase20_r3_cp_cell/` (also the LP-interim check); LP interim = 1-bit codes of the CP-2 cell (`LP_INTERIM.md`); 2-bit LP deferred to a future phase (multilayer / slot-coupled cell).
+- 6: close-out: CP-2 and the LP interim registered in the Phase 27 cell-family registry (`ris_cp2_octagon_madp_rt5880_15`, `ris_lp_1bit_from_cp2_madp_rt5880_15`, MODEL_ONLY, 4 discrete states, 2x2 reflection per state); STATUS, roadmap log (R5 must verify codings at array level; pitch vs stub length open) updated; brief archived.
+- Additive only: theta = 0 without loads and the Phase 23 snapshot are bit-identical.
+
 ## Unreleased - Phase 20 R2 - PIN-diode models (branch `phase20-ris`; MODEL_ONLY, PROVISIONAL_DATASHEET)
 - 1: `src/ris/diodes.py`: SMP1345-079LF ON (R_s + L_s) / OFF (C_T + L_s, optional parallel R_p) with per-value provenance (datasheet 200046U); R_p `NOT_AVAILABLE_FROM_CURRENT_DATA`.
 - 2: `diode_load` -> `LumpedLoad` per frequency; additive `LumpedLoad.z_of_f` (default None: every pre-existing result unchanged); a series-RLC diode is exactly the R1 load.

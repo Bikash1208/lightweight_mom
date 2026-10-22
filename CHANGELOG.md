@@ -5,6 +5,15 @@ summarize each phase's own write-up in `docs/history/`/`docs/history/`). No vers
 before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` for current
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
+## Unreleased - Phase 20 R4 - CP-2 state library (branch `phase20-ris`; MODEL_ONLY, NOT_HFSS_VALIDATED)
+- 0-2: monotonic job-wait clocks (macOS wall-clock jumps), structure-frame circular basis helpers, symmetry/cost study (no symmetry reduction; cost estimate).
+- 3: library `results/phase20_r4/cp2_library_v1.npz` (+ manifest): four one-hot states, f 8-12 GHz / theta 0-45 / phi 0-330, mesh 60 raw table + Richardson mesh-120 correction + uncertainty, built in resumable chunks (`scripts/research/phase20_r4_build_library.py`); `src/ris/state_library.py` interpolator with domain and diffraction-order checks. **Finding: the solver's minimum Floquet cutoff leaves isolated numerical lines; F = 2n adopted.** Reduced grid (accepted by the user).
+- 4: held-out validation: interpolation 95th percentile 1.81 deg / 0.166 dB at theta <= 30 (gate 3 deg / 0.2 dB, pass, thin dB margin); corrected table vs mesh-120 solves: residual 95th percentile 12 deg / 0.96 dB near the 10.3-10.8 GHz resonance (reported, not a gate).
+- 5: metrics README (`results/phase20_r4/README.md`): all R3 targets met only at the 10.0 GHz grid point for theta <= 7.5 deg; LP 1-bit codes; tolerance corners (10.5 GHz is not robust); plots.
+- 6: registry entries (domain = grid, higher-order refusal in `check_request`), HFSS comparison/calibration hook (`src/ris/hfss_calibration.py`; calibration only with user approval, none applied).
+- Floquet-cutoff audit (`results/phase20_r4/FLOQUET_AUDIT.md`): R1-R3 HFSS references regenerated at F = 2n (old files `*_mincutoff`); CP-2 theta-30 opposite-handed -10.0 dB and C_T +20 % step error 20.8 deg are open items (R3 values superseded); gradient locality unchanged; Phase 26 uses F = n, effect on beta 1.4e-4 k0; opt-in `LWMOM_FLOQUET_CHECK`.
+- Additive only: default results and the Phase 23 snapshot are bit-identical.
+
 ## Unreleased - Phase 20 R3 - 2-bit RIS cells (branch `phase20-ris`; MODEL_ONLY, PROVISIONAL_DATASHEET)
 - 1: literature / topology selection (`results/phase20_r3/LITERATURE.md`, `PAPER_NOTES.md`): CP lead = CP-2 (octagon + four 45-degree delay lines), CP-1 benchmark, CP-3 alternative; LP-1 and the new single-layer LP-2.
 - 2: rotated lumped loads (`LumpedLoad.direction` = angle; 0/90/180 unchanged), `PolyComposite` polygon patches with STEP export (`src/polygon_geometry.py`), propagation-relative circular basis (`src/ris/polarization.py`), cells LP-1 / LP-2 / CP-2 (`src/ris/cells.py`); MACOM MADP-000907-14020 diode model (L_s NOT_AVAILABLE, assumed-sensitivity sweep).

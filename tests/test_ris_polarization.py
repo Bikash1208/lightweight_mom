@@ -60,3 +60,27 @@ def test_cartesian_roundtrip_and_azimuth_rotation():
     assert s[0, 0] == 3.0 and s[1, 1] == 2.0  # (TE, TM) = (y, x)
     with pytest.raises(ValueError):
         circular_reflection(np.zeros((3, 3)))
+
+
+def test_te_tm_from_circular_is_the_exact_inverse():
+    from src.ris.polarization import te_tm_from_circular
+
+    rng = np.random.default_rng(3)
+    s = rng.normal(size=(2, 2)) + 1j * rng.normal(size=(2, 2))
+    assert np.allclose(te_tm_from_circular(circular_reflection(s)), s, atol=1e-14)
+
+
+def test_structure_frame_turns_with_azimuth_and_pb_phase_is_explicit():
+    from src.ris.polarization import cartesian_reflection, from_structure_frame, to_structure_frame
+
+    # a half-wave plate turned by alpha reflects with r_RR = exp(+2j alpha) in the fixed structure frame (R3 convention); the incidence-plane frame at
+    # azimuth phi sees it as exp(2j (alpha - phi)): to_structure_frame restores the first
+    alpha = math.radians(37.0)
+    jones = np.array([[math.cos(2 * alpha), math.sin(2 * alpha)], [math.sin(2 * alpha), -math.cos(2 * alpha)]])  # [[cos2a, sin2a], [sin2a, -cos2a]]
+    ref = circular_reflection(jones_to_te_tm(jones, 0.0))
+    for phi in (0.0, math.radians(50.0), math.radians(-120.0)):
+        s = jones_to_te_tm(jones, phi)  # the same structure seen from azimuth phi (normal incidence)
+        c_o = circular_reflection(s)
+        assert np.allclose(to_structure_frame(c_o, phi), ref, atol=1e-12)
+        assert np.allclose(from_structure_frame(to_structure_frame(c_o, phi), phi), c_o, atol=1e-14)
+    assert cartesian_reflection(jones_to_te_tm(jones, 0.7), 0.7) == pytest.approx(jones, abs=1e-12)

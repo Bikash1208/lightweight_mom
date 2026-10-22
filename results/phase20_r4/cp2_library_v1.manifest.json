@@ -1,0 +1,127 @@
+{
+ "name": "ris_cp2_octagon_madp_rt5880_15",
+ "version": 1,
+ "labels": [
+  "MODEL_ONLY",
+  "NOT_HFSS_VALIDATED",
+  "PROVISIONAL_DATASHEET",
+  "VIA_OMITTED_APPROXIMATION"
+ ],
+ "axes": {
+  "f_ghz": [
+   8.0,
+   8.25,
+   8.5,
+   8.75,
+   9.0,
+   9.25,
+   9.5,
+   9.75,
+   10.0,
+   10.25,
+   10.5,
+   10.75,
+   11.0,
+   11.25,
+   11.5,
+   11.75,
+   12.0
+  ],
+  "theta_deg": [
+   0.0,
+   7.5,
+   15.0,
+   22.5,
+   30.0,
+   37.5,
+   45.0
+  ],
+  "phi_deg": [
+   0.0,
+   30.0,
+   60.0,
+   90.0,
+   120.0,
+   150.0,
+   180.0,
+   210.0,
+   240.0,
+   270.0,
+   300.0,
+   330.0
+  ],
+  "state": [
+   1,
+   2,
+   3,
+   4
+  ]
+ },
+ "theta_label": {
+  "0": "within_R3_targets",
+  "7.5": "within_R3_targets",
+  "15": "within_R3_targets",
+  "22.5": "within_R3_targets",
+  "30": "within_R3_targets",
+  "37.5": "EXTRAPOLATED_BEYOND_R3_TARGETS",
+  "45": "EXTRAPOLATED_BEYOND_R3_TARGETS"
+ },
+ "frame": "circular reflection C[reflected, incident] (R, L; propagation-relative) referred to the fixed structure axes; s_corr in the incidence-plane (TE, TM) frame",
+ "grid_mesh": 60,
+ "floquet_cutoff": "2 n (n = cells per period) at every mesh",
+ "grid_reduction_note": "reduced from the approved 41 x 10 x 24 grid after the Floquet-cutoff finding (results/phase20_r4/FLOQUET_CONVERGENCE.md)",
+ "correction": {
+  "meshes": [
+   60,
+   90,
+   120
+  ],
+  "f_ghz": [
+   8.0,
+   8.5,
+   9.0,
+   9.5,
+   10.0,
+   10.5,
+   11.0,
+   11.5,
+   12.0
+  ],
+  "points": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    30.0,
+    0.0
+   ],
+   [
+    30.0,
+    90.0
+   ],
+   [
+    45.0,
+    0.0
+   ],
+   [
+    45.0,
+    90.0
+   ]
+  ],
+  "definition": "dC = C_inf(p=2) - C(60) with C_inf = C(120) + R2 (C(120) - C(90)), phi-mean, interpolated in (f, theta), added to every phi; uncertainty = |C_inf(p=1) - C_inf(p=2)| + phi spread; all meshes with Floquet cutoff F = 2n",
+  "r_RR_phase_correction_deg": {
+   "min": -11.543645540368253,
+   "max": 168.56393424526507,
+   "median": 4.850071428488469
+  },
+  "max_uncertainty_abs": 0.520139342470353
+ },
+ "cell": {
+  "geometry_json": "results/phase20_r3/opt/cp2_madp_final.json",
+  "diode": "MACOM MADP-000907-14020 (L_s = 0 assumed)",
+  "period_mm": 15.0
+ },
+ "built_at_commit": "81b6e5fddb577fc797a34701cce93f292409f987",
+ "sha256": "90cae4df17aa71381a4a924242b97708573272d572b401fa5767c8caee6b76fb"
+}

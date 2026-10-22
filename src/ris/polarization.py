@@ -45,3 +45,33 @@ def jones_to_te_tm(r_cart, phi=0.0):
     b = np.array([[np.cos(phi), -np.sin(phi)], [np.sin(phi), np.cos(phi)]])
     s_tm_te = b.T @ np.asarray(r_cart, dtype=complex) @ b
     return s_tm_te[::-1, ::-1]
+
+
+def te_tm_from_circular(c):
+    """Inverse of `circular_reflection`: the 2x2 (TE, TM) reflection from the circular matrix `[[r_RR, r_RL], [r_LR, r_LL]]` (exact: the circular
+    basis vectors are orthonormal)."""
+    c = np.asarray(c, dtype=complex)
+    if c.shape != (2, 2):
+        raise ValueError("c must be a 2x2 circular reflection matrix")
+    s_tm_te = np.zeros((2, 2), dtype=complex)
+    for a in (R, L):
+        for b in (R, L):
+            s_tm_te += c[a, b] * np.outer(_REF[a], np.conj(_INC[b]))
+    return s_tm_te[::-1, ::-1]
+
+
+def to_structure_frame(c, phi):
+    """Circular reflection referred to the FIXED structure axes (x, y) instead of the incidence-plane frame of azimuth `phi` [rad]. The incidence-plane
+    frame turns with `phi`: p - j q = exp(j phi)(x - j y), so a reflected R amplitude gains exp(+j phi), an incident R amplitude exp(-j phi):
+    r_RR -> r_RR exp(+2j phi), r_LL -> r_LL exp(-2j phi), r_RL and r_LR unchanged. In this frame the Pancharatnam-Berry phase of a turned element is
+    explicit and the dependence on `phi` is weak."""
+    c = np.array(c, dtype=complex)
+    out = c.copy()
+    out[R, R] = c[R, R] * np.exp(2j * phi)
+    out[L, L] = c[L, L] * np.exp(-2j * phi)
+    return out
+
+
+def from_structure_frame(c, phi):
+    """Inverse of `to_structure_frame`."""
+    return to_structure_frame(c, -phi)

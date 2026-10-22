@@ -33,11 +33,33 @@ over one cell. Closed form (np.sinc(z) = sin(pi z)/(pi z)):
     F_y = exp(j(kx xc + ky yc)) * dx sinc(kx dx/2pi)   * dy sinc^2(ky dy/2pi)
 """
 
+import os
+import warnings
 from dataclasses import dataclass
 
 import numpy as np
 
 from .geometry import UnitCell
+
+FLOQUET_CHECK_ENV = "LWMOM_FLOQUET_CHECK"
+FLOQUET_RECOMMENDED_FACTOR = (
+    2  # Phase 20 R4 finding: floquet_order >= 2 * max(cells_x, cells_y) for converged oblique results
+)
+
+
+def floquet_adequacy(mesh, factor=FLOQUET_RECOMMENDED_FACTOR):
+    """Opt-in convergence check (Phase 20 R4 Floquet-cutoff audit): (ok, message). `ok` is False when `mesh.floquet_order` < factor * max(cells_x, cells_y), the
+    cutoff at which the Phase 20 R4 study found the oblique-incidence results converged; the rank minimum (2F+1 >= n) can leave isolated numerical lines."""
+    n = max(mesh.cells_x, mesh.cells_y)
+    need = int(factor * n)
+    ok = mesh.floquet_order >= need
+    msg = (
+        ""
+        if ok
+        else f"floquet_order={mesh.floquet_order} is below {factor}*n={need} for the {mesh.cells_x} x {mesh.cells_y} mesh: results can contain "
+        "isolated numerical lines (Phase 20 R4 FLOQUET_CONVERGENCE.md); use floquet_order >= " + str(need)
+    )
+    return ok, msg
 
 
 def _check_integer(name, v, minimum):
@@ -73,6 +95,13 @@ class MeshSettings:
                 f"({self.cells_x} x {self.cells_y} cells): need 2*floquet_order + 1 >= "
                 f"{max(self.cells_x, self.cells_y)} or Z is rank-deficient"
             )
+        mode = os.environ.get(FLOQUET_CHECK_ENV, "").strip().lower()  # opt-in only: unset = no check, results unchanged
+        if mode in ("1", "warn", "error"):
+            ok, msg = floquet_adequacy(self)
+            if not ok:
+                if mode == "error":
+                    raise ValueError(msg)
+                warnings.warn(msg, RuntimeWarning, stacklevel=3)
 
 
 class RooftopBasis:

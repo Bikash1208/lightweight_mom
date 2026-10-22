@@ -66,11 +66,12 @@ def _entries(s11):
 
 
 def solve_sets(cell, f, th, n, load_sets):
+    # Floquet cutoff F = 2n: the converged cutoff (Phase 20 R4 audit); the first version of the package used the minimum n // 2 + 1
     base = cell.unit_cell(cell.states()[0], madp_kit())
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         return compute_s_parameters_oblique_over_loads(
-            base, f, MeshSettings(n, n, n // 2 + 1), PL, math.radians(th), 0.0, load_sets
+            base, f, MeshSettings(n, n, 2 * n), PL, math.radians(th), 0.0, load_sets
         )
 
 

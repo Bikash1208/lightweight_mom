@@ -46,7 +46,7 @@ LOADS = [
 ]
 
 
-MESHES = ((60, 32), (80, 40), (100, 50))  # all aligned with the 1 mm gap and the 8 mm patch edges
+MESHES = ((60, 120), (80, 160), (100, 200))  # all aligned with the 1 mm gap and the 8 mm patch edges
 
 
 def solve_rows(mesh_cells, floquet):
@@ -105,7 +105,7 @@ def main(out_dir=OUT):
     per_mesh = {}
     for n, fl in MESHES:
         per_mesh[n], cell, sub = solve_rows(n, fl)
-    coarse, _, _ = solve_rows(20, 16)
+    coarse, _, _ = solve_rows(20, 40)
     fine = []
     for k, r in enumerate(per_mesh[100]):
         e_hi = richardson(per_mesh[80][k]["s"], 80, r["s"], 100)
@@ -169,7 +169,7 @@ sheet, z = 0.0175 mm, x -0.5..+0.5, y -4..+4 mm, bridging the arms' side faces).
 4. Solve at 10 GHz (adaptive, delta S <= 0.01); export S11 for Floquet modes 1 and 2 (magnitude dB and phase), at each angle and load.
 
 ## What to compare (`mom_reference.csv`)
-`mom_S11_mag_dB`, `mom_S11_phase_deg`: **Richardson-extrapolated** from the 80 x 80 and 100 x 100 meshes (Floquet order 40 / 50; assumed second-order convergence, S(n) = S_inf + c/n^2; the observed order of the
+`mom_S11_mag_dB`, `mom_S11_phase_deg`: **Richardson-extrapolated** from the 80 x 80 and 100 x 100 meshes (Floquet order 160 / 200 = 2n, the converged cutoff; the first version of this file used the minimum order n/2 and is kept as `mom_reference_mincutoff.csv`; assumed second-order convergence, S(n) = S_inf + c/n^2; the observed order of the
 60/80/100 sequence is listed per row in `observed_order_p`; median {p_med:.1f}, range {p_lo:.1f}-{p_hi:.1f}: where p < 2 the p = 2 extrapolation under-corrects and the stated uncertainty is understated); `mom_uncertainty_phase_deg` / `mom_uncertainty_mag_dB` = the difference to the same extrapolation from the 60 and 80 meshes; the raw 100 x 100 and the 20 x 20
 values are listed too. MoM S are power-wave normalised, like HFSS Floquet-port S-parameters.
 1. **Convention first:** run the bare grounded slab (no metal, no load; `bare_grounded_slab_reference.csv`, analytic) at each angle and mode. If HFSS's TM phase differs from the

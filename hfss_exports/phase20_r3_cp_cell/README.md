@@ -41,10 +41,10 @@ rotated with the stub; current line ALONG the stub axis):
   (reflected row, incident column; **propagation-relative handedness**, `docs/theory/CONVENTIONS.md` "Circular basis for the RIS cells": incident R = (TM + jTE)/sqrt2, reflected R = (TM - jTE)/sqrt2
   on the power-wave amplitudes). A metal plate has r_LR = r_RL = -1 and r_RR = r_LL = 0; the PB cell wants r_RR = exp(+j 2 alpha) with alpha = state turn.
 * `mom_*` = MoM on the 90 x 90 mesh (pitch 0.167 mm); `mesh60_*` the 60 x 60 mesh; `mesh_delta_*` their difference. **The mesh uncertainty is of order 10 deg**: the octagon diagonals are staircased
-  and the convergence order was not usable (see `OPTIMISATION.md`); at 10 GHz the 60 -> 90 phase change of r_RR is up to 6.3 deg here. Do not read a smaller HFSS-MoM difference as agreement to better than that.
+  and the convergence order was not usable (see `OPTIMISATION.md`); at 10 GHz the 60 -> 90 phase change of r_RR is up to 6.1 deg here. Do not read a smaller HFSS-MoM difference as agreement to better than that.
 * **Convention first:** run the bare grounded slab (no metal, no loads; `bare_grounded_slab_reference.csv`, analytic) at theta = 0, 30 deg and apply any 180 deg TM sign shift HFSS shows to every TM entry
   before comparing; then build r_RR etc. from the corrected TE/TM entries with the formula above. Report what you saw.
-* Predictions at 10 GHz, normal incidence, states 1-4: **r_RR phase** -108 / -17 / 86 / 173 deg (a rotating ladder, nominally 90 deg steps), **|r_RR|** -0.88 / -1.00 / -1.09 / -0.89 dB, **opposite-handed max(|r_LR|, |r_RL|)** -17.0 / -16.2 / -13.6 / -19.8 dB.
+* Predictions at 10 GHz, normal incidence, states 1-4: **r_RR phase** -107 / -13 / 87 / 175 deg (a rotating ladder, nominally 90 deg steps), **|r_RR|** -0.90 / -1.05 / -1.10 / -0.90 dB, **opposite-handed max(|r_LR|, |r_RL|)** -16.5 / -15.0 / -13.5 / -19.1 dB.
   The opposite-handed term carries no PB phase (it is the same for every state), so in an array it goes to the specular lobe, not the steered beam (`results/phase20_r3/LOCALITY.md`).
 * What would be news: an r_RR ladder step differing from ~90 deg by more than ~20 deg (the model uncertainty is ~10 deg), |r_RR| below -2 dB (diode loss: R_s = 5.2 ohm is the dominant loss), or an
   opposite-handed level much worse than -13 dB. The expected bandwidth is limited by the diode loss: |r_RR| >= -1.5 dB over about 10.0-10.75 GHz (MoM grid), the ladder steps staying within 90 +- 20 deg across 8.5-11.5 GHz.

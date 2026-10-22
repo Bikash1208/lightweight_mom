@@ -39,8 +39,8 @@ FREQS = np.arange(8.0, 12.01, 0.5) * 1e9
 ANGLES = (0.0, 30.0)
 MODES = ("TE", "TM")
 MESHES = (
-    (40, 24),
-    (80, 41),
+    (40, 80),
+    (80, 160),
 )  # edges at 0.25 mm multiples: only n a multiple of 40 is aligned with the strip (see README)
 
 
@@ -286,7 +286,7 @@ the 2-D current crowding changes the OFF phase by tens of degrees against the id
 
 ## What to compare (`mom_reference.csv`)
 Rows `model = hfss_chain` are the MoM of exactly this geometry (two loads and the island); `ideal_series` is the single-load series model of the same diode (the model used in `results/phase20_r2/DEMO.md`).
-`mom_S11_*` are **extrapolated** from the 40 x 40 and 80 x 80 meshes (both aligned with the 0.25 mm strip edges; Floquet order 24 / 41) assuming S(n) = S_inf + c/n^p with p = 1.5, the median order
+`mom_S11_*` are **extrapolated** from the 40 x 40 and 80 x 80 meshes (both aligned with the 0.25 mm strip edges; Floquet order 80 / 160 = 2n, the converged cutoff; the first version used the minimum order and is kept as `mom_reference_mincutoff.csv`) assuming S(n) = S_inf + c/n^p with p = 1.5, the median order
 observed at 10 GHz on meshes 40/80/120 (1.2-1.65 per row, `results/phase20_r2/DEMO.md`); `uncertainty_*` is the spread between the p = 1 and p = 2 extrapolations (up to {unc_te:.1f} deg TE,
 {unc_tm:.1f} deg TM); the raw 40 and 80 mesh values are listed too. TE is nearly state-independent for this narrow bridge (an HFSS TE ON/OFF difference of more than a few degrees would be news),
 but the TE phase itself is the least converged quantity (several degrees between meshes).

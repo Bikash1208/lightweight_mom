@@ -11,6 +11,7 @@ MODEL_ONLY, NOT_HFSS_VALIDATED, PROVISIONAL_DATASHEET, VIA_OMITTED_APPROXIMATION
 
 import json
 import math
+import os
 import sys
 import time
 import warnings
@@ -32,6 +33,9 @@ from src.sparameters import compute_s_parameters_oblique  # noqa: E402
 
 PL = ReferencePlanes(0.0, None, 1.575e-3)
 F0 = 10e9
+FLOQUET_FACTOR = (
+    float(os.environ["LOCALITY_FLOQUET_FACTOR"]) if os.environ.get("LOCALITY_FLOQUET_FACTOR") else None
+)  # opt-in: 2 = converged cutoff (R4 audit)
 PARAMS_JSON = ROOT / "results" / "phase20_r3" / "opt" / "cp2_madp_final.json"
 
 
@@ -51,7 +55,7 @@ def isolated_circular(cell, kit, theta_deg, n):
             s = compute_s_parameters_oblique(
                 cell.unit_cell(st, kit),
                 F0,
-                MeshSettings(n, n, n // 2 + 1),
+                MeshSettings(n, n, n // 2 + 1 if FLOQUET_FACTOR is None else int(FLOQUET_FACTOR * n)),
                 PL,
                 math.radians(theta_deg),
                 0.0,
@@ -124,7 +128,7 @@ def run_cases(name, cell, kit, iso_by_theta, codings, nx, ny, n, out):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             all_orders = solve_orders(
-                sc, F0, default_mesh(n, nx, ny), PL, math.radians(th), 0.0, load_sets, max_order=3
+                sc, F0, default_mesh(n, nx, ny, FLOQUET_FACTOR), PL, math.radians(th), 0.0, load_sets, max_order=3
             )
         for g, orders_s in zip(grids, all_orders, strict=True):
             meas = measured(orders_s, th, nx, ny, cell.period)

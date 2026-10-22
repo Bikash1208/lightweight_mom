@@ -180,7 +180,10 @@ def solve_orders(unit_cell, frequency, mesh, planes, theta, phi, load_sets, max_
     return results
 
 
-def default_mesh(n_per_cell, nx, ny):
+def default_mesh(n_per_cell, nx, ny, floquet_factor=None):
     """`MeshSettings` for an `nx x ny` supercell of cells meshed with `n_per_cell` cells per period: same pitch, Floquet cutoff
-    `n_total // 2 + 1` (the isolated-cell convention applied to the supercell mesh; the rank condition needs 2F + 1 >= cells)."""
-    return MeshSettings(n_per_cell * nx, n_per_cell * ny, n_per_cell * max(nx, ny) // 2 + 1)
+    `n_total // 2 + 1` (the isolated-cell convention applied to the supercell mesh; the rank condition needs 2F + 1 >= cells).
+    `floquet_factor` (opt-in, Phase 20 R4 audit): cutoff `floquet_factor * n_total` instead, e.g. 2 = the converged cutoff found in R4; the default is unchanged."""
+    n_total = n_per_cell * max(nx, ny)
+    f = n_total // 2 + 1 if floquet_factor is None else int(floquet_factor * n_total)
+    return MeshSettings(n_per_cell * nx, n_per_cell * ny, f)

@@ -36,14 +36,14 @@ the 2-D current crowding changes the OFF phase by tens of degrees against the id
 
 ## What to compare (`mom_reference.csv`)
 Rows `model = hfss_chain` are the MoM of exactly this geometry (two loads and the island); `ideal_series` is the single-load series model of the same diode (the model used in `results/phase20_r2/DEMO.md`).
-`mom_S11_*` are **extrapolated** from the 40 x 40 and 80 x 80 meshes (both aligned with the 0.25 mm strip edges; Floquet order 24 / 41) assuming S(n) = S_inf + c/n^p with p = 1.5, the median order
-observed at 10 GHz on meshes 40/80/120 (1.2-1.65 per row, `results/phase20_r2/DEMO.md`); `uncertainty_*` is the spread between the p = 1 and p = 2 extrapolations (up to 2.9 deg TE,
-3.2 deg TM); the raw 40 and 80 mesh values are listed too. TE is nearly state-independent for this narrow bridge (an HFSS TE ON/OFF difference of more than a few degrees would be news),
+`mom_S11_*` are **extrapolated** from the 40 x 40 and 80 x 80 meshes (both aligned with the 0.25 mm strip edges; Floquet order 80 / 160 = 2n, the converged cutoff; the first version used the minimum order and is kept as `mom_reference_mincutoff.csv`) assuming S(n) = S_inf + c/n^p with p = 1.5, the median order
+observed at 10 GHz on meshes 40/80/120 (1.2-1.65 per row, `results/phase20_r2/DEMO.md`); `uncertainty_*` is the spread between the p = 1 and p = 2 extrapolations (up to 3.0 deg TE,
+3.1 deg TM); the raw 40 and 80 mesh values are listed too. TE is nearly state-independent for this narrow bridge (an HFSS TE ON/OFF difference of more than a few degrees would be news),
 but the TE phase itself is the least converged quantity (several degrees between meshes).
 1. **Convention first:** run the bare grounded slab (no metal, no loads; `bare_grounded_slab_reference.csv`, analytic) at theta = 0, 30 deg. If HFSS's TM phase differs from the listed value by 180 deg (sign
    convention of the TM mode), apply the same shift to every TM entry before comparing; TE should agree directly. Report what you saw.
-2. Then ON and OFF. TM ON-OFF phase difference of the extrapolated MoM prediction (hfss_chain): theta 0 deg: -16 deg at 10 GHz, largest +91 deg at 8 GHz; theta 30 deg: -14 deg at 10 GHz, largest -98 deg at 8.5 GHz. (The OFF series resonance of L_s and C_T is 13.8 GHz nominal.) This cell's contrast is NOT that of the item-4 demo cell (`results/phase20_r2/DEMO.md`, direct 0.5 mm bridge, no pads): the 2 mm slot and the pads change it.
+2. Then ON and OFF. TM ON-OFF phase difference of the extrapolated MoM prediction (hfss_chain): theta 0 deg: -16 deg at 10 GHz, largest +91 deg at 8 GHz; theta 30 deg: -14 deg at 10 GHz, largest -96 deg at 8.5 GHz. (The OFF series resonance of L_s and C_T is 13.8 GHz nominal.) This cell's contrast is NOT that of the item-4 demo cell (`results/phase20_r2/DEMO.md`, direct 0.5 mm bridge, no pads): the 2 mm slot and the pads change it.
 3. **OFF is a sensitive state**: +-20 % on C_T or L_s moves its phase by tens of degrees (up to >100 deg). A difference of that size between HFSS and the MoM is most likely the diode values (C_T at the OFF bias, the
    lead inductance of the pads and island), not a solver error: do the HFSS OFF run with C_T 0.19 pF and also 0.23 pF (+20 %) so the sensitivity can be read directly.
-4. Honest limits: zero-thickness metal in the MoM; the island and pads are conductor strips, the loads are series sheets (`transverse_conducts=False`); the chain and the ideal series model differ by up to 114.5 deg
+4. Honest limits: zero-thickness metal in the MoM; the island and pads are conductor strips, the loads are series sheets (`transverse_conducts=False`); the chain and the ideal series model differ by up to 113.7 deg
    (OFF, TM) in the MoM itself; the MoM mesh is aligned only at n = 40, 80, 120 (mesh 160 does not fit in 36 GiB)

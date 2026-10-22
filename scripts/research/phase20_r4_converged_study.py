@@ -41,8 +41,6 @@ def main(out):
     for th in (0.0, 30.0):
         for n in (60, 90, 120):
             for label, big_f in (("minimal", n // 2 + 1), ("2n", 2 * n)):
-                if label == "minimal" and n == 120 and False:
-                    continue
                 t = time.monotonic()
                 c = run(10.0, th, 0.0, n, big_f)
                 rows.append(

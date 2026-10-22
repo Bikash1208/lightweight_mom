@@ -106,16 +106,26 @@ def test_malformed_entries_are_rejected():
 def test_ris_families_are_registered_model_only_discrete_states_with_their_domain_and_biases():
     cp = reg.get("ris_cp2_octagon_madp_rt5880_15")
     lp = reg.get("ris_lp_1bit_from_cp2_madp_rt5880_15")
-    for fam, n_states in ((cp, 4), (lp, 4)):
+    for fam in (cp, lp):
         reg.validate_family(fam)
-        assert (
-            fam.data_kind == "discrete_states" and fam.validation_label == "MODEL_ONLY" and len(fam.states) == n_states
-        )
-        assert fam.period_mm == 15.0 and fam.incidence_max_theta_deg == 30.0
+        assert fam.data_kind == "discrete_states" and fam.validation_label == "MODEL_ONLY" and len(fam.states) == 4
+        assert fam.period_mm == 15.0 and fam.incidence_max_theta_deg == 45.0 and fam.frequency_band_ghz == (8.0, 12.0)
         assert all(s.response.kind == "reflection_2x2" for s in fam.states)
         assert any("flip-chip" in b for b in fam.known_biases) and any("random codings" in b for b in fam.known_biases)
+        assert any("EXTRAPOLATED_BEYOND_R3_TARGETS" in b for b in fam.known_biases) and fam.diffraction_check
         json.dumps(fam.to_dict())
     assert [s.bias["diode_1"] for s in cp.states] == ["on", "off", "off", "off"]  # one-hot
-    assert reg.check_request(cp.name, f_ghz=10.0, theta_deg=30.0, period_mm=15.0).state == reg.AVAILABLE
+    assert reg.check_request(cp.name, f_ghz=10.1, theta_deg=30.0, period_mm=15.0).state == reg.AVAILABLE
     out = reg.check_request(cp.name, f_ghz=10.0, theta_deg=60.0, period_mm=6.4)
     assert out.state == reg.NOT_AVAILABLE and len(out.reasons) == 2  # 60 deg and the wrong period, both reported
+    assert reg.check_request(cp.name, f_ghz=12.5).state == reg.NOT_AVAILABLE
+
+
+def test_ris_family_refuses_requests_where_a_higher_diffraction_order_propagates():
+    name = "ris_cp2_octagon_madp_rt5880_15"
+    assert reg.check_request(name, f_ghz=11.0, theta_deg=45.0).state == reg.AVAILABLE  # below onset at every azimuth
+    out = reg.check_request(name, f_ghz=11.9, theta_deg=45.0)
+    assert out.state == reg.NOT_AVAILABLE and "diffraction order" in out.reasons[0]
+    # with an explicit azimuth the verdict is for that azimuth (at theta 45 and 12 GHz the order propagates at azimuth 0 deg, not at 45 deg)
+    assert reg.check_request(name, f_ghz=12.0, theta_deg=45.0, phi_deg=0.0).state == reg.NOT_AVAILABLE
+    assert reg.check_request(name, f_ghz=12.0, theta_deg=45.0, phi_deg=45.0).state == reg.AVAILABLE

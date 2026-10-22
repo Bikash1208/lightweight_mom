@@ -80,6 +80,7 @@ class CellFamily:
     data_paths: tuple = ()
     validation_evidence: tuple = ()
     notes: str = ""
+    diffraction_check: bool = False  # discrete-state RIS families: refuse (f, theta, phi) where a higher diffraction order propagates (Phase 20 R4)
 
     def to_dict(self):
         return asdict(self)
@@ -150,7 +151,7 @@ def list_families():
     return dict(_REGISTRY)
 
 
-def check_request(name, substrate=None, f_ghz=None, period_mm=None, theta_deg=None):
+def check_request(name, substrate=None, f_ghz=None, period_mm=None, theta_deg=None, phi_deg=None):
     """Is a design request inside the family's domain of validity? Unspecified items are not checked.
     `substrate`: `(eps_r, tan_d, h_mm)` or a `SubstrateSpec`."""
     f = get(name)
@@ -175,6 +176,22 @@ def check_request(name, substrate=None, f_ghz=None, period_mm=None, theta_deg=No
             why.append(f"frequency {f_ghz:g} GHz has no data (have {have})")
     if theta_deg is not None and abs(theta_deg) > f.incidence_max_theta_deg + 1e-9:
         why.append(f"incidence {theta_deg:g} deg exceeds the characterised {f.incidence_max_theta_deg:g} deg")
+    if f.diffraction_check and f_ghz is not None and theta_deg is not None:
+        import numpy as np
+
+        from ..ris.state_library import higher_order_margin
+
+        phis = [phi_deg] if phi_deg is not None else list(range(0, 360, 30))
+        bad = [p for p in phis if float(higher_order_margin(f_ghz, abs(theta_deg), p)) < 1.0]
+        if bad:
+            where = (
+                "at the requested azimuth"
+                if phi_deg is not None
+                else f"at azimuth(s) {[float(np.round(b)) for b in bad]} deg"
+            )
+            why.append(
+                f"a higher diffraction order propagates at {f_ghz:g} GHz, theta {theta_deg:g} deg {where}: the stored (0,0) reflection is not the whole response"
+            )
     return RequestCheck(NOT_AVAILABLE if why else AVAILABLE, tuple(why), f.name, f.validation_label, f.known_biases)
 
 
@@ -265,22 +282,25 @@ def _builtin():
 
 
 def _ris_builtin(rt5880):
-    """Phase 20 R3 close-out: the two RIS cell families (MODEL_ONLY, discrete states, 2x2 reflection per state). Data: the MoM predictions of the HFSS
-    check package (8-12 GHz in 0.5 GHz steps, theta 0 and 30 deg, phi 0); NOT the R4 production-density library."""
-    freqs = tuple(8.0 + 0.5 * k for k in range(9))
-    thetas = (0.0, 30.0)
-    data = "hfss_exports/phase20_r3_cp_cell/mom_reference.csv"
+    """Phase 20 R3 close-out + R4: the two RIS cell families (MODEL_ONLY, discrete states, 2x2 reflection per state). Data: the R4 state library `results/phase20_r4/cp2_library_v1.npz`
+    (structure-frame circular reflection of the four one-hot states, tabulated MoM at the Floquet cutoff 2n with a mesh correction, interpolated in (f, theta, phi) with a stored
+    uncertainty; see `results/phase20_r4/README.md`). Grid: f 8-12 GHz (0.25 GHz), theta 0-45 deg (7.5 deg), phi 0-330 deg (30 deg)."""
+    freqs = tuple(8.0 + 0.25 * k for k in range(17))
+    thetas = tuple(7.5 * k for k in range(7))
+    phis = tuple(30.0 * k for k in range(12))
+    data = "results/phase20_r4/cp2_library_v1.npz"
     cp_grid = ResponseGrid(
-        "reflection_2x2", freqs, theta_deg=thetas, phi_deg=(0.0,), basis="te_tm_power_wave", data_path=data
+        "reflection_2x2", freqs, theta_deg=thetas, phi_deg=phis, basis="circular_structure_frame", data_path=data
     )
     biases = (
-        "MODEL_ONLY: no HFSS number yet (check package hfss_exports/phase20_r3_cp_cell/ pending); mesh uncertainty of the isolated-cell phases ~10 deg (staircased octagon)",
+        "MODEL_ONLY: no HFSS number yet (check package hfss_exports/phase20_r3_cp_cell/ pending; comparison/calibration hook src/ris/hfss_calibration.py, calibration only with the user's approval); model uncertainty of the phases ~10 deg (staircased octagon)",
         "PROVISIONAL_DATASHEET: MADP-000907-14020 (MACOM Rev V8) R_s 5.2 ohm typ, C_T 0.025 pF typ (max 0.030 = +20 %); L_s NOT_AVAILABLE_FROM_CURRENT_DATA, 0 assumed",
         "flip-chip part: assembly not confirmed with fabrication (fallback: re-optimise around a packaged low-capacitance PIN diode, C_T <= ~0.05 pF)",
         "VIA_OMITTED_APPROXIMATION; bias network not modelled",
-        "opposite-handed (plate-like) reflection -13.6 / -14.0 dB at theta 0 / 30 deg against the -15 dB target; min amplitude -1.60 dB at theta 30 (target -1.5)",
+        "opposite-handed (plate-like) reflection about -14 dB at theta 0 / 30 deg against the -15 dB target; min amplitude -1.60 dB at theta 30 (target -1.5)",
+        "theta > 30 deg is EXTRAPOLATED_BEYOND_R3_TARGETS (the cell was optimised and checked to 30 deg; 60 deg degrades badly and is not tabulated); points where a higher diffraction order propagates (e.g. theta 45 deg above 11.7 GHz) are refused",
         "isolated-cell predictions are reliable for regular gradients but NOT for random codings at this 15 mm pitch (order levels off 1-4 dB, up to ~10 dB): verify codings at array level (supercell/coupling-aware)",
-        "theta = 60 deg degrades (amplitudes down to -7 dB, opposite-handed -3 dB): not characterised for use",
+        "the solver needs a Floquet cutoff of 2n for converged results (smaller cutoffs leave isolated numerical lines); R2/R3 numbers used the minimal cutoff and shift by a few degrees (results/phase20_r4/FLOQUET_CONVERGENCE.md)",
     )
     register(
         CellFamily(
@@ -291,15 +311,15 @@ def _ris_builtin(rt5880):
             period_mm=15.0,
             data_kind="discrete_states",
             validation_label="MODEL_ONLY",
-            frequencies_ghz=freqs,
-            incidence_max_theta_deg=30.0,
+            frequency_band_ghz=(8.0, 12.0),
+            incidence_max_theta_deg=45.0,
             states=tuple(
                 StateSpec(
                     f"cp{k + 1}",
                     f"diode {k + 1} ON (stub {45 * k} deg), others OFF; r_RR phase ~ {90 * k} deg + const",
                     cp_grid,
                     bias={f"diode_{i + 1}": ("on" if i == k else "off") for i in range(4)},
-                    note="handedness-preserving r_RR is the wanted term (propagation-relative circular basis, docs/theory/CONVENTIONS.md); phases at 10 GHz on the optimisation mesh: -104 / -10 / 98 / 178 deg",
+                    note="handedness-preserving r_RR is the wanted term (propagation-relative circular basis, docs/theory/CONVENTIONS.md); the library stores it referred to the fixed structure axes",
                 )
                 for k in range(4)
             ),
@@ -310,12 +330,20 @@ def _ris_builtin(rt5880):
                 "one_hot": True,
                 "period_mm_max_allowed": 15.0,
             },
-            data_paths=(data, "results/phase20_r3/OPTIMISATION.md", "results/phase20_r3/LOCALITY.md"),
+            data_paths=(
+                data,
+                "results/phase20_r4/README.md",
+                "results/phase20_r3/OPTIMISATION.md",
+                "results/phase20_r3/LOCALITY.md",
+            ),
             validation_evidence=(),
             notes="CP family; effective stub line is clamped by the cell edge (the optimum sits on this constraint: pitch vs stub length is an open item)",
+            diffraction_check=True,
         )
     )
-    lp_grid = ResponseGrid("reflection_2x2", freqs, theta_deg=thetas, phi_deg=(0.0,), basis="linear_xy", data_path=data)
+    lp_grid = ResponseGrid(
+        "reflection_2x2", freqs, theta_deg=thetas, phi_deg=phis, basis="te_tm_power_wave", data_path=data
+    )
     register(
         CellFamily(
             name="ris_lp_1bit_from_cp2_madp_rt5880_15",
@@ -325,8 +353,8 @@ def _ris_builtin(rt5880):
             period_mm=15.0,
             data_kind="discrete_states",
             validation_label="MODEL_ONLY",
-            frequencies_ghz=freqs,
-            incidence_max_theta_deg=30.0,
+            frequency_band_ghz=(8.0, 12.0),
+            incidence_max_theta_deg=45.0,
             states=(
                 StateSpec("co_0", "LP->co-LP code, bit 0 (CP-2 state 1)", lp_grid, bias={"cp2_state": 1}),
                 StateSpec("co_1", "LP->co-LP code, bit 1 (CP-2 state 3)", lp_grid, bias={"cp2_state": 3}),
@@ -336,11 +364,12 @@ def _ris_builtin(rt5880):
             known_biases=biases
             + (
                 "1-bit only: a 2-bit LP cell did not meet the targets (LP-1/LP-2/LP-3 with MADP); 2-bit LP is a future phase needing a multilayer / slot-coupled cell",
-                "phase difference of the co-LP code 163 / 157 deg at theta 0 (x / y), 178 / 173 deg at 30 deg; cross-pol 12-23 dB below the wanted term (results/phase20_r3/LP_INTERIM.md)",
+                "the linear codes are meaningful for an incident polarisation along a structure axis (incidence-plane azimuth phi = 0, 90, 180, 270 deg); see results/phase20_r4/README.md for the code metrics",
             ),
             fabrication_rules={"diode": "MACOM MADP-000907-14020 (flip-chip)", "diodes_per_cell": 4, "one_hot": True},
-            data_paths=(data, "results/phase20_r3/LP_INTERIM.md", "results/phase20_r3/lp_interim.json"),
-            notes="the same physical cell as ris_cp2_octagon_madp_rt5880_15: the user selects the polarisation family, not a different geometry",
+            data_paths=(data, "results/phase20_r3/LP_INTERIM.md"),
+            notes="the same physical cell and the same library as ris_cp2_octagon_madp_rt5880_15: the user selects the polarisation family, not a different geometry",
+            diffraction_check=True,
         )
     )
 

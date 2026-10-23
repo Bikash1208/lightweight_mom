@@ -205,7 +205,67 @@ def status():
         print(f"{kind}: {have}/{len(freqs)}")
 
 
+def _lin(start, step, stop, endpoint):
+    n = round((stop - start) / step)
+    return [start + step * i for i in range(n + 1 if endpoint else n)]
+
+
+def configure_grid(f_step=None, theta_step=None, phi_step=None, f_list=None, theta_list=None, phi_list=None):
+    """Override the grid constants (f 8-12 GHz, theta 0-45 deg, phi 0-<360 deg) by a step or an explicit list; an argument left at None keeps the current constant, so
+    `configure_grid()` changes nothing. With the default steps (0.25 GHz, 7.5 deg, 30 deg) the lists equal the constants above exactly."""
+    global GRID_F, GRID_THETA, GRID_PHI
+    if f_list is not None:
+        GRID_F = list(f_list)
+    elif f_step is not None:
+        GRID_F = _lin(8.0, f_step, 12.0, True)
+    if theta_list is not None:
+        GRID_THETA = list(theta_list)
+    elif theta_step is not None:
+        GRID_THETA = _lin(0.0, theta_step, 45.0, True)
+    if phi_list is not None:
+        GRID_PHI = list(phi_list)
+    elif phi_step is not None:
+        GRID_PHI = _lin(0.0, phi_step, 360.0, False)
+
+
+def parse_grid_options(argv):
+    """Pull the optional `--f-step/--theta-step/--phi-step X`, `--f-list/--theta-list/--phi-list a,b,c` and `--dry-run` out of argv; returns (positional, kwargs, dry_run)."""
+    keys = {"--f-step": "f_step", "--theta-step": "theta_step", "--phi-step": "phi_step"}
+    lists = {"--f-list": "f_list", "--theta-list": "theta_list", "--phi-list": "phi_list"}
+    pos, kw, dry, i = [], {}, False, 0
+    while i < len(argv):
+        a = argv[i]
+        if a == "--dry-run":
+            dry = True
+        elif a in keys:
+            kw[keys[a]] = float(argv[i + 1])
+            i += 1
+        elif a in lists:
+            kw[lists[a]] = [float(x) for x in argv[i + 1].split(",")]
+            i += 1
+        else:
+            pos.append(a)
+        i += 1
+    return pos, kw, dry
+
+
 if __name__ == "__main__":
+    argv, grid_kw, dry_run = parse_grid_options(sys.argv)
+    configure_grid(**grid_kw)
+    if dry_run:
+        print(
+            json.dumps(
+                {
+                    "GRID_F": GRID_F,
+                    "GRID_THETA": GRID_THETA,
+                    "GRID_PHI": GRID_PHI,
+                    "n_points_per_f": len(grid_points()),
+                    "n_tasks": len(GRID_F) * len(grid_points()),
+                }
+            )
+        )
+        sys.exit(0)
+    sys.argv = argv
     cmd = sys.argv[1]
     if cmd == "status":
         status()

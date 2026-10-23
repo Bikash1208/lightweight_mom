@@ -1,4 +1,7 @@
-# Phase 20 R3b — CP-2 cell re-optimisation for 10.5 GHz (PLAN; nothing optimised yet)
+# Phase 20 R3b — CP-2 cell re-optimisation for 10.5 GHz (CLOSED 2026-10-23: not pursued, baseline CP-2 retained)
+
+> **Outcome:** the optimisation was stopped after 249 evaluations and not resumed (user decision); the baseline CP-2 cell is retained, the R4 library stays valid. See `results/phase20_r3b/OUTCOME.md`. The plan below is kept as written for the record.
+
 
 Branch `phase20-ris`. **Status: plan for the user's approval. No optimisation has been run.** Labels: MODEL_ONLY with an approved `HFSS_CALIBRATED` delta correction for the baseline cell only, PROVISIONAL_DATASHEET, VIA_OMITTED_APPROXIMATION.
 

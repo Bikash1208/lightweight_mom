@@ -219,7 +219,7 @@ README = """# phase20_r3b_cp_cell -- HFSS check of the re-optimised CP-2 octagon
 
 **State: PREDICTION_NOT_HFSS_VALIDATED (MODEL_ONLY), diode values PROVISIONAL_DATASHEET, VIA_OMITTED_APPROXIMATION.** Generated at Floquet cutoff F = 2n (converged; see `results/phase20_r4/FLOQUET_CONVERGENCE.md`).
 This is the second HFSS check of the RIS cell. The first (`hfss_results/phase20_r3_cp_cell/`) showed the PB ladder working, best point 10.5 GHz, but unequal steps (98/92/102/68 deg) and theta-30 opposite-handed
--11.9 dB; R3b changed the cell (`docs/briefs/PHASE20_R3B_CP2_REOPT.md`): same 15 mm period and diode, **separate axis and diagonal stub length and width**. {source}
+-11.9 dB; R3b changed the cell (`docs/history/briefs/PHASE20_R3B_CP2_REOPT.md`): same 15 mm period and diode, **separate axis and diagonal stub length and width**. {source}
 
 Diode (MACOM MADP-000907-14020): ON R_s = 5.2 ohm, OFF C_T = 0.025 pF (max 0.030 pF = +20 %; the datasheet gives **no minimum**, so the C_T -10 % / -20 % cases are our ASSUMPTION); L_s NOT_AVAILABLE_FROM_CURRENT_DATA
 (nominal 0, +0.1 nH ASSUMED sensitivity). Flip-chip assembly not confirmed with fabrication; one lumped boundary per diode. Each diode is one single-type boundary (ON: R only; OFF: C only).

@@ -130,6 +130,26 @@ beam purity, AR and XPD are better than predicted. It does not separate pin-dire
 Comparison + budget: `scripts/research/phase26_compare_single_hex.py`, `results/phase26/hex150_tensor_cp_single_hfss_comparison.json`,
 `results/phase26/README.md` section H.
 
+## 8. First HFSS check of the RIS cell: CP-2, `phase20_r3_cp_cell` (Phase 20 R3 package, run by the user 2026-10-23)
+
+**State: MODEL_ONLY vs HFSS, comparison only (no calibration enters these numbers).** HFSS: `hfss_results/phase20_r3_cp_cell/` (bare slab + the four one-hot states at theta 0 / 30 deg, phi 0, 8-12 GHz in 0.5 GHz steps; diodes as parallel-RLC
+sheets, MADP ON 5.2 ohm / OFF 0.025 pF). Model: the F = 2n state library `results/phase20_r4/cp2_library_v1.npz` and the regenerated F = 2n `mom_reference.csv`. Tool: `scripts/research/phase20_r4_hfss_check.py`
+(`src/ris/hfss_calibration.py`), output `results/phase20_r4/hfss_check.json` and `HFSS_CHECK.md`. The user's own quick comparison (`hfss_results/phase20_r3_cp_cell/NOTES.md`) was reproduced and is **confirmed except one interpretation** (below).
+
+**Conventions (bare slab, repo tool):** Floquet mode 1 = TE, mode 2 = TM, no 180 deg TM flip; reference-plane offset **1.236 mm** (fit residual 0.51 deg; the HFSS de-embedding stops ~1.24 mm short of the patch plane - to be checked in the HFSS setup); cross terms keep their sign (+1: mean |dr_RR| 0.29 vs 0.77 for -1).
+
+**Confirmed**
+* The PB ladder works in HFSS: four states rotate the CP phase in ~90 deg steps with low loss.
+* Best point 10.5 GHz: |r_RR| -0.57 … -0.63 dB (theta 0), -0.55 … -0.78 dB (theta 30); steps **98 / 92 / 102 / 68 deg** (theta 0), **97 / 92 / 100 / 71 deg** (theta 30), step error 21.9 / 18.7 deg (target 20); the short step is 4 -> 1 (68-71 deg; 64 deg at 10 GHz; library 77-78, mom mesh 90 77).
+* Opposite-handed at 10.5 GHz: -16.8 dB (theta 0, meets -15) and **-11.9 dB (theta 30, misses)**; library -18.6 / -10.5 dB. At 10.0 GHz HFSS is worse than the library: -8.4 / -5.7 dB (library -15.2 / -10.0), |r_RR| down to -1.5 / -2.2 dB.
+* Amplitudes at 10.5 GHz agree with the library within 0.1 dB per state at theta 0 and within 0.4 dB at theta 30. HFSS - library r_RR phase at 10.5 GHz: -18 … -31 deg (theta 0), -19 … -35 deg (theta 30), i.e. a common offset of about -25 deg plus a state-dependent part of +-7 deg.
+* `compare()` (library points = HFSS points, 72): median phase difference 19 deg, 95th percentile 51 deg, level difference median 0.9 dB, 8 % within the library's stored uncertainty - verdict `HFSS_DIFFERS_FROM_LIBRARY` (dominated by the off-band points where the response is small and steep).
+
+**Corrected interpretation:** the "HFSS resonance ~0.3-0.5 GHz higher than the MoM" is **not** supported by a fit. The frequency shift that best aligns the |r_RR| curves is **-0.05 GHz** (rms 0.48 dB at theta 0, 0.52 dB without shift; theta 30: no change), and from the opposite-handed curves **-0.10 … -0.15 GHz** (the opposite sign). Both models have their best point at 10.5 GHz
+at phi = 0; what differs is the **shape**: the HFSS pass band is narrower (|r_RR| -1.8 / -1.5 / -1.7 dB at 9.5 / 10 / 11 GHz against -3.0 / -1.2 / -0.9 dB in the library: lossier on the high side, better on the low side), the opposite-handed level degrades faster off 10.5 GHz, and the ladder is more distorted (steps 98/92/102/68 vs 89/104/89/77). The library's low-frequency edge of the "usable band" at 10.0 GHz (worst-over-phi, tolerance-limited) is therefore not confirmed by HFSS; 10.5 GHz is the HFSS-supported operating point.
+
+**Caveats:** one HFSS run, phi = 0 only, 0.5 GHz sampling (sharp features undersampled), HFSS diode representation differs from the MoM series load, no HFSS tolerance corners, MoM model uncertainty ~10 deg and F = 2n mesh-correction residual 12 deg near 10.3-10.8 GHz (R4 README) remain. Decision recorded in the roadmap log: operating frequency 10.5 GHz; R3b plan `docs/briefs/PHASE20_R3B_CP2_REOPT.md` (an approved `HFSS_CALIBRATED` additive delta table exists for this cell: `results/phase20_r3b/hfss_delta_table.npz`).
+
 ## Regenerating
 
 - Phase 12 HFSS comparisons: re-run through the app's **HFSS compare** page, or

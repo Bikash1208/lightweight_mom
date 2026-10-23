@@ -46,6 +46,53 @@ def read_hfss_rows(path, tm_shift_180=False):
     return entries
 
 
+C0 = 299792458.0
+
+
+def _reim(row, i, j):
+    return float(row[f"re(S(FloquetPort1:{i},FloquetPort1:{j})) []"]) + 1j * float(
+        row[f"im(S(FloquetPort1:{i},FloquetPort1:{j})) []"]
+    )
+
+
+def read_hfss_reim(path, plane_offset_mm=0.0, phi_deg=0.0):
+    """Same dict as `read_hfss_rows` from an HFSS 'scan_theta, state, Freq, re/im S(FloquetPort1:i,FloquetPort1:j)' export (mode 1 = TE, mode 2 = TM; S(i,j) = received i, incident j).
+    `plane_offset_mm` de-embeds the Floquet-port reference plane: every S is multiplied by exp(+j 2 k0 d cos(theta)) (see `fit_reference_plane_mm`). No TM sign flip is applied here."""
+    entries = {}
+    with open(path, newline="") as fh:
+        for raw in csv.DictReader(fh):
+            r = {k.strip(): v for k, v in raw.items()}
+            th, st, f = float(r["scan_theta [deg]"]), int(float(r["state []"])), float(r["Freq [GHz]"])
+            g = np.exp(1j * 2 * (2 * np.pi * f * 1e9 / C0) * (plane_offset_mm * 1e-3) * math.cos(math.radians(th)))
+            m = np.array([[_reim(r, 1, 1), _reim(r, 1, 2)], [_reim(r, 2, 1), _reim(r, 2, 2)]]) * g
+            entries[(st, round(f, 6), th, float(phi_deg))] = m
+    return entries
+
+
+def fit_reference_plane_mm(bare_csv, reference_csv):
+    """Least-squares reference-plane offset d [mm] with HFSS phase = analytic - 2 k0 d cos(theta) from the bare grounded slab export (state 1) against the analytic
+    `bare_grounded_slab_reference.csv`; returns (d_mm, max residual deg)."""
+    ref = {}
+    with open(reference_csv, newline="") as fh:
+        for r in csv.DictReader(fh):
+            ref[(round(float(r["f_ghz"]), 6), float(r["theta_deg"]), r["floquet_mode"][0])] = float(r["S11_phase_deg"])
+    a, b = [], []
+    with open(bare_csv, newline="") as fh:
+        for raw in csv.DictReader(fh):
+            r = {k.strip(): v for k, v in raw.items()}
+            if int(float(r["state []"])) != 1:
+                continue
+            th, f = float(r["scan_theta [deg]"]), float(r["Freq [GHz]"])
+            for mode in (1, 2):
+                phase_ref = ref[(round(f, 6), th, str(mode))]
+                dphi = np.angle(np.exp(1j * math.radians(phase_ref)) / _reim(r, mode, mode))
+                a.append(2 * (2 * np.pi * f * 1e9 / C0) * math.cos(math.radians(th)))
+                b.append(dphi)
+    a, b = np.array(a), np.array(b)
+    d = float(np.sum(a * b) / np.sum(a * a))
+    return d * 1e3, float(np.abs(np.degrees(b - a * d)).max())
+
+
 @dataclass
 class PointComparison:
     state: int
@@ -132,3 +179,81 @@ def apply_calibration(arrays, offsets, *, approved_by_user=False, source=""):
     out["s_corr"] = te_tm_from_structure_circular(out["c_corr"], phi)
     out["calibration"] = np.array([f"HFSS_CALIBRATED: {source}"])
     return out
+
+
+# --- additive HFSS delta table (user-approved calibration of the CP-2 cell, 2026-10-23) -----------------------------------------------------------------------------------------------
+class DeltaTable:
+    """Additive structure-frame correction `dC[f, theta, state, 2, 2] = C_hfss - C_library` at the HFSS points (phi = 0, f 0.5 GHz grid, theta 0 and 30 deg). `apply` adds it to a
+    structure-frame circular response computed for the SAME cell, linearly interpolated in f and theta (theta beyond the HFSS range is held at the last value and flagged). For a MODIFIED
+    cell the delta is a TRANSFER assumption (the HFSS-vs-MoM offsets of the old cell are taken to carry over), not a measurement: label `HFSS_CALIBRATED_TRANSFERRED`. phi-independent by assumption
+    (HFSS was run at phi = 0 only)."""
+
+    LABEL = "HFSS_CALIBRATED"
+
+    def __init__(self, f_ghz, theta_deg, delta, source):
+        self.f, self.theta, self.delta, self.source = (
+            np.asarray(f_ghz),
+            np.asarray(theta_deg),
+            np.asarray(delta),
+            str(source),
+        )
+
+    @classmethod
+    def build(cls, library, hfss, source, *, approved_by_user=False):
+        """Delta table from `library` (corrected, structure frame) and HFSS rows `{(state, f, theta, phi): 2x2 TE/TM}` (phi = 0 rows used). Needs `approved_by_user=True` and a provenance string."""
+        if not approved_by_user:
+            raise CalibrationNotApproved(
+                "building an HFSS delta table needs the user's explicit approval (approved_by_user=True)"
+            )
+        if not source:
+            raise ValueError("a calibration needs its data provenance (`source`)")
+        rows = {k: v for k, v in hfss.items() if k[3] == 0.0}
+        fs = sorted({k[1] for k in rows})
+        ths = sorted({k[2] for k in rows})
+        delta = np.zeros((len(fs), len(ths), 4, 2, 2), dtype=complex)
+        for i, f in enumerate(fs):
+            for j, th in enumerate(ths):
+                for s in range(4):
+                    c_h = to_structure_frame(circular_reflection(rows[(s + 1, f, th, 0.0)]), 0.0)
+                    delta[i, j, s] = c_h - library.structure_circular(f, th, 0.0, s + 1)[0]
+        return cls(fs, ths, delta, source)
+
+    def at(self, f_ghz, theta_deg, state):
+        """Interpolated delta (2x2) for state 1..4; also returns the label."""
+        fi = np.interp(f_ghz, self.f, np.arange(len(self.f)))
+        ti = np.interp(min(theta_deg, self.theta[-1]), self.theta, np.arange(len(self.theta)))
+        i0, j0 = int(np.floor(fi)), int(np.floor(ti))
+        i1, j1 = min(i0 + 1, len(self.f) - 1), min(j0 + 1, len(self.theta) - 1)
+        wf, wt = fi - i0, ti - j0
+        d = self.delta[:, :, state - 1]
+        val = (
+            (1 - wf) * (1 - wt) * d[i0, j0]
+            + wf * (1 - wt) * d[i1, j0]
+            + (1 - wf) * wt * d[i0, j1]
+            + wf * wt * d[i1, j1]
+        )
+        label = (
+            self.LABEL
+            if theta_deg <= self.theta[-1] and self.f[0] <= f_ghz <= self.f[-1]
+            else "HFSS_CALIBRATED_EXTRAPOLATED"
+        )
+        return val, label
+
+    def apply(self, c_structure, f_ghz, theta_deg, state):
+        val, label = self.at(f_ghz, theta_deg, state)
+        return np.asarray(c_structure) + val, label
+
+    def save(self, path):
+        np.savez_compressed(
+            path,
+            f_ghz=self.f,
+            theta_deg=self.theta,
+            delta=self.delta,
+            source=np.array([self.source]),
+            label=np.array([self.LABEL]),
+        )
+
+    @classmethod
+    def load(cls, path):
+        z = np.load(path, allow_pickle=False)
+        return cls(z["f_ghz"], z["theta_deg"], z["delta"], str(z["source"][0]))

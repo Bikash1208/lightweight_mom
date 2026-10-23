@@ -50,7 +50,14 @@ def test_ru_maxrss_kb_normalizes_macos_bytes_but_not_linux_kilobytes(monkeypatch
     class _FakeUsage:
         ru_maxrss = 1_400_000_000  # the live review's own reported (buggy, un-normalized) value
 
-    monkeypatch.setattr(diag.resource, "getrusage", lambda who: _FakeUsage())
+    class _FakeResource:  # stands in for the Unix-only module, so this runs where `resource` is absent too
+        RUSAGE_SELF = 0
+
+        @staticmethod
+        def getrusage(who):
+            return _FakeUsage()
+
+    monkeypatch.setattr(diag, "resource", _FakeResource)
 
     monkeypatch.setattr(diag.sys, "platform", "darwin")
     assert diag._ru_maxrss_kb() == pytest.approx(1_400_000_000 / 1024.0)
@@ -77,7 +84,7 @@ def test_resource_import_is_guarded_in_the_source():
     """The module must import on a platform without `resource`: the import sits in a try/except ImportError."""
     import inspect
 
-    src = inspect.getsource(diag)
+    src = inspect.getsource(diag).replace("\r\n", "\n")  # a Windows checkout may carry CRLF
     assert "try:\n    import resource\nexcept ImportError" in src
 
 

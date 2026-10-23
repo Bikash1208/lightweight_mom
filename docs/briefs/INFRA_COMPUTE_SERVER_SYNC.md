@@ -54,6 +54,10 @@ Same check before any fetch from `hub`.
   Windows), with a test.
 - Any other Windows-only failure found by the server's first fast-suite run: report first, fix in the same way.
 - Server fast-suite report 2026-10-23 (Windows, 48 cores, 255.6 GB, OpenBLAS 0.3.34): 13 failed / 85 errors = 93 from `resource` (fixed above), 2 last-digit BLAS differences (~1e-15, expected, not fixed) and 3 Windows-only test issues, fixed portably without physics change: `test_app_jsonutil::test_path_becomes_string` (compares with `str(path)`), `test_phase8b_conventions::test_coordinate_system_matches_conventions_md_text` (reads UTF-8 explicitly), `test_tensor_cp_service` export-vs-reference comparison (the gitignored reference `layout.json` / `layout.dxf` may be absent: the export must then still produce the file).
+- Equivalence result 2026-10-23 (server 1 vs Mac): **INTERCHANGEABLE**, max relative difference 4.3e-10 at 1 and at 8 threads; the server is cleared for jobs.
+- The Phase 23 rectangular snapshot (`phase23_rect_snapshot.py` vs `rect_snapshot_after_C.json`) differs on the server in the last digits (different BLAS): it is a **Mac-only gate**; the server runs the fast suite and the equivalence tolerance (<= 1e-6 relative) instead.
+- Remaining Windows test issues (no physics change): the two diagnostics tests that assumed `resource` (patched with a fake module / CRLF-tolerant source check); the byte-compare fixtures were suspected CRLF from `core.autocrlf` on the Windows checkout, so a `.gitattributes` fixes line endings (`* text=auto eol=lf`; CSV exports and HFSS `.txt` are `-text` because many are stored with CRLF; binaries marked). To be verified by the server's next report.
+- Three `board_export` job failures: cause not yet known; the server reruns one with the job log and reports the error text.
 
 ## First steps
 1. Server: create the share and bare repo (done by the user), push nothing yet.

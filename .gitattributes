@@ -1,0 +1,16 @@
+# Text fixtures and sources are compared byte-for-byte by tests: keep LF on every checkout (Windows autocrlf).
+* text=auto eol=lf
+# CSV/TXT exports are stored as written (many carry CRLF from the csv module or HFSS): never converted.
+*.csv -text
+hfss_results/**/*.txt -text
+*.png binary
+*.jpg binary
+*.step binary
+*.stp binary
+*.npz binary
+*.pdf binary
+*.xlsx binary
+*.zip binary
+*.s2p binary
+*.s4p binary
+*.s36p binary

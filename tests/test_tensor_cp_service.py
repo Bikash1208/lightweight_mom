@@ -142,8 +142,14 @@ def test_app_export_of_the_single_hexagon_matches_the_committed_phase26_folder(t
     } <= set(names)
     ref = _ROOT / "hfss_exports/hex150_tensor_cp_single"
     for f in ("hfss_build_board.py", "layout.csv", "layout.json", "predictions.json", "layout.png"):
-        assert (tmp_path / f).read_bytes() == (ref / f).read_bytes(), f
-    assert _dxf_entities(tmp_path / "layout.dxf") == _dxf_entities(ref / "layout.dxf")
+        if (ref / f).exists():
+            assert (tmp_path / f).read_bytes() == (ref / f).read_bytes(), f
+        else:  # gitignored reference artefact (e.g. layout.json) absent in a fresh clone / compute server: the export must still produce it
+            assert (tmp_path / f).stat().st_size > 0, f
+    if (ref / "layout.dxf").exists():  # gitignored as well
+        assert _dxf_entities(tmp_path / "layout.dxf") == _dxf_entities(ref / "layout.dxf")
+    else:
+        assert (tmp_path / "layout.dxf").stat().st_size > 0
 
 
 def test_app_export_hex4_has_drive_port_option_and_four_ports(tmp_path):

@@ -35,13 +35,14 @@ each additive and bit-identical on the Mac.
    if the differences are far below the model uncertainty (≤ 1e-6 relative), otherwise stop and report.
    Bit-identity gates stay **Mac-only**; on the server, report the difference size.
 6. **Threads.** On the server set `OMP_NUM_THREADS` / `MKL_NUM_THREADS` / `OPENBLAS_NUM_THREADS` so that
-   workers × threads ≤ cores; memory limits workers (mesh 120 ≈ 9 GB per worker) — check RAM before launching.
+   workers × threads ≤ cores; **every server job sets `OPENBLAS_NUM_THREADS=1` per worker (measured: `-n 24` without it was 4.7x slower)**; memory limits workers (mesh 120 ≈ 9 GB per worker) — check RAM before launching.
 7. **Checkpointing** as in R4/R3b: every evaluation cached, resumable after a reboot/RDP disconnect.
 
 ## Portability items (Mac session implements; additive; bit-identical on the Mac)
 - `src/diagnostics.py`: guarded import of the Unix-only `resource` module (memory reported as `NOT_AVAILABLE` on
   Windows), with a test.
 - Any other Windows-only failure found by the server's first fast-suite run: report first, fix in the same way.
+- Server fast-suite report 2026-10-23 (Windows, 48 cores, 255.6 GB, OpenBLAS 0.3.34): 13 failed / 85 errors = 93 from `resource` (fixed above), 2 last-digit BLAS differences (~1e-15, expected, not fixed) and 3 Windows-only test issues, fixed portably without physics change: `test_app_jsonutil::test_path_becomes_string` (compares with `str(path)`), `test_phase8b_conventions::test_coordinate_system_matches_conventions_md_text` (reads UTF-8 explicitly), `test_tensor_cp_service` export-vs-reference comparison (the gitignored reference `layout.json` / `layout.dxf` may be absent: the export must then still produce the file).
 
 ## First steps
 1. Server: create the share and bare repo (done by the user), push nothing yet.

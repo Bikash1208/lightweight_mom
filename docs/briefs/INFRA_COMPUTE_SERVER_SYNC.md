@@ -38,6 +38,11 @@ each additive and bit-identical on the Mac.
    workers × threads ≤ cores; **every server job sets `OPENBLAS_NUM_THREADS=1` per worker (measured: `-n 24` without it was 4.7x slower)**; memory limits workers (mesh 120 ≈ 9 GB per worker) — check RAM before launching.
 7. **Checkpointing** as in R4/R3b: every evaluation cached, resumable after a reboot/RDP disconnect.
 
+## Mac push rule (added 2026-10-23)
+**Before every push to `hub`** the Mac session checks that `/Volumes/hmsa_sync` is mounted and that `/Volumes/hmsa_sync/lightweight_mom.git` exists (`test -d /Volumes/hmsa_sync/lightweight_mom.git`).
+If either is missing (the SMB mount drops after sleep / network changes), **stop and tell the user to remount** (Finder ⌘K → `smb://100.88.61.96/hmsa_sync`); never push to another path, a local copy or a different remote instead.
+Same check before any fetch from `hub`.
+
 ## Portability items (Mac session implements; additive; bit-identical on the Mac)
 - `src/diagnostics.py`: guarded import of the Unix-only `resource` module (memory reported as `NOT_AVAILABLE` on
   Windows), with a test.

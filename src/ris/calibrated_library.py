@@ -123,6 +123,19 @@ def read_hfss_reim_tolerance(path, plane_offset_mm=0.0, coff_column=None):
     return out
 
 
+def tolerance_plane_offset_mm(tolerance_csv, run1_csv, bare_csv, bare_reference_csv):
+    """De-embedding offset for the tolerance export, by the SAME method as the run-2 delta table: run-1 plane (fit of the bare grounded slab against the analytic
+    reference) minus the plane shift of the file relative to run 1 measured from the co-polar data (`run_shift_mm`, taken on the nominal C_off rows).
+    Returns (offset_mm, shift_mm, (p16, p84))."""
+    from .hfss_calibration import fit_reference_plane_mm, read_hfss_reim, run_shift_mm
+
+    d1, _ = fit_reference_plane_mm(bare_csv, bare_reference_csv)
+    raw = read_hfss_reim_tolerance(tolerance_csv, 0.0)
+    nominal = {(s, f, th, 0.0): m for (c, s, f, th), m in raw.items() if abs(c - NOMINAL_COFF_PF) < 1e-9}
+    shift, lo, hi = run_shift_mm(read_hfss_reim(run1_csv, 0.0), nominal)
+    return d1 - shift, shift, (lo, hi)
+
+
 class ToleranceBand:
     """Structure-frame response difference `C(C_off) - C(nominal)` per state on the HFSS (f, theta) grid, interpolated linearly in f, theta and C_off (extrapolation in C_off is refused)."""
 

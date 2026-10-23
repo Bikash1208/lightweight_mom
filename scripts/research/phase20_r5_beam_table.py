@@ -20,7 +20,12 @@ sys.path.insert(0, str(ROOT))
 
 from scripts.research.provenance import finish, provenance  # noqa: E402
 from src.ris import coding as cd  # noqa: E402
-from src.ris.calibrated_library import CalibratedLibrary, ToleranceBand, read_hfss_reim_tolerance  # noqa: E402
+from src.ris.calibrated_library import (  # noqa: E402
+    CalibratedLibrary,
+    ToleranceBand,
+    read_hfss_reim_tolerance,
+    tolerance_plane_offset_mm,
+)
 from src.ris.state_library import OutOfDomain  # noqa: E402
 
 F0 = 10.5
@@ -30,7 +35,7 @@ VARIANTS = ["plain", "dither", "tilt", "refined"]
 FREQS = [round(10.0 + 0.05 * i, 2) for i in range(21)]
 COFFS = [0.0225, 0.025, 0.030]
 TOL_CSV = ROOT / "hfss_results" / "phase20_r3_cp_cell" / "hfss_cp2_tolerance_Coff_0225_025_030.csv"
-TOL_PLANE_MM = -0.374  # the run-2 residual plane correction used for the delta table (same HFSS project)
+HF = ROOT / "hfss_results" / "phase20_r3_cp_cell"
 STEP = 0.005
 
 
@@ -59,8 +64,24 @@ def _num(v):
 def main(out_path):
     t0 = time.time()
     cal = CalibratedLibrary.load()
-    cal.tolerance = ToleranceBand.from_hfss(read_hfss_reim_tolerance(TOL_CSV, plane_offset_mm=TOL_PLANE_MM))
-    result = {"provenance": provenance(), "design_f_ghz": F0, "labels": list(cd.ASSUMPTIONS), "table": [], "bandwidth": [], "sensitivity": []}
+    plane, shift, spread = tolerance_plane_offset_mm(
+        TOL_CSV,
+        HF / "hfss_cp2_states1-4_theta0_30.csv",
+        HF / "hfss_bare_slab_theta0_30.csv",
+        ROOT / "hfss_exports/phase20_r3_cp_cell/bare_grounded_slab_reference.csv",
+    )
+    cal.tolerance = ToleranceBand.from_hfss(read_hfss_reim_tolerance(TOL_CSV, plane_offset_mm=plane))
+    result = {
+        "provenance": provenance(),
+        "tolerance_plane_offset_mm": plane,
+        "tolerance_shift_vs_run1_mm": shift,
+        "tolerance_shift_16_84": spread,
+        "design_f_ghz": F0,
+        "labels": list(cd.ASSUMPTIONS),
+        "table": [],
+        "bandwidth": [],
+        "sensitivity": [],
+    }
     base_gain, codings = {}, {}
     for phi in PLANES:
         for th in ANGLES:
@@ -80,8 +101,14 @@ def main(out_path):
                 entry["variants"][var] = row(m, gt)
                 codings[(var, th, phi)] = c
                 if var == "dither":
-                    gs = [cd.evaluate(cal, cd.design(cal, "dither", F0, th, phi, seed=s), step=STEP)[1] for s in range(5)]
-                    entry["variants"][var]["gain_target_over_seeds_dbi"] = [round(min(gs), 2), round(float(np.mean(gs)), 2), round(max(gs), 2)]
+                    gs = [
+                        cd.evaluate(cal, cd.design(cal, "dither", F0, th, phi, seed=s), step=STEP)[1] for s in range(5)
+                    ]
+                    entry["variants"][var]["gain_target_over_seeds_dbi"] = [
+                        round(min(gs), 2),
+                        round(float(np.mean(gs)), 2),
+                        round(max(gs), 2),
+                    ]
                 if var == "refined":
                     entry["variants"][var]["refine_log"] = c.log
             if th == 0:
@@ -104,29 +131,42 @@ def main(out_path):
                     gt.append(np.nan), gp.append(np.nan), tp.append(np.nan), ok.append(False)
             good = np.array(ok)
             fr = np.array(FREQS)[good]
-            result["bandwidth"].append({
-                "theta_s": th, "phi_s": 0.0, "variant": var, "freqs": FREQS,
-                "gain_at_design_direction_dbi": [_num(g) for g in gt],
-                "peak_gain_dbi": [_num(g) for g in gp],
-                "peak_theta_deg": [_num(g) for g in tp],
-                "grating_onset_deg": [round(cd.grating_onset_deg(f), 1) for f in FREQS],
-                "bandwidth_design_direction": cd.gain_bandwidth(fr, np.array(gt)[good]) if good.any() else {},
-                "bandwidth_peak": cd.gain_bandwidth(fr, np.array(gp)[good]) if good.any() else {},
-                "out_of_domain_freqs": [f for f, o in zip(FREQS, ok) if not o],
-            })
+            result["bandwidth"].append(
+                {
+                    "theta_s": th,
+                    "phi_s": 0.0,
+                    "variant": var,
+                    "freqs": FREQS,
+                    "gain_at_design_direction_dbi": [_num(g) for g in gt],
+                    "peak_gain_dbi": [_num(g) for g in gp],
+                    "peak_theta_deg": [_num(g) for g in tp],
+                    "grating_onset_deg": [round(cd.grating_onset_deg(f), 1) for f in FREQS],
+                    "bandwidth_design_direction": cd.gain_bandwidth(fr, np.array(gt)[good]) if good.any() else {},
+                    "bandwidth_peak": cd.gain_bandwidth(fr, np.array(gp)[good]) if good.any() else {},
+                    "out_of_domain_freqs": [f for f, o in zip(FREQS, ok, strict=True) if not o],
+                }
+            )
     print(f"bandwidth done {time.time() - t0:.0f}s", flush=True)
 
     for phi in PLANES:
         for th in (0, 30, 50):
             for var in ("plain", "refined"):
                 c = codings[(var, th, phi)]
-                rows_ = {str(coff): row(*(lambda r: (r[0], r[1]))(cd.evaluate(cal, c, coff=coff, step=STEP))) for coff in COFFS}
+                rows_ = {
+                    str(coff): row(*(lambda r: (r[0], r[1]))(cd.evaluate(cal, c, coff=coff, step=STEP)))
+                    for coff in COFFS
+                }
                 g_all = [r["gain_target_dbi"] for r in rows_.values()]
-                result["sensitivity"].append({
-                    "theta_s": th, "phi_s": phi, "variant": var, "by_coff_pf": rows_,
-                    "gain_target_spread_db": round(max(g_all) - min(g_all), 2),
-                    "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)",
-                })
+                result["sensitivity"].append(
+                    {
+                        "theta_s": th,
+                        "phi_s": phi,
+                        "variant": var,
+                        "by_coff_pf": rows_,
+                        "gain_target_spread_db": round(max(g_all) - min(g_all), 2),
+                        "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)",
+                    }
+                )
     result["runtime_s"] = round(time.time() - t0, 1)
     finish(result["provenance"])
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)

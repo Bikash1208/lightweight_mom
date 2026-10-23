@@ -40,17 +40,17 @@ The design-direction gain falls with frequency off 10.5 GHz because the fixed co
 
 | phi_s | theta_s | coding | gain at target (C_off 0.0225 / 0.025 / 0.030) | spread dB | SLL | opposite-handed peak re co-pol |
 |---|---|---|---|---|---|---|
-| 0 | 0 | plain | 30.84 / 30.84 / 30.81 | 0.03 | -13.3 / -13.3 / -13.3 | -21.0 / -24.2 / -27.5 |
-| 0 | 0 | refined | 30.84 / 30.84 / 30.81 | 0.03 | -13.3 / -13.3 / -13.3 | -21.0 / -24.2 / -27.5 |
-| 0 | 30 | plain | 27.63 / 27.63 / 27.59 | 0.04 | -12.8 / -12.8 / -12.8 | -15.7 / -18.5 / -25.8 |
-| 0 | 30 | refined | 27.63 / 27.63 / 27.59 | 0.04 | -12.8 / -12.8 / -12.8 | -15.7 / -18.5 / -25.8 |
-| 0 | 50 | plain | 23.7 / 23.71 / 23.69 | 0.02 | -5.3 / -5.5 / -5.7 | -9.9 / -12.4 / -19.2 |
-| 0 | 50 | refined | 22.64 / 22.63 / 22.56 | 0.08 | -10.5 / -10.5 / -10.5 | -11.1 / -14.2 / -19.1 |
-| 90 | 0 | plain | 30.84 / 30.84 / 30.81 | 0.03 | -13.3 / -13.3 / -13.3 | -21.0 / -24.2 / -27.5 |
-| 90 | 0 | refined | 30.84 / 30.84 / 30.81 | 0.03 | -13.3 / -13.3 / -13.3 | -21.0 / -24.2 / -27.5 |
-| 90 | 30 | plain | 27.63 / 27.63 / 27.59 | 0.04 | -12.8 / -12.8 / -12.8 | -15.7 / -18.5 / -25.8 |
-| 90 | 30 | refined | 27.63 / 27.63 / 27.59 | 0.04 | -12.8 / -12.8 / -12.8 | -15.7 / -18.5 / -25.8 |
-| 90 | 50 | plain | 23.7 / 23.71 / 23.69 | 0.02 | -5.3 / -5.5 / -5.7 | -9.9 / -12.4 / -19.2 |
-| 90 | 50 | refined | 22.59 / 22.58 / 22.52 | 0.07 | -11.8 / -11.8 / -11.2 | -10.9 / -14.0 / -19.1 |
+| 0 | 0 | plain | 30.83 / 30.84 / 30.83 | 0.01 | -13.3 / -13.3 / -13.3 | -21.0 / -24.2 / -27.2 |
+| 0 | 0 | refined | 30.83 / 30.84 / 30.83 | 0.01 | -13.3 / -13.3 / -13.3 | -21.0 / -24.2 / -27.2 |
+| 0 | 30 | plain | 27.62 / 27.63 / 27.61 | 0.02 | -12.8 / -12.8 / -12.8 | -15.7 / -18.5 / -25.4 |
+| 0 | 30 | refined | 27.62 / 27.63 / 27.61 | 0.02 | -12.8 / -12.8 / -12.8 | -15.7 / -18.5 / -25.4 |
+| 0 | 50 | plain | 23.69 / 23.71 / 23.71 | 0.02 | -5.3 / -5.5 / -5.7 | -9.9 / -12.4 / -19.2 |
+| 0 | 50 | refined | 22.63 / 22.63 / 22.58 | 0.05 | -10.5 / -10.5 / -10.5 | -11.2 / -14.2 / -18.8 |
+| 90 | 0 | plain | 30.83 / 30.84 / 30.83 | 0.01 | -13.3 / -13.3 / -13.3 | -21.0 / -24.2 / -27.2 |
+| 90 | 0 | refined | 30.83 / 30.84 / 30.83 | 0.01 | -13.3 / -13.3 / -13.3 | -21.0 / -24.2 / -27.2 |
+| 90 | 30 | plain | 27.62 / 27.63 / 27.61 | 0.02 | -12.8 / -12.8 / -12.8 | -15.7 / -18.5 / -25.4 |
+| 90 | 30 | refined | 27.62 / 27.63 / 27.61 | 0.02 | -12.8 / -12.8 / -12.8 | -15.7 / -18.5 / -25.4 |
+| 90 | 50 | plain | 23.69 / 23.71 / 23.71 | 0.02 | -5.3 / -5.5 / -5.7 | -9.9 / -12.4 / -19.2 |
+| 90 | 50 | refined | 22.58 / 22.58 / 22.54 | 0.04 | -11.8 / -11.8 / -11.2 | -11.0 / -14.0 / -18.8 |
 
-The tolerance data are the user's HFSS run (theta 0 and 30, phi 0; plane correction -0.374 mm as for the run-2 delta), applied at the incidence used here (normal). Main-beam gain, pointing and SLL move by <= 0.1 dB; the opposite-handed level moves most (several dB at theta_s = 30 / 50). This agrees with the HFSS reading (cell robust to C_off) and not with the earlier MoM corner predictions (17-28 deg step errors), which the HFSS run did not reproduce.
+The tolerance data are the user's HFSS run (theta 0 and 30, phi 0; plane correction -0.321 mm, derived by the same method as the run-2 delta (see `results/phase20_r5/PLANE_CORRECTION.md`)), applied at the incidence used here (normal). Main-beam gain, pointing and SLL move by <= 0.1 dB; the opposite-handed level moves most (several dB at theta_s = 30 / 50). This agrees with the HFSS reading (cell robust to C_off) and not with the earlier MoM corner predictions (17-28 deg step errors), which the HFSS run did not reproduce.

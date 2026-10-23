@@ -3,7 +3,7 @@
   "machine": "Bikss-MacBook-Pro.local",
   "os": "Darwin 27.0.0 arm64",
   "cpu_count": 12,
-  "git_commit": "d47e053fd5c4080292d532dbbe49277f3a6b0919",
+  "git_commit": "00528a4f7bae1767a0184b802d4d6621727db132",
   "git_branch": "phase20-ris",
   "git_dirty": true,
   "python": "3.14.7",
@@ -20,9 +20,15 @@
    "VECLIB_MAXIMUM_THREADS": null
   },
   "workers": null,
-  "started": "2026-10-23T16:33:37.426000+00:00",
-  "finished": "2026-10-23T16:35:58.379349+00:00"
+  "started": "2026-10-23T16:45:26.115563+00:00",
+  "finished": "2026-10-23T16:47:46.995589+00:00"
  },
+ "tolerance_plane_offset_mm": -0.32068742967482033,
+ "tolerance_shift_vs_run1_mm": 1.556541245096046,
+ "tolerance_shift_16_84": [
+  1.552888180428703,
+  1.5686785713458749
+ ],
  "design_f_ghz": 10.5,
  "labels": [
   "MODEL_ONLY",
@@ -4582,17 +4588,17 @@
    "variant": "plain",
    "by_coff_pf": {
     "0.0225": {
-     "gain_target_dbi": 30.84,
-     "peak_gain_dbi": 30.84,
+     "gain_target_dbi": 30.83,
+     "peak_gain_dbi": 30.83,
      "peak_theta_deg": 0.0,
      "peak_phi_deg": 45.0,
      "pointing_error_deg": 0.0,
      "directivity_dbi": 31.52,
-     "radiated_over_incident": 0.855,
+     "radiated_over_incident": 0.854,
      "sll_db": -13.3,
      "sll_at_deg": [
       7.8,
-      90.0
+      0.0
      ],
      "cross_peak_db": -21.0,
      "cross_peak_at_deg": [
@@ -4624,28 +4630,28 @@
      "axial_ratio_db": 1.07
     },
     "0.03": {
-     "gain_target_dbi": 30.81,
-     "peak_gain_dbi": 30.81,
+     "gain_target_dbi": 30.83,
+     "peak_gain_dbi": 30.83,
      "peak_theta_deg": 0.0,
      "peak_phi_deg": 45.0,
      "pointing_error_deg": 0.0,
      "directivity_dbi": 31.55,
-     "radiated_over_incident": 0.845,
+     "radiated_over_incident": 0.847,
      "sll_db": -13.3,
      "sll_at_deg": [
       7.8,
-      0.0
+      90.0
      ],
-     "cross_peak_db": -27.5,
+     "cross_peak_db": -27.2,
      "cross_peak_at_deg": [
       0.0,
       45.0
      ],
-     "cross_at_specular_db": -27.5,
-     "axial_ratio_db": 0.73
+     "cross_at_specular_db": -27.2,
+     "axial_ratio_db": 0.76
     }
    },
-   "gain_target_spread_db": 0.03,
+   "gain_target_spread_db": 0.01,
    "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
   },
   {
@@ -4654,17 +4660,17 @@
    "variant": "refined",
    "by_coff_pf": {
     "0.0225": {
-     "gain_target_dbi": 30.84,
-     "peak_gain_dbi": 30.84,
+     "gain_target_dbi": 30.83,
+     "peak_gain_dbi": 30.83,
      "peak_theta_deg": 0.0,
      "peak_phi_deg": 45.0,
      "pointing_error_deg": 0.0,
      "directivity_dbi": 31.52,
-     "radiated_over_incident": 0.855,
+     "radiated_over_incident": 0.854,
      "sll_db": -13.3,
      "sll_at_deg": [
       7.8,
-      90.0
+      0.0
      ],
      "cross_peak_db": -21.0,
      "cross_peak_at_deg": [
@@ -4696,28 +4702,28 @@
      "axial_ratio_db": 1.07
     },
     "0.03": {
-     "gain_target_dbi": 30.81,
-     "peak_gain_dbi": 30.81,
+     "gain_target_dbi": 30.83,
+     "peak_gain_dbi": 30.83,
      "peak_theta_deg": 0.0,
      "peak_phi_deg": 45.0,
      "pointing_error_deg": 0.0,
      "directivity_dbi": 31.55,
-     "radiated_over_incident": 0.845,
+     "radiated_over_incident": 0.847,
      "sll_db": -13.3,
      "sll_at_deg": [
       7.8,
-      0.0
+      90.0
      ],
-     "cross_peak_db": -27.5,
+     "cross_peak_db": -27.2,
      "cross_peak_at_deg": [
       0.0,
       45.0
      ],
-     "cross_at_specular_db": -27.5,
-     "axial_ratio_db": 0.73
+     "cross_at_specular_db": -27.2,
+     "axial_ratio_db": 0.76
     }
    },
-   "gain_target_spread_db": 0.03,
+   "gain_target_spread_db": 0.01,
    "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
   },
   {
@@ -4726,13 +4732,13 @@
    "variant": "plain",
    "by_coff_pf": {
     "0.0225": {
-     "gain_target_dbi": 27.63,
-     "peak_gain_dbi": 28.36,
+     "gain_target_dbi": 27.62,
+     "peak_gain_dbi": 28.35,
      "peak_theta_deg": 28.57,
      "peak_phi_deg": 0.0,
      "pointing_error_deg": 1.43,
      "directivity_dbi": 30.59,
-     "radiated_over_incident": 0.598,
+     "radiated_over_incident": 0.597,
      "sll_db": -12.8,
      "sll_at_deg": [
       38.0,
@@ -4768,28 +4774,28 @@
      "axial_ratio_db": 0.44
     },
     "0.03": {
-     "gain_target_dbi": 27.59,
-     "peak_gain_dbi": 28.31,
+     "gain_target_dbi": 27.61,
+     "peak_gain_dbi": 28.33,
      "peak_theta_deg": 28.58,
      "peak_phi_deg": 0.0,
      "pointing_error_deg": 1.42,
      "directivity_dbi": 30.67,
-     "radiated_over_incident": 0.581,
+     "radiated_over_incident": 0.583,
      "sll_db": -12.8,
      "sll_at_deg": [
       38.0,
       0.0
      ],
-     "cross_peak_db": -25.8,
+     "cross_peak_db": -25.4,
      "cross_peak_at_deg": [
       0.6,
       0.0
      ],
-     "cross_at_specular_db": -25.9,
+     "cross_at_specular_db": -25.5,
      "axial_ratio_db": 0.48
     }
    },
-   "gain_target_spread_db": 0.04,
+   "gain_target_spread_db": 0.02,
    "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
   },
   {
@@ -4798,13 +4804,13 @@
    "variant": "refined",
    "by_coff_pf": {
     "0.0225": {
-     "gain_target_dbi": 27.63,
-     "peak_gain_dbi": 28.36,
+     "gain_target_dbi": 27.62,
+     "peak_gain_dbi": 28.35,
      "peak_theta_deg": 28.57,
      "peak_phi_deg": 0.0,
      "pointing_error_deg": 1.43,
      "directivity_dbi": 30.59,
-     "radiated_over_incident": 0.598,
+     "radiated_over_incident": 0.597,
      "sll_db": -12.8,
      "sll_at_deg": [
       38.0,
@@ -4840,28 +4846,28 @@
      "axial_ratio_db": 0.44
     },
     "0.03": {
-     "gain_target_dbi": 27.59,
-     "peak_gain_dbi": 28.31,
+     "gain_target_dbi": 27.61,
+     "peak_gain_dbi": 28.33,
      "peak_theta_deg": 28.58,
      "peak_phi_deg": 0.0,
      "pointing_error_deg": 1.42,
      "directivity_dbi": 30.67,
-     "radiated_over_incident": 0.581,
+     "radiated_over_incident": 0.583,
      "sll_db": -12.8,
      "sll_at_deg": [
       38.0,
       0.0
      ],
-     "cross_peak_db": -25.8,
+     "cross_peak_db": -25.4,
      "cross_peak_at_deg": [
       0.6,
       0.0
      ],
-     "cross_at_specular_db": -25.9,
+     "cross_at_specular_db": -25.5,
      "axial_ratio_db": 0.48
     }
    },
-   "gain_target_spread_db": 0.04,
+   "gain_target_spread_db": 0.02,
    "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
   },
   {
@@ -4870,13 +4876,13 @@
    "variant": "plain",
    "by_coff_pf": {
     "0.0225": {
-     "gain_target_dbi": 23.7,
-     "peak_gain_dbi": 23.81,
+     "gain_target_dbi": 23.69,
+     "peak_gain_dbi": 23.8,
      "peak_theta_deg": 49.3,
      "peak_phi_deg": 0.0,
      "pointing_error_deg": 0.7,
      "directivity_dbi": 27.92,
-     "radiated_over_incident": 0.388,
+     "radiated_over_incident": 0.387,
      "sll_db": -5.3,
      "sll_at_deg": [
       23.3,
@@ -4912,13 +4918,13 @@
      "axial_ratio_db": 0.43
     },
     "0.03": {
-     "gain_target_dbi": 23.69,
-     "peak_gain_dbi": 23.8,
+     "gain_target_dbi": 23.71,
+     "peak_gain_dbi": 23.82,
      "peak_theta_deg": 49.29,
      "peak_phi_deg": 0.0,
      "pointing_error_deg": 0.71,
      "directivity_dbi": 28.14,
-     "radiated_over_incident": 0.368,
+     "radiated_over_incident": 0.37,
      "sll_db": -5.7,
      "sll_at_deg": [
       23.3,
@@ -4929,7 +4935,7 @@
       21.4,
       180.0
      ],
-     "cross_at_specular_db": -20.7,
+     "cross_at_specular_db": -20.3,
      "axial_ratio_db": 0.39
     }
    },
@@ -4942,11 +4948,11 @@
    "variant": "refined",
    "by_coff_pf": {
     "0.0225": {
-     "gain_target_dbi": 22.64,
-     "peak_gain_dbi": 22.67,
-     "peak_theta_deg": 49.6,
+     "gain_target_dbi": 22.63,
+     "peak_gain_dbi": 22.66,
+     "peak_theta_deg": 49.61,
      "peak_phi_deg": 0.0,
-     "pointing_error_deg": 0.4,
+     "pointing_error_deg": 0.39,
      "directivity_dbi": 27.25,
      "radiated_over_incident": 0.348,
      "sll_db": -10.5,
@@ -4954,12 +4960,12 @@
       39.1,
       0.0
      ],
-     "cross_peak_db": -11.1,
+     "cross_peak_db": -11.2,
      "cross_peak_at_deg": [
       0.0,
       45.0
      ],
-     "cross_at_specular_db": -11.1,
+     "cross_at_specular_db": -11.2,
      "axial_ratio_db": 0.6
     },
     "0.025": {
@@ -4984,28 +4990,28 @@
      "axial_ratio_db": 0.64
     },
     "0.03": {
-     "gain_target_dbi": 22.56,
-     "peak_gain_dbi": 22.59,
+     "gain_target_dbi": 22.58,
+     "peak_gain_dbi": 22.61,
      "peak_theta_deg": 49.6,
      "peak_phi_deg": 0.0,
      "pointing_error_deg": 0.4,
      "directivity_dbi": 27.31,
-     "radiated_over_incident": 0.338,
+     "radiated_over_incident": 0.339,
      "sll_db": -10.5,
      "sll_at_deg": [
       39.1,
       0.0
      ],
-     "cross_peak_db": -19.1,
+     "cross_peak_db": -18.8,
      "cross_peak_at_deg": [
       0.6,
       180.0
      ],
-     "cross_at_specular_db": -19.3,
-     "axial_ratio_db": 0.72
+     "cross_at_specular_db": -19.0,
+     "axial_ratio_db": 0.73
     }
    },
-   "gain_target_spread_db": 0.08,
+   "gain_target_spread_db": 0.05,
    "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
   },
   {
@@ -5014,17 +5020,17 @@
    "variant": "plain",
    "by_coff_pf": {
     "0.0225": {
-     "gain_target_dbi": 30.84,
-     "peak_gain_dbi": 30.84,
+     "gain_target_dbi": 30.83,
+     "peak_gain_dbi": 30.83,
      "peak_theta_deg": 0.0,
      "peak_phi_deg": 45.0,
      "pointing_error_deg": 0.0,
      "directivity_dbi": 31.52,
-     "radiated_over_incident": 0.855,
+     "radiated_over_incident": 0.854,
      "sll_db": -13.3,
      "sll_at_deg": [
       7.8,
-      90.0
+      0.0
      ],
      "cross_peak_db": -21.0,
      "cross_peak_at_deg": [
@@ -5056,28 +5062,28 @@
      "axial_ratio_db": 1.07
     },
     "0.03": {
-     "gain_target_dbi": 30.81,
-     "peak_gain_dbi": 30.81,
+     "gain_target_dbi": 30.83,
+     "peak_gain_dbi": 30.83,
      "peak_theta_deg": 0.0,
      "peak_phi_deg": 45.0,
      "pointing_error_deg": 0.0,
      "directivity_dbi": 31.55,
-     "radiated_over_incident": 0.845,
+     "radiated_over_incident": 0.847,
      "sll_db": -13.3,
      "sll_at_deg": [
       7.8,
-      0.0
+      90.0
      ],
-     "cross_peak_db": -27.5,
+     "cross_peak_db": -27.2,
      "cross_peak_at_deg": [
       0.0,
       45.0
      ],
-     "cross_at_specular_db": -27.5,
-     "axial_ratio_db": 0.73
+     "cross_at_specular_db": -27.2,
+     "axial_ratio_db": 0.76
     }
    },
-   "gain_target_spread_db": 0.03,
+   "gain_target_spread_db": 0.01,
    "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
   },
   {
@@ -5086,17 +5092,17 @@
    "variant": "refined",
    "by_coff_pf": {
     "0.0225": {
-     "gain_target_dbi": 30.84,
-     "peak_gain_dbi": 30.84,
+     "gain_target_dbi": 30.83,
+     "peak_gain_dbi": 30.83,
      "peak_theta_deg": 0.0,
      "peak_phi_deg": 45.0,
      "pointing_error_deg": 0.0,
      "directivity_dbi": 31.52,
-     "radiated_over_incident": 0.855,
+     "radiated_over_incident": 0.854,
      "sll_db": -13.3,
      "sll_at_deg": [
       7.8,
-      90.0
+      0.0
      ],
      "cross_peak_db": -21.0,
      "cross_peak_at_deg": [
@@ -5128,28 +5134,28 @@
      "axial_ratio_db": 1.07
     },
     "0.03": {
-     "gain_target_dbi": 30.81,
-     "peak_gain_dbi": 30.81,
+     "gain_target_dbi": 30.83,
+     "peak_gain_dbi": 30.83,
      "peak_theta_deg": 0.0,
      "peak_phi_deg": 45.0,
      "pointing_error_deg": 0.0,
      "directivity_dbi": 31.55,
-     "radiated_over_incident": 0.845,
+     "radiated_over_incident": 0.847,
      "sll_db": -13.3,
      "sll_at_deg": [
       7.8,
-      0.0
+      90.0
      ],
-     "cross_peak_db": -27.5,
+     "cross_peak_db": -27.2,
      "cross_peak_at_deg": [
       0.0,
       45.0
      ],
-     "cross_at_specular_db": -27.5,
-     "axial_ratio_db": 0.73
+     "cross_at_specular_db": -27.2,
+     "axial_ratio_db": 0.76
     }
    },
-   "gain_target_spread_db": 0.03,
+   "gain_target_spread_db": 0.01,
    "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
   },
   {
@@ -5158,13 +5164,13 @@
    "variant": "plain",
    "by_coff_pf": {
     "0.0225": {
-     "gain_target_dbi": 27.63,
-     "peak_gain_dbi": 28.36,
+     "gain_target_dbi": 27.62,
+     "peak_gain_dbi": 28.35,
      "peak_theta_deg": 28.57,
      "peak_phi_deg": 90.0,
      "pointing_error_deg": 1.43,
      "directivity_dbi": 30.59,
-     "radiated_over_incident": 0.598,
+     "radiated_over_incident": 0.597,
      "sll_db": -12.8,
      "sll_at_deg": [
       38.0,
@@ -5200,28 +5206,28 @@
      "axial_ratio_db": 0.44
     },
     "0.03": {
-     "gain_target_dbi": 27.59,
-     "peak_gain_dbi": 28.31,
+     "gain_target_dbi": 27.61,
+     "peak_gain_dbi": 28.33,
      "peak_theta_deg": 28.58,
      "peak_phi_deg": 90.0,
      "pointing_error_deg": 1.42,
      "directivity_dbi": 30.67,
-     "radiated_over_incident": 0.581,
+     "radiated_over_incident": 0.583,
      "sll_db": -12.8,
      "sll_at_deg": [
       38.0,
       90.0
      ],
-     "cross_peak_db": -25.8,
+     "cross_peak_db": -25.4,
      "cross_peak_at_deg": [
       0.6,
       90.0
      ],
-     "cross_at_specular_db": -25.9,
+     "cross_at_specular_db": -25.5,
      "axial_ratio_db": 0.48
     }
    },
-   "gain_target_spread_db": 0.04,
+   "gain_target_spread_db": 0.02,
    "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
   },
   {
@@ -5230,13 +5236,13 @@
    "variant": "refined",
    "by_coff_pf": {
     "0.0225": {
-     "gain_target_dbi": 27.63,
-     "peak_gain_dbi": 28.36,
+     "gain_target_dbi": 27.62,
+     "peak_gain_dbi": 28.35,
      "peak_theta_deg": 28.57,
      "peak_phi_deg": 90.0,
      "pointing_error_deg": 1.43,
      "directivity_dbi": 30.59,
-     "radiated_over_incident": 0.598,
+     "radiated_over_incident": 0.597,
      "sll_db": -12.8,
      "sll_at_deg": [
       38.0,
@@ -5272,28 +5278,28 @@
      "axial_ratio_db": 0.44
     },
     "0.03": {
-     "gain_target_dbi": 27.59,
-     "peak_gain_dbi": 28.31,
+     "gain_target_dbi": 27.61,
+     "peak_gain_dbi": 28.33,
      "peak_theta_deg": 28.58,
      "peak_phi_deg": 90.0,
      "pointing_error_deg": 1.42,
      "directivity_dbi": 30.67,
-     "radiated_over_incident": 0.581,
+     "radiated_over_incident": 0.583,
      "sll_db": -12.8,
      "sll_at_deg": [
       38.0,
       90.0
      ],
-     "cross_peak_db": -25.8,
+     "cross_peak_db": -25.4,
      "cross_peak_at_deg": [
       0.6,
       90.0
      ],
-     "cross_at_specular_db": -25.9,
+     "cross_at_specular_db": -25.5,
      "axial_ratio_db": 0.48
     }
    },
-   "gain_target_spread_db": 0.04,
+   "gain_target_spread_db": 0.02,
    "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
   },
   {
@@ -5302,13 +5308,13 @@
    "variant": "plain",
    "by_coff_pf": {
     "0.0225": {
-     "gain_target_dbi": 23.7,
-     "peak_gain_dbi": 23.81,
+     "gain_target_dbi": 23.69,
+     "peak_gain_dbi": 23.8,
      "peak_theta_deg": 49.3,
      "peak_phi_deg": 90.0,
      "pointing_error_deg": 0.7,
      "directivity_dbi": 27.92,
-     "radiated_over_incident": 0.388,
+     "radiated_over_incident": 0.387,
      "sll_db": -5.3,
      "sll_at_deg": [
       23.3,
@@ -5344,13 +5350,13 @@
      "axial_ratio_db": 0.43
     },
     "0.03": {
-     "gain_target_dbi": 23.69,
-     "peak_gain_dbi": 23.8,
+     "gain_target_dbi": 23.71,
+     "peak_gain_dbi": 23.82,
      "peak_theta_deg": 49.29,
      "peak_phi_deg": 90.0,
      "pointing_error_deg": 0.71,
      "directivity_dbi": 28.14,
-     "radiated_over_incident": 0.368,
+     "radiated_over_incident": 0.37,
      "sll_db": -5.7,
      "sll_at_deg": [
       23.3,
@@ -5361,7 +5367,7 @@
       21.4,
       270.0
      ],
-     "cross_at_specular_db": -20.7,
+     "cross_at_specular_db": -20.3,
      "axial_ratio_db": 0.39
     }
    },
@@ -5374,24 +5380,24 @@
    "variant": "refined",
    "by_coff_pf": {
     "0.0225": {
-     "gain_target_dbi": 22.59,
-     "peak_gain_dbi": 22.72,
+     "gain_target_dbi": 22.58,
+     "peak_gain_dbi": 22.71,
      "peak_theta_deg": 49.2,
      "peak_phi_deg": 90.1,
      "pointing_error_deg": 0.8,
      "directivity_dbi": 27.17,
-     "radiated_over_incident": 0.359,
+     "radiated_over_incident": 0.358,
      "sll_db": -11.8,
      "sll_at_deg": [
       38.7,
       90.9
      ],
-     "cross_peak_db": -10.9,
+     "cross_peak_db": -11.0,
      "cross_peak_at_deg": [
       0.3,
       270.0
      ],
-     "cross_at_specular_db": -10.9,
+     "cross_at_specular_db": -11.0,
      "axial_ratio_db": 0.64
     },
     "0.025": {
@@ -5416,28 +5422,28 @@
      "axial_ratio_db": 0.66
     },
     "0.03": {
-     "gain_target_dbi": 22.52,
-     "peak_gain_dbi": 22.66,
-     "peak_theta_deg": 49.19,
+     "gain_target_dbi": 22.54,
+     "peak_gain_dbi": 22.68,
+     "peak_theta_deg": 49.18,
      "peak_phi_deg": 90.1,
      "pointing_error_deg": 0.82,
      "directivity_dbi": 27.25,
-     "radiated_over_incident": 0.347,
+     "radiated_over_incident": 0.349,
      "sll_db": -11.2,
      "sll_at_deg": [
       2.4,
       69.4
      ],
-     "cross_peak_db": -19.1,
+     "cross_peak_db": -18.8,
      "cross_peak_at_deg": [
       0.9,
       270.0
      ],
-     "cross_at_specular_db": -19.6,
+     "cross_at_specular_db": -19.3,
      "axial_ratio_db": 0.72
     }
    },
-   "gain_target_spread_db": 0.07,
+   "gain_target_spread_db": 0.04,
    "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
   }
  ],

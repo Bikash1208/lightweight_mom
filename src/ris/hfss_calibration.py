@@ -93,6 +93,21 @@ def fit_reference_plane_mm(bare_csv, reference_csv):
     return d * 1e3, float(np.abs(np.degrees(b - a * d)).max())
 
 
+def run_shift_mm(rows_a, rows_b):
+    """Reference-plane shift [mm] of the HFSS data set `rows_b` relative to `rows_a` (both from `read_hfss_reim` with offset 0): median (and 16 / 84 percentiles)
+    over the TE / TM co-polar entries with |S| > 0.9 at the common (state, f, theta) of phase(b / a) / (2 k0 cos theta). A pure plane move is a common phase slope,
+    so this is independent of the cell physics as long as both runs model the same cell."""
+    ds = []
+    for k, m1 in rows_a.items():
+        if k not in rows_b:
+            continue
+        st, f, th, _ = k
+        for i in (0, 1):
+            if abs(m1[i, i]) > 0.9:
+                ds.append(np.angle(rows_b[k][i, i] / m1[i, i]) / (2 * (2 * np.pi * f * 1e9 / C0) * math.cos(math.radians(th))) * 1e3)
+    return float(np.median(ds)), float(np.percentile(ds, 16)), float(np.percentile(ds, 84))
+
+
 @dataclass
 class PointComparison:
     state: int

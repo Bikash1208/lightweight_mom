@@ -189,3 +189,21 @@ def test_tolerance_compare_script_reports_zero_difference_for_consistent_inputs(
     )
     rep = cmp.main(p, npz, 0.0, tmp_path / "r.json")
     assert rep["at_10p5_ghz"]["n"] == 24 and rep["at_10p5_ghz"]["max_abs_phase_diff_deg"] < 1e-6
+
+
+def test_run_shift_recovers_a_known_plane_move():
+    import math
+
+    import numpy as np
+
+    from src.ris.hfss_calibration import C0, run_shift_mm
+
+    rng = np.random.default_rng(1)
+    a, b = {}, {}
+    for f in (9.0, 10.0, 11.0):
+        for th in (0.0, 30.0):
+            m = np.diag(np.exp(1j * rng.uniform(-3, 3, 2)) * 0.97).astype(complex)
+            a[(1, f, th, 0.0)] = m
+            g = np.exp(-1j * 2 * (2 * np.pi * f * 1e9 / C0) * 1.7e-3 * math.cos(math.radians(th)))
+            b[(1, f, th, 0.0)] = m * g
+    assert run_shift_mm(a, b)[0] == pytest.approx(-1.7, abs=1e-9)

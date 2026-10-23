@@ -17,6 +17,12 @@ each additive and bit-identical on the Mac.
   (Mac: `/Volumes/hmsa_sync/lightweight_mom.git`; server: `C:\hmsa_sync\lightweight_mom.git`).
 - `hmsa_sync/data/<job>/` — large gitignored artefacts (libraries `.npz`, caches, STEP, HFSS exports).
 
+## Mac role: coordinator only (decision 2026-10-23)
+The Mac does **no heavy compute** from now on: git, briefs, docs, reviews of server results, merges and small checks only (a few seconds to about a minute: a single solve, a unit test file, the Phase 23 snapshot gate).
+No long optimisations, library builds, HFSS-package generation or mesh-120 runs; **run the test suites on the server too where possible** (fast suite as the first step of a job; the Mac keeps the bit-identity gates, and
+runs a targeted test selection plus the snapshot gate before a commit; the full fast suite is then a mandatory first step of the next server job and any failure is reported before the results are used).
+Anything that would take more than about a minute on the Mac becomes a job request `jobs/<job>.md` (rule 2).
+
 ## Rules
 1. **Branches.** The server never commits to `phase20-ris` or any phase branch. Compute work goes on
    `compute/<job>` branches (e.g. `compute/r3b-rescore`, `compute/r4b-library`), created from the commit the Mac

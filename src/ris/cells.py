@@ -252,6 +252,10 @@ class Cp2Cell:
         True  # False blocks transverse current in the diode region: on a 45-degree strip the Cartesian rooftops
     )
     # then need Jx = Jy exactly and the block kills the longitudinal current too (see tests); True = a full-width sheet in the diode region
+    line_diag: float | None = (
+        None  # Phase 20 R3b: separate line / width of the diagonal stubs (angles that are not multiples of 90 deg); None = same as `line` / `stub_width`
+    )
+    stub_width_diag: float | None = None
 
     kind = "cp2"
     n_diodes = 4
@@ -270,17 +274,27 @@ class Cp2Cell:
         """Radial distance from the patch centre to the tip of a stub."""
         return self.apothem + self.pad + self.diode_span + self.pad + self.line
 
+    @staticmethod
+    def _is_axis(ang_deg):
+        return abs(math.sin(math.radians(2.0 * ang_deg))) < 1e-9  # multiples of 90 deg
+
+    def line_at(self, ang_deg):
+        return self.line if self._is_axis(ang_deg) or self.line_diag is None else self.line_diag
+
+    def width_at(self, ang_deg):
+        return self.stub_width if self._is_axis(ang_deg) or self.stub_width_diag is None else self.stub_width_diag
+
     def _stub(self, ang_deg):
         a = math.radians(ang_deg)
         r0 = self.apothem - self.overlap
         r_d0 = self.apothem + self.pad
         r_d1 = r_d0 + self.diode_span
-        r_end = r_d1 + self.pad + self.line
+        r_end = r_d1 + self.pad + self.line_at(ang_deg)
         c = lambda r: (r * math.cos(a), r * math.sin(a))  # noqa: E731
         mid = c(0.5 * (r0 + r_end))
-        poly = oriented_rect(mid[0], mid[1], r_end - r0, self.stub_width, a)
+        poly = oriented_rect(mid[0], mid[1], r_end - r0, self.width_at(ang_deg), a)
         dm = c(0.5 * (r_d0 + r_d1))
-        return poly, (dm[0], dm[1], self.diode_span, self.stub_width, ang_deg)
+        return poly, (dm[0], dm[1], self.diode_span, self.width_at(ang_deg), ang_deg)
 
     def geometry(self):
         octagon = regular_polygon(0.0, 0.0, self.circumradius, 8, rotation=math.pi / 8)
@@ -295,6 +309,14 @@ class Cp2Cell:
             abs(math.cos(math.radians(a))) > 0.99 or abs(math.sin(math.radians(a))) > 0.99 for a in self.stub_angles_deg
         ):
             raise ValueError("an axis-aligned stub reaches the cell boundary: shorten `line` or enlarge `period`")
+        if self.line_diag is not None and any(
+            (self.apothem + 2 * self.pad + self.diode_span + self.line_at(a))
+            * max(abs(math.cos(math.radians(a))), abs(math.sin(math.radians(a))))
+            > self.period / 2 - 0.25e-3
+            for a in self.stub_angles_deg
+            if not self._is_axis(a)
+        ):
+            raise ValueError("a diagonal stub reaches the cell boundary: shorten `line_diag` or enlarge `period`")
         loads = [
             diode_load(kit.model(s), *site, transverse_conducts=self.transverse_conducts)
             for s, site in zip(state, self.diode_sites(), strict=True)

@@ -124,3 +124,23 @@ def test_step_export_has_load_sheets_and_the_expected_metal_pieces(cell, solids,
     if cell.kind == "cp2":  # the sheets of the diagonal stubs are rotated rectangles
         bb = res.load_bboxes_mm[1]
         assert (bb[1] - bb[0]) == pytest.approx(bb[3] - bb[2], rel=1e-6)  # square bbox of a 45-degree rectangle
+
+
+def test_cp2_separate_diagonal_stub_parameters_are_additive():
+    """Phase 20 R3b: `line_diag` / `stub_width_diag` default to None (identical geometry); setting them changes only the 45 / 135 deg stubs."""
+    from dataclasses import replace
+
+    base = Cp2Cell(period=15e-3, circumradius=4.6e-3, stub_width=1.37e-3, line=1.75e-3)
+    same = replace(base, line_diag=base.line, stub_width_diag=base.stub_width)
+    assert base.diode_sites() == same.diode_sites()
+    xs = np.linspace(-7e-3, 7e-3, 141)
+    gx, gy = np.meshgrid(xs, xs)
+    assert np.array_equal(base.geometry().in_feature(gx, gy), same.geometry().in_feature(gx, gy))
+    longer = replace(base, line_diag=3.0e-3, stub_width_diag=2.0e-3)
+    sb, sl = base.diode_sites(), longer.diode_sites()
+    assert sb[0] == sl[0] and sb[2] == sl[2]  # axis stubs untouched
+    assert (
+        sl[1][3] == 2.0e-3 and sl[3][3] == 2.0e-3 and sb[1][3] == 1.37e-3
+    )  # diagonal diode width follows the diagonal stub width
+    with pytest.raises(ValueError, match="diagonal stub"):
+        replace(base, line_diag=9e-3).unit_cell(base.states()[0], madp_kit())

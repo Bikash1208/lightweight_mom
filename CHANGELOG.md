@@ -5,6 +5,10 @@ summarize each phase's own write-up in `docs/history/`/`docs/history/`). No vers
 before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` for current
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
+## Unreleased - Phase 20 R3b prep - first HFSS check of the CP-2 cell (branch `phase20-ris`)
+- User's HFSS run `hfss_results/phase20_r3_cp_cell/` compared with the F = 2n library by the repo tool (`phase20_r4_hfss_check.py`, `read_hfss_reim`, `fit_reference_plane_mm`): ladder works, best point 10.5 GHz, steps 98/92/102/68 deg, theta-30 opposite-handed -11.9 dB; the "resonance 0.3-0.5 GHz high" reading is not supported (fit -0.05 GHz). `docs/validation/README.md` section 8.
+- Operating frequency 10.5 GHz (roadmap log); approved `HFSS_CALIBRATED` additive delta table `results/phase20_r3b/hfss_delta_table.npz` (`DeltaTable`); grating / quantisation limits at 10.5 GHz (`phase20_r3b_grating.py`); R3b plan `docs/briefs/PHASE20_R3B_CP2_REOPT.md` (nothing optimised).
+
 ## Unreleased - Phase 20 R4 - CP-2 state library (branch `phase20-ris`; MODEL_ONLY, NOT_HFSS_VALIDATED)
 - 0-2: monotonic job-wait clocks (macOS wall-clock jumps), structure-frame circular basis helpers, symmetry/cost study (no symmetry reduction; cost estimate).
 - 3: library `results/phase20_r4/cp2_library_v1.npz` (+ manifest): four one-hot states, f 8-12 GHz / theta 0-45 / phi 0-330, mesh 60 raw table + Richardson mesh-120 correction + uncertainty, built in resumable chunks (`scripts/research/phase20_r4_build_library.py`); `src/ris/state_library.py` interpolator with domain and diffraction-order checks. **Finding: the solver's minimum Floquet cutoff leaves isolated numerical lines; F = 2n adopted.** Reduced grid (accepted by the user).

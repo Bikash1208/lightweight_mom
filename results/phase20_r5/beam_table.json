@@ -1,0 +1,5445 @@
+{
+ "provenance": {
+  "machine": "Bikss-MacBook-Pro.local",
+  "os": "Darwin 27.0.0 arm64",
+  "cpu_count": 12,
+  "git_commit": "d47e053fd5c4080292d532dbbe49277f3a6b0919",
+  "git_branch": "phase20-ris",
+  "git_dirty": true,
+  "python": "3.14.7",
+  "numpy": "2.5.3",
+  "scipy": "1.18.1",
+  "blas": {
+   "name": "accelerate",
+   "version": "unknown"
+  },
+  "threads": {
+   "OMP_NUM_THREADS": null,
+   "MKL_NUM_THREADS": null,
+   "OPENBLAS_NUM_THREADS": null,
+   "VECLIB_MAXIMUM_THREADS": null
+  },
+  "workers": null,
+  "started": "2026-10-23T16:33:37.426000+00:00",
+  "finished": "2026-10-23T16:35:58.379349+00:00"
+ },
+ "design_f_ghz": 10.5,
+ "labels": [
+  "MODEL_ONLY",
+  "LOCAL_RESPONSE_AT_INCIDENT_ANGLE_ASSUMED",
+  "NOT_HFSS_VALIDATED"
+ ],
+ "table": [
+  {
+   "theta_s": 0,
+   "phi_s": 0.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 31.42,
+     "peak_gain_dbi": 31.42,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.55,
+     "radiated_over_incident": 0.97,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": -0.58
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 31.42,
+     "peak_gain_dbi": 31.42,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.55,
+     "radiated_over_incident": 0.97,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": -0.58
+    },
+    "plain": {
+     "gain_target_dbi": 30.84,
+     "peak_gain_dbi": 30.84,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.54,
+     "radiated_over_incident": 0.852,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -24.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -24.2,
+     "axial_ratio_db": 1.07,
+     "scan_loss_db": 0.0
+    },
+    "dither": {
+     "gain_target_dbi": 29.3,
+     "peak_gain_dbi": 29.31,
+     "peak_theta_deg": 0.09,
+     "peak_phi_deg": 136.5,
+     "pointing_error_deg": 0.09,
+     "directivity_dbi": 30.81,
+     "radiated_over_incident": 0.708,
+     "sll_db": -12.5,
+     "sll_at_deg": [
+      8.1,
+      182.0
+     ],
+     "cross_peak_db": -16.3,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -16.3,
+     "axial_ratio_db": 2.68,
+     "gain_target_over_seeds_dbi": [
+      29.29,
+      29.31,
+      29.33
+     ],
+     "scan_loss_db": 1.54
+    },
+    "tilt": {
+     "gain_target_dbi": 30.84,
+     "peak_gain_dbi": 30.84,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.54,
+     "radiated_over_incident": 0.852,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -24.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -24.2,
+     "axial_ratio_db": 1.07,
+     "scan_loss_db": 0.0
+    },
+    "refined": {
+     "gain_target_dbi": 30.84,
+     "peak_gain_dbi": 30.84,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.54,
+     "radiated_over_incident": 0.852,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -24.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -24.2,
+     "axial_ratio_db": 1.07,
+     "refine_log": {
+      "objective_before": 30.840589816354147,
+      "objective_after": 30.840589816354147,
+      "flips": 0,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 0.0
+    }
+   }
+  },
+  {
+   "theta_s": 5,
+   "phi_s": 0.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 31.36,
+     "peak_gain_dbi": 31.36,
+     "peak_theta_deg": 4.97,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.03,
+     "directivity_dbi": 31.54,
+     "radiated_over_incident": 0.96,
+     "sll_db": -13.2,
+     "sll_at_deg": [
+      2.9,
+      180.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": -0.52
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 30.56,
+     "peak_gain_dbi": 30.56,
+     "peak_theta_deg": 4.88,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.12,
+     "directivity_dbi": 30.9,
+     "radiated_over_incident": 0.925,
+     "sll_db": -8.3,
+     "sll_at_deg": [
+      14.5,
+      180.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 0.28
+    },
+    "plain": {
+     "gain_target_dbi": 29.94,
+     "peak_gain_dbi": 29.97,
+     "peak_theta_deg": 4.75,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.25,
+     "directivity_dbi": 30.84,
+     "radiated_over_incident": 0.818,
+     "sll_db": -9.2,
+     "sll_at_deg": [
+      14.8,
+      180.0
+     ],
+     "cross_peak_db": -19.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -19.9,
+     "axial_ratio_db": 0.25,
+     "scan_loss_db": 0.9
+    },
+    "dither": {
+     "gain_target_dbi": 28.85,
+     "peak_gain_dbi": 28.86,
+     "peak_theta_deg": 4.85,
+     "peak_phi_deg": 359.6,
+     "pointing_error_deg": 0.15,
+     "directivity_dbi": 30.55,
+     "radiated_over_incident": 0.678,
+     "sll_db": -11.0,
+     "sll_at_deg": [
+      3.2,
+      180.0
+     ],
+     "cross_peak_db": -19.1,
+     "cross_peak_at_deg": [
+      0.9,
+      0.0
+     ],
+     "cross_at_specular_db": -19.3,
+     "axial_ratio_db": 0.74,
+     "gain_target_over_seeds_dbi": [
+      28.85,
+      29.02,
+      29.26
+     ],
+     "scan_loss_db": 1.99
+    },
+    "tilt": {
+     "gain_target_dbi": 29.94,
+     "peak_gain_dbi": 29.97,
+     "peak_theta_deg": 4.75,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.25,
+     "directivity_dbi": 30.84,
+     "radiated_over_incident": 0.818,
+     "sll_db": -9.2,
+     "sll_at_deg": [
+      14.8,
+      180.0
+     ],
+     "cross_peak_db": -19.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -19.9,
+     "axial_ratio_db": 0.25,
+     "scan_loss_db": 0.9
+    },
+    "refined": {
+     "gain_target_dbi": 29.28,
+     "peak_gain_dbi": 29.29,
+     "peak_theta_deg": 4.85,
+     "peak_phi_deg": 359.7,
+     "pointing_error_deg": 0.15,
+     "directivity_dbi": 30.59,
+     "radiated_over_incident": 0.743,
+     "sll_db": -11.2,
+     "sll_at_deg": [
+      2.9,
+      180.0
+     ],
+     "cross_peak_db": -19.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -19.2,
+     "axial_ratio_db": 0.31,
+     "refine_log": {
+      "objective_before": 27.217277921099686,
+      "objective_after": 29.283205685012412,
+      "flips": 35,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 1.56
+    }
+   }
+  },
+  {
+   "theta_s": 10,
+   "phi_s": 0.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 31.17,
+     "peak_gain_dbi": 31.17,
+     "peak_theta_deg": 9.95,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.05,
+     "directivity_dbi": 31.49,
+     "radiated_over_incident": 0.93,
+     "sll_db": -13.0,
+     "sll_at_deg": [
+      2.0,
+      0.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": -0.33
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 30.32,
+     "peak_gain_dbi": 30.32,
+     "peak_theta_deg": 9.86,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.14,
+     "directivity_dbi": 30.95,
+     "radiated_over_incident": 0.864,
+     "sll_db": -10.9,
+     "sll_at_deg": [
+      2.0,
+      0.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 0.52
+    },
+    "plain": {
+     "gain_target_dbi": 29.72,
+     "peak_gain_dbi": 29.72,
+     "peak_theta_deg": 10.06,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.06,
+     "directivity_dbi": 30.89,
+     "radiated_over_incident": 0.764,
+     "sll_db": -11.5,
+     "sll_at_deg": [
+      32.0,
+      180.0
+     ],
+     "cross_peak_db": -20.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -20.2,
+     "axial_ratio_db": 0.33,
+     "scan_loss_db": 1.12
+    },
+    "dither": {
+     "gain_target_dbi": 28.78,
+     "peak_gain_dbi": 28.81,
+     "peak_theta_deg": 9.76,
+     "peak_phi_deg": 359.6,
+     "pointing_error_deg": 0.24,
+     "directivity_dbi": 30.51,
+     "radiated_over_incident": 0.676,
+     "sll_db": -11.9,
+     "sll_at_deg": [
+      1.7,
+      0.0
+     ],
+     "cross_peak_db": -18.7,
+     "cross_peak_at_deg": [
+      0.3,
+      180.0
+     ],
+     "cross_at_specular_db": -18.7,
+     "axial_ratio_db": 0.62,
+     "gain_target_over_seeds_dbi": [
+      28.65,
+      28.73,
+      28.83
+     ],
+     "scan_loss_db": 2.06
+    },
+    "tilt": {
+     "gain_target_dbi": 29.72,
+     "peak_gain_dbi": 29.72,
+     "peak_theta_deg": 10.06,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.06,
+     "directivity_dbi": 30.89,
+     "radiated_over_incident": 0.764,
+     "sll_db": -11.5,
+     "sll_at_deg": [
+      32.0,
+      180.0
+     ],
+     "cross_peak_db": -20.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -20.2,
+     "axial_ratio_db": 0.33,
+     "scan_loss_db": 1.12
+    },
+    "refined": {
+     "gain_target_dbi": 29.67,
+     "peak_gain_dbi": 29.67,
+     "peak_theta_deg": 10.03,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.03,
+     "directivity_dbi": 30.87,
+     "radiated_over_incident": 0.759,
+     "sll_db": -11.7,
+     "sll_at_deg": [
+      18.1,
+      0.0
+     ],
+     "cross_peak_db": -20.1,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -20.1,
+     "axial_ratio_db": 0.32,
+     "refine_log": {
+      "objective_before": 29.38841519620071,
+      "objective_after": 29.673332331734844,
+      "flips": 7,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 1.17
+    }
+   }
+  },
+  {
+   "theta_s": 15,
+   "phi_s": 0.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 30.86,
+     "peak_gain_dbi": 30.86,
+     "peak_theta_deg": 14.92,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.08,
+     "directivity_dbi": 31.4,
+     "radiated_over_incident": 0.883,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      6.9,
+      0.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": -0.02
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 30.03,
+     "peak_gain_dbi": 30.03,
+     "peak_theta_deg": 14.72,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.28,
+     "directivity_dbi": 30.89,
+     "radiated_over_incident": 0.819,
+     "sll_db": -9.2,
+     "sll_at_deg": [
+      6.6,
+      0.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 0.81
+    },
+    "plain": {
+     "gain_target_dbi": 29.34,
+     "peak_gain_dbi": 29.38,
+     "peak_theta_deg": 14.72,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.28,
+     "directivity_dbi": 30.77,
+     "radiated_over_incident": 0.726,
+     "sll_db": -8.9,
+     "sll_at_deg": [
+      6.9,
+      0.0
+     ],
+     "cross_peak_db": -19.7,
+     "cross_peak_at_deg": [
+      0.3,
+      180.0
+     ],
+     "cross_at_specular_db": -19.8,
+     "axial_ratio_db": 0.44,
+     "scan_loss_db": 1.5
+    },
+    "dither": {
+     "gain_target_dbi": 28.56,
+     "peak_gain_dbi": 28.57,
+     "peak_theta_deg": 14.87,
+     "peak_phi_deg": 359.9,
+     "pointing_error_deg": 0.13,
+     "directivity_dbi": 30.48,
+     "radiated_over_incident": 0.644,
+     "sll_db": -12.3,
+     "sll_at_deg": [
+      7.2,
+      0.0
+     ],
+     "cross_peak_db": -18.7,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -18.7,
+     "axial_ratio_db": 0.43,
+     "gain_target_over_seeds_dbi": [
+      28.36,
+      28.46,
+      28.56
+     ],
+     "scan_loss_db": 2.28
+    },
+    "tilt": {
+     "gain_target_dbi": 29.34,
+     "peak_gain_dbi": 29.38,
+     "peak_theta_deg": 14.72,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.28,
+     "directivity_dbi": 30.77,
+     "radiated_over_incident": 0.726,
+     "sll_db": -8.9,
+     "sll_at_deg": [
+      6.9,
+      0.0
+     ],
+     "cross_peak_db": -19.7,
+     "cross_peak_at_deg": [
+      0.3,
+      180.0
+     ],
+     "cross_at_specular_db": -19.8,
+     "axial_ratio_db": 0.44,
+     "scan_loss_db": 1.5
+    },
+    "refined": {
+     "gain_target_dbi": 29.34,
+     "peak_gain_dbi": 29.38,
+     "peak_theta_deg": 14.72,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.28,
+     "directivity_dbi": 30.77,
+     "radiated_over_incident": 0.726,
+     "sll_db": -8.9,
+     "sll_at_deg": [
+      6.9,
+      0.0
+     ],
+     "cross_peak_db": -19.7,
+     "cross_peak_at_deg": [
+      0.3,
+      180.0
+     ],
+     "cross_at_specular_db": -19.8,
+     "axial_ratio_db": 0.44,
+     "refine_log": {
+      "objective_before": 29.343435297990375,
+      "objective_after": 29.343435297990375,
+      "flips": 0,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 1.5
+    }
+   }
+  },
+  {
+   "theta_s": 20,
+   "phi_s": 0.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 30.42,
+     "peak_gain_dbi": 30.42,
+     "peak_theta_deg": 19.88,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.12,
+     "directivity_dbi": 31.28,
+     "radiated_over_incident": 0.821,
+     "sll_db": -12.5,
+     "sll_at_deg": [
+      11.8,
+      0.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 0.42
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 29.6,
+     "peak_gain_dbi": 29.6,
+     "peak_theta_deg": 19.83,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.17,
+     "directivity_dbi": 30.82,
+     "radiated_over_incident": 0.755,
+     "sll_db": -12.9,
+     "sll_at_deg": [
+      11.8,
+      0.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 1.24
+    },
+    "plain": {
+     "gain_target_dbi": 28.96,
+     "peak_gain_dbi": 28.96,
+     "peak_theta_deg": 19.96,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.04,
+     "directivity_dbi": 30.71,
+     "radiated_over_incident": 0.668,
+     "sll_db": -10.3,
+     "sll_at_deg": [
+      11.8,
+      0.0
+     ],
+     "cross_peak_db": -19.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -19.9,
+     "axial_ratio_db": 0.41,
+     "scan_loss_db": 1.88
+    },
+    "dither": {
+     "gain_target_dbi": 27.91,
+     "peak_gain_dbi": 27.94,
+     "peak_theta_deg": 19.77,
+     "peak_phi_deg": 359.8,
+     "pointing_error_deg": 0.24,
+     "directivity_dbi": 30.17,
+     "radiated_over_incident": 0.598,
+     "sll_db": -11.5,
+     "sll_at_deg": [
+      11.8,
+      358.6
+     ],
+     "cross_peak_db": -17.5,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -17.5,
+     "axial_ratio_db": 0.58,
+     "gain_target_over_seeds_dbi": [
+      27.91,
+      27.98,
+      28.07
+     ],
+     "scan_loss_db": 2.93
+    },
+    "tilt": {
+     "gain_target_dbi": 28.96,
+     "peak_gain_dbi": 28.96,
+     "peak_theta_deg": 19.96,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.04,
+     "directivity_dbi": 30.71,
+     "radiated_over_incident": 0.668,
+     "sll_db": -10.3,
+     "sll_at_deg": [
+      11.8,
+      0.0
+     ],
+     "cross_peak_db": -19.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -19.9,
+     "axial_ratio_db": 0.41,
+     "scan_loss_db": 1.88
+    },
+    "refined": {
+     "gain_target_dbi": 28.96,
+     "peak_gain_dbi": 28.96,
+     "peak_theta_deg": 19.96,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.04,
+     "directivity_dbi": 30.71,
+     "radiated_over_incident": 0.668,
+     "sll_db": -10.3,
+     "sll_at_deg": [
+      11.8,
+      0.0
+     ],
+     "cross_peak_db": -19.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -19.9,
+     "axial_ratio_db": 0.41,
+     "refine_log": {
+      "objective_before": 28.955487160784354,
+      "objective_after": 28.955487160784354,
+      "flips": 0,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 1.88
+    }
+   }
+  },
+  {
+   "theta_s": 25,
+   "phi_s": 0.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 29.86,
+     "peak_gain_dbi": 29.86,
+     "peak_theta_deg": 24.84,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.16,
+     "directivity_dbi": 31.11,
+     "radiated_over_incident": 0.75,
+     "sll_db": -12.3,
+     "sll_at_deg": [
+      16.6,
+      0.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 0.98
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 29.1,
+     "peak_gain_dbi": 29.1,
+     "peak_theta_deg": 24.61,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.39,
+     "directivity_dbi": 30.52,
+     "radiated_over_incident": 0.721,
+     "sll_db": -9.8,
+     "sll_at_deg": [
+      16.0,
+      0.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 1.74
+    },
+    "plain": {
+     "gain_target_dbi": 28.42,
+     "peak_gain_dbi": 28.48,
+     "peak_theta_deg": 24.59,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.41,
+     "directivity_dbi": 30.46,
+     "radiated_over_incident": 0.634,
+     "sll_db": -9.5,
+     "sll_at_deg": [
+      16.0,
+      0.0
+     ],
+     "cross_peak_db": -17.8,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -17.8,
+     "axial_ratio_db": 0.5,
+     "scan_loss_db": 2.42
+    },
+    "dither": {
+     "gain_target_dbi": 26.98,
+     "peak_gain_dbi": 27.04,
+     "peak_theta_deg": 24.63,
+     "peak_phi_deg": 0.1,
+     "pointing_error_deg": 0.37,
+     "directivity_dbi": 29.69,
+     "radiated_over_incident": 0.542,
+     "sll_db": -9.6,
+     "sll_at_deg": [
+      16.0,
+      359.0
+     ],
+     "cross_peak_db": -17.1,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -17.1,
+     "axial_ratio_db": 0.61,
+     "gain_target_over_seeds_dbi": [
+      26.98,
+      27.33,
+      27.48
+     ],
+     "scan_loss_db": 3.86
+    },
+    "tilt": {
+     "gain_target_dbi": 28.42,
+     "peak_gain_dbi": 28.48,
+     "peak_theta_deg": 24.59,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.41,
+     "directivity_dbi": 30.46,
+     "radiated_over_incident": 0.634,
+     "sll_db": -9.5,
+     "sll_at_deg": [
+      16.0,
+      0.0
+     ],
+     "cross_peak_db": -17.8,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -17.8,
+     "axial_ratio_db": 0.5,
+     "scan_loss_db": 2.42
+    },
+    "refined": {
+     "gain_target_dbi": 27.94,
+     "peak_gain_dbi": 28.02,
+     "peak_theta_deg": 24.56,
+     "peak_phi_deg": 0.3,
+     "pointing_error_deg": 0.45,
+     "directivity_dbi": 30.19,
+     "radiated_over_incident": 0.606,
+     "sll_db": -8.7,
+     "sll_at_deg": [
+      16.0,
+      1.0
+     ],
+     "cross_peak_db": -17.3,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -17.3,
+     "axial_ratio_db": 0.5,
+     "refine_log": {
+      "objective_before": 26.76521914453349,
+      "objective_after": 27.935228097234997,
+      "flips": 32,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 2.9
+    }
+   }
+  },
+  {
+   "theta_s": 30,
+   "phi_s": 0.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 29.18,
+     "peak_gain_dbi": 29.18,
+     "peak_theta_deg": 29.79,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.21,
+     "directivity_dbi": 30.91,
+     "radiated_over_incident": 0.672,
+     "sll_db": -12.1,
+     "sll_at_deg": [
+      21.4,
+      0.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 1.66
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 28.39,
+     "peak_gain_dbi": 28.39,
+     "peak_theta_deg": 30.56,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.56,
+     "directivity_dbi": 30.09,
+     "radiated_over_incident": 0.677,
+     "sll_db": -4.8,
+     "sll_at_deg": [
+      21.7,
+      0.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 2.45
+    },
+    "plain": {
+     "gain_target_dbi": 27.63,
+     "peak_gain_dbi": 28.36,
+     "peak_theta_deg": 28.57,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 1.43,
+     "directivity_dbi": 30.63,
+     "radiated_over_incident": 0.592,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      0.0
+     ],
+     "cross_peak_db": -18.5,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -18.5,
+     "axial_ratio_db": 0.44,
+     "scan_loss_db": 3.21
+    },
+    "dither": {
+     "gain_target_dbi": 26.79,
+     "peak_gain_dbi": 26.92,
+     "peak_theta_deg": 29.4,
+     "peak_phi_deg": 359.9,
+     "pointing_error_deg": 0.61,
+     "directivity_dbi": 29.77,
+     "radiated_over_incident": 0.52,
+     "sll_db": -12.7,
+     "sll_at_deg": [
+      20.8,
+      0.8
+     ],
+     "cross_peak_db": -16.7,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -16.7,
+     "axial_ratio_db": 0.5,
+     "gain_target_over_seeds_dbi": [
+      26.67,
+      26.7,
+      26.79
+     ],
+     "scan_loss_db": 4.05
+    },
+    "tilt": {
+     "gain_target_dbi": 27.63,
+     "peak_gain_dbi": 28.36,
+     "peak_theta_deg": 28.57,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 1.43,
+     "directivity_dbi": 30.63,
+     "radiated_over_incident": 0.592,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      0.0
+     ],
+     "cross_peak_db": -18.5,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -18.5,
+     "axial_ratio_db": 0.44,
+     "scan_loss_db": 3.21
+    },
+    "refined": {
+     "gain_target_dbi": 27.63,
+     "peak_gain_dbi": 28.36,
+     "peak_theta_deg": 28.57,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 1.43,
+     "directivity_dbi": 30.63,
+     "radiated_over_incident": 0.592,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      0.0
+     ],
+     "cross_peak_db": -18.5,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -18.5,
+     "axial_ratio_db": 0.44,
+     "refine_log": {
+      "objective_before": 27.631646952302816,
+      "objective_after": 27.631646952302816,
+      "flips": 0,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 3.21
+    }
+   }
+  },
+  {
+   "theta_s": 35,
+   "phi_s": 0.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 28.37,
+     "peak_gain_dbi": 28.37,
+     "peak_theta_deg": 34.73,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.27,
+     "directivity_dbi": 30.66,
+     "radiated_over_incident": 0.591,
+     "sll_db": -11.8,
+     "sll_at_deg": [
+      25.8,
+      0.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 2.47
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 27.51,
+     "peak_gain_dbi": 27.51,
+     "peak_theta_deg": 34.77,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.23,
+     "directivity_dbi": 29.61,
+     "radiated_over_incident": 0.616,
+     "sll_db": -6.0,
+     "sll_at_deg": [
+      10.1,
+      0.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 3.33
+    },
+    "plain": {
+     "gain_target_dbi": 26.85,
+     "peak_gain_dbi": 26.86,
+     "peak_theta_deg": 35.18,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.18,
+     "directivity_dbi": 29.64,
+     "radiated_over_incident": 0.528,
+     "sll_db": -7.1,
+     "sll_at_deg": [
+      9.5,
+      0.0
+     ],
+     "cross_peak_db": -16.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -16.9,
+     "axial_ratio_db": 0.67,
+     "scan_loss_db": 3.99
+    },
+    "dither": {
+     "gain_target_dbi": 25.7,
+     "peak_gain_dbi": 25.76,
+     "peak_theta_deg": 34.58,
+     "peak_phi_deg": 359.8,
+     "pointing_error_deg": 0.44,
+     "directivity_dbi": 29.12,
+     "radiated_over_incident": 0.461,
+     "sll_db": -10.8,
+     "sll_at_deg": [
+      25.8,
+      359.3
+     ],
+     "cross_peak_db": -15.4,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -15.4,
+     "axial_ratio_db": 0.47,
+     "gain_target_over_seeds_dbi": [
+      25.7,
+      25.85,
+      26.01
+     ],
+     "scan_loss_db": 5.14
+    },
+    "tilt": {
+     "gain_target_dbi": 26.85,
+     "peak_gain_dbi": 26.86,
+     "peak_theta_deg": 35.18,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.18,
+     "directivity_dbi": 29.64,
+     "radiated_over_incident": 0.528,
+     "sll_db": -7.1,
+     "sll_at_deg": [
+      9.5,
+      0.0
+     ],
+     "cross_peak_db": -16.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -16.9,
+     "axial_ratio_db": 0.67,
+     "scan_loss_db": 3.99
+    },
+    "refined": {
+     "gain_target_dbi": 25.98,
+     "peak_gain_dbi": 26.0,
+     "peak_theta_deg": 35.22,
+     "peak_phi_deg": 359.9,
+     "pointing_error_deg": 0.23,
+     "directivity_dbi": 29.18,
+     "radiated_over_incident": 0.481,
+     "sll_db": -10.0,
+     "sll_at_deg": [
+      46.1,
+      359.6
+     ],
+     "cross_peak_db": -15.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -15.9,
+     "axial_ratio_db": 0.68,
+     "refine_log": {
+      "objective_before": 22.034188208485368,
+      "objective_after": 25.983930769646143,
+      "flips": 54,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 4.86
+    }
+   }
+  },
+  {
+   "theta_s": 40,
+   "phi_s": 0.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 27.45,
+     "peak_gain_dbi": 27.45,
+     "peak_theta_deg": 39.65,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.35,
+     "directivity_dbi": 30.35,
+     "radiated_over_incident": 0.513,
+     "sll_db": -11.5,
+     "sll_at_deg": [
+      30.3,
+      0.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 3.39
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 26.51,
+     "peak_gain_dbi": 26.51,
+     "peak_theta_deg": 40.04,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.04,
+     "directivity_dbi": 29.05,
+     "radiated_over_incident": 0.557,
+     "sll_db": -4.8,
+     "sll_at_deg": [
+      2.6,
+      180.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 4.33
+    },
+    "plain": {
+     "gain_target_dbi": 26.25,
+     "peak_gain_dbi": 26.26,
+     "peak_theta_deg": 39.77,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.23,
+     "directivity_dbi": 29.47,
+     "radiated_over_incident": 0.478,
+     "sll_db": -7.5,
+     "sll_at_deg": [
+      2.6,
+      180.0
+     ],
+     "cross_peak_db": -16.4,
+     "cross_peak_at_deg": [
+      0.3,
+      0.0
+     ],
+     "cross_at_specular_db": -16.5,
+     "axial_ratio_db": 1.07,
+     "scan_loss_db": 4.59
+    },
+    "dither": {
+     "gain_target_dbi": 25.54,
+     "peak_gain_dbi": 25.61,
+     "peak_theta_deg": 39.51,
+     "peak_phi_deg": 360.0,
+     "pointing_error_deg": 0.5,
+     "directivity_dbi": 29.23,
+     "radiated_over_incident": 0.434,
+     "sll_db": -10.4,
+     "sll_at_deg": [
+      30.0,
+      0.6
+     ],
+     "cross_peak_db": -15.7,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -15.7,
+     "axial_ratio_db": 1.05,
+     "gain_target_over_seeds_dbi": [
+      25.43,
+      25.58,
+      25.69
+     ],
+     "scan_loss_db": 5.3
+    },
+    "tilt": {
+     "gain_target_dbi": 26.25,
+     "peak_gain_dbi": 26.26,
+     "peak_theta_deg": 39.78,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.22,
+     "directivity_dbi": 29.47,
+     "radiated_over_incident": 0.478,
+     "sll_db": -7.3,
+     "sll_at_deg": [
+      2.6,
+      180.0
+     ],
+     "cross_peak_db": -17.2,
+     "cross_peak_at_deg": [
+      0.3,
+      0.0
+     ],
+     "cross_at_specular_db": -17.3,
+     "axial_ratio_db": 1.01,
+     "scan_loss_db": 4.59
+    },
+    "refined": {
+     "gain_target_dbi": 25.45,
+     "peak_gain_dbi": 25.46,
+     "peak_theta_deg": 39.88,
+     "peak_phi_deg": 0.1,
+     "pointing_error_deg": 0.13,
+     "directivity_dbi": 29.04,
+     "radiated_over_incident": 0.438,
+     "sll_db": -10.7,
+     "sll_at_deg": [
+      30.3,
+      0.6
+     ],
+     "cross_peak_db": -15.6,
+     "cross_peak_at_deg": [
+      0.3,
+      0.0
+     ],
+     "cross_at_specular_db": -15.6,
+     "axial_ratio_db": 1.0,
+     "refine_log": {
+      "objective_before": 21.72260379381198,
+      "objective_after": 25.450364578057638,
+      "flips": 36,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 5.39
+    }
+   }
+  },
+  {
+   "theta_s": 45,
+   "phi_s": 0.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 26.39,
+     "peak_gain_dbi": 26.39,
+     "peak_theta_deg": 44.54,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.46,
+     "directivity_dbi": 29.98,
+     "radiated_over_incident": 0.438,
+     "sll_db": -11.2,
+     "sll_at_deg": [
+      34.8,
+      0.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 4.45
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 25.62,
+     "peak_gain_dbi": 25.62,
+     "peak_theta_deg": 44.92,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.08,
+     "directivity_dbi": 28.57,
+     "radiated_over_incident": 0.508,
+     "sll_db": -2.8,
+     "sll_at_deg": [
+      13.0,
+      180.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 5.22
+    },
+    "plain": {
+     "gain_target_dbi": 24.96,
+     "peak_gain_dbi": 24.96,
+     "peak_theta_deg": 44.92,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.08,
+     "directivity_dbi": 28.41,
+     "radiated_over_incident": 0.452,
+     "sll_db": -3.1,
+     "sll_at_deg": [
+      13.0,
+      180.0
+     ],
+     "cross_peak_db": -14.7,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -14.7,
+     "axial_ratio_db": 0.49,
+     "scan_loss_db": 5.88
+    },
+    "dither": {
+     "gain_target_dbi": 23.83,
+     "peak_gain_dbi": 23.93,
+     "peak_theta_deg": 44.38,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.63,
+     "directivity_dbi": 28.02,
+     "radiated_over_incident": 0.39,
+     "sll_db": -9.0,
+     "sll_at_deg": [
+      34.4,
+      0.0
+     ],
+     "cross_peak_db": -14.0,
+     "cross_peak_at_deg": [
+      0.3,
+      0.0
+     ],
+     "cross_at_specular_db": -14.1,
+     "axial_ratio_db": 0.54,
+     "gain_target_over_seeds_dbi": [
+      23.79,
+      23.91,
+      24.09
+     ],
+     "scan_loss_db": 7.01
+    },
+    "tilt": {
+     "gain_target_dbi": 24.96,
+     "peak_gain_dbi": 24.96,
+     "peak_theta_deg": 44.92,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.08,
+     "directivity_dbi": 28.41,
+     "radiated_over_incident": 0.452,
+     "sll_db": -3.1,
+     "sll_at_deg": [
+      13.0,
+      180.0
+     ],
+     "cross_peak_db": -14.7,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -14.7,
+     "axial_ratio_db": 0.49,
+     "scan_loss_db": 5.88
+    },
+    "refined": {
+     "gain_target_dbi": 23.82,
+     "peak_gain_dbi": 23.83,
+     "peak_theta_deg": 45.14,
+     "peak_phi_deg": 359.9,
+     "pointing_error_deg": 0.18,
+     "directivity_dbi": 28.06,
+     "radiated_over_incident": 0.378,
+     "sll_db": -10.8,
+     "sll_at_deg": [
+      35.5,
+      0.0
+     ],
+     "cross_peak_db": -15.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -15.2,
+     "axial_ratio_db": 0.59,
+     "refine_log": {
+      "objective_before": 15.786754938377054,
+      "objective_after": 23.82250289294818,
+      "flips": 134,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 7.02
+    }
+   }
+  },
+  {
+   "theta_s": 50,
+   "phi_s": 0.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 25.21,
+     "peak_gain_dbi": 25.21,
+     "peak_theta_deg": 49.38,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.62,
+     "directivity_dbi": 29.54,
+     "radiated_over_incident": 0.369,
+     "sll_db": -10.8,
+     "sll_at_deg": [
+      39.1,
+      0.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 5.63
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 24.39,
+     "peak_gain_dbi": 24.39,
+     "peak_theta_deg": 49.23,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.77,
+     "directivity_dbi": 27.99,
+     "radiated_over_incident": 0.436,
+     "sll_db": -4.1,
+     "sll_at_deg": [
+      23.3,
+      180.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 6.45
+    },
+    "plain": {
+     "gain_target_dbi": 23.71,
+     "peak_gain_dbi": 23.82,
+     "peak_theta_deg": 49.29,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.71,
+     "directivity_dbi": 28.02,
+     "radiated_over_incident": 0.38,
+     "sll_db": -5.5,
+     "sll_at_deg": [
+      23.3,
+      180.0
+     ],
+     "cross_peak_db": -12.4,
+     "cross_peak_at_deg": [
+      0.3,
+      180.0
+     ],
+     "cross_at_specular_db": -12.4,
+     "axial_ratio_db": 0.43,
+     "scan_loss_db": 7.13
+    },
+    "dither": {
+     "gain_target_dbi": 22.65,
+     "peak_gain_dbi": 22.82,
+     "peak_theta_deg": 49.09,
+     "peak_phi_deg": 0.1,
+     "pointing_error_deg": 0.91,
+     "directivity_dbi": 27.28,
+     "radiated_over_incident": 0.358,
+     "sll_db": -10.1,
+     "sll_at_deg": [
+      38.7,
+      0.0
+     ],
+     "cross_peak_db": -12.5,
+     "cross_peak_at_deg": [
+      0.3,
+      0.0
+     ],
+     "cross_at_specular_db": -12.6,
+     "axial_ratio_db": 0.5,
+     "gain_target_over_seeds_dbi": [
+      22.53,
+      22.63,
+      22.76
+     ],
+     "scan_loss_db": 8.19
+    },
+    "tilt": {
+     "gain_target_dbi": 23.71,
+     "peak_gain_dbi": 23.82,
+     "peak_theta_deg": 49.29,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.71,
+     "directivity_dbi": 28.02,
+     "radiated_over_incident": 0.38,
+     "sll_db": -5.5,
+     "sll_at_deg": [
+      23.3,
+      180.0
+     ],
+     "cross_peak_db": -12.4,
+     "cross_peak_at_deg": [
+      0.3,
+      180.0
+     ],
+     "cross_at_specular_db": -12.4,
+     "axial_ratio_db": 0.43,
+     "scan_loss_db": 7.13
+    },
+    "refined": {
+     "gain_target_dbi": 22.63,
+     "peak_gain_dbi": 22.66,
+     "peak_theta_deg": 49.6,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.4,
+     "directivity_dbi": 27.3,
+     "radiated_over_incident": 0.343,
+     "sll_db": -10.5,
+     "sll_at_deg": [
+      39.1,
+      0.0
+     ],
+     "cross_peak_db": -14.2,
+     "cross_peak_at_deg": [
+      0.3,
+      180.0
+     ],
+     "cross_at_specular_db": -14.3,
+     "axial_ratio_db": 0.64,
+     "refine_log": {
+      "objective_before": 14.474310874045337,
+      "objective_after": 21.84811643339826,
+      "flips": 164,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 8.21
+    }
+   }
+  },
+  {
+   "theta_s": 60,
+   "phi_s": 0.0,
+   "note": "near band centre only: first grating lobe enters at 64.6 deg at 10.5 GHz; no band margin above 10.54 GHz",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 22.42,
+     "peak_gain_dbi": 22.42,
+     "peak_theta_deg": 58.75,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 1.25,
+     "directivity_dbi": 28.27,
+     "radiated_over_incident": 0.26,
+     "sll_db": -9.7,
+     "sll_at_deg": [
+      46.9,
+      0.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 8.42
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 21.61,
+     "peak_gain_dbi": 21.61,
+     "peak_theta_deg": 58.79,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 1.21,
+     "directivity_dbi": 26.62,
+     "radiated_over_incident": 0.315,
+     "sll_db": -3.7,
+     "sll_at_deg": [
+      44.0,
+      180.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 9.23
+    },
+    "plain": {
+     "gain_target_dbi": 20.81,
+     "peak_gain_dbi": 20.95,
+     "peak_theta_deg": 58.97,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 1.03,
+     "directivity_dbi": 26.44,
+     "radiated_over_incident": 0.283,
+     "sll_db": -4.5,
+     "sll_at_deg": [
+      44.0,
+      180.0
+     ],
+     "cross_peak_db": -10.6,
+     "cross_peak_at_deg": [
+      0.6,
+      180.0
+     ],
+     "cross_at_specular_db": -10.7,
+     "axial_ratio_db": 0.43,
+     "scan_loss_db": 10.03
+    },
+    "dither": {
+     "gain_target_dbi": 19.72,
+     "peak_gain_dbi": 20.11,
+     "peak_theta_deg": 58.28,
+     "peak_phi_deg": 0.1,
+     "pointing_error_deg": 1.72,
+     "directivity_dbi": 25.48,
+     "radiated_over_incident": 0.291,
+     "sll_db": -8.7,
+     "sll_at_deg": [
+      46.1,
+      0.4
+     ],
+     "cross_peak_db": -10.4,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -10.4,
+     "axial_ratio_db": 0.58,
+     "gain_target_over_seeds_dbi": [
+      19.71,
+      19.83,
+      19.98
+     ],
+     "scan_loss_db": 11.12
+    },
+    "tilt": {
+     "gain_target_dbi": 20.81,
+     "peak_gain_dbi": 20.95,
+     "peak_theta_deg": 58.97,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 1.03,
+     "directivity_dbi": 26.44,
+     "radiated_over_incident": 0.283,
+     "sll_db": -4.5,
+     "sll_at_deg": [
+      44.0,
+      180.0
+     ],
+     "cross_peak_db": -10.6,
+     "cross_peak_at_deg": [
+      0.6,
+      180.0
+     ],
+     "cross_at_specular_db": -10.7,
+     "axial_ratio_db": 0.43,
+     "scan_loss_db": 10.03
+    },
+    "refined": {
+     "gain_target_dbi": 19.49,
+     "peak_gain_dbi": 19.79,
+     "peak_theta_deg": 58.51,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 1.49,
+     "directivity_dbi": 25.29,
+     "radiated_over_incident": 0.282,
+     "sll_db": -7.2,
+     "sll_at_deg": [
+      46.1,
+      0.0
+     ],
+     "cross_peak_db": -11.5,
+     "cross_peak_at_deg": [
+      0.3,
+      180.0
+     ],
+     "cross_at_specular_db": -11.6,
+     "axial_ratio_db": 0.56,
+     "refine_log": {
+      "objective_before": 8.832608607958413,
+      "objective_after": 15.71730778612573,
+      "flips": 128,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 11.35
+    }
+   }
+  },
+  {
+   "theta_s": 0,
+   "phi_s": 90.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 31.42,
+     "peak_gain_dbi": 31.42,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.55,
+     "radiated_over_incident": 0.97,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": -0.58
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 31.42,
+     "peak_gain_dbi": 31.42,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.55,
+     "radiated_over_incident": 0.97,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": -0.58
+    },
+    "plain": {
+     "gain_target_dbi": 30.84,
+     "peak_gain_dbi": 30.84,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.54,
+     "radiated_over_incident": 0.852,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -24.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -24.2,
+     "axial_ratio_db": 1.07,
+     "scan_loss_db": 0.0
+    },
+    "dither": {
+     "gain_target_dbi": 29.3,
+     "peak_gain_dbi": 29.31,
+     "peak_theta_deg": 0.09,
+     "peak_phi_deg": 136.5,
+     "pointing_error_deg": 0.09,
+     "directivity_dbi": 30.81,
+     "radiated_over_incident": 0.708,
+     "sll_db": -12.5,
+     "sll_at_deg": [
+      8.1,
+      182.0
+     ],
+     "cross_peak_db": -16.3,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -16.3,
+     "axial_ratio_db": 2.68,
+     "gain_target_over_seeds_dbi": [
+      29.29,
+      29.31,
+      29.33
+     ],
+     "scan_loss_db": 1.54
+    },
+    "tilt": {
+     "gain_target_dbi": 30.84,
+     "peak_gain_dbi": 30.84,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.54,
+     "radiated_over_incident": 0.852,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -24.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -24.2,
+     "axial_ratio_db": 1.07,
+     "scan_loss_db": 0.0
+    },
+    "refined": {
+     "gain_target_dbi": 30.84,
+     "peak_gain_dbi": 30.84,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.54,
+     "radiated_over_incident": 0.852,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -24.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -24.2,
+     "axial_ratio_db": 1.07,
+     "refine_log": {
+      "objective_before": 30.840589816354147,
+      "objective_after": 30.840589816354147,
+      "flips": 0,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 0.0
+    }
+   }
+  },
+  {
+   "theta_s": 5,
+   "phi_s": 90.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 31.36,
+     "peak_gain_dbi": 31.36,
+     "peak_theta_deg": 4.97,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.03,
+     "directivity_dbi": 31.54,
+     "radiated_over_incident": 0.96,
+     "sll_db": -13.2,
+     "sll_at_deg": [
+      2.9,
+      270.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": -0.52
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 30.56,
+     "peak_gain_dbi": 30.56,
+     "peak_theta_deg": 4.88,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.12,
+     "directivity_dbi": 30.9,
+     "radiated_over_incident": 0.925,
+     "sll_db": -8.3,
+     "sll_at_deg": [
+      14.5,
+      270.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 0.28
+    },
+    "plain": {
+     "gain_target_dbi": 29.94,
+     "peak_gain_dbi": 29.97,
+     "peak_theta_deg": 4.75,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.25,
+     "directivity_dbi": 30.84,
+     "radiated_over_incident": 0.818,
+     "sll_db": -9.2,
+     "sll_at_deg": [
+      14.8,
+      270.0
+     ],
+     "cross_peak_db": -19.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -19.9,
+     "axial_ratio_db": 0.25,
+     "scan_loss_db": 0.9
+    },
+    "dither": {
+     "gain_target_dbi": 29.07,
+     "peak_gain_dbi": 29.07,
+     "peak_theta_deg": 5.05,
+     "peak_phi_deg": 89.9,
+     "pointing_error_deg": 0.05,
+     "directivity_dbi": 30.66,
+     "radiated_over_incident": 0.692,
+     "sll_db": -11.8,
+     "sll_at_deg": [
+      9.6,
+      147.3
+     ],
+     "cross_peak_db": -18.7,
+     "cross_peak_at_deg": [
+      0.9,
+      270.0
+     ],
+     "cross_at_specular_db": -18.9,
+     "axial_ratio_db": 0.55,
+     "gain_target_over_seeds_dbi": [
+      28.98,
+      29.12,
+      29.3
+     ],
+     "scan_loss_db": 1.77
+    },
+    "tilt": {
+     "gain_target_dbi": 29.94,
+     "peak_gain_dbi": 29.97,
+     "peak_theta_deg": 4.75,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.25,
+     "directivity_dbi": 30.84,
+     "radiated_over_incident": 0.818,
+     "sll_db": -9.2,
+     "sll_at_deg": [
+      14.8,
+      270.0
+     ],
+     "cross_peak_db": -19.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -19.9,
+     "axial_ratio_db": 0.25,
+     "scan_loss_db": 0.9
+    },
+    "refined": {
+     "gain_target_dbi": 29.22,
+     "peak_gain_dbi": 29.25,
+     "peak_theta_deg": 4.78,
+     "peak_phi_deg": 90.8,
+     "pointing_error_deg": 0.23,
+     "directivity_dbi": 30.59,
+     "radiated_over_incident": 0.735,
+     "sll_db": -10.8,
+     "sll_at_deg": [
+      2.9,
+      270.0
+     ],
+     "cross_peak_db": -19.1,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -19.1,
+     "axial_ratio_db": 0.28,
+     "refine_log": {
+      "objective_before": 27.21727792109969,
+      "objective_after": 29.222685685672367,
+      "flips": 37,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 1.62
+    }
+   }
+  },
+  {
+   "theta_s": 10,
+   "phi_s": 90.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 31.17,
+     "peak_gain_dbi": 31.17,
+     "peak_theta_deg": 9.95,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.05,
+     "directivity_dbi": 31.49,
+     "radiated_over_incident": 0.93,
+     "sll_db": -13.0,
+     "sll_at_deg": [
+      2.0,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": -0.33
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 30.32,
+     "peak_gain_dbi": 30.32,
+     "peak_theta_deg": 9.86,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.14,
+     "directivity_dbi": 30.95,
+     "radiated_over_incident": 0.864,
+     "sll_db": -10.9,
+     "sll_at_deg": [
+      2.0,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 0.52
+    },
+    "plain": {
+     "gain_target_dbi": 29.72,
+     "peak_gain_dbi": 29.72,
+     "peak_theta_deg": 10.06,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.06,
+     "directivity_dbi": 30.89,
+     "radiated_over_incident": 0.764,
+     "sll_db": -11.5,
+     "sll_at_deg": [
+      32.0,
+      270.0
+     ],
+     "cross_peak_db": -20.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -20.2,
+     "axial_ratio_db": 0.33,
+     "scan_loss_db": 1.12
+    },
+    "dither": {
+     "gain_target_dbi": 28.91,
+     "peak_gain_dbi": 28.92,
+     "peak_theta_deg": 9.99,
+     "peak_phi_deg": 90.9,
+     "pointing_error_deg": 0.16,
+     "directivity_dbi": 30.64,
+     "radiated_over_incident": 0.673,
+     "sll_db": -12.2,
+     "sll_at_deg": [
+      2.3,
+      82.9
+     ],
+     "cross_peak_db": -18.6,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -18.6,
+     "axial_ratio_db": 0.37,
+     "gain_target_over_seeds_dbi": [
+      28.65,
+      28.8,
+      28.92
+     ],
+     "scan_loss_db": 1.93
+    },
+    "tilt": {
+     "gain_target_dbi": 29.72,
+     "peak_gain_dbi": 29.72,
+     "peak_theta_deg": 10.06,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.06,
+     "directivity_dbi": 30.89,
+     "radiated_over_incident": 0.764,
+     "sll_db": -11.5,
+     "sll_at_deg": [
+      32.0,
+      270.0
+     ],
+     "cross_peak_db": -20.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -20.2,
+     "axial_ratio_db": 0.33,
+     "scan_loss_db": 1.12
+    },
+    "refined": {
+     "gain_target_dbi": 29.65,
+     "peak_gain_dbi": 29.65,
+     "peak_theta_deg": 10.04,
+     "peak_phi_deg": 89.9,
+     "pointing_error_deg": 0.05,
+     "directivity_dbi": 30.87,
+     "radiated_over_incident": 0.755,
+     "sll_db": -11.8,
+     "sll_at_deg": [
+      18.1,
+      90.0
+     ],
+     "cross_peak_db": -20.1,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -20.1,
+     "axial_ratio_db": 0.31,
+     "refine_log": {
+      "objective_before": 29.388415196200707,
+      "objective_after": 29.645946449250424,
+      "flips": 6,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 1.19
+    }
+   }
+  },
+  {
+   "theta_s": 15,
+   "phi_s": 90.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 30.86,
+     "peak_gain_dbi": 30.86,
+     "peak_theta_deg": 14.92,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.08,
+     "directivity_dbi": 31.4,
+     "radiated_over_incident": 0.883,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      6.9,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": -0.02
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 30.03,
+     "peak_gain_dbi": 30.03,
+     "peak_theta_deg": 14.72,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.28,
+     "directivity_dbi": 30.89,
+     "radiated_over_incident": 0.819,
+     "sll_db": -9.2,
+     "sll_at_deg": [
+      6.6,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 0.81
+    },
+    "plain": {
+     "gain_target_dbi": 29.34,
+     "peak_gain_dbi": 29.38,
+     "peak_theta_deg": 14.72,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.28,
+     "directivity_dbi": 30.77,
+     "radiated_over_incident": 0.726,
+     "sll_db": -8.9,
+     "sll_at_deg": [
+      6.9,
+      90.0
+     ],
+     "cross_peak_db": -19.7,
+     "cross_peak_at_deg": [
+      0.3,
+      270.0
+     ],
+     "cross_at_specular_db": -19.8,
+     "axial_ratio_db": 0.44,
+     "scan_loss_db": 1.5
+    },
+    "dither": {
+     "gain_target_dbi": 28.08,
+     "peak_gain_dbi": 28.1,
+     "peak_theta_deg": 14.84,
+     "peak_phi_deg": 90.3,
+     "pointing_error_deg": 0.18,
+     "directivity_dbi": 30.24,
+     "radiated_over_incident": 0.61,
+     "sll_db": -12.2,
+     "sll_at_deg": [
+      16.9,
+      118.8
+     ],
+     "cross_peak_db": -17.6,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -17.6,
+     "axial_ratio_db": 0.36,
+     "gain_target_over_seeds_dbi": [
+      28.08,
+      28.33,
+      28.5
+     ],
+     "scan_loss_db": 2.76
+    },
+    "tilt": {
+     "gain_target_dbi": 29.34,
+     "peak_gain_dbi": 29.38,
+     "peak_theta_deg": 14.72,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.28,
+     "directivity_dbi": 30.77,
+     "radiated_over_incident": 0.726,
+     "sll_db": -8.9,
+     "sll_at_deg": [
+      6.9,
+      90.0
+     ],
+     "cross_peak_db": -19.7,
+     "cross_peak_at_deg": [
+      0.3,
+      270.0
+     ],
+     "cross_at_specular_db": -19.8,
+     "axial_ratio_db": 0.44,
+     "scan_loss_db": 1.5
+    },
+    "refined": {
+     "gain_target_dbi": 29.34,
+     "peak_gain_dbi": 29.38,
+     "peak_theta_deg": 14.72,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.28,
+     "directivity_dbi": 30.77,
+     "radiated_over_incident": 0.726,
+     "sll_db": -8.9,
+     "sll_at_deg": [
+      6.9,
+      90.0
+     ],
+     "cross_peak_db": -19.7,
+     "cross_peak_at_deg": [
+      0.3,
+      270.0
+     ],
+     "cross_at_specular_db": -19.8,
+     "axial_ratio_db": 0.44,
+     "refine_log": {
+      "objective_before": 29.343435297990375,
+      "objective_after": 29.343435297990375,
+      "flips": 0,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 1.5
+    }
+   }
+  },
+  {
+   "theta_s": 20,
+   "phi_s": 90.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 30.42,
+     "peak_gain_dbi": 30.42,
+     "peak_theta_deg": 19.88,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.12,
+     "directivity_dbi": 31.28,
+     "radiated_over_incident": 0.821,
+     "sll_db": -12.5,
+     "sll_at_deg": [
+      11.8,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 0.42
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 29.6,
+     "peak_gain_dbi": 29.6,
+     "peak_theta_deg": 19.83,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.17,
+     "directivity_dbi": 30.82,
+     "radiated_over_incident": 0.755,
+     "sll_db": -12.9,
+     "sll_at_deg": [
+      11.8,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 1.24
+    },
+    "plain": {
+     "gain_target_dbi": 28.96,
+     "peak_gain_dbi": 28.96,
+     "peak_theta_deg": 19.96,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.04,
+     "directivity_dbi": 30.71,
+     "radiated_over_incident": 0.668,
+     "sll_db": -10.3,
+     "sll_at_deg": [
+      11.8,
+      90.0
+     ],
+     "cross_peak_db": -19.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -19.9,
+     "axial_ratio_db": 0.41,
+     "scan_loss_db": 1.88
+    },
+    "dither": {
+     "gain_target_dbi": 28.04,
+     "peak_gain_dbi": 28.04,
+     "peak_theta_deg": 20.04,
+     "peak_phi_deg": 90.3,
+     "pointing_error_deg": 0.11,
+     "directivity_dbi": 30.25,
+     "radiated_over_incident": 0.601,
+     "sll_db": -11.8,
+     "sll_at_deg": [
+      21.6,
+      112.4
+     ],
+     "cross_peak_db": -17.7,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -17.7,
+     "axial_ratio_db": 0.63,
+     "gain_target_over_seeds_dbi": [
+      27.93,
+      28.04,
+      28.16
+     ],
+     "scan_loss_db": 2.8
+    },
+    "tilt": {
+     "gain_target_dbi": 28.96,
+     "peak_gain_dbi": 28.96,
+     "peak_theta_deg": 19.96,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.04,
+     "directivity_dbi": 30.71,
+     "radiated_over_incident": 0.668,
+     "sll_db": -10.3,
+     "sll_at_deg": [
+      11.8,
+      90.0
+     ],
+     "cross_peak_db": -19.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -19.9,
+     "axial_ratio_db": 0.41,
+     "scan_loss_db": 1.88
+    },
+    "refined": {
+     "gain_target_dbi": 28.96,
+     "peak_gain_dbi": 28.96,
+     "peak_theta_deg": 19.96,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.04,
+     "directivity_dbi": 30.71,
+     "radiated_over_incident": 0.668,
+     "sll_db": -10.3,
+     "sll_at_deg": [
+      11.8,
+      90.0
+     ],
+     "cross_peak_db": -19.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -19.9,
+     "axial_ratio_db": 0.41,
+     "refine_log": {
+      "objective_before": 28.955487160784354,
+      "objective_after": 28.955487160784354,
+      "flips": 0,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 1.88
+    }
+   }
+  },
+  {
+   "theta_s": 25,
+   "phi_s": 90.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 29.86,
+     "peak_gain_dbi": 29.86,
+     "peak_theta_deg": 24.84,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.16,
+     "directivity_dbi": 31.11,
+     "radiated_over_incident": 0.75,
+     "sll_db": -12.3,
+     "sll_at_deg": [
+      16.6,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 0.98
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 29.1,
+     "peak_gain_dbi": 29.1,
+     "peak_theta_deg": 24.61,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.39,
+     "directivity_dbi": 30.52,
+     "radiated_over_incident": 0.721,
+     "sll_db": -9.8,
+     "sll_at_deg": [
+      16.0,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 1.74
+    },
+    "plain": {
+     "gain_target_dbi": 28.42,
+     "peak_gain_dbi": 28.48,
+     "peak_theta_deg": 24.59,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.41,
+     "directivity_dbi": 30.46,
+     "radiated_over_incident": 0.634,
+     "sll_db": -9.5,
+     "sll_at_deg": [
+      16.0,
+      90.0
+     ],
+     "cross_peak_db": -17.8,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -17.8,
+     "axial_ratio_db": 0.5,
+     "scan_loss_db": 2.42
+    },
+    "dither": {
+     "gain_target_dbi": 27.37,
+     "peak_gain_dbi": 27.38,
+     "peak_theta_deg": 24.96,
+     "peak_phi_deg": 90.2,
+     "pointing_error_deg": 0.08,
+     "directivity_dbi": 29.92,
+     "radiated_over_incident": 0.557,
+     "sll_db": -12.2,
+     "sll_at_deg": [
+      16.6,
+      90.0
+     ],
+     "cross_peak_db": -16.6,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -16.6,
+     "axial_ratio_db": 0.39,
+     "gain_target_over_seeds_dbi": [
+      27.27,
+      27.41,
+      27.65
+     ],
+     "scan_loss_db": 3.47
+    },
+    "tilt": {
+     "gain_target_dbi": 28.42,
+     "peak_gain_dbi": 28.48,
+     "peak_theta_deg": 24.59,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.41,
+     "directivity_dbi": 30.46,
+     "radiated_over_incident": 0.634,
+     "sll_db": -9.5,
+     "sll_at_deg": [
+      16.0,
+      90.0
+     ],
+     "cross_peak_db": -17.8,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -17.8,
+     "axial_ratio_db": 0.5,
+     "scan_loss_db": 2.42
+    },
+    "refined": {
+     "gain_target_dbi": 27.91,
+     "peak_gain_dbi": 28.01,
+     "peak_theta_deg": 24.52,
+     "peak_phi_deg": 89.8,
+     "pointing_error_deg": 0.49,
+     "directivity_dbi": 30.21,
+     "radiated_over_incident": 0.602,
+     "sll_db": -9.8,
+     "sll_at_deg": [
+      16.0,
+      89.0
+     ],
+     "cross_peak_db": -17.5,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -17.5,
+     "axial_ratio_db": 0.47,
+     "refine_log": {
+      "objective_before": 26.7652191445335,
+      "objective_after": 27.910695219662422,
+      "flips": 34,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 2.93
+    }
+   }
+  },
+  {
+   "theta_s": 30,
+   "phi_s": 90.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 29.18,
+     "peak_gain_dbi": 29.18,
+     "peak_theta_deg": 29.79,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.21,
+     "directivity_dbi": 30.91,
+     "radiated_over_incident": 0.672,
+     "sll_db": -12.1,
+     "sll_at_deg": [
+      21.4,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 1.66
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 28.39,
+     "peak_gain_dbi": 28.39,
+     "peak_theta_deg": 30.56,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.56,
+     "directivity_dbi": 30.09,
+     "radiated_over_incident": 0.677,
+     "sll_db": -4.8,
+     "sll_at_deg": [
+      21.7,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 2.45
+    },
+    "plain": {
+     "gain_target_dbi": 27.63,
+     "peak_gain_dbi": 28.36,
+     "peak_theta_deg": 28.57,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 1.43,
+     "directivity_dbi": 30.63,
+     "radiated_over_incident": 0.592,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      90.0
+     ],
+     "cross_peak_db": -18.5,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -18.5,
+     "axial_ratio_db": 0.44,
+     "scan_loss_db": 3.21
+    },
+    "dither": {
+     "gain_target_dbi": 26.84,
+     "peak_gain_dbi": 26.91,
+     "peak_theta_deg": 29.56,
+     "peak_phi_deg": 90.2,
+     "pointing_error_deg": 0.44,
+     "directivity_dbi": 29.74,
+     "radiated_over_incident": 0.522,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      30.2,
+      74.4
+     ],
+     "cross_peak_db": -16.4,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -16.4,
+     "axial_ratio_db": 0.56,
+     "gain_target_over_seeds_dbi": [
+      26.65,
+      26.8,
+      26.88
+     ],
+     "scan_loss_db": 4.0
+    },
+    "tilt": {
+     "gain_target_dbi": 27.63,
+     "peak_gain_dbi": 28.36,
+     "peak_theta_deg": 28.57,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 1.43,
+     "directivity_dbi": 30.63,
+     "radiated_over_incident": 0.592,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      90.0
+     ],
+     "cross_peak_db": -18.5,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -18.5,
+     "axial_ratio_db": 0.44,
+     "scan_loss_db": 3.21
+    },
+    "refined": {
+     "gain_target_dbi": 27.63,
+     "peak_gain_dbi": 28.36,
+     "peak_theta_deg": 28.57,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 1.43,
+     "directivity_dbi": 30.63,
+     "radiated_over_incident": 0.592,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      90.0
+     ],
+     "cross_peak_db": -18.5,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -18.5,
+     "axial_ratio_db": 0.44,
+     "refine_log": {
+      "objective_before": 27.63164695230281,
+      "objective_after": 27.63164695230281,
+      "flips": 0,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 3.21
+    }
+   }
+  },
+  {
+   "theta_s": 35,
+   "phi_s": 90.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 28.37,
+     "peak_gain_dbi": 28.37,
+     "peak_theta_deg": 34.73,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.27,
+     "directivity_dbi": 30.66,
+     "radiated_over_incident": 0.591,
+     "sll_db": -11.8,
+     "sll_at_deg": [
+      25.8,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 2.47
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 27.51,
+     "peak_gain_dbi": 27.51,
+     "peak_theta_deg": 34.77,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.23,
+     "directivity_dbi": 29.61,
+     "radiated_over_incident": 0.616,
+     "sll_db": -6.0,
+     "sll_at_deg": [
+      10.1,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 3.33
+    },
+    "plain": {
+     "gain_target_dbi": 26.85,
+     "peak_gain_dbi": 26.86,
+     "peak_theta_deg": 35.18,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.18,
+     "directivity_dbi": 29.64,
+     "radiated_over_incident": 0.528,
+     "sll_db": -7.1,
+     "sll_at_deg": [
+      9.5,
+      90.0
+     ],
+     "cross_peak_db": -16.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -16.9,
+     "axial_ratio_db": 0.67,
+     "scan_loss_db": 3.99
+    },
+    "dither": {
+     "gain_target_dbi": 25.97,
+     "peak_gain_dbi": 25.99,
+     "peak_theta_deg": 34.78,
+     "peak_phi_deg": 90.1,
+     "pointing_error_deg": 0.22,
+     "directivity_dbi": 29.29,
+     "radiated_over_incident": 0.468,
+     "sll_db": -11.2,
+     "sll_at_deg": [
+      35.9,
+      103.3
+     ],
+     "cross_peak_db": -15.7,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -15.7,
+     "axial_ratio_db": 0.5,
+     "gain_target_over_seeds_dbi": [
+      25.86,
+      25.95,
+      26.02
+     ],
+     "scan_loss_db": 4.87
+    },
+    "tilt": {
+     "gain_target_dbi": 26.85,
+     "peak_gain_dbi": 26.86,
+     "peak_theta_deg": 35.18,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.18,
+     "directivity_dbi": 29.64,
+     "radiated_over_incident": 0.528,
+     "sll_db": -7.1,
+     "sll_at_deg": [
+      9.5,
+      90.0
+     ],
+     "cross_peak_db": -16.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -16.9,
+     "axial_ratio_db": 0.67,
+     "scan_loss_db": 3.99
+    },
+    "refined": {
+     "gain_target_dbi": 25.88,
+     "peak_gain_dbi": 25.88,
+     "peak_theta_deg": 35.04,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.04,
+     "directivity_dbi": 29.1,
+     "radiated_over_incident": 0.476,
+     "sll_db": -10.1,
+     "sll_at_deg": [
+      45.6,
+      90.0
+     ],
+     "cross_peak_db": -16.1,
+     "cross_peak_at_deg": [
+      0.3,
+      270.0
+     ],
+     "cross_at_specular_db": -16.1,
+     "axial_ratio_db": 0.68,
+     "refine_log": {
+      "objective_before": 22.034188208485375,
+      "objective_after": 25.88054600725213,
+      "flips": 50,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 4.96
+    }
+   }
+  },
+  {
+   "theta_s": 40,
+   "phi_s": 90.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 27.45,
+     "peak_gain_dbi": 27.45,
+     "peak_theta_deg": 39.65,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.35,
+     "directivity_dbi": 30.35,
+     "radiated_over_incident": 0.513,
+     "sll_db": -11.5,
+     "sll_at_deg": [
+      30.3,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 3.39
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 26.51,
+     "peak_gain_dbi": 26.51,
+     "peak_theta_deg": 40.04,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.04,
+     "directivity_dbi": 29.05,
+     "radiated_over_incident": 0.557,
+     "sll_db": -4.8,
+     "sll_at_deg": [
+      2.6,
+      270.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 4.33
+    },
+    "plain": {
+     "gain_target_dbi": 26.25,
+     "peak_gain_dbi": 26.26,
+     "peak_theta_deg": 39.77,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.23,
+     "directivity_dbi": 29.47,
+     "radiated_over_incident": 0.478,
+     "sll_db": -7.5,
+     "sll_at_deg": [
+      2.6,
+      270.0
+     ],
+     "cross_peak_db": -16.4,
+     "cross_peak_at_deg": [
+      0.3,
+      90.0
+     ],
+     "cross_at_specular_db": -16.5,
+     "axial_ratio_db": 1.07,
+     "scan_loss_db": 4.59
+    },
+    "dither": {
+     "gain_target_dbi": 25.59,
+     "peak_gain_dbi": 25.64,
+     "peak_theta_deg": 39.57,
+     "peak_phi_deg": 90.1,
+     "pointing_error_deg": 0.43,
+     "directivity_dbi": 29.27,
+     "radiated_over_incident": 0.434,
+     "sll_db": -10.9,
+     "sll_at_deg": [
+      30.3,
+      89.4
+     ],
+     "cross_peak_db": -15.8,
+     "cross_peak_at_deg": [
+      0.3,
+      270.0
+     ],
+     "cross_at_specular_db": -15.8,
+     "axial_ratio_db": 0.95,
+     "gain_target_over_seeds_dbi": [
+      25.39,
+      25.53,
+      25.59
+     ],
+     "scan_loss_db": 5.25
+    },
+    "tilt": {
+     "gain_target_dbi": 26.25,
+     "peak_gain_dbi": 26.26,
+     "peak_theta_deg": 39.78,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.22,
+     "directivity_dbi": 29.47,
+     "radiated_over_incident": 0.478,
+     "sll_db": -7.3,
+     "sll_at_deg": [
+      2.6,
+      270.0
+     ],
+     "cross_peak_db": -17.2,
+     "cross_peak_at_deg": [
+      0.3,
+      90.0
+     ],
+     "cross_at_specular_db": -17.3,
+     "axial_ratio_db": 1.01,
+     "scan_loss_db": 4.59
+    },
+    "refined": {
+     "gain_target_dbi": 25.46,
+     "peak_gain_dbi": 25.47,
+     "peak_theta_deg": 39.77,
+     "peak_phi_deg": 89.9,
+     "pointing_error_deg": 0.24,
+     "directivity_dbi": 29.03,
+     "radiated_over_incident": 0.441,
+     "sll_db": -11.1,
+     "sll_at_deg": [
+      30.3,
+      90.0
+     ],
+     "cross_peak_db": -15.7,
+     "cross_peak_at_deg": [
+      0.3,
+      90.0
+     ],
+     "cross_at_specular_db": -15.8,
+     "axial_ratio_db": 1.06,
+     "refine_log": {
+      "objective_before": 21.72260379381198,
+      "objective_after": 25.456550613352725,
+      "flips": 38,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 5.38
+    }
+   }
+  },
+  {
+   "theta_s": 45,
+   "phi_s": 90.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 26.39,
+     "peak_gain_dbi": 26.39,
+     "peak_theta_deg": 44.54,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.46,
+     "directivity_dbi": 29.98,
+     "radiated_over_incident": 0.438,
+     "sll_db": -11.2,
+     "sll_at_deg": [
+      34.8,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 4.45
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 25.62,
+     "peak_gain_dbi": 25.62,
+     "peak_theta_deg": 44.92,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.08,
+     "directivity_dbi": 28.57,
+     "radiated_over_incident": 0.508,
+     "sll_db": -2.8,
+     "sll_at_deg": [
+      13.0,
+      270.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 5.22
+    },
+    "plain": {
+     "gain_target_dbi": 24.96,
+     "peak_gain_dbi": 24.96,
+     "peak_theta_deg": 44.92,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.08,
+     "directivity_dbi": 28.41,
+     "radiated_over_incident": 0.452,
+     "sll_db": -3.1,
+     "sll_at_deg": [
+      13.0,
+      270.0
+     ],
+     "cross_peak_db": -14.7,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -14.7,
+     "axial_ratio_db": 0.49,
+     "scan_loss_db": 5.88
+    },
+    "dither": {
+     "gain_target_dbi": 23.98,
+     "peak_gain_dbi": 24.03,
+     "peak_theta_deg": 44.54,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.46,
+     "directivity_dbi": 28.33,
+     "radiated_over_incident": 0.372,
+     "sll_db": -10.6,
+     "sll_at_deg": [
+      34.8,
+      90.0
+     ],
+     "cross_peak_db": -13.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -13.9,
+     "axial_ratio_db": 0.39,
+     "gain_target_over_seeds_dbi": [
+      23.84,
+      23.97,
+      24.18
+     ],
+     "scan_loss_db": 6.86
+    },
+    "tilt": {
+     "gain_target_dbi": 24.96,
+     "peak_gain_dbi": 24.96,
+     "peak_theta_deg": 44.92,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.08,
+     "directivity_dbi": 28.41,
+     "radiated_over_incident": 0.452,
+     "sll_db": -3.1,
+     "sll_at_deg": [
+      13.0,
+      270.0
+     ],
+     "cross_peak_db": -14.7,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -14.7,
+     "axial_ratio_db": 0.49,
+     "scan_loss_db": 5.88
+    },
+    "refined": {
+     "gain_target_dbi": 23.83,
+     "peak_gain_dbi": 23.84,
+     "peak_theta_deg": 45.14,
+     "peak_phi_deg": 89.9,
+     "pointing_error_deg": 0.15,
+     "directivity_dbi": 28.03,
+     "radiated_over_incident": 0.381,
+     "sll_db": -11.8,
+     "sll_at_deg": [
+      35.5,
+      90.0
+     ],
+     "cross_peak_db": -15.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -15.2,
+     "axial_ratio_db": 0.6,
+     "refine_log": {
+      "objective_before": 15.786754938377053,
+      "objective_after": 23.833786372816405,
+      "flips": 151,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 7.01
+    }
+   }
+  },
+  {
+   "theta_s": 50,
+   "phi_s": 90.0,
+   "note": "",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 25.21,
+     "peak_gain_dbi": 25.21,
+     "peak_theta_deg": 49.38,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.62,
+     "directivity_dbi": 29.54,
+     "radiated_over_incident": 0.369,
+     "sll_db": -10.8,
+     "sll_at_deg": [
+      39.1,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 5.63
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 24.39,
+     "peak_gain_dbi": 24.39,
+     "peak_theta_deg": 49.23,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.77,
+     "directivity_dbi": 27.99,
+     "radiated_over_incident": 0.436,
+     "sll_db": -4.1,
+     "sll_at_deg": [
+      23.3,
+      270.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 6.45
+    },
+    "plain": {
+     "gain_target_dbi": 23.71,
+     "peak_gain_dbi": 23.82,
+     "peak_theta_deg": 49.29,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.71,
+     "directivity_dbi": 28.02,
+     "radiated_over_incident": 0.38,
+     "sll_db": -5.5,
+     "sll_at_deg": [
+      23.3,
+      270.0
+     ],
+     "cross_peak_db": -12.4,
+     "cross_peak_at_deg": [
+      0.3,
+      270.0
+     ],
+     "cross_at_specular_db": -12.4,
+     "axial_ratio_db": 0.43,
+     "scan_loss_db": 7.13
+    },
+    "dither": {
+     "gain_target_dbi": 22.52,
+     "peak_gain_dbi": 22.64,
+     "peak_theta_deg": 49.26,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.74,
+     "directivity_dbi": 27.32,
+     "radiated_over_incident": 0.34,
+     "sll_db": -10.7,
+     "sll_at_deg": [
+      38.7,
+      89.5
+     ],
+     "cross_peak_db": -12.7,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -12.7,
+     "axial_ratio_db": 0.54,
+     "gain_target_over_seeds_dbi": [
+      22.5,
+      22.59,
+      22.67
+     ],
+     "scan_loss_db": 8.32
+    },
+    "tilt": {
+     "gain_target_dbi": 23.71,
+     "peak_gain_dbi": 23.82,
+     "peak_theta_deg": 49.29,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.71,
+     "directivity_dbi": 28.02,
+     "radiated_over_incident": 0.38,
+     "sll_db": -5.5,
+     "sll_at_deg": [
+      23.3,
+      270.0
+     ],
+     "cross_peak_db": -12.4,
+     "cross_peak_at_deg": [
+      0.3,
+      270.0
+     ],
+     "cross_at_specular_db": -12.4,
+     "axial_ratio_db": 0.43,
+     "scan_loss_db": 7.13
+    },
+    "refined": {
+     "gain_target_dbi": 22.58,
+     "peak_gain_dbi": 22.71,
+     "peak_theta_deg": 49.2,
+     "peak_phi_deg": 90.1,
+     "pointing_error_deg": 0.81,
+     "directivity_dbi": 27.23,
+     "radiated_over_incident": 0.354,
+     "sll_db": -11.8,
+     "sll_at_deg": [
+      38.7,
+      90.9
+     ],
+     "cross_peak_db": -14.0,
+     "cross_peak_at_deg": [
+      0.3,
+      270.0
+     ],
+     "cross_at_specular_db": -14.0,
+     "axial_ratio_db": 0.66,
+     "refine_log": {
+      "objective_before": 14.474310874045335,
+      "objective_after": 21.477612657282037,
+      "flips": 154,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 8.26
+    }
+   }
+  },
+  {
+   "theta_s": 60,
+   "phi_s": 90.0,
+   "note": "near band centre only: first grating lobe enters at 64.6 deg at 10.5 GHz; no band margin above 10.54 GHz",
+   "variants": {
+    "ideal_continuous": {
+     "gain_target_dbi": 22.42,
+     "peak_gain_dbi": 22.42,
+     "peak_theta_deg": 58.75,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 1.25,
+     "directivity_dbi": 28.27,
+     "radiated_over_incident": 0.26,
+     "sll_db": -9.7,
+     "sll_at_deg": [
+      46.9,
+      90.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 8.42
+    },
+    "ideal_2bit": {
+     "gain_target_dbi": 21.61,
+     "peak_gain_dbi": 21.61,
+     "peak_theta_deg": 58.79,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 1.21,
+     "directivity_dbi": 26.62,
+     "radiated_over_incident": 0.315,
+     "sll_db": -3.7,
+     "sll_at_deg": [
+      44.0,
+      270.0
+     ],
+     "cross_peak_db": -3000.0,
+     "cross_peak_at_deg": [
+      90.0,
+      270.0
+     ],
+     "cross_at_specular_db": -3000.0,
+     "axial_ratio_db": 0.0,
+     "scan_loss_db": 9.23
+    },
+    "plain": {
+     "gain_target_dbi": 20.81,
+     "peak_gain_dbi": 20.95,
+     "peak_theta_deg": 58.97,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 1.03,
+     "directivity_dbi": 26.44,
+     "radiated_over_incident": 0.283,
+     "sll_db": -4.5,
+     "sll_at_deg": [
+      44.0,
+      270.0
+     ],
+     "cross_peak_db": -10.6,
+     "cross_peak_at_deg": [
+      0.6,
+      270.0
+     ],
+     "cross_at_specular_db": -10.7,
+     "axial_ratio_db": 0.43,
+     "scan_loss_db": 10.03
+    },
+    "dither": {
+     "gain_target_dbi": 19.81,
+     "peak_gain_dbi": 20.05,
+     "peak_theta_deg": 58.69,
+     "peak_phi_deg": 90.2,
+     "pointing_error_deg": 1.32,
+     "directivity_dbi": 25.59,
+     "radiated_over_incident": 0.279,
+     "sll_db": -9.5,
+     "sll_at_deg": [
+      46.9,
+      89.2
+     ],
+     "cross_peak_db": -9.5,
+     "cross_peak_at_deg": [
+      0.3,
+      270.0
+     ],
+     "cross_at_specular_db": -9.5,
+     "axial_ratio_db": 0.46,
+     "gain_target_over_seeds_dbi": [
+      19.71,
+      19.8,
+      19.92
+     ],
+     "scan_loss_db": 11.03
+    },
+    "tilt": {
+     "gain_target_dbi": 20.81,
+     "peak_gain_dbi": 20.95,
+     "peak_theta_deg": 58.97,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 1.03,
+     "directivity_dbi": 26.44,
+     "radiated_over_incident": 0.283,
+     "sll_db": -4.5,
+     "sll_at_deg": [
+      44.0,
+      270.0
+     ],
+     "cross_peak_db": -10.6,
+     "cross_peak_at_deg": [
+      0.6,
+      270.0
+     ],
+     "cross_at_specular_db": -10.7,
+     "axial_ratio_db": 0.43,
+     "scan_loss_db": 10.03
+    },
+    "refined": {
+     "gain_target_dbi": 19.35,
+     "peak_gain_dbi": 19.6,
+     "peak_theta_deg": 58.64,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 1.36,
+     "directivity_dbi": 25.14,
+     "radiated_over_incident": 0.279,
+     "sll_db": -7.7,
+     "sll_at_deg": [
+      46.5,
+      90.0
+     ],
+     "cross_peak_db": -11.1,
+     "cross_peak_at_deg": [
+      0.3,
+      270.0
+     ],
+     "cross_at_specular_db": -11.2,
+     "axial_ratio_db": 0.55,
+     "refine_log": {
+      "objective_before": 8.832608607958427,
+      "objective_after": 15.263858340847925,
+      "flips": 113,
+      "sll_limit_db": -12.0,
+      "cross_limit_db": -15.0
+     },
+     "scan_loss_db": 11.49
+    }
+   }
+  }
+ ],
+ "bandwidth": [
+  {
+   "theta_s": 0,
+   "phi_s": 0.0,
+   "variant": "plain",
+   "freqs": [
+    10.0,
+    10.05,
+    10.1,
+    10.15,
+    10.2,
+    10.25,
+    10.3,
+    10.35,
+    10.4,
+    10.45,
+    10.5,
+    10.55,
+    10.6,
+    10.65,
+    10.7,
+    10.75,
+    10.8,
+    10.85,
+    10.9,
+    10.95,
+    11.0
+   ],
+   "gain_at_design_direction_dbi": [
+    30.03,
+    30.1,
+    30.18,
+    30.26,
+    30.35,
+    30.43,
+    30.52,
+    30.6,
+    30.69,
+    30.77,
+    30.84,
+    30.9,
+    30.96,
+    30.99,
+    31.01,
+    31.0,
+    30.98,
+    30.93,
+    30.85,
+    30.74,
+    30.6
+   ],
+   "peak_gain_dbi": [
+    30.03,
+    30.1,
+    30.18,
+    30.26,
+    30.35,
+    30.43,
+    30.52,
+    30.6,
+    30.69,
+    30.77,
+    30.84,
+    30.9,
+    30.96,
+    30.99,
+    31.01,
+    31.0,
+    30.98,
+    30.93,
+    30.85,
+    30.74,
+    30.6
+   ],
+   "peak_theta_deg": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "grating_onset_deg": [
+    87.0,
+    81.4,
+    78.2,
+    75.7,
+    73.6,
+    71.8,
+    70.1,
+    68.6,
+    67.2,
+    65.9,
+    64.6,
+    63.4,
+    62.3,
+    61.2,
+    60.2,
+    59.2,
+    58.3,
+    57.4,
+    56.5,
+    55.6,
+    54.8
+   ],
+   "bandwidth_design_direction": {
+    "1.0": {
+     "f_lo": 10.0,
+     "f_hi": 11.0,
+     "width": 1.0,
+     "open_low": true,
+     "open_high": true
+    },
+    "3.0": {
+     "f_lo": 10.0,
+     "f_hi": 11.0,
+     "width": 1.0,
+     "open_low": true,
+     "open_high": true
+    }
+   },
+   "bandwidth_peak": {
+    "1.0": {
+     "f_lo": 10.0,
+     "f_hi": 11.0,
+     "width": 1.0,
+     "open_low": true,
+     "open_high": true
+    },
+    "3.0": {
+     "f_lo": 10.0,
+     "f_hi": 11.0,
+     "width": 1.0,
+     "open_low": true,
+     "open_high": true
+    }
+   },
+   "out_of_domain_freqs": []
+  },
+  {
+   "theta_s": 0,
+   "phi_s": 0.0,
+   "variant": "refined",
+   "freqs": [
+    10.0,
+    10.05,
+    10.1,
+    10.15,
+    10.2,
+    10.25,
+    10.3,
+    10.35,
+    10.4,
+    10.45,
+    10.5,
+    10.55,
+    10.6,
+    10.65,
+    10.7,
+    10.75,
+    10.8,
+    10.85,
+    10.9,
+    10.95,
+    11.0
+   ],
+   "gain_at_design_direction_dbi": [
+    30.03,
+    30.1,
+    30.18,
+    30.26,
+    30.35,
+    30.43,
+    30.52,
+    30.6,
+    30.69,
+    30.77,
+    30.84,
+    30.9,
+    30.96,
+    30.99,
+    31.01,
+    31.0,
+    30.98,
+    30.93,
+    30.85,
+    30.74,
+    30.6
+   ],
+   "peak_gain_dbi": [
+    30.03,
+    30.1,
+    30.18,
+    30.26,
+    30.35,
+    30.43,
+    30.52,
+    30.6,
+    30.69,
+    30.77,
+    30.84,
+    30.9,
+    30.96,
+    30.99,
+    31.01,
+    31.0,
+    30.98,
+    30.93,
+    30.85,
+    30.74,
+    30.6
+   ],
+   "peak_theta_deg": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "grating_onset_deg": [
+    87.0,
+    81.4,
+    78.2,
+    75.7,
+    73.6,
+    71.8,
+    70.1,
+    68.6,
+    67.2,
+    65.9,
+    64.6,
+    63.4,
+    62.3,
+    61.2,
+    60.2,
+    59.2,
+    58.3,
+    57.4,
+    56.5,
+    55.6,
+    54.8
+   ],
+   "bandwidth_design_direction": {
+    "1.0": {
+     "f_lo": 10.0,
+     "f_hi": 11.0,
+     "width": 1.0,
+     "open_low": true,
+     "open_high": true
+    },
+    "3.0": {
+     "f_lo": 10.0,
+     "f_hi": 11.0,
+     "width": 1.0,
+     "open_low": true,
+     "open_high": true
+    }
+   },
+   "bandwidth_peak": {
+    "1.0": {
+     "f_lo": 10.0,
+     "f_hi": 11.0,
+     "width": 1.0,
+     "open_low": true,
+     "open_high": true
+    },
+    "3.0": {
+     "f_lo": 10.0,
+     "f_hi": 11.0,
+     "width": 1.0,
+     "open_low": true,
+     "open_high": true
+    }
+   },
+   "out_of_domain_freqs": []
+  },
+  {
+   "theta_s": 30,
+   "phi_s": 0.0,
+   "variant": "plain",
+   "freqs": [
+    10.0,
+    10.05,
+    10.1,
+    10.15,
+    10.2,
+    10.25,
+    10.3,
+    10.35,
+    10.4,
+    10.45,
+    10.5,
+    10.55,
+    10.6,
+    10.65,
+    10.7,
+    10.75,
+    10.8,
+    10.85,
+    10.9,
+    10.95,
+    11.0
+   ],
+   "gain_at_design_direction_dbi": [
+    27.2,
+    27.32,
+    27.42,
+    27.51,
+    27.59,
+    27.64,
+    27.68,
+    27.71,
+    27.71,
+    27.68,
+    27.63,
+    27.55,
+    27.44,
+    27.29,
+    27.09,
+    26.86,
+    26.58,
+    26.25,
+    25.86,
+    25.43,
+    24.93
+   ],
+   "peak_gain_dbi": [
+    27.21,
+    27.32,
+    27.44,
+    27.55,
+    27.67,
+    27.8,
+    27.92,
+    28.03,
+    28.15,
+    28.26,
+    28.36,
+    28.44,
+    28.52,
+    28.58,
+    28.61,
+    28.63,
+    28.61,
+    28.58,
+    28.51,
+    28.42,
+    28.29
+   ],
+   "peak_theta_deg": [
+    30.12,
+    29.96,
+    29.8,
+    29.64,
+    29.48,
+    29.32,
+    29.17,
+    29.02,
+    28.87,
+    28.72,
+    28.57,
+    28.43,
+    28.28,
+    28.14,
+    28.0,
+    27.86,
+    27.72,
+    27.58,
+    27.45,
+    27.31,
+    27.18
+   ],
+   "grating_onset_deg": [
+    87.0,
+    81.4,
+    78.2,
+    75.7,
+    73.6,
+    71.8,
+    70.1,
+    68.6,
+    67.2,
+    65.9,
+    64.6,
+    63.4,
+    62.3,
+    61.2,
+    60.2,
+    59.2,
+    58.3,
+    57.4,
+    56.5,
+    55.6,
+    54.8
+   ],
+   "bandwidth_design_direction": {
+    "1.0": {
+     "f_lo": 10.0,
+     "f_hi": 10.777123524953039,
+     "width": 0.7771235249530388,
+     "open_low": true,
+     "open_high": false
+    },
+    "3.0": {
+     "f_lo": 10.0,
+     "f_hi": 11.0,
+     "width": 1.0,
+     "open_low": true,
+     "open_high": true
+    }
+   },
+   "bandwidth_peak": {
+    "1.0": {
+     "f_lo": 10.17948210463098,
+     "f_hi": 11.0,
+     "width": 0.8205178953690204,
+     "open_low": false,
+     "open_high": true
+    },
+    "3.0": {
+     "f_lo": 10.0,
+     "f_hi": 11.0,
+     "width": 1.0,
+     "open_low": true,
+     "open_high": true
+    }
+   },
+   "out_of_domain_freqs": []
+  },
+  {
+   "theta_s": 30,
+   "phi_s": 0.0,
+   "variant": "refined",
+   "freqs": [
+    10.0,
+    10.05,
+    10.1,
+    10.15,
+    10.2,
+    10.25,
+    10.3,
+    10.35,
+    10.4,
+    10.45,
+    10.5,
+    10.55,
+    10.6,
+    10.65,
+    10.7,
+    10.75,
+    10.8,
+    10.85,
+    10.9,
+    10.95,
+    11.0
+   ],
+   "gain_at_design_direction_dbi": [
+    27.2,
+    27.32,
+    27.42,
+    27.51,
+    27.59,
+    27.64,
+    27.68,
+    27.71,
+    27.71,
+    27.68,
+    27.63,
+    27.55,
+    27.44,
+    27.29,
+    27.09,
+    26.86,
+    26.58,
+    26.25,
+    25.86,
+    25.43,
+    24.93
+   ],
+   "peak_gain_dbi": [
+    27.21,
+    27.32,
+    27.44,
+    27.55,
+    27.67,
+    27.8,
+    27.92,
+    28.03,
+    28.15,
+    28.26,
+    28.36,
+    28.44,
+    28.52,
+    28.58,
+    28.61,
+    28.63,
+    28.61,
+    28.58,
+    28.51,
+    28.42,
+    28.29
+   ],
+   "peak_theta_deg": [
+    30.12,
+    29.96,
+    29.8,
+    29.64,
+    29.48,
+    29.32,
+    29.17,
+    29.02,
+    28.87,
+    28.72,
+    28.57,
+    28.43,
+    28.28,
+    28.14,
+    28.0,
+    27.86,
+    27.72,
+    27.58,
+    27.45,
+    27.31,
+    27.18
+   ],
+   "grating_onset_deg": [
+    87.0,
+    81.4,
+    78.2,
+    75.7,
+    73.6,
+    71.8,
+    70.1,
+    68.6,
+    67.2,
+    65.9,
+    64.6,
+    63.4,
+    62.3,
+    61.2,
+    60.2,
+    59.2,
+    58.3,
+    57.4,
+    56.5,
+    55.6,
+    54.8
+   ],
+   "bandwidth_design_direction": {
+    "1.0": {
+     "f_lo": 10.0,
+     "f_hi": 10.777123524953039,
+     "width": 0.7771235249530388,
+     "open_low": true,
+     "open_high": false
+    },
+    "3.0": {
+     "f_lo": 10.0,
+     "f_hi": 11.0,
+     "width": 1.0,
+     "open_low": true,
+     "open_high": true
+    }
+   },
+   "bandwidth_peak": {
+    "1.0": {
+     "f_lo": 10.17948210463098,
+     "f_hi": 11.0,
+     "width": 0.8205178953690204,
+     "open_low": false,
+     "open_high": true
+    },
+    "3.0": {
+     "f_lo": 10.0,
+     "f_hi": 11.0,
+     "width": 1.0,
+     "open_low": true,
+     "open_high": true
+    }
+   },
+   "out_of_domain_freqs": []
+  },
+  {
+   "theta_s": 50,
+   "phi_s": 0.0,
+   "variant": "plain",
+   "freqs": [
+    10.0,
+    10.05,
+    10.1,
+    10.15,
+    10.2,
+    10.25,
+    10.3,
+    10.35,
+    10.4,
+    10.45,
+    10.5,
+    10.55,
+    10.6,
+    10.65,
+    10.7,
+    10.75,
+    10.8,
+    10.85,
+    10.9,
+    10.95,
+    11.0
+   ],
+   "gain_at_design_direction_dbi": [
+    20.71,
+    21.23,
+    21.69,
+    22.11,
+    22.48,
+    22.81,
+    23.09,
+    23.32,
+    23.5,
+    23.63,
+    23.71,
+    23.74,
+    23.71,
+    23.61,
+    23.45,
+    23.22,
+    22.92,
+    22.54,
+    22.08,
+    21.54,
+    20.91
+   ],
+   "peak_gain_dbi": [
+    22.05,
+    22.24,
+    22.42,
+    22.6,
+    22.79,
+    22.97,
+    23.15,
+    23.33,
+    23.5,
+    23.66,
+    23.82,
+    23.96,
+    24.08,
+    24.19,
+    24.27,
+    24.33,
+    24.36,
+    24.36,
+    24.34,
+    24.28,
+    24.2
+   ],
+   "peak_theta_deg": [
+    52.69,
+    52.32,
+    51.96,
+    51.61,
+    51.26,
+    50.92,
+    50.58,
+    50.25,
+    49.93,
+    49.61,
+    49.29,
+    48.98,
+    48.68,
+    48.38,
+    48.08,
+    47.79,
+    47.51,
+    47.22,
+    46.94,
+    46.67,
+    46.4
+   ],
+   "grating_onset_deg": [
+    87.0,
+    81.4,
+    78.2,
+    75.7,
+    73.6,
+    71.8,
+    70.1,
+    68.6,
+    67.2,
+    65.9,
+    64.6,
+    63.4,
+    62.3,
+    61.2,
+    60.2,
+    59.2,
+    58.3,
+    57.4,
+    56.5,
+    55.6,
+    54.8
+   ],
+   "bandwidth_design_direction": {
+    "1.0": {
+     "f_lo": 10.239462763876645,
+     "f_hi": 10.82392389547318,
+     "width": 0.5844611315965356,
+     "open_low": false,
+     "open_high": false
+    },
+    "3.0": {
+     "f_lo": 10.002832125714926,
+     "f_hi": 11.0,
+     "width": 0.9971678742850738,
+     "open_low": false,
+     "open_high": true
+    }
+   },
+   "bandwidth_peak": {
+    "1.0": {
+     "f_lo": 10.360411231623461,
+     "f_hi": 11.0,
+     "width": 0.6395887683765391,
+     "open_low": false,
+     "open_high": true
+    },
+    "3.0": {
+     "f_lo": 10.0,
+     "f_hi": 11.0,
+     "width": 1.0,
+     "open_low": true,
+     "open_high": true
+    }
+   },
+   "out_of_domain_freqs": []
+  },
+  {
+   "theta_s": 50,
+   "phi_s": 0.0,
+   "variant": "refined",
+   "freqs": [
+    10.0,
+    10.05,
+    10.1,
+    10.15,
+    10.2,
+    10.25,
+    10.3,
+    10.35,
+    10.4,
+    10.45,
+    10.5,
+    10.55,
+    10.6,
+    10.65,
+    10.7,
+    10.75,
+    10.8,
+    10.85,
+    10.9,
+    10.95,
+    11.0
+   ],
+   "gain_at_design_direction_dbi": [
+    19.28,
+    19.85,
+    20.36,
+    20.81,
+    21.22,
+    21.57,
+    21.88,
+    22.14,
+    22.35,
+    22.52,
+    22.63,
+    22.68,
+    22.68,
+    22.62,
+    22.49,
+    22.3,
+    22.05,
+    21.71,
+    21.31,
+    20.82,
+    20.26
+   ],
+   "peak_gain_dbi": [
+    21.01,
+    21.18,
+    21.36,
+    21.53,
+    21.7,
+    21.87,
+    22.04,
+    22.21,
+    22.37,
+    22.52,
+    22.66,
+    22.79,
+    22.9,
+    22.99,
+    23.07,
+    23.12,
+    23.14,
+    23.13,
+    23.1,
+    23.04,
+    22.95
+   ],
+   "peak_theta_deg": [
+    53.02,
+    52.65,
+    52.29,
+    51.93,
+    51.58,
+    51.24,
+    50.9,
+    50.57,
+    50.24,
+    49.92,
+    49.6,
+    49.29,
+    48.98,
+    48.68,
+    48.38,
+    48.09,
+    47.8,
+    47.51,
+    47.23,
+    46.95,
+    46.68
+   ],
+   "grating_onset_deg": [
+    87.0,
+    81.4,
+    78.2,
+    75.7,
+    73.6,
+    71.8,
+    70.1,
+    68.6,
+    67.2,
+    65.9,
+    64.6,
+    63.4,
+    62.3,
+    61.2,
+    60.2,
+    59.2,
+    58.3,
+    57.4,
+    56.5,
+    55.6,
+    54.8
+   ],
+   "bandwidth_design_direction": {
+    "1.0": {
+     "f_lo": 10.26726437465502,
+     "f_hi": 10.853931526207706,
+     "width": 0.5866671515526853,
+     "open_low": false,
+     "open_high": false
+    },
+    "3.0": {
+     "f_lo": 10.03559552835823,
+     "f_hi": 11.0,
+     "width": 0.9644044716417692,
+     "open_low": false,
+     "open_high": true
+    }
+   },
+   "bandwidth_peak": {
+    "1.0": {
+     "f_lo": 10.328963018271638,
+     "f_hi": 11.0,
+     "width": 0.6710369817283617,
+     "open_low": false,
+     "open_high": true
+    },
+    "3.0": {
+     "f_lo": 10.0,
+     "f_hi": 11.0,
+     "width": 1.0,
+     "open_low": true,
+     "open_high": true
+    }
+   },
+   "out_of_domain_freqs": []
+  }
+ ],
+ "sensitivity": [
+  {
+   "theta_s": 0,
+   "phi_s": 0.0,
+   "variant": "plain",
+   "by_coff_pf": {
+    "0.0225": {
+     "gain_target_dbi": 30.84,
+     "peak_gain_dbi": 30.84,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.52,
+     "radiated_over_incident": 0.855,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -21.0,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -21.0,
+     "axial_ratio_db": 1.55
+    },
+    "0.025": {
+     "gain_target_dbi": 30.84,
+     "peak_gain_dbi": 30.84,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.54,
+     "radiated_over_incident": 0.852,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -24.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -24.2,
+     "axial_ratio_db": 1.07
+    },
+    "0.03": {
+     "gain_target_dbi": 30.81,
+     "peak_gain_dbi": 30.81,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.55,
+     "radiated_over_incident": 0.845,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      0.0
+     ],
+     "cross_peak_db": -27.5,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -27.5,
+     "axial_ratio_db": 0.73
+    }
+   },
+   "gain_target_spread_db": 0.03,
+   "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
+  },
+  {
+   "theta_s": 0,
+   "phi_s": 0.0,
+   "variant": "refined",
+   "by_coff_pf": {
+    "0.0225": {
+     "gain_target_dbi": 30.84,
+     "peak_gain_dbi": 30.84,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.52,
+     "radiated_over_incident": 0.855,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -21.0,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -21.0,
+     "axial_ratio_db": 1.55
+    },
+    "0.025": {
+     "gain_target_dbi": 30.84,
+     "peak_gain_dbi": 30.84,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.54,
+     "radiated_over_incident": 0.852,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -24.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -24.2,
+     "axial_ratio_db": 1.07
+    },
+    "0.03": {
+     "gain_target_dbi": 30.81,
+     "peak_gain_dbi": 30.81,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.55,
+     "radiated_over_incident": 0.845,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      0.0
+     ],
+     "cross_peak_db": -27.5,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -27.5,
+     "axial_ratio_db": 0.73
+    }
+   },
+   "gain_target_spread_db": 0.03,
+   "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
+  },
+  {
+   "theta_s": 30,
+   "phi_s": 0.0,
+   "variant": "plain",
+   "by_coff_pf": {
+    "0.0225": {
+     "gain_target_dbi": 27.63,
+     "peak_gain_dbi": 28.36,
+     "peak_theta_deg": 28.57,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 1.43,
+     "directivity_dbi": 30.59,
+     "radiated_over_incident": 0.598,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      0.0
+     ],
+     "cross_peak_db": -15.7,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -15.7,
+     "axial_ratio_db": 0.42
+    },
+    "0.025": {
+     "gain_target_dbi": 27.63,
+     "peak_gain_dbi": 28.36,
+     "peak_theta_deg": 28.57,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 1.43,
+     "directivity_dbi": 30.63,
+     "radiated_over_incident": 0.592,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      0.0
+     ],
+     "cross_peak_db": -18.5,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -18.5,
+     "axial_ratio_db": 0.44
+    },
+    "0.03": {
+     "gain_target_dbi": 27.59,
+     "peak_gain_dbi": 28.31,
+     "peak_theta_deg": 28.58,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 1.42,
+     "directivity_dbi": 30.67,
+     "radiated_over_incident": 0.581,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      0.0
+     ],
+     "cross_peak_db": -25.8,
+     "cross_peak_at_deg": [
+      0.6,
+      0.0
+     ],
+     "cross_at_specular_db": -25.9,
+     "axial_ratio_db": 0.48
+    }
+   },
+   "gain_target_spread_db": 0.04,
+   "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
+  },
+  {
+   "theta_s": 30,
+   "phi_s": 0.0,
+   "variant": "refined",
+   "by_coff_pf": {
+    "0.0225": {
+     "gain_target_dbi": 27.63,
+     "peak_gain_dbi": 28.36,
+     "peak_theta_deg": 28.57,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 1.43,
+     "directivity_dbi": 30.59,
+     "radiated_over_incident": 0.598,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      0.0
+     ],
+     "cross_peak_db": -15.7,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -15.7,
+     "axial_ratio_db": 0.42
+    },
+    "0.025": {
+     "gain_target_dbi": 27.63,
+     "peak_gain_dbi": 28.36,
+     "peak_theta_deg": 28.57,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 1.43,
+     "directivity_dbi": 30.63,
+     "radiated_over_incident": 0.592,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      0.0
+     ],
+     "cross_peak_db": -18.5,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -18.5,
+     "axial_ratio_db": 0.44
+    },
+    "0.03": {
+     "gain_target_dbi": 27.59,
+     "peak_gain_dbi": 28.31,
+     "peak_theta_deg": 28.58,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 1.42,
+     "directivity_dbi": 30.67,
+     "radiated_over_incident": 0.581,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      0.0
+     ],
+     "cross_peak_db": -25.8,
+     "cross_peak_at_deg": [
+      0.6,
+      0.0
+     ],
+     "cross_at_specular_db": -25.9,
+     "axial_ratio_db": 0.48
+    }
+   },
+   "gain_target_spread_db": 0.04,
+   "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
+  },
+  {
+   "theta_s": 50,
+   "phi_s": 0.0,
+   "variant": "plain",
+   "by_coff_pf": {
+    "0.0225": {
+     "gain_target_dbi": 23.7,
+     "peak_gain_dbi": 23.81,
+     "peak_theta_deg": 49.3,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.7,
+     "directivity_dbi": 27.92,
+     "radiated_over_incident": 0.388,
+     "sll_db": -5.3,
+     "sll_at_deg": [
+      23.3,
+      180.0
+     ],
+     "cross_peak_db": -9.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -9.9,
+     "axial_ratio_db": 0.45
+    },
+    "0.025": {
+     "gain_target_dbi": 23.71,
+     "peak_gain_dbi": 23.82,
+     "peak_theta_deg": 49.29,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.71,
+     "directivity_dbi": 28.02,
+     "radiated_over_incident": 0.38,
+     "sll_db": -5.5,
+     "sll_at_deg": [
+      23.3,
+      180.0
+     ],
+     "cross_peak_db": -12.4,
+     "cross_peak_at_deg": [
+      0.3,
+      180.0
+     ],
+     "cross_at_specular_db": -12.4,
+     "axial_ratio_db": 0.43
+    },
+    "0.03": {
+     "gain_target_dbi": 23.69,
+     "peak_gain_dbi": 23.8,
+     "peak_theta_deg": 49.29,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.71,
+     "directivity_dbi": 28.14,
+     "radiated_over_incident": 0.368,
+     "sll_db": -5.7,
+     "sll_at_deg": [
+      23.3,
+      180.0
+     ],
+     "cross_peak_db": -19.2,
+     "cross_peak_at_deg": [
+      21.4,
+      180.0
+     ],
+     "cross_at_specular_db": -20.7,
+     "axial_ratio_db": 0.39
+    }
+   },
+   "gain_target_spread_db": 0.02,
+   "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
+  },
+  {
+   "theta_s": 50,
+   "phi_s": 0.0,
+   "variant": "refined",
+   "by_coff_pf": {
+    "0.0225": {
+     "gain_target_dbi": 22.64,
+     "peak_gain_dbi": 22.67,
+     "peak_theta_deg": 49.6,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.4,
+     "directivity_dbi": 27.25,
+     "radiated_over_incident": 0.348,
+     "sll_db": -10.5,
+     "sll_at_deg": [
+      39.1,
+      0.0
+     ],
+     "cross_peak_db": -11.1,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -11.1,
+     "axial_ratio_db": 0.6
+    },
+    "0.025": {
+     "gain_target_dbi": 22.63,
+     "peak_gain_dbi": 22.66,
+     "peak_theta_deg": 49.6,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.4,
+     "directivity_dbi": 27.3,
+     "radiated_over_incident": 0.343,
+     "sll_db": -10.5,
+     "sll_at_deg": [
+      39.1,
+      0.0
+     ],
+     "cross_peak_db": -14.2,
+     "cross_peak_at_deg": [
+      0.3,
+      180.0
+     ],
+     "cross_at_specular_db": -14.3,
+     "axial_ratio_db": 0.64
+    },
+    "0.03": {
+     "gain_target_dbi": 22.56,
+     "peak_gain_dbi": 22.59,
+     "peak_theta_deg": 49.6,
+     "peak_phi_deg": 0.0,
+     "pointing_error_deg": 0.4,
+     "directivity_dbi": 27.31,
+     "radiated_over_incident": 0.338,
+     "sll_db": -10.5,
+     "sll_at_deg": [
+      39.1,
+      0.0
+     ],
+     "cross_peak_db": -19.1,
+     "cross_peak_at_deg": [
+      0.6,
+      180.0
+     ],
+     "cross_at_specular_db": -19.3,
+     "axial_ratio_db": 0.72
+    }
+   },
+   "gain_target_spread_db": 0.08,
+   "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
+  },
+  {
+   "theta_s": 0,
+   "phi_s": 90.0,
+   "variant": "plain",
+   "by_coff_pf": {
+    "0.0225": {
+     "gain_target_dbi": 30.84,
+     "peak_gain_dbi": 30.84,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.52,
+     "radiated_over_incident": 0.855,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -21.0,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -21.0,
+     "axial_ratio_db": 1.55
+    },
+    "0.025": {
+     "gain_target_dbi": 30.84,
+     "peak_gain_dbi": 30.84,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.54,
+     "radiated_over_incident": 0.852,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -24.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -24.2,
+     "axial_ratio_db": 1.07
+    },
+    "0.03": {
+     "gain_target_dbi": 30.81,
+     "peak_gain_dbi": 30.81,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.55,
+     "radiated_over_incident": 0.845,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      0.0
+     ],
+     "cross_peak_db": -27.5,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -27.5,
+     "axial_ratio_db": 0.73
+    }
+   },
+   "gain_target_spread_db": 0.03,
+   "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
+  },
+  {
+   "theta_s": 0,
+   "phi_s": 90.0,
+   "variant": "refined",
+   "by_coff_pf": {
+    "0.0225": {
+     "gain_target_dbi": 30.84,
+     "peak_gain_dbi": 30.84,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.52,
+     "radiated_over_incident": 0.855,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -21.0,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -21.0,
+     "axial_ratio_db": 1.55
+    },
+    "0.025": {
+     "gain_target_dbi": 30.84,
+     "peak_gain_dbi": 30.84,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.54,
+     "radiated_over_incident": 0.852,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      90.0
+     ],
+     "cross_peak_db": -24.2,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -24.2,
+     "axial_ratio_db": 1.07
+    },
+    "0.03": {
+     "gain_target_dbi": 30.81,
+     "peak_gain_dbi": 30.81,
+     "peak_theta_deg": 0.0,
+     "peak_phi_deg": 45.0,
+     "pointing_error_deg": 0.0,
+     "directivity_dbi": 31.55,
+     "radiated_over_incident": 0.845,
+     "sll_db": -13.3,
+     "sll_at_deg": [
+      7.8,
+      0.0
+     ],
+     "cross_peak_db": -27.5,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -27.5,
+     "axial_ratio_db": 0.73
+    }
+   },
+   "gain_target_spread_db": 0.03,
+   "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
+  },
+  {
+   "theta_s": 30,
+   "phi_s": 90.0,
+   "variant": "plain",
+   "by_coff_pf": {
+    "0.0225": {
+     "gain_target_dbi": 27.63,
+     "peak_gain_dbi": 28.36,
+     "peak_theta_deg": 28.57,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 1.43,
+     "directivity_dbi": 30.59,
+     "radiated_over_incident": 0.598,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      90.0
+     ],
+     "cross_peak_db": -15.7,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -15.7,
+     "axial_ratio_db": 0.42
+    },
+    "0.025": {
+     "gain_target_dbi": 27.63,
+     "peak_gain_dbi": 28.36,
+     "peak_theta_deg": 28.57,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 1.43,
+     "directivity_dbi": 30.63,
+     "radiated_over_incident": 0.592,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      90.0
+     ],
+     "cross_peak_db": -18.5,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -18.5,
+     "axial_ratio_db": 0.44
+    },
+    "0.03": {
+     "gain_target_dbi": 27.59,
+     "peak_gain_dbi": 28.31,
+     "peak_theta_deg": 28.58,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 1.42,
+     "directivity_dbi": 30.67,
+     "radiated_over_incident": 0.581,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      90.0
+     ],
+     "cross_peak_db": -25.8,
+     "cross_peak_at_deg": [
+      0.6,
+      90.0
+     ],
+     "cross_at_specular_db": -25.9,
+     "axial_ratio_db": 0.48
+    }
+   },
+   "gain_target_spread_db": 0.04,
+   "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
+  },
+  {
+   "theta_s": 30,
+   "phi_s": 90.0,
+   "variant": "refined",
+   "by_coff_pf": {
+    "0.0225": {
+     "gain_target_dbi": 27.63,
+     "peak_gain_dbi": 28.36,
+     "peak_theta_deg": 28.57,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 1.43,
+     "directivity_dbi": 30.59,
+     "radiated_over_incident": 0.598,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      90.0
+     ],
+     "cross_peak_db": -15.7,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -15.7,
+     "axial_ratio_db": 0.42
+    },
+    "0.025": {
+     "gain_target_dbi": 27.63,
+     "peak_gain_dbi": 28.36,
+     "peak_theta_deg": 28.57,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 1.43,
+     "directivity_dbi": 30.63,
+     "radiated_over_incident": 0.592,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      90.0
+     ],
+     "cross_peak_db": -18.5,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -18.5,
+     "axial_ratio_db": 0.44
+    },
+    "0.03": {
+     "gain_target_dbi": 27.59,
+     "peak_gain_dbi": 28.31,
+     "peak_theta_deg": 28.58,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 1.42,
+     "directivity_dbi": 30.67,
+     "radiated_over_incident": 0.581,
+     "sll_db": -12.8,
+     "sll_at_deg": [
+      38.0,
+      90.0
+     ],
+     "cross_peak_db": -25.8,
+     "cross_peak_at_deg": [
+      0.6,
+      90.0
+     ],
+     "cross_at_specular_db": -25.9,
+     "axial_ratio_db": 0.48
+    }
+   },
+   "gain_target_spread_db": 0.04,
+   "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
+  },
+  {
+   "theta_s": 50,
+   "phi_s": 90.0,
+   "variant": "plain",
+   "by_coff_pf": {
+    "0.0225": {
+     "gain_target_dbi": 23.7,
+     "peak_gain_dbi": 23.81,
+     "peak_theta_deg": 49.3,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.7,
+     "directivity_dbi": 27.92,
+     "radiated_over_incident": 0.388,
+     "sll_db": -5.3,
+     "sll_at_deg": [
+      23.3,
+      270.0
+     ],
+     "cross_peak_db": -9.9,
+     "cross_peak_at_deg": [
+      0.0,
+      45.0
+     ],
+     "cross_at_specular_db": -9.9,
+     "axial_ratio_db": 0.45
+    },
+    "0.025": {
+     "gain_target_dbi": 23.71,
+     "peak_gain_dbi": 23.82,
+     "peak_theta_deg": 49.29,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.71,
+     "directivity_dbi": 28.02,
+     "radiated_over_incident": 0.38,
+     "sll_db": -5.5,
+     "sll_at_deg": [
+      23.3,
+      270.0
+     ],
+     "cross_peak_db": -12.4,
+     "cross_peak_at_deg": [
+      0.3,
+      270.0
+     ],
+     "cross_at_specular_db": -12.4,
+     "axial_ratio_db": 0.43
+    },
+    "0.03": {
+     "gain_target_dbi": 23.69,
+     "peak_gain_dbi": 23.8,
+     "peak_theta_deg": 49.29,
+     "peak_phi_deg": 90.0,
+     "pointing_error_deg": 0.71,
+     "directivity_dbi": 28.14,
+     "radiated_over_incident": 0.368,
+     "sll_db": -5.7,
+     "sll_at_deg": [
+      23.3,
+      270.0
+     ],
+     "cross_peak_db": -19.2,
+     "cross_peak_at_deg": [
+      21.4,
+      270.0
+     ],
+     "cross_at_specular_db": -20.7,
+     "axial_ratio_db": 0.39
+    }
+   },
+   "gain_target_spread_db": 0.02,
+   "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
+  },
+  {
+   "theta_s": 50,
+   "phi_s": 90.0,
+   "variant": "refined",
+   "by_coff_pf": {
+    "0.0225": {
+     "gain_target_dbi": 22.59,
+     "peak_gain_dbi": 22.72,
+     "peak_theta_deg": 49.2,
+     "peak_phi_deg": 90.1,
+     "pointing_error_deg": 0.8,
+     "directivity_dbi": 27.17,
+     "radiated_over_incident": 0.359,
+     "sll_db": -11.8,
+     "sll_at_deg": [
+      38.7,
+      90.9
+     ],
+     "cross_peak_db": -10.9,
+     "cross_peak_at_deg": [
+      0.3,
+      270.0
+     ],
+     "cross_at_specular_db": -10.9,
+     "axial_ratio_db": 0.64
+    },
+    "0.025": {
+     "gain_target_dbi": 22.58,
+     "peak_gain_dbi": 22.71,
+     "peak_theta_deg": 49.2,
+     "peak_phi_deg": 90.1,
+     "pointing_error_deg": 0.81,
+     "directivity_dbi": 27.23,
+     "radiated_over_incident": 0.354,
+     "sll_db": -11.8,
+     "sll_at_deg": [
+      38.7,
+      90.9
+     ],
+     "cross_peak_db": -14.0,
+     "cross_peak_at_deg": [
+      0.3,
+      270.0
+     ],
+     "cross_at_specular_db": -14.0,
+     "axial_ratio_db": 0.66
+    },
+    "0.03": {
+     "gain_target_dbi": 22.52,
+     "peak_gain_dbi": 22.66,
+     "peak_theta_deg": 49.19,
+     "peak_phi_deg": 90.1,
+     "pointing_error_deg": 0.82,
+     "directivity_dbi": 27.25,
+     "radiated_over_incident": 0.347,
+     "sll_db": -11.2,
+     "sll_at_deg": [
+      2.4,
+      69.4
+     ],
+     "cross_peak_db": -19.1,
+     "cross_peak_at_deg": [
+      0.9,
+      270.0
+     ],
+     "cross_at_specular_db": -19.6,
+     "axial_ratio_db": 0.72
+    }
+   },
+   "gain_target_spread_db": 0.07,
+   "label": "MODEL_ONLY with HFSS C_off differences added to the calibrated states (HFSS tolerance run, theta 0 data)"
+  }
+ ],
+ "runtime_s": 141.0
+}

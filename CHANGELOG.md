@@ -6,7 +6,7 @@ before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` 
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
 ## Unreleased - Phase 20 R5 brief (branch `phase20-ris`)
-- `docs/briefs/PHASE20_R5_RIS_DESIGN_MODE.md`: full R5 brief from the user's answers (items R5-1 calibrated library layer, R5-2 plane-wave forward model, R5-3 coding synthesis and gain bandwidth, R5-4 offset horn with a feasibility gate, R5-5 array-level verification as server jobs, R5-6 app page, R5-7 HFSS 10 x 10 sub-board export last, R5-8 close-out); item 0 audit in Appendix A; nothing implemented.
+- `docs/briefs/PHASE20_R5_RIS_DESIGN_MODE.md`: full R5 brief from the user's answers, corrected the same day to the plane-wave reflecting RIS only (offset horn removed; feasibility numbers kept in Appendix B): R5-1 calibrated library layer, R5-2 plane-wave forward model, R5-3 coding synthesis and gain bandwidth, R5-4 array-level verification as server jobs, R5-5 app page, R5-6 HFSS 10 x 10 sub-board export last, R5-7 close-out; item 0 audit in Appendix A. Roadmap: OPEN stage-2 item (integrated antenna with its own feed).
 
 ## Unreleased - Phase 20 R3b closed - baseline CP-2 retained (branch `phase20-ris`)
 - Optimisation stopped after 249 cached evaluations (objective dominated by the theta-30 / phi-45 tolerance corners, insensitive to the 5 parameters, diagonal-stub split worse): baseline CP-2 retained, R4 library valid, `jobs/r3b-continue.md` withdrawn (`results/phase20_r3b/OUTCOME.md`). Additive `Cp2Cell.line_diag` / `stub_width_diag`, checkpointed optimiser and scripts kept.

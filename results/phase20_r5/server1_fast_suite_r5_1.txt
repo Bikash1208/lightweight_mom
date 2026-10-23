@@ -1,0 +1,368 @@
+﻿sss.................................................................F.F. [  2%]
+.............FF......................................................... [  5%]
+........................................................................ [  7%]
+ss........ss............................................................ [ 10%]
+........................................................................ [ 12%]
+...............................................FF....................... [ 15%]
+........................................................................ [ 17%]
+........................................................................ [ 20%]
+.....................................................ss..........s...... [ 22%]
+...ssss................................................................. [ 25%]
+........................................................................ [ 27%]
+........................................................................ [ 30%]
+........................................................................ [ 32%]
+........................................................................ [ 35%]
+...ssss................................................................. [ 37%]
+........................................................................ [ 40%]
+........................................................................ [ 42%]
+........................................................................ [ 45%]
+........................................................................ [ 47%]
+........................................................................ [ 50%]
+........................................................................ [ 52%]
+........................................................................ [ 55%]
+........................................................................ [ 58%]
+........................................................................ [ 60%]
+........................................................................ [ 63%]
+....................................................ssssss............ss [ 65%]
+.....................................................s.................. [ 68%]
+.......................sssss....................ss.......sss.s....ssss.. [ 70%]
+..sss.......s...........ssssssss.....ssssssssssssssssssssssssssss....sss [ 73%]
+ssss.......ssss......sssss......sssssss................................. [ 75%]
+...sss............sssssssss..........................................sss [ 78%]
+sss..................................................................... [ 80%]
+........................................................................ [ 83%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+....................F................................................... [ 90%]
+........................................................................ [ 93%]
+.................F.........F.........................s.................. [ 95%]
+.....sssss.............................................................. [ 98%]
+...............................................                          [100%]
+================================== FAILURES ===================================
+_____ test_export_board_endpoint_writes_exact_step_script_csv_and_readme ______
+
+client = <starlette.testclient.TestClient object at 0x000001D6634DB150>
+
+    def test_export_board_endpoint_writes_exact_step_script_csv_and_readme(client):
+        body = _grid_request(32.0, 0.0)
+        body["layout"]["snap_side_to_cells"] = True
+        submitted = client.post("/api/hmsa/synthesize_ports", json=body).json()
+        synth = _wait_for_job(client, submitted["id"], timeout=120.0)
+        assert synth["status"] == "done", synth
+        resp = client.post(
+            "/api/export/board",
+            json={"source_job_id": submitted["id"], "period_mm": 6.4, "eps_r": 2.2, "tan_delta": 0.0009,
+                  "thickness_mm": 1.575, "frequency_hz": F, "name": "four_port_test"},
+        )
+        assert resp.status_code == 200, resp.text
+        job = _wait_for_job(client, resp.json()["id"], timeout=120.0)
+>       assert job["status"] == "done", job
+E       AssertionError: {'id': 'a9db0532-abe1-4b4f-9daa-1c85e383c279', 'kind': 'board_export', 'status': 'failed', 'progress': 0.0, ...}
+E       assert 'failed' == 'done'
+E         
+E         - done
+E         + failed
+
+tests\test_app_phase21_multiport.py:180: AssertionError
+_____________ test_export_board_endpoint_feeds_files_pins_and_png _____________
+
+client = <starlette.testclient.TestClient object at 0x000001D661E68750>
+
+    def test_export_board_endpoint_feeds_files_pins_and_png(client):
+        body = _grid_request(32.0, 0.0)
+        submitted = client.post("/api/hmsa/synthesize_ports", json=body).json()
+        synth = _wait_for_job(client, submitted["id"], timeout=120.0)
+        assert synth["status"] == "done", synth
+        payload = {"source_job_id": submitted["id"], "period_mm": 6.4, "eps_r": 2.2, "tan_delta": 0.0009,
+                   "thickness_mm": 1.575, "frequency_hz": F, "name": "pins_test"}
+        plain = _wait_for_job(client, client.post("/api/export/board", json=payload).json()["id"], timeout=120.0)
+        pinned = _wait_for_job(client, client.post("/api/export/board", json={**payload, "include_pins": True}).json()["id"], timeout=120.0)
+>       assert plain["status"] == pinned["status"] == "done", (plain, pinned)
+E       AssertionError: ({'id': 'bce14486-805e-4923-adcc-41ba55025b00', 'kind': 'board_export', 'status': 'failed', 'progress': 0.0, ...}, {'id': 'ded27c6b-6695-4b50-b077-af0f232b03a9', 'kind': 'board_export', 'status': 'failed', 'progress': 0.0, ...})
+E       assert 'failed' == 'done'
+E         
+E         - done
+E         + failed
+
+tests\test_app_phase21_multiport.py:206: AssertionError
+______________________ test_sidelobe_endpoint_end_to_end ______________________
+
+tmp_path = WindowsPath('C:/Users/Bikash/AppData/Local/Temp/2/pytest-of-Bikash/pytest-4/test_sidelobe_endpoint_end_to_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001D6625C3CB0>
+
+    def test_sidelobe_endpoint_end_to_end(tmp_path, monkeypatch):
+        """`/api/sidelobes/optimize` on a finished hex4 job: a new job result with the optimised board,
+        before/after tables on the held-out grid, and an exportable layout."""
+        import time
+    
+        from fastapi.testclient import TestClient
+    
+        from src.app.main import create_app
+    
+        monkeypatch.setenv("LWMOM_APP_DATA_DIR", str(tmp_path / "data"))
+        import types
+    
+        import src.hologram.auto_states as auto_mod
+    
+        def fake_auto_states(n_bits, substrate, f, period_m, fixed_L_mm=None, cache_dir=None, **_):
+            shift = (f - F) / 1e9 * 60.0  # no MoM in the fast suite: a linear stand-in for the re-solved cells
+            return types.SimpleNamespace(
+                states=[
+                    types.SimpleNamespace(gamma=np.exp(1j * np.radians(138.0))),
+                    types.SimpleNamespace(gamma=np.exp(1j * np.radians(-41.0 - shift))),
+                ]
+            )
+    
+        monkeypatch.setattr(auto_mod, "auto_states", fake_auto_states)
+        client = TestClient(create_app())
+    
+        def wait(job_id, timeout=300):
+            t0 = time.monotonic()
+            while True:
+                job = client.get(f"/api/jobs/{job_id}").json()
+                if job["status"] in ("done", "failed", "cancelled"):
+                    return job
+                assert time.monotonic() - t0 < timeout
+                time.sleep(0.1)
+    
+        body = _request({"preset": "hex4", "side_mm": 50.0, "gap_mm": 0.0})
+        synth = wait(client.post("/api/hmsa/synthesize_ports", json=body).json()["id"])
+        assert synth["status"] == "done", synth
+        req = {
+            "source_job_id": synth["id"],
+            "frequency_hz": F,
+            "period_mm": 6.4,
+            "eps_r": 2.2,
+            "tan_delta": 0.0009,
+            "thickness_mm": 1.575,
+            "polarization": "rhcp",
+            "mode": "single",
+            "max_flips": 15,
+            "frequency_check_percent": 2.0,
+            "port_beams": [[{"theta_deg": 30.0, "phi_deg": 45.0 + 90.0 * k}] for k in range(4)],
+        }
+        opt = wait(client.post("/api/sidelobes/optimize", json=req).json()["id"])
+        assert opt["status"] == "done", opt
+        info = opt["result"]["sidelobe_optimisation"]
+        assert info["mode"] == "single" and info["label"] == "MODEL_ONLY_SIDELOBE_OPTIMISATION"
+        assert set(info["before"]) == {"port1", "port2", "port3", "port4", "all"}
+        assert info["held_out_grid"] == {"theta_step_deg": 0.5, "phi_step_deg": 1.0}
+        assert sum(info["cells_changed"].values()) <= 4 * 15
+        assert set(info["frequency_check"]) == {"10.33 GHz", "10.75 GHz"}
+        for name in ("port1", "port2"):
+            b0, b1 = info["before"][name]["beams"][0], info["after"][name]["beams"][0]
+            assert b1["sll_global_db"] <= b0["sll_global_db"] + 0.05
+        # the optimised job drives the exact board export
+        export = wait(
+            client.post(
+                "/api/export/board",
+                json={
+                    "source_job_id": opt["id"],
+                    "period_mm": 6.4,
+                    "eps_r": 2.2,
+                    "tan_delta": 0.0009,
+                    "thickness_mm": 1.575,
+                    "frequency_hz": F,
+                    "include_step": False,
+                },
+            ).json()["id"]
+        )
+>       assert export["status"] == "done", export
+E       AssertionError: {'id': '8d3e0f64-729e-4189-96cf-cb89c31f0f89', 'kind': 'board_export', 'status': 'failed', 'progress': 0.0, ...}
+E       assert 'failed' == 'done'
+E         
+E         - done
+E         + failed
+
+tests\test_app_phase23_hex4.py:289: AssertionError
+____________ test_single_hexagon_design_export_compare_end_to_end _____________
+
+    def test_single_hexagon_design_export_compare_end_to_end():
+        client = TestClient(create_app())
+        design = _wait(client, client.post("/api/tensor_cp/design", json={"board": "single"}).json())
+        assert design["status"] == "done" and design["result"]["state"] == "OK"
+        p = design["result"]["ports"][0]
+        assert p["gain_rhcp_or_lhcp_dbi"] == pytest.approx(23.03, abs=0.02) and p["sources"]["gain"] == "HFSS_ANCHORED"
+    
+        export = _wait(client, client.post("/api/tensor_cp/export", json={"job_id": design["id"]}).json())
+        assert export["status"] == "done"
+        files = export["result"]["files"]
+        assert {"hfss_build_board.py", "layout.csv", "layout.dxf", "predictions.json", "README.md"} <= set(files)
+        built = client.get(export["result"]["download"]["hfss_build_board.py"]).content
+        assert built == (ROOT / "hfss_exports/hex150_tensor_cp_single/hfss_build_board.py").read_bytes()
+    
+        uploads = {
+            "gain_csv": ("g.csv", (HFSS / "realized_gain_RHCP_LHCP_10p5GHz_1deg.csv").read_bytes()),
+            "params_txt": ("p.txt", (HFSS / "antenna_params_10p5GHz.txt").read_bytes()),
+            "s_param": ("S11.csv", (HFSS / "S11_8_12GHz.csv").read_bytes()),
+        }
+        r = client.post("/api/tensor_cp/compare", data={"board": "single", "design_job_id": design["id"]}, files=uploads)
+        assert r.status_code == 200, r.text
+        rep = r.json()["report"]
+        assert rep["measured"]["peak_rhcp_gain_dbi"] == pytest.approx(23.03, abs=0.01)
+        assert rep["measured"]["xpd_at_peak_db"] == pytest.approx(23.0, abs=0.1)
+        assert rep["s_parameter"]["s_db_at_design"] == pytest.approx(-15.0, abs=0.05)
+        assert rep["checks"]["peak_gain"]["state"] == "GAIN_WITHIN_PREDICTED_RANGE"
+        used = json.loads(Path(r.json()["predictions_used"]).read_text())
+>       assert used == json.loads((ROOT / "hfss_exports/hex150_tensor_cp_single/predictions.json").read_text())
+E       AssertionError: assert {'labels': ['...': 10.54, ...} == {'labels': ['...': 10.54, ...}
+E         
+E         Omitting 6 identical items, use -vv to show
+E         Differing items:
+E         {'accepted_power_budget': {'launch_bare_0.592': {'pin_direct_space_wave_assumed_outside_beam': 0.40800000000000003, 'u...eaches_edge': 0.4062315028783703, 'aperture_radiated': 0.4737684971216297, 'main_beam_8deg': 0.4489088611627768, ...}}} != {'accepted_power_budget': {'launch_bare_0.592': {'pin_direct_space_wave_assumed_outside_beam': 0.40800000000000003, 'u...aches_edge': 0.4062315028783703, 'aperture_radiated': 0.4737684971216297, 'main_beam_8deg': 0.44890886116277673, ...}}}
+E         {'aperture_pattern': {'directivit...
+E         
+E         ...Full output truncated (4 lines hidden), use '-vv' to show
+
+tests\test_app_phase27_tensor_cp.py:55: AssertionError
+___________ test_instrumented_solve_returns_result_and_diagnostics ____________
+
+    def test_instrumented_solve_returns_result_and_diagnostics():
+        cell = _small_ungrounded_cell()
+        mesh = MeshSettings(cells_x=8, cells_y=8, floquet_order=8)
+        planes = ReferencePlanes(
+            top_air_thickness=10e-3, bottom_air_thickness=10e-3, substrate_thickness=cell.substrate.thickness
+        )
+        result, d = diag.instrumented_compute_s_parameters(cell, 10e9, mesh, planes, run_id="test-run")
+    
+        assert result.magnitude("S11_xx") <= 1.0 + 1e-9
+        assert d.run_id == "test-run"
+        assert d.cells_x == 8 and d.cells_y == 8
+        assert d.n_unknowns > 0
+        assert d.total_time_s > 0.0
+        assert d.condition_estimate is not None  # small mesh, below CONDITION_ESTIMATE_MAX_UNKNOWNS
+        assert d.energy_conservation_residual is not None and d.energy_conservation_residual < 0.2
+        assert d.reciprocity_residual is not None and d.reciprocity_residual < 1e-9  # exact reciprocity
+        assert d.surface_wave_margin is None  # ungrounded stack
+        # PHASE13B A9: platform-normalized to kB everywhere -- a tiny test-process solve is nowhere
+        # near the ~1.4e9 "kB" the live review saw from an un-normalized macOS ru_maxrss (bytes).
+>       assert d.peak_memory_kb is not None and 0.0 < d.peak_memory_kb < 1.0e7
+E       AssertionError: assert (None is not None)
+E        +  where None = SolveDiagnostics(run_id='test-run', cells_x=8, cells_y=8, dx_m=0.0006, dy_m=0.0006, mesh_aligned=False, floquet_order=...urface_wave_margin=None, energy_conservation_residual=0.0006811760532722255, reciprocity_residual=9.71445146547012e-17).peak_memory_kb
+
+tests\test_diagnostics.py:43: AssertionError
+______ test_ru_maxrss_kb_normalizes_macos_bytes_but_not_linux_kilobytes _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001D65F368440>
+
+    def test_ru_maxrss_kb_normalizes_macos_bytes_but_not_linux_kilobytes(monkeypatch):
+        """PHASE13B A9: POSIX leaves ru_maxrss's unit unspecified -- Linux reports kB, macOS/BSD report
+        bytes. `_ru_maxrss_kb` must divide by 1024 only on the platforms that need it."""
+    
+        class _FakeUsage:
+            ru_maxrss = 1_400_000_000  # the live review's own reported (buggy, un-normalized) value
+    
+>       monkeypatch.setattr(diag.resource, "getrusage", lambda who: _FakeUsage())
+E       AttributeError: None has no attribute 'getrusage'
+
+tests\test_diagnostics.py:53: AttributeError
+_ test_normal_incidence_results_are_bit_identical_to_the_phase20_base_commit __
+
+    def test_normal_incidence_results_are_bit_identical_to_the_phase20_base_commit():
+        """`tests/data/r1_theta0_reference.json` was written at the base commit of branch phase20-ris (hex floats)."""
+        from tests.data._gen_r1_theta0_reference import compute
+    
+        ref = json.loads((ROOT / "tests/data/r1_theta0_reference.json").read_text())
+        got = compute()
+        assert got.keys() == ref.keys()
+        for key in ref:
+            for blk in ref[key]:
+>               assert json.loads(json.dumps(got[key][blk])) == ref[key][blk], (key, blk)
+E               AssertionError: ('pec_0.006_0', 's11')
+E               assert [[['0x1.c06a6...946d47cp-1']]] == [[['0x1.c06a6...946d47ep-1']]]
+E                 
+E                 At index 0 diff: [['0x1.c06a6e650ead5p-2', '0x1.cbd1bffa7736cp-1'], ['0x1.a13d72da1cc67p-54', '-0x1.9751330a85bf1p-57']] != [['0x1.c06a6e650eac7p-2', '0x1.cbd1bffa77373p-1'], ['0x1.60d27fb6857c8p-53', '0x1.2dd43f009cf29p-58']]
+E                 Use -v to get more diff
+
+tests\test_sparameters_oblique.py:225: AssertionError
+______ test_single_hexagon_cells_match_committed_layout_bit_identically _______
+
+table = SupercellTable(slots=((4.4, 1.2), (4.6, 1.6), (4.8, 1.6), (4.8, 2.0)), k_grid=array([0.5555, 0.7407, 0.8889, 1.1111, 1...501, 1.06255908],
+       [1.06856137, 1.07283367, 1.06604763, 1.0636905 , 1.0678973 ]]), diameter_mm=6.0, pitch_mm=6.4)
+
+    def test_single_hexagon_cells_match_committed_layout_bit_identically(table):
+        cells = t.single_hexagon_cells(table)
+        rows = list(csv.reader((ROOT / "hfss_exports/hex150_tensor_cp_single/layout.csv").read_text().splitlines()))[1:]
+        assert len(cells) == len(rows)
+        for c, r in zip(cells, rows, strict=True):
+            assert (
+                f"{c['x_mm']:.3f}",
+                f"{c['y_mm']:.3f}",
+                f"{c['slot_L_mm']:.2f}",
+                f"{c['slot_W_mm']:.2f}",
+                f"{c['slot_angle_deg']:.3f}",
+            ) == (r[0], r[1], r[3], r[4], r[5])
+        # and the full-precision cell list of the committed design JSON
+        ref = json.loads((ROOT / "results/phase26/tensor_cp_hexagon_cells.json").read_text())
+>       assert [c["x_mm"] for c in cells] == ref["x_mm"] and [c["slot_angle_deg"] for c in cells] == ref["slot_angle_deg"]
+E       assert ([0.0, -12.8, ....4, 12.8, ...] == [0.0, -12.8, ....4, 12.8, ...]
+E         
+E         Use -v to get more diff and [74.069072038...43373508, ...] == [74.069072038...43373508, ...]
+E         
+E         At index 2 diff: 30.757828525351485 != 30.757828525351282
+E         Use -v to get more diff)
+
+tests\test_tensor_cp_design.py:35: AssertionError
+_ test_app_export_of_the_single_hexagon_matches_the_committed_phase26_folder __
+
+tmp_path = WindowsPath('C:/Users/Bikash/AppData/Local/Temp/2/pytest-of-Bikash/pytest-4/test_app_export_of_the_single_0')
+
+    def test_app_export_of_the_single_hexagon_matches_the_committed_phase26_folder(tmp_path):
+        r = svc.run_design({"board": "single"})
+        names = export_app_result(r, tmp_path)
+        assert {
+            "hfss_build_board.py",
+            "layout.csv",
+            "layout.json",
+            "layout.dxf",
+            "layout.png",
+            "predictions.json",
+            "README.md",
+        } <= set(names)
+        ref = _ROOT / "hfss_exports/hex150_tensor_cp_single"
+        for f in ("hfss_build_board.py", "layout.csv", "layout.json", "predictions.json", "layout.png"):
+            if (ref / f).exists():
+>               assert (tmp_path / f).read_bytes() == (ref / f).read_bytes(), f
+E               AssertionError: predictions.json
+E               assert b'{\r\n "labe...z only)"\r\n}' == b'{\r\n "labe...z only)"\r\n}'
+E                 
+E                 At index 512 diff: b'8' != b'7'
+E                 Use -v to get more diff
+
+tests\test_tensor_cp_service.py:146: AssertionError
+============================== warnings summary ===============================
+.venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\lightweight_mom\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_app_phase21_multiport.py: 2 warnings
+tests/test_app_phase23_hex4.py: 2 warnings
+tests/test_export_exact_board.py: 5 warnings
+tests/test_transmitarray_export.py: 3 warnings
+  C:\lightweight_mom\.venv\Lib\site-packages\cadquery\utils.py:82: FutureWarning: save will be removed in the next release.
+    warn(f"{f.__name__} will be removed in the next release.", FutureWarning)
+
+tests/test_sparameters_oblique.py::test_grating_order_warning_and_record_at_an_angle_that_makes_a_higher_order_propagate
+  C:\lightweight_mom\tests\test_sparameters_oblique.py:169: UserWarning: a Floquet harmonic is inside the grounded slab's TM0 surface-wave interval (k0=209.585, Re(k_substrate)=310.864 rad/m; margin 0.199 x k0): S-parameters near a surface-wave resonance may be numerically sensitive
+    s = compute_s_parameters_oblique(uc, F, MeshSettings(16, 16, 10), _planes("pec"), math.radians(20.0), 0.0)
+
+tests/test_sweep_definition.py::test_cell_ids_are_deterministic_unique_and_sensitive_to_everything_that_matters
+  C:\lightweight_mom\tests\test_sweep_definition.py:251: UserWarning: 1 group(s) of mesh-identical geometries on this mesh (cells_x=8, cells_y=16): 1 of 3 OK cell(s) discretize to the exact same metal mask as another cell in this sweep, and will solve to bit-identical S-parameters despite differing continuous geometry (discretization.py)
+    other = [c.cell_id for c in plan_sweep(sweep_config(**change), d).cells]
+
+tests/test_sweep_definition.py::test_cell_ids_are_deterministic_unique_and_sensitive_to_everything_that_matters
+  C:\lightweight_mom\tests\test_sweep_definition.py:251: UserWarning: 1 group(s) of mesh-identical geometries on this mesh (cells_x=16, cells_y=16): 1 of 3 OK cell(s) discretize to the exact same metal mask as another cell in this sweep, and will solve to bit-identical S-parameters despite differing continuous geometry (discretization.py)
+    other = [c.cell_id for c in plan_sweep(sweep_config(**change), d).cells]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_app_phase21_multiport.py::test_export_board_endpoint_writes_exact_step_script_csv_and_readme
+FAILED tests/test_app_phase21_multiport.py::test_export_board_endpoint_feeds_files_pins_and_png
+FAILED tests/test_app_phase23_hex4.py::test_sidelobe_endpoint_end_to_end - As...
+FAILED tests/test_app_phase27_tensor_cp.py::test_single_hexagon_design_export_compare_end_to_end
+FAILED tests/test_diagnostics.py::test_instrumented_solve_returns_result_and_diagnostics
+FAILED tests/test_diagnostics.py::test_ru_maxrss_kb_normalizes_macos_bytes_but_not_linux_kilobytes
+FAILED tests/test_sparameters_oblique.py::test_normal_incidence_results_are_bit_identical_to_the_phase20_base_commit
+FAILED tests/test_tensor_cp_design.py::test_single_hexagon_cells_match_committed_layout_bit_identically
+FAILED tests/test_tensor_cp_service.py::test_app_export_of_the_single_hexagon_matches_the_committed_phase26_folder
+9 failed, 2717 passed, 129 skipped, 120 deselected, 16 warnings in 2695.76s (0:44:55)

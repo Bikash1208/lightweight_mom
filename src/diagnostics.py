@@ -5,7 +5,6 @@ post-hoc checks on the returned `SParameters`) rather than editing the solver co
 instrumentation, per CLAUDE.md's "physics/numerics untouched" rule.
 """
 
-import resource
 import sys
 import time
 from dataclasses import dataclass
@@ -18,6 +17,12 @@ from .errors import solve_failed
 from .green_function import LayeredGreenFunction
 from .logging_setup import get_logger
 from .sparameters import compute_s_parameters, surface_wave_proximity
+
+# Windows has no `resource` module: peak memory is then reported as None (NOT_AVAILABLE); nothing else changes.
+try:
+    import resource
+except ImportError:
+    resource = None
 
 _log = get_logger("diagnostics")
 
@@ -51,7 +56,9 @@ def _ru_maxrss_kb():
     """`ru_maxrss` units are platform-dependent (POSIX leaves them unspecified): Linux reports
     kilobytes, macOS/BSD report BYTES (PHASE13B A9, live review: `peak_memory_kb` showed ~1.4e9
     for a 2.5k-unknown solve on macOS, ~1000x too large). Normalized here to kB on every platform
-    so callers never have to know which OS produced a given diagnostics record."""
+    so callers never have to know which OS produced a given diagnostics record. None where the `resource` module does not exist (Windows)."""
+    if resource is None:
+        return None
     raw = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     return raw / 1024.0 if sys.platform == "darwin" else float(raw)
 
@@ -91,7 +98,9 @@ def instrumented_compute_s_parameters(unit_cell, frequency, mesh, planes, run_id
         raise solve_failed(exc) from exc
     total_time = time.perf_counter() - t0
     mem_after = _ru_maxrss_kb()
-    peak_memory_kb = max(mem_after, mem_before)  # ru_maxrss is already a running peak (POSIX)
+    peak_memory_kb = (
+        None if mem_before is None or mem_after is None else max(mem_after, mem_before)
+    )  # ru_maxrss is already a running peak (POSIX)
 
     condition_estimate, skip_reason = None, None
     if basis.n_unknowns <= CONDITION_ESTIMATE_MAX_UNKNOWNS:

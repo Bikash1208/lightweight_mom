@@ -59,6 +59,28 @@ def test_ru_maxrss_kb_normalizes_macos_bytes_but_not_linux_kilobytes(monkeypatch
     assert diag._ru_maxrss_kb() == pytest.approx(1_400_000_000.0)
 
 
+def test_peak_memory_is_not_available_without_the_resource_module(monkeypatch):
+    """Portability (Windows compute servers): without the Unix-only `resource` module the peak memory is None (NOT_AVAILABLE) and a solve still returns its diagnostics."""
+    monkeypatch.setattr(diag, "resource", None)
+    assert diag._ru_maxrss_kb() is None
+    cell = _small_ungrounded_cell()
+    mesh = MeshSettings(cells_x=8, cells_y=8, floquet_order=8)
+    planes = ReferencePlanes(
+        top_air_thickness=10e-3, bottom_air_thickness=10e-3, substrate_thickness=cell.substrate.thickness
+    )
+    result, d = diag.instrumented_compute_s_parameters(cell, 10e9, mesh, planes, run_id="no-resource")
+    assert d.peak_memory_kb is None
+    assert d.n_unknowns > 0 and result.magnitude("S11_xx") <= 1.0 + 1e-9
+
+
+def test_resource_import_is_guarded_in_the_source():
+    """The module must import on a platform without `resource`: the import sits in a try/except ImportError."""
+    import inspect
+
+    src = inspect.getsource(diag)
+    assert "try:\n    import resource\nexcept ImportError" in src
+
+
 def test_condition_estimate_skipped_above_threshold(monkeypatch):
     monkeypatch.setattr(diag, "CONDITION_ESTIMATE_MAX_UNKNOWNS", 1)
     cell = _small_ungrounded_cell()

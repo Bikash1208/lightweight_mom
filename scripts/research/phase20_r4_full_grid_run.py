@@ -88,15 +88,15 @@ def run(out_dir, workers, hours):
     busy = 0.0
     last = t_start
     with Pool(workers) as pool:
-        for task, status, dt in pool.imap_unordered(work, [(t, str(out), deadline) for t in todo], chunksize=1):
-            if status == "done":
+        for task, outcome, dt in pool.imap_unordered(work, [(t, str(out), deadline) for t in todo], chunksize=1):
+            if outcome == "done":
                 n_done += 1
                 busy += dt
-            elif status == "skipped_deadline":
+            elif outcome == "skipped_deadline":
                 n_skip += 1
-            elif status.startswith("error"):
+            elif outcome.startswith("error"):
                 n_err += 1
-                print(f"  ERROR {task}: {status}", flush=True)
+                print(f"  ERROR {task}: {outcome}", flush=True)
             now = time.monotonic()
             if (n_done and n_done % 100 == 0) or now - last > 600:
                 last = now

@@ -18,7 +18,6 @@ from pathlib import Path
 
 import numpy as np
 import phase20_r4_build_library as B
-from phase20_r4_build_library import CORR_F, CORR_POINTS
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -62,10 +61,21 @@ def load_grid():
     return fill_normal_incidence(s, B.GRID_THETA, B.GRID_PHI)
 
 
+def _corr_chunk(kind, f):
+    """The correction chunk; a missing mesh-60 one is cut out of the grid chunk of that frequency (the correction points are grid points, same solves)."""
+    path = chunk_path(kind, f)
+    if kind == "corr60" and not path.exists():
+        z = np.load(chunk_path("grid", f))
+        idx = [next(k for k, pt in enumerate(z["points"]) if np.allclose(pt, p)) for p in B.CORR_POINTS]
+        return {"points": np.array(B.CORR_POINTS), "s": z["s"][idx]}
+    return np.load(path)
+
+
 def load_corr(kind):
+    CORR_F, CORR_POINTS = B.CORR_F, B.CORR_POINTS
     out = np.zeros((len(CORR_F), len(CORR_POINTS), 4, 2, 2), dtype=complex)
     for i, f in enumerate(CORR_F):
-        z = np.load(chunk_path(kind, f))
+        z = _corr_chunk(kind, f)
         assert np.allclose(z["points"], np.array(CORR_POINTS))
         for j, ((_, ph), sk) in enumerate(zip(CORR_POINTS, z["s"], strict=True)):
             for k in range(4):
@@ -75,6 +85,7 @@ def load_corr(kind):
 
 def main(out, name="ris_cp2_octagon_madp_rt5880_15", version=1, note=None):
     GRID_F, GRID_THETA, GRID_PHI = B.GRID_F, B.GRID_THETA, B.GRID_PHI
+    CORR_F, CORR_POINTS = B.CORR_F, B.CORR_POINTS
     s_raw = load_grid()
     c60, c90, c120 = (load_corr(k) for k in ("corr60", "corr90", "corr120"))
     arrays = assemble(GRID_F, GRID_THETA, GRID_PHI, s_raw, CORR_F, CORR_POINTS, c60, c90, c120)

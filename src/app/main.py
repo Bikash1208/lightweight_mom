@@ -58,6 +58,7 @@ def create_app():
     from .routers import library as library_router
     from .routers import pattern as pattern_router
     from .routers import reflectarray as reflectarray_router
+    from .routers import ris as ris_router
     from .routers import sidelobes as sidelobes_router
     from .routers import tensor_cp as tensor_cp_router
     from .routers import unit_cell as unit_cell_router
@@ -75,6 +76,7 @@ def create_app():
     app.include_router(verify_router.router)
     app.include_router(sidelobes_router.router)
     app.include_router(tensor_cp_router.router)
+    app.include_router(ris_router.router)
 
     @app.get("/api/health")
     def health():

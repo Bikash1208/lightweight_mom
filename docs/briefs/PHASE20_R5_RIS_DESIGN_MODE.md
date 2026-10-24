@@ -49,7 +49,7 @@ Reflected field of a finite coded aperture under plane-wave CP illumination (the
 * Outcome per coding: `COUPLING_VERIFIED` (all gates pass), `COUPLING_CORRECTED` (design re-run with the supercell-measured order errors as a correction map; stated limits) or `COUPLING_FAILED_ISOLATED_CELL_MODEL` (reported as an error band on the pattern); no coding is called verified without these runs.
 * Report (**stop point 2**): which codings pass, the error band on gain / SLL / specular lobe for those that do not.
 
-### R5-5 RIS designer page (app)
+### R5-5 RIS designer page (app) - DONE on the Mac 2026-10-24 (before stop point 2; coupling status stays `COUPLING_NOT_VERIFIED_FOR_THIS_CODING` until R5-4 merges)
 "RIS designer" on the Phase 27 registry: family `ris_cp2_octagon_madp_rt5880_15`, frequency, aperture, steering (theta_s, phi_s), plane-wave incidence, results with labels and refusals (`NOT_AVAILABLE_FROM_CURRENT_DATA` outside the registry domain), sensitivity band, beam table, coupling status; heavy checks submitted as server jobs (the page shows the job request and ingests `hub` results; no heavy compute in the Mac app). Tests in the style of `tests/test_app_phase27_tensor_cp.py`.
 
 ### R5-6 HFSS export of a coded board - LAST ITEM, predictions first

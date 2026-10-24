@@ -282,13 +282,13 @@ def _builtin():
 
 
 def _ris_builtin(rt5880):
-    """Phase 20 R3 close-out + R4: the two RIS cell families (MODEL_ONLY, discrete states, 2x2 reflection per state). Data: the R4 state library `results/phase20_r4/cp2_library_v1.npz`
+    """Phase 20 R3 close-out + R4: the two RIS cell families (MODEL_ONLY, discrete states, 2x2 reflection per state). Data: the R4 state library, full-grid v2 `results/phase20_r4/cp2_library_v2_fullgrid.npz` (the reduced-grid v1 stays selectable in `src/ris/calibrated_library.py`)
     (structure-frame circular reflection of the four one-hot states, tabulated MoM at the Floquet cutoff 2n with a mesh correction, interpolated in (f, theta, phi) with a stored
-    uncertainty; see `results/phase20_r4/README.md`). Grid: f 8-12 GHz (0.25 GHz), theta 0-45 deg (7.5 deg), phi 0-330 deg (30 deg)."""
-    freqs = tuple(8.0 + 0.25 * k for k in range(17))
-    thetas = tuple(7.5 * k for k in range(7))
-    phis = tuple(30.0 * k for k in range(12))
-    data = "results/phase20_r4/cp2_library_v1.npz"
+    uncertainty; see `results/phase20_r4/README.md`). Grid (v2): f 8-12 GHz (0.1 GHz), theta 0-45 deg (5 deg), phi 0-345 deg (15 deg)."""
+    freqs = tuple(round(8.0 + 0.1 * k, 6) for k in range(41))
+    thetas = tuple(5.0 * k for k in range(10))
+    phis = tuple(15.0 * k for k in range(24))
+    data = "results/phase20_r4/cp2_library_v2_fullgrid.npz"
     cp_grid = ResponseGrid(
         "reflection_2x2", freqs, theta_deg=thetas, phi_deg=phis, basis="circular_structure_frame", data_path=data
     )

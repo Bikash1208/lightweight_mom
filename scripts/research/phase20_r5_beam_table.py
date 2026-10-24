@@ -61,9 +61,9 @@ def _num(v):
     return None if not np.isfinite(v) else round(float(v), 2)
 
 
-def main(out_path):
+def main(out_path, version="v2"):
     t0 = time.time()
-    cal = CalibratedLibrary.load()
+    cal = CalibratedLibrary.load(version=version)
     plane, shift, spread = tolerance_plane_offset_mm(
         TOL_CSV,
         HF / "hfss_cp2_states1-4_theta0_30.csv",
@@ -76,7 +76,7 @@ def main(out_path):
         "tolerance_plane_offset_mm": plane,
         "tolerance_shift_vs_run1_mm": shift,
         "tolerance_shift_16_84": spread,
-        "design_f_ghz": F0,
+        "library_version": version, "design_f_ghz": F0,
         "labels": list(cd.ASSUMPTIONS),
         "table": [],
         "bandwidth": [],
@@ -175,4 +175,4 @@ def main(out_path):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "results/phase20_r5/beam_table.json")
+    main(sys.argv[1] if len(sys.argv) > 1 else "results/phase20_r5/beam_table.json", sys.argv[sys.argv.index("--library") + 1] if "--library" in sys.argv else "v2")

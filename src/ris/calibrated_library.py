@@ -26,8 +26,18 @@ from .polarization import circular_reflection, from_structure_frame, te_tm_from_
 from .state_library import OutOfDomain, StateLibrary
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_LIBRARY = ROOT / "results" / "phase20_r4" / "cp2_library_v1.npz"
-DEFAULT_DELTA = ROOT / "results" / "phase20_r3b" / "hfss_delta_table_run2.npz"
+LIBRARIES = {  # selectable: v2 = full grid (41 x 10 x 24, server run) with the delta rebuilt against it; v1 = the reduced R4 grid
+    "v1": (
+        ROOT / "results" / "phase20_r4" / "cp2_library_v1.npz",
+        ROOT / "results" / "phase20_r3b" / "hfss_delta_table_run2.npz",
+    ),
+    "v2": (
+        ROOT / "results" / "phase20_r4" / "cp2_library_v2_fullgrid.npz",
+        ROOT / "results" / "phase20_r5" / "hfss_delta_table_run2_lib_v2.npz",
+    ),
+}
+DEFAULT_VERSION = "v2"
+DEFAULT_LIBRARY, DEFAULT_DELTA = LIBRARIES[DEFAULT_VERSION]
 MESH_RESIDUAL_BAND_GHZ = (10.3, 10.8)  # R4 README: corrected table vs mesh-120 residual up to ~12 deg
 NOMINAL_COFF_PF = 0.025
 
@@ -45,7 +55,12 @@ class CalibratedLibrary:
         self.library, self.delta, self.tolerance = library, delta, tolerance
 
     @classmethod
-    def load(cls, library_path=DEFAULT_LIBRARY, delta_path=DEFAULT_DELTA, tolerance=None):
+    def load(cls, library_path=None, delta_path=DEFAULT_DELTA, tolerance=None, version=None):
+        """`version` "v1" / "v2" selects a library with its matching delta table; explicit paths override. Default: v2 (full grid)."""
+        if version is not None:
+            library_path, delta_path = LIBRARIES[version]
+        elif library_path is None:
+            library_path = DEFAULT_LIBRARY
         delta = DeltaTable.load(delta_path) if delta_path is not None else None
         return cls(StateLibrary.load(library_path), delta, tolerance)
 

@@ -207,3 +207,17 @@ def test_run_shift_recovers_a_known_plane_move():
             g = np.exp(-1j * 2 * (2 * np.pi * f * 1e9 / C0) * 1.7e-3 * math.cos(math.radians(th)))
             b[(1, f, th, 0.0)] = m * g
     assert run_shift_mm(a, b)[0] == pytest.approx(-1.7, abs=1e-9)
+
+
+def test_library_versions_are_selectable_and_both_reproduce_the_hfss_points():
+    import numpy as np
+
+    from src.ris.calibrated_library import DEFAULT_VERSION
+
+    assert DEFAULT_VERSION == "v2"
+    v1, v2 = CalibratedLibrary.load(version="v1"), CalibratedLibrary.load(version="v2")
+    assert v2.library.f.size == 41 and v1.library.f.size == 17
+    for s in (1, 2, 3, 4):
+        # inside the HFSS domain (theta 0/30, phi 0, HFSS frequencies) the calibration makes the library version irrelevant
+        a, b = v1.response(10.5, 30.0, 0.0, s).c, v2.response(10.5, 30.0, 0.0, s).c
+        assert np.allclose(a, b, atol=1e-9)

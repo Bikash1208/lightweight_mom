@@ -40,7 +40,10 @@ def test_instrumented_solve_returns_result_and_diagnostics():
     assert d.surface_wave_margin is None  # ungrounded stack
     # PHASE13B A9: platform-normalized to kB everywhere -- a tiny test-process solve is nowhere
     # near the ~1.4e9 "kB" the live review saw from an un-normalized macOS ru_maxrss (bytes).
-    assert d.peak_memory_kb is not None and 0.0 < d.peak_memory_kb < 1.0e7
+    if diag.resource is not None:  # Unix only; None (NOT_AVAILABLE) on Windows by design
+        assert d.peak_memory_kb is not None and 0.0 < d.peak_memory_kb < 1.0e7
+    else:
+        assert d.peak_memory_kb is None
 
 
 def test_ru_maxrss_kb_normalizes_macos_bytes_but_not_linux_kilobytes(monkeypatch):

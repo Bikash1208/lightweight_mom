@@ -1,0 +1,128 @@
+{
+ "task": {
+  "name": "grad_x_q1_n4",
+  "nx": 4,
+  "ny": 1,
+  "angle_deg": 28.42,
+  "axis": "x"
+ },
+ "n_per_cell": 48,
+ "floquet_factor": 2.0,
+ "f_ghz": 10.5,
+ "results": [
+  {
+   "label": "plain q=1/4",
+   "codes": [
+    [
+     2,
+     1,
+     0,
+     3
+    ]
+   ],
+   "orders": [
+    {
+     "order": [
+      -2,
+      0
+     ],
+     "meas_rr_db": -22.419093101435447,
+     "pred_rr_db": -24.085858819069685,
+     "err_db": 1.6667657176342356,
+     "err_deg": 13.666243320140731,
+     "meas_lr_db": -34.01839355242545,
+     "pred_lr_db": -26.59456687122795,
+     "above_floor": true
+    },
+    {
+     "order": [
+      -1,
+      0
+     ],
+     "meas_rr_db": -30.056117711338427,
+     "pred_rr_db": -28.448441055006967,
+     "err_db": -1.6076766563314584,
+     "err_deg": 23.000747861509243,
+     "meas_lr_db": -40.40093865426118,
+     "pred_lr_db": -33.3893427803072,
+     "above_floor": true
+    },
+    {
+     "order": [
+      0,
+      0
+     ],
+     "meas_rr_db": -23.574682601806423,
+     "pred_rr_db": -21.73398364571153,
+     "err_db": -1.8406989560948928,
+     "err_deg": 27.22450123169152,
+     "meas_lr_db": -16.33306901084847,
+     "pred_lr_db": -14.37882755524009,
+     "above_floor": true
+    },
+    {
+     "order": [
+      1,
+      0
+     ],
+     "meas_rr_db": -0.7013822569771665,
+     "pred_rr_db": -0.7902298862582742,
+     "err_db": 0.08884762928110831,
+     "err_deg": -1.458613150786717,
+     "meas_lr_db": -25.138890117810504,
+     "pred_lr_db": -32.16572377583684,
+     "above_floor": true
+    },
+    {
+     "order": [
+      2,
+      0
+     ],
+     "meas_rr_db": -27.013787191775393,
+     "pred_rr_db": -24.085858819069692,
+     "err_db": -2.927928372705699,
+     "err_deg": -84.44619785960133,
+     "meas_lr_db": -26.225636693278393,
+     "pred_lr_db": -26.59456687122795,
+     "above_floor": true
+    }
+   ],
+   "gate_1db_15deg": false,
+   "max_abs_err_db_above_floor": 2.927928372705699
+  }
+ ],
+ "isolated_rr_deg": {
+  "0": -148.73307273829448,
+  "1": -64.75587404119392,
+  "2": 42.552406743232254,
+  "3": 129.31787375318726
+ },
+ "seconds_isolated": 264.37209701538086,
+ "seconds_total": 3888.5765566825867,
+ "peak_memory_kb": null,
+ "provenance": {
+  "machine": "AEM-LAB1",
+  "os": "Windows 2019Server AMD64",
+  "cpu_count": 48,
+  "git_commit": "7d4cc209271ae05a9fe43074c92518d19f00a11e",
+  "git_branch": "compute/r5-supercell-gradients",
+  "git_dirty": true,
+  "python": "3.13.5",
+  "numpy": "2.5.4",
+  "scipy": "1.18.1",
+  "blas": {
+   "name": "scipy-openblas",
+   "version": "0.3.34.106.0"
+  },
+  "threads": {
+   "OMP_NUM_THREADS": "3",
+   "MKL_NUM_THREADS": "3",
+   "OPENBLAS_NUM_THREADS": "3",
+   "VECLIB_MAXIMUM_THREADS": "1"
+  },
+  "workers": null,
+  "started": "2026-10-24T08:31:32.969331+00:00",
+  "task": "grad_x_q1_n4",
+  "finished": "2026-10-24T08:31:32.969405+00:00"
+ }
+}

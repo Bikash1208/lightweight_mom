@@ -1,0 +1,101 @@
+{
+ "task": {
+  "name": "grad_x_q1_n3",
+  "nx": 3,
+  "ny": 1,
+  "angle_deg": 39.38,
+  "axis": "x"
+ },
+ "n_per_cell": 48,
+ "floquet_factor": 2.0,
+ "f_ghz": 10.5,
+ "results": [
+  {
+   "label": "plain q=1/3",
+   "codes": [
+    [
+     3,
+     2,
+     1
+    ]
+   ],
+   "orders": [
+    {
+     "order": [
+      -1,
+      0
+     ],
+     "meas_rr_db": -13.478524240937075,
+     "pred_rr_db": -13.546371306801754,
+     "err_db": 0.06784706586467962,
+     "err_deg": -4.094671192219809,
+     "meas_lr_db": -27.181890723989625,
+     "pred_lr_db": -27.38491557240817,
+     "above_floor": true
+    },
+    {
+     "order": [
+      0,
+      0
+     ],
+     "meas_rr_db": -12.757173485411762,
+     "pred_rr_db": -13.024449254954447,
+     "err_db": 0.2672757695426832,
+     "err_deg": -9.462134630461469,
+     "meas_lr_db": -15.126080069389642,
+     "pred_lr_db": -14.466596945202904,
+     "above_floor": true
+    },
+    {
+     "order": [
+      1,
+      0
+     ],
+     "meas_rr_db": -1.1760454102588016,
+     "pred_rr_db": -1.2456349020293134,
+     "err_db": 0.06958949177051085,
+     "err_deg": -6.627619493960643,
+     "meas_lr_db": -22.195508445740387,
+     "pred_lr_db": -26.069205504997413,
+     "above_floor": true
+    }
+   ],
+   "gate_1db_15deg": true,
+   "max_abs_err_db_above_floor": 0.2672757695426832
+  }
+ ],
+ "isolated_rr_deg": {
+  "0": -148.73307273829448,
+  "1": -64.75587404119392,
+  "2": 42.552406743232254,
+  "3": 129.31787375318726
+ },
+ "seconds_isolated": 242.68697595596313,
+ "seconds_total": 1455.9984815120697,
+ "peak_memory_kb": null,
+ "provenance": {
+  "machine": "AEM-LAB1",
+  "os": "Windows 2019Server AMD64",
+  "cpu_count": 48,
+  "git_commit": "7d4cc209271ae05a9fe43074c92518d19f00a11e",
+  "git_branch": "compute/r5-supercell-gradients",
+  "git_dirty": true,
+  "python": "3.13.5",
+  "numpy": "2.5.4",
+  "scipy": "1.18.1",
+  "blas": {
+   "name": "scipy-openblas",
+   "version": "0.3.34.106.0"
+  },
+  "threads": {
+   "OMP_NUM_THREADS": "3",
+   "MKL_NUM_THREADS": "3",
+   "OPENBLAS_NUM_THREADS": "3",
+   "VECLIB_MAXIMUM_THREADS": "1"
+  },
+  "workers": null,
+  "started": "2026-10-24T07:52:01.810690+00:00",
+  "task": "grad_x_q1_n3",
+  "finished": "2026-10-24T07:52:01.810762+00:00"
+ }
+}

@@ -138,7 +138,7 @@ def exact_board_from_ports_result(result, period_mm, thickness_mm):
 
 
 def write_layout_csv(board, path):
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
         f.write("port,row,col,x_min_mm,y_min_mm,x_max_mm,y_max_mm\n")
         for p in board.patches:
             f.write(",".join([str(p.port), str(p.i), str(p.j), fmt(p.x0), fmt(p.y0), fmt(p.x1), fmt(p.y1)]) + "\n")
@@ -266,7 +266,7 @@ def write_exact_step(board, path, include_pins=False, r_pin_mm=DEFAULT_R_PIN_MM,
 
 def write_feeds_csv(board, path):
     """`port,x_mm,y_mm` -- one row per port, in port order."""
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
         f.write("port,x_mm,y_mm\n")
         for k, (fx, fy) in enumerate(board.feeds_mm, start=1):
             f.write(f"{k},{fmt(fx)},{fmt(fy)}\n")
@@ -292,7 +292,7 @@ def write_layout_json(board, path):
             None if o is None else [[fmt(x), fmt(y)] for x, y in o] for o in board.port_outlines_mm
         ]
         data["trim_board"] = board.trim_board
-    Path(path).write_text(json.dumps(data, indent=1))
+    Path(path).write_text(json.dumps(data, indent=1), encoding="utf-8", newline="\n")
     return Path(path)
 
 
@@ -331,5 +331,5 @@ def write_layout_dxf(board, path):
         parts += ["0", "CIRCLE", "8", "FEEDS", "10", fmt(fx), "20", fmt(fy), "30", "0.0", "40", fmt(FEED_MARKER_HALF_MM)]
         parts += ["0", "TEXT", "8", "FEEDS", "10", fmt(fx + 1), "20", fmt(fy + 1), "30", "0.0", "40", "3.0", "1", f"P{k}"]
     parts += ["0", "ENDSEC", "0", "EOF"]
-    Path(path).write_text("\n".join(parts) + "\n")
+    Path(path).write_text("\n".join(parts) + "\n", encoding="utf-8", newline="\n")
     return Path(path)

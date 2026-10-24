@@ -164,7 +164,7 @@ def write_single_board(cells, out, predictions, name="hex150_tensor_cp_single", 
     """Writes `hfss_build_board.py`, `layout.json/.csv/.dxf/.png`, `board.step` (if `step` and CadQuery) and `predictions.json`."""
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
-    (out / "hfss_build_board.py").write_text(aedt_script(cells, name=name, note=note))
+    (out / "hfss_build_board.py").write_text(aedt_script(cells, name=name, note=note), encoding="utf-8", newline="\n")
     (out / "layout.json").write_text(
         json.dumps(
             {
@@ -177,8 +177,8 @@ def write_single_board(cells, out, predictions, name="hex150_tensor_cp_single", 
             },
             indent=1,
         )
-    )
-    with open(out / "layout.csv", "w", newline="") as f:
+    , encoding="utf-8", newline="\n")
+    with open(out / "layout.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["x_mm", "y_mm", "diameter_mm", "slot_length_mm", "slot_width_mm", "slot_angle_deg", "cross_slot"])
         for k in cells:
@@ -212,7 +212,7 @@ def write_single_board(cells, out, predictions, name="hex150_tensor_cp_single", 
         msp.add_lwpolyline(hexagon_vertices(), close=True, dxfattribs={"layer": "OUTLINE"})
         doc.saveas(out / "layout.dxf")
     except Exception as exc:  # noqa: BLE001
-        (out / "layout.dxf.NOT_WRITTEN.txt").write_text(f"{type(exc).__name__}: {exc}\n")
+        (out / "layout.dxf.NOT_WRITTEN.txt").write_text(f"{type(exc).__name__}: {exc}\n", encoding="utf-8", newline="\n")
     try:
         import matplotlib
 
@@ -234,7 +234,7 @@ def write_single_board(cells, out, predictions, name="hex150_tensor_cp_single", 
         ax.set_title(f"hex150_tensor_cp_single: {len(cells)} slotted circles (D {D_MM:.1f} mm), feed +")
         fig.savefig(out / "layout.png", dpi=110)
     except Exception as exc:  # noqa: BLE001
-        (out / "layout.png.NOT_WRITTEN.txt").write_text(f"{type(exc).__name__}: {exc}\n")
+        (out / "layout.png.NOT_WRITTEN.txt").write_text(f"{type(exc).__name__}: {exc}\n", encoding="utf-8", newline="\n")
     try:
         if not step:
             raise RuntimeError("STEP not requested")
@@ -254,8 +254,8 @@ def write_single_board(cells, out, predictions, name="hex150_tensor_cp_single", 
         comp = cq.Compound.makeCompound([o for o in solids.vals()])
         cq.exporters.export(cq.Workplane("XY").add(comp), str(out / "board.step"))
     except Exception as exc:  # noqa: BLE001
-        (out / "board.step.NOT_WRITTEN.txt").write_text(f"{type(exc).__name__}: {exc}\n")
-    (out / "predictions.json").write_text(json.dumps(predictions, indent=1, default=float))
+        (out / "board.step.NOT_WRITTEN.txt").write_text(f"{type(exc).__name__}: {exc}\n", encoding="utf-8", newline="\n")
+    (out / "predictions.json").write_text(json.dumps(predictions, indent=1, default=float), encoding="utf-8", newline="\n")
     return cells
 
 
@@ -401,7 +401,7 @@ oDesktop.AddMessage(oProject.GetName(), "{name}", 0, "Built: %d slotted-circle c
 
 def write_layout_fourhex(cells, out, title):
     out = Path(out)
-    with open(out / "layout.csv", "w", newline="") as f:
+    with open(out / "layout.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["x_mm", "y_mm", "diameter_mm", "slot_length_mm", "slot_width_mm", "slot_angle_deg", "port"])
         for k in cells:
@@ -426,7 +426,7 @@ def write_layout_fourhex(cells, out, title):
                 "cells": cells,
             }
         )
-    )
+    , encoding="utf-8", newline="\n")
     try:
         import ezdxf
 
@@ -445,7 +445,7 @@ def write_layout_fourhex(cells, out, title):
             msp.add_lwpolyline([tuple(v) for v in hex_poly_mm(FEEDS[p])], close=True, dxfattribs={"layer": "OUTLINE"})
         doc.saveas(out / "layout.dxf")
     except Exception as exc:  # noqa: BLE001
-        (out / "layout.dxf.NOT_WRITTEN.txt").write_text(f"{type(exc).__name__}: {exc}\n")
+        (out / "layout.dxf.NOT_WRITTEN.txt").write_text(f"{type(exc).__name__}: {exc}\n", encoding="utf-8", newline="\n")
     try:
         import matplotlib
 
@@ -473,7 +473,7 @@ def write_layout_fourhex(cells, out, title):
         ax.set_title(title)
         fig.savefig(out / "layout.png", dpi=100)
     except Exception as exc:  # noqa: BLE001
-        (out / "layout.png.NOT_WRITTEN.txt").write_text(f"{type(exc).__name__}: {exc}\n")
+        (out / "layout.png.NOT_WRITTEN.txt").write_text(f"{type(exc).__name__}: {exc}\n", encoding="utf-8", newline="\n")
 
 
 README = """# hex4_tensor_cp_static -- 4-hexagon tensor-CP board A (static beams), Phase 26
@@ -557,7 +557,7 @@ def export_app_result(result, out_dir, drive_port=0, with_step=False):
         cells = [{k: c[k] for k in _SINGLE_KEYS} for c in result["cells"]]
         assert len(cells) == len(cells_new)
         write_single_board(cells, out, pred, name="hex150_tensor_cp_single", step=with_step)
-        (out / "README.md").write_text(_app_readme(result, pred))
+        (out / "README.md").write_text(_app_readme(result, pred), encoding="utf-8", newline="\n")
     else:
         cells = result["cells"]
         if req["board"] == "hex4_static":
@@ -577,7 +577,7 @@ def export_app_result(result, out_dir, drive_port=0, with_step=False):
                 drive_port=drive_port,
                 phases_deg=phases,
             )
-        )
+        , encoding="utf-8", newline="\n")
         write_layout_fourhex(cells, out, f"{name}: {len(cells)} slotted circles (D 6.0 mm), shared 6.4 mm lattice")
         pred = {
             "labels": result["labels"],
@@ -593,8 +593,8 @@ def export_app_result(result, out_dir, drive_port=0, with_step=False):
             "n_cells": len(cells),
             "source": "app design job (tensor_cp_service.run_design)",
         }
-        (out / "predictions.json").write_text(json.dumps(pred, indent=1, default=float))
-        (out / "README.md").write_text(_app_readme(result, pred))
+        (out / "predictions.json").write_text(json.dumps(pred, indent=1, default=float), encoding="utf-8", newline="\n")
+        (out / "README.md").write_text(_app_readme(result, pred), encoding="utf-8", newline="\n")
     return sorted(p.name for p in out.iterdir() if p.is_file())
 
 

@@ -111,9 +111,29 @@ def correction_map(f_corr, points, c60, c90, c120):
     return np.array(thetas), mv(d), mv(sp), mv(st)
 
 
-def interpolate_correction(f_nodes, theta_nodes, values, f_grid, theta_grid):
-    """Cubic interpolation of `values[f, theta, state, 2, 2]` (complex or real) onto the library (f, theta) grid, per state and element (re/im separately)."""
+def interpolate_correction(f_nodes, theta_nodes, values, f_grid, theta_grid, f_method="cubic"):
+    """Cubic interpolation of `values[f, theta, state, 2, 2]` (complex or real) onto the library (f, theta) grid, per state and element (re/im separately).
+    `f_method="pchip"` (opt-in, Phase 20 R4 v2.1): shape-preserving PCHIP in frequency for each theta node (no overshoot between unevenly spaced nodes, the 0.5 GHz / 0.05 GHz mix
+    of the band-refined correction map), then the same theta interpolation as before; the default "cubic" is unchanged."""
     kind = "cubic" if len(theta_nodes) >= 4 else "linear"
+    if f_method == "pchip":
+        from scipy.interpolate import PchipInterpolator, interp1d
+
+        along_f = np.empty((len(f_grid), len(theta_nodes), *values.shape[2:]), dtype=values.dtype)
+        for idx in np.ndindex(values.shape[2:]):
+            v = values[(slice(None), slice(None), *idx)]
+            parts = (v.real, v.imag) if np.iscomplexobj(v) else (v,)
+            res = [PchipInterpolator(np.asarray(f_nodes), p, axis=0, extrapolate=True)(np.asarray(f_grid)) for p in parts]
+            along_f[(slice(None), slice(None), *idx)] = res[0] + 1j * res[1] if np.iscomplexobj(v) else res[0]
+        out = np.empty((len(f_grid), len(theta_grid), *values.shape[2:]), dtype=values.dtype)
+        for idx in np.ndindex(values.shape[2:]):
+            v = along_f[(slice(None), slice(None), *idx)]
+            parts = (v.real, v.imag) if np.iscomplexobj(v) else (v,)
+            res = [interp1d(np.asarray(theta_nodes), p, axis=1, kind=kind, fill_value="extrapolate")(np.asarray(theta_grid)) for p in parts]
+            out[(slice(None), slice(None), *idx)] = res[0] + 1j * res[1] if np.iscomplexobj(v) else res[0]
+        return out
+    if f_method != "cubic":
+        raise ValueError("f_method must be 'cubic' or 'pchip'")
     out = np.zeros((len(f_grid), len(theta_grid), *values.shape[2:]), dtype=values.dtype)
     ff, tt = np.meshgrid(f_grid, theta_grid, indexing="ij")
     pts = np.stack([ff.ravel(), tt.ravel()], axis=-1)
@@ -130,13 +150,13 @@ def interpolate_correction(f_nodes, theta_nodes, values, f_grid, theta_grid):
     return out
 
 
-def assemble(f_ghz, theta_deg, phi_deg, s_raw, corr_f, corr_points, c60, c90, c120):
+def assemble(f_ghz, theta_deg, phi_deg, s_raw, corr_f, corr_points, c60, c90, c120, f_method="cubic"):
     """All the arrays of the library file from the raw grid (theta = 0 already filled) and the correction set."""
     f_ghz, theta_deg, phi_deg = (np.asarray(a, dtype=float) for a in (f_ghz, theta_deg, phi_deg))
     c_raw = structure_frame_circular(s_raw, phi_deg)
     th_nodes, d, spread, step = correction_map(corr_f, corr_points, c60, c90, c120)
-    corr = interpolate_correction(np.asarray(corr_f), th_nodes, d, f_ghz, theta_deg)  # (f, theta, state, 2, 2)
-    unc = interpolate_correction(np.asarray(corr_f), th_nodes, step + spread, f_ghz, theta_deg)
+    corr = interpolate_correction(np.asarray(corr_f), th_nodes, d, f_ghz, theta_deg, f_method)  # (f, theta, state, 2, 2)
+    unc = interpolate_correction(np.asarray(corr_f), th_nodes, step + spread, f_ghz, theta_deg, f_method)
     corr = np.broadcast_to(
         corr[:, :, None], c_raw.shape
     ).copy()  # same correction at every phi (supported by the pilot)
@@ -162,7 +182,7 @@ def assemble(f_ghz, theta_deg, phi_deg, s_raw, corr_f, corr_points, c60, c90, c1
 def save_library(path, arrays, manifest):
     path = Path(path)
     np.savez_compressed(path, **arrays)
-    path.with_suffix(".manifest.json").write_text(json.dumps(manifest, indent=1))
+    path.with_suffix(".manifest.json").write_text(json.dumps(manifest, indent=1), encoding="utf-8", newline="\n")
 
 
 # ---------------------------------------------------------------------------------------------------------------------- query
@@ -197,7 +217,7 @@ class StateLibrary:
         path = Path(path)
         z = np.load(path)
         man = path.with_suffix(".manifest.json")
-        return cls({k: z[k] for k in z.files}, json.loads(man.read_text()) if man.exists() else None)
+        return cls({k: z[k] for k in z.files}, json.loads(man.read_text(encoding="utf-8")) if man.exists() else None)
 
     def _interp(self, key, state, a, b):
         ck = (key, state, a, b)

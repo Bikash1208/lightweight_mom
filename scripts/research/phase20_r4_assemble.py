@@ -1,7 +1,7 @@
 """Phase 20 R4 item 3: assemble the CP-2 state library from the chunks of `phase20_r4_build_library.py`.
 
     python scripts/research/phase20_r4_assemble.py [out.npz]      # default results/phase20_r4/cp2_library_v1.npz (+ .manifest.json)
-    python scripts/research/phase20_r4_assemble.py out.npz --f-step 0.1 --theta-step 5 --phi-step 15 --grid-chunks <dir> [--corr-chunks <dir>] [--server-manifest MANIFEST.json] [--name vN]
+    python scripts/research/phase20_r4_assemble.py out.npz --f-step 0.1 --theta-step 5 --phi-step 15 --grid-chunks <dir> [--corr-chunks <dir>] [--server-manifest MANIFEST.json] [--name vN] [--corr-interp cubic|pchip]
 
 The grid options are those of `phase20_r4_build_library.py` (defaults unchanged: with no option this script behaves exactly as before). `--grid-chunks` / `--corr-chunks` give the
 directories of the `grid_f*.npz` and `corr*_f*.npz` chunks (default: the build script's chunk directory); `--server-manifest` verifies every chunk's sha256 against a server MANIFEST.json before use.
@@ -83,12 +83,12 @@ def load_corr(kind):
     return out
 
 
-def main(out, name="ris_cp2_octagon_madp_rt5880_15", version=1, note=None):
+def main(out, name="ris_cp2_octagon_madp_rt5880_15", version=1, note=None, f_method="cubic"):
     GRID_F, GRID_THETA, GRID_PHI = B.GRID_F, B.GRID_THETA, B.GRID_PHI
     CORR_F, CORR_POINTS = B.CORR_F, B.CORR_POINTS
     s_raw = load_grid()
     c60, c90, c120 = (load_corr(k) for k in ("corr60", "corr90", "corr120"))
-    arrays = assemble(GRID_F, GRID_THETA, GRID_PHI, s_raw, CORR_F, CORR_POINTS, c60, c90, c120)
+    arrays = assemble(GRID_F, GRID_THETA, GRID_PHI, s_raw, CORR_F, CORR_POINTS, c60, c90, c120, f_method)
     dc = arrays["correction"][:, :, 0]  # (f, theta, state, 2, 2)
     rr = arrays["c_raw"][:, :, 0, :, 0, 0]
     phase_corr = np.degrees(np.angle((rr + dc[..., 0, 0]) / rr))
@@ -111,6 +111,7 @@ def main(out, name="ris_cp2_octagon_madp_rt5880_15", version=1, note=None):
             "meshes": [60, 90, 120],
             "f_ghz": CORR_F,
             "points": CORR_POINTS,
+            "f_interpolation": f_method,
             "definition": "dC = C_inf(p=2) - C(60) with C_inf = C(120) + R2 (C(120) - C(90)), phi-mean, interpolated in (f, theta), added to every phi; uncertainty = |C_inf(p=1) - C_inf(p=2)| + phi spread; all meshes with Floquet cutoff F = 2n",
             "r_RR_phase_correction_deg": {
                 "min": float(phase_corr.min()),
@@ -136,7 +137,7 @@ if __name__ == "__main__":
     argv, grid_kw, dry = B.parse_grid_options(sys.argv)
     B.configure_grid(**grid_kw)
     opts = {}
-    for key in ("--grid-chunks", "--corr-chunks", "--server-manifest", "--name"):
+    for key in ("--grid-chunks", "--corr-chunks", "--server-manifest", "--name", "--corr-interp"):
         if key in argv:
             i = argv.index(key)
             opts[key] = argv[i + 1]
@@ -157,6 +158,7 @@ if __name__ == "__main__":
     main(
         argv[1] if len(argv) > 1 else ROOT / "results/phase20_r4/cp2_library_v1.npz",
         name=opts.get("--name", "ris_cp2_octagon_madp_rt5880_15"),
+        f_method=opts.get("--corr-interp", "cubic"),
         version=2 if full else 1,
         note="full approved grid 41 x 10 x 24 (server run r4-full-grid, mesh 60, F = 2n; corrections from the R4 mesh 60/90/120 set, mesh 90 re-run on the server agrees to 1e-13)"
         if full

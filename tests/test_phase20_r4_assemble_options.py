@@ -78,3 +78,21 @@ def test_missing_corr60_chunk_is_cut_from_the_grid_chunk(tmp_path, monkeypatch):
     assert np.allclose(z["points"], np.array(asm.B.CORR_POINTS))
     idx = [pts.index(tuple(p)) for p in asm.B.CORR_POINTS]
     assert np.array_equal(z["s"], s[idx])
+
+
+def test_pchip_correction_interpolation_is_shape_preserving_and_cubic_default_unchanged():
+    from src.ris.state_library import interpolate_correction
+
+    f_nodes = np.array([10.0, 10.4, 10.45, 10.5, 11.0])
+    th = np.array([0.0, 30.0, 45.0])
+    step = np.array([0.0, 0.0, 0.0, 40.0, 0.0])  # a narrow peak between uneven nodes
+    vals = np.broadcast_to(step[:, None, None, None, None], (5, 3, 1, 1, 1)).astype(complex)
+    f_grid = np.linspace(10.0, 11.0, 101)
+    cub = interpolate_correction(f_nodes, th, vals, f_grid, np.array([0.0, 15.0]))
+    pch = interpolate_correction(f_nodes, th, vals, f_grid, np.array([0.0, 15.0]), "pchip")
+    assert np.array_equal(cub, interpolate_correction(f_nodes, th, vals, f_grid, np.array([0.0, 15.0]), "cubic"))
+    assert pch.real.max() <= 40.0 + 1e-9 and pch.real.min() >= -1e-9  # no overshoot
+    assert np.allclose(interpolate_correction(f_nodes, th, vals, f_nodes, th), vals)  # the default is exact at the nodes too
+    assert np.allclose(interpolate_correction(f_nodes, th, vals, f_nodes, th, "pchip"), vals)  # exact at the nodes
+    with pytest.raises(ValueError):
+        interpolate_correction(f_nodes, th, vals, f_grid, th, "bogus")

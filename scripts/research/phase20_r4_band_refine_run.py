@@ -8,7 +8,7 @@ Stages (run in this order; every stage is checkpointed per task, a rerun resumes
 The mesh-60 correction values at those nodes are table points (the new grid tasks, or the existing v2 grid chunks for 10.40/10.60/10.70/10.80/10.90): no separate tasks.
 The wall-clock cap is for the WHOLE job: the first `run` writes <out_dir>/job_start.txt and every later `run` stops at job_start + hours. Same solver call as the library build. MODEL_ONLY.
 
-    python scripts/research/phase20_r4_band_refine_run.py run <out_dir> --stage grid|corr90|corr120 [--workers 40] [--hours 8]
+    python scripts/research/phase20_r4_band_refine_run.py run <out_dir> --stage grid|corr90|corr120 [--workers 40] [--hours 8] [--limit N]
     python scripts/research/phase20_r4_band_refine_run.py status <out_dir>
     python scripts/research/phase20_r4_band_refine_run.py consolidate <out_dir>     # chunks in the library-build layout + MANIFEST.json
 """
@@ -60,13 +60,15 @@ def job_deadline(out, hours):
     return time.monotonic() + (float(f.read_text()) + hours * 3600.0 - time.time())
 
 
-def run(out_dir, workers, hours, stage):
+def run(out_dir, workers, hours, stage, limit=None):
     import provenance as prov
 
     out = Path(out_dir)
     (out / "tasks").mkdir(parents=True, exist_ok=True)
     tasks = build_tasks(stage)
     todo = [t for t in tasks if not (out / "tasks" / fg.task_name(*t)).exists()]
+    if limit is not None:
+        todo = todo[:limit]  # pilot: the first `limit` unfinished tasks (longest first), e.g. one mesh-120 task to measure its memory
     deadline = job_deadline(out, hours)
     print(
         f"stage {stage}: {len(tasks)} tasks, {len(tasks) - len(todo)} done, {len(todo)} to do, {workers} workers, {max(deadline - time.monotonic(), 0) / 3600:.2f} h left of the {hours} h cap",
@@ -158,8 +160,9 @@ if __name__ == "__main__":
     w = int(opts[opts.index("--workers") + 1]) if "--workers" in opts else 40
     hrs = float(opts[opts.index("--hours") + 1]) if "--hours" in opts else 8.0
     stg = opts[opts.index("--stage") + 1] if "--stage" in opts else None
+    lim = int(opts[opts.index("--limit") + 1]) if "--limit" in opts else None
     if cmd == "run" and stg not in STAGES:
         sys.exit(f"--stage must be one of {STAGES}")
-    {"run": lambda: run(outd, w, hrs, stg), "status": lambda: status(outd), "consolidate": lambda: consolidate(outd)}[
+    {"run": lambda: run(outd, w, hrs, stg, lim), "status": lambda: status(outd), "consolidate": lambda: consolidate(outd)}[
         cmd
     ]()

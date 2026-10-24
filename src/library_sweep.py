@@ -244,7 +244,7 @@ def write_app_library_json(database, path):
         "cells": [_cell_doc(c, database) for c in database.cells],
     }
     path = Path(path)
-    path.write_text(json.dumps(doc, indent=1, allow_nan=False) + "\n")
+    path.write_text(json.dumps(doc, indent=1, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
     return path
 
 
@@ -291,7 +291,7 @@ def write_square_library_json(cells, path):
     `write_app_library_json` produces."""
     doc = {"format": LIBRARY_FORMAT_NAME, "version": LIBRARY_FORMAT_VERSION, "cells": cells}
     path = Path(path)
-    path.write_text(json.dumps(doc, indent=1, allow_nan=False) + "\n")
+    path.write_text(json.dumps(doc, indent=1, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
     return path
 
 
@@ -391,5 +391,5 @@ def write_annular_slot_library_json(cells, path):
     `UnitCellLibrary` (which is hard-keyed to the `(L_mm, W_mm)` 2-tuple))."""
     doc = {"format": LIBRARY_FORMAT_NAME, "version": LIBRARY_FORMAT_VERSION, "cells": cells}
     path = Path(path)
-    path.write_text(json.dumps(doc, indent=1, allow_nan=False) + "\n")
+    path.write_text(json.dumps(doc, indent=1, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
     return path

@@ -99,7 +99,7 @@ def write_library_json(database, path):
         "cells": [_cell_doc(c, database) for c in database.cells],
     }
     path = Path(path)
-    path.write_text(json.dumps(doc, indent=1, allow_nan=False) + "\n")
+    path.write_text(json.dumps(doc, indent=1, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
     return path
 
 
@@ -201,7 +201,7 @@ def build_manifest(config, build, phase_source, deterministic_timestamp=None):
 
 def write_manifest(manifest, path):
     path = Path(path)
-    path.write_text(json.dumps(manifest, indent=1, allow_nan=False) + "\n")
+    path.write_text(json.dumps(manifest, indent=1, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
     return path
 
 
@@ -229,7 +229,7 @@ class UnitCellLibrary:
 
     @classmethod
     def from_json(cls, path):
-        return cls(json.loads(Path(path).read_text()))
+        return cls(json.loads(Path(path).read_text(encoding="utf-8")))
 
     def all_cells(self):
         """Every cell's raw document, in the library's own on-disk order (Phase 13's app "Library"
@@ -585,7 +585,7 @@ def build_full_library(config: LibraryConfig, base_dir, *, resume=True, progress
     consistency = check_json_csv_consistency(library_json_path, library_csv_path)
 
     library_validation_path = reports_dir / "LIBRARY_VALIDATION.md"
-    library_validation_path.write_text(render_library_validation_md(config, subset, consistency, build))
+    library_validation_path.write_text(render_library_validation_md(config, subset, consistency, build), encoding="utf-8", newline="\n")
 
     library_report_path = reports_dir / "LIBRARY_REPORT.md"
     library_report_path.write_text(
@@ -599,8 +599,7 @@ def build_full_library(config: LibraryConfig, base_dir, *, resume=True, progress
             phase_source,
             manifest,
             consistency,
-        )
-    )
+        ), encoding="utf-8", newline="\n")
 
     return FullLibraryResult(
         base_dir,

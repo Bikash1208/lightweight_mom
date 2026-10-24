@@ -74,7 +74,7 @@ def load_ledger(path=None):
     path = Path(path) if path is not None else DEFAULT_LEDGER_PATH
     if not path.exists():
         return []
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def record_comparison(summary: ComparisonSummary, path=None):
@@ -85,5 +85,5 @@ def record_comparison(summary: ComparisonSummary, path=None):
     entry["labels"] = list(entry["labels"])
     ledger.append(entry)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(ledger, indent=2, default=str))
+    path.write_text(json.dumps(ledger, indent=2, default=str), encoding="utf-8", newline="\n")
     return path

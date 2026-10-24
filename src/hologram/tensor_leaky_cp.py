@@ -45,7 +45,7 @@ class SupercellTable:
         pts = []
         meta = None
         for f in sorted(glob.glob(pattern)):
-            d = json.load(open(f))
+            d = json.load(open(f, encoding="utf-8"))
             meta = meta or d
             for p in d["points"]:
                 if "alpha_leak_np_per_m" in p:

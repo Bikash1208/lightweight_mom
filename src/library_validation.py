@@ -98,7 +98,7 @@ def check_json_csv_consistency(json_path, csv_path, rtol=1e-9):
     `unit_cell_library.write_library_json`) must agree numerically wherever they overlap
     (real/imag/mag/mag_db/phase_deg of S11/S21/S12/S22 per (cell, frequency)) -- both read
     independently from disk, never compared against in-memory state that produced either."""
-    doc = json.loads(Path(json_path).read_text())
+    doc = json.loads(Path(json_path).read_text(encoding="utf-8"))
     with open(csv_path, newline="", encoding="utf-8") as fh:
         csv_rows = list(csv.DictReader(fh))
     by_key = {(row["cell_id"], row["f_GHz"]): row for row in csv_rows}

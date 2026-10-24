@@ -614,8 +614,8 @@ def run_and_write_phase8a(
         required_phase_deg=required_phase_deg,
     )
 
-    (output_dir / "feasibility.json").write_text(json.dumps(build_feasibility_json(result, config), indent=1) + "\n")
-    (output_dir / "feasibility_report.md").write_text(render_feasibility_report_md(result, config))
+    (output_dir / "feasibility.json").write_text(json.dumps(build_feasibility_json(result, config), indent=1) + "\n", encoding="utf-8", newline="\n")
+    (output_dir / "feasibility_report.md").write_text(render_feasibility_report_md(result, config), encoding="utf-8", newline="\n")
 
     if result.table:
         _write_csv(

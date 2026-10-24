@@ -34,8 +34,8 @@ def load_library_bundle(library_dir):
     for p in (manifest_path, json_path, csv_path):
         if not p.exists():
             raise FileNotFoundError(f"Phase 8A: expected library file is missing: {p}")
-    manifest = json.loads(manifest_path.read_text())
-    library_doc = json.loads(json_path.read_text())
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    library_doc = json.loads(json_path.read_text(encoding="utf-8"))
     step_files = frozenset(p.name for p in geom_dir.glob("*.step")) if geom_dir.exists() else frozenset()
     return LibraryBundle(library_dir, manifest, library_doc, json_path, csv_path, step_files)
 

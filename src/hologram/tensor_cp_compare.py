@@ -40,7 +40,7 @@ POINTING_TOL_DEG = 2.0
 
 # ------------------------------------------------------------------------------------------ parsers
 def read_gain_csv(path, f_ghz=F_DESIGN):
-    rows = list(csv.reader(Path(path).read_text().splitlines()))
+    rows = list(csv.reader(Path(path).read_text(encoding="utf-8").splitlines()))
     head = [h.strip().lower() for h in rows[0]]
 
     def col(*keys):
@@ -88,7 +88,7 @@ def read_params(path):
 def read_s_parameter(path, port=1, f_ghz=F_DESIGN):
     """Touchstone `.sNp` (S[port, port]) or an HFSS sweep CSV (`Freq [GHz]`, `dB(S(1,1))`)."""
     if str(path).lower().endswith(".csv"):
-        rows = list(csv.reader(Path(path).read_text().splitlines()))[1:]
+        rows = list(csv.reader(Path(path).read_text(encoding="utf-8").splitlines()))[1:]
         a = np.array([[float(v) for v in r[:2]] for r in rows if r])
         f, db = a[:, 0], a[:, 1]
     else:
@@ -119,7 +119,7 @@ def read_ar_sweep(path, theta0=BEAM[0], f_ghz=F_DESIGN):
     """HFSS AR export with `Freq`, `Phi`, `Theta`, `dB(AxialRatioValue)` columns (a frequency sweep at one phi cut):
     AR vs frequency at the beam theta, the 3 dB AR band there, and the cut at the frequency nearest `f_ghz`.
     Returns None if the file has no frequency column."""
-    rows = list(csv.reader(Path(path).read_text().splitlines()))
+    rows = list(csv.reader(Path(path).read_text(encoding="utf-8").splitlines()))
     head = [h.strip().lower() for h in rows[0]]
     if not any("freq" in h for h in head):
         return None
@@ -175,7 +175,7 @@ def read_re_field(path):
 
 
 def read_ar_cut(path):
-    rows = list(csv.reader(Path(path).read_text().splitlines()))
+    rows = list(csv.reader(Path(path).read_text(encoding="utf-8").splitlines()))
     head = [h.strip().lower() for h in rows[0]]
     it = next(i for i, h in enumerate(head) if "theta" in h or "angle" in h or "deg" in h)
     ia = next(i for i, h in enumerate(head) if "axial" in h or re.search(r"\bar\b", h) or h.startswith("db(ar"))
@@ -184,7 +184,7 @@ def read_ar_cut(path):
 
 
 def fit_decay(path):
-    rows = list(csv.reader(Path(path).read_text().splitlines()))
+    rows = list(csv.reader(Path(path).read_text(encoding="utf-8").splitlines()))
     head = [h.strip().lower() for h in rows[0]]
     data = np.array([[float(v) for v in r] for r in rows[1:] if r])
     d = data[:, 0]
@@ -337,7 +337,7 @@ def compare_params_only(args, pred):
 
 
 def compare(args):
-    pred = json.loads(Path(args.pred).read_text())
+    pred = json.loads(Path(args.pred).read_text(encoding="utf-8"))
     if not args.gain:
         rep = compare_params_only(args, pred)
         _attach_sweeps(rep, args)
@@ -562,8 +562,8 @@ def main_single(argv=None):
     txt = markdown(rep)
     print(txt)
     if args.out:
-        Path(args.out).write_text(json.dumps(rep, indent=1, default=float))
-        Path(args.out).with_suffix(".md").write_text(txt)
+        Path(args.out).write_text(json.dumps(rep, indent=1, default=float), encoding="utf-8", newline="\n")
+        Path(args.out).with_suffix(".md").write_text(txt, encoding="utf-8", newline="\n")
     return rep
 
 
@@ -673,7 +673,7 @@ def coupling_report(s4p, pred):
 
 
 def compare_fourhex(args):
-    pred = json.loads(Path(args.pred).read_text())
+    pred = json.loads(Path(args.pred).read_text(encoding="utf-8"))
     rep = {"pred": str(args.pred), "ports": {}, "coupling": "NOT_PROVIDED"}
     gains, params = _kv(args.gain), _kv(args.params)
     for port, path in gains.items():
@@ -738,6 +738,6 @@ def main_fourhex(argv=None):
     txt = markdown_fourhex(rep)
     print(txt)
     if args.out:
-        Path(args.out).write_text(json.dumps(rep, indent=1, default=float))
-        Path(args.out).with_suffix(".md").write_text(txt)
+        Path(args.out).write_text(json.dumps(rep, indent=1, default=float), encoding="utf-8", newline="\n")
+        Path(args.out).with_suffix(".md").write_text(txt, encoding="utf-8", newline="\n")
     return rep

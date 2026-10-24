@@ -187,7 +187,7 @@ class _Solves:
             path = self._path(side_cells, n)
             if path.is_file():
                 try:
-                    d = json.loads(path.read_text())
+                    d = json.loads(path.read_text(encoding="utf-8"))
                     value = complex(d["re"], d["im"])
                     self.n_cached += 1
                 except (ValueError, KeyError, OSError):
@@ -198,7 +198,7 @@ class _Solves:
             value = complex(self.solver(side_cells, n, self.substrate, self.frequency_hz, self.period_m))
             self.n_solves += 1
             if self.cache_dir:
-                self._path(side_cells, n).write_text(json.dumps({"re": value.real, "im": value.imag}))
+                self._path(side_cells, n).write_text(json.dumps({"re": value.real, "im": value.imag}), encoding="utf-8", newline="\n")
         self._memo[memo_key] = value
         return value
 

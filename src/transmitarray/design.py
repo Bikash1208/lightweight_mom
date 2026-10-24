@@ -51,7 +51,7 @@ class FamilyLimits:
 def load_guess_library(path):
     """Rows of the committed library CSV as dicts with float fields and a complex 2x2 ``t`` (s/p)."""
     rows = []
-    with open(path) as fh:
+    with open(path, encoding="utf-8") as fh:
         for r in csv.DictReader(fh):
             t = np.array(
                 [

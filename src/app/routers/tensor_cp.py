@@ -161,7 +161,7 @@ async def compare(
     if pred_path is None:
         if design_job_id and board == "single":
             pred_path = str(updir / "predictions.json")
-            (updir / "predictions.json").write_text(json.dumps(_pred_for_job(request, design_job_id), default=float))
+            (updir / "predictions.json").write_text(json.dumps(_pred_for_job(request, design_job_id), default=float), encoding="utf-8", newline="\n")
         else:
             pred_path = str(compare_mod.PRED if board == "single" else compare_mod.PRED4)
     try:

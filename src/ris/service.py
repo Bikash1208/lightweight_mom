@@ -117,7 +117,7 @@ def coupling_status():
     for sub in ("supercell_gradients", "supercell_random"):
         for f in sorted((ROOT / "results" / "phase20_r5" / sub).glob("*.json")):
             try:
-                d = json.loads(f.read_text())
+                d = json.loads(f.read_text(encoding="utf-8"))
             except ValueError:
                 continue
             for res in d.get("results", []):

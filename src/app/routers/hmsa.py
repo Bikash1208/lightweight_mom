@@ -187,7 +187,7 @@ async def upload_field(
         # against whatever frequency synthesis is actually requested at (PHASE13B A3) -- the .fld
         # file itself carries no frequency (the app asks for it separately, docs/briefs/
         # PHASE13_WEBAPP_PROMPT.md), so this is the only place it's ever recorded.
-        (updir / "meta.json").write_text(json.dumps({"frequency_hz": frequency_hz}))
+        (updir / "meta.json").write_text(json.dumps({"frequency_hz": frequency_hz}), encoding="utf-8", newline="\n")
 
     regularity = check_grid_regularity(phase_fld)
     r_bins, beta_median = radial_beta_profile(phase_fld)
@@ -324,7 +324,7 @@ def _uploaded_frequency_hz(upload_id):
     meta_path = upload_dir(upload_id) / "meta.json"
     if not meta_path.exists():
         return None
-    return json.loads(meta_path.read_text()).get("frequency_hz")
+    return json.loads(meta_path.read_text(encoding="utf-8")).get("frequency_hz")
 
 
 def _mask_feed_region(reference_field):
@@ -869,7 +869,7 @@ def _auto_dispersion_id(body_dict):
 def _write_dispersion_csv(table, path):
     import csv as _csv
 
-    with open(path, "w", newline="") as fh:
+    with open(path, "w", newline="", encoding="utf-8") as fh:
         writer = _csv.writer(fh)
         writer.writerow(["geometry_param", "beta_rad_per_m", "x_s_ohm"])
         for s in table.samples:
@@ -1860,7 +1860,7 @@ def _resolve_two_state_choice(
             if two_state["annular_slot_library_id"] is None:
                 raise config_invalid(message="two_state source 'square_and_annular' needs annular_slot_library_id")
             annular_path = library_registry.resolve_path(two_state["annular_slot_library_id"])
-            annular_cells = json.loads(annular_path.read_text())["cells"]
+            annular_cells = json.loads(annular_path.read_text(encoding="utf-8"))["cells"]
             candidates = candidates + candidates_from_annular_slot_library(annular_cells, frequency_hz / 1e9)
         else:
             raise config_invalid(message=f"unknown two_state source {source!r}")

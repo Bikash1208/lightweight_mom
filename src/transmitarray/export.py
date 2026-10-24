@@ -155,7 +155,7 @@ def verify_step(path, cells, d_flats_mm, pitch_mm, plate_mm, total_mm, vol_tol=0
 def pathlib_read(path):
     import pathlib
 
-    return pathlib.Path(path).read_text(errors="ignore")
+    return pathlib.Path(path).read_text(errors="ignore", encoding="utf-8")
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -421,13 +421,13 @@ def export_exact_step(workplane, path, cells, d_flats_mm, pitch_mm, plate_mm, to
     with tempfile.TemporaryDirectory() as td:
         raw_path = pathlib.Path(td) / "raw.step"
         save_step_named(workplane, raw_path)
-        raw_text = raw_path.read_text()
+        raw_text = raw_path.read_text(encoding="utf-8")
         desc = (
             f"Nylon dual-beam lens, millimetres; coordinates snapped to design values within {SNAP_TOL_MM:g} mm; "
             f"uncertainty {UNCERTAINTY_MM:g} mm"
         )
         snapped_text, stats = snap_step_text(raw_text, intended, description=desc)
-        path.write_text(snapped_text)
+        path.write_text(snapped_text, encoding="utf-8", newline="\n")
         raw_shape = cq.importers.importStep(str(raw_path)).val()
         new_shape = cq.importers.importStep(str(path)).val()
     vol_raw, vol_new = raw_shape.Volume(), new_shape.Volume()

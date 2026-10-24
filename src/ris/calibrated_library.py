@@ -128,7 +128,7 @@ def read_hfss_reim_tolerance(path, plane_offset_mm=0.0, coff_column=None):
     """{(coff_pF, state, f_ghz, theta_deg): (2, 2) TE/TM S} from the user's tolerance export: the `read_hfss_reim` columns plus a C_off column (header containing 'coff' or 'c_off', case-insensitive; value in pF, a unit suffix is ignored).
     The reference-plane correction `plane_offset_mm` is applied exactly as in `read_hfss_reim`."""
     out = {}
-    with open(path, newline="") as fh:
+    with open(path, newline="", encoding="utf-8") as fh:
         reader = csv.DictReader(fh)
         for raw in reader:
             r = {k.strip(): v for k, v in raw.items()}
@@ -224,4 +224,4 @@ def band_edges(cal, f_ghz, theta_deg, phi_deg, state, coffs):
 
 def corner_table(path=ROOT / "results" / "phase20_r4" / "tolerance_corners.json"):
     """The R4 MoM corner rows (MODEL_ONLY): r_RR phase / level shifts per state for C_T +-20 %, L_s 0.1 / 0.2 nH at 9.5 / 10 / 10.5 GHz, theta 0 / 30 - the fallback sensitivity statement when no HFSS tolerance data exist."""
-    return json.loads(Path(path).read_text())
+    return json.loads(Path(path).read_text(encoding="utf-8"))

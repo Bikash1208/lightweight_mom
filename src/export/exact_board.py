@@ -176,7 +176,7 @@ def verify_step_exact(path, strict_points=True, pins=()):
     only the 3-D VERTEX/edge-end points are checked. `pins`: `(x_mm, y_mm, radius_mm, height_mm)` per
     pin -- each must have vertices at exactly z = 0 and z = height, at exactly `radius` from its axis.
     Returns the number of coordinates checked."""
-    text = Path(path).read_text()
+    text = Path(path).read_text(encoding="utf-8")
     points, vertices = _step_points(text)
     if strict_points:
         checked = [p for p in points.values() if len(p) == 3]

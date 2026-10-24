@@ -28,7 +28,7 @@ VERDICT_DIFFER = "HFSS_DIFFERS_FROM_LIBRARY"
 def read_hfss_rows(path, tm_shift_180=False):
     """{(state, f_ghz, theta_deg, phi_deg): 2x2 complex (TE, TM) reflection} from a long-format CSV (see module docstring). `tm_shift_180` applies the 180 degree TM shift to every TM entry."""
     entries = {}
-    with open(path, newline="") as fh:
+    with open(path, newline="", encoding="utf-8") as fh:
         for r in csv.DictReader(fh):
             if r["quantity"] not in QUANTITIES:
                 continue
@@ -59,7 +59,7 @@ def read_hfss_reim(path, plane_offset_mm=0.0, phi_deg=0.0):
     """Same dict as `read_hfss_rows` from an HFSS 'scan_theta, state, Freq, re/im S(FloquetPort1:i,FloquetPort1:j)' export (mode 1 = TE, mode 2 = TM; S(i,j) = received i, incident j).
     `plane_offset_mm` de-embeds the Floquet-port reference plane: every S is multiplied by exp(+j 2 k0 d cos(theta)) (see `fit_reference_plane_mm`). No TM sign flip is applied here."""
     entries = {}
-    with open(path, newline="") as fh:
+    with open(path, newline="", encoding="utf-8") as fh:
         for raw in csv.DictReader(fh):
             r = {k.strip(): v for k, v in raw.items()}
             th, st, f = float(r["scan_theta [deg]"]), int(float(r["state []"])), float(r["Freq [GHz]"])
@@ -73,11 +73,11 @@ def fit_reference_plane_mm(bare_csv, reference_csv):
     """Least-squares reference-plane offset d [mm] with HFSS phase = analytic - 2 k0 d cos(theta) from the bare grounded slab export (state 1) against the analytic
     `bare_grounded_slab_reference.csv`; returns (d_mm, max residual deg)."""
     ref = {}
-    with open(reference_csv, newline="") as fh:
+    with open(reference_csv, newline="", encoding="utf-8") as fh:
         for r in csv.DictReader(fh):
             ref[(round(float(r["f_ghz"]), 6), float(r["theta_deg"]), r["floquet_mode"][0])] = float(r["S11_phase_deg"])
     a, b = [], []
-    with open(bare_csv, newline="") as fh:
+    with open(bare_csv, newline="", encoding="utf-8") as fh:
         for raw in csv.DictReader(fh):
             r = {k.strip(): v for k, v in raw.items()}
             if int(float(r["state []"])) != 1:

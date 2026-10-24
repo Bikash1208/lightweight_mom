@@ -708,7 +708,7 @@ used with a sensitivity scale s = 1 (design march) and s = 1.7 (upper reading); 
 
 Hexagon 1 and 3 hand 0.21 of the launched wave to neighbours (0.13 of accepted); 2 and 4 hand 0.13 (0.08 of accepted). The rest leaves the board edge.
 
-**Board A prediction** (shared 6.4 mm lattice, 5685 cells, port driven alone; HFSS-anchored, s = 1 / 1.7; `fourhex_design.json`; 1 deg grid):
+**Board A prediction** (shared 6.4 mm lattice, 5684 cells, port driven alone; HFSS-anchored, s = 1 / 1.7; `fourhex_design.json`; 1 deg grid):
 
 | port | beam | model peak (theta, phi) | gain dBi | XPD dB | AR peak / worst in beam | pickup / main power | neighbour LHCP lobe (vs main RHCP peak) |
 |---|---|---|---|---|---|---|---|
@@ -729,7 +729,7 @@ reference of the polarisation rotation `chi = phi_ref - kt u.(r - r_ref)`: `r_re
 then gives ONE continuous aperture phase `exp(-j kt u.r)` over the board. Consequence: every slot of hexagon j is rotated by the constant
 `-1/2 kt u.r_j` (mod 180 deg) relative to the single-hexagon design: port 1 +37.0 deg, port 2 -4.3, port 3 -37.0, port 4 +4.3 (checked on port 3
 against board A: -37.03 deg uniform, `board_B_minus_A_slot_angle_offset_deg`). Cell sizes, alphas, positions and the pin are unchanged.
-Export files (when asked): `results/phase26/fourhex/fourhex_B_cells.json` (5685 cells).
+Export files (when asked): `results/phase26/fourhex/fourhex_B_cells.json` (5684 cells).
 
 **Port order for the Butler outputs.** The four feed x positions are -194.9 (port 2), -64.95 (port 3), +64.95 (port 1), +194.9 (port 4) mm: equally spaced by
 129.9 mm. A Butler output n has phase n*step, so the outputs must be ordered along the x axis: **Butler outputs 1, 2, 3, 4 = ports 2, 3, 1, 4.**
@@ -805,7 +805,7 @@ Question: can flattening the aperture amplitude across the shared edges bring th
 **Result: no variant reaches -15 dB (equal phase) or -10 dB (+/-45 deg); the best is -13.2 / -8.6 / -7.0 dB, at 1.5-2 dB gain cost.**
 
 **Why (two floors that amplitude shaping cannot move):**
-1. *Outline floor.* An IDEAL uniform-amplitude, ideal-phase circular aperture on the same 5685 cells has its first lobes at **-12.3 dB** (the board outline
+1. *Outline floor.* An IDEAL uniform-amplitude, ideal-phase circular aperture on the same 5684 cells has its first lobes at **-12.3 dB** (the board outline
    is 650 x 525 mm, ~23 lambda: uniform-aperture sidelobes). Only an ideal smooth board-wide taper would reach -18.9 dB (reference in the JSON), and the
    feed/cell family cannot produce it: the table's alpha window is 0.42-4.3 Np/m, so the radiated density near each pin cannot go below ~90 (units of the design amplitude^2)
    while it saturates at 26-40 over the outer 60 % of each tile (alpha 3.4 Np/m x depleted W / rho). The envelope is peaked at the four pins; lowering the

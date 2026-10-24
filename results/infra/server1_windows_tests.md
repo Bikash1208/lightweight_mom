@@ -55,3 +55,20 @@ Expected: the 2 BLAS diffs. Not expected: the other 5. (`-n 24` is fast with `OP
 ### C. For the Mac
 1. `src/app/routers/export.py:297,303`: add `encoding="utf-8", newline="\n"` (the three `board_export` tests then reach the next step; unverified beyond that).
 2. The two numeric byte-compare tests (`test_tensor_cp_service` folder compare, `test_app_phase27` end-to-end) compare floating-point output exactly; on a different CPU/BLAS they cannot pass bit-for-bit. Consider a tolerance on the Windows server, or mark them Mac-only like the other bit-identity gates (the infra brief already says bit-identity gates stay Mac-only).
+
+---
+
+## Update 2026-10-24 (later): the 9 tests on `62df347` (utf-8 + LF on every text write in `src/`, incl. `src/app/routers/export.py`) — server-authored, pending Mac review
+
+Detached worktree at `62df347`, `OPENBLAS/OMP/MKL threads = 1`, log `server1_rerun9_62df347.log`. **4 failed, 9 passed** (13 test items; was 7 failed at `1a6b3d3` / `939e81c`).
+
+| Test | Result | Cause |
+|---|---|---|
+| 3 x `board_export` (`test_app_phase21_multiport` x2, `test_app_phase23_hex4::test_sidelobe_endpoint_end_to_end`) | **PASS now** | the encoding fix reached `src/app/routers/export.py` |
+| `test_diagnostics.py` (both tests) | PASS | (fixed earlier) |
+| `test_sparameters_oblique::test_normal_incidence_results_are_bit_identical_to_the_phase20_base_commit` | FAIL (expected) | BLAS last digit |
+| `test_tensor_cp_design::test_single_hexagon_cells_match_committed_layout_bit_identically` | FAIL (expected) | BLAS last digit (30.757828525351485 vs ...282) |
+| `test_tensor_cp_service::test_app_export_of_the_single_hexagon_matches_the_committed_phase26_folder` | FAIL (**not in the expected 2**) | the byte-compare of `predictions.json` now differs only by a digit (`b'8' != b'7'` at index 488): a last-digit effect in the predicted numbers, no text/encoding/line-ending difference left |
+| `test_app_phase27_tensor_cp::test_single_hexagon_design_export_compare_end_to_end` | FAIL (**not in the expected 2**) | numeric differences in `accepted_power_budget` / `aperture_pattern` values (e.g. 0.4062315028783703); again numeric, not text |
+
+So all text-encoding failures are gone; the 4 left are all floating-point last-digit differences, two of them in tests that compare exact bytes or exact floats of tensor-CP predictions (they pass bit-for-bit only on the Mac's CPU/BLAS). Suggested: treat these two like the other bit-identity gates (Mac-only) or compare with a tolerance on other machines.

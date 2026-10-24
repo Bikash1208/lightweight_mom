@@ -22,7 +22,9 @@ SMOKE_NOTE = """**SMOKE TEST ONLY -- NO PREDICTIONS, NOTHING TO COMPARE WITH.** 
 been run there work: `AssignLumpedRLC` (36 boundaries; ON sheets R only, OFF sheets C only) and the incident-wave assignment. The coding is the plain 2-bit steering coding for 30 deg in the phi = 0 plane
 (any valid coding would do); it carries no design meaning at 3 x 3 cells. What to look at after the run: (1) the build finishes without the message "Lumped RLC assignment failed" or "Incident wave not assigned";
 (2) HFSS > Boundaries lists `Load_1_RLC` ... `Load_36_RLC`, nine with a resistance of 5.2 ohm and 27 with a 0.025 pF capacitance, each with its current line along the stub;
-(3) the excitation list shows the incident wave with the intended direction (the specular direction is theta_i = 0 here, i.e. normal incidence). Report what failed (exact message) so the script can be fixed."""
+(3) the excitation list shows the incident wave with the intended direction (the specular direction is theta_i = 0 here, i.e. normal incidence). Report what failed (exact message) so the script can be fixed.
+
+**Result (user, 2026-10-24): verified (3x3 smoke build, 2026-10-24)** -- the build completed with no errors; `Load_1`..`Load_36_RLC` are present with R = 5.2 ohm (ON) and C = 0.025 pF (OFF); the incident wave was assigned. Still to confirm by the user: the current-line direction of the boundaries. The circular-polarisation incidence (two plane waves) remains a manual step."""
 
 
 def main(out):

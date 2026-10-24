@@ -86,7 +86,7 @@ def test_aedt_script_is_valid_python_with_every_piece_and_load(board):
         text.count("'Load_") == 36
         and text.count("('C0_0_Oct'") == 1
         and "AssignLumpedRLC" in text
-        and "NOT yet run in AEDT" in text
+        and "VERIFIED in AEDT" in text
     )
     ns = {}
     code = text.split("oProject.GetDefinitionManager()")[0].split("oEditor.SetModelUnits")[1].split("\n", 1)[1]

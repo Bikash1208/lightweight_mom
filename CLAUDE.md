@@ -33,6 +33,9 @@ with one write-up per phase alongside it in `docs/history/`; active work items a
   who imports what. Document a concern instead of refactoring the package.
 - Every phase updates `docs/STATUS.md` (last tag/commit, capability matrix, open next steps) as
   part of its own final commit.
+- **Roadmap alignment**: Check `docs/ROADMAP.md` for project deliverables, completed phases, in-progress tasks, and priority sequence.
+- **Remote compute server workflow**: Heavy compute (MoM sweeps, full-grid libraries, supercell solves) is **never run on the local Mac**. Dispatch jobs via `jobs/<job>.md` to remote Windows compute servers through the `hub` remote on `compute/<job>` branches, following `docs/briefs/INFRA_COMPUTE_SERVER_SYNC.md` and `jobs/README.md`. The Mac coordinates and merges.
+- **External HFSS ground truth**: Returned HFSS simulations, Touchstone files, and benchmark notes are indexed in `hfss_results/README.md`. Never invent full-wave data.
 
 ## Commands
 
@@ -60,9 +63,16 @@ make lint / make format                                # ruff check / ruff check
 
 ## Physical model assumptions
 
-Rectangular lattice, one cell; air | zero-thickness PEC pattern at z = 0 | one isotropic substrate
-| air, or (opt-in, `backing: pec`) air | pattern | substrate | PEC ground — no superstrate either
-way. Normal incidence only; only the (0,0) Floquet order is a port mode. One production
-(ungrounded) library: 4.8 mm period, rectangular PEC patch, RT/Duroid 5880, 10–15 GHz; a grounded
-8 mm design point is also recorded (`src/phase12c/design_point.py`). See `docs/STATUS.md` for what
-is and isn't validated against HFSS at this model.
+Rectangular lattice (`period_x`, `period_y`), one cell; air | zero-thickness PEC pattern at z = 0 | one
+isotropic substrate | air, or (opt-in, `backing: pec`) air | pattern | substrate | PEC ground — no
+superstrate either way. Normal incidence is the original path; **oblique incidence** (arbitrary θ, φ,
+TE/TM and full 2x2, `compute_s_parameters_oblique`) is an additive Phase 20 R1 extension. Only the
+(0,0) Floquet order is an external port mode. **Lumped RLC loads** (`src/loads.py`, rotated loads and
+`PolyComposite` from R3) and PIN-diode circuit models (`src/ris/diodes.py`: Skyworks SMP1345-079LF,
+MACOM MADP-000907-14020) sit on the pattern metal. **Floquet cutoff F = 2n** (n = mesh size, e.g.
+n = 60 -> F = 120) is required for grounded cells with sub-wavelength lumped loads
+(`results/phase20_r4/FLOQUET_AUDIT.md`); all RIS numbers are at F = 2n. Production libraries: the
+ungrounded 4.8 mm rectangular patch (RT/Duroid 5880, 10-15 GHz); a grounded 8 mm design point
+(`src/phase12c/design_point.py`); the 2-bit grounded CP-2 octagon cell (15 mm, 10.5 GHz, state
+library v2, 8942 points, `results/phase20_r4/cp2_library_v2_fullgrid.npz`). See `docs/STATUS.md` and
+`docs/ROADMAP.md` for what is and isn't validated against HFSS at this model.

@@ -1,6 +1,6 @@
 # Periodic layered-medium spectral dyadic Green's function
 
-Implementation: [src/green_function.py](src/green_function.py) (`LayeredGreenFunction`).
+Implementation: [`src/green_function.py`](../../src/green_function.py) (`LayeredGreenFunction`).
 Conventions: [CONVENTIONS.md](CONVENTIONS.md) (`exp(+jωt)`, SI, `Im(kz) ≤ 0`).
 
 ## 0. Scope, provenance, and honesty about sources

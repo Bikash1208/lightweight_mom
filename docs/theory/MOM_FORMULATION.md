@@ -1,8 +1,8 @@
 # MoM discretization and matrix assembly (Phase 3)
 
-Implementation: [src/basis_functions.py](src/basis_functions.py) (mesh, rooftops, transforms),
-[src/mom_matrix.py](src/mom_matrix.py) (Z, V), [src/excitation.py](src/excitation.py)
-(unpatterned-stack field, reference planes), [src/solver.py](src/solver.py)
+Implementation: [`src/basis_functions.py`](../../src/basis_functions.py) (mesh, rooftops, transforms),
+[`src/mom_matrix.py`](../../src/mom_matrix.py) (Z, V), [`src/excitation.py`](../../src/excitation.py)
+(unpatterned-stack field, reference planes), [`src/solver.py`](../../src/solver.py)
 (`assemble_system`, `build_system`, `solve`).
 Conventions: [CONVENTIONS.md](CONVENTIONS.md). Kernel: [GREEN_FUNCTION.md](GREEN_FUNCTION.md).
 

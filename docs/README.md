@@ -1,10 +1,11 @@
 # Docs index
 
-**New here? Read [`START_HERE.md`](START_HERE.md) first, then [`STATUS.md`](STATUS.md).**
+**New here? Read [`START_HERE.md`](START_HERE.md) first, then [`ROADMAP.md`](ROADMAP.md) and [`STATUS.md`](STATUS.md).**
 
 | File / folder | What it is |
 |---|---|
 | [`START_HERE.md`](START_HERE.md) | Onboarding: purpose, design flow, repo map, conventions that bite, working method. |
+| [`ROADMAP.md`](ROADMAP.md) | Planned deliverables, completed phases, verified current state, and priority sequence. |
 | [`STATUS.md`](STATUS.md) | Single source of truth for *now*: last tag/commit, capability matrix with validation level, known limitations, open next steps, parked ideas. |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Module map (core solver / HMSA design / research-phase packages / app), the app's 3-step data flow, job queue, storage, frontend. |
 | [`USER_GUIDE.md`](USER_GUIDE.md) | Walkthrough of every app page. |
@@ -19,4 +20,5 @@
 
 Root-level docs outside this folder: [`../README.md`](../README.md) (front door),
 [`../CLAUDE.md`](../CLAUDE.md) (AI-agent rules), [`../CHANGELOG.md`](../CHANGELOG.md),
-[`../CONTRIBUTING.md`](../CONTRIBUTING.md).
+[`../CONTRIBUTING.md`](../CONTRIBUTING.md), [`../jobs/README.md`](../jobs/README.md) (remote compute server job architecture and status matrix),
+[`../hfss_results/README.md`](../hfss_results/README.md) (HFSS simulation runs and ground truth).

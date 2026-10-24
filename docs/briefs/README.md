@@ -19,12 +19,16 @@ and reports back against its own acceptance checks.
 
 ## What's here now
 
-- Active: `PHASE26_LEAKY_TENSOR_CP_HEXAGON.md` (leakage-calibrated tensor-cell pure-CP hexagon, model-only until HFSS); `PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md` (Parts A–D done; Parts E/F wait on the user's decision whether
-  ±30.00° is a hard specification and on an HFSS run of the lens — see `docs/STATUS.md` "Open next steps").
-  Also active (2026-10-16): `PHASE27_APP_TENSOR_CP.md` (tensor-CP design flow in the app, branch `phase27-app-tensor-cp`; do now) and the RIS track
-  `PHASE20_RIS_ROADMAP.md` (R1-R4 are finished and archived in `docs/history/briefs/`; R5 waits for its brief; R3b is closed without re-optimisation and archived in `docs/history/briefs/`; `INFRA_COMPUTE_SERVER_SYNC.md` is the active infrastructure brief; `PHASE20_R5_RIS_DESIGN_MODE.md` is the R5 brief (written 2026-10-23, item 0 done, stopped before item 1)), branch `phase20-ris`).
-  Nothing else is active; `PHASE24_CURATION_AND_CLEANUP.md` is finished and archived in `docs/history/briefs/`.
-- `_parked/` — deferred ideas, each its own file, not current work: the Phase 25 Butler sector scanner (B/C paused 2026-10-14), and the unit-cell/FSS S-parameter tool (Phase 16).
+- **Primary active track (RIS Phase 20):**
+  - `PHASE20_R5_RIS_DESIGN_MODE.md`: 2-bit X-band PIN-diode RIS design mode. Current status: R5-1 (tolerance check), R5-2 (forward model), R5-3 (coding synthesis), R5-5 (RIS designer web page), and R5-6 infrastructure (board exporter + 3×3 smoke test) are done. R5-4 (supercell locality, server jobs `r5-supercell-gradients` and `r5-supercell-random`) is in progress.
+  - `PHASE20_RIS_ROADMAP.md`: High-level roadmap for the RIS track (R1–R4 completed and archived in `docs/history/briefs/`; R5 underway).
+  - `INFRA_COMPUTE_SERVER_SYNC.md`: Architecture and sync rules for remote Windows compute servers.
+- **Active on hold:**
+  - `PHASE26_LEAKY_TENSOR_CP_HEXAGON.md`: Leakage-calibrated tensor-cell pure-CP hexagon (synthesis and Board A export done; HFSS simulation run parked per `docs/STATUS.md`).
+- **Parked:**
+  - `_parked/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md`: 28 GHz nylon lens (Parts A–D done; Parts E/F parked).
+  - `_parked/PHASE25_BUTLER_SECTOR_SCANNER.md`: Phase 25 Butler sector scanner (paused).
+  - `_parked/PHASE16_UNIT_CELL_SPARAM_TOOL.md`: Phase 16 unit-cell/FSS S-parameter tool.
 
 See `docs/history/briefs/` for every completed brief (phases 12A onward; phases 1–11's own task
 descriptions are narrated inline in `docs/history/PROJECT_HISTORY.md` instead, predating this

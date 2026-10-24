@@ -1,9 +1,9 @@
 # S-parameter extraction (Phase 4)
 
-Implementation: [src/sparameters.py](src/sparameters.py) (extraction, data model),
-[src/green_function.py](src/green_function.py) (`sheet_fields`, `stack_fields`),
-[src/excitation.py](src/excitation.py) (`ReferencePlanes`, `stack_tangential_field`, now with `port`),
-[src/solver.py](src/solver.py) (`solve` with several right-hand sides).
+Implementation: [`src/sparameters.py`](../../src/sparameters.py) (extraction, data model),
+[`src/green_function.py`](../../src/green_function.py) (`sheet_fields`, `stack_fields`),
+[`src/excitation.py`](../../src/excitation.py) (`ReferencePlanes`, `stack_tangential_field`, now with `port`),
+[`src/solver.py`](../../src/solver.py) (`solve` with several right-hand sides).
 Conventions: [CONVENTIONS.md](CONVENTIONS.md). Upstream: [GREEN_FUNCTION.md](GREEN_FUNCTION.md), [MOM_FORMULATION.md](MOM_FORMULATION.md).
 
 **Pipeline:** solved current `I` → mean current `J̃₀₀` → tangential **E and H at the reference planes** (unpatterned-stack field

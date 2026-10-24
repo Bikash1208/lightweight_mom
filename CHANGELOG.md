@@ -5,6 +5,16 @@ summarize each phase's own write-up in `docs/history/`/`docs/history/`). No vers
 before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` for current
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
+## Unreleased - Phase 20 R5 progress, R4 library v2 validation, Windows fix, curation (2026-10-24, branch `phase20-ris`)
+- **R4 gate PASS - library v2** (`compute/r4-fullgrid-validate` @ `ed76d73`, merged `37074da`; labels `f6688c9`): 60 random points p95 0.31 deg / 0.012 dB; 40 points phi 75-105 deg p95 2.46 deg / 0.109 dB. Full-grid library v2 (`results/phase20_r4/cp2_library_v2_fullgrid.npz`, 41 x 10 x 24, F = 2n = 120; assembled `1264bdc`) is the validated default; v1 labelled as failing the gate near phi = 90 deg (errors live in the 10.4-10.9 GHz band).
+- **R5-1** (`9d3deee`, `14ac74d`): MoM at mesh 90 reproduces the HFSS C_off sensitivity (<= 2.8 deg vs <= 2.2 deg; `results/phase20_r5/TOLERANCE_GAP.md`).
+- **R5-2 / R5-3** (`3f2cfe2`, `00528a4`, `0d46f83`): plane-wave forward model (`src/ris/forward.py`), coding synthesis (`src/ris/coding.py`), beam table, bandwidths, C_off sensitivity, one reference-plane method.
+- **R5-5** (`26b2433`): RIS designer page `/ris.html`, `/api/ris/*`.
+- **R5-6** (`977883b`, `e9e63dd`, `8033f90`): RIS board exporter (`src/export/ris_board_export.py`) and 3x3 smoke package; `AssignLumpedRLC` and the plane-wave call verified in AEDT (2026-10-24).
+- **Phase 26 board B export** (`41f9ea0`, from `764224a`); board A cell count corrected to 5684.
+- **Infra / Windows:** compute-server sync (`13f099f`); utf-8 + LF on every text write under `src/` outside the frozen `phase8b-13` packages (`62df347`), scan test `tests/test_text_write_encoding.py`; opt-in PCHIP interpolation of the correction map (`9466f1f`).
+- **Curation pass 0-5** (branch `curation/2026-10-24`, docs only): `docs/ROADMAP.md`, `jobs/README.md`, `hfss_results/README.md`, refreshed README/START_HERE/briefs index, Phase 19 brief to `_parked/`, Phase 27 brief to `docs/history/briefs/`, theory link fixes.
+
 ## Unreleased - Phase 20 R5 brief (branch `phase20-ris`)
 - `docs/briefs/PHASE20_R5_RIS_DESIGN_MODE.md`: full R5 brief from the user's answers, corrected the same day to the plane-wave reflecting RIS only (offset horn removed; feasibility numbers kept in Appendix B): R5-1 calibrated library layer, R5-2 plane-wave forward model, R5-3 coding synthesis and gain bandwidth, R5-4 array-level verification as server jobs, R5-5 app page, R5-6 HFSS 10 x 10 sub-board export last, R5-7 close-out; item 0 audit in Appendix A. Roadmap: OPEN stage-2 item (integrated antenna with its own feed).
 

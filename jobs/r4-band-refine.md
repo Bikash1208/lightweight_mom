@@ -17,8 +17,6 @@ Library v2 (0.1 GHz nodes) passes the R4 gate (p95), but every large error sits 
 ```
 cd C:\lightweight_mom ; git fetch hub ; git checkout -b compute/r4-band-refine 68814ae2aad573f67345cd7a4e6ce93da47a400a ; .venv\Scripts\activate
 $env:OPENBLAS_NUM_THREADS="1"; $env:OMP_NUM_THREADS="1"; $env:MKL_NUM_THREADS="1"
-# outputs on the share (the chunk directory is gitignored): junction as in jobs/r4-full-grid-server.md, new target
-cmd /c mklink /J results\phase20_r4\chunks_band C:\hmsa_sync\data\r4-band-refine\chunks_band      (create the target first; only needed if you want the build-script chunk dir elsewhere; the driver below writes to its own <out_dir>)
 python scripts\research\phase20_r4_band_refine_run.py run C:\hmsa_sync\data\r4-band-refine --workers 40 --hours 3
 python scripts\research\phase20_r4_band_refine_run.py consolidate C:\hmsa_sync\data\r4-band-refine
 $env:PHASE20_R4_LIB="results\phase20_r4\cp2_library_v2_fullgrid.npz"; $env:PHASE20_R4_WORKERS="40"

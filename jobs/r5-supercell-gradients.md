@@ -1,6 +1,6 @@
 # Job request: r5-supercell-gradients (Phase 20 R5-4a, server 1)
 
-**From:** Mac session (coordinator). **Branch on the server:** `compute/r5-supercell-gradients` from the base commit. Never commit to `phase20-ris`. **Base commit:** `fe491f3e4627a65a2fb9f2b5ad70796965667c78` on `phase20-ris` (fetch from `hub`).
+**From:** Mac session (coordinator). **Branch on the server:** `compute/r5-supercell-gradients` from the base commit. Never commit to `phase20-ris`. **Base commit:** `7d4cc209271ae05a9fe43074c92518d19f00a11e` on `phase20-ris` (fetch from `hub`).
 
 ## START CONDITION
 `jobs/equivalence-check.md` passed (it did: INTERCHANGEABLE) **and `jobs/r5-tolerance-mom.md` has finished** (queued behind it; the two supercell jobs may then run at the same time: this one uses at most 11 workers, `r5-supercell-random` at most 9, leaving the rest of the 48 cores free).
@@ -11,7 +11,7 @@ Array-level check of the designed gradient codings (the local-response assumptio
 
 ## Commands (PowerShell)
 ```
-cd C:\lightweight_mom ; git fetch hub ; git checkout -b compute/r5-supercell-gradients fe491f3e4627a65a2fb9f2b5ad70796965667c78 ; .venv\Scripts\activate
+cd C:\lightweight_mom ; git fetch hub ; git checkout -b compute/r5-supercell-gradients 7d4cc209271ae05a9fe43074c92518d19f00a11e ; .venv\Scripts\activate
 $env:OPENBLAS_NUM_THREADS="1"; $env:OMP_NUM_THREADS="1"; $env:MKL_NUM_THREADS="1"
 python -m pytest -m "not slow" -q > results\phase20_r5\server1_fast_suite_r5_4a.txt     (first step; report failures other than the known BLAS last-digit ones; do not patch)
 python scripts\research\phase20_r5_supercell.py gradients results\phase20_r5\supercell_gradients --workers 11 --smoke      (smoke: one task at n_per_cell 8, minutes; check it prints "done")

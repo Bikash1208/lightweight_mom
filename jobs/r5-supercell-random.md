@@ -1,6 +1,6 @@
 # Job request: r5-supercell-random (Phase 20 R5-4b, server 1)
 
-**From:** Mac session (coordinator). **Branch on the server:** `compute/r5-supercell-random` from the base commit. Never commit to `phase20-ris`. **Base commit:** `fe491f3e4627a65a2fb9f2b5ad70796965667c78` on `phase20-ris` (fetch from `hub`).
+**From:** Mac session (coordinator). **Branch on the server:** `compute/r5-supercell-random` from the base commit. Never commit to `phase20-ris`. **Base commit:** `7d4cc209271ae05a9fe43074c92518d19f00a11e` on `phase20-ris` (fetch from `hub`).
 
 ## START CONDITION
 `jobs/equivalence-check.md` passed and `jobs/r5-tolerance-mom.md` finished (queued behind it). May run together with `r5-supercell-gradients` (this job uses at most 9 workers).
@@ -11,7 +11,7 @@ Same array-level check for the **non-periodic codings**: 4 x 4 tiles at f = 10.5
 
 ## Commands (PowerShell)
 ```
-cd C:\lightweight_mom ; git fetch hub ; git checkout -b compute/r5-supercell-random fe491f3e4627a65a2fb9f2b5ad70796965667c78 ; .venv\Scripts\activate
+cd C:\lightweight_mom ; git fetch hub ; git checkout -b compute/r5-supercell-random 7d4cc209271ae05a9fe43074c92518d19f00a11e ; .venv\Scripts\activate
 $env:OPENBLAS_NUM_THREADS="1"; $env:OMP_NUM_THREADS="1"; $env:MKL_NUM_THREADS="1"
 python scripts\research\phase20_r5_supercell.py random results\phase20_r5\supercell_random --workers 9 --smoke      (smoke at n_per_cell 8; delete its output afterwards)
 python scripts\research\phase20_r5_supercell.py random results\phase20_r5\supercell_random --workers 9

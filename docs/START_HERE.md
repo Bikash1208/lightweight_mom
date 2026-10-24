@@ -27,7 +27,7 @@ Run it: `make app`, then walk the 3-step wizard at `http://127.0.0.1:8000`. One 
 lives at `inputs/reference_fields/efl_phase_EzZ_example.fld` (see `inputs/README.md`).
 Additional specialized tools under "More tools":
 - **Tensor CP (monopole-fed)** (`/tensor_cp.html`, Phases 26/27): pure-circular-polarisation design -> HFSS export -> comparison with HFSS exports.
-- **RIS designer** (`/ris.html`, Phase 20 R5): 2-bit PIN-diode reconfigurable metasurface (10.5 GHz CP-2 cell family), plane-wave beam steering, coding synthesis, and board export.
+- **RIS designer** (`/ris.html`, Phase 20 R5): 2-bit PIN-diode reconfigurable metasurface (10.5 GHz CP-2 cell family), plane-wave beam steering, coding synthesis and beam prediction; the board exporter is `src/export/ris_board_export.py`.
 Cell families and discrete-state libraries live in `src/hologram/cell_family_registry.py`.
 
 ## Repo map
@@ -62,7 +62,7 @@ Active work: `docs/briefs/README.md` lists what is active and what is parked.
 python3 --version  # must be >= 3.11 -- substitute a 3.11+ interpreter below otherwise
 python3 -m venv .venv && .venv/bin/pip install -e ".[dev,app,cad]"
 make app          # start the web app at http://127.0.0.1:8000 -- RESTART after any backend change
-make test-fast    # pytest -m "not slow", ~6-7 min (2908 tests), run before every commit
+make test-fast    # pytest -m "not slow", ~6-7 min (2914 tests), run before every commit
 make test-full    # everything, including real MoM solves, tens of minutes
 ```
 
@@ -110,5 +110,5 @@ Key architectural context for new agents:
 - **Active Track:** The primary active track is **RIS** (Reconfigurable Metasurface): 2-bit PIN-diode cells at 10.5 GHz with circular polarisation (CP-2 cell) and linear polarisation. Core modules live in `src/ris/`, with frontend UI at `src/app/static/ris.html` (`/ris.html`).
 - **Cell Family Registry:** Cell families, discrete-state libraries, and domains of validity are registered in `src/hologram/cell_family_registry.py`.
 - **Compute Server Workflow:** Heavy computational tasks (MoM sweeps, full-grid libraries, supercell verifications) are **never run on the Mac**. They are dispatched via `jobs/<job>.md` to Windows compute servers (e.g. Server 1) through the `hub` remote on `compute/<job>` branches, following `docs/briefs/INFRA_COMPUTE_SERVER_SYNC.md`. The Mac functions strictly as coordinator and merges completed branches.
-- **Full-Wave Ground Truth:** External HFSS simulation outputs (Touchstone files, gain tables, Floquet references) reside in `hfss_results/` and anchor all model calibrations.
+- **Full-Wave Ground Truth:** External HFSS simulation outputs (Touchstone files, gain tables, Floquet references) reside in `hfss_results/` and are the reference for the HFSS-calibrated corrections.
 - `docs/ARCHITECTURE.md` and `docs/USER_GUIDE.md` are the next stops if modifying the HMSA Designer web application.

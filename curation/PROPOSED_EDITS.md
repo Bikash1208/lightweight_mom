@@ -161,3 +161,39 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
 - **Phase 26 Board B export** (commit `41f9ea0`): Export package for 4-port tensor-CP hexagon Board B.
 ```
 - **Evidence:** Reconstructs the 2026-10-24 commit log on `phase20-ris` (`1264bdc`, `7ddc843`, `9d3deee`, `14ac74d`, `26b2433`, `977883b`, `e9e63dd`, `41f9ea0`, `ed76d73`, `f6688c9`).
+
+---
+
+## 5. Updates for Moved Briefs in Protected Documentation (Pass 3)
+
+### 5.1 `docs/STATUS.md` (Line 98)
+
+- **Target File:** `docs/STATUS.md`
+- **Location:** Line 98 (Open Next Steps, item 1)
+- **Old Text:**
+```markdown
+1. **Decision, Phase 19**: is ±30.00° a hard specification for the nylon lens? The error bar puts the beam at ≈30.3° median in the
+   primary model (0.4° typical pointing error). Parts E/F of `docs/briefs/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md` wait on this.
+```
+- **New Text:**
+```markdown
+1. **Decision, Phase 19**: is ±30.00° a hard specification for the nylon lens? The error bar puts the beam at ≈30.3° median in the
+   primary model (0.4° typical pointing error). Parts E/F of `docs/briefs/_parked/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md` wait on this.
+```
+- **Evidence:** `PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md` moved to `docs/briefs/_parked/` in Pass 3.
+
+---
+
+### 5.2 `docs/history/PROJECT_HISTORY.md` (Line 600)
+
+- **Target File:** `docs/history/PROJECT_HISTORY.md`
+- **Location:** Line 600
+- **Old Text:**
+```markdown
+comparison) wait on the user's ±30.00° decision and an HFSS run. Brief: `briefs/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md`.
+```
+- **New Text:**
+```markdown
+comparison) wait on the user's ±30.00° decision and an HFSS run. Brief: `briefs/_parked/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md`.
+```
+- **Evidence:** Brief moved to `docs/briefs/_parked/`.

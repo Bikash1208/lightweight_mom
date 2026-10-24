@@ -25,10 +25,8 @@ and reports back against its own acceptance checks.
   - `INFRA_COMPUTE_SERVER_SYNC.md`: Architecture and sync rules for remote Windows compute servers.
 - **Active on hold:**
   - `PHASE26_LEAKY_TENSOR_CP_HEXAGON.md`: Leakage-calibrated tensor-cell pure-CP hexagon (synthesis and Board A export done; HFSS simulation run parked per `docs/STATUS.md:79`).
-- **Completed (pending move to `docs/history/briefs/` in Pass 3):**
-  - `PHASE27_APP_TENSOR_CP.md`: Tensor-CP design flow in the app (merged and closed out in commit `4b87212`).
-- **Parked / Pending park:**
-  - `PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md`: Parts A–D done; Parts E/F parked (moving to `docs/briefs/_parked/` in Pass 3).
+- **Parked:**
+  - `_parked/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md`: 28 GHz nylon lens (Parts A–D done; Parts E/F parked).
   - `_parked/PHASE25_BUTLER_SECTOR_SCANNER.md`: Phase 25 Butler sector scanner (paused).
   - `_parked/PHASE16_UNIT_CELL_SPARAM_TOOL.md`: Phase 16 unit-cell/FSS S-parameter tool.
 

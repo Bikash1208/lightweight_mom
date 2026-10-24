@@ -37,7 +37,7 @@ Cell families and discrete-state libraries live in `src/hologram/cell_family_reg
 | `src/` (flat modules) | Core periodic MoM solver: geometry, basis functions, Green's function, MoM matrix, S-parameters, unit-cell database | changing solver physics (rare — see `CLAUDE.md`'s reuse rule) |
 | `src/dispersion/`, `src/fields/`, `src/hologram/`, `src/pattern/`, `src/reflectarray/`, `src/export/`, `src/verify/`, `src/hfss_compare/` | HMSA design layer: surface-wave dispersion, `.fld` import, hologram synthesis, far-field pattern, CAD/CSV export, full-array verification | adding a design capability |
 | `src/hologram/ports.py`, `auto_states.py`, `sll_optimizer.py`, `sll_board.py`; `src/pattern/cellwise_pattern.py`; `src/export/exact_board.py`, `aedt_script.py` | Phases 21-23: multi-port layouts incl. polygon/hexagon ports (`hex4`), automatic coded-cell states, the cell-wise far-field model and the sidelobe optimiser ("Reduce sidelobes", `/api/sidelobes/optimize`), exact STEP + AEDT script for boards | multi-port, coded or sidelobe work (the Phase 23 rectangle gate: `scripts/research/phase23_rect_snapshot.py`) |
-| `src/dielectric_cell/`, `src/transmitarray/` | Phase 19 (model-only): RCWA unit cell for 3D-printed dielectric (nylon) cells and the horn-fed transmitarray lens design/error-bar code; not wired into the app | the nylon lens (`docs/briefs/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md`) |
+| `src/dielectric_cell/`, `src/transmitarray/` | Phase 19 (model-only): RCWA unit cell for 3D-printed dielectric (nylon) cells and the horn-fed transmitarray lens design/error-bar code; not wired into the app | the nylon lens (`docs/briefs/_parked/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md`) |
 | `src/ris/` | Phase 20 RIS track: plane-wave forward model, PIN diode circuit models, calibrated state library, coding synthesis, and service layer | active RIS development (`docs/briefs/PHASE20_R5_RIS_DESIGN_MODE.md`) |
 | `src/phase8b/ … src/phase13/` | Frozen research-phase packages, still imported by the app (`docs/ARCHITECTURE.md` has the who-imports-what table) | **don't rename or move these** — document, don't refactor |
 | `src/app/` | FastAPI backend + static HTML/JS frontend (HMSA wizard, Tensor CP, RIS designer) | adding/changing a page or endpoint |
@@ -62,7 +62,7 @@ Active work: `docs/briefs/README.md` lists what is active and what is parked.
 python3 --version  # must be >= 3.11 -- substitute a 3.11+ interpreter below otherwise
 python3 -m venv .venv && .venv/bin/pip install -e ".[dev,app,cad]"
 make app          # start the web app at http://127.0.0.1:8000 -- RESTART after any backend change
-make test-fast    # pytest -m "not slow", ~6-7 min (2914 tests), run before every commit
+make test-fast    # pytest -m "not slow", ~6-7 min (~2900 tests), run before every commit
 make test-full    # everything, including real MoM solves, tens of minutes
 ```
 

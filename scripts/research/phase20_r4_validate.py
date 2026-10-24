@@ -6,9 +6,11 @@
     error the correction map removes and what is left.
 
     python scripts/research/phase20_r4_validate.py a|b [N] [out.json] [--phi-range LO,HI] [--seed S] [--save-refs refs.npz]
+                                                  [--f-range LO,HI] [--use-refs refs.npz]
 
 `PHASE20_R4_LIB` selects the library, `PHASE20_R4_WORKERS` the pool size (default 11 as before). `--phi-range` draws the held-out points only inside that phi window (default 0-360), `--seed` changes the
 draw (default the original 20261021), `--save-refs` stores the direct-solve references (points, states, structure-frame circular) so the interpolation can be re-evaluated without new solves.
+`--use-refs refs.npz` does exactly that: the points and solved states come from a saved file (no solves; any library via PHASE20_R4_LIB). `--f-range` restricts the drawn frequencies (e.g. 10.4,10.9). The summary also reports the errors inside the resonance band 10.4-10.9 GHz.
 
 Gate (brief): interpolation error <= 3 deg / 0.2 dB at the 95th percentile for theta <= 30 deg; beyond 30 deg reported only. Errors are on r_RR (phase, level) and on the
 largest element difference |dC|. MODEL_ONLY.
@@ -36,11 +38,11 @@ F_REF = {60: 120, 120: 240}
 LIB = Path(os.environ.get("PHASE20_R4_LIB", ROOT / "results" / "phase20_r4" / "cp2_library_v1.npz"))
 
 
-def draw_points(n, seed=20261021, phi_range=(0.0, 360.0)):
+def draw_points(n, seed=20261021, phi_range=(0.0, 360.0), f_range=(8.0, 12.0)):
     rng = np.random.default_rng(seed)
     pts = []
     while len(pts) < n:  # points with a propagating higher order are outside the library domain and are not drawn
-        f, th, ph = float(rng.uniform(8, 12)), float(rng.uniform(0, 45)), float(rng.uniform(*phi_range))
+        f, th, ph = float(rng.uniform(*f_range)), float(rng.uniform(0, 45)), float(rng.uniform(*phi_range))
         if higher_order_margin(f, th, ph) >= 1.0:
             pts.append((f, th, ph))
     return pts
@@ -58,8 +60,31 @@ def errors(c_lib, c_ref):
     return ph, db, dmax
 
 
+BAND = (10.4, 10.9)
+
+
 def summarise(rows):
     out = {}
+    band = [r for r in rows if BAND[0] <= r["f"] <= BAND[1]]
+    for tag, sel in (
+        ("in_band_10p4_10p9.theta_le_30", [r for r in band if r["theta"] <= 30.0]),
+        ("in_band_10p4_10p9.all_theta", band),
+    ):
+        if sel:
+            v = np.abs([x for r in sel for x in r["phase_err_deg"]])
+            d = np.abs([x for r in sel for x in r["db_err"]])
+            out[f"{tag}.phase_err_deg"] = {
+                "n_points": len(sel),
+                "median": float(np.median(v)),
+                "p95": float(np.percentile(v, 95)),
+                "max": float(v.max()),
+            }
+            out[f"{tag}.db_err"] = {
+                "n_points": len(sel),
+                "median": float(np.median(d)),
+                "p95": float(np.percentile(d, 95)),
+                "max": float(d.max()),
+            }
     for name, sel in (
         ("theta_le_30", [r for r in rows if r["theta"] <= 30.0]),
         ("theta_gt_30", [r for r in rows if r["theta"] > 30.0]),
@@ -77,11 +102,19 @@ def summarise(rows):
     return out
 
 
-def main(mode, n, out, phi_range=(0.0, 360.0), seed=20261021, save_refs=None):
+def main(mode, n, out, phi_range=(0.0, 360.0), seed=20261021, save_refs=None, f_range=(8.0, 12.0), use_refs=None):
     lib = StateLibrary.load(LIB)
-    pts = draw_points(n, seed, phi_range)
+    if use_refs:
+        z = np.load(use_refs)
+        pts = [tuple(float(v) for v in p) for p in z["points"]]
+        mode, n = str(z["mode"]), len(pts)
+    else:
+        pts = draw_points(n, seed, phi_range, f_range)
     workers = int(os.environ.get("PHASE20_R4_WORKERS", "11"))
-    if mode == "a":
+    if use_refs:
+        solved = list(z["s"])
+        key = "c_raw" if mode == "a" else "c_corr"
+    elif mode == "a":
         os.environ.setdefault("OMP_NUM_THREADS", "1")
         with Pool(workers) as pool:
             solved = pool.map(solve_point, [(f, th, ph, 60, F_REF[60]) for f, th, ph in pts], chunksize=1)
@@ -114,7 +147,17 @@ def main(mode, n, out, phi_range=(0.0, 360.0), seed=20261021, save_refs=None):
             "limit_db": 0.2,
             "result": "GATE_PASS" if ph95 <= 3.0 and db95 <= 0.2 else "GATE_FAIL",
         }
-    res = {"mode": mode, "n_points": n, "phi_range": list(phi_range), "seed": seed, "library": str(LIB), "gate_theta_le_30": gate, "summary": summ}
+    res = {
+        "mode": mode,
+        "n_points": n,
+        "phi_range": list(phi_range),
+        "f_range": list(f_range),
+        "seed": seed,
+        "refs": str(use_refs) if use_refs else None,
+        "library": str(LIB),
+        "gate_theta_le_30": gate,
+        "summary": summ,
+    }
     if mode == "b":
         raw_rows = [
             {
@@ -134,7 +177,7 @@ def main(mode, n, out, phi_range=(0.0, 360.0), seed=20261021, save_refs=None):
 if __name__ == "__main__":
     argv = sys.argv[1:]
     opts = {}
-    for key in ("--phi-range", "--seed", "--save-refs"):
+    for key in ("--phi-range", "--seed", "--save-refs", "--f-range", "--use-refs"):
         if key in argv:
             i = argv.index(key)
             opts[key] = argv[i + 1]
@@ -148,4 +191,6 @@ if __name__ == "__main__":
         tuple(float(x) for x in opts["--phi-range"].split(",")) if "--phi-range" in opts else (0.0, 360.0),
         int(opts["--seed"]) if "--seed" in opts else 20261021,
         opts.get("--save-refs"),
+        tuple(float(x) for x in opts["--f-range"].split(",")) if "--f-range" in opts else (8.0, 12.0),
+        opts.get("--use-refs"),
     )

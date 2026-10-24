@@ -38,3 +38,17 @@ def test_manifest_sha256_check(tmp_path):
     np.savez(f, a=np.arange(4))
     with pytest.raises(ValueError):
         asm.verify_manifest(man, [tmp_path])
+
+
+def test_corr_f_list_option_changes_only_the_correction_frequencies():
+    B = asm.B
+    old_corr, old_grid = list(B.CORR_F), list(B.GRID_F)
+    try:
+        pos, kw, dry = B.parse_grid_options(["x", "corr90", "40", "--corr-f-list", "10.45,10.55", "--f-list", "10.45,10.55", "--theta-step", "5", "--phi-step", "15"])
+        assert pos == ["x", "corr90", "40"] and kw["corr_f_list"] == [10.45, 10.55]
+        B.configure_grid(**kw)
+        assert B.CORR_F == [10.45, 10.55] and B.GRID_F == [10.45, 10.55]
+        assert B.CORR_POINTS[:2] == [(0.0, 0.0), (30.0, 0.0)]
+    finally:
+        B.CORR_F, B.GRID_F = old_corr, old_grid
+        B.configure_grid(theta_step=7.5, phi_step=30.0)

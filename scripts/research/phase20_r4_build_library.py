@@ -210,10 +210,12 @@ def _lin(start, step, stop, endpoint):
     return [start + step * i for i in range(n + 1 if endpoint else n)]
 
 
-def configure_grid(f_step=None, theta_step=None, phi_step=None, f_list=None, theta_list=None, phi_list=None):
+def configure_grid(f_step=None, theta_step=None, phi_step=None, f_list=None, theta_list=None, phi_list=None, corr_f_list=None):
     """Override the grid constants (f 8-12 GHz, theta 0-45 deg, phi 0-<360 deg) by a step or an explicit list; an argument left at None keeps the current constant, so
     `configure_grid()` changes nothing. With the default steps (0.25 GHz, 7.5 deg, 30 deg) the lists equal the constants above exactly."""
-    global GRID_F, GRID_THETA, GRID_PHI
+    global GRID_F, GRID_THETA, GRID_PHI, CORR_F
+    if corr_f_list is not None:  # frequencies of the corr60 / corr90 / corr120 chunks (default: the 9 R4 frequencies)
+        CORR_F = list(corr_f_list)
     if f_list is not None:
         GRID_F = list(f_list)
     elif f_step is not None:
@@ -229,9 +231,9 @@ def configure_grid(f_step=None, theta_step=None, phi_step=None, f_list=None, the
 
 
 def parse_grid_options(argv):
-    """Pull the optional `--f-step/--theta-step/--phi-step X`, `--f-list/--theta-list/--phi-list a,b,c` and `--dry-run` out of argv; returns (positional, kwargs, dry_run)."""
+    """Pull the optional `--f-step/--theta-step/--phi-step X`, `--f-list/--theta-list/--phi-list/--corr-f-list a,b,c` and `--dry-run` out of argv; returns (positional, kwargs, dry_run)."""
     keys = {"--f-step": "f_step", "--theta-step": "theta_step", "--phi-step": "phi_step"}
-    lists = {"--f-list": "f_list", "--theta-list": "theta_list", "--phi-list": "phi_list"}
+    lists = {"--f-list": "f_list", "--theta-list": "theta_list", "--phi-list": "phi_list", "--corr-f-list": "corr_f_list"}
     pos, kw, dry, i = [], {}, False, 0
     while i < len(argv):
         a = argv[i]

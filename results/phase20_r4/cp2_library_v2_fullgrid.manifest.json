@@ -1,0 +1,169 @@
+{
+ "name": "ris_cp2_octagon_madp_rt5880_15_fullgrid",
+ "version": 2,
+ "labels": [
+  "MODEL_ONLY",
+  "NOT_HFSS_VALIDATED",
+  "PROVISIONAL_DATASHEET",
+  "VIA_OMITTED_APPROXIMATION"
+ ],
+ "axes": {
+  "f_ghz": [
+   8.0,
+   8.1,
+   8.2,
+   8.3,
+   8.4,
+   8.5,
+   8.6,
+   8.7,
+   8.8,
+   8.9,
+   9.0,
+   9.1,
+   9.2,
+   9.3,
+   9.4,
+   9.5,
+   9.6,
+   9.7,
+   9.8,
+   9.9,
+   10.0,
+   10.1,
+   10.2,
+   10.3,
+   10.4,
+   10.5,
+   10.6,
+   10.7,
+   10.8,
+   10.9,
+   11.0,
+   11.1,
+   11.2,
+   11.3,
+   11.4,
+   11.5,
+   11.6,
+   11.7,
+   11.8,
+   11.9,
+   12.0
+  ],
+  "theta_deg": [
+   0.0,
+   5.0,
+   10.0,
+   15.0,
+   20.0,
+   25.0,
+   30.0,
+   35.0,
+   40.0,
+   45.0
+  ],
+  "phi_deg": [
+   0.0,
+   15.0,
+   30.0,
+   45.0,
+   60.0,
+   75.0,
+   90.0,
+   105.0,
+   120.0,
+   135.0,
+   150.0,
+   165.0,
+   180.0,
+   195.0,
+   210.0,
+   225.0,
+   240.0,
+   255.0,
+   270.0,
+   285.0,
+   300.0,
+   315.0,
+   330.0,
+   345.0
+  ],
+  "state": [
+   1,
+   2,
+   3,
+   4
+  ]
+ },
+ "theta_label": {
+  "0": "within_R3_targets",
+  "5": "within_R3_targets",
+  "10": "within_R3_targets",
+  "15": "within_R3_targets",
+  "20": "within_R3_targets",
+  "25": "within_R3_targets",
+  "30": "within_R3_targets",
+  "35": "EXTRAPOLATED_BEYOND_R3_TARGETS",
+  "40": "EXTRAPOLATED_BEYOND_R3_TARGETS",
+  "45": "EXTRAPOLATED_BEYOND_R3_TARGETS"
+ },
+ "frame": "circular reflection C[reflected, incident] (R, L; propagation-relative) referred to the fixed structure axes; s_corr in the incidence-plane (TE, TM) frame",
+ "grid_mesh": 60,
+ "floquet_cutoff": "2 n (n = cells per period) at every mesh",
+ "grid_reduction_note": "full approved grid 41 x 10 x 24 (server run r4-full-grid, mesh 60, F = 2n; corrections from the R4 mesh 60/90/120 set, mesh 90 re-run on the server agrees to 1e-13)",
+ "correction": {
+  "meshes": [
+   60,
+   90,
+   120
+  ],
+  "f_ghz": [
+   8.0,
+   8.5,
+   9.0,
+   9.5,
+   10.0,
+   10.5,
+   11.0,
+   11.5,
+   12.0
+  ],
+  "points": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    30.0,
+    0.0
+   ],
+   [
+    30.0,
+    90.0
+   ],
+   [
+    45.0,
+    0.0
+   ],
+   [
+    45.0,
+    90.0
+   ]
+  ],
+  "definition": "dC = C_inf(p=2) - C(60) with C_inf = C(120) + R2 (C(120) - C(90)), phi-mean, interpolated in (f, theta), added to every phi; uncertainty = |C_inf(p=1) - C_inf(p=2)| + phi spread; all meshes with Floquet cutoff F = 2n",
+  "r_RR_phase_correction_deg": {
+   "min": -39.87759473032928,
+   "max": 64.22771420737705,
+   "median": 4.906058925978943
+  },
+  "max_uncertainty_abs": 0.520139342470353
+ },
+ "cell": {
+  "geometry_json": "results/phase20_r3/opt/cp2_madp_final.json",
+  "diode": "MACOM MADP-000907-14020 (L_s = 0 assumed)",
+  "period_mm": 15.0
+ },
+ "built_at_commit": "7ddc84344c613bd0366cd8db4d4b3392d67d6ed8",
+ "sha256": "5b4e9cd7333f858c75ba7433228b0f805c7b2d2c815bb535da593d9112b5a3e0"
+}

@@ -5,7 +5,10 @@
 (b) CORRECTED-LIBRARY error: M of those points re-solved at mesh 120; compared with the interpolated CORRECTED table (`c_corr`) and with the raw one: how much of the mesh
     error the correction map removes and what is left.
 
-    python scripts/research/phase20_r4_validate.py a|b [N] [out.json]
+    python scripts/research/phase20_r4_validate.py a|b [N] [out.json] [--phi-range LO,HI] [--seed S] [--save-refs refs.npz]
+
+`PHASE20_R4_LIB` selects the library, `PHASE20_R4_WORKERS` the pool size (default 11 as before). `--phi-range` draws the held-out points only inside that phi window (default 0-360), `--seed` changes the
+draw (default the original 20261021), `--save-refs` stores the direct-solve references (points, states, structure-frame circular) so the interpolation can be re-evaluated without new solves.
 
 Gate (brief): interpolation error <= 3 deg / 0.2 dB at the 95th percentile for theta <= 30 deg; beyond 30 deg reported only. Errors are on r_RR (phase, level) and on the
 largest element difference |dC|. MODEL_ONLY.
@@ -33,11 +36,11 @@ F_REF = {60: 120, 120: 240}
 LIB = Path(os.environ.get("PHASE20_R4_LIB", ROOT / "results" / "phase20_r4" / "cp2_library_v1.npz"))
 
 
-def draw_points(n, seed=20261021):
+def draw_points(n, seed=20261021, phi_range=(0.0, 360.0)):
     rng = np.random.default_rng(seed)
     pts = []
     while len(pts) < n:  # points with a propagating higher order are outside the library domain and are not drawn
-        f, th, ph = float(rng.uniform(8, 12)), float(rng.uniform(0, 45)), float(rng.uniform(0, 360))
+        f, th, ph = float(rng.uniform(8, 12)), float(rng.uniform(0, 45)), float(rng.uniform(*phi_range))
         if higher_order_margin(f, th, ph) >= 1.0:
             pts.append((f, th, ph))
     return pts
@@ -74,18 +77,21 @@ def summarise(rows):
     return out
 
 
-def main(mode, n, out):
+def main(mode, n, out, phi_range=(0.0, 360.0), seed=20261021, save_refs=None):
     lib = StateLibrary.load(LIB)
-    pts = draw_points(n)
+    pts = draw_points(n, seed, phi_range)
+    workers = int(os.environ.get("PHASE20_R4_WORKERS", "11"))
     if mode == "a":
         os.environ.setdefault("OMP_NUM_THREADS", "1")
-        with Pool(11) as pool:
+        with Pool(workers) as pool:
             solved = pool.map(solve_point, [(f, th, ph, 60, F_REF[60]) for f, th, ph in pts], chunksize=1)
         key = "c_raw"
     else:
         with Pool(3) as pool:  # 3 processes x OMP_NUM_THREADS (set by the caller, e.g. 4): peak ~9 GB each
             solved = pool.map(solve_point, [(f, th, ph, 120, F_REF[120]) for f, th, ph in pts], chunksize=1)
         key = "c_corr"
+    if save_refs:
+        np.savez_compressed(save_refs, points=np.array(pts), s=np.array(solved), mode=mode)
     rows = []
     for (f, th, ph), s in zip(pts, solved, strict=True):
         ref = to_c(s, ph)
@@ -108,7 +114,7 @@ def main(mode, n, out):
             "limit_db": 0.2,
             "result": "GATE_PASS" if ph95 <= 3.0 and db95 <= 0.2 else "GATE_FAIL",
         }
-    res = {"mode": mode, "n_points": n, "gate_theta_le_30": gate, "summary": summ}
+    res = {"mode": mode, "n_points": n, "phi_range": list(phi_range), "seed": seed, "library": str(LIB), "gate_theta_le_30": gate, "summary": summ}
     if mode == "b":
         raw_rows = [
             {
@@ -126,6 +132,20 @@ def main(mode, n, out):
 
 
 if __name__ == "__main__":
-    mode = sys.argv[1]
-    n = int(sys.argv[2]) if len(sys.argv) > 2 else (60 if mode == "a" else 20)
-    main(mode, n, sys.argv[3] if len(sys.argv) > 3 else ROOT / "results" / "phase20_r4" / f"validation_{mode}.json")
+    argv = sys.argv[1:]
+    opts = {}
+    for key in ("--phi-range", "--seed", "--save-refs"):
+        if key in argv:
+            i = argv.index(key)
+            opts[key] = argv[i + 1]
+            del argv[i : i + 2]
+    mode = argv[0]
+    n = int(argv[1]) if len(argv) > 1 else (60 if mode == "a" else 20)
+    main(
+        mode,
+        n,
+        argv[2] if len(argv) > 2 else ROOT / "results" / "phase20_r4" / f"validation_{mode}.json",
+        tuple(float(x) for x in opts["--phi-range"].split(",")) if "--phi-range" in opts else (0.0, 360.0),
+        int(opts["--seed"]) if "--seed" in opts else 20261021,
+        opts.get("--save-refs"),
+    )

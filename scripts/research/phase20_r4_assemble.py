@@ -1,6 +1,10 @@
 """Phase 20 R4 item 3: assemble the CP-2 state library from the chunks of `phase20_r4_build_library.py`.
 
     python scripts/research/phase20_r4_assemble.py [out.npz]      # default results/phase20_r4/cp2_library_v1.npz (+ .manifest.json)
+    python scripts/research/phase20_r4_assemble.py out.npz --f-step 0.1 --theta-step 5 --phi-step 15 --grid-chunks <dir> [--corr-chunks <dir>] [--server-manifest MANIFEST.json] [--name vN]
+
+The grid options are those of `phase20_r4_build_library.py` (defaults unchanged: with no option this script behaves exactly as before). `--grid-chunks` / `--corr-chunks` give the
+directories of the `grid_f*.npz` and `corr*_f*.npz` chunks (default: the build script's chunk directory); `--server-manifest` verifies every chunk's sha256 against a server MANIFEST.json before use.
 
 Reads the grid chunks (mesh 60) and the correction chunks (mesh 60 / 90 / 120), fills theta = 0 by the exact frame rotation, refers everything to the fixed structure frame,
 builds the (f, theta) mesh-correction map and the uncertainty (src/ris/state_library.py), writes one compressed npz plus a JSON manifest. MODEL_ONLY.
@@ -13,7 +17,8 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from phase20_r4_build_library import CORR_F, CORR_POINTS, GRID_F, GRID_PHI, GRID_THETA, chunk_path, grid_points
+import phase20_r4_build_library as B
+from phase20_r4_build_library import CORR_F, CORR_POINTS
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -21,16 +26,40 @@ sys.path.insert(0, str(ROOT))
 from src.ris.polarization import circular_reflection, to_structure_frame  # noqa: E402
 from src.ris.state_library import THETA_LABEL_LIMIT_DEG, assemble, fill_normal_incidence, save_library  # noqa: E402
 
+CHUNK_DIRS = {}  # kind -> directory override ("grid", "corr")
+
+
+def chunk_path(kind, f):
+    d = CHUNK_DIRS.get("grid" if kind == "grid" else "corr")
+    return (Path(d) / f"{kind}_f{f:.2f}.npz") if d else B.chunk_path(kind, f)
+
+
+def verify_manifest(manifest_path, directories):
+    """sha256 of every chunk named in a server MANIFEST.json (paths with backslashes) against the file found in `directories`; raises on any mismatch or missing file."""
+    man = json.loads(Path(manifest_path).read_text())
+    checked = 0
+    for ent in man["files"]:
+        name = ent["file"].replace("\\", "/").split("/")[-1]
+        found = next((Path(d) / name for d in directories if (Path(d) / name).exists()), None)
+        if found is None:
+            if name.endswith(".npz"):
+                raise FileNotFoundError(name)
+            continue  # logs / provenance files live next to the chunks directory, not in it
+        if hashlib.sha256(found.read_bytes()).hexdigest() != ent["sha256"]:
+            raise ValueError(f"sha256 mismatch: {found}")
+        checked += 1
+    return checked
+
 
 def load_grid():
-    pts = grid_points()
-    s = np.zeros((len(GRID_F), len(GRID_THETA), len(GRID_PHI), 4, 2, 2), dtype=complex)
-    for i, f in enumerate(GRID_F):
+    pts = B.grid_points()
+    s = np.zeros((len(B.GRID_F), len(B.GRID_THETA), len(B.GRID_PHI), 4, 2, 2), dtype=complex)
+    for i, f in enumerate(B.GRID_F):
         z = np.load(chunk_path("grid", f))
         assert np.allclose(z["points"], np.array(pts))
         for (th, ph), val in zip(pts, z["s"], strict=True):
-            s[i, GRID_THETA.index(th), GRID_PHI.index(ph)] = val
-    return fill_normal_incidence(s, GRID_THETA, GRID_PHI)
+            s[i, B.GRID_THETA.index(th), B.GRID_PHI.index(ph)] = val
+    return fill_normal_incidence(s, B.GRID_THETA, B.GRID_PHI)
 
 
 def load_corr(kind):
@@ -44,7 +73,8 @@ def load_corr(kind):
     return out
 
 
-def main(out):
+def main(out, name="ris_cp2_octagon_madp_rt5880_15", version=1, note=None):
+    GRID_F, GRID_THETA, GRID_PHI = B.GRID_F, B.GRID_THETA, B.GRID_PHI
     s_raw = load_grid()
     c60, c90, c120 = (load_corr(k) for k in ("corr60", "corr90", "corr120"))
     arrays = assemble(GRID_F, GRID_THETA, GRID_PHI, s_raw, CORR_F, CORR_POINTS, c60, c90, c120)
@@ -53,8 +83,8 @@ def main(out):
     phase_corr = np.degrees(np.angle((rr + dc[..., 0, 0]) / rr))
     commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=ROOT).stdout.strip()
     manifest = {
-        "name": "ris_cp2_octagon_madp_rt5880_15",
-        "version": 1,
+        "name": name,
+        "version": version,
         "labels": ["MODEL_ONLY", "NOT_HFSS_VALIDATED", "PROVISIONAL_DATASHEET", "VIA_OMITTED_APPROXIMATION"],
         "axes": {"f_ghz": GRID_F, "theta_deg": GRID_THETA, "phi_deg": GRID_PHI, "state": [1, 2, 3, 4]},
         "theta_label": {
@@ -64,7 +94,8 @@ def main(out):
         "frame": "circular reflection C[reflected, incident] (R, L; propagation-relative) referred to the fixed structure axes; s_corr in the incidence-plane (TE, TM) frame",
         "grid_mesh": 60,
         "floquet_cutoff": "2 n (n = cells per period) at every mesh",
-        "grid_reduction_note": "reduced from the approved 41 x 10 x 24 grid after the Floquet-cutoff finding (results/phase20_r4/FLOQUET_CONVERGENCE.md)",
+        "grid_reduction_note": note
+        or "reduced from the approved 41 x 10 x 24 grid after the Floquet-cutoff finding (results/phase20_r4/FLOQUET_CONVERGENCE.md)",
         "correction": {
             "meshes": [60, 90, 120],
             "f_ghz": CORR_F,
@@ -91,4 +122,32 @@ def main(out):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else ROOT / "results/phase20_r4/cp2_library_v1.npz")
+    argv, grid_kw, dry = B.parse_grid_options(sys.argv)
+    B.configure_grid(**grid_kw)
+    opts = {}
+    for key in ("--grid-chunks", "--corr-chunks", "--server-manifest", "--name"):
+        if key in argv:
+            i = argv.index(key)
+            opts[key] = argv[i + 1]
+            del argv[i : i + 2]
+    if "--grid-chunks" in opts:
+        CHUNK_DIRS["grid"] = opts["--grid-chunks"]
+    if "--corr-chunks" in opts:
+        CHUNK_DIRS["corr"] = opts["--corr-chunks"]
+    if "--server-manifest" in opts:
+        print(
+            "sha256 verified:",
+            verify_manifest(
+                opts["--server-manifest"], [d for d in (opts.get("--grid-chunks"), opts.get("--corr-chunks")) if d]
+            ),
+            "files",
+        )
+    full = bool(grid_kw)
+    main(
+        argv[1] if len(argv) > 1 else ROOT / "results/phase20_r4/cp2_library_v1.npz",
+        name=opts.get("--name", "ris_cp2_octagon_madp_rt5880_15"),
+        version=2 if full else 1,
+        note="full approved grid 41 x 10 x 24 (server run r4-full-grid, mesh 60, F = 2n; corrections from the R4 mesh 60/90/120 set, mesh 90 re-run on the server agrees to 1e-13)"
+        if full
+        else None,
+    )

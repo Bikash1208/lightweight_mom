@@ -37,6 +37,10 @@ LIBRARIES = {  # selectable: v2 = full grid (41 x 10 x 24, server run) with the 
     ),
 }
 DEFAULT_VERSION = "v2"
+LIBRARY_STATUS = {  # R4 item 4 gate, server run r4-fullgrid-validate (results/phase20_r4/validation_*.json)
+    "v2": "R4_GATE_PASS: validated library (60 random points: p95 0.31 deg / 0.012 dB; 40 points at phi 75-105 deg: p95 2.46 deg / 0.109 dB; limits 3 deg / 0.2 dB, theta <= 30 deg)",
+    "v1": "FAILS_R4_GATE_ON_PHI_75_105_DRAW: the reduced-grid library fails the R4 gate near phi = 90 deg (p95 6.65 deg vs 3 deg on 40 points at phi 75-105 deg; it passed the all-phi draw at 1.81 deg); the large errors sit at 10.4-10.9 GHz",
+}
 DEFAULT_LIBRARY, DEFAULT_DELTA = LIBRARIES[DEFAULT_VERSION]
 MESH_RESIDUAL_BAND_GHZ = (10.3, 10.8)  # R4 README: corrected table vs mesh-120 residual up to ~12 deg
 NOMINAL_COFF_PF = 0.025
@@ -51,8 +55,8 @@ class Response:
 
 
 class CalibratedLibrary:
-    def __init__(self, library, delta=None, tolerance=None):
-        self.library, self.delta, self.tolerance = library, delta, tolerance
+    def __init__(self, library, delta=None, tolerance=None, version=None):
+        self.library, self.delta, self.tolerance, self.version = library, delta, tolerance, version
 
     @classmethod
     def load(cls, library_path=None, delta_path=DEFAULT_DELTA, tolerance=None, version=None):
@@ -61,14 +65,19 @@ class CalibratedLibrary:
             library_path, delta_path = LIBRARIES[version]
         elif library_path is None:
             library_path = DEFAULT_LIBRARY
+            if delta_path == DEFAULT_DELTA:
+                version = DEFAULT_VERSION
         delta = DeltaTable.load(delta_path) if delta_path is not None else None
-        return cls(StateLibrary.load(library_path), delta, tolerance)
+        return cls(StateLibrary.load(library_path), delta, tolerance, version)
 
     def response(self, f_ghz, theta_deg, phi_deg, state, with_tolerance_coff=None):
         """Calibrated response of one state (1..4). Raises `OutOfDomain` outside the library domain. `with_tolerance_coff` (pF) adds the tolerance band's difference to the nominal."""
         c = self.library.structure_circular(f_ghz, theta_deg, phi_deg, state)[0]
         unc = float(self.library.uncertainty(f_ghz, theta_deg, phi_deg, state)[0].max())
         labels, notes = ["MODEL_ONLY", self.library.label(theta_deg)], []
+        if self.version == "v1":
+            labels.append("LIBRARY_V1_FAILS_R4_GATE_NEAR_PHI_90")
+            notes.append(LIBRARY_STATUS["v1"])
         if self.delta is not None:
             val, dlabel = self.delta.at(f_ghz, theta_deg, state)
             c = c + val

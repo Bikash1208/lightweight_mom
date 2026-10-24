@@ -13,6 +13,7 @@ import numpy as np
 from ..hologram import cell_family_registry as registry
 from . import coding as cd
 from .calibrated_library import (
+    LIBRARY_STATUS,
     CalibratedLibrary,
     ToleranceBand,
     read_hfss_reim_tolerance,
@@ -210,7 +211,7 @@ def run_design(req, progress=None):
     prog(1.0, "done")
     counts = {int(s): int(np.sum(c.states == s)) for s in (1, 2, 3, 4)}
     return {
-        **base, "state": "OK", "reasons": [], "variant_used": variant, "seed": c.seed, "notes": notes + list(resp.notes), "cell_response_labels": list(resp.labels),
+        **base, "state": "OK", "library_label": LIBRARY_STATUS[r["library"]], "reasons": [], "variant_used": variant, "seed": c.seed, "notes": notes + list(resp.notes), "cell_response_labels": list(resp.labels),
         "states": c.states.tolist(), "state_counts": counts, "metrics": _metrics_dict(m, g_t), "ideal_references": refs, "tolerance_sensitivity": sens,
         "grating_onset_deg": round(cd.grating_onset_deg(r["frequency_ghz"]), 1), "coupling": coupling_status(),
         "coupling_for_this_coding": "COUPLING_NOT_VERIFIED_FOR_THIS_CODING: isolated-cell (local-response) model; array-level check = server jobs r5-supercell-gradients / r5-supercell-random",

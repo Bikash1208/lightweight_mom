@@ -300,6 +300,7 @@ def _ris_builtin(rt5880):
         "opposite-handed (plate-like) reflection about -14 dB at theta 0 / 30 deg against the -15 dB target; min amplitude -1.60 dB at theta 30 (target -1.5)",
         "theta > 30 deg is EXTRAPOLATED_BEYOND_R3_TARGETS (the cell was optimised and checked to 30 deg; 60 deg degrades badly and is not tabulated); points where a higher diffraction order propagates (e.g. theta 45 deg above 11.7 GHz) are refused",
         "isolated-cell predictions are reliable for regular gradients but NOT for random codings at this 15 mm pitch (order levels off 1-4 dB, up to ~10 dB): verify codings at array level (supercell/coupling-aware)",
+        "state library v2 (full grid, the registry default) is VALIDATED against the R4 gate: GATE_PASS on 60 random off-grid points (p95 0.31 deg / 0.012 dB) and on 40 points at phi 75-105 deg (p95 2.46 deg / 0.109 dB); isolated outliers up to ~19 deg remain inside the 10.4-10.9 GHz resonance band (results/phase20_r4/validation_v2_a*.json). v1 (reduced grid) stays selectable but FAILS the R4 gate near phi = 90 deg (p95 6.65 deg on the phi 75-105 draw)",
         "the solver needs a Floquet cutoff of 2n for converged results (smaller cutoffs leave isolated numerical lines); R2/R3 numbers used the minimal cutoff and shift by a few degrees (results/phase20_r4/FLOQUET_CONVERGENCE.md)",
     )
     register(

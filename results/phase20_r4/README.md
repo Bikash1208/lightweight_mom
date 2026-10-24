@@ -21,6 +21,16 @@ The raw mesh-60 table is off by up to 11 deg / 1.4 dB at the same points, so the
 that the 0.5 GHz sampling of the correction map cannot follow, and has a ~0.3–0.6 dB level offset at 8.5–9 GHz. This is **not** the brief's gate (the gate is the interpolation error above, which passes); it is the honest
 residual of the mesh correction, comparable to the ~10 deg model uncertainty. The stored `uncertainty` (median 0.09, 95th percentile 0.23 in |C| units) was not checked against these residuals point by point. A finer correction grid (f step 0.25 GHz at 10–11 GHz) would reduce it; not done (cost).
 
+## Gate for the full-grid library v2 and the 5.5 vs 1.8 deg question (2026-10-24, server job r4-fullgrid-validate, `validation_{v1,v2}_a*.json`)
+Same seeded points for both libraries (direct mesh-60, F = 2n solves, raw table, theta <= 30 deg, p95 of the r_RR phase / level error; limits 3 deg / 0.2 dB):
+
+| draw | v1 (reduced grid) | v2 (full grid) |
+|---|---|---|
+| A: 60 random points, phi 0-360 | 1.81 deg / 0.166 dB **GATE_PASS** | 0.31 deg / 0.012 dB **GATE_PASS** |
+| B: 40 random points, phi 75-105 deg | 6.65 deg / 0.132 dB **GATE_FAIL** | 2.46 deg / 0.109 dB **GATE_PASS** |
+
+**Why the earlier systematic check gave 5.5 deg for v1 against 1.81 deg in draw A.** All the large v1 errors sit in the narrow resonance band 10.4-10.9 GHz (outside it every draw is below 1.1 deg), where the 0.25 GHz frequency spacing is too coarse; they are not specific to phi (draw A has such a point at phi = 27 deg, and the node-based check found phi = 90 no worse than phi = 0). The p95 of a heavy-tailed error depends on whether the in-band share of the sample crosses 5 %: draw A had 3 of 152 values above 3 deg (2 %, p95 1.81), draw B 3 of 100 (3 %, p95 6.65), and the systematic node sample had 20 % of its frequency nodes inside the band (p95 5.5). So the 1.81 deg of draw A was a small-sample statement; it did not show a phi weakness and its pass did not mean v1 is good inside the resonance band. The 95th percentile gate is therefore only as strong as the share of points in that band: for v2 the draw-B maximum is still 19 deg (10.75 GHz, theta 12.7 deg, phi 101 deg) and 5 deg at 10.45 GHz, so isolated points inside the band can still be off by more than the gate while p95 passes. v2 is the validated library (GATE_PASS on both draws); v1 stays selectable and is labelled as failing the gate.
+
 ## Target metrics at 10 GHz, worst over phi (item 5; `library_metrics.json`, corrected table)
 R3 targets: lattice deviation <= 15 deg, step error <= 20 deg, min amplitude >= -1.5 dB, spread <= 1 dB, opposite-handed <= -15 dB.
 

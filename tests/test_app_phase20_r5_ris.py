@@ -62,8 +62,12 @@ def test_bad_options_are_rejected_and_auto_switches_to_dither_at_35_deg():
 
 
 def test_library_v1_is_selectable_and_agrees_inside_the_hfss_domain():
-    a = service.run_design({"theta_s_deg": 30.0, "library": "v1", "sensitivity": False})["metrics"]["gain_at_target_dbi"]
-    b = service.run_design({"theta_s_deg": 30.0, "library": "v2", "sensitivity": False})["metrics"]["gain_at_target_dbi"]
+    a = service.run_design({"theta_s_deg": 30.0, "library": "v1", "sensitivity": False})["metrics"][
+        "gain_at_target_dbi"
+    ]
+    b = service.run_design({"theta_s_deg": 30.0, "library": "v2", "sensitivity": False})["metrics"][
+        "gain_at_target_dbi"
+    ]
     assert a == pytest.approx(b, abs=1e-6)
 
 
@@ -73,3 +77,33 @@ def test_defaults_families_and_coupling_endpoints_and_page_served():
     assert service.FAMILY in client.get("/api/ris/families").json()
     assert client.get("/api/ris/coupling").json()["state"].startswith("COUPLING_")
     assert "RIS designer" in client.get("/ris.html").text
+
+
+def test_library_labels_v2_validated_v1_fails_the_gate_near_phi_90():
+    import json
+    from pathlib import Path
+
+    from src.hologram import cell_family_registry as registry
+    from src.ris.calibrated_library import CalibratedLibrary
+
+    r2 = service.run_design({"theta_s_deg": 30.0, "library": "v2", "sensitivity": False})
+    r1 = service.run_design({"theta_s_deg": 30.0, "library": "v1", "sensitivity": False})
+    assert r2["library_label"].startswith("R4_GATE_PASS") and r1["library_label"].startswith("FAILS_R4_GATE")
+    assert (
+        "LIBRARY_V1_FAILS_R4_GATE_NEAR_PHI_90" in r1["cell_response_labels"]
+        and "LIBRARY_V1_FAILS_R4_GATE_NEAR_PHI_90" not in r2["cell_response_labels"]
+    )
+    assert CalibratedLibrary.load(version="v1").response(10.5, 0.0, 0.0, 1).notes[0].startswith("FAILS_R4_GATE")
+    assert any("VALIDATED against the R4 gate" in b for b in registry.get(service.FAMILY).known_biases)
+    # the recorded server gate results behind the labels
+    d = Path(__file__).resolve().parents[1] / "results" / "phase20_r4"
+    gate = {
+        n: json.loads((d / f"validation_{n}.json").read_text())["gate_theta_le_30"]["result"]
+        for n in ("v1_a", "v1_a_phi90", "v2_a", "v2_a_phi90")
+    }
+    assert gate == {"v1_a": "GATE_PASS", "v1_a_phi90": "GATE_FAIL", "v2_a": "GATE_PASS", "v2_a_phi90": "GATE_PASS"}
+
+
+def test_page_offers_the_v1_label():
+    client = TestClient(create_app())
+    assert "fails the R4 gate" in client.get("/ris.html").text

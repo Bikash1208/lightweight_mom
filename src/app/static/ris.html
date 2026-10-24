@@ -33,6 +33,8 @@
             <option value="auto">auto (dither from 35&deg;, array-level check pending)</option>
           </select></label>
         <label>Seed<input type="number" name="seed" value="0" /></label>
+        <label>Cell library
+          <select name="library"><option value="v2">v2 full grid (validated)</option><option value="v1">v1 reduced grid (fails the R4 gate near &phi; = 90&deg;)</option></select></label>
         <label><input type="checkbox" name="sensitivity" checked /> diode C<sub>off</sub> sensitivity band</label>
         <button type="submit">Design</button>
       </form>
@@ -40,6 +42,7 @@
     </div>
     <div class="card" id="results" style="display:none">
       <h3 id="state"></h3>
+      <p id="libstate"></p>
       <ul id="reasons"></ul>
       <table id="metrics"></table>
       <h3>Diode tolerance (C<sub>off</sub> 0.0225 / 0.025 / 0.030 pF)</h3>
@@ -58,7 +61,7 @@
     ev.preventDefault();
     const f = new FormData($("form"));
     const body = { frequency_ghz: +f.get("frequency_ghz"), rows: +f.get("rows"), cols: +f.get("cols"), theta_s_deg: +f.get("theta_s_deg"), phi_s_deg: +f.get("phi_s_deg"),
-      theta_i_deg: +f.get("theta_i_deg"), variant: f.get("variant"), seed: +f.get("seed"), sensitivity: f.get("sensitivity") === "on" };
+      theta_i_deg: +f.get("theta_i_deg"), variant: f.get("variant"), library: f.get("library"), seed: +f.get("seed"), sensitivity: f.get("sensitivity") === "on" };
     $("status").textContent = "Submitting...";
     const r = await fetch("/api/ris/design", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (!r.ok) { $("status").textContent = "Rejected: " + (await r.json()).detail; return; }
@@ -75,6 +78,8 @@
     $("status").textContent = "Done.";
     $("results").style.display = "";
     $("state").textContent = `${res.state} — ${res.family} (${res.validation_label})`;
+    $("libstate").innerHTML = `<b>Library ${res.library}:</b> ${res.library_label}`;
+    $("libstate").style.color = res.library === "v1" ? "#a40" : "";
     $("reasons").innerHTML = (res.reasons || []).map((x) => `<li>${x}</li>`).join("");
     $("biases").innerHTML = (res.known_biases || []).map((b) => `<li>${b}</li>`).join("");
     if (res.state !== "OK") { $("metrics").innerHTML = $("sens").innerHTML = $("grid").textContent = $("coupling").textContent = ""; return; }

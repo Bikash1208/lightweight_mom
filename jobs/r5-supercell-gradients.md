@@ -1,4 +1,6 @@
-# Job request: r5-supercell-gradients (Phase 20 R5-4a, server 1)
+# WITHDRAWN 2026-10-24 (direction change): r5-supercell-gradients (Phase 20 R5-4a, server 1)
+
+**Do not run this job.** Withdrawn 2026-10-24 per project direction change to monopole-fed coded holographic antenna (`docs/briefs/PHASE28_CODED_HOLOGRAPHIC_ANTENNA.md`). Reflectarray / plane-wave RIS designs with external feed are dropped. Partial results (3 of 11 tasks finished) stay on the hub branch `compute/r5-supercell-gradients` with their logs. Previous job specifications retained below for record.
 
 **From:** Mac session (coordinator). **Branch on the server:** `compute/r5-supercell-gradients` from the base commit. Never commit to `phase20-ris`. **Base commit:** `7d4cc209271ae05a9fe43074c92518d19f00a11e` on `phase20-ris` (fetch from `hub`).
 

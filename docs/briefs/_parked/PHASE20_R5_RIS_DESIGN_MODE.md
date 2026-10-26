@@ -1,5 +1,10 @@
 # Phase 20 R5 — RIS design mode on the R4 CP-2 library (plane-wave reflecting RIS)
 
+> [!NOTE]
+> **PARKED 2026-10-24 (direction change).**
+> R5-1/2/3/5 and the R5-6 exporter are done; R5-4 stopped. The project focus has changed to the monopole-fed coded holographic metasurface antenna (`docs/briefs/PHASE28_CODED_HOLOGRAPHIC_ANTENNA.md`).
+> The RIS designer page (`/ris.html`) and CP-2 registry entry stay as they are (`MODEL_ONLY`). Server jobs `r5-supercell-gradients` and `r5-supercell-random` are marked WITHDRAWN.
+
 **Branch:** `phase20-ris` (R5 work may sit on `phase20-r5` created from it; heavy compute on `compute/<job>` branches per the infra brief). **Written:** 2026-10-23, from the user's answers to the R5 outline.
 **Status:** active. Item 0 (audit) is done (Appendix A). **Scope correction 2026-10-23 (user): R5 is the plane-wave reflecting RIS only** - the ISRO/IIT Indore proposal's stage 1, the free-space reflection test (Fig. 8a). The offset-horn item was the advisor's own assumption (the proposal never specifies a horn) and is removed (Appendix B keeps the feasibility numbers as the reason). The integrated antenna with its own feed is an OPEN stage-2 item in the roadmap, not part of R5.
 Labels throughout: `MODEL_ONLY`, `HFSS_CALIBRATED` (baseline cell, inside the HFSS-measured domain only), `NOT_HFSS_VALIDATED`, `PROVISIONAL_DATASHEET`, `VIA_OMITTED_APPROXIMATION`, `EXTRAPOLATED_BEYOND_R3_TARGETS` (theta > 30), `NOT_AVAILABLE_FROM_CURRENT_DATA`.

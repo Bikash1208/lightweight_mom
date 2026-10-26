@@ -1,4 +1,6 @@
-# Job request: r4-band-refine (library v2.1, resonance band 10.4-10.9 GHz, server 1) - revised: Part C approved and extended
+# WITHDRAWN 2026-10-24 (direction change): r4-band-refine (library v2.1, resonance band 10.4-10.9 GHz, server 1)
+
+**Do not run this job.** Withdrawn 2026-10-24 per project direction change to monopole-fed coded holographic antenna (`docs/briefs/PHASE28_CODED_HOLOGRAPHIC_ANTENNA.md`). Previous job specifications retained below for record.
 
 **From:** Mac session (coordinator). **Branch on the server:** `compute/r4-band-refine` from the base commit. Never commit to `phase20-ris`. **Base commit:** `dc2e664dc19ae8b36d25eec7bc209df62e731493` on `phase20-ris` (fetch from `hub`).
 

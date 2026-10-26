@@ -42,7 +42,7 @@ scan range, polarisation, bias approach, measured vs simulated. Short table plus
 - Bit depth: 1-bit and 2-bit quantisation of the holographic modulation (scalar for LP; tensor/rotation for CP).
 - Pitch: 4, 5, 6.4, 8 mm.
 - Aperture: the 150 mm hexagon with the monopole at its centre (and one larger size for reference).
-- Steering: θ = 0–50°, several φ; frequency 10.0 and 10.5 GHz (the PI decision is open; keep both).
+- Steering: θ = 0–50°, several φ; frequency **10.0 GHz (PI decision 2026-10-26; the 10.54 GHz Phase 26 results are history)**.
 - Report per case: gain, SLL, pointing error, CP purity (AR / XPD) where applicable, quantisation loss vs continuous,
   scan loss, and the **required switching contrast** (the minimum Δ between states that keeps the gain within 1 dB of
   the continuous hologram).

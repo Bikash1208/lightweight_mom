@@ -5,7 +5,7 @@
 
 ## Roles
 - **Server 1 (implementer, the only working session):** Windows Server 2019, 48 logical CPUs, 255.6 GB RAM, RTX 2000 (unused by the solver), Tailscale `100.88.61.96`, user `Bikash`, repo `C:\lightweight_mom`,
-  Python 3.13 (Anaconda) venv `.venv`. Writes code, tests and briefs, runs all compute, commits on phase branches (currently `phase28-coded-holographic`), updates `docs/STATUS.md` and `CHANGELOG.md`, pushes to `hub`.
+  Python 3.13 (Anaconda) venv `.venv`. Writes code, tests and briefs, runs all compute, commits on phase branches (currently `phase28-coded-holographic-v2`), updates `docs/STATUS.md` and `CHANGELOG.md`, pushes to `hub`.
   Merges to `main` and release tags are made here too, after the fast suite and only when the user's stated condition holds.
 - **Hub (shared repo):** SMB share `hmsa_sync` on server 1. Server path `C:\hmsa_sync`; `hmsa_sync\lightweight_mom.git` is the bare repo, remote name **`hub`**; `hmsa_sync\data\<job>\` holds large gitignored artefacts
   (libraries `.npz`, caches, task files, STEP, HFSS exports) with a manifest committed to git (rule 4).

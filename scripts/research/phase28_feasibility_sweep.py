@@ -31,7 +31,7 @@ from src.hologram import tensor_cp_design as t26  # noqa: E402
 from src.hologram.tensor_leaky_cp import SupercellTable  # noqa: E402
 
 PITCHES_MM = [4.0, 5.0, 6.4, 8.0]
-VARIANTS = [(k, b) for k in ("cp", "lp", "lpx") for b in (None, 1, 2)]
+VARIANTS = [("cp", b) for b in (None, 1, 2, 3)] + [(k, b) for k in ("lp", "lpx") for b in (None, 1, 2)]
 CONSTANTS = {
     "frequency_ghz": 10.54,
     "frequency_ghz_not_available": 10.0,
@@ -49,6 +49,17 @@ CONSTANTS = {
     "supply_rail_v": 3.3,
     "shift_register_clock_mhz": 10.0,
     "table_extrapolated_flag_fraction": 0.05,
+    "launch_fraction_calibrated": t26.LAUNCH,
+    "launch_calibration_offset_db": 10 * math.log10(t26.LAUNCH / cf.LAUNCH_BARE),
+    "combined_loss_tolerances_db": [1.0, 1.5, 2.0],
+}
+SETTINGS = {
+    "design_point": {"pitch_mm": 6.4, "aperture_r_mm": 150.0, "theta0_deg": 30.0, "phi0_deg": 225.0},
+    "scan_azimuth_deg": 225.0,
+    "reference_aperture_r_mm": 225.0,
+    "recommended": {"pitch_mm": 6.4, "bits": 2, "alternative_pitch_mm": 8.0},
+    "extreme_pitches_mm": [4.0, 8.0],
+    "supported_scan_theta_deg": 20.0,
 }
 
 
@@ -157,7 +168,11 @@ def _gain_with_cap(args):
     )
     x, y, d, march = cf.design_cells(table, cf.hexagon_m(0.150), 6.4e-3, theta0, phi0)
     r = cf.analyse(d["jx"], d["jy"], x, y, cf.green_function(), 6.4e-3, "cp", (theta0, phi0))
+    _, axis2 = cf.cp_states(d, 2)
+    jx2, jy2 = cf.cp_currents(d, axis2)
+    r2 = cf.analyse(jx2, jy2, x, y, cf.green_function(), 6.4e-3, "cp", (theta0, phi0))
     return {
+        "q2_fixed_source_loss_db": cf.fixed_source_loss_db(r, r2),
         "alpha_cap_np_per_m": cap,
         "gain_dbi": cf.launch_gain_dbi(r["d_ap_dbi"], march["eta_conv"]),
         "d_ap_dbi": r["d_ap_dbi"],
@@ -165,6 +180,20 @@ def _gain_with_cap(args):
         "beta_over_k0_mean": float(np.mean(d["beta_over_k0"][d["alpha"] > 0])),
         "alpha_max_used_np_per_m": float(d["alpha"].max()),
     }
+
+
+def _interp_cap(curve, key, tol):
+    """Smallest cap (log-interpolated between the grid points) whose loss `curve[i][key]` is <= tol; None if even the table maximum does not reach it."""
+    if curve[-1][key] > tol:
+        return None
+    if curve[0][key] <= tol:
+        return curve[0]["alpha_cap_np_per_m"]
+    for lo, hi in zip(curve[:-1], curve[1:], strict=True):
+        if lo[key] > tol >= hi[key]:
+            f = (lo[key] - tol) / (lo[key] - hi[key])
+            la, lb = math.log(lo["alpha_cap_np_per_m"]), math.log(hi["alpha_cap_np_per_m"])
+            return float(math.exp(la + f * (lb - la)))
+    return None
 
 
 def run_contrast(pool, steerings=((0.0, 0.0), (30.0, 225.0), (50.0, 225.0))):
@@ -194,13 +223,31 @@ def run_contrast(pool, steerings=((0.0, 0.0), (30.0, 225.0), (50.0, 225.0))):
                 break
         if cap_star is None and curve[0]["loss_vs_uncapped_db"] <= tol:
             cap_star = curve[0]["alpha_cap_np_per_m"]
+        for r in curve:
+            r["combined_2bit_loss_vs_uncapped_continuous_db"] = r["loss_vs_uncapped_db"] + r["q2_fixed_source_loss_db"]
         entry = {
             "theta0_deg": theta0,
             "phi0_deg": phi0,
             "uncapped": base,
             "curve": curve,
             "alpha_cap_for_1db_np_per_m": cap_star,
+            "closed_form_note": "NOT_AVAILABLE: broadside is the Bragg condition of the n = -1 harmonic, the closed form is indicative only"
+            if theta0 == 0.0
+            else None,
+            "combined_2bit": [],
         }
+        for tol_c in CONSTANTS["combined_loss_tolerances_db"]:
+            cap_c = _interp_cap(curve, "combined_2bit_loss_vs_uncapped_continuous_db", tol_c)
+            entry["combined_2bit"].append(
+                {
+                    "tolerance_db": tol_c,
+                    "alpha_cap_np_per_m": cap_c,
+                    "loss_at_table_max_db": curve[-1]["combined_2bit_loss_vs_uncapped_continuous_db"],
+                    "contrast": None
+                    if cap_c is None
+                    else cf.contrast_from_alpha(cap_c, base["beta_over_k0_mean"], theta0, 2),
+                }
+            )
         if cap_star is not None:
             chk = _gain_with_cap((cap_star, theta0, phi0))
             chk["loss_vs_uncapped_db"] = base["gain_dbi"] - chk["gain_dbi"]
@@ -272,6 +319,25 @@ def diode_terminal():
     return out
 
 
+def hfss_reference():
+    """The single recorded HFSS run of the continuous Phase 26 hexagon next to its prediction (results/phase26/hex150_tensor_cp_single_hfss_comparison.json)."""
+    c = json.loads((ROOT / "results/phase26/hex150_tensor_cp_single_hfss_comparison.json").read_text(encoding="utf-8"))
+    chk = c["checks"]
+    return {
+        "source": "results/phase26/hex150_tensor_cp_single_hfss_comparison.json (one HFSS run, one board, 10.5 GHz)",
+        "gain_hfss_dbi": chk["peak_gain"]["hfss_dbi"],
+        "gain_predicted_bare_dbi": chk["peak_gain"]["predicted_dbi_bare_launch"],
+        "sll_hfss_db": chk["rhcp_sll_db"]["hfss"],
+        "sll_predicted_db": chk["rhcp_sll_db"]["predicted"],
+        "xpd_hfss_db": chk["xpd_at_peak_db"]["hfss"],
+        "xpd_predicted_db": chk["xpd_at_peak_db"]["predicted"],
+        "ar_hfss_db": chk["ar_at_peak_db"]["hfss"],
+        "ar_predicted_db": chk["ar_at_peak_db"]["predicted"],
+        "lhcp_share_hfss": c["measured"]["budget_of_radiated"]["lhcp_total_all_angles"],
+        "lhcp_share_model": chk["power_budget_fractions_of_radiated"]["model_lhcp_aperture_only"],
+    }
+
+
 def derive(rows):
     """Quantisation loss vs the same-family continuous design, scan loss vs broadside, per case; and the design-point summary."""
     key = lambda r: (r["pitch_mm"], r["aperture_r_mm"], r["theta0_deg"], r["phi0_deg"])  # noqa: E731
@@ -279,9 +345,21 @@ def derive(rows):
     for r in rows:
         b = by.get((r["pitch_mm"], r["aperture_r_mm"], 0.0, 0.0))
         for name, v in r["variants"].items():
-            cont = r["variants"][name.split("_")[0] + "_cont"]
-            v["quantisation_loss_db"] = cont["gain_dbi"] - v["gain_dbi"]
-            v["scan_loss_db"] = None if b is None else b["variants"][name]["gain_dbi"] - v["gain_dbi"]
+            kind = name.split("_")[0]
+            cont = r["variants"][kind + "_cont"]
+            v["quantisation_loss_renormalised_db"] = cont["gain_dbi"] - v["gain_dbi"]
+            v["quantisation_loss_fixed_source_db"] = cf.fixed_source_loss_db(cont, v)
+            v["radiated_power_change_db"] = 10 * math.log10(v["radiated_power_arb"] / cont["radiated_power_arb"])
+            # headline: phase-only quantisation (cp) keeps |J|, so the unradiated quantisation error is a real loss (fixed source);
+            # amplitude quantisation (lp, lpx) changes |J| (and would change alpha), so the renormalised loss is the consistent one
+            v["quantisation_loss_db"] = (
+                v["quantisation_loss_fixed_source_db"] if kind == "cp" else v["quantisation_loss_renormalised_db"]
+            )
+            v["gain_headline_dbi"] = cont["gain_dbi"] - v["quantisation_loss_db"]
+    for r in rows:
+        b = by.get((r["pitch_mm"], r["aperture_r_mm"], 0.0, 0.0))
+        for name, v in r["variants"].items():
+            v["scan_loss_db"] = None if b is None else b["variants"][name]["gain_headline_dbi"] - v["gain_headline_dbi"]
     summary = []
     for r in rows:
         if r["aperture_r_mm"] == 150.0 and r["theta0_deg"] == 30.0 and r["phi0_deg"] == 225.0:
@@ -290,7 +368,7 @@ def derive(rows):
                     {
                         "pitch_mm": r["pitch_mm"],
                         "variant": name,
-                        "gain_dbi": v["gain_dbi"],
+                        "gain_dbi": v["gain_headline_dbi"],
                         "quantisation_loss_db": v["quantisation_loss_db"],
                         "sll_db": v["sll_db"],
                         "pointing_error_deg": v["pointing_error_deg"],
@@ -331,6 +409,8 @@ def main(out_path, workers=24, quick=False):
         "design_point_summary": summary,
         "contrast": contrast,
         "diode_terminal": diode_terminal(),
+        "settings": SETTINGS,
+        "hfss_reference": hfss_reference(),
         "seconds": time.time() - t0,
     }
     Path(out_path).write_text(json.dumps(doc, indent=1, sort_keys=True), encoding="utf-8", newline="\n")

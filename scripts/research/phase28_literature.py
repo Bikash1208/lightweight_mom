@@ -24,22 +24,20 @@ NEEDS = "NEEDS_FULL_TEXT (user has IEEE access)"
 CLAIMS = {
     "10.1109/TAP.2003.817558": [
         (
-            "tunable surface, 2-D steering",
+            "electrically tunable impedance surface, 2-D beam steering",
             "Two-dimensional beam steering using an electrically tunable impedance surface",
         )
     ],
     "10.1109/TAP.2010.2055812": [
         (
-            "scalar and tensor (polarisation) holographic surfaces",
+            "scalar and tensor holographic artificial impedance surfaces",
             "Scalar and Tensor Holographic Artificial Impedance Surfaces",
         )
     ],
     "10.1109/TAP.2011.2143668": [
         ("sinusoidally modulated reactance, printed leaky wave", "Sinusoidally-Modulated Reactance Surface")
     ],
-    "10.1109/TAP.2014.2377718": [
-        ("modulated metasurface antennas (passive)", "Modulated Metasurface Antennas for Space")
-    ],
+    "10.1109/TAP.2014.2377718": [("modulated metasurface antennas", "Modulated Metasurface Antennas for Space")],
     "10.1109/TAP.2015.2399937": [
         ("reconfigurable holographic antenna", "Reconfigurable Holographic Metamaterial Antenna")
     ],
@@ -47,7 +45,7 @@ CLAIMS = {
         ("reconfigurable holographic aperture", "Reconfigurable Holographic Metasurface Aperture")
     ],
     "10.1109/TAP.2018.2845746": [
-        ("binary (1-bit) programmable surface, leaky wave, fixed frequency", "Binary Programmable Metasurface")
+        ("binary programmable metasurface, leaky wave, fixed frequency", "Binary Programmable Metasurface")
     ],
     "10.1038/s41598-021-83377-9": [
         ("varactor-tuned elements", "varactor-tuned elements"),
@@ -66,15 +64,15 @@ CLAIMS = {
 }
 # Why each paper is in the table (role for Phase 28), from its title only.
 ROLE = {
-    "10.1109/TAP.2003.817558": "tunable-impedance beam steering (early)",
-    "10.1109/TAP.2010.2055812": "holographic artificial impedance surface, tensor = polarisation control (passive)",
-    "10.1109/TAP.2011.2143668": "sinusoidally modulated reactance surface leaky wave (passive)",
-    "10.1109/TAP.2014.2377718": "modulated metasurface antennas, synthesis and realisation (passive)",
-    "10.1109/TAP.2015.2399937": "reconfigurable holographic antenna, sidelobe control",
-    "10.1109/ACCESS.2017.2712659": "reconfigurable holographic aperture",
-    "10.1109/TAP.2018.2845746": "binary programmable leaky-wave metasurface",
-    "10.1038/s41598-021-83377-9": "electronically steered waveguide-fed metasurface antenna",
-    "10.1109/LAWP.2023.3239992": "CP-reconfigurable holographic leaky-wave antenna",
+    "10.1109/TAP.2003.817558": "two-dimensional beam steering with an electrically tunable impedance surface",
+    "10.1109/TAP.2010.2055812": "holographic artificial impedance surfaces, scalar and tensor",
+    "10.1109/TAP.2011.2143668": "printed leaky-wave antenna on a sinusoidally modulated reactance surface",
+    "10.1109/TAP.2014.2377718": "modulated metasurface antennas for space: synthesis, analysis and realisations",
+    "10.1109/TAP.2015.2399937": "sidelobe canceling for a reconfigurable holographic metamaterial antenna",
+    "10.1109/ACCESS.2017.2712659": "reconfigurable holographic metasurface aperture, dynamic focusing in the Fresnel zone",
+    "10.1109/TAP.2018.2845746": "beam forming of leaky waves at fixed frequency with a binary programmable metasurface",
+    "10.1038/s41598-021-83377-9": "electronically steered metasurface antenna (waveguide-fed and varactor-tuned according to the abstract)",
+    "10.1109/LAWP.2023.3239992": "circular-polarisation-reconfigurable holographic leaky-wave antenna with fixed-frequency beam scanning",
 }
 DOIS = list(CLAIMS)
 
@@ -144,8 +142,8 @@ def build():
         "",
         "## What this table supports (and what it does not)",
         "",
-        "- The papers split into passive holographic / modulated-reactance antennas (Fong 2010, Patel & Grbic 2011, Minatti 2015) and electronically reconfigurable ones (Sievenpiper 2003, Johnson 2015, Yurduseven 2017, Wan 2018, Boyarsky 2021, Wang 2023), judged from the titles.",
-        "- Tensor surfaces for polarisation control (Fong 2010) and CP-reconfigurable holographic leaky-wave antennas (Wang 2023) exist in the literature, judged from the titles.",
+        "- Six titles state electronic tuning, reconfiguration or programmability (tunable, reconfigurable, programmable, electronically steered): Sievenpiper 2003, Johnson 2015, Yurduseven 2017, Wan 2018, Boyarsky 2021, Wang 2023. The titles of Fong 2010, Patel & Grbic 2011 and Minatti 2015 do not say whether the surface is static or tunable: that is `NEEDS_FULL_TEXT`.",
+        "- The title of Fong 2010 names tensor as well as scalar holographic impedance surfaces, and the title of Wang 2023 names circular-polarisation reconfiguration; what either achieves is `NEEDS_FULL_TEXT`.",
         "- It does NOT support any statement on a required switching contrast, a recommended pitch, bit-depth loss, diode counts or bias architecture: those need the full texts. Item 2 derives the contrast requirement from the Phase 26 model instead of from this table.",
     ]
     (OUT / "LITERATURE.md").write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")

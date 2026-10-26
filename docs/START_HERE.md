@@ -38,7 +38,7 @@ Cell families and discrete-state libraries live in `src/hologram/cell_family_reg
 | `src/dispersion/`, `src/fields/`, `src/hologram/`, `src/pattern/`, `src/reflectarray/`, `src/export/`, `src/verify/`, `src/hfss_compare/` | HMSA design layer: surface-wave dispersion, `.fld` import, hologram synthesis, far-field pattern, CAD/CSV export, full-array verification | adding a design capability |
 | `src/hologram/ports.py`, `auto_states.py`, `sll_optimizer.py`, `sll_board.py`; `src/pattern/cellwise_pattern.py`; `src/export/exact_board.py`, `aedt_script.py` | Phases 21-23: multi-port layouts incl. polygon/hexagon ports (`hex4`), automatic coded-cell states, the cell-wise far-field model and the sidelobe optimiser ("Reduce sidelobes", `/api/sidelobes/optimize`), exact STEP + AEDT script for boards | multi-port, coded or sidelobe work (the Phase 23 rectangle gate: `scripts/research/phase23_rect_snapshot.py`) |
 | `src/dielectric_cell/`, `src/transmitarray/` | Phase 19 (model-only): RCWA unit cell for 3D-printed dielectric (nylon) cells and the horn-fed transmitarray lens design/error-bar code; not wired into the app | the nylon lens (`docs/briefs/_parked/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md`) |
-| `src/ris/` | Phase 20 RIS track: plane-wave forward model, PIN diode circuit models, calibrated state library, coding synthesis, and service layer | active RIS development (`docs/briefs/PHASE20_R5_RIS_DESIGN_MODE.md`) |
+| `src/ris/` | Phase 20 RIS track: plane-wave forward model, PIN diode circuit models, calibrated state library, coding synthesis, and service layer | RIS track, parked 2026-10-24 (`docs/briefs/_parked/PHASE20_R5_RIS_DESIGN_MODE.md`) |
 | `src/phase8b/ … src/phase13/` | Frozen research-phase packages, still imported by the app (`docs/ARCHITECTURE.md` has the who-imports-what table) | **don't rename or move these** — document, don't refactor |
 | `src/app/` | FastAPI backend + static HTML/JS frontend (HMSA wizard, Tensor CP, RIS designer) | adding/changing a page or endpoint |
 | `tests/` | One `test_<module>.py` per module; `test_app_*.py` for the app | every change needs a test |
@@ -104,7 +104,7 @@ The project roadmap is tracked in **`docs/ROADMAP.md`**. It outlines deliverable
 
 ## If you are an AI agent
 
-Read this file, then **`docs/ROADMAP.md`** (deliverables and verified state) and **`docs/STATUS.md`** (what's validated, what's open right now), then the active brief(s) in `docs/briefs/` (primarily `docs/briefs/PHASE20_R5_RIS_DESIGN_MODE.md`).
+Read this file, then **`docs/ROADMAP.md`** (deliverables and verified state) and **`docs/STATUS.md`** (what's validated, what's open right now), then the active brief(s) in `docs/briefs/` (primarily `docs/briefs/PHASE28_CODED_HOLOGRAPHIC_ANTENNA.md`; the RIS brief is parked in `docs/briefs/_parked/`).
 
 Key architectural context for new agents:
 - **Active Track:** The primary active track is **RIS** (Reconfigurable Metasurface): 2-bit PIN-diode cells at 10.5 GHz with circular polarisation (CP-2 cell) and linear polarisation. Core modules live in `src/ris/`, with frontend UI at `src/app/static/ris.html` (`/ris.html`).

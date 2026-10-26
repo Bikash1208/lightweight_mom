@@ -6,6 +6,8 @@ import re
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "research"))
 
@@ -94,3 +96,53 @@ def test_an_invented_number_inserted_into_the_report_is_flagged():
     text = _strip_labels(REPORT.read_text(encoding="utf-8") + "\nGain 31.37 dBi at 50 degrees.\n")
     bad = [t for t in TOKEN.findall(text) if not _matches(t, leaves)]
     assert "31.37" in bad
+
+
+def test_design_point_table_cells_equal_the_json_cell_by_cell():
+    """Not only 'some JSON value': every cell of the design-point table is the value of ITS pitch, variant and column."""
+    doc = json.loads(RESULTS.read_text(encoding="utf-8"))
+    dp = doc["settings"]["design_point"]
+    rows = {}
+    for line in REPORT.read_text(encoding="utf-8").splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) == 11 and cells[1].startswith(("cp_", "lp_", "lpx_")):
+            rows[(cells[0], cells[1])] = cells
+    assert rows
+    n = 0
+    for c in doc["cases"]:
+        if (c["aperture_r_mm"], c["theta0_deg"], c["phi0_deg"]) != (dp["aperture_r_mm"], dp["theta0_deg"], dp["phi0_deg"]):
+            continue
+        for name, v in c["variants"].items():
+            cells = rows[(f"{c['pitch_mm']:.1f}", name)]
+            expect = [
+                f"{v['gain_headline_dbi']:.2f}",
+                f"{v['quantisation_loss_db']:.2f}",
+                f"{v['quantisation_loss_fixed_source_db']:.2f}",
+                f"{v['quantisation_loss_renormalised_db']:.2f}",
+                f"{v['radiated_power_change_db']:.2f}",
+                f"{v['sll_db']:.1f}",
+                f"{v['pointing_error_deg']:.2f}",
+            ]
+            assert cells[2:9] == expect, (c["pitch_mm"], name, cells[2:9], expect)
+            n += 1
+    assert n == len(rows)
+
+
+def test_hardware_table_counts_equal_cells_times_bits_and_the_json():
+    doc = json.loads(RESULTS.read_text(encoding="utf-8"))
+    dp = doc["settings"]["design_point"]
+    seen = 0
+    for line in REPORT.read_text(encoding="utf-8").splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) == 16 and cells[1] in ("cp_1bit", "cp_2bit", "cp_3bit"):
+            case = next(
+                c
+                for c in doc["cases"]
+                if f"{c['pitch_mm']:.1f}" == cells[0] and (c["aperture_r_mm"], c["theta0_deg"], c["phi0_deg"]) == (dp["aperture_r_mm"], dp["theta0_deg"], dp["phi0_deg"])
+            )
+            b = case["bias"][cells[1]]
+            bits = int(cells[1][3])
+            assert int(cells[2]) == case["n_cells"] and int(cells[3]) == case["n_cells"] * bits == b["n_diodes"]
+            assert float(cells[13]) == pytest.approx(b["dc_power_expected_w"], abs=0.051)
+            seen += 1
+    assert seen == 12

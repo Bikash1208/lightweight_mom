@@ -195,7 +195,7 @@ def test_bias_budget_uses_one_dc_power_method_and_matches_the_repo_diode_budget(
     assert b["dc_power_expected_w"] == pytest.approx(p_repo)
     assert b["dc_power_all_on_w"] == pytest.approx(2860 * 10e-3 * 3.3)
     assert b["shift_register"]["outputs_per_chip_8"]["chips"] == 358  # ceil(2860 / 8)
-    assert b["bias_line_sharing"]["cells_per_line_4"] == 715
+    assert b["bias_line_sharing"]["diodes_per_line_4"] == 715
 
 
 def test_state_bit_stats():
@@ -230,3 +230,28 @@ def test_lp_scalar_radial_current_has_the_radial_direction(anchor):
     np.testing.assert_allclose(
         jy * np.cos(d["phi"]), jx * np.sin(d["phi"]), atol=1e-12 * np.abs(jx).max()
     )  # J parallel to (cos phi, sin phi)
+
+
+def test_non_finite_input_to_the_quantisers_is_an_error_not_level_zero():
+    with pytest.raises(ValueError):
+        cf.quantise_circular(np.array([0.1, np.nan]), 4, 2 * np.pi)
+    with pytest.raises(ValueError):
+        cf.quantise_nearest(np.array([np.inf]), cf.uniform_levels(2))
+
+
+def test_fixed_source_loss_formula_and_the_phase_only_power_deficit(anchor):
+    a = {"d_ap_dbi": 20.0, "radiated_power_arb": 2.0}
+    b = {"d_ap_dbi": 19.0, "radiated_power_arb": 1.0}
+    assert cf.fixed_source_loss_db(a, a) == 0.0
+    assert cf.fixed_source_loss_db(a, b) == pytest.approx(1.0 + 10 * np.log10(2.0))
+    # a phase-only quantisation keeps |J| and radiates less: the fixed-source loss exceeds the renormalised one
+    _, x, y, d, _ = anchor
+    g = cf.green_function()
+    res = {}
+    for bits in (None, 2):
+        _, axis = cf.cp_states(d, bits)
+        jx, jy = cf.cp_currents(d, axis)
+        res[bits] = cf.analyse(jx, jy, x, y, g, 6.4e-3, "cp", (30.0, 225.0))
+    renormalised = res[None]["d_ap_dbi"] - res[2]["d_ap_dbi"]
+    assert cf.fixed_source_loss_db(res[None], res[2]) > renormalised + 0.2
+    assert res[2]["radiated_power_arb"] < res[None]["radiated_power_arb"]

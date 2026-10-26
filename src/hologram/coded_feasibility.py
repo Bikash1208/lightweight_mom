@@ -54,8 +54,11 @@ def uniform_levels(bits):
 
 
 def quantise_nearest(values, levels):
-    """Nearest level (ties to the lower level). Returns `(index, quantised)`."""
+    """Nearest level; an exact tie goes to the level that comes first in `levels` (floating point: a value that is only nearly half-way is not a tie,
+    e.g. 0.0 in the 2-bit set is 1 ulp nearer +1/3). Returns `(index, quantised)`. Non-finite input is an error."""
     v = np.asarray(values, dtype=float)
+    if not np.all(np.isfinite(v)):
+        raise ValueError("quantise_nearest: non-finite input")
     lv = np.asarray(levels, dtype=float)
     idx = np.argmin(np.abs(v[..., None] - lv), axis=-1)
     return idx, lv[idx]
@@ -65,7 +68,10 @@ def quantise_circular(values, n_levels, period):
     """Nearest of `n_levels` equally spaced levels `k period / n_levels` on a circle of the given period (angles wrap: a value just below
     `period` goes to level 0). Exact half-way values go to the higher level. Returns `(index, quantised)` with `quantised` in [0, period)."""
     step = period / n_levels
-    idx = np.floor(np.asarray(values, dtype=float) / step + 0.5).astype(int) % n_levels
+    v = np.asarray(values, dtype=float)
+    if not np.all(np.isfinite(v)):
+        raise ValueError("quantise_circular: non-finite input")
+    idx = np.floor(v / step + 0.5).astype(int) % n_levels
     return idx, idx * step
 
 
@@ -246,6 +252,16 @@ def analyse(jx, jy, x, y, green, pitch_m, kind, beam_deg, theta=None, phi=None):
     return out
 
 
+def fixed_source_loss_db(cont, quant):
+    """Gain loss of a quantised pattern against the continuous one for the SAME cell currents: the peak field scales as `D_ap * P_rad`, so the loss is
+    `(D_c + 10 log10 P_c) - (D_q + 10 log10 P_q)` [dB]. Right for a PHASE-only quantisation (cp: |J| unchanged, the quantisation error falls into the non-radiating
+    spectrum and is lost); `D_ap` alone renormalises that lost power away. For an AMPLITUDE quantisation (lp, lpx: |J| changes, which would change alpha) the
+    renormalised `D_ap` loss is the energy-consistent one."""
+    return (cont["d_ap_dbi"] + 10 * math.log10(cont["radiated_power_arb"])) - (
+        quant["d_ap_dbi"] + 10 * math.log10(quant["radiated_power_arb"])
+    )
+
+
 def launch_gain_dbi(d_ap_dbi, eta_conv, launch=LAUNCH_BARE):
     """The Phase 26 bookkeeping: gain referred to the accepted power."""
     return d_ap_dbi + 10 * math.log10(launch * eta_conv)
@@ -305,7 +321,7 @@ def bias_budget(
         "shift_register": {},
     }
     for share in (1, 2, 4):
-        row["bias_line_sharing"][f"cells_per_line_{share}"] = int(math.ceil(n_diodes / share))
+        row["bias_line_sharing"][f"diodes_per_line_{share}"] = int(math.ceil(n_diodes / share))
     for outs in outputs_per_chip:
         chips = int(math.ceil(n_diodes / outs))
         chains = int(math.ceil(chips / chain_chips))

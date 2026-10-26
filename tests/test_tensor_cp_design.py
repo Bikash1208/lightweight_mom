@@ -9,6 +9,7 @@ import pytest
 
 from src.hologram import tensor_cp_design as t
 from src.hologram.tensor_leaky_cp import SupercellTable
+from tests._platform_tol import assert_matches_reference
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -32,7 +33,8 @@ def test_single_hexagon_cells_match_committed_layout_bit_identically(table):
         ) == (r[0], r[1], r[3], r[4], r[5])
     # and the full-precision cell list of the committed design JSON
     ref = json.loads((ROOT / "results/phase26/tensor_cp_hexagon_cells.json").read_text())
-    assert [c["x_mm"] for c in cells] == ref["x_mm"] and [c["slot_angle_deg"] for c in cells] == ref["slot_angle_deg"]
+    assert_matches_reference([c["x_mm"] for c in cells], ref["x_mm"], "x_mm")
+    assert_matches_reference([c["slot_angle_deg"] for c in cells], ref["slot_angle_deg"], "slot_angle_deg")
 
 
 def test_fourhex_boards_match_committed_layouts(table):

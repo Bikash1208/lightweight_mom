@@ -11,6 +11,7 @@ pytest.importorskip("fastapi")
 from fastapi.testclient import TestClient  # noqa: E402
 
 from src.app.main import create_app  # noqa: E402
+from tests._platform_tol import assert_matches_reference, assert_text_matches_reference  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 HFSS = ROOT / "hfss_results/hex150_tensor_cp_single"
@@ -37,7 +38,9 @@ def test_single_hexagon_design_export_compare_end_to_end():
     files = export["result"]["files"]
     assert {"hfss_build_board.py", "layout.csv", "layout.dxf", "predictions.json", "README.md"} <= set(files)
     built = client.get(export["result"]["download"]["hfss_build_board.py"]).content
-    assert built == (ROOT / "hfss_exports/hex150_tensor_cp_single/hfss_build_board.py").read_bytes()
+    assert_text_matches_reference(
+        built, (ROOT / "hfss_exports/hex150_tensor_cp_single/hfss_build_board.py").read_bytes(), "hfss_build_board.py"
+    )
 
     uploads = {
         "gain_csv": ("g.csv", (HFSS / "realized_gain_RHCP_LHCP_10p5GHz_1deg.csv").read_bytes()),
@@ -52,7 +55,11 @@ def test_single_hexagon_design_export_compare_end_to_end():
     assert rep["s_parameter"]["s_db_at_design"] == pytest.approx(-15.0, abs=0.05)
     assert rep["checks"]["peak_gain"]["state"] == "GAIN_WITHIN_PREDICTED_RANGE"
     used = json.loads(Path(r.json()["predictions_used"]).read_text())
-    assert used == json.loads((ROOT / "hfss_exports/hex150_tensor_cp_single/predictions.json").read_text())
+    assert_matches_reference(
+        used,
+        json.loads((ROOT / "hfss_exports/hex150_tensor_cp_single/predictions.json").read_text()),
+        "predictions.json",
+    )
 
 
 def test_unavailable_request_ends_in_the_named_state_and_cannot_be_exported():

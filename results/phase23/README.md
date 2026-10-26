@@ -11,4 +11,4 @@
 - `rect_snapshot_before.json` / `rect_snapshot_after_C.json` -- the bit-identical gate for rectangle layouts
   (`scripts/research/phase23_rect_snapshot.py`).
 - `rect_snapshot_server1.json` / `.provenance.json` -- numeric reference made on server 1 (2026-10-26, 1 BLAS thread): every number of the six
-  rectangle syntheses, for number-by-number comparison (`scripts/research/phase23_rect_numbers.py`; see `docs/DEVELOPING.md`).
+  rectangle syntheses, for number-by-number comparison (`scripts/research/phase23_rect_numbers.py`; see `docs/DEVELOPING.md`). `git_dirty: true` in the provenance is expected: the output files were untracked when it was written.

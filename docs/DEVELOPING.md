@@ -137,3 +137,12 @@ Any change that touches `/synthesize_ports`, `src/hologram/ports.py` or `src/exp
   ```
 
   Exit 0 = every number identical (the gate passes); 1 = numeric differences, with the max abs / rel difference and where; 2 = different structure. The reference holds 10,431 values (11,883 floats) over six cases; three runs at 1 BLAS thread and the saved reference run were all identical, `result_sha256` equal for all six cases. The reference is tied to this server's numpy/scipy/BLAS (recorded in the provenance file); regenerate it, with the reason, if those change. The logic is unit-tested in `tests/test_phase23_rect_numbers.py`.
+
+## Committed numeric references: exact on the reference platform, 1e-12 elsewhere
+
+The committed references (`hfss_exports/hex150_tensor_cp_single/`, `results/phase26/tensor_cp_hexagon_cells.json`, `tests/data/r1_theta0_reference.json`) were produced on **macOS arm64**. On another CPU/BLAS (e.g. the Windows compute server) the same code differs in the last digits (~1e-15), so a bit-for-bit compare can only hold on the reference platform. The rule, implemented once in `tests/_platform_tol.py` and used by the four tests that compare against such references (`test_sparameters_oblique` base-commit gate, `test_tensor_cp_design` single-hexagon layout, `test_tensor_cp_service` single-hexagon export folder, `test_app_phase27_tensor_cp` end-to-end):
+
+- on macOS arm64 (`ON_REFERENCE_PLATFORM`): exact comparison, unchanged;
+- elsewhere: every float within `CROSS_PLATFORM_RTOL = 1e-12` (relative; entries below `NOISE_FLOOR_REL = 1e-9` of the largest value in the same array/file, i.e. rounding noise such as the ~1e-16 off-diagonal S-parameters, are held to `1e-12 x` that largest value). For byte-compared text files (`hfss_build_board.py`, `layout.csv`, `layout.json`, `predictions.json`) the numbers are parsed and compared the same way; the text between them, keys, strings, integers, bools and array lengths must still match exactly. PNG bytes stay an exact compare.
+
+`tests/test_platform_tolerance.py` checks that the tolerance path accepts 1e-15 noise and fails on a 1e-9 perturbation. Never regenerate a committed reference to make a non-reference platform pass; never widen the constant without a measured reason.

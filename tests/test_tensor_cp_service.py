@@ -108,6 +108,7 @@ def test_hex4_static_full_grid_matches_the_phase26_board_a_numbers():
 from pathlib import Path  # noqa: E402
 
 from src.export.tensor_cp_export import export_app_result  # noqa: E402
+from tests._platform_tol import assert_text_matches_reference  # noqa: E402
 
 _ROOT = Path(__file__).resolve().parents[1]
 
@@ -143,7 +144,10 @@ def test_app_export_of_the_single_hexagon_matches_the_committed_phase26_folder(t
     ref = _ROOT / "hfss_exports/hex150_tensor_cp_single"
     for f in ("hfss_build_board.py", "layout.csv", "layout.json", "predictions.json", "layout.png"):
         if (ref / f).exists():
-            assert (tmp_path / f).read_bytes() == (ref / f).read_bytes(), f
+            if f == "layout.png":
+                assert (tmp_path / f).read_bytes() == (ref / f).read_bytes(), f  # image bytes: no numbers to parse
+            else:
+                assert_text_matches_reference((tmp_path / f).read_bytes(), (ref / f).read_bytes(), f)
         else:  # gitignored reference artefact (e.g. layout.json) absent in a fresh clone / compute server: the export must still produce it
             assert (tmp_path / f).stat().st_size > 0, f
     if (ref / "layout.dxf").exists():  # gitignored as well

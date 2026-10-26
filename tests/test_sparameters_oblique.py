@@ -26,6 +26,7 @@ from src.sparameters import (
     s_parameters_from_config,
     sweep_s_parameters_oblique,
 )
+from tests._platform_tol import ON_REFERENCE_PLATFORM, assert_matches_reference
 
 F = 10e9
 SUB = Substrate("rt5880", 2.2, 0.0, 1.575e-3)
@@ -220,6 +221,16 @@ def test_normal_incidence_results_are_bit_identical_to_the_phase20_base_commit()
     ref = json.loads((ROOT / "tests/data/r1_theta0_reference.json").read_text())
     got = compute()
     assert got.keys() == ref.keys()
+
+    def unhex(o):
+        if isinstance(o, str):
+            return float.fromhex(o)
+        return [unhex(x) for x in o]
+
     for key in ref:
         for blk in ref[key]:
-            assert json.loads(json.dumps(got[key][blk])) == ref[key][blk], (key, blk)
+            g, r = json.loads(json.dumps(got[key][blk])), ref[key][blk]
+            if ON_REFERENCE_PLATFORM:
+                assert g == r, (key, blk)  # hex strings: bit for bit
+            else:
+                assert_matches_reference(unhex(g), unhex(r), f"{key}/{blk}")

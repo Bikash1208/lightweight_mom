@@ -143,7 +143,7 @@ def build(d):
         "- Scalar cell (also the amplitude control of the `lpx` bound), states `Ybar +- j dB/2` (`dB` the full swing between the extreme levels): the first harmonic of the quantised surface is c1, one quarter of dB times g (g the first-harmonic gain of the level set), and alpha is a constant times c1 squared (`leakage_alpha_first_order`, TM and TE parts, the larger `dB` reported). `dX_switch` [ohm] is the TM surface-reactance difference of the two extreme states; `d_beta` the difference of the TM0 phase constants of the two uniform states."
     )
     a(
-        "- Modulation depth: `delta/|Y_down|` (tensor) or half of dB over `|Y_down|` (scalar), `Y_down = Ybar + Y_slab,TM(beta)`, the Phase 26 `required_map` definition. That map asks for far larger values because it targets a conversion of 0.85 of the launched wave; the continuous Phase 26 design itself converts only the eta_conv of the scan table below."
+        "- Modulation depth: `delta/|Y_down|` (tensor) or half of dB over `|Y_down|` (scalar), `Y_down = Ybar + Y_slab,TM(beta)`, the Phase 26 `required_map` definition. That map asks for far larger values because it targets a much higher conversion of the launched wave; the continuous Phase 26 design itself converts only the eta_conv of the scan table below."
     )
     a("")
     a(
@@ -230,11 +230,18 @@ def build(d):
     )
     a("")
     a(
-        "**Combined requirement: 2-bit coded surface.** The quantisation loss adds to the contrast loss. Each capped design is also quantised to four slot axes; the table gives the smallest `alpha_cap` whose total loss against the uncapped continuous design stays within the tolerance, converted to the tensor and scalar contrast (four-level swing). The 2-bit loss of the uncapped design is the first column."
+        "**Combined requirement: 2-bit coded surface.** The quantisation loss adds to the contrast loss. Each capped design is also quantised to four slot axes; the table gives the smallest `alpha_cap` whose total loss against the uncapped continuous design stays within the tolerance, converted to the tensor and scalar contrast (four-level swing). The 2-bit loss of the uncapped design is the first column. The cap is interpolated linearly in loss between the grid points of the cap sweep, so it can be slightly conservative (a larger cap than strictly needed)."
     )
     a("")
     rows = []
     for st in c["steerings"]:
+        fr = D.outside(st["theta0_deg"], st["phi0_deg"])
+        fc = st["floquet_check"]
+        caveat = D.status(fr)
+        if st["closed_form_note"]:
+            caveat += "; closed form indicative only"
+        if fc["ratio_exact_over_first_order"] is not None and abs(fc["ratio_exact_over_first_order"] - 1.0) > 0.1:
+            caveat += "; Floquet exact/closed ratio " + f(fc["ratio_exact_over_first_order"], 3)
         for ce in st["combined_2bit"]:
             if ce["alpha_cap_np_per_m"] is None:
                 rows.append(
@@ -246,6 +253,7 @@ def build(d):
                         "-",
                         "-",
                         "-",
+                        caveat,
                     )
                 )
             else:
@@ -259,6 +267,7 @@ def build(d):
                         f(ct["tensor"]["delta_ms"], 3),
                         f(ct["tensor"]["dx_aniso_ohm"], 1),
                         f(ct["scalar"]["dx_switch_ohm"], 1),
+                        caveat,
                     )
                 )
     L += table(
@@ -270,6 +279,7 @@ def build(d):
             "tensor delta [mS]",
             "tensor dX_aniso [ohm]",
             "scalar four-level dX_switch [ohm]",
+            "caveat",
         ],
         rows,
     )
@@ -309,14 +319,14 @@ def build(d):
     )
     a("")
     a(
-        "- *fixed source*: the same cell currents, so the peak field scales as the pattern's directivity times its radiated power. A phase-only quantisation (`cp`) leaves every current magnitude unchanged, and the quantisation error is radiated into the non-radiating part of the spectrum; that power is lost, and this is the loss used as the headline for `cp`."
+        "- *fixed source*: the same cell currents, so the peak field scales as the pattern's directivity times its radiated power. A phase-only quantisation (`cp`) leaves every current magnitude unchanged, and the quantisation error is radiated into the non-radiating part of the spectrum; that power does not contribute to the beam (where it goes is not modelled), and this is the loss used as the headline for `cp`."
     )
     a(
         "- *renormalised*: the directivity of the quantised pattern alone, i.e. its own radiated power renormalised to the launched power. It hides the lost power. It is the energy-consistent one for an amplitude quantisation (`lp`, `lpx`), where the currents change magnitude and would change the leakage, and is the headline for those."
     )
     a("")
     a(
-        "`cp` = rotating-slot tensor, RHCP (the Phase 26 family); `lp` = scalar surface, current along the radial direction; `lpx` = linear polarisation with IDEAL polarisation control (current along x in every cell), an upper bound no cell has been shown to realise. AR and XPD beyond the bound are shown as bounds, never as numbers. A negative loss is a quantised pattern that happens to radiate better than the continuous one on this sampling."
+        "`cp` = rotating-slot tensor, RHCP (the Phase 26 family); `lp` = scalar surface, current along the radial direction; `lpx` = linear polarisation with IDEAL polarisation control (current along x in every cell), an upper bound no cell has been shown to realise. AR and XPD beyond the bound are shown as bounds, never as numbers. A negative renormalised loss is a quantised pattern whose directivity is higher than the continuous one on this sampling; a negative fixed-source loss for `lp` and `lpx` is not a gain: the plus and minus one levels have larger magnitude than the continuous modulation, so the radiated power rises (radiated power change column)."
     )
     a("")
     rows = []
@@ -394,8 +404,13 @@ def build(d):
         v = cs["variants"]
         spread = [
             D.case(dp["pitch_mm"], dp["aperture_r_mm"], t, q)["variants"]["cp_2bit"]["gain_headline_dbi"]
-            for q in (0.0, 45.0, 225.0)
-            if (dp["pitch_mm"], dp["aperture_r_mm"], t, q) in D.cases
+            for q in sorted(
+                {
+                    c_["phi0_deg"]
+                    for c_ in d["cases"]
+                    if c_["theta0_deg"] == t and c_["aperture_r_mm"] == dp["aperture_r_mm"]
+                }
+            )
         ]
         rows.append(
             (
@@ -462,8 +477,8 @@ def build(d):
             "cp 2-bit loss [dB]",
             "cp 2-bit loss, renormalised [dB]",
             "cp 1-bit loss [dB]",
-            "lpx 1-bit loss [dB]",
-            "lpx 2-bit loss [dB]",
+            "lpx 1-bit loss, renormalised [dB]",
+            "lpx 2-bit loss, renormalised [dB]",
         ],
         rows,
     )
@@ -473,7 +488,13 @@ def build(d):
     )
     a("")
     rows = []
-    for t in (0.0, dp["theta0_deg"], 50.0):
+    for t in sorted(
+        {
+            c_["theta0_deg"]
+            for c_ in d["cases"]
+            if c_["aperture_r_mm"] == s["reference_aperture_r_mm"] and c_["pitch_mm"] == dp["pitch_mm"]
+        }
+    ):
         ph = 0.0 if t == 0.0 else dp["phi0_deg"]
         cs = D.case(dp["pitch_mm"], s["reference_aperture_r_mm"], t, ph)
         v = cs["variants"]
@@ -513,7 +534,7 @@ def build(d):
     a(
         f"Counting rules (one method for every row): diodes per cell = bits (one diode per bit, an ASSUMPTION; the topology is item 3); bit = 1 is the forward-biased diode at {f(k['diode_forward_current_ma'], 0)} mA, the share of forward bits is counted from the actual coded states; "
         f"DC power = (forward diodes) x I_F x V_rail, V_rail = {f(k['supply_rail_v'], 1)} V (the supply power, series resistor included; the diode alone dissipates {f(k['diode_forward_voltage_v'], 2)} V x I_F). The same formula is evaluated at {f(k['diode_forward_current_low_ma'], 0)} mA. "
-        "Independent bias lines = diodes (arbitrary patterns need an independent state per diode). Sharing a line among several diodes constrains the pattern: the columns give the line count only, they are NOT simulated, and no row/column or per-ring scheme is evaluated (a per-ring scheme can only make ring-symmetric, i.e. broadside, patterns). "
+        "Independent bias lines = diodes (arbitrary patterns need an independent state per diode). Sharing a line among several diodes constrains the pattern: the columns give the line count only, they are NOT simulated, and no row/column or per-ring scheme is evaluated (a per-ring scheme would also not carry the azimuth-dependent slot axes of this family). "
         f"Shift registers: eight- or sixteen-output devices in chains of eight clocked at {f(k['shift_register_clock_mhz'], 0)} MHz; FPGA pins = chains plus the shared clock, latch and enable lines (generic counts, not checked against a specific FPGA board); output current per pin is the diode forward current."
     )
     a("")
@@ -569,6 +590,10 @@ def build(d):
     b = D.at_dp(rec["pitch_mm"])["bias"][bias_key]
     a(
         f"Driver current per output: {f(b['driver_current_per_output_ma'], 0)} mA (a sixteen-output device with every output on draws {f(b['shift_register']['outputs_per_chip_16']['chip_current_all_on_ma'], 0)} mA, an eight-output device {f(b['shift_register']['outputs_per_chip_8']['chip_current_all_on_ma'], 0)} mA): the output stage must source or sink this per pin; whether common logic-level shift registers are specified for it is NOT checked here (datasheets to be checked in item 3), a current-driver class may be needed. The LP rows are identical in count to the CP rows of the same bit depth (`lp` bias tables are in the JSON)."
+    )
+    a("")
+    a(
+        "For `lpx` the renormalised loss is a lower bound on the penalty: it hides the power moved out of the beam, and an equal-current-power estimate is not computed here."
     )
     a("")
     a(

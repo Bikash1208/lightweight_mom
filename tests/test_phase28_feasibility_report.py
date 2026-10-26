@@ -110,7 +110,11 @@ def test_design_point_table_cells_equal_the_json_cell_by_cell():
     assert rows
     n = 0
     for c in doc["cases"]:
-        if (c["aperture_r_mm"], c["theta0_deg"], c["phi0_deg"]) != (dp["aperture_r_mm"], dp["theta0_deg"], dp["phi0_deg"]):
+        if (c["aperture_r_mm"], c["theta0_deg"], c["phi0_deg"]) != (
+            dp["aperture_r_mm"],
+            dp["theta0_deg"],
+            dp["phi0_deg"],
+        ):
             continue
         for name, v in c["variants"].items():
             cells = rows[(f"{c['pitch_mm']:.1f}", name)]
@@ -138,7 +142,9 @@ def test_hardware_table_counts_equal_cells_times_bits_and_the_json():
             case = next(
                 c
                 for c in doc["cases"]
-                if f"{c['pitch_mm']:.1f}" == cells[0] and (c["aperture_r_mm"], c["theta0_deg"], c["phi0_deg"]) == (dp["aperture_r_mm"], dp["theta0_deg"], dp["phi0_deg"])
+                if f"{c['pitch_mm']:.1f}" == cells[0]
+                and (c["aperture_r_mm"], c["theta0_deg"], c["phi0_deg"])
+                == (dp["aperture_r_mm"], dp["theta0_deg"], dp["phi0_deg"])
             )
             b = case["bias"][cells[1]]
             bits = int(cells[1][3])

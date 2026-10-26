@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RIS designer (reflecting CP-2) — HMSA Designer</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1><a href="/">HMSA Designer</a></h1>
+    <nav><a href="/">Home</a> <a href="/more_tools.html">More tools</a></nav>
+  </header>
+  <main>
+    <div class="card">
+      <h2>RIS designer (plane-wave reflecting RIS, CP-2 cell)</h2>
+      <p>2-bit PIN-diode RIS, 15 mm cells (MADP-000907-14020, RT/duroid 5880 1.575 mm), RHCP in &rarr; RHCP out, steering 0&ndash;50&deg; in the &phi; = 0 and 90&deg; planes. <b>Model only</b>
+      (isolated-cell responses with the user's HFSS calibration inside its measured domain); array-level coupling is checked by server jobs, not here. Requests outside the characterised domain return
+      <code>NOT_AVAILABLE_FROM_CURRENT_DATA</code>; nothing is extrapolated.</p>
+      <form id="form">
+        <label>Frequency [GHz]<input type="number" step="0.05" name="frequency_ghz" value="10.5" /></label>
+        <label>Cells (rows &times; columns)<input type="number" name="rows" value="20" min="2" max="40" /><input type="number" name="cols" value="20" min="2" max="40" /></label>
+        <label>Steering &theta;<sub>s</sub> [deg]<input type="number" step="1" name="theta_s_deg" value="30" /></label>
+        <label>Steering plane &phi;<sub>s</sub>
+          <select name="phi_s_deg"><option value="0">0&deg;</option><option value="90">90&deg;</option></select></label>
+        <label>Incidence &theta;<sub>i</sub> [deg] (plane wave, &le; 30)<input type="number" step="1" name="theta_i_deg" value="0" /></label>
+        <label>Coding
+          <select name="variant">
+            <option value="plain">plain (nearest state)</option>
+            <option value="dither">dither (seeded)</option>
+            <option value="tilt">tilt search</option>
+            <option value="refined">refined (sidelobe-aware)</option>
+            <option value="auto">auto (dither from 35&deg;, array-level check pending)</option>
+          </select></label>
+        <label>Seed<input type="number" name="seed" value="0" /></label>
+        <label>Cell library
+          <select name="library"><option value="v2">v2 full grid (validated)</option><option value="v1">v1 reduced grid (fails the R4 gate near &phi; = 90&deg;)</option></select></label>
+        <label><input type="checkbox" name="sensitivity" checked /> diode C<sub>off</sub> sensitivity band</label>
+        <button type="submit">Design</button>
+      </form>
+      <p class="status" id="status"></p>
+    </div>
+    <div class="card" id="results" style="display:none">
+      <h3 id="state"></h3>
+      <p id="libstate"></p>
+      <ul id="reasons"></ul>
+      <table id="metrics"></table>
+      <h3>Diode tolerance (C<sub>off</sub> 0.0225 / 0.025 / 0.030 pF)</h3>
+      <table id="sens"></table>
+      <h3>Array-level coupling</h3>
+      <p id="coupling"></p>
+      <h3>State map (1&ndash;4 = one-hot diode state)</h3>
+      <pre id="grid"></pre>
+      <h3>Known biases</h3>
+      <ul id="biases"></ul>
+    </div>
+  </main>
+  <script>
+  const $ = (id) => document.getElementById(id);
+  $("form").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const f = new FormData($("form"));
+    const body = { frequency_ghz: +f.get("frequency_ghz"), rows: +f.get("rows"), cols: +f.get("cols"), theta_s_deg: +f.get("theta_s_deg"), phi_s_deg: +f.get("phi_s_deg"),
+      theta_i_deg: +f.get("theta_i_deg"), variant: f.get("variant"), library: f.get("library"), seed: +f.get("seed"), sensitivity: f.get("sensitivity") === "on" };
+    $("status").textContent = "Submitting...";
+    const r = await fetch("/api/ris/design", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) { $("status").textContent = "Rejected: " + (await r.json()).detail; return; }
+    let job = await r.json();
+    while (!["done", "failed", "cancelled"].includes(job.status)) {
+      $("status").textContent = `${job.status} ${(100 * job.progress).toFixed(0)}% ${job.progress_message}`;
+      await new Promise((s) => setTimeout(s, 700));
+      job = await (await fetch("/api/jobs/" + job.id)).json();
+    }
+    if (job.status !== "done") { $("status").textContent = "Failed: " + JSON.stringify(job.error); return; }
+    show(job.result);
+  });
+  function show(res) {
+    $("status").textContent = "Done.";
+    $("results").style.display = "";
+    $("state").textContent = `${res.state} — ${res.family} (${res.validation_label})`;
+    $("libstate").innerHTML = `<b>Library ${res.library}:</b> ${res.library_label}`;
+    $("libstate").style.color = res.library === "v1" ? "#a40" : "";
+    $("reasons").innerHTML = (res.reasons || []).map((x) => `<li>${x}</li>`).join("");
+    $("biases").innerHTML = (res.known_biases || []).map((b) => `<li>${b}</li>`).join("");
+    if (res.state !== "OK") { $("metrics").innerHTML = $("sens").innerHTML = $("grid").textContent = $("coupling").textContent = ""; return; }
+    const m = res.metrics;
+    $("metrics").innerHTML = "<tr><th>coding</th><th>gain at target dBi</th><th>peak dBi @ (&theta;,&phi;)</th><th>pointing err deg</th><th>SLL dB</th><th>opp-handed dB</th><th>AR dB</th></tr>" +
+      `<tr><td>${res.variant_used}</td><td>${m.gain_at_target_dbi}</td><td>${m.peak_gain_dbi} @ ${m.peak_direction_deg.join(", ")}</td><td>${m.pointing_error_deg}</td><td>${m.sll_db} @ ${m.sll_direction_deg.join(", ")}</td><td>${m.opposite_handed_peak_db}</td><td>${m.axial_ratio_db}</td></tr>` +
+      Object.entries(res.ideal_references).map(([k, v]) => `<tr><td>${k}</td><td>&ndash;</td><td>${v.peak_gain_dbi}</td><td>&ndash;</td><td>${v.sll_db}</td><td>&ndash;</td><td>&ndash;</td></tr>`).join("");
+    $("sens").innerHTML = res.tolerance_sensitivity ? "<tr><th>C<sub>off</sub> pF</th><th>gain dBi</th><th>SLL dB</th><th>opp-handed dB</th></tr>" +
+      Object.entries(res.tolerance_sensitivity.by_coff_pf).map(([c, v]) => `<tr><td>${c}</td><td>${v.gain_at_target_dbi}</td><td>${v.sll_db}</td><td>${v.opposite_handed_peak_db}</td></tr>`).join("") +
+      `<tr><td colspan=4>gain spread ${res.tolerance_sensitivity.gain_spread_db} dB</td></tr>` : "<tr><td>not computed</td></tr>";
+    $("coupling").textContent = res.coupling_for_this_coding + " | merged server results: " + res.coupling.state + " (" + res.coupling.tasks.length + " codings)";
+    $("grid").textContent = res.states.map((row) => row.join(" ")).join("\n");
+  }
+  </script>
+</body>
+</html>

@@ -8,9 +8,9 @@ from src.errors import solve_failed
 
 
 def _wait(job, timeout=5.0):
-    deadline = time.time() + timeout
+    deadline = time.monotonic() + timeout
     while job.status in (JobStatus.QUEUED, JobStatus.RUNNING):
-        if time.time() > deadline:
+        if time.monotonic() > deadline:
             raise TimeoutError(f"job {job.id} did not finish within {timeout}s")
         time.sleep(0.01)
     return job

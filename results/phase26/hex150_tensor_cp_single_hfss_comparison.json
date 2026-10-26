@@ -1,0 +1,213 @@
+{
+ "labels": [
+  "HFSS_USER_EXPORT",
+  "COMPARISON_ONLY_NO_MODELLING"
+ ],
+ "pin_model": "[user to state: scripted pin or connector]",
+ "gain_csv": "hfss_results/hex150_tensor_cp_single/realized_gain_RHCP_LHCP_10p5GHz_1deg.csv",
+ "frequency_used_ghz": 10.5,
+ "measured": {
+  "peak_rhcp_gain_dbi": 23.0266128448279,
+  "peak_theta_phi_deg": [
+   30.0,
+   225.0
+  ],
+  "pointing_error_deg": 0.0,
+  "xpd_at_peak_db": 23.017341354200404,
+  "integrated_realized_gain_over_4pi_total_efficiency": 0.9938742469427262,
+  "grid_complete": true,
+  "ar_at_peak_db": 1.229423342029242,
+  "ar_max_over_minus3db_beam_db": 1.5844625734223525,
+  "minus3db_beam_points": 83,
+  "rhcp_sll_db": -18.54296184342222,
+  "budget_of_radiated": {
+   "main_beam_le_8deg_total": 0.2721234963181038,
+   "main_beam_le_8deg_rhcp": 0.27058938620019146,
+   "near_sidelobes_8_to_20deg": 0.02425867289863218,
+   "far_sidelobes_theta_le_70": 0.17072583282667306,
+   "grazing_70_to_90": 0.26422689559918794,
+   "back_hemisphere_gt_90": 0.2686651023574032,
+   "lhcp_total_all_angles": 0.31028955599192865,
+   "rhcp_total_all_angles": 0.6897104440080714,
+   "rhcp_within_beam_over_total_within_beam": 0.9943624488929872
+  }
+ },
+ "checks": {
+  "peak_gain": {
+   "hfss_dbi": 23.0266128448279,
+   "predicted_dbi_bare_launch": 23.511963450519115,
+   "predicted_dbi_loaded_launch_max": 25.233573104791603,
+   "tolerance_db": 1.5,
+   "falsifier_dbi": 19.0,
+   "state": "GAIN_WITHIN_PREDICTED_RANGE"
+  },
+  "pointing": {
+   "hfss_deg": 0.0,
+   "tolerance_deg": 2.0,
+   "state": "OK"
+  },
+  "xpd_at_peak_db": {
+   "hfss": 23.017341354200404,
+   "predicted": 16.883500081960044,
+   "brief_target": 25.0,
+   "delta_db": 6.13384127224036
+  },
+  "ar_at_peak_db": {
+   "hfss": 1.229423342029242,
+   "predicted": 2.50416507339554,
+   "brief_target_le": 3.0,
+   "worst_in_minus3db_beam_hfss": 1.5844625734223525,
+   "worst_predicted": 3.066663670474407
+  },
+  "rhcp_fraction_in_beam": {
+   "hfss": 0.9943624488929872,
+   "predicted": 0.9790342550298181,
+   "falsifier_lt": 0.8,
+   "state": "OK"
+  },
+  "rhcp_sll_db": {
+   "hfss": -18.54296184342222,
+   "predicted": -22.77399475110991,
+   "brief_target_le": -15.0
+  },
+  "power_budget_fractions_of_radiated": {
+   "hfss": {
+    "main_beam_le_8deg_total": 0.2721234963181038,
+    "main_beam_le_8deg_rhcp": 0.27058938620019146,
+    "near_sidelobes_8_to_20deg": 0.02425867289863218,
+    "far_sidelobes_theta_le_70": 0.17072583282667306,
+    "grazing_70_to_90": 0.26422689559918794,
+    "back_hemisphere_gt_90": 0.2686651023574032,
+    "lhcp_total_all_angles": 0.31028955599192865,
+    "rhcp_total_all_angles": 0.6897104440080714,
+    "rhcp_within_beam_over_total_within_beam": 0.9943624488929872
+   },
+   "model_main_beam_8deg": 0.3019932338731407,
+   "model_lhcp_aperture_only": 0.008003156127624528,
+   "model_grazing_plus_back_upper_bound": 0.6812830110272673,
+   "hfss_grazing_plus_back": 0.5328919979565911,
+   "note": "The model gives no pattern to the pin's direct space wave (0.41) or the unconverted remainder (0.27): they are lumped into the grazing+back upper bound. HFSS LHCP includes the pin's direct radiation, the model's LHCP does not."
+  },
+  "integral_consistency": {
+   "integrated_gain_over_4pi": 0.9938742469427262,
+   "grid_complete": true
+  },
+  "peak_realized_gain_table_dbi": 23.048238457918124
+ },
+ "antenna_params": {
+  "Max U": 16.054758,
+  "Peak Directivity": 206.919836,
+  "Peak Gain": 207.653153,
+  "Peak Realized Gain": 201.754786,
+  "Peak System Gain": 201.754786,
+  "Radiated Power": 975.038402,
+  "Accepted Power": 971.595098,
+  "Incident Power": 1.0,
+  "System Power": 1.0,
+  "Radiation Efficiency": 1.003544,
+  "Total Efficiency": 0.975038,
+  "System Efficiency": 0.975038,
+  "Front to Back Ratio": 477.93022,
+  "Decay Factor": 0.0,
+  "Total": 225.0,
+  "X": 225.0,
+  "Y": 225.0,
+  "Z": 225.0,
+  "Phi": 225.0,
+  "Theta": 225.0,
+  "LHCP": 279.0,
+  "RHCP": 225.0,
+  "Ludwig3/X dominant": 225.0,
+  "Ludwig3/Y dominant": 225.0,
+  "CoPolar": 225.0,
+  "CrossPolar": 225.0
+ },
+ "antenna_params_selected": {
+  "Total Efficiency": 0.975038,
+  "Radiation Efficiency": 1.003544,
+  "Accepted Power": 971.595098,
+  "Radiated Power": 975.038402,
+  "Incident Power": 1.0
+ },
+ "s_parameter": {
+  "s_db_at_design": -15.002165023156,
+  "f_nearest_ghz": 10.54,
+  "min_s_db": -27.2692214220148,
+  "f_at_min_ghz": 10.08,
+  "band_below_minus10_db_ghz": [
+   8.81,
+   11.59
+  ],
+  "design_inside_minus10_db": true,
+  "prediction": "NO_PREDICTION (match not modelled; the pin is the scripted/connector feed)",
+  "brief_target": "S11 <= -10 dB at 10.54 GHz (launcher redesign constraint)"
+ },
+ "ar_sweep": {
+  "phi_cut_deg": 224.0,
+  "frequencies_ghz": [
+   8.0,
+   8.125,
+   8.25,
+   8.375,
+   8.5,
+   8.75,
+   9.0,
+   9.25,
+   9.5,
+   9.75,
+   10.0,
+   10.25,
+   10.5,
+   11.0,
+   11.25,
+   11.5,
+   11.625,
+   11.75,
+   12.0
+  ],
+  "ar_at_beam_theta_db": [
+   18.2156305400679,
+   9.65541294149227,
+   1.2250334292437,
+   9.45647034138737,
+   17.0656584917165,
+   22.3711341874021,
+   12.8159619852049,
+   5.98265632236716,
+   1.54544599119052,
+   1.51705259964405,
+   1.92351385034272,
+   1.6962766563518,
+   1.30453051322988,
+   1.27541688740696,
+   1.33098355254461,
+   1.10756734492841,
+   3.08129157609375,
+   2.46710394160797,
+   2.49748377694982
+  ],
+  "frequency_used_ghz": 10.5,
+  "ar_at_beam_theta_at_used_freq_db": 1.30453051322988,
+  "min_ar_in_cut_db": 0.248517525594402,
+  "min_ar_theta_deg": 26.0,
+  "freqs_with_ar_le_3db_at_beam_theta_ghz": [
+   8.25,
+   9.5,
+   9.75,
+   10.0,
+   10.25,
+   10.5,
+   11.0,
+   11.25,
+   11.5,
+   11.75,
+   12.0
+  ],
+  "contiguous_3db_band_around_design_ghz": [
+   9.5,
+   11.5
+  ]
+ },
+ "ar_cut": "SEE ar_sweep",
+ "surface_wave_decay": "NOT_PROVIDED"
+}

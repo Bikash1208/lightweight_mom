@@ -20,7 +20,10 @@ def test_complex_becomes_real_imag_dict():
 
 
 def test_path_becomes_string():
-    assert to_jsonable(Path("/tmp/foo.json")) == "/tmp/foo.json"
+    p = Path(
+        "/tmp/foo.json"
+    )  # str(Path) uses the platform separator (backslashes on Windows); the contract is str(path)
+    assert to_jsonable(p) == str(p)
 
 
 def test_nested_dataclass_is_flattened():

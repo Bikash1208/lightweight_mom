@@ -1,8 +1,8 @@
 # MoM discretization and matrix assembly (Phase 3)
 
-Implementation: [src/basis_functions.py](src/basis_functions.py) (mesh, rooftops, transforms),
-[src/mom_matrix.py](src/mom_matrix.py) (Z, V), [src/excitation.py](src/excitation.py)
-(unpatterned-stack field, reference planes), [src/solver.py](src/solver.py)
+Implementation: [`src/basis_functions.py`](../../src/basis_functions.py) (mesh, rooftops, transforms),
+[`src/mom_matrix.py`](../../src/mom_matrix.py) (Z, V), [`src/excitation.py`](../../src/excitation.py)
+(unpatterned-stack field, reference planes), [`src/solver.py`](../../src/solver.py)
 (`assemble_system`, `build_system`, `solve`).
 Conventions: [CONVENTIONS.md](CONVENTIONS.md). Kernel: [GREEN_FUNCTION.md](GREEN_FUNCTION.md).
 
@@ -251,6 +251,49 @@ The incident wave's phase reference stays at `z = 0` (Section 2).
 - **S-parameters (done in Phase 4, S_PARAMETERS.md):** `V(z)` outside `z = 0` is now available
   (`sheet_fields`, `stack_fields`); the bottom-port excitation is `stack_tangential_field(..., port="bottom")`.
 - Finite metal conductivity and metal thickness: not modelled.
+
+## 14. Lumped RLC loads (Phase 20 R1 item 2; `src/loads.py`)
+
+A load is an axis-aligned rectangle of the cell, length `ℓ` along its direction (say x) and width `w` across it, that the mesh treats as
+conductor: rooftop basis functions cross it. It carries the series impedance `Z_L(ω) = R + jωL + 1/(jωC)` (`exp(+jωt)`), i.e. the
+**sheet impedance** `Z_s = Z_L · w/ℓ` [ohm/sq] for current along x (a rectangle of length ℓ and width w has `Z_L = Z_s ℓ/w`).
+The impedance boundary condition on the region is `E_tan,total = Z_s J`. In the Galerkin system (`V_i − (Z I)_i = ⟨f_i, Z_s J⟩`) this
+is
+
+    (Z + Z_load) I = V,        Z_load,ij = Z_s ∫_region f_i · f_j dA     (x-directed f_i, f_j only),
+
+with the exact overlap of two rooftops (tent in x times a rectangle of height Δy in y) over the region: the product of two tents is
+piecewise quadratic and is integrated exactly (2-point Gauss on each piece); the y factor is the overlap of the basis row with the
+region (rows are disjoint, so only same-row pairs couple). No per-edge scaling constant is needed: the "N parallel edges across the
+gap" statement is automatic. Normalisation check (tested at 10, 20, 40 cells): a uniform current `J = 1 A/m` through the region
+carries `I_tot = w` and gives `I^H Z_load I = Z_L w²`, i.e. dissipation `½ R I_tot²`; two side-by-side halves of width `w/2` with
+`2 Z_L` are identical to one load (same `Z_s`).
+
+Transverse to the direction the region is a perfect conductor by default (the brief's model). `transverse_conducts=False` adds a
+huge sheet impedance (`OPEN_OHM`) for the transverse basis functions of the region (a lumped element conducts along its axis only);
+`open_circuit=True` does that AND sets `Z_L = OPEN_OHM`, which reproduces the geometry with the gap empty (tested to 2e-5). A finite
+but large `|Z_L|` with the transverse conduction kept leaves a floating metal strip in the gap and is NOT the empty gap (S11 differs
+by ~0.09 in the test cell). Without loads (`UnitCell.loads == ()`, the default) none of this runs. Absorbed power:
+`½ Re(I^H Z_load I)`; for a lossless substrate it equals `1 − Σ|S|²` of the incident mode (tested at 0° and 40°). Limits: regions must
+lie at least one mesh cell inside the unit cell (images of the boundary rooftops), edges should lie on mesh lines (warning otherwise),
+no vertical (via) currents.
+
+## 15. Rotated loads and polygon patches (Phase 20 R3 item 2; `src/loads.py`, `src/polygon_geometry.py`)
+
+A load may have its conduction axis at an angle α from +x (`LumpedLoad(direction=α [deg])`; 0 and 90 are the x and y loads, bit-identical). The
+region is the rectangle of length ℓ along `u = (cos α, sin α)` and width w along `v = (−sin α, cos α)`; the sheet impedance is a tensor,
+
+    Z_s u uᵀ  (+ OPEN_OHM · v vᵀ when the transverse conduction is blocked),   Z_s = Z_L w/ℓ,
+
+and `Z_load,ij = ∫_region f_iᵀ (tensor) f_j dA` with the SAME rooftops as Section 14 (x-directed and y-directed functions couple through
+`u_x u_y`). The region's edges cut the mesh cells arbitrarily, so the integral is a composite 2-point Gauss rule on sub-cells of side ≤ h/4 (convergent,
+not exact). Normalisation (tested at 24 and 48 cells, 30°, 45°, 135°): the rooftops of each family partition unity, so the uniform current
+`J = u` has a pointwise-constant integrand and dissipates exactly `½ R I_tot²`; with the 10¹² Ω transverse penalty the rounding noise is ~10⁻⁶.
+
+**Known numerical limit.** On a diagonal strip only a few cells wide the Cartesian rooftops can satisfy the transverse block (`v·J = 0`) only if
+`J_x = J_y` pointwise, which they cannot do on a staircase, so `transverse_conducts=False` also kills the longitudinal current (tested: the 45° stub of the CP-2
+cell has no effect with the block, a clean 90° phase ladder without it). Rotated diode regions therefore conduct transversely (a full-width sheet over a narrow strip).
+Polygon patches (`PolyComposite`: octagon, oriented rectangles) are staircased by the mesh; `edges_aligned` is False when any edge is not axis-aligned.
 
 ## 13. References (method; equations here are derived, see Section 0)
 

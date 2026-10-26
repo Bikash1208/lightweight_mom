@@ -80,6 +80,76 @@ plane in front of/behind a finite panel and moves the phase back to the substrat
 **self-consistency check between two measurement techniques in this project, not an HFSS
 comparison** — no HFSS data exists for this geometry yet (`hfss_exports/README.md`).
 
+## 6. First HFSS run of an app-designed board: `four_port_hex150_gap0`, port 3 alone (Phase 26)
+
+The user's HFSS solve of `hfss_exports/four_port_hex150_gap0/` (4 × 150 mm-side hexagons, 1-bit pair empty |
+5.85 mm square, RT/duroid 5880 1.575 mm, λ/4-class monopole per port), data in `hfss_results/hex150_gap0/`:
+
+| File | What | Committed |
+|---|---|---|
+| `port3_antenna_params_8_10p5GHz.txt` | HFSS antenna-parameter table, port 3 excited, 8 GHz and 10.5 GHz | yes |
+| `port3_realized_gain_RHCP_LHCP_10p5GHz.csv` | realized gain RHCP / LHCP, 10.5 GHz, θ 0–180° and φ −180…180° in 2° steps | yes |
+| `HEX_HFSSDesign1.s4p` | 4-port S-parameters 8–12 GHz | **no** (gitignored Touchstone, stays local) |
+
+Numbers as reported (S-parameters from the local `.s4p`; the rest from the two committed files):
+
+- S11…S44 −13.9 / −17.6 / −16.4 / −14.6 dB at 10.54 GHz, −10 dB band ≈ 8.5–11.4 GHz (minimum near 9.6–10 GHz: the
+  monopole is slightly long); coupling ≤ −50 dB at 10.54 GHz and ≤ −41.7 dB anywhere in 8–12 GHz.
+- Port 3 alone, 10.5 GHz: beam at (θ 30°, φ 224°) (design 30°, 225°); peak realized gain RHCP **19.85 dBi**
+  (table: directivity 99.4 = 20.0 dBi, realized gain 97.2 = 19.9 dBi, total efficiency 97.7 %); XPD at the peak
+  22.3 dB; model (Phase 23 cell-wise) predicted 25.8–26.0 dBi.
+- Integrated power budget from the CSV (2° grid, 1.05 × accepted power, ±5 %): within 8° of the beam 19.4 %, within
+  20° 34.7 %, θ > 70° 38 %, back hemisphere 14 %, LHCP 48 %. Table quirk: radiation efficiency 1.016 and radiated
+  power (977 mW) above accepted power (962 mW) — HFSS integration/mesh noise at the percent level; the ±5 %
+  above covers it.
+- Model comparison: `results/phase26/README.md` — the leakage model brackets the realized gain (16.9–19.9 dBi
+  depending on the in-context contrast, launch fraction not modelled), it does not validate it. Named state
+  `LEAKAGE_MODEL_BRACKETS_HFSS_NOT_DISCRIMINATING`.
+
+## 7. HFSS run of the single-hexagon tensor-CP board `hex150_tensor_cp_single` (Phase 26)
+
+The user's HFSS solve of `hfss_exports/hex150_tensor_cp_single/` (one 150 mm-side hexagon, 1430 rotating-slot circles
+D 6.0 mm on RT/duroid 5880 1.575 mm, pure-RHCP pencil beam θ 30° / φ 225°, monopole at the centre, pin 6.0 mm above
+the surface), data in `hfss_results/hex150_tensor_cp_single/` (antenna parameters, S11 8–12 GHz, AR φ = 224° 8–12 GHz,
+realized-gain RHCP/LHCP 1° CSV at 10.5 GHz; all committed; the E-field line is still to come):
+
+| Quantity | HFSS (10.5 GHz) | Model (written before the run) |
+|---|---|---|
+| Peak RHCP realized gain | **23.03 dBi** (table 23.05; directivity 23.16 dBi; total efficiency 0.975) | 23.5 (launch 0.592) … 25.2 dBi |
+| Beam | θ 30°, φ 225° | 30°, 224° |
+| AR at the peak / worst over the −3 dB beam | **1.2–1.3 dB** / 1.6 dB (≤ 3 dB over 9.5–11.5 GHz at θ 30°) | 2.5 / 3.1 dB |
+| XPD at the peak | **23.0 dB** | 16.9 dB |
+| RHCP SLL | **−18.2 dB** (user; −18.5 dB with the 15° exclusion of the comparison script) | −22.8 dB |
+| S11 at 10.54 GHz | −15.0 dB (−10 dB band 8.8–11.6 GHz) | not modelled |
+| Power budget (of radiated) | main beam ≤ 8° 0.27; grazing 0.26; back 0.27; far sidelobes 0.17; LHCP (all angles) 0.31 | 0.30; (pin direct 0.41 + unconverted 0.27 lumped) |
+
+This is a **prediction check of the leakage + launch + supercell-table model on one board, one frequency, one run**: the
+gain is within 0.5 dB of the model's bare-launch value, the loss accounting agrees in total (non-beam power 0.70 vs 0.68),
+beam purity, AR and XPD are better than predicted. It does not separate pin-direct radiation from unconverted edge power
+(needs the E-field line), and the model's frequency behaviour is untested (the table is at 10.54 GHz only).
+Comparison + budget: `scripts/research/phase26_compare_single_hex.py`, `results/phase26/hex150_tensor_cp_single_hfss_comparison.json`,
+`results/phase26/README.md` section H.
+
+## 8. First HFSS check of the RIS cell: CP-2, `phase20_r3_cp_cell` (Phase 20 R3 package, run by the user 2026-10-23)
+
+**State: MODEL_ONLY vs HFSS, comparison only (no calibration enters these numbers).** HFSS: `hfss_results/phase20_r3_cp_cell/` (bare slab + the four one-hot states at theta 0 / 30 deg, phi 0, 8-12 GHz in 0.5 GHz steps; diodes as parallel-RLC
+sheets, MADP ON 5.2 ohm / OFF 0.025 pF). Model: the F = 2n state library `results/phase20_r4/cp2_library_v1.npz` and the regenerated F = 2n `mom_reference.csv`. Tool: `scripts/research/phase20_r4_hfss_check.py`
+(`src/ris/hfss_calibration.py`), output `results/phase20_r4/hfss_check.json` and `HFSS_CHECK.md`. The user's own quick comparison (`hfss_results/phase20_r3_cp_cell/NOTES.md`) was reproduced and is **confirmed except one interpretation** (below).
+
+**Conventions (bare slab, repo tool):** Floquet mode 1 = TE, mode 2 = TM, no 180 deg TM flip; reference-plane offset **1.236 mm** (fit residual 0.51 deg; the HFSS de-embedding stops ~1.24 mm short of the patch plane - to be checked in the HFSS setup); cross terms keep their sign (+1: mean |dr_RR| 0.29 vs 0.77 for -1).
+
+**Confirmed**
+* The PB ladder works in HFSS: four states rotate the CP phase in ~90 deg steps with low loss.
+* Best point 10.5 GHz: |r_RR| -0.57 … -0.63 dB (theta 0), -0.55 … -0.78 dB (theta 30); steps **98 / 92 / 102 / 68 deg** (theta 0), **97 / 92 / 100 / 71 deg** (theta 30), step error 21.9 / 18.7 deg (target 20); the short step is 4 -> 1 (68-71 deg; 64 deg at 10 GHz; library 77-78, mom mesh 90 77).
+* Opposite-handed at 10.5 GHz: -16.8 dB (theta 0, meets -15) and **-11.9 dB (theta 30, misses)**; library -18.6 / -10.5 dB. At 10.0 GHz HFSS is worse than the library: -8.4 / -5.7 dB (library -15.2 / -10.0), |r_RR| down to -1.5 / -2.2 dB.
+* Amplitudes at 10.5 GHz agree with the library within 0.1 dB per state at theta 0 and within 0.4 dB at theta 30. HFSS - library r_RR phase at 10.5 GHz: -18 … -31 deg (theta 0), -19 … -35 deg (theta 30), i.e. a common offset of about -25 deg plus a state-dependent part of +-7 deg.
+* `compare()` (library points = HFSS points, 72): median phase difference 19 deg, 95th percentile 51 deg, level difference median 0.9 dB, 8 % within the library's stored uncertainty - verdict `HFSS_DIFFERS_FROM_LIBRARY` (dominated by the off-band points where the response is small and steep).
+
+**Corrected interpretation:** the "HFSS resonance ~0.3-0.5 GHz higher than the MoM" is **not** supported by a fit. The frequency shift that best aligns the |r_RR| curves is **-0.05 GHz** (rms 0.48 dB at theta 0, 0.52 dB without shift; theta 30: no change), and from the opposite-handed curves **-0.10 … -0.15 GHz** (the opposite sign). Both models have their best point at 10.5 GHz
+at phi = 0; what differs is the **shape**: the HFSS pass band is narrower (|r_RR| -1.8 / -1.5 / -1.7 dB at 9.5 / 10 / 11 GHz against -3.0 / -1.2 / -0.9 dB in the library: lossier on the high side, better on the low side), the opposite-handed level degrades faster off 10.5 GHz, and the ladder is more distorted (steps 98/92/102/68 vs 89/104/89/77). The library's low-frequency edge of the "usable band" at 10.0 GHz (worst-over-phi, tolerance-limited) is therefore not confirmed by HFSS; 10.5 GHz is the HFSS-supported operating point.
+
+**Caveats:** one HFSS run, phi = 0 only, 0.5 GHz sampling (sharp features undersampled), HFSS diode representation differs from the MoM series load, no HFSS tolerance corners, MoM model uncertainty ~10 deg and F = 2n mesh-correction residual 12 deg near 10.3-10.8 GHz (R4 README) remain. Decision recorded in the roadmap log: operating frequency 10.5 GHz; R3b plan `docs/history/briefs/PHASE20_R3B_CP2_REOPT.md` (an approved `HFSS_CALIBRATED` additive delta table exists for this cell: `results/phase20_r3b/hfss_delta_table.npz`).
+
 ## Regenerating
 
 - Phase 12 HFSS comparisons: re-run through the app's **HFSS compare** page, or

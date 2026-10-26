@@ -10,3 +10,5 @@
   +-2 % rows held the cells' 10.54 GHz phases, which is wrong -- the square's phase moves ~13 deg per 0.2 GHz).
 - `rect_snapshot_before.json` / `rect_snapshot_after_C.json` -- the bit-identical gate for rectangle layouts
   (`scripts/research/phase23_rect_snapshot.py`).
+- `rect_snapshot_server1.json` / `.provenance.json` -- numeric reference made on server 1 (2026-10-26, 1 BLAS thread): every number of the six
+  rectangle syntheses, for number-by-number comparison (`scripts/research/phase23_rect_numbers.py`; see `docs/DEVELOPING.md`).

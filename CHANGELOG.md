@@ -5,6 +5,91 @@ summarize each phase's own write-up in `docs/history/`/`docs/history/`). No vers
 before Phase 13; `0.13.0` (`pyproject.toml`) is the first. See `docs/STATUS.md` for current
 validation numbers and open next steps; this file is the per-phase "what changed" record.
 
+## Unreleased - Phase 20 R5 progress, R4 library v2 validation, Windows fix, curation (2026-10-24, branch `phase20-ris`)
+- **R4 gate PASS - library v2** (`compute/r4-fullgrid-validate` @ `ed76d73`, merged `37074da`; labels `f6688c9`): 60 random points p95 0.31 deg / 0.012 dB; 40 points phi 75-105 deg p95 2.46 deg / 0.109 dB. Full-grid library v2 (`results/phase20_r4/cp2_library_v2_fullgrid.npz`, 41 x 10 x 24, F = 2n = 120; assembled `1264bdc`) is the validated default; v1 labelled as failing the gate near phi = 90 deg (errors live in the 10.4-10.9 GHz band).
+- **R5-1** (`9d3deee`, `14ac74d`): MoM at mesh 90 reproduces the HFSS C_off sensitivity (<= 2.8 deg vs <= 2.2 deg; `results/phase20_r5/TOLERANCE_GAP.md`).
+- **R5-2 / R5-3** (`3f2cfe2`, `00528a4`, `0d46f83`): plane-wave forward model (`src/ris/forward.py`), coding synthesis (`src/ris/coding.py`), beam table, bandwidths, C_off sensitivity, one reference-plane method.
+- **R5-5** (`26b2433`): RIS designer page `/ris.html`, `/api/ris/*`.
+- **R5-6** (`977883b`, `e9e63dd`, `8033f90`): RIS board exporter (`src/export/ris_board_export.py`) and 3x3 smoke package; `AssignLumpedRLC` and the plane-wave call verified in AEDT (2026-10-24).
+- **Phase 26 board B export** (`41f9ea0`, from `764224a`); board A cell count corrected to 5684.
+- **Infra / Windows:** compute-server sync (`13f099f`); utf-8 + LF on every text write under `src/` outside the frozen `phase8b-13` packages (`62df347`), scan test `tests/test_text_write_encoding.py`; opt-in PCHIP interpolation of the correction map (`9466f1f`).
+- **Curation pass 0-5** (branch `curation/2026-10-24`, docs only): `docs/ROADMAP.md`, `jobs/README.md`, `hfss_results/README.md`, refreshed README/START_HERE/briefs index, Phase 19 brief to `_parked/`, Phase 27 brief to `docs/history/briefs/`, theory link fixes.
+
+## Unreleased - Phase 20 R5 brief (branch `phase20-ris`)
+- `docs/briefs/PHASE20_R5_RIS_DESIGN_MODE.md`: full R5 brief from the user's answers, corrected the same day to the plane-wave reflecting RIS only (offset horn removed; feasibility numbers kept in Appendix B): R5-1 calibrated library layer, R5-2 plane-wave forward model, R5-3 coding synthesis and gain bandwidth, R5-4 array-level verification as server jobs, R5-5 app page, R5-6 HFSS 10 x 10 sub-board export last, R5-7 close-out; item 0 audit in Appendix A. Roadmap: OPEN stage-2 item (integrated antenna with its own feed).
+
+## Unreleased - Phase 20 R3b closed - baseline CP-2 retained (branch `phase20-ris`)
+- Optimisation stopped after 249 cached evaluations (objective dominated by the theta-30 / phi-45 tolerance corners, insensitive to the 5 parameters, diagonal-stub split worse): baseline CP-2 retained, R4 library valid, `jobs/r3b-continue.md` withdrawn (`results/phase20_r3b/OUTCOME.md`). Additive `Cp2Cell.line_diag` / `stub_width_diag`, checkpointed optimiser and scripts kept.
+- Infra: compute-server sync brief; Mac is coordinator-only; guarded `resource` import and three portable test fixes; cross-machine equivalence tools (`jobs/equivalence-check.md`).
+
+## Unreleased - Phase 20 R3b prep - first HFSS check of the CP-2 cell (branch `phase20-ris`)
+- User's HFSS run `hfss_results/phase20_r3_cp_cell/` compared with the F = 2n library by the repo tool (`phase20_r4_hfss_check.py`, `read_hfss_reim`, `fit_reference_plane_mm`): ladder works, best point 10.5 GHz, steps 98/92/102/68 deg, theta-30 opposite-handed -11.9 dB; the "resonance 0.3-0.5 GHz high" reading is not supported (fit -0.05 GHz). `docs/validation/README.md` section 8.
+- Operating frequency 10.5 GHz (roadmap log); approved `HFSS_CALIBRATED` additive delta table `results/phase20_r3b/hfss_delta_table.npz` (`DeltaTable`); grating / quantisation limits at 10.5 GHz (`phase20_r3b_grating.py`); R3b plan `docs/history/briefs/PHASE20_R3B_CP2_REOPT.md` (nothing optimised).
+
+## Unreleased - Phase 20 R4 - CP-2 state library (branch `phase20-ris`; MODEL_ONLY, NOT_HFSS_VALIDATED)
+- 0-2: monotonic job-wait clocks (macOS wall-clock jumps), structure-frame circular basis helpers, symmetry/cost study (no symmetry reduction; cost estimate).
+- 3: library `results/phase20_r4/cp2_library_v1.npz` (+ manifest): four one-hot states, f 8-12 GHz / theta 0-45 / phi 0-330, mesh 60 raw table + Richardson mesh-120 correction + uncertainty, built in resumable chunks (`scripts/research/phase20_r4_build_library.py`); `src/ris/state_library.py` interpolator with domain and diffraction-order checks. **Finding: the solver's minimum Floquet cutoff leaves isolated numerical lines; F = 2n adopted.** Reduced grid (accepted by the user).
+- 4: held-out validation: interpolation 95th percentile 1.81 deg / 0.166 dB at theta <= 30 (gate 3 deg / 0.2 dB, pass, thin dB margin); corrected table vs mesh-120 solves: residual 95th percentile 12 deg / 0.96 dB near the 10.3-10.8 GHz resonance (reported, not a gate).
+- 5: metrics README (`results/phase20_r4/README.md`): all R3 targets met only at the 10.0 GHz grid point for theta <= 7.5 deg; LP 1-bit codes; tolerance corners (10.5 GHz is not robust); plots.
+- 6: registry entries (domain = grid, higher-order refusal in `check_request`), HFSS comparison/calibration hook (`src/ris/hfss_calibration.py`; calibration only with user approval, none applied).
+- Floquet-cutoff audit (`results/phase20_r4/FLOQUET_AUDIT.md`): R1-R3 HFSS references regenerated at F = 2n (old files `*_mincutoff`); CP-2 theta-30 opposite-handed -10.0 dB and C_T +20 % step error 20.8 deg are open items (R3 values superseded); gradient locality unchanged; Phase 26 uses F = n, effect on beta 1.4e-4 k0; opt-in `LWMOM_FLOQUET_CHECK`.
+- Additive only: default results and the Phase 23 snapshot are bit-identical.
+
+## Unreleased - Phase 20 R3 - 2-bit RIS cells (branch `phase20-ris`; MODEL_ONLY, PROVISIONAL_DATASHEET)
+- 1: literature / topology selection (`results/phase20_r3/LITERATURE.md`, `PAPER_NOTES.md`): CP lead = CP-2 (octagon + four 45-degree delay lines), CP-1 benchmark, CP-3 alternative; LP-1 and the new single-layer LP-2.
+- 2: rotated lumped loads (`LumpedLoad.direction` = angle; 0/90/180 unchanged), `PolyComposite` polygon patches with STEP export (`src/polygon_geometry.py`), propagation-relative circular basis (`src/ris/polarization.py`), cells LP-1 / LP-2 / CP-2 (`src/ris/cells.py`); MACOM MADP-000907-14020 diode model (L_s NOT_AVAILABLE, assumed-sensitivity sweep).
+- 3: optimisation (Nelder-Mead outside the solver core, tolerance corners in the objective, aligned meshes 60/90/120): CP-2 with MADP meets phase / amplitude / tolerance targets within ~10 deg model uncertainty, misses opposite-handed (-13.6 / -14.0 dB vs -15) and the theta-30 amplitude (-1.60 dB); LP-1 / LP-2 (2 diodes) and LP-3 (3 diodes) miss (`results/phase20_r3/OPTIMISATION.md`). MADP is the CP-family diode (flip-chip, assembly unconfirmed).
+- 4: locality test: supercell MoM with per-site diode states and Floquet-order extraction (`src/ris/supercell.py`): gradient passes the 1 dB / 15 deg gate, random 4x4 codings 2 of 10 (`LOCALITY.md`).
+- 5: HFSS check package `hfss_exports/phase20_r3_cp_cell/` (also the LP-interim check); LP interim = 1-bit codes of the CP-2 cell (`LP_INTERIM.md`); 2-bit LP deferred to a future phase (multilayer / slot-coupled cell).
+- 6: close-out: CP-2 and the LP interim registered in the Phase 27 cell-family registry (`ris_cp2_octagon_madp_rt5880_15`, `ris_lp_1bit_from_cp2_madp_rt5880_15`, MODEL_ONLY, 4 discrete states, 2x2 reflection per state); STATUS, roadmap log (R5 must verify codings at array level; pitch vs stub length open) updated; brief archived.
+- Additive only: theta = 0 without loads and the Phase 23 snapshot are bit-identical.
+
+## Unreleased - Phase 20 R2 - PIN-diode models (branch `phase20-ris`; MODEL_ONLY, PROVISIONAL_DATASHEET)
+- 1: `src/ris/diodes.py`: SMP1345-079LF ON (R_s + L_s) / OFF (C_T + L_s, optional parallel R_p) with per-value provenance (datasheet 200046U); R_p `NOT_AVAILABLE_FROM_CURRENT_DATA`.
+- 2: `diode_load` -> `LumpedLoad` per frequency; additive `LumpedLoad.z_of_f` (default None: every pre-existing result unchanged); a series-RLC diode is exactly the R1 load.
+- 3: `hfss_chain` (HFSS series representation as single-type boundaries joined by islands) and its MoM check against the ideal series model (ON 0.2 deg, OFF ~6 deg with pads).
+- 4: ON/OFF demo `results/phase20_r2/DEMO.md` (8-12 GHz, theta 0/30/60, sensitivity +-20 %, mesh 40/80/120 at 10 GHz with the observed order, bias budget).
+- 5: HFSS check package `hfss_exports/phase20_r2_diode_cell/` (predictions first; the RLC-boundary check first in its README).
+
+## Unreleased - Phase 20 R1 - loads and oblique incidence in the MoM (branch `phase20-ris`, from `phase27-app-tensor-cp` 4b87212; MODEL_ONLY)
+- 1: oblique incidence: audit (19 tests; Green function, stack fields, excitation and currents were already right for kt < k0), full 2x2 TE/TM power-wave S-parameters `compute_s_parameters_oblique`, per-frequency grating-order warning, config accepts 0 <= theta < 90.
+- 2: lumped RLC loads (`src/loads.py`, `UnitCell.loads`, config `loads`); `open_circuit` / `transverse_conducts=False` (a conducting transverse strip is not the empty gap).
+- 3: `CompositeGeometry` (union of metal rectangles minus apertures; one rectangle bit-identical to `rectangle`), mesh-alignment warning, STEP export with `Load_<k>` sheets.
+- 4: demo `results/phase20_r1_demo/` and HFSS check package `hfss_exports/phase20_r1_loaded_cell/` (Richardson-extrapolated MoM reference with per-row uncertainty).
+- Additive only: theta = 0 without loads is bit-identical to the pre-R1 solver (hex-float reference test) and the Phase 23 snapshot is unchanged.
+
+## Unreleased - Phase 27 - tensor-CP design flow in the app (branch `phase27-app-tensor-cp`)
+- 1: the Phase 26 design flow as `src/hologram/tensor_cp_design.py` (single hexagon, boards A / B on the shared lattice, prediction builders); the
+  `scripts/research/phase26_*` design scripts are wrappers. Regenerated layouts, cells, results JSON and `predictions.json` are **exactly** the committed ones.
+- 2: `src/hologram/cell_family_registry.py`, a cell-family / state-library registry by domain of validity (substrate, period, frequencies with data,
+  incidence, data kind, validation label, known biases, fabrication rules); out-of-domain requests give `NOT_AVAILABLE_FROM_CURRENT_DATA`; the schema takes
+  discrete N-state libraries (2x2 reflection per state vs f, theta, phi) unchanged -- the slot for RIS (Phase 20 R4).
+- 3: "Tensor CP (monopole-fed)" mode: `src/hologram/tensor_cp_service.py`, `/api/tensor_cp/{design,defaults,families}` (background job), page `tensor_cp.html`.
+  Boards: single hexagon, four hexagons with one beam per port, four hexagons combined; RHCP/LHCP; pin height; every number source-labelled with the registry's biases.
+  The 1-bit HMSA flow is untouched.
+- 4: `src/export/tensor_cp_export.py`, `/api/tensor_cp/export` (AEDT script with `DRIVE_PORT`, layout CSV/JSON/DXF/PNG, optional STEP, `predictions.json`, README);
+  the single-hexagon export equals the committed `hfss_exports/hex150_tensor_cp_single/` files (DXF compared by entities: ezdxf text is not byte-stable). The committed
+  `layout.csv` gained the `cross_slot` column the generator writes (cell data unchanged).
+- 5: `src/hologram/tensor_cp_compare.py`, `/api/tensor_cp/compare` (upload the HFSS exports; named states and power budget); with the committed HFSS files it gives 23.03 dBi,
+  XPD 23.0 dB, S11 -15.0 dB at 10.54 GHz. Fixed in item 6: the `design_job_id` option of `/compare` (found by the end-to-end test).
+- 6: end-to-end test `tests/test_app_phase27_tensor_cp.py`; STATUS / START_HERE updated. Additive hooks only: `march_rays(density_fn=)`, `design_board(beams=, hand=)`.
+
+## Unreleased - Phase 26 - leakage-controlled tensor-CP hexagon
+- A: `src/dispersion/leakage_model.py` (first-order and Floquet-balance leakage of the n = -1 harmonic, scalar and tensor sheets),
+  `src/hologram/leaky_forward.py`, `src/dispersion/pin_launch.py` (monopole launch fraction, loaded sheet); HFSS data of
+  `four_port_hex150_gap0` indexed in `docs/validation/README.md` §6.
+- B/B2: `src/dispersion/tensor_sheet.py` (tensor sheet from the 2x2 reflection, Bloch kt > k0 extraction, tensor transverse resonance),
+  `slotted_cells.py` (slotted circle/square, cross-slotted circle, `CellRow`), `tensor_floquet.py` (Floquet balance of a modulated tensor
+  sheet); solver modules untouched, every pre-existing result bit-identical (Phase 23 snapshot).
+- C/D: `src/hologram/tensor_leaky_cp.py` (supercell-table design march, rotating-slot currents, far field) and the exact single-hexagon
+  export `hfss_exports/hex150_tensor_cp_single/` (+ V2 graded-pad variant, on hold); HFSS run: 23.03 dBi RHCP, AR 1.3 dB, XPD 23 dB
+  (`docs/validation/README.md` §7).
+- Decision recorded: board B = combined-beam board (in-phase 1:4); Butler scanning on the 4-hex layout shelved (quantisation lobes, needs ~lambda/2 feed spacing); board B export held until board A HFSS.
+- Board B tile-amplitude equalisation study (`phase26_tile_equalise.py`; additive `march_rays(density_fn=)`), 4-hex HFSS comparison script (`phase26_compare_fourhex.py`). Targets not reached; see `results/phase26/README.md` O.
+- 4-hex tensor-CP boards: `phase26_fourhex_design.py` (boards A/B on one shared 6.4 mm lattice, edge-power bookkeeping, pickup of the unconverted wave, Butler combinations), `phase26_export_fourhex.py` -> `hfss_exports/hex4_tensor_cp_static/` (board A, DRIVE_PORT option), `results/phase26/fourhex/`; board B scoped only. Model only, not HFSS-validated.
+- Studies (model only): substrate study (RT5880 3.175, RO3006, RO3010, RT6010), launcher redesign, aperture-size study, 4-hex scope;
+  `scripts/research/phase26_*.py`, results in `results/phase26/`.
+
 ## Unreleased - Phase 23 - hexagonal ports and the sidelobe-cancelling optimiser
 - A: `PortRegion` may be a convex polygon (`vertices_m`; rectangles unchanged and bit-identical); `layout_preset_hex4` (side or
   flat-to-flat, gap, pointy/flat, shared 6.4 mm lattice, cells outside the hexagons empty); polygon overlap/gap/isolation; DXF

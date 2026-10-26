@@ -74,8 +74,8 @@ def load_case_artifacts(case_dir) -> CaseArtifacts:
                 f"-- src/hfss_comparison.py only reads already-exported files, never solves."
             )
     database = Database.from_json(mom_path)
-    geometry = json.loads(geometry_path.read_text())
-    solver_config = json.loads(solver_config_path.read_text())
+    geometry = json.loads(geometry_path.read_text(encoding="utf-8"))
+    solver_config = json.loads(solver_config_path.read_text(encoding="utf-8"))
     return CaseArtifacts(case_dir, database, geometry, solver_config)
 
 
@@ -366,6 +366,6 @@ def export_hfss_comparison(case_dir):
     plot_paths = generate_hfss_plots(artifacts.database, case_dir / "plots")
 
     md_path = case_dir / "HFSS_COMPARISON.md"
-    md_path.write_text(render_hfss_comparison_md(artifacts, csv_path, plot_paths))
+    md_path.write_text(render_hfss_comparison_md(artifacts, csv_path, plot_paths), encoding="utf-8", newline="\n")
 
     return HfssComparisonResult(case_dir, csv_path, plot_paths, md_path)

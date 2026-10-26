@@ -25,6 +25,10 @@ monopole .fld (Step 1)  ->  beams & board (Step 2)  ->  pattern & export (Step 3
 
 Run it: `make app`, then walk the 3-step wizard at `http://127.0.0.1:8000`. One worked example
 lives at `inputs/reference_fields/efl_phase_EzZ_example.fld` (see `inputs/README.md`).
+Additional specialized tools under "More tools":
+- **Tensor CP (monopole-fed)** (`/tensor_cp.html`, Phases 26/27): pure-circular-polarisation design -> HFSS export -> comparison with HFSS exports.
+- **RIS designer** (`/ris.html`, Phase 20 R5): 2-bit PIN-diode reconfigurable metasurface (10.5 GHz CP-2 cell family), plane-wave beam steering, coding synthesis and beam prediction; the board exporter is `src/export/ris_board_export.py`.
+Cell families and discrete-state libraries live in `src/hologram/cell_family_registry.py`.
 
 ## Repo map
 
@@ -33,20 +37,22 @@ lives at `inputs/reference_fields/efl_phase_EzZ_example.fld` (see `inputs/README
 | `src/` (flat modules) | Core periodic MoM solver: geometry, basis functions, Green's function, MoM matrix, S-parameters, unit-cell database | changing solver physics (rare — see `CLAUDE.md`'s reuse rule) |
 | `src/dispersion/`, `src/fields/`, `src/hologram/`, `src/pattern/`, `src/reflectarray/`, `src/export/`, `src/verify/`, `src/hfss_compare/` | HMSA design layer: surface-wave dispersion, `.fld` import, hologram synthesis, far-field pattern, CAD/CSV export, full-array verification | adding a design capability |
 | `src/hologram/ports.py`, `auto_states.py`, `sll_optimizer.py`, `sll_board.py`; `src/pattern/cellwise_pattern.py`; `src/export/exact_board.py`, `aedt_script.py` | Phases 21-23: multi-port layouts incl. polygon/hexagon ports (`hex4`), automatic coded-cell states, the cell-wise far-field model and the sidelobe optimiser ("Reduce sidelobes", `/api/sidelobes/optimize`), exact STEP + AEDT script for boards | multi-port, coded or sidelobe work (the Phase 23 rectangle gate: `scripts/research/phase23_rect_snapshot.py`) |
-| `src/dielectric_cell/`, `src/transmitarray/` | Phase 19 (model-only): RCWA unit cell for 3D-printed dielectric (nylon) cells and the horn-fed transmitarray lens design/error-bar code; not wired into the app | the nylon lens (`docs/briefs/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md`) |
+| `src/dielectric_cell/`, `src/transmitarray/` | Phase 19 (model-only): RCWA unit cell for 3D-printed dielectric (nylon) cells and the horn-fed transmitarray lens design/error-bar code; not wired into the app | the nylon lens (`docs/briefs/_parked/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md`) |
+| `src/ris/` | Phase 20 RIS track: plane-wave forward model, PIN diode circuit models, calibrated state library, coding synthesis, and service layer | active RIS development (`docs/briefs/PHASE20_R5_RIS_DESIGN_MODE.md`) |
 | `src/phase8b/ … src/phase13/` | Frozen research-phase packages, still imported by the app (`docs/ARCHITECTURE.md` has the who-imports-what table) | **don't rename or move these** — document, don't refactor |
-| `src/app/` | FastAPI backend + static HTML/JS frontend | adding/changing a page or endpoint |
+| `src/app/` | FastAPI backend + static HTML/JS frontend (HMSA wizard, Tensor CP, RIS designer) | adding/changing a page or endpoint |
 | `tests/` | One `test_<module>.py` per module; `test_app_*.py` for the app | every change needs a test |
-| `docs/` | `START_HERE.md` (this file), `STATUS.md`, `ARCHITECTURE.md`, `USER_GUIDE.md`, `theory/` (conventions), `validation/` (numbers + where), `history/` (phase write-ups + completed briefs), `briefs/` (active work items) | see `docs/README.md` for the full index |
+| `docs/` | `START_HERE.md` (this file), `ROADMAP.md`, `STATUS.md`, `ARCHITECTURE.md`, `USER_GUIDE.md`, `theory/` (conventions), `validation/` (numbers + where), `history/` (phase write-ups + completed briefs), `briefs/` (active work items) | see `docs/README.md` for the full index |
+| `jobs/` | Server compute job requests and records (`jobs/<job>.md`) offloaded to remote Windows compute servers | scheduling heavy compute (`docs/briefs/INFRA_COMPUTE_SERVER_SYNC.md`) |
 | `examples/` | User-facing scripts (`make_paper_board_26ghz.py`, `build_unit_cell_library.py`, ...) | `scripts/research/` has the one-off research drivers instead |
 | `configs/`, `inputs/` | Config-file presets; the example reference field | |
-| `scripts/` | `research/` (per-phase drivers: `run_phase*.py`, `phase19_*.py`, `phase23_*.py`), `adhoc/` (rescued one-offs: `coded4.py`, `square4/`, FSS tools) — see each folder's README | reproducing a published number |
-| `results/`, `hfss_exports/` | Generated outputs and HFSS export packages (each with its own `README.md` indexing status) | read `results/README.md` / `hfss_exports/README.md` before assuming something is stale |
+| `scripts/` | `research/` (per-phase drivers: `run_phase*.py`, `phase20_*.py`, `phase26_*.py`), `adhoc/` (rescued one-offs: `coded4.py`, `square4/`, FSS tools) — see each folder's README | reproducing a published number |
+| `results/`, `hfss_exports/`, `hfss_results/` | Generated outputs, export packages, and returned external HFSS simulation data (each with its own `README.md` indexing status) | read each folder's `README.md` before assuming something is stale |
 
 ## Where things are in the repo (depth 1)
 
-`src/` code · `tests/` · `docs/` (this file, `STATUS.md`, `ARCHITECTURE.md`, `USER_GUIDE.md`, `DEVELOPING.md`, `theory/`, `validation/`,
-`history/`, `briefs/`, `submission/`) · `examples/` · `scripts/` · `configs/`, `inputs/` · `results/` · `hfss_exports/` ·
+`src/` code · `tests/` · `docs/` (this file, `ROADMAP.md`, `STATUS.md`, `ARCHITECTURE.md`, `USER_GUIDE.md`, `DEVELOPING.md`, `theory/`, `validation/`,
+`history/`, `briefs/`, `submission/`) · `jobs/` · `hfss_results/` · `examples/` · `scripts/` · `configs/`, `inputs/` · `results/` · `hfss_exports/` ·
 `CHANGELOG.md`, `CLAUDE.md`, `Makefile` (`make clean`, `make distclean`, `make clean-app-outputs`: `docs/DEVELOPING.md` "Cleaning").
 Active work: `docs/briefs/README.md` lists what is active and what is parked.
 
@@ -56,7 +62,7 @@ Active work: `docs/briefs/README.md` lists what is active and what is parked.
 python3 --version  # must be >= 3.11 -- substitute a 3.11+ interpreter below otherwise
 python3 -m venv .venv && .venv/bin/pip install -e ".[dev,app,cad]"
 make app          # start the web app at http://127.0.0.1:8000 -- RESTART after any backend change
-make test-fast    # pytest -m "not slow", ~6-7 min (2550 tests), run before every commit
+make test-fast    # pytest -m "not slow", ~6-7 min (~2900 tests), run before every commit
 make test-full    # everything, including real MoM solves, tens of minutes
 ```
 
@@ -92,8 +98,17 @@ make test-full    # everything, including real MoM solves, tens of minutes
   Never commit raw HFSS Touchstone (`*.s36p`/`*.s4p`) exports or reference-paper PDFs — both are
   gitignored on purpose (`docs/DEVELOPING.md`).
 
+## Where the project is going
+
+The project roadmap is tracked in **`docs/ROADMAP.md`**. It outlines deliverables ((a) 2-bit X-band PIN-diode RIS with LP/CP families, (b) HMSA Designer app with tensor-CP and RIS design modes, (c) solver deliverable), what is completed, current in-progress tasks, and next steps in priority order.
+
 ## If you are an AI agent
 
-Read this file, then `docs/STATUS.md` (what's validated, what's open right now), then the active
-brief(s) in `docs/briefs/` (anything other than `_parked/` and `README.md`). `docs/ARCHITECTURE.md`
-and `docs/USER_GUIDE.md` are the next two stops if you're touching the app specifically.
+Read this file, then **`docs/ROADMAP.md`** (deliverables and verified state) and **`docs/STATUS.md`** (what's validated, what's open right now), then the active brief(s) in `docs/briefs/` (primarily `docs/briefs/PHASE20_R5_RIS_DESIGN_MODE.md`).
+
+Key architectural context for new agents:
+- **Active Track:** The primary active track is **RIS** (Reconfigurable Metasurface): 2-bit PIN-diode cells at 10.5 GHz with circular polarisation (CP-2 cell) and linear polarisation. Core modules live in `src/ris/`, with frontend UI at `src/app/static/ris.html` (`/ris.html`).
+- **Cell Family Registry:** Cell families, discrete-state libraries, and domains of validity are registered in `src/hologram/cell_family_registry.py`.
+- **Compute Server Workflow:** Heavy computational tasks (MoM sweeps, full-grid libraries, supercell verifications) are **never run on the Mac**. They are dispatched via `jobs/<job>.md` to Windows compute servers (e.g. Server 1) through the `hub` remote on `compute/<job>` branches, following `docs/briefs/INFRA_COMPUTE_SERVER_SYNC.md`. The Mac functions strictly as coordinator and merges completed branches.
+- **Full-Wave Ground Truth:** External HFSS simulation outputs (Touchstone files, gain tables, Floquet references) reside in `hfss_results/` and are the reference for the HFSS-calibrated corrections.
+- `docs/ARCHITECTURE.md` and `docs/USER_GUIDE.md` are the next stops if modifying the HMSA Designer web application.

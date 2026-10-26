@@ -141,7 +141,7 @@ def write_layout_files(lw_grid_m, output_dir, basename="layout", feeds_mm=None):
     fieldnames = (
         ["i", "j", "kind", "length_m", "width_m", "R_m", "r_m"] if has_annular else ["i", "j", "length_m", "width_m"]
     )
-    with open(csv_path, "w", newline="") as fh:
+    with open(csv_path, "w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
@@ -154,7 +154,7 @@ def write_layout_files(lw_grid_m, output_dir, basename="layout", feeds_mm=None):
     payload = {"n_cells_per_side": n_y, "total_cells": len(rows), "cells": rows}
     if feeds_mm:  # Phase 21/22: the feed positions (port, x_mm, y_mm) travel with the layout
         payload["feeds"] = [{"port": k, "x_mm": x, "y_mm": y} for k, (x, y) in enumerate(feeds_mm, start=1)]
-    json_path.write_text(json.dumps(payload, indent=2))
+    json_path.write_text(json.dumps(payload, indent=2), encoding="utf-8", newline="\n")
     return csv_path, json_path
 
 
@@ -163,7 +163,7 @@ def write_feeds_csv(feeds_mm, output_dir, basename="feeds"):
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / f"{basename}.csv"
-    with open(path, "w", newline="") as fh:
+    with open(path, "w", newline="", encoding="utf-8") as fh:
         fh.write("port,x_mm,y_mm\n")
         for k, (x, y) in enumerate(feeds_mm, start=1):
             fh.write(f"{k},{x:.3f},{y:.3f}\n")
@@ -197,7 +197,7 @@ def write_hfss_readme(output_dir, basename="HFSS_README", feeds_mm=None, ports_i
             f"wavelengths, as a first-order heuristic; a true isolation number needs exactly this "
             f"full-wave solve).\n\n{port_lines}\n"
         )
-    path.write_text(text)
+    path.write_text(text, encoding="utf-8", newline="\n")
     return path
 
 
@@ -297,7 +297,7 @@ def write_layout_dxf(lw_grid_m, period_x_m, period_y_m, output_dir, basename="la
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / f"{basename}.dxf"
-    path.write_text(_layout_dxf_text(lw_grid_m, period_x_m, period_y_m))
+    path.write_text(_layout_dxf_text(lw_grid_m, period_x_m, period_y_m), encoding="utf-8", newline="\n")
     return path
 
 
@@ -308,7 +308,7 @@ def write_layout_dxf_rect(lw_grid_m, period_x_m, period_y_m, output_dir, basenam
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / f"{basename}.dxf"
-    path.write_text(_layout_dxf_text(lw_grid_m, period_x_m, period_y_m, feeds_mm))
+    path.write_text(_layout_dxf_text(lw_grid_m, period_x_m, period_y_m, feeds_mm), encoding="utf-8", newline="\n")
     return path
 
 

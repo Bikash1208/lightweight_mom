@@ -25,13 +25,13 @@ def client(tmp_path, monkeypatch):
 
 
 def _wait_for_job(client, job_id, timeout=60.0):
-    deadline = time.time() + timeout
+    deadline = time.monotonic() + timeout
     while True:
         resp = client.get(f"/api/jobs/{job_id}")
         job = resp.json()
         if job["status"] in ("done", "failed", "cancelled"):
             return job
-        if time.time() > deadline:
+        if time.monotonic() > deadline:
             raise TimeoutError(f"job {job_id} did not finish in {timeout}s: {job}")
         time.sleep(0.05)
 

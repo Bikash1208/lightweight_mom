@@ -40,7 +40,10 @@ def test_instrumented_solve_returns_result_and_diagnostics():
     assert d.surface_wave_margin is None  # ungrounded stack
     # PHASE13B A9: platform-normalized to kB everywhere -- a tiny test-process solve is nowhere
     # near the ~1.4e9 "kB" the live review saw from an un-normalized macOS ru_maxrss (bytes).
-    assert d.peak_memory_kb is not None and 0.0 < d.peak_memory_kb < 1.0e7
+    if diag.resource is not None:  # Unix only; None (NOT_AVAILABLE) on Windows by design
+        assert d.peak_memory_kb is not None and 0.0 < d.peak_memory_kb < 1.0e7
+    else:
+        assert d.peak_memory_kb is None
 
 
 def test_ru_maxrss_kb_normalizes_macos_bytes_but_not_linux_kilobytes(monkeypatch):
@@ -50,13 +53,42 @@ def test_ru_maxrss_kb_normalizes_macos_bytes_but_not_linux_kilobytes(monkeypatch
     class _FakeUsage:
         ru_maxrss = 1_400_000_000  # the live review's own reported (buggy, un-normalized) value
 
-    monkeypatch.setattr(diag.resource, "getrusage", lambda who: _FakeUsage())
+    class _FakeResource:  # stands in for the Unix-only module, so this runs where `resource` is absent too
+        RUSAGE_SELF = 0
+
+        @staticmethod
+        def getrusage(who):
+            return _FakeUsage()
+
+    monkeypatch.setattr(diag, "resource", _FakeResource)
 
     monkeypatch.setattr(diag.sys, "platform", "darwin")
     assert diag._ru_maxrss_kb() == pytest.approx(1_400_000_000 / 1024.0)
 
     monkeypatch.setattr(diag.sys, "platform", "linux")
     assert diag._ru_maxrss_kb() == pytest.approx(1_400_000_000.0)
+
+
+def test_peak_memory_is_not_available_without_the_resource_module(monkeypatch):
+    """Portability (Windows compute servers): without the Unix-only `resource` module the peak memory is None (NOT_AVAILABLE) and a solve still returns its diagnostics."""
+    monkeypatch.setattr(diag, "resource", None)
+    assert diag._ru_maxrss_kb() is None
+    cell = _small_ungrounded_cell()
+    mesh = MeshSettings(cells_x=8, cells_y=8, floquet_order=8)
+    planes = ReferencePlanes(
+        top_air_thickness=10e-3, bottom_air_thickness=10e-3, substrate_thickness=cell.substrate.thickness
+    )
+    result, d = diag.instrumented_compute_s_parameters(cell, 10e9, mesh, planes, run_id="no-resource")
+    assert d.peak_memory_kb is None
+    assert d.n_unknowns > 0 and result.magnitude("S11_xx") <= 1.0 + 1e-9
+
+
+def test_resource_import_is_guarded_in_the_source():
+    """The module must import on a platform without `resource`: the import sits in a try/except ImportError."""
+    import inspect
+
+    src = inspect.getsource(diag).replace("\r\n", "\n")  # a Windows checkout may carry CRLF
+    assert "try:\n    import resource\nexcept ImportError" in src
 
 
 def test_condition_estimate_skipped_above_threshold(monkeypatch):

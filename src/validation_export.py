@@ -367,10 +367,10 @@ def export_case(case: ValidationCase, out_dir, metal_export_thickness_m=DEFAULT_
     step_result = export_unit_cell_step(case.config.unit_cell, step_path, metal_export_thickness_m)
 
     geometry_json_path = out_dir / "geometry.json"
-    geometry_json_path.write_text(json.dumps(geometry_dict(case, metal_export_thickness_m), indent=1) + "\n")
+    geometry_json_path.write_text(json.dumps(geometry_dict(case, metal_export_thickness_m), indent=1) + "\n", encoding="utf-8", newline="\n")
 
     solver_config_json_path = out_dir / "solver_config.json"
-    solver_config_json_path.write_text(json.dumps(solver_config_dict(case, database), indent=1) + "\n")
+    solver_config_json_path.write_text(json.dumps(solver_config_dict(case, database), indent=1) + "\n", encoding="utf-8", newline="\n")
 
     mom_results_json_path = out_dir / "mom_results.json"
     database.to_json(mom_results_json_path)
@@ -380,7 +380,7 @@ def export_case(case: ValidationCase, out_dir, metal_export_thickness_m=DEFAULT_
     plot_paths = generate_plots(database, plots_dir)
 
     readme_path = out_dir / "README.md"
-    readme_path.write_text(render_readme(case, step_result, database, plot_paths))
+    readme_path.write_text(render_readme(case, step_result, database, plot_paths), encoding="utf-8", newline="\n")
 
     return CaseExportResult(
         case,

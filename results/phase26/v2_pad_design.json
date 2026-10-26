@@ -1,0 +1,108 @@
+{
+ "labels": [
+  "PREDICTION_NOT_HFSS_VALIDATED",
+  "MODEL_ONLY",
+  "HFSS_ANCHORED_TO_CURRENT_RUN"
+ ],
+ "pad": {
+  "R_high_mm": 15.0,
+  "R_pad_mm": 30.0,
+  "L_cross_mm": 4.8,
+  "ybar_high_mS": 7.552755553377026,
+  "ybar_hologram_local_mean_mS": 6.899112903225806,
+  "ybar_cross_vs_W_mS_kt1.06": {
+   "0.8": 6.408883818315162,
+   "1.0": 6.770329487593664,
+   "1.2": 6.770329487593664,
+   "1.6": 7.253854909665731,
+   "2.0": 7.552755553377026
+  },
+  "W_at_pin_mm": 2.0,
+  "W_at_edge_mm": 1.3065370379743526,
+  "n_pad_cells": 68,
+  "n_hologram_cells_unchanged": 1366,
+  "n_hologram_cells_removed": 64,
+  "unslotted_D6_ybar_mS": 4.36
+ },
+ "hologram_cells_identical_to_current_design": true,
+ "conversion": {
+  "current": 0.5383732921836701,
+  "with_pad_no_radiation_inside_30mm": 0.5054694283437419
+ },
+ "aperture_pattern_with_hole": {
+  "directivity_ap_rhcp_dbi": 28.39299624762897,
+  "xpd_at_peak_db": 16.797232756545583,
+  "ar_at_peak_db": 2.529513102629744,
+  "ar_max_over_minus3db_beam_db": 3.054988126849491,
+  "rhcp_sll_db": -19.114873747337835,
+  "within_8deg_fraction": 0.8477331017277534,
+  "lhcp_fraction": 0.03247258124078771
+ },
+ "aperture_pattern_current": {
+  "directivity_ap_rhcp_dbi": 28.477911312158874,
+  "xpd_at_peak_db": 16.883500081960044,
+  "ar_at_peak_db": 2.50416507339554,
+  "rhcp_sll_db": -22.77399475110991,
+  "within_8deg_fraction": 0.9475278831119267
+ },
+ "feed_model": {
+  "top_above_surface_mm": 6.0,
+  "r_pin_effective_mm": 1.5,
+  "calibration": {
+   "r_scale": 1.2955931203765074,
+   "rms_db": 3.3587323041998967,
+   "rms_db_unscaled": 4.863665343989662,
+   "model_min_db": -17.237304268751434,
+   "model_f_at_min_ghz": 9.8,
+   "hfss_min_db": -27.199556410192,
+   "hfss_f_at_min_ghz": 10.1,
+   "model_s11_at_10p54_db": -13.51428106915075,
+   "hfss_s11_at_10p54_db": -15.09274785940962
+  },
+  "s11_db_current_est": -13.511905944873899,
+  "s11_db_v2_est": -11.475326459824274,
+  "s11_db_half_loaded_est": -12.5859959989887,
+  "z_current_ohm": [
+   44.688061257743634,
+   21.85176277425017
+  ],
+  "z_v2_ohm": [
+   58.90386395886905,
+   21.85176277425017
+  ]
+ },
+ "current_run_hfss": {
+  "gain_dbi": 23.03,
+  "main_beam_8deg": 0.271,
+  "grazing_plus_back": 0.533,
+  "lhcp_total": 0.31,
+  "launch_current_model": 0.6268113359831035,
+  "eta_old": 0.5383732921836701
+ },
+ "predictions": {
+  "lower_launch_unchanged": {
+   "launch_fraction": 0.6268113359831035,
+   "gain_dbi": 22.671198802815617,
+   "delta_gain_db": -0.3588011971843856,
+   "main_beam_8deg_share": 0.22763960336830225,
+   "grazing_plus_back_share": 0.5647024573452605,
+   "lhcp_total_share": 0.32843857744283445
+  },
+  "central_half_of_the_infinite_sheet_gain": {
+   "launch_fraction": 0.7528538934532836,
+   "gain_dbi": 23.46693738866408,
+   "delta_gain_db": 0.43693738866407816,
+   "main_beam_8deg_share": 0.2734145856363507,
+   "grazing_plus_back_share": 0.5312346033687587,
+   "lhcp_total_share": 0.3089732214715107
+  },
+  "upper_infinite_sheet": {
+   "launch_fraction": 0.8788964509234636,
+   "gain_dbi": 24.13920748877779,
+   "delta_gain_db": 1.1092074887777863,
+   "main_beam_8deg_share": 0.3191895679043989,
+   "grazing_plus_back_share": 0.49776674939225707,
+   "lhcp_total_share": 0.28950786550018703
+  }
+ }
+}

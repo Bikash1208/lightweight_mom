@@ -18,5 +18,9 @@ Also cited, not held as a local PDF:
   core in Phase 8B (`docs/history/PHASE8B_FORMULATION.md`), motivating the reflectarray-style
   (reflection-phase) formulation this project actually uses for Formulation B.
 
+Phase 20 R3 (2-bit PIN-diode RIS cells), cited by DOI only (none held locally): `results/phase20_r3/LITERATURE.md` lists them with what was verified
+(10.3390/electronics12204220; 10.1038/srep42302; 10.1109/LAWP.2022.3188491; 10.1109/TAP.2024.3511945; 10.1364/OE.415730; 10.1109/TAP.2023.3291773;
+10.1109/LAWP.2025.3606542; 10.1109/LAWP.2025.3646699; 10.36227/techrxiv.175019406.64903296; 10.1109/APUSNCURSINRSM.2017.8073084; 10.1155/2022/6011557).
+
 If you add a new reference PDF, add its row here (citation + DOI if available + what it's used
 for) in the same commit that cites it from a phase doc or module docstring.

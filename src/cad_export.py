@@ -100,6 +100,67 @@ def _feature_solid(geometry, thickness_mm, z0_mm):
     )
 
 
+def _axis_rect_solid(rect, t_mm, z0_mm):
+    return (
+        cq.Workplane("XY")
+        .workplane(offset=z0_mm)
+        .center(units.to_mm(rect.cx), units.to_mm(rect.cy))
+        .rect(units.to_mm(rect.length), units.to_mm(rect.width))
+        .extrude(t_mm)
+    )
+
+
+def _composite_metal_solid(geo, t_mm):
+    """Phase 20 R1: `CompositeGeometry` as one Metal part: union of the metal rectangles minus the apertures. Disjoint pieces
+    (e.g. the two arms of a gapped patch) become separate solids inside the one part."""
+    metal = _axis_rect_solid(geo.metal[0], t_mm, 0.0)
+    for r in geo.metal[1:]:
+        metal = metal.union(_axis_rect_solid(r, t_mm, 0.0))
+    for r in geo.apertures:
+        metal = metal.cut(_axis_rect_solid(r, t_mm, 0.0))
+    return metal
+
+
+def _poly_solid(poly, t_mm, z0_mm):
+    pts = [(units.to_mm(x), units.to_mm(y)) for x, y in poly.vertices]
+    return cq.Workplane("XY").workplane(offset=z0_mm).polyline(pts).close().extrude(t_mm)
+
+
+def _poly_composite_metal_solid(geo, t_mm):
+    """Phase 20 R3: `PolyComposite` (polygons and axis-aligned rectangles, minus apertures) as one Metal part."""
+    from .polygon_geometry import Poly
+
+    def solid(shape):
+        return _poly_solid(shape, t_mm, 0.0) if isinstance(shape, Poly) else _axis_rect_solid(shape, t_mm, 0.0)
+
+    metal = solid(geo.metal[0])
+    for r in geo.metal[1:]:
+        metal = metal.union(solid(r))
+    for r in geo.apertures:
+        metal = metal.cut(solid(r))
+    return metal
+
+
+def build_load_sheets(unit_cell: UnitCell, metal_export_thickness_m=DEFAULT_METAL_EXPORT_THICKNESS_M):
+    """Phase 20 R1: one zero-thickness sheet (a single face) per `unit_cell.loads` entry, in the plane z = t/2 (mid-height of the
+    exported metal slab, so the sheet bridges the gap between the side faces of the adjacent metal bodies), covering the load
+    rectangle. Named `Load_<k>` (k from 1) in the STEP assembly, so each can be assigned an RLC boundary in HFSS (the current
+    direction is `loads[k-1].direction`). Returns a list of cadquery Workplanes holding one Face each."""
+    _require_cadquery()
+    t_mm = units.to_mm(_check_thickness(metal_export_thickness_m))
+    sheets = []
+    for ld in unit_cell.loads:
+        z = t_mm / 2.0
+        if ld.is_rotated:  # Phase 20 R3: a load on a non-axis-aligned conduction line is a rotated rectangle
+            corners = [cq.Vector(units.to_mm(x), units.to_mm(y), z) for x, y in ld.corners()]
+        else:
+            x0, x1, y0, y1 = (units.to_mm(v) for v in ld.region())
+            corners = [cq.Vector(x0, y0, z), cq.Vector(x1, y0, z), cq.Vector(x1, y1, z), cq.Vector(x0, y1, z)]
+        wire = cq.Wire.makePolygon(corners, close=True)
+        sheets.append(cq.Workplane("XY").add(cq.Face.makeFromWires(wire)))
+    return sheets
+
+
 def build_unit_cell_solids(unit_cell: UnitCell, metal_export_thickness_m=DEFAULT_METAL_EXPORT_THICKNESS_M):
     """(substrate_solid, metal_solid): cadquery `Workplane` solids in millimetres, built only from
     `unit_cell` (no independent parameter path — see module docstring). Unchanged by Phase 12A
@@ -112,11 +173,23 @@ def build_unit_cell_solids(unit_cell: UnitCell, metal_export_thickness_m=DEFAULT
 
     substrate = cq.Workplane("XY").workplane(offset=-h_mm).rect(px_mm, py_mm).extrude(h_mm)
 
-    if geo.polarity == "metal":
+    if geo.kind == "composite":  # Phase 20 R1: union of metal rectangles minus aperture rectangles (one Metal part)
+        metal = _composite_metal_solid(geo, t_mm)
+    elif geo.kind == "poly_composite":  # Phase 20 R3: polygons (octagon, 45-degree lines) and rectangles
+        metal = _poly_composite_metal_solid(geo, t_mm)
+    elif geo.polarity == "metal":
         metal = _feature_solid(geo, t_mm, 0.0)
     else:  # "aperture" (slot): full-period plate minus the feature
         plate = cq.Workplane("XY").rect(px_mm, py_mm).extrude(t_mm)
         metal = plate.cut(_feature_solid(geo, t_mm, 0.0))
+    for ld in unit_cell.loads:  # Phase 20 R1: the MoM treats a load region as conductor; in CAD it is the gap the Load_<k> sheet bridges
+        if ld.is_rotated:
+            pts = [(units.to_mm(x), units.to_mm(y)) for x, y in ld.corners()]
+            cutter = cq.Workplane("XY").polyline(pts).close().extrude(t_mm)
+        else:
+            x0, x1, y0, y1 = (units.to_mm(v) for v in ld.region())
+            cutter = cq.Workplane("XY").center(0.5 * (x0 + x1), 0.5 * (y0 + y1)).rect(x1 - x0, y1 - y0).extrude(t_mm)
+        metal = metal.cut(cutter)
     return substrate, metal
 
 
@@ -168,6 +241,7 @@ class StepExportResult:
     substrate: SolidProperties
     metal: SolidProperties
     ground: SolidProperties | None = None  # Phase 12A: only for backing="pec"
+    load_bboxes_mm: tuple = ()  # Phase 20 R1: (xmin, xmax, ymin, ymax, z) of each Load_<k> sheet
 
 
 def export_unit_cell_step(unit_cell: UnitCell, path, metal_export_thickness_m=DEFAULT_METAL_EXPORT_THICKNESS_M):
@@ -181,6 +255,9 @@ def export_unit_cell_step(unit_cell: UnitCell, path, metal_export_thickness_m=DE
     asm.add(metal, name=_PART_METAL, color=cq.Color(0.80, 0.55, 0.10, 1.0))
     if ground is not None:
         asm.add(ground, name=_PART_GROUND, color=cq.Color(0.60, 0.60, 0.65, 1.0))
+    sheets = build_load_sheets(unit_cell, metal_export_thickness_m) if unit_cell.loads else []
+    for k, sheet in enumerate(sheets):
+        asm.add(sheet, name=f"Load_{k + 1}", color=cq.Color(0.85, 0.10, 0.10, 1.0))
     asm.export(str(path), exportType="STEP")
     return StepExportResult(
         str(path),
@@ -188,6 +265,7 @@ def export_unit_cell_step(unit_cell: UnitCell, path, metal_export_thickness_m=DE
         SolidProperties.of(substrate),
         SolidProperties.of(metal),
         SolidProperties.of(ground) if ground is not None else None,
+        tuple((b.xmin, b.xmax, b.ymin, b.ymax, b.zmin) for b in (sh.val().BoundingBox() for sh in sheets)),
     )
 
 
@@ -343,3 +421,23 @@ def expected_feature_bbox_mm(geometry):
     c, s = abs(math.cos(geometry.rotation)), abs(math.sin(geometry.rotation))
     hx, hy = (length_mm * c + width_mm * s) / 2.0, (length_mm * s + width_mm * c) / 2.0
     return (cx_mm - hx, cx_mm + hx, cy_mm - hy, cy_mm + hy)
+
+
+def import_named_parts(path):
+    """Phase 20 R1: re-import a STEP assembly from disk with its part names; returns
+    `{name: {"n_solids", "n_faces", "bbox_mm": (xmin, xmax, ymin, ymax, zmin, zmax), "volume_mm3", "area_mm2"}}`
+    (e.g. `Substrate`, `Metal`, `Ground`, `Load_1` ...). Independent of anything held in memory."""
+    _require_cadquery()
+    asm = cq.Assembly.importStep(str(path))
+    out = {}
+    for child in asm.children:
+        shape = child.obj.val() if hasattr(child.obj, "val") else child.obj
+        bb = shape.BoundingBox()
+        out[child.name] = {
+            "n_solids": len(shape.Solids()),
+            "n_faces": len(shape.Faces()),
+            "bbox_mm": (bb.xmin, bb.xmax, bb.ymin, bb.ymax, bb.zmin, bb.zmax),
+            "volume_mm3": float(shape.Volume()),
+            "area_mm2": float(shape.Area()),
+        }
+    return out

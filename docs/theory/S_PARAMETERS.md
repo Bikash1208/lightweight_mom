@@ -1,9 +1,9 @@
 # S-parameter extraction (Phase 4)
 
-Implementation: [src/sparameters.py](src/sparameters.py) (extraction, data model),
-[src/green_function.py](src/green_function.py) (`sheet_fields`, `stack_fields`),
-[src/excitation.py](src/excitation.py) (`ReferencePlanes`, `stack_tangential_field`, now with `port`),
-[src/solver.py](src/solver.py) (`solve` with several right-hand sides).
+Implementation: [`src/sparameters.py`](../../src/sparameters.py) (extraction, data model),
+[`src/green_function.py`](../../src/green_function.py) (`sheet_fields`, `stack_fields`),
+[`src/excitation.py`](../../src/excitation.py) (`ReferencePlanes`, `stack_tangential_field`, now with `port`),
+[`src/solver.py`](../../src/solver.py) (`solve` with several right-hand sides).
 Conventions: [CONVENTIONS.md](CONVENTIONS.md). Upstream: [GREEN_FUNCTION.md](GREEN_FUNCTION.md), [MOM_FORMULATION.md](MOM_FORMULATION.md).
 
 **Pipeline:** solved current `I` → mean current `J̃₀₀` → tangential **E and H at the reference planes** (unpatterned-stack field
@@ -221,11 +221,37 @@ the plane phases, of the `H` sign, of the bottom-port mirror or current sign, of
 
 ## 9. Limitations and hand-off (Phase 5 has since been implemented: DATABASE.md)
 
-- Normal incidence, x/y linear basis; oblique incidence needs TE/TM port modes and power-wave normalization `cosθ`.
+- Normal incidence, x/y linear basis (`compute_s_parameters`); oblique incidence is Sec. 11 (TE/TM, power-wave normalised).
 - Only the specular order; grating lobes are not ports (warning issued).
 - The circular basis (`e_R = (x+jy)/√2`, `e_L = (x−jy)/√2`) and its handedness under `exp(+jωt)` are fixed in DATABASE.md Sec. 7; how the holographic synthesis uses them is still open.
 - Geometry and frequency sweeps, and the unit-cell database, are implemented in Phase 5 (DATABASE.md); they call `compute_s_parameters` unchanged.
 - Validation against an external full-wave solver (HFSS/CST/openEMS) with `exp(−jωt)` conjugation is still open.
+
+## 11. Oblique incidence (Phase 20 R1; additive, `compute_s_parameters_oblique`, `ObliqueSParameters`)
+
+**What already carried the transverse wavenumber.** `LayeredGreenFunction` (TE/TM equivalent impedances at every `kt`), `stack_fields` and
+`sheet_fields` (per-mode transmission lines for any `(kx, ky)`), `assemble_impedance_matrix` and `assemble_excitation_vector`
+(`kx0, ky0` in the Floquet sums and in `Φ(k0)`) and `RooftopBasis.current_coefficients` were already correct at `kt < k0` (audit:
+`tests/test_oblique_audit.py`, against textbook transmission-line impedances, Fresnel/Airy reflection, rooftop quadrature and
+`Z(k)ᵀ = Z(−k)` reciprocity). Only `sparameters.py` assumed normal incidence (`0.0, 0.0` into assembly, excitation, currents and the (0,0)
+field decomposition) and `config.py` rejected `theta_deg ≠ 0`.
+
+**Basis and reference planes.** `p = (cosφ, sinφ)`, `q = ẑ × p`; mode 0 = TE (`E ∥ q`), mode 1 = TM (tangential `E ∥ p`);
+`θ = 0, φ = 0`: TE = y, TM = x. Ports are the same planes as in Sec. 1/6 (`ReferencePlanes`), only the (0,0) order, with `kz0 = k0 cosθ`;
+re-referencing multiplies by `exp(∓2j kz0 D)` (`ObliqueSParameters.at_planes`). Time factor `exp(+jωt)` as everywhere.
+
+**Wave amplitudes.** `E_t = V_TM p + V_TE q`, `H_t = −I_TE p + I_TM q` (as `LayeredGreenFunction._apply_modes`); characteristic
+admittances `Y_TE = kz0/(ωμ0)`, `Y_TM = ωε0/kz0`; `V_up/down = (V ± I/Y)/2` per mode, measured from the total (stack + sheet) field at
+each plane (so the incident amplitude used in `S = b/a` is the measured one). The returned S are **power-wave normalised**,
+`S_ij = sqrt(Y_i/Y_j) · V_i/V_j`: co-pol terms equal the tangential-E ratio, a TE↔TM term carries `sqrt(Y_TM/Y_TE) = 1/cosθ`, and for a
+lossless cell with only the (0,0) order propagating `Σ|S|² = 1` (grounded: over the one port's two modes; ungrounded: over both ports).
+Cross-polarisation is output (full 2×2 per block). A higher propagating Floquet order at `(θ, φ)` raises the same `UserWarning` and sets
+`higher_orders_propagate` in the object and in `to_record()` / `sweep_s_parameters_oblique` records.
+
+**Checks.** Bare grounded and ungrounded slab vs the analytic TE/TM transmission-line result at 0°, 30°, 60° (≤ 1e-10); energy
+conservation with a patch at oblique angles (≤ 2e-9); `(θ, φ) ↔ (θ, φ+180°)` equality for a centrosymmetric cell; TE/TM at `φ = 0`
+equal to those at `φ = 90°` for a square patch on a square lattice; `θ = 0` equals the x/y solver with TE = y, TM = x; and the
+bit-identical gate: normal-incidence results equal the Phase 20 base-commit values (`tests/data/r1_theta0_reference.json`).
 
 ## 10. References (method; equations here are derived, see Section 0)
 

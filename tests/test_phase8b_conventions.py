@@ -37,5 +37,5 @@ def test_no_ground_plane_and_no_surface_wave_solver_are_true_facts():
 
 
 def test_coordinate_system_matches_conventions_md_text():
-    text = CONVENTIONS_MD.read_text()
+    text = CONVENTIONS_MD.read_text(encoding="utf-8")  # the file is UTF-8; the Windows default codec is not
     assert "Px/2" in text and "no ground plane" in text.lower()

@@ -160,7 +160,7 @@ def test_loader_does_not_mutate_input():
         ({"reference_planes__height": 1e-3}, "unknown"),
         # Phase-1 scope gates
         ({"metal__model": "copper"}, "pec"),
-        ({"excitation__theta_deg": 30.0}, "normal incidence"),
+        ({"excitation__theta_deg": 90.0}, "theta_deg"),
         ({"excitation__polarization": "z"}, "polarization"),
     ],
 )

@@ -295,8 +295,7 @@ def _run_board_export_job(job, source_result, params):
         files.append("layout.png")
     script_path = out_dir / "hfss_build_board.py"
     script_path.write_text(
-        generate_aedt_script(board, params["name"], params["eps_r"], params["tan_delta"], params["frequency_hz"])
-    )
+        generate_aedt_script(board, params["name"], params["eps_r"], params["tan_delta"], params["frequency_hz"]), encoding="utf-8", newline="\n")
     files.append("hfss_build_board.py")
     readme_path = out_dir / "README.md"
     files.append("README.md")
@@ -304,8 +303,7 @@ def _run_board_export_job(job, source_result, params):
         build_board_readme(
             board, source_result, params["name"], params["eps_r"], params["tan_delta"], params["frequency_hz"], files,
             with_pins=bool(params["include_step"] and params["include_pins"]),
-        )
-    )
+        ), encoding="utf-8", newline="\n")
     return {
         "n_patches": len(board.patches),
         "board_width_mm": float(board.width_mm),

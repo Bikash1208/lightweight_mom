@@ -122,3 +122,18 @@ wire it into a page: construct a `RunManifest` in that router's job function (in
 config, labels/warnings, timings), call `manifest.add_output_file(...)` for each file the job
 produces, and expose a download endpoint the same way `routers/files.py` already does for job
 outputs.
+
+## The Phase 23 rectangle gate (hash and numeric versions)
+
+Any change that touches `/synthesize_ports`, `src/hologram/ports.py` or `src/export/exact_board.py` must leave the six rectangle layouts unchanged.
+
+- **Mac (hash gate):** `python scripts/research/phase23_rect_snapshot.py <out.json>` and compare with `results/phase23/rect_snapshot_after_C.json`; every sha256 must match. It stores hashes only, so it cannot say how big a difference is.
+- **Server 1 (numeric gate, 2026-10-26):** BLAS differs between machines at the last digit, so the Mac hashes do not hold on the server. Use the numeric reference `results/phase23/rect_snapshot_server1.json` (+ `.provenance.json`), made with `scripts/research/phase23_rect_numbers.py`:
+
+  ```bash
+  OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+    python scripts/research/phase23_rect_numbers.py dump <new.json>
+  python scripts/research/phase23_rect_numbers.py compare results/phase23/rect_snapshot_server1.json <new.json>
+  ```
+
+  Exit 0 = every number identical (the gate passes); 1 = numeric differences, with the max abs / rel difference and where; 2 = different structure. The reference holds 10,431 values (11,883 floats) over six cases; three runs at 1 BLAS thread and the saved reference run were all identical, `result_sha256` equal for all six cases. The reference is tied to this server's numpy/scipy/BLAS (recorded in the provenance file); regenerate it, with the reason, if those change. The logic is unit-tested in `tests/test_phase23_rect_numbers.py`.

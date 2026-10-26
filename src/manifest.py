@@ -113,7 +113,7 @@ class RunManifest:
         }
 
     def write(self, path):
-        Path(path).write_text(json.dumps(self.to_dict(), indent=2, sort_keys=True, default=str))
+        Path(path).write_text(json.dumps(self.to_dict(), indent=2, sort_keys=True, default=str), encoding="utf-8", newline="\n")
         return Path(path)
 
 
@@ -130,7 +130,7 @@ def build_diagnostic_bundle(manifest: RunManifest, log_file_path, input_files, o
         zf.writestr("manifest.json", json.dumps(manifest.to_dict(), indent=2, sort_keys=True, default=str))
         log_file_path = Path(log_file_path)
         if log_file_path.exists():
-            lines = [line for line in log_file_path.read_text(errors="replace").splitlines() if manifest.run_id in line]
+            lines = [line for line in log_file_path.read_text(errors="replace", encoding="utf-8").splitlines() if manifest.run_id in line]
             zf.writestr("log_excerpt.jsonl", "\n".join(lines))
         for input_file in input_files:
             input_file = Path(input_file)

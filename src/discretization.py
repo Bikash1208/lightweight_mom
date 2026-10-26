@@ -149,7 +149,10 @@ def geometry_edges_aligned(geometry, lattice, mesh, rtol=ALIGNMENT_RTOL):
     """True iff ``geometry``'s feature edges (x and y) lie on ``mesh``'s lines. Exact only for an
     axis-aligned (``rotation == 0``) rectangle; any rotated feature's edges are not, in general,
     parallel to the mesh at all, so this returns False for nonzero rotation without attempting a
-    rotated-edge alignment test."""
+    rotated-edge alignment test. A geometry with its own ``edges_aligned(lattice, mesh, rtol)`` (Phase 20 R1:
+    ``composite_geometry.CompositeGeometry``) answers for itself."""
+    if hasattr(geometry, "edges_aligned"):
+        return geometry.edges_aligned(lattice, mesh, rtol)
     if geometry.rotation != 0.0:
         return False
     return feature_edges_aligned(

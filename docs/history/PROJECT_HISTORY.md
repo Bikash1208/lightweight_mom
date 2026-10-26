@@ -597,7 +597,7 @@ co-pol SLL definition every later phase cites) and hand-built the square-cell-on
 transmitarray: an RCWA unit-cell solver (`src/dielectric_cell/`, checked against analytic slab formulas to ~1e-14), a cell
 library, a horn-fed dual-beam ±30° lens design with local-periodicity and Monte Carlo error-bar studies (`src/transmitarray/`,
 `results/transmitarray_dual30/`) and an HFSS package (`hfss_exports/nylon_lens_28ghz_dual30/`). Parts E/F (app wiring, HFSS
-comparison) wait on the user's ±30.00° decision and an HFSS run. Brief: `briefs/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md`.
+comparison) wait on the user's ±30.00° decision and an HFSS run. Brief: `briefs/_parked/PHASE19_DIELECTRIC_TRANSMITARRAY_28GHZ.md`.
 
 **Phase 20** (RIS: 2-bit PIN-diode reconfigurable metasurface) was only roadmapped and then paused; the briefs are in
 `briefs/_parked/`. Nothing is implemented.

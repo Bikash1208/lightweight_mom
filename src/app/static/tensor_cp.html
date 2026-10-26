@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tensor CP (monopole-fed) — HMSA Designer</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1><a href="/">HMSA Designer</a></h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/more_tools.html">More tools</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Tensor CP (monopole-fed)</h2>
+      <p>Pure-circular-polarisation rotating-slot hologram on RT/duroid 5880 1.575 mm, 6.4 mm cells, 10.54 GHz, one
+      monopole per 150 mm hexagon. Model only (Phase 26): one HFSS run checks the single hexagon (23.03 dBi RHCP). Requests outside
+      the characterised substrate / frequency return <code>NOT_AVAILABLE_FROM_CURRENT_DATA</code> &mdash; nothing is extrapolated.</p>
+      <form id="form">
+        <label>Board
+          <select name="board">
+            <option value="single">Single hexagon</option>
+            <option value="hex4_static">Four hexagons, one beam per port</option>
+            <option value="hex4_combined">Four hexagons, one combined beam</option>
+          </select>
+        </label>
+        <label>Beams &theta;,&phi; [deg] (one "theta,phi" per line; four lines for per-port)
+          <textarea name="beams" rows="4">30,225</textarea>
+        </label>
+        <label>Handedness
+          <select name="handedness"><option value="rhcp">RHCP</option><option value="lhcp">LHCP</option></select>
+        </label>
+        <label>Pin top above the surface [mm]<input type="number" step="0.1" name="pin_height_mm" value="6.0" /></label>
+        <label>Frequency [GHz]<input type="number" step="0.01" name="frequency_ghz" value="10.54" /></label>
+        <label>Substrate h [mm]<input type="number" step="0.001" name="h_mm" value="1.575" /></label>
+        <label><input type="checkbox" name="quick" /> Quick (coarse grid, not for reporting)</label>
+        <button type="submit">Design</button>
+      </form>
+      <p class="status" id="status"></p>
+    </div>
+    <div class="card">
+      <h3>Compare with your HFSS run</h3>
+      <p>Upload the exports of the solved board: the 1&deg; realized-gain CSV (RHCP and LHCP), the antenna-parameter table, the S-parameter
+      file (.csv, .s1p or, for four hexagons, .s4p) and optionally the axial-ratio sweep. The report uses named states and the power budget;
+      it models nothing. Four hexagons: one gain CSV per driven port, with the port numbers listed in the same order.</p>
+      <form id="cmp-form">
+        <label>Board
+          <select name="board"><option value="single">Single hexagon</option><option value="hex4">Four hexagons</option></select>
+        </label>
+        <label>Gain CSV (single)<input type="file" name="gain_csv" /></label>
+        <label>Antenna parameters (single)<input type="file" name="params_txt" /></label>
+        <label>Axial-ratio sweep CSV (single)<input type="file" name="ar_csv" /></label>
+        <label>S-parameters (.csv, .s1p, .s4p)<input type="file" name="s_param" /></label>
+        <label>Gain CSVs per port (four hexagons)<input type="file" name="gain_files" multiple /></label>
+        <label>Their port numbers, in order (e.g. 3,2)<input type="text" name="gain_ports" /></label>
+        <button type="submit">Compare</button>
+      </form>
+      <p class="status" id="cmp-status"></p>
+      <pre id="cmp-report"></pre>
+    </div>
+    <div class="card" id="results" style="display:none">
+      <h3>Results</h3>
+      <div id="state"></div>
+      <table id="ports"></table>
+      <details open><summary>Power budget</summary><pre id="budget"></pre></details>
+      <details open><summary>Known biases (registry)</summary><ul id="biases"></ul></details>
+      <p id="warnings"></p>
+      <p id="export-box"><label>Drive port (four-hexagon boards; 0 = HFSS default)<input type="number" id="drive" min="0" max="4" value="0" /></label>
+        <button type="button" id="export-btn">Export for HFSS</button> <span id="export-status"></span></p>
+      <ul id="downloads"></ul>
+      <img id="cellmap" alt="cell map" style="max-width:48%" />
+      <img id="pattern" alt="pattern cut" style="max-width:48%" />
+    </div>
+  </main>
+  <script>
+  const $ = (id) => document.getElementById(id);
+  const defaults = { single: "30,225", hex4_static: "30,45\n30,135\n30,225\n30,315", hex4_combined: "30,225" };
+  document.querySelector("[name=board]").addEventListener("change", (e) => {
+    document.querySelector("[name=beams]").value = defaults[e.target.value];
+  });
+  $("form").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const f = new FormData($("form"));
+    const beams = f.get("beams").trim().split("\n").map((l) => l.split(",").map(Number));
+    const body = { board: f.get("board"), beams_deg: beams, handedness: f.get("handedness"), pin_height_mm: +f.get("pin_height_mm"),
+      frequency_ghz: +f.get("frequency_ghz"), substrate: { h_mm: +f.get("h_mm") }, quick: f.get("quick") === "on" };
+    $("status").textContent = "Submitting...";
+    const r = await fetch("/api/tensor_cp/design", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) { $("status").textContent = "Rejected: " + (await r.json()).detail; return; }
+    let job = await r.json();
+    while (!["done", "failed", "cancelled"].includes(job.status)) {
+      $("status").textContent = `${job.status} ${(100 * job.progress).toFixed(0)}% ${job.progress_message}`;
+      await new Promise((s) => setTimeout(s, 1000));
+      job = await (await fetch("/api/jobs/" + job.id)).json();
+    }
+    if (job.status !== "done") { $("status").textContent = "Failed: " + JSON.stringify(job.error); return; }
+    show(job);
+  });
+  $("cmp-form").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const fd = new FormData($("cmp-form"));
+    for (const k of [...fd.keys()]) { const v = fd.get(k); if (v instanceof File && !v.name) fd.delete(k); }
+    $("cmp-status").textContent = "Comparing...";
+    const r = await fetch("/api/tensor_cp/compare", { method: "POST", body: fd });
+    const body = await r.json();
+    if (!r.ok) { $("cmp-status").textContent = "Rejected: " + body.detail; return; }
+    $("cmp-status").textContent = "Done.";
+    $("cmp-report").textContent = body.markdown;
+  });
+  let lastJob = null;
+  $("export-btn").addEventListener("click", async () => {
+    $("export-status").textContent = "Exporting...";
+    const r = await fetch("/api/tensor_cp/export", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ job_id: lastJob, drive_port: +$("drive").value }) });
+    if (!r.ok) { $("export-status").textContent = "Rejected: " + (await r.json()).detail; return; }
+    let job = await r.json();
+    while (!["done", "failed", "cancelled"].includes(job.status)) {
+      await new Promise((s) => setTimeout(s, 1000));
+      job = await (await fetch("/api/jobs/" + job.id)).json();
+    }
+    if (job.status !== "done") { $("export-status").textContent = "Failed: " + JSON.stringify(job.error); return; }
+    $("export-status").textContent = "Done.";
+    $("downloads").innerHTML = Object.entries(job.result.download).map(([n, u]) => `<li><a href="${u}">${n}</a></li>`).join("");
+  });
+  function show(job) {
+    lastJob = job.id;
+    const res = job.result;
+    $("status").textContent = "Done.";
+    $("results").style.display = "";
+    $("state").innerHTML = `<b>${res.state}</b> &mdash; family ${res.family} (${res.validation_label})` + (res.reasons ? "<br>" + res.reasons.join("<br>") : "");
+    $("biases").innerHTML = (res.known_biases || []).map((b) => `<li>${b}</li>`).join("");
+    if (res.state !== "OK") { $("ports").innerHTML = ""; return; }
+    $("warnings").textContent = (res.warnings || []).join(" | ");
+    $("ports").innerHTML = "<tr><th>port</th><th>beam</th><th>gain dBi</th><th>AR dB (peak/worst)</th><th>XPD dB</th><th>SLL dB</th><th>gain source</th></tr>" +
+      res.ports.map((p) => `<tr><td>${p.port}</td><td>${p.beam_theta_phi_deg.join(", ")}</td><td>${p.gain_rhcp_or_lhcp_dbi.toFixed(2)}` +
+      (p.gain_range_over_edge_power_scale_dbi ? ` (${p.gain_range_over_edge_power_scale_dbi.map((v) => v.toFixed(2)).join("..")})` : "") +
+      `</td><td>${p.ar_peak_db.toFixed(2)} / ${p.ar_worst_in_minus3db_beam_db.toFixed(2)}</td><td>${p.xpd_db.toFixed(1)}</td><td>${p.sll_db.toFixed(1)}</td><td>${p.sources.gain}</td></tr>`).join("");
+    $("budget").textContent = JSON.stringify(res.power_budget, null, 1);
+    $("cellmap").src = `/api/files/${job.id}/${res.files.cell_map_png}`;
+    $("pattern").src = `/api/files/${job.id}/${res.files.pattern_png}`;
+  }
+  </script>
+</body>
+</html>

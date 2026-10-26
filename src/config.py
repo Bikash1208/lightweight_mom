@@ -18,6 +18,7 @@ from . import units
 from .basis_functions import MeshSettings
 from .excitation import PlaneWaveExcitation, ReferencePlanes
 from .geometry import AnnularSlotPatch, Geometry, UnitCell
+from .loads import LumpedLoad
 from .materials import Metal, Substrate
 from .periodic_bc import RectangularLattice
 from .sweep import (
@@ -98,7 +99,7 @@ def config_from_dict(data):
             "mesh",
             "reference_planes",
         ),
-        optional=("metal", "sweep"),
+        optional=("metal", "sweep", "loads"),
     )
 
     # --- lattice -----------------------------------------------------------
@@ -176,7 +177,28 @@ def config_from_dict(data):
             rotation=units.from_deg(_number("geometry.rotation_deg", geo.get("rotation_deg", 0.0))),
         )
 
-    unit_cell = _wrap("unit_cell", UnitCell, lattice, geometry, substrate, metal, backing=backing)
+    # Phase 20 R1: optional lumped RLC loads; absent = none = identical behaviour
+    loads = []
+    for k, ld in enumerate(data.get("loads", [])):
+        ld = _mapping(ld, f"loads[{k}]")
+        _check_keys(f"loads[{k}]", ld, required=("x", "y", "length", "width", "direction"), optional=("R", "L", "C", "open_circuit", "transverse_conducts"))
+        loads.append(
+            _wrap(
+                f"loads[{k}]",
+                LumpedLoad,
+                x=_length(f"loads[{k}]", "x", ld["x"]),
+                y=_length(f"loads[{k}]", "y", ld["y"]),
+                length=_length(f"loads[{k}]", "length", ld["length"]),
+                width=_length(f"loads[{k}]", "width", ld["width"]),
+                direction=ld["direction"],
+                R=_number(f"loads[{k}].R", ld.get("R", 0.0)),
+                L=_number(f"loads[{k}].L", ld.get("L", 0.0)),
+                C=None if ld.get("C") is None else _number(f"loads[{k}].C", ld["C"]),
+                open_circuit=bool(ld.get("open_circuit", False)),
+                transverse_conducts=bool(ld.get("transverse_conducts", True)),
+            )
+        )
+    unit_cell = _wrap("unit_cell", UnitCell, lattice, geometry, substrate, metal, backing=backing, loads=tuple(loads))
 
     # --- excitation --------------------------------------------------------
     exc = _mapping(data["excitation"], "excitation")
@@ -187,8 +209,8 @@ def config_from_dict(data):
         optional=("theta_deg", "phi_deg", "polarization"),
     )
     theta_deg = _number("excitation.theta_deg", exc.get("theta_deg", 0.0))
-    if theta_deg != 0.0:
-        raise ConfigError("excitation.theta_deg: Phase 1 supports normal incidence only (theta_deg must be 0)")
+    if not 0.0 <= theta_deg < 90.0:  # Phase 20 R1: oblique incidence allowed (S-parameters in the TE/TM basis)
+        raise ConfigError("excitation.theta_deg: must satisfy 0 <= theta_deg < 90")
     try:
         frequency = units.parse_frequency(exc["frequency"], "excitation.frequency")
     except ValueError as e:

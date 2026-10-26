@@ -1,0 +1,495 @@
+{
+ "labels": [
+  "MODEL_ONLY",
+  "NOT_HFSS_VALIDATED",
+  "SOLVER_SUPERCELL"
+ ],
+ "metric": "strongest RHCP local max 4-20 deg from the peak, dB re peak; main patterns only (no pickup)",
+ "ideal_aperture_reference_lobe_db": {
+  "uniform": -12.289128847528627,
+  "cos_taper_ellipse_330x270": -18.872220684785045
+ },
+ "uniform_amplitude_same_phases_butler": {
+  "equal": -12.28023900618516,
+  "1L": -8.36620681885729,
+  "2R": -1.1485401539934434,
+  "2L": -0.04212824603107275,
+  "1R": -6.6992005893738895
+ },
+ "candidates": [
+  {
+   "name": "baseline (eta_d 0.9, taper 0.5)",
+   "params": {
+    "taper_c": 0.5,
+    "eta": 0.9
+   },
+   "eta_radiated": 0.5383732921836701,
+   "removed_by_quiet_zone": 0.0,
+   "butler": {
+    "equal": {
+     "peak_theta_deg": 30.0,
+     "peak_phi_deg": 225.0,
+     "gain_dbi": 29.068724436805887,
+     "tile_lobe_4_20deg": -10.256465750250275,
+     "beyond_20deg": -26.43503324500915
+    },
+    "1L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 227.0,
+     "gain_dbi": 28.711334808497217,
+     "tile_lobe_4_20deg": -7.44263979540742,
+     "beyond_20deg": -24.88000129716678
+    },
+    "2R": {
+     "peak_theta_deg": 27.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 26.617047852222655,
+     "tile_lobe_4_20deg": -0.9197998140441674,
+     "beyond_20deg": -20.789462612327622
+    },
+    "2L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 219.0,
+     "gain_dbi": 25.92479075471975,
+     "tile_lobe_4_20deg": -0.14548635567801868,
+     "beyond_20deg": -20.90390939754753
+    },
+    "1R": {
+     "peak_theta_deg": 31.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 28.399158138402328,
+     "tile_lobe_4_20deg": -5.635269348676201,
+     "beyond_20deg": -25.136264068737578
+    }
+   }
+  },
+  {
+   "name": "uniform target density (taper 0)",
+   "params": {
+    "taper_c": 0.0,
+    "eta": 0.9
+   },
+   "eta_radiated": 0.5002869713457426,
+   "removed_by_quiet_zone": 0.0,
+   "butler": {
+    "equal": {
+     "peak_theta_deg": 30.0,
+     "peak_phi_deg": 225.0,
+     "gain_dbi": 28.937979842893572,
+     "tile_lobe_4_20deg": -10.81975070454776,
+     "beyond_20deg": -27.02607434382837
+    },
+    "1L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 227.0,
+     "gain_dbi": 28.55804486213056,
+     "tile_lobe_4_20deg": -7.804140298405407,
+     "beyond_20deg": -25.68708679821867
+    },
+    "2R": {
+     "peak_theta_deg": 27.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 26.36201973540208,
+     "tile_lobe_4_20deg": -0.9385263779632748,
+     "beyond_20deg": -21.59141293259062
+    },
+    "2L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 219.0,
+     "gain_dbi": 25.658185352737615,
+     "tile_lobe_4_20deg": -0.13010175121925618,
+     "beyond_20deg": -21.47628998961707
+    },
+    "1R": {
+     "peak_theta_deg": 31.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 28.245114639892886,
+     "tile_lobe_4_20deg": -6.04265178798698,
+     "beyond_20deg": -26.446417350147023
+    }
+   }
+  },
+  {
+   "name": "outward boost b=4",
+   "params": {
+    "taper_c": 0.0,
+    "eta": 0.9,
+    "b": 4.0
+   },
+   "eta_radiated": 0.3880060422713672,
+   "removed_by_quiet_zone": 0.0,
+   "butler": {
+    "equal": {
+     "peak_theta_deg": 30.0,
+     "peak_phi_deg": 225.0,
+     "gain_dbi": 27.983189381011027,
+     "tile_lobe_4_20deg": -12.59027032445161,
+     "beyond_20deg": -26.346964340311516
+    },
+    "1L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 227.0,
+     "gain_dbi": 27.533859675663713,
+     "tile_lobe_4_20deg": -8.476532830945743,
+     "beyond_20deg": -24.184344577310025
+    },
+    "2R": {
+     "peak_theta_deg": 27.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 25.041452981303536,
+     "tile_lobe_4_20deg": -1.0269983937456053,
+     "beyond_20deg": -20.295206028148076
+    },
+    "2L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 219.0,
+     "gain_dbi": 24.275404973250087,
+     "tile_lobe_4_20deg": -0.05714314118922184,
+     "beyond_20deg": -19.517730632106932
+    },
+    "1R": {
+     "peak_theta_deg": 31.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 27.21830929097986,
+     "tile_lobe_4_20deg": -6.833360128942235,
+     "beyond_20deg": -23.18318962224653
+    }
+   }
+  },
+  {
+   "name": "free-edge ramp 60 mm, g0 0.3",
+   "params": {
+    "taper_c": 0.0,
+    "eta": 0.9,
+    "w": 60.0
+   },
+   "eta_radiated": 0.519895657735389,
+   "removed_by_quiet_zone": 0.0,
+   "butler": {
+    "equal": {
+     "peak_theta_deg": 30.0,
+     "peak_phi_deg": 225.0,
+     "gain_dbi": 28.936987344886393,
+     "tile_lobe_4_20deg": -10.41951787154475,
+     "beyond_20deg": -25.34527333583054
+    },
+    "1L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 227.0,
+     "gain_dbi": 28.571009356312853,
+     "tile_lobe_4_20deg": -7.526450857172749,
+     "beyond_20deg": -24.083315861893688
+    },
+    "2R": {
+     "peak_theta_deg": 27.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 26.4498911723029,
+     "tile_lobe_4_20deg": -0.9298608422731887,
+     "beyond_20deg": -21.39703113653223
+    },
+    "2L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 219.0,
+     "gain_dbi": 25.742553450515718,
+     "tile_lobe_4_20deg": -0.12687321579415237,
+     "beyond_20deg": -20.659137022687702
+    },
+    "1R": {
+     "peak_theta_deg": 31.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 28.259211960507088,
+     "tile_lobe_4_20deg": -5.7244841338510275,
+     "beyond_20deg": -26.46745873542224
+    }
+   }
+  },
+  {
+   "name": "low density eta_d 0.4",
+   "params": {
+    "taper_c": 0.0,
+    "eta": 0.4
+   },
+   "eta_radiated": 0.3683384918551118,
+   "removed_by_quiet_zone": 0.0,
+   "butler": {
+    "equal": {
+     "peak_theta_deg": 30.0,
+     "peak_phi_deg": 225.0,
+     "gain_dbi": 27.814463869545463,
+     "tile_lobe_4_20deg": -12.375323356422088,
+     "beyond_20deg": -27.090364836382076
+    },
+    "1L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 227.0,
+     "gain_dbi": 27.367909651317305,
+     "tile_lobe_4_20deg": -8.398639969688483,
+     "beyond_20deg": -25.633202265219484
+    },
+    "2R": {
+     "peak_theta_deg": 27.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 24.904090107147017,
+     "tile_lobe_4_20deg": -1.0596113251151391,
+     "beyond_20deg": -21.665718846815256
+    },
+    "2L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 219.0,
+     "gain_dbi": 24.11057496842218,
+     "tile_lobe_4_20deg": -0.03193800285435906,
+     "beyond_20deg": -19.98768995238159
+    },
+    "1R": {
+     "peak_theta_deg": 31.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 27.052639621612805,
+     "tile_lobe_4_20deg": -6.751790162812723,
+     "beyond_20deg": -24.62449511838079
+    }
+   }
+  },
+  {
+   "name": "low density eta_d 0.3",
+   "params": {
+    "taper_c": 0.0,
+    "eta": 0.3
+   },
+   "eta_radiated": 0.28973106693765366,
+   "removed_by_quiet_zone": 0.0,
+   "butler": {
+    "equal": {
+     "peak_theta_deg": 30.0,
+     "peak_phi_deg": 225.0,
+     "gain_dbi": 26.73735770270563,
+     "tile_lobe_4_20deg": -12.524010278842713,
+     "beyond_20deg": -22.161761456146163
+    },
+    "1L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 227.0,
+     "gain_dbi": 26.27503153033192,
+     "tile_lobe_4_20deg": -8.45282622348228,
+     "beyond_20deg": -21.747392495301597
+    },
+    "2R": {
+     "peak_theta_deg": 27.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 23.789559661128557,
+     "tile_lobe_4_20deg": -1.1703287342727426,
+     "beyond_20deg": -16.78272811822361
+    },
+    "2L": {
+     "peak_theta_deg": 33.0,
+     "peak_phi_deg": 227.0,
+     "gain_dbi": 22.95929193992492,
+     "tile_lobe_4_20deg": -0.0602613971961313,
+     "beyond_20deg": -14.333333791462854
+    },
+    "1R": {
+     "peak_theta_deg": 31.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 25.958225107657494,
+     "tile_lobe_4_20deg": -6.791558492747162,
+     "beyond_20deg": -20.053505074012822
+    }
+   }
+  },
+  {
+   "name": "board cos taper p2 (330x270), eta_d 0.9",
+   "params": {
+    "taper_c": 0.0,
+    "eta": 0.9,
+    "board": [
+     2,
+     330.0,
+     270.0
+    ]
+   },
+   "eta_radiated": 0.477734076846541,
+   "removed_by_quiet_zone": 0.0,
+   "butler": {
+    "equal": {
+     "peak_theta_deg": 30.0,
+     "peak_phi_deg": 225.0,
+     "gain_dbi": 28.143092732194063,
+     "tile_lobe_4_20deg": -10.952257601202287,
+     "beyond_20deg": -26.784525848924382
+    },
+    "1L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 227.0,
+     "gain_dbi": 27.75154218026943,
+     "tile_lobe_4_20deg": -7.801172580862987,
+     "beyond_20deg": -26.05038563648868
+    },
+    "2R": {
+     "peak_theta_deg": 27.0,
+     "peak_phi_deg": 222.0,
+     "gain_dbi": 25.586150115708147,
+     "tile_lobe_4_20deg": -1.0483858392928627,
+     "beyond_20deg": -23.68371121760155
+    },
+    "2L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 218.0,
+     "gain_dbi": 24.850188322208368,
+     "tile_lobe_4_20deg": -0.15271100933360895,
+     "beyond_20deg": -23.39438583507068
+    },
+    "1R": {
+     "peak_theta_deg": 31.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 27.44412254468793,
+     "tile_lobe_4_20deg": -5.90059562731172,
+     "beyond_20deg": -27.557278255749882
+    }
+   }
+  },
+  {
+   "name": "board cos taper p2 (330x270), eta_d 0.3",
+   "params": {
+    "taper_c": 0.0,
+    "eta": 0.3,
+    "board": [
+     2,
+     330.0,
+     270.0
+    ]
+   },
+   "eta_radiated": 0.30174603048729287,
+   "removed_by_quiet_zone": 0.0,
+   "butler": {
+    "equal": {
+     "peak_theta_deg": 30.0,
+     "peak_phi_deg": 225.0,
+     "gain_dbi": 26.182872047049184,
+     "tile_lobe_4_20deg": -11.325717826638382,
+     "beyond_20deg": -27.141940551446048
+    },
+    "1L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 227.0,
+     "gain_dbi": 25.76335704361378,
+     "tile_lobe_4_20deg": -8.008207110761356,
+     "beyond_20deg": -23.76822523250957
+    },
+    "2R": {
+     "peak_theta_deg": 27.0,
+     "peak_phi_deg": 222.0,
+     "gain_dbi": 23.374144126209554,
+     "tile_lobe_4_20deg": -1.1265348059735192,
+     "beyond_20deg": -22.003723985844076
+    },
+    "2L": {
+     "peak_theta_deg": 33.0,
+     "peak_phi_deg": 227.0,
+     "gain_dbi": 22.53056821922883,
+     "tile_lobe_4_20deg": -0.06241721285946591,
+     "beyond_20deg": -20.38558787097864
+    },
+    "1R": {
+     "peak_theta_deg": 31.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 25.455369007436687,
+     "tile_lobe_4_20deg": -6.16790456614944,
+     "beyond_20deg": -24.075945530302185
+    }
+   }
+  },
+  {
+   "name": "quiet zone 50 mm (no radiation near the pin), taper 0",
+   "params": {
+    "taper_c": 0.0,
+    "eta": 0.9,
+    "quiet": 50.0
+   },
+   "eta_radiated": 0.38433502865555025,
+   "removed_by_quiet_zone": 0.2317708621879328,
+   "butler": {
+    "equal": {
+     "peak_theta_deg": 30.0,
+     "peak_phi_deg": 225.0,
+     "gain_dbi": 27.364032556394445,
+     "tile_lobe_4_20deg": -13.163848694379507,
+     "beyond_20deg": -29.447884264850067
+    },
+    "1L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 227.0,
+     "gain_dbi": 26.900330256009358,
+     "tile_lobe_4_20deg": -8.617950902475558,
+     "beyond_20deg": -28.305511839229478
+    },
+    "2R": {
+     "peak_theta_deg": 27.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 24.335624583089167,
+     "tile_lobe_4_20deg": -1.058195655507298,
+     "beyond_20deg": -20.873032865487936
+    },
+    "2L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 219.0,
+     "gain_dbi": 23.545780491375087,
+     "tile_lobe_4_20deg": -0.028554247429919632,
+     "beyond_20deg": -24.084291963887914
+    },
+    "1R": {
+     "peak_theta_deg": 31.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 26.58396128955584,
+     "tile_lobe_4_20deg": -6.983933765763124,
+     "beyond_20deg": -30.320021968208763
+    }
+   }
+  },
+  {
+   "name": "quiet zone 50 mm, taper 0.5",
+   "params": {
+    "taper_c": 0.5,
+    "eta": 0.9,
+    "quiet": 50.0
+   },
+   "eta_radiated": 0.3623677335830586,
+   "removed_by_quiet_zone": 0.3269210437366306,
+   "butler": {
+    "equal": {
+     "peak_theta_deg": 30.0,
+     "peak_phi_deg": 225.0,
+     "gain_dbi": 27.094656290800415,
+     "tile_lobe_4_20deg": -13.018385918760615,
+     "beyond_20deg": -28.571149366247962
+    },
+    "1L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 227.0,
+     "gain_dbi": 26.6344187343524,
+     "tile_lobe_4_20deg": -8.568510417280836,
+     "beyond_20deg": -27.274502328299683
+    },
+    "2R": {
+     "peak_theta_deg": 27.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 24.09391462468622,
+     "tile_lobe_4_20deg": -1.072611484089781,
+     "beyond_20deg": -20.87093938868957
+    },
+    "2L": {
+     "peak_theta_deg": 29.0,
+     "peak_phi_deg": 219.0,
+     "gain_dbi": 23.29000943926229,
+     "tile_lobe_4_20deg": -0.015734227832270894,
+     "beyond_20deg": -23.297362256211017
+    },
+    "1R": {
+     "peak_theta_deg": 31.0,
+     "peak_phi_deg": 223.0,
+     "gain_dbi": 26.317918126754094,
+     "tile_lobe_4_20deg": -6.929128780677399,
+     "beyond_20deg": -29.889113784924014
+    }
+   }
+  }
+ ]
+}

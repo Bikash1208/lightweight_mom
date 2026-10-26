@@ -28,12 +28,12 @@ def _load():
     path = _registry_path()
     if not path.exists():
         return {}
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _save(entries):
     output_root().mkdir(parents=True, exist_ok=True)
-    _registry_path().write_text(json.dumps(entries, indent=1, sort_keys=True))
+    _registry_path().write_text(json.dumps(entries, indent=1, sort_keys=True), encoding="utf-8", newline="\n")
 
 
 def register(library_id, path, meta):

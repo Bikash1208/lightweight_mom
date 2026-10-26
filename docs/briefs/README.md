@@ -20,7 +20,7 @@ and reports back against its own acceptance checks.
 ## What's here now
 
 - **Primary active track (Phase 28 — Monopole-Fed Coded Holographic Metasurface Antenna):**
-  - `PHASE28_CODED_HOLOGRAPHIC_ANTENNA.md`: Monopole-fed coded (PIN-diode reconfigurable) holographic metasurface antenna. Direction change 2026-10-24: reflectarray / plane-wave RIS designs with external feed dropped; focus on integrated monopole feed launching surface wave across PIN-diode switched holographic cells. Current status: item 0 done; items 1–2 in progress (stop point after item 2).
+  - `PHASE28_CODED_HOLOGRAPHIC_ANTENNA.md`: Monopole-fed coded (PIN-diode reconfigurable) holographic metasurface antenna. Direction change 2026-10-24: reflectarray / plane-wave RIS designs with external feed dropped; focus on integrated monopole feed launching surface wave across PIN-diode switched holographic cells. Current status: items 0–2 done, at the item-2 stop point (awaiting the user's decision).
   - `INFRA_COMPUTE_SERVER_SYNC.md`: Architecture and sync rules for remote Windows compute servers.
 - **Active on hold:**
   - `PHASE26_LEAKY_TENSOR_CP_HEXAGON.md`: Leakage-calibrated tensor-cell pure-CP hexagon (synthesis and Board A export done; HFSS simulation run parked per `docs/STATUS.md`).

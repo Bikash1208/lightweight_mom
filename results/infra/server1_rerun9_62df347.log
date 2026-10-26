@@ -1,0 +1,147 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-9.1.1, pluggy-1.7.0
+rootdir: C:\lw_jobs\tip2
+configfile: pytest.ini
+plugins: anyio-4.15.1, platformdirs-4.13.5, xdist-3.8.0
+collected 13 items
+
+tests\test_app_phase21_multiport.py ..                                   [ 15%]
+tests\test_app_phase23_hex4.py .                                         [ 23%]
+tests\test_app_phase27_tensor_cp.py F                                    [ 30%]
+tests\test_diagnostics.py ......                                         [ 76%]
+tests\test_sparameters_oblique.py F                                      [ 84%]
+tests\test_tensor_cp_design.py F                                         [ 92%]
+tests\test_tensor_cp_service.py F                                        [100%]
+
+================================== FAILURES ===================================
+____________ test_single_hexagon_design_export_compare_end_to_end _____________
+
+    def test_single_hexagon_design_export_compare_end_to_end():
+        client = TestClient(create_app())
+        design = _wait(client, client.post("/api/tensor_cp/design", json={"board": "single"}).json())
+        assert design["status"] == "done" and design["result"]["state"] == "OK"
+        p = design["result"]["ports"][0]
+        assert p["gain_rhcp_or_lhcp_dbi"] == pytest.approx(23.03, abs=0.02) and p["sources"]["gain"] == "HFSS_ANCHORED"
+    
+        export = _wait(client, client.post("/api/tensor_cp/export", json={"job_id": design["id"]}).json())
+        assert export["status"] == "done"
+        files = export["result"]["files"]
+        assert {"hfss_build_board.py", "layout.csv", "layout.dxf", "predictions.json", "README.md"} <= set(files)
+        built = client.get(export["result"]["download"]["hfss_build_board.py"]).content
+        assert built == (ROOT / "hfss_exports/hex150_tensor_cp_single/hfss_build_board.py").read_bytes()
+    
+        uploads = {
+            "gain_csv": ("g.csv", (HFSS / "realized_gain_RHCP_LHCP_10p5GHz_1deg.csv").read_bytes()),
+            "params_txt": ("p.txt", (HFSS / "antenna_params_10p5GHz.txt").read_bytes()),
+            "s_param": ("S11.csv", (HFSS / "S11_8_12GHz.csv").read_bytes()),
+        }
+        r = client.post("/api/tensor_cp/compare", data={"board": "single", "design_job_id": design["id"]}, files=uploads)
+        assert r.status_code == 200, r.text
+        rep = r.json()["report"]
+        assert rep["measured"]["peak_rhcp_gain_dbi"] == pytest.approx(23.03, abs=0.01)
+        assert rep["measured"]["xpd_at_peak_db"] == pytest.approx(23.0, abs=0.1)
+        assert rep["s_parameter"]["s_db_at_design"] == pytest.approx(-15.0, abs=0.05)
+        assert rep["checks"]["peak_gain"]["state"] == "GAIN_WITHIN_PREDICTED_RANGE"
+        used = json.loads(Path(r.json()["predictions_used"]).read_text())
+>       assert used == json.loads((ROOT / "hfss_exports/hex150_tensor_cp_single/predictions.json").read_text())
+E       AssertionError: assert {'labels': ['...': 10.54, ...} == {'labels': ['...': 10.54, ...}
+E         
+E         Omitting 6 identical items, use -vv to show
+E         Differing items:
+E         {'accepted_power_budget': {'launch_bare_0.592': {'pin_direct_space_wave_assumed_outside_beam': 0.40800000000000003, 'u...eaches_edge': 0.4062315028783703, 'aperture_radiated': 0.4737684971216297, 'main_beam_8deg': 0.4489088611627768, ...}}} != {'accepted_power_budget': {'launch_bare_0.592': {'pin_direct_space_wave_assumed_outside_beam': 0.40800000000000003, 'u...aches_edge': 0.4062315028783703, 'aperture_radiated': 0.4737684971216297, 'main_beam_8deg': 0.44890886116277673, ...}}}
+E         {'aperture_pattern': {'directivit...
+E         
+E         ...Full output truncated (4 lines hidden), use '-vv' to show
+
+tests\test_app_phase27_tensor_cp.py:55: AssertionError
+_ test_normal_incidence_results_are_bit_identical_to_the_phase20_base_commit __
+
+    def test_normal_incidence_results_are_bit_identical_to_the_phase20_base_commit():
+        """`tests/data/r1_theta0_reference.json` was written at the base commit of branch phase20-ris (hex floats)."""
+        from tests.data._gen_r1_theta0_reference import compute
+    
+        ref = json.loads((ROOT / "tests/data/r1_theta0_reference.json").read_text())
+        got = compute()
+        assert got.keys() == ref.keys()
+        for key in ref:
+            for blk in ref[key]:
+>               assert json.loads(json.dumps(got[key][blk])) == ref[key][blk], (key, blk)
+E               AssertionError: ('pec_0.006_0', 's11')
+E               assert [[['0x1.c06a6...946d47cp-1']]] == [[['0x1.c06a6...946d47ep-1']]]
+E                 
+E                 At index 0 diff: [['0x1.c06a6e650ead5p-2', '0x1.cbd1bffa7736cp-1'], ['0x1.a13d72da1cc67p-54', '-0x1.9751330a85bf1p-57']] != [['0x1.c06a6e650eac7p-2', '0x1.cbd1bffa77373p-1'], ['0x1.60d27fb6857c8p-53', '0x1.2dd43f009cf29p-58']]
+E                 Use -v to get more diff
+
+tests\test_sparameters_oblique.py:225: AssertionError
+______ test_single_hexagon_cells_match_committed_layout_bit_identically _______
+
+table = SupercellTable(slots=((4.4, 1.2), (4.6, 1.6), (4.8, 1.6), (4.8, 2.0)), k_grid=array([0.5555, 0.7407, 0.8889, 1.1111, 1...501, 1.06255908],
+       [1.06856137, 1.07283367, 1.06604763, 1.0636905 , 1.0678973 ]]), diameter_mm=6.0, pitch_mm=6.4)
+
+    def test_single_hexagon_cells_match_committed_layout_bit_identically(table):
+        cells = t.single_hexagon_cells(table)
+        rows = list(csv.reader((ROOT / "hfss_exports/hex150_tensor_cp_single/layout.csv").read_text().splitlines()))[1:]
+        assert len(cells) == len(rows)
+        for c, r in zip(cells, rows, strict=True):
+            assert (
+                f"{c['x_mm']:.3f}",
+                f"{c['y_mm']:.3f}",
+                f"{c['slot_L_mm']:.2f}",
+                f"{c['slot_W_mm']:.2f}",
+                f"{c['slot_angle_deg']:.3f}",
+            ) == (r[0], r[1], r[3], r[4], r[5])
+        # and the full-precision cell list of the committed design JSON
+        ref = json.loads((ROOT / "results/phase26/tensor_cp_hexagon_cells.json").read_text())
+>       assert [c["x_mm"] for c in cells] == ref["x_mm"] and [c["slot_angle_deg"] for c in cells] == ref["slot_angle_deg"]
+E       assert ([0.0, -12.8, ....4, 12.8, ...] == [0.0, -12.8, ....4, 12.8, ...]
+E         
+E         Use -v to get more diff and [74.069072038...43373508, ...] == [74.069072038...43373508, ...]
+E         
+E         At index 2 diff: 30.757828525351485 != 30.757828525351282
+E         Use -v to get more diff)
+
+tests\test_tensor_cp_design.py:35: AssertionError
+_ test_app_export_of_the_single_hexagon_matches_the_committed_phase26_folder __
+
+tmp_path = WindowsPath('C:/Users/Bikash/AppData/Local/Temp/2/pytest-of-Bikash/pytest-15/test_app_export_of_the_single_0')
+
+    def test_app_export_of_the_single_hexagon_matches_the_committed_phase26_folder(tmp_path):
+        r = svc.run_design({"board": "single"})
+        names = export_app_result(r, tmp_path)
+        assert {
+            "hfss_build_board.py",
+            "layout.csv",
+            "layout.json",
+            "layout.dxf",
+            "layout.png",
+            "predictions.json",
+            "README.md",
+        } <= set(names)
+        ref = _ROOT / "hfss_exports/hex150_tensor_cp_single"
+        for f in ("hfss_build_board.py", "layout.csv", "layout.json", "predictions.json", "layout.png"):
+            if (ref / f).exists():
+>               assert (tmp_path / f).read_bytes() == (ref / f).read_bytes(), f
+E               AssertionError: predictions.json
+E               assert b'{\n "labels...GHz only)"\n}' == b'{\n "labels...GHz only)"\n}'
+E                 
+E                 At index 488 diff: b'8' != b'7'
+E                 Use -v to get more diff
+
+tests\test_tensor_cp_service.py:146: AssertionError
+============================== warnings summary ===============================
+..\..\lightweight_mom\.venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\lightweight_mom\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_app_phase21_multiport.py::test_export_board_endpoint_writes_exact_step_script_csv_and_readme
+tests/test_app_phase21_multiport.py::test_export_board_endpoint_feeds_files_pins_and_png
+  C:\lightweight_mom\.venv\Lib\site-packages\cadquery\utils.py:82: FutureWarning: save will be removed in the next release.
+    warn(f"{f.__name__} will be removed in the next release.", FutureWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_app_phase27_tensor_cp.py::test_single_hexagon_design_export_compare_end_to_end
+FAILED tests/test_sparameters_oblique.py::test_normal_incidence_results_are_bit_identical_to_the_phase20_base_commit
+FAILED tests/test_tensor_cp_design.py::test_single_hexagon_cells_match_committed_layout_bit_identically
+FAILED tests/test_tensor_cp_service.py::test_app_export_of_the_single_hexagon_matches_the_committed_phase26_folder
+============= 4 failed, 9 passed, 3 warnings in 257.89s (0:04:17) =============

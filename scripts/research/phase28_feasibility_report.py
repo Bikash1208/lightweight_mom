@@ -44,9 +44,14 @@ class Doc:
     def pitches(self):
         return sorted({c["pitch_mm"] for c in self.d["cases"]})
 
+    @staticmethod
+    def frac(case):
+        """Share of march points the table does not cover: beyond its K range, and (runs with the key) farther than the stated relative distance from every column."""
+        return max(case["table_extrapolated_fraction"], case.get("table_far_from_column_fraction", 0.0))
+
     def outside(self, theta, phi):
         dp = self.dp
-        return self.case(dp["pitch_mm"], dp["aperture_r_mm"], theta, phi)["table_extrapolated_fraction"]
+        return self.frac(self.case(dp["pitch_mm"], dp["aperture_r_mm"], theta, phi))
 
     def status(self, frac):
         return "TABLE_EXTRAPOLATED" if frac > self.k["table_extrapolated_flag_fraction"] else "inside the table"
@@ -72,8 +77,13 @@ def build(d):
     )
     a("")
     a(
-        f"Forward model: the Phase 26 tensor-CP model unchanged (supercell table, ray march, aperture far field on the grounded slab). Frequency {f(k['frequency_ghz'])} GHz, the only frequency of the supercell table; "
-        f"{f(k['frequency_ghz_not_available'], 1)} GHz is `{d['frequency_10p0_ghz']}`. Cells are idealised (a state is a tensor or scalar value, no geometry); the table, computed for 6.4 mm cells, is assumed at every pitch, "
+        f"Forward model: the Phase 26 tensor-CP model unchanged (supercell table, ray march, aperture far field on the grounded slab). Frequency {f(k['frequency_ghz'])} GHz"
+        + (
+            f", the only frequency of the supercell table; {f(k['frequency_ghz_not_available'], 1)} GHz is `{d['frequency_10p0_ghz']}`. "
+            if not d.get("frequency_note")
+            else ". " + d["frequency_note"] + " "
+        )
+        + f"Cells are idealised (a state is a tensor or scalar value, no geometry); the table, computed for 6.4 mm cells, is assumed at every pitch, "
         f"so the pitch sweep changes only how the hologram is sampled. Gain is referred to the accepted power with the Phase 26 bare launch fraction {f(k['launch_fraction_bare'], 3)} "
         f"(the calibrated launch fraction {f(k['launch_fraction_calibrated'], 2)} of the four-hexagon work would add {f(k['launch_calibration_offset_db'], 2)} dB to every gain here, and nothing to any loss)."
     )
@@ -82,8 +92,15 @@ def build(d):
     an = d["anchor"]
     a("## Anchor: no quantisation reproduces the Phase 26 single-hexagon prediction")
     a("")
-    a(f"Source: {an['source']}. Same grid, same code path; the finer refinement of the peak is reported separately.")
-    a("")
+    if an.get("applicable") is False:
+        a(f"Source: {an['source']}. {an['note']}")
+        a("")
+        an = {"rows": []}
+    else:
+        a(
+            f"Source: {an['source']}. Same grid, same code path; the finer refinement of the peak is reported separately."
+        )
+        a("")
     rows = [
         (
             r["quantity"],
@@ -95,12 +112,14 @@ def build(d):
         )
         for r in an["rows"]
     ]
-    L += table(["quantity", "this pipeline", "Phase 26", "abs diff", "tolerance", "within"], rows)
-    a("")
-    a(
-        f"Refined peak directivity {f(an['refined_d_ap_dbi'], 3)} dBi ({f(an['refinement_gain_over_coarse_db'], 3)} dB above the coarse-grid peak), pointing error {f(an['refined_pointing_error_deg'], 2)} degrees."
-    )
-    a("")
+    if rows:
+        L += table(["quantity", "this pipeline", "Phase 26", "abs diff", "tolerance", "within"], rows)
+        a("")
+    if rows:
+        a(
+            f"Refined peak directivity {f(an['refined_d_ap_dbi'], 3)} dBi ({f(an['refinement_gain_over_coarse_db'], 3)} dB above the coarse-grid peak), pointing error {f(an['refined_pointing_error_deg'], 2)} degrees."
+        )
+        a("")
     # ------------------------------------------------------------------ known HFSS gap
     h = d["hfss_reference"]
     a("## What the model got wrong in the one HFSS run")
@@ -311,7 +330,7 @@ def build(d):
     )
     a("")
     a(
-        f"This beam has {f(dpc['table_extrapolated_fraction'], 2)} of its march points outside the supercell table: `{D.status(dpc['table_extrapolated_fraction'])}`; the design-point numbers share that caveat."
+        f"This beam has {f(D.frac(dpc), 2)} of its march points outside the supercell table: `{D.status(D.frac(dpc))}`; the design-point numbers share that caveat."
     )
     a("")
     a(
@@ -390,6 +409,11 @@ def build(d):
         f"Headline gain by beam polar angle (azimuth {f(az, 0)} degrees; broadside has no azimuth). Scan loss is relative to broadside of the same variant; a negative value means the gain is higher than at broadside (the conversion efficiency rises with the steering angle in this model). "
         f"`outside` is the share of the design's march points whose modulation wavenumber lies outside the supercell table; the table supports the beam up to the polar angle {f(s['supported_scan_theta_deg'], 0)} degrees (no point outside), and the rows with a larger share are `TABLE_EXTRAPOLATED`."
     )
+    if "table_far_from_column_fraction" in dpc:
+        a("")
+        a(
+            "For this run the share also counts the march points whose modulation wavenumber is farther than fifteen percent from every column of the table (a gap between two columns, not only the ends of the table): the larger of the two shares is printed."
+        )
     a("")
     rows = []
     for t in sorted(
@@ -416,7 +440,7 @@ def build(d):
             (
                 f(t, 0),
                 f(cs["eta_conv"], 3),
-                f(cs["table_extrapolated_fraction"], 2) + " " + D.status(cs["table_extrapolated_fraction"]),
+                f(D.frac(cs), 2) + " " + D.status(D.frac(cs)),
                 f(v["cp_cont"]["gain_dbi"], 2),
                 f(v["cp_3bit"]["gain_headline_dbi"], 2),
                 f(v["cp_2bit"]["gain_headline_dbi"], 2),
@@ -504,7 +528,7 @@ def build(d):
                 f(t, 0),
                 cs["n_cells"],
                 f(cs["eta_conv"], 3),
-                f(cs["table_extrapolated_fraction"], 2) + " " + D.status(cs["table_extrapolated_fraction"]),
+                f(D.frac(cs), 2) + " " + D.status(D.frac(cs)),
                 f(v["cp_cont"]["gain_dbi"], 2),
                 f(v["cp_2bit"]["gain_headline_dbi"], 2),
                 f(v["cp_1bit"]["gain_headline_dbi"], 2),
@@ -628,7 +652,7 @@ def build(d):
         f"a total loss of {f(ce_a['tolerance_db'], 1)} dB needs a tensor anisotropy of {f(ce_a['contrast']['tensor']['delta_ms'], 3)} mS ({f(ce_a['contrast']['tensor']['dx_aniso_ohm'], 1)} ohm), and a total of {f(ce_b['tolerance_db'], 1)} dB needs {f(ce_b['contrast']['tensor']['delta_ms'], 3)} mS ({f(ce_b['contrast']['tensor']['dx_aniso_ohm'], 1)} ohm), close to the table maximum of the leakage constant."
     )
     a(
-        f"- **Scan range:** the supercell table supports the beam up to the polar angle {f(s['supported_scan_theta_deg'], 0)} degrees; the design point has {f(dpc['table_extrapolated_fraction'], 2)} of its march points outside the table and the larger angles more (scan table), so the gain at those angles is `TABLE_EXTRAPOLATED`."
+        f"- **Scan range:** the supercell table supports the beam up to the polar angle {f(s['supported_scan_theta_deg'], 0)} degrees; the design point has {f(D.frac(dpc), 2)} of its march points outside the table and the larger angles more (scan table), so the gain at those angles is `TABLE_EXTRAPOLATED`."
     )
     a(
         f"- **Reliability of the sidelobe and cross-polar numbers:** the one HFSS run has a sidelobe level of {f(h['sll_hfss_db'], 1)} dB against the model's {f(h['sll_predicted_db'], 1)} dB; treat the model's absolute sidelobe levels as optimistic."
@@ -636,9 +660,12 @@ def build(d):
     a("")
     a("## What is not available or not established")
     a("")
-    a(
-        f"- {f(k['frequency_ghz_not_available'], 1)} GHz: `{d['frequency_10p0_ghz']}`; a table at that frequency is a server job, not run."
-    )
+    if d.get("frequency_note"):
+        a("- " + d["frequency_note"])
+    else:
+        a(
+            f"- {f(k['frequency_ghz_not_available'], 1)} GHz: `{d['frequency_10p0_ghz']}`; a table at that frequency is a server job, not run."
+        )
     a(
         "- Everything is `MODEL_ONLY`: idealised cells, the table assumed at all pitches, no coupling between neighbouring states, no diode loss, the unconverted surface wave and the feed's direct radiation assumed outside the beam (Phase 26 assumptions)."
     )

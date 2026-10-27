@@ -44,6 +44,16 @@ K0 = t26.K0
 SUB = t26.SUB
 LAUNCH_BARE = t26.LAUNCH_BARE
 ETA_DESIGN, TAPER_C = 0.9, 0.5  # the selected Phase 26 single-hexagon design
+
+
+def set_frequency(freq_hz):
+    """Point the module at another frequency (default: the Phase 26 10.54 GHz). The functions read `F` and `K0` at call time; the supercell table passed to
+    `design_cells` must be the one built at that frequency. `LAUNCH_BARE` stays the 10.54 GHz Phase 26 value (not recomputed; the caller labels it)."""
+    global F, K0
+    F = float(freq_hz)
+    K0 = free_space_wavenumber(F)
+
+
 BOUND_DB = 40.0  # AR / XPD values beyond this are reported as "> 40 dB", never as numbers
 
 
@@ -273,6 +283,16 @@ def table_extrapolation_fraction(march, table):
     inside = march["rho"][None, :] <= march["r_edge"][:, None]
     out = (k < table.k_grid.min()) | (k > table.k_grid.max())
     return float(np.sum(out & inside) / np.sum(inside))
+
+
+def table_sparse_fraction(march, table, rel=0.15):
+    """Fraction of the march points inside the aperture whose modulation wavenumber K is farther than `rel` (relative) from EVERY column of the supercell table: the
+    nearest-column rule of the Phase 26 design then uses a column that is not the one the point needs (a gap in the table, not only its ends)."""
+    k = march["K"]
+    inside = march["rho"][None, :] <= march["r_edge"][:, None]
+    cols = np.asarray(table.k_grid, dtype=float)
+    dist = np.min(np.abs(k[..., None] - cols), axis=-1) / np.maximum(k, 1e-9)
+    return float(np.sum((dist > rel) & inside) / np.sum(inside))
 
 
 # ------------------------------------------------------------------------------------------------ practicality

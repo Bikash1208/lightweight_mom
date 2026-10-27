@@ -30,11 +30,15 @@ from src.hologram import coded_feasibility as cf  # noqa: E402
 from src.hologram import tensor_cp_design as t26  # noqa: E402
 from src.hologram.tensor_leaky_cp import SupercellTable  # noqa: E402
 
+# configuration by environment (the worker processes are spawned fresh and re-import this module): the frequency [GHz] and the supercell table glob
+FREQ_GHZ = float(os.environ.get("PHASE28_FREQ_GHZ", "10.54"))
+TABLE_GLOB = os.environ.get("PHASE28_TABLE_GLOB", t26.TABLE_GLOB)
+cf.set_frequency(FREQ_GHZ * 1e9)
 PITCHES_MM = [4.0, 5.0, 6.4, 8.0]
 VARIANTS = [("cp", b) for b in (None, 1, 2, 3)] + [(k, b) for k in ("lp", "lpx") for b in (None, 1, 2)]
 CONSTANTS = {
-    "frequency_ghz": 10.54,
-    "frequency_ghz_not_available": 10.0,
+    "frequency_ghz": FREQ_GHZ,
+    "frequency_ghz_not_available": 10.0 if FREQ_GHZ == 10.54 else None,
     "gain_loss_tolerance_db": 1.0,
     "peak_refine_step_deg": 0.25,
     "coarse_grid_theta_phi_deg": [1.0, 2.0],
@@ -82,7 +86,7 @@ def _specs(quick):
 
 
 def run_case(spec):
-    table = SupercellTable.from_files(t26.TABLE_GLOB)
+    table = SupercellTable.from_files(TABLE_GLOB)
     pitch = spec["pitch_mm"] * 1e-3
     poly = cf.hexagon_m(spec["aperture_r_mm"] * 1e-3)
     x, y, d, march = cf.design_cells(table, poly, pitch, spec["theta0_deg"], spec["phi0_deg"])
@@ -95,6 +99,7 @@ def run_case(spec):
             "n_cells": int(x.size),
             "eta_conv": float(eta),
             "table_extrapolated_fraction": cf.table_extrapolation_fraction(march, table),
+            "table_far_from_column_fraction": cf.table_sparse_fraction(march, table),
             "variants": {},
             "bias": {},
         }
@@ -119,7 +124,15 @@ def run_case(spec):
 
 
 def run_anchor():
-    table = SupercellTable.from_files(t26.TABLE_GLOB)
+    if abs(FREQ_GHZ - 10.54) > 1e-9:
+        return {
+            "applicable": False,
+            "source": "results/phase26/tensor_cp_hexagon.json (10.54 GHz)",
+            "rows": [],
+            "all_within_tolerance": None,
+            "note": "The committed Phase 26 prediction is at 10.54 GHz; this code path was anchored to it in the 10.54 GHz sweep (results/phase28/feasibility_results.json). There is nothing to compare at this frequency.",
+        }
+    table = SupercellTable.from_files(TABLE_GLOB)
     x, y, d, march = cf.design_cells(table, cf.hexagon_m(0.150), 6.4e-3, 30.0, 225.0)
     got = cf.analyse(d["jx"], d["jy"], x, y, cf.green_function(), 6.4e-3, "cp", (30.0, 225.0))
     ref = json.loads((ROOT / "results/phase26/tensor_cp_hexagon.json").read_text(encoding="utf-8"))["selected"]
@@ -162,9 +175,9 @@ def run_anchor():
 def _gain_with_cap(args):
     cap, theta0, phi0 = args
     table = (
-        cf.capped_table(SupercellTable.from_files(t26.TABLE_GLOB), cap)
+        cf.capped_table(SupercellTable.from_files(TABLE_GLOB), cap)
         if cap is not None
-        else SupercellTable.from_files(t26.TABLE_GLOB)
+        else SupercellTable.from_files(TABLE_GLOB)
     )
     x, y, d, march = cf.design_cells(table, cf.hexagon_m(0.150), 6.4e-3, theta0, phi0)
     r = cf.analyse(d["jx"], d["jy"], x, y, cf.green_function(), 6.4e-3, "cp", (theta0, phi0))
@@ -197,10 +210,18 @@ def _interp_cap(curve, key, tol):
 
 
 def run_contrast(pool, steerings=((0.0, 0.0), (30.0, 225.0), (50.0, 225.0))):
-    table = SupercellTable.from_files(t26.TABLE_GLOB)
+    table = SupercellTable.from_files(TABLE_GLOB)
     amax = float(np.nanmax(table.alpha))
     caps = [float(c) for c in np.round(np.geomspace(0.25, amax, 20), 4)]
-    out = {"table_alpha_max_np_per_m": amax, "table_alpha_min_np_per_m": float(np.nanmin(table.alpha)), "steerings": []}
+    core = (
+        table.k_grid <= 1.6
+    )  # columns of the committed 10.54 GHz table's K range (the 10.0 GHz table also has non-radiating high-K columns)
+    out = {
+        "table_alpha_max_np_per_m": amax,
+        "table_alpha_min_np_per_m": float(np.nanmin(table.alpha)),
+        "table_alpha_min_core_columns_np_per_m": float(np.nanmin(table.alpha[:, core])),
+        "steerings": [],
+    }
     for theta0, phi0 in steerings:
         jobs = [(None, theta0, phi0)] + [(c, theta0, phi0) for c in caps]
         res = list(pool.map(_gain_with_cap, jobs))
@@ -319,6 +340,36 @@ def diode_terminal():
     return out
 
 
+def table_provenance():
+    """Which supercell table files this run used (glob and sha256 of every file)."""
+    import glob
+    import hashlib
+
+    files = {Path(f).name: hashlib.sha256(Path(f).read_bytes()).hexdigest() for f in sorted(glob.glob(str(TABLE_GLOB)))}
+    return {
+        "glob": str(Path(TABLE_GLOB).relative_to(ROOT)) if str(TABLE_GLOB).startswith(str(ROOT)) else str(TABLE_GLOB),
+        "files": files,
+    }
+
+
+def supported_theta(rows):
+    """Largest beam polar angle up to which no march point of any azimuth lies outside the supercell table (derived from the cases, not typed)."""
+    ok = 0.0
+    key = (
+        "table_far_from_column_fraction"
+        if "table_far_from_column_fraction" in rows[0]
+        else "table_extrapolated_fraction"
+    )
+    for t in sorted({r["theta0_deg"] for r in rows if r["aperture_r_mm"] == 150.0 and r["pitch_mm"] == 6.4}):
+        if all(
+            r[key] == 0.0 for r in rows if r["theta0_deg"] == t and r["aperture_r_mm"] == 150.0 and r["pitch_mm"] == 6.4
+        ):
+            ok = t
+        else:
+            break
+    return ok
+
+
 def hfss_reference():
     """The single recorded HFSS run of the continuous Phase 26 hexagon next to its prediction (results/phase26/hex150_tensor_cp_single_hfss_comparison.json)."""
     c = json.loads((ROOT / "results/phase26/hex150_tensor_cp_single_hfss_comparison.json").read_text(encoding="utf-8"))
@@ -400,16 +451,22 @@ def main(out_path, workers=24, quick=False):
             "MODEL_ONLY",
             "IDEALISED_CELLS",
             "NOT_HFSS_VALIDATED",
-            "SUPERCELL_TABLE_6P4MM_10P54GHZ_ASSUMED_AT_ALL_PITCHES",
+            f"SUPERCELL_TABLE_6P4MM_{str(FREQ_GHZ).replace('.', 'P')}GHZ_ASSUMED_AT_ALL_PITCHES",
         ],
         "constants": CONSTANTS,
-        "frequency_10p0_ghz": "NOT_AVAILABLE_FROM_CURRENT_DATA (the supercell table exists at 10.54 GHz only)",
+        "frequency_10p0_ghz": "NOT_AVAILABLE_FROM_CURRENT_DATA (the supercell table exists at 10.54 GHz only)"
+        if abs(FREQ_GHZ - 10.54) < 1e-9
+        else "n/a: this run is at its own frequency",
+        "frequency_note": None
+        if abs(FREQ_GHZ - 10.54) < 1e-9
+        else f"{FREQ_GHZ:g} GHz is the PI's operating frequency (2026-10-26); the 10.54 GHz Phase 26 table and the item-2 sweep at that frequency are history. The launch fraction is the 10.54 GHz Phase 26 value (NOT recomputed at this frequency): absolute gains carry that assumption, losses and contrast do not.",
         "anchor": anchor,
         "cases": rows,
         "design_point_summary": summary,
         "contrast": contrast,
         "diode_terminal": diode_terminal(),
-        "settings": SETTINGS,
+        "table": table_provenance(),
+        "settings": {**SETTINGS, "supported_scan_theta_deg": supported_theta(rows)},
         "hfss_reference": hfss_reference(),
         "seconds": time.time() - t0,
     }

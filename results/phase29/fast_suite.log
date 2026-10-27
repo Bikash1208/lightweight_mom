@@ -1,0 +1,67 @@
+sss..................................................................... [  2%]
+........................................................................ [  4%]
+........................................................................ [  7%]
+............ss........ss................................................ [  9%]
+........................................................................ [ 12%]
+........................................................................ [ 14%]
+........................................................................ [ 17%]
+........................................................................ [ 19%]
+........................................................................ [ 22%]
+ss..........s.........ssss.............................................. [ 24%]
+........................................................................ [ 26%]
+........................................................................ [ 29%]
+........................................................................ [ 31%]
+........................................................................ [ 34%]
+.........................ssss........................................... [ 36%]
+........................................................................ [ 39%]
+........................................................................ [ 41%]
+........................................................................ [ 44%]
+........................................................................ [ 46%]
+........................................................................ [ 49%]
+........................................................................ [ 51%]
+........................................................................ [ 53%]
+........................................................................ [ 56%]
+........................................................................ [ 58%]
+........................................................................ [ 61%]
+........................................................................ [ 63%]
+..ssssss............ss.................................................. [ 66%]
+..........................s.........................................ssss [ 68%]
+s....................ss.......sss.s....ssss....sss.......s...........sss [ 71%]
+sssss.....ssssssssssssssssssssssssssss....sssssss.......ssss......sssss. [ 73%]
+.....sssssss....................................sss............sssssssss [ 76%]
+..........................................ssssss........................ [ 78%]
+........................................................................ [ 80%]
+........................................................................ [ 83%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+........................................................................ [ 90%]
+........................................................................ [ 93%]
+............................................................s........... [ 95%]
+............sssss....................................................... [ 98%]
+......................................................                   [100%]
+============================== warnings summary ===============================
+.venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\lightweight_mom\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_app_phase21_multiport.py: 2 warnings
+tests/test_app_phase23_hex4.py: 2 warnings
+tests/test_export_exact_board.py: 5 warnings
+tests/test_transmitarray_export.py: 3 warnings
+  C:\lightweight_mom\.venv\Lib\site-packages\cadquery\utils.py:82: FutureWarning: save will be removed in the next release.
+    warn(f"{f.__name__} will be removed in the next release.", FutureWarning)
+
+tests/test_sparameters_oblique.py::test_grating_order_warning_and_record_at_an_angle_that_makes_a_higher_order_propagate
+  C:\lightweight_mom\tests\test_sparameters_oblique.py:170: UserWarning: a Floquet harmonic is inside the grounded slab's TM0 surface-wave interval (k0=209.585, Re(k_substrate)=310.864 rad/m; margin 0.199 x k0): S-parameters near a surface-wave resonance may be numerically sensitive
+    s = compute_s_parameters_oblique(uc, F, MeshSettings(16, 16, 10), _planes("pec"), math.radians(20.0), 0.0)
+
+tests/test_sweep_definition.py::test_cell_ids_are_deterministic_unique_and_sensitive_to_everything_that_matters
+  C:\lightweight_mom\tests\test_sweep_definition.py:251: UserWarning: 1 group(s) of mesh-identical geometries on this mesh (cells_x=8, cells_y=16): 1 of 3 OK cell(s) discretize to the exact same metal mask as another cell in this sweep, and will solve to bit-identical S-parameters despite differing continuous geometry (discretization.py)
+    other = [c.cell_id for c in plan_sweep(sweep_config(**change), d).cells]
+
+tests/test_sweep_definition.py::test_cell_ids_are_deterministic_unique_and_sensitive_to_everything_that_matters
+  C:\lightweight_mom\tests\test_sweep_definition.py:251: UserWarning: 1 group(s) of mesh-identical geometries on this mesh (cells_x=16, cells_y=16): 1 of 3 OK cell(s) discretize to the exact same metal mask as another cell in this sweep, and will solve to bit-identical S-parameters despite differing continuous geometry (discretization.py)
+    other = [c.cell_id for c in plan_sweep(sweep_config(**change), d).cells]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+2805 passed, 129 skipped, 121 deselected, 16 warnings in 2754.18s (0:45:54)

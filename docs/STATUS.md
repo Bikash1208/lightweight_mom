@@ -73,6 +73,12 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
 - No run manifest / diagnostic-bundle download wired into the app yet (`src/manifest.py` exists and
   is tested, nothing attaches it to a job â€” `docs/ARCHITECTURE.md`).
 
+## Phase 29 (seven-hexagon cluster, branch `phase29-seven-hex`, 2026-10-27) — MODEL_ONLY, stopped at the review stop point
+
+Centre broadside + six outer tensor-CP tiles; per-tile and pair-excitation forward model (no inter-tile coupling). Result: pairs merge into
+one steerable beam only when the two beams are closer than about one beamwidth (150 mm tile: <= 6 deg, 75 mm: <= 10 deg); at 45 deg they never do.
+Numbers: `results/phase29/README.md`, `seven_hex.json`. HFSS package for the 7-tile board: not started (after review).
+
 ## Open next steps
 
 Order of work, with what each needs from the user (HFSS runs are the user's):

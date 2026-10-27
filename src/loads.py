@@ -152,6 +152,13 @@ def check_load_geometry(loads, unit_cell, nx=None, ny=None):
         if ld.is_rotated:
             keep = ld.contains(gx, gy)
             gx, gy = gx[keep], gy[keep]
+        if ld.is_rotated and not ld.transverse_conducts and not ld.open_circuit:
+            warnings.warn(
+                f"load {k}: a rotated load with blocked transverse conduction locks the rooftop basis (the 1e12 ohm penalty also kills the longitudinal current, ON == OFF): "
+                "use transverse_conducts=True for a rotated load (the R3 caveat for 45-degree strips; the region is then a conductor transversely, which is exact for a strap that fills the strip width)",
+                UserWarning,
+                stacklevel=3,
+            )
         if not np.all(unit_cell.is_metal(gx, gy)):
             warnings.warn(
                 f"load {k}: part of its region is not metal in the unit-cell pattern, so no basis function crosses it there "

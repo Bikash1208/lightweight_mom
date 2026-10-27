@@ -113,3 +113,55 @@ def test_blocking_transverse_conduction_on_a_staircased_diagonal_strip_kills_the
         return abs(s[0, 1])  # x/y coupling of a 45-degree anisotropy axis
 
     assert co_pol_spread(True) > 20 * co_pol_spread(False)
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------
+# Phase 28 (additive): blocked-transverse rotated loads lock the rooftop basis (documented R3 limit, now also a warning); conducting rotated loads are rotation covariant
+def _strap_geo():
+    """Two patches joined only by a 1.2 mm x 1.2 mm strap: a load on the strap is the only conduction path between them."""
+    return CompositeGeometry((AxisRect(-2.1e-3, 0.0, 3.0e-3, 7.2e-3), AxisRect(2.1e-3, 0.0, 3.0e-3, 7.2e-3), AxisRect(0.0, 0.0, 1.2e-3, 1.2e-3)))
+
+
+def _sheet(ld_list, mesh=45, geo=None):
+    from src.hologram.coded_cell_eval import sheet_tensor
+
+    geo = geo or CompositeGeometry((AxisRect(0.0, 0.0, 7.2e-3, 7.2e-3),))
+    uc = UnitCell(RectangularLattice(9e-3, 9e-3), geo, Substrate("rt5880", 2.2, 0.0, 3.175e-3), Metal(), backing="pec", loads=tuple(ld_list))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return sheet_tensor(uc, 10e9, mesh)
+
+
+def test_blocked_rotated_load_locks_the_line_and_warns():
+    """Minimal reproduction of the Phase 28 finding. Two patches joined only by a strap that carries a 1 milliohm load (a closed switch). Axis-aligned or conducting loads leave the
+    link closed. A ROTATED load with the 1e12 ohm transverse penalty locks the Cartesian rooftops (no x/y combination has a zero transverse component), cuts the link and the cell tensor
+    jumps towards that of the open gap although the load is a 1 milliohm closed switch (when the load spans the whole strip, as in the Phase 28 loop cell, ON == OFF exactly)."""
+    geo = _strap_geo()
+    closed = _sheet([], geo=geo)
+    mk = lambda d, **kw: LumpedLoad(0.0, 0.0, 0.6e-3, 0.6e-3, d, R=1e-3, **kw)  # noqa: E731
+    rel = lambda t: np.linalg.norm(t - closed) / np.linalg.norm(closed)  # noqa: E731
+    axis = rel(_sheet([mk("x", transverse_conducts=False)], geo=geo))
+    free = rel(_sheet([mk(20.0, transverse_conducts=True)], geo=geo))
+    locked = rel(_sheet([mk(20.0, transverse_conducts=False)], geo=geo))
+    assert axis < 1e-3 and free < 1e-3 and locked > 0.03 and locked > 100 * axis
+    uc = UnitCell(RectangularLattice(9e-3, 9e-3), geo, SUB, Metal(), backing="pec", loads=(mk(20.0, transverse_conducts=False),))
+    with pytest.warns(UserWarning, match="locks the rooftop basis"):
+        check_load_geometry(uc.loads, uc, 45, 45)
+    uc2 = replace(uc, loads=(mk(20.0, transverse_conducts=True),))
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        check_load_geometry(uc2.loads, uc2, 45, 45)
+
+
+@pytest.mark.parametrize("theta", [30.0, 45.0])
+def test_a_conducting_rotated_load_changes_the_cell_tensor_like_the_rotated_unrotated_load(theta):
+    """Physics: a load turned by theta in the middle of a solid patch changes the sheet tensor by R(theta) dY(0) R(theta)^T, to the rooftop staircase of the rotated region
+    (2 % at 45 deg, 7 % at 30 deg at this mesh)."""
+    base = _sheet([])
+    d0 = _sheet([LumpedLoad(0.0, 0.0, 3.6e-3, 1.2e-3, "x", R=300.0)]) - base
+    dt = _sheet([LumpedLoad(0.0, 0.0, 3.6e-3, 1.2e-3, theta, R=300.0, transverse_conducts=True)]) - base
+    a = math.radians(theta)
+    r = np.array([[math.cos(a), -math.sin(a)], [math.sin(a), math.cos(a)]])
+    pred = r @ d0 @ r.T
+    assert np.linalg.norm(d0) > 1e-4  # the load is visible
+    assert np.linalg.norm(dt - pred) / np.linalg.norm(pred) < 0.12

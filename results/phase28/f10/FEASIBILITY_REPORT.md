@@ -137,7 +137,7 @@ With the induced current along the surface wave's own (radial) direction the con
 
 ## Steering: pitch 6.4 mm, 150 mm hexagon, CP tensor
 
-Headline gain by beam polar angle (azimuth 225 degrees; broadside has no azimuth). Scan loss is relative to broadside of the same variant; a negative value means the gain is higher than at broadside (the conversion efficiency rises with the steering angle in this model). `outside` is the share of the design's march points whose modulation wavenumber lies outside the supercell table; the table supports the beam up to the polar angle 50 degrees (no point outside), and the rows with a larger share are `TABLE_EXTRAPOLATED`.
+Headline gain by beam polar angle (azimuth 225 degrees; broadside has no azimuth). Scan loss is relative to broadside of the same variant; a negative value means the gain is higher than at broadside (the conversion efficiency rises with the steering angle in this model). `outside` is the share of the design's march points whose modulation wavenumber lies outside the supercell table; the table supports the beam up to the polar angle 50 degrees (no point far from every column of the table), and the rows with a larger share are `TABLE_EXTRAPOLATED`. Counting only the march points past the largest tabulated wavenumber, the supported angle is 40 degrees; above it a small share of the march points (the `outside` column) lies past the end of the table.
 
 For this run the share also counts the march points whose modulation wavenumber is farther than fifteen percent from every column of the table (a gap between two columns, not only the ends of the table): the larger of the two shares is printed.
 

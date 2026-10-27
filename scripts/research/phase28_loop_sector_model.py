@@ -38,7 +38,7 @@ from src.materials import Substrate  # noqa: E402
 SUB = Substrate("rt5880_3p175", 2.2, 0.0009, 3.175e-3)
 PITCH = 9.0e-3
 BEAMS = [(0.0, 0.0), (30.0, 0.0), (30.0, 180.0), (45.0, 90.0), (45.0, 180.0)]
-CASES = ["MEAS_10mA", "MEAS_5mA"]
+CASES = ["MEAS_10mA", "MEAS_5mA", "HFSS_R4"]
 CONFIRM = ROOT / "results/phase28/f10/ring_cell/confirm.jsonl"
 REPORT = ROOT / "results/phase28/f10/ring_cell/report.json"
 
@@ -54,6 +54,10 @@ def _rows():
 
 def tensors(case):
     """`case` = MEAS_10mA or MEAS_5mA: the measured MA4AGP907 (full Z(f)), mesh 90, 10 GHz, loop R4."""
+    if case == "HFSS_R4":  # the HFSS-checked tensors of the R-only / C-only cell at 10 GHz (src/ris/loop_cell_calibration.py)
+        from src.ris import loop_cell_calibration as lc
+
+        return lc.hfss_tensors(10.0)
     lm, rows = _rows()
     on_label = "ON_" + case.split("_")[1]
     idx = {lm.key(r): r for r in rows}
@@ -65,6 +69,10 @@ def tensors(case):
 
 
 def alpha0(case):
+    if case == "HFSS_R4":
+        from src.ris import loop_cell_calibration as lc
+
+        return lc.alpha_exact(10.0)
     lm, rows = _rows()
     return lm.report(rows)["cases"][case.split("_")[1]]["mesh90_10ghz"]["alpha_exact"]
 

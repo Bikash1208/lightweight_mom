@@ -81,6 +81,14 @@ and only when the beams are closer than about one beamwidth: 150 mm tile at 6 an
 (centre+outer only). At 45 deg the outer tile AR is 5.4-5.6 dB at the peak (worst over the beam 6.6-6.8 dB), above the 3 dB target.
 Numbers: `results/phase29/README.md`, `seven_hex.json`. HFSS package for the 7-tile board: not started (after review).
 
+## Phase 29 design point B (one shared aperture, 7 ports) - MODEL_ONLY, stage 1 FAILED the pointing criterion, stopped before the HFSS package
+
+Shared-cell tensor-CP model (`src/hologram/shared_aperture_multiport.py`): broad beams are reachable (HPBW 35 deg centre / 27 deg tilted at R 90 mm, ring 32 mm), but the
+seven holograms cross-talk (every port pattern has 2-4 lobes within 6 dB): weighted scan over theta <= 30 deg has median pointing error 4.9 deg, 22 % of directions
+within +-3 deg, gain dip 2.3 dB; 30-45 deg band: pointing up to 30 deg, dip 4.1 dB. Optimised weights do not rescue it. Numbers: `results/phase29/pointB_stage1.json`,
+`pointB_sweep.json`. Coupling at 32 mm port spacing: raw estimate -21 dB (calibrated with the one-board bias -47 dB; not calibrated at this spacing). Seven separate small tiles
+(R 30-40 mm) are closer to the criterion (median pointing 1.2-1.8 deg, dip 1.4-1.5 dB, max pointing 6.7-8.5 deg) but are not a shared aperture.
+
 ## Open next steps
 
 Order of work, with what each needs from the user (HFSS runs are the user's):

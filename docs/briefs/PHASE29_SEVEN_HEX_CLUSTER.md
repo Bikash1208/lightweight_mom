@@ -24,3 +24,12 @@ Read `docs/START_HERE.md`, `docs/STATUS.md`, `CLAUDE.md` first. Labels of everyt
 ## Do not
 Modify frozen modules; claim HFSS-level numbers for tilts or sizes the HFSS run did not cover; fabricate coupling; start the HFSS package.
 Gain stays anchored to the single-hexagon HFSS run only (`OFFSET_DB`), so every other number is an extrapolation of the model.
+
+---
+## Addendum 2026-10-27 - design point B (user decision GO)
+ONE shared hexagonal aperture (size free, expected 80-120 mm), 7 monopole ports, 10.54 GHz, passive fixed hologram, polarisation free. Each port alone: a BROAD
+beam (HPBW ~30-35 deg), port 1 broadside, ports 2-7 at ~30 deg tilt, azimuths 60 deg apart, neighbouring beams crossing near -3 dB; the 7 holograms superimposed
+on the same cells; scanning = complex weights on the ports (2-3 active). Stage 1: design + per-port metrics + coupling estimate + weight table on theta 0-45 deg
+(pass: pointing within +-3 deg and gain dip <= 3 dB for theta <= 30 deg; 30-45 band reported as is) + one cheap fresh-subagent mechanical verification.
+Stage 2 (only if stage 1 does not fail): `hfss_exports/phase29_point_B/` (7-port AEDT script, predictions first, weight CSV, README with Edit Sources steps).
+Code: `src/hologram/shared_aperture_multiport.py`, `scripts/research/phase29_pointB_sweep.py` (parallel, BLAS 1 per worker, memory-guarded), `phase29_pointB_stage1.py`.

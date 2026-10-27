@@ -32,6 +32,7 @@ LABELS = [
     r"MADP-000907-14020",
     r"SMP1345-079LF",
     r"10\.0 GHz",
+    r"10\.54 GHz",
     r"\b45 degree",
     r"\b2 x 2",
 ]

@@ -359,7 +359,7 @@ def summary(docs):
     )
     L += [
         "",
-        "`converged` is the mesh criterion below; a candidate that is not converged is listed for the record and its numbers are not to be used. `mode`: `bowtie` = the two necks of the state's axis conduct, `notch` = every neck conducts except the two of the perpendicular axis. The 103 ohm target and 132 ohm stretch goal are the values approved from the 10.54 GHz item-2 sweep (combined 1.5 dB and 1 dB totals); at 10.0 GHz the same item-2 totals need 90.9 and 118.4 ohm, and the leakage the surface must reach is `alpha_cap` (2.09 Np/m contrast-only, 2.44 / 3.66 combined 1.5 / 1 dB), all in `FEASIBILITY_REPORT.md` and `FREQUENCY_COMPARISON.md`. `meets the target` refers to the anisotropy only; compare the leakage column with `alpha_cap` separately.",
+        "`converged` is the mesh criterion below; a candidate that is not converged is listed for the record and its numbers are not to be used. `mode`: `bowtie` = the two necks of the state's axis conduct, `notch` = every neck conducts except the two of the perpendicular axis. The 103 ohm target and 132 ohm stretch goal are the values approved from the 10.54 GHz item-2 sweep (combined 1.5 dB and 1 dB totals); at 10.0 GHz the same item-2 totals need lower anisotropies, and the leakage the surface must reach is `alpha_cap`; the 10.0 GHz values are in `FEASIBILITY_REPORT.md` and `FREQUENCY_COMPARISON.md`. `meets the target` refers to the anisotropy only; compare the leakage column with `alpha_cap` separately.",
         "",
     ]
     return L

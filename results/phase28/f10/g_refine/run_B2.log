@@ -1,0 +1,48 @@
+2 jobs
+concurrent.futures.process._RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\concurrent\futures\process.py", line 254, in _process_worker
+    r = call_item.fn(*call_item.args, **call_item.kwargs)
+  File "C:\ProgramData\anaconda3\Lib\concurrent\futures\process.py", line 203, in _process_chunk
+    return [fn(*args) for args in chunk]
+            ~~^^^^^^^
+  File "C:\lightweight_mom\scripts\research\phase28_g_refine.py", line 39, in run
+    r = evaluate((spec, job["state"], job["mesh"], F_HZ, scale, 1))
+  File "C:\lightweight_mom\scripts\research\phase28_cell_characterise.py", line 78, in evaluate
+    uc = cell.unit_cell(cell.states()[state_idx], kit)
+  File "C:\lightweight_mom\src\hologram\coded_cell_candidates.py", line 545, in unit_cell
+    diode_load(kit.model(s), x, y, length, width, direction=d, transverse_conducts=False)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\lightweight_mom\src\ris\diodes.py", line 203, in diode_load
+    return LumpedLoad(R=model.R_s, L=model.L_s, C=model.C_T, **kw)
+  File "<string>", line 14, in __init__
+  File "C:\lightweight_mom\src\loads.py", line 54, in __post_init__
+    raise ValueError("load length and width must be > 0")
+ValueError: load length and width must be > 0
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\lightweight_mom\scripts\research\phase28_g_refine.py", line 67, in <module>
+    main(a[0], a[1], int(a[a.index("--workers") + 1]) if "--workers" in a else 8)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\lightweight_mom\scripts\research\phase28_g_refine.py", line 59, in main
+    for r in ex.map(run, jobs):
+             ~~~~~~^^^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\concurrent\futures\process.py", line 617, in _chain_from_iterable_of_lists
+    for element in iterable:
+                   ^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\concurrent\futures\_base.py", line 619, in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\concurrent\futures\_base.py", line 317, in _result_or_cancel
+    return fut.result(timeout)
+           ~~~~~~~~~~^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\concurrent\futures\_base.py", line 456, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "C:\ProgramData\anaconda3\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+ValueError: load length and width must be > 0

@@ -1,0 +1,82 @@
+44 jobs to run, 0 done
+done (0, 96, 9.5) 1453s
+done (1, 96, 9.5) 1449s
+done (2, 96, 9.5) 1387s
+done (3, 96, 9.5) 1448s
+done (0, 96, 9.75) 1379s
+done (1, 96, 9.75) 1440s
+done (2, 96, 9.75) 1375s
+done (3, 96, 9.75) 1440s
+done (0, 96, 10.0) 1380s
+done (1, 96, 10.0) 1446s
+done (2, 96, 10.0) 1436s
+done (3, 96, 10.0) 1368s
+done (0, 96, 10.25) 1360s
+done (1, 96, 10.25) 1439s
+done (2, 96, 10.25) 1442s
+done (3, 96, 10.25) 1361s
+done (0, 96, 10.5) 1442s
+done (1, 96, 10.5) 1366s
+done (2, 96, 10.5) 1368s
+done (3, 96, 10.5) 1465s
+done (0, 64, 9.5) 113s
+done (1, 64, 9.5) 108s
+done (2, 64, 9.5) 109s
+done (3, 64, 9.5) 113s
+done (0, 64, 9.75) 109s
+done (1, 64, 9.75) 111s
+done (2, 64, 9.75) 112s
+done (3, 64, 9.75) 113s
+done (0, 64, 10.0) 109s
+done (1, 64, 10.0) 113s
+done (2, 64, 10.0) 111s
+done (3, 64, 10.0) 115s
+done (0, 64, 10.25) 106s
+done (1, 64, 10.25) 109s
+done (2, 64, 10.25) 111s
+done (3, 64, 10.25) 119s
+done (0, 64, 10.5) 166s
+done (1, 64, 10.5) 173s
+done (2, 64, 10.5) 175s
+done (3, 64, 10.5) 170s
+concurrent.futures.process._RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\concurrent\futures\process.py", line 254, in _process_worker
+    r = call_item.fn(*call_item.args, **call_item.kwargs)
+  File "C:\ProgramData\anaconda3\Lib\concurrent\futures\process.py", line 203, in _process_chunk
+    return [fn(*args) for args in chunk]
+            ~~^^^^^^^
+  File "C:\lightweight_mom\scripts\research\phase28_cell_library.py", line 107, in run
+    return job_oblique(job) if job[0] == "obl" else job_normal(job)
+           ~~~~~~~~~~~^^^^^
+  File "C:\lightweight_mom\scripts\research\phase28_cell_library.py", line 78, in job_oblique
+    uc = cell.unit_cell(cell.states()[state], make_kit(SPEC["kit"], None))
+                        ~~~~~~~~~~~~~^^^^^^^
+TypeError: list indices must be integers or slices, not str
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\lightweight_mom\scripts\research\phase28_cell_library.py", line 165, in <module>
+    main(args[0], w)
+    ~~~~^^^^^^^^^^^^
+  File "C:\lightweight_mom\scripts\research\phase28_cell_library.py", line 141, in main
+    for r in ex.map(run, todo):
+             ~~~~~~^^^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\concurrent\futures\process.py", line 617, in _chain_from_iterable_of_lists
+    for element in iterable:
+                   ^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\concurrent\futures\_base.py", line 619, in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\concurrent\futures\_base.py", line 317, in _result_or_cancel
+    return fut.result(timeout)
+           ~~~~~~~~~~^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "C:\ProgramData\anaconda3\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+TypeError: list indices must be integers or slices, not str

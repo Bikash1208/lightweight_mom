@@ -63,7 +63,6 @@ SETTINGS = {
     "reference_aperture_r_mm": 225.0,
     "recommended": {"pitch_mm": 6.4, "bits": 2, "alternative_pitch_mm": 8.0},
     "extreme_pitches_mm": [4.0, 8.0],
-    "supported_scan_theta_deg": 20.0,
 }
 
 
@@ -352,10 +351,10 @@ def table_provenance():
     }
 
 
-def supported_theta(rows):
+def supported_theta(rows, key=None):
     """Largest beam polar angle up to which no march point of any azimuth lies outside the supercell table (derived from the cases, not typed)."""
     ok = 0.0
-    key = (
+    key = key or (
         "table_far_from_column_fraction"
         if "table_far_from_column_fraction" in rows[0]
         else "table_extrapolated_fraction"
@@ -466,7 +465,11 @@ def main(out_path, workers=24, quick=False):
         "contrast": contrast,
         "diode_terminal": diode_terminal(),
         "table": table_provenance(),
-        "settings": {**SETTINGS, "supported_scan_theta_deg": supported_theta(rows)},
+        "settings": {
+            **SETTINGS,
+            "supported_scan_theta_deg": supported_theta(rows),
+            "supported_scan_theta_extrapolation_deg": supported_theta(rows, "table_extrapolated_fraction"),
+        },
         "hfss_reference": hfss_reference(),
         "seconds": time.time() - t0,
     }

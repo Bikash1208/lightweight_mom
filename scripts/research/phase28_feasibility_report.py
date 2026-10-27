@@ -407,7 +407,12 @@ def build(d):
     a("")
     a(
         f"Headline gain by beam polar angle (azimuth {f(az, 0)} degrees; broadside has no azimuth). Scan loss is relative to broadside of the same variant; a negative value means the gain is higher than at broadside (the conversion efficiency rises with the steering angle in this model). "
-        f"`outside` is the share of the design's march points whose modulation wavenumber lies outside the supercell table; the table supports the beam up to the polar angle {f(s['supported_scan_theta_deg'], 0)} degrees (no point outside), and the rows with a larger share are `TABLE_EXTRAPOLATED`."
+        f"`outside` is the share of the design's march points whose modulation wavenumber lies outside the supercell table; the table supports the beam up to the polar angle {f(s['supported_scan_theta_deg'], 0)} degrees ({'no point far from every column of the table' if 'supported_scan_theta_extrapolation_deg' in s else 'no point outside'}), and the rows with a larger share are `TABLE_EXTRAPOLATED`."
+        + (
+            f" Counting only the march points past the largest tabulated wavenumber, the supported angle is {f(s['supported_scan_theta_extrapolation_deg'], 0)} degrees; above it a small share of the march points (the `outside` column) lies past the end of the table."
+            if "supported_scan_theta_extrapolation_deg" in s
+            else ""
+        )
     )
     if "table_far_from_column_fraction" in dpc:
         a("")

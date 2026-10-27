@@ -33,3 +33,8 @@ on the same cells; scanning = complex weights on the ports (2-3 active). Stage 1
 (pass: pointing within +-3 deg and gain dip <= 3 dB for theta <= 30 deg; 30-45 band reported as is) + one cheap fresh-subagent mechanical verification.
 Stage 2 (only if stage 1 does not fail): `hfss_exports/phase29_point_B/` (7-port AEDT script, predictions first, weight CSV, README with Edit Sources steps).
 Code: `src/hologram/shared_aperture_multiport.py`, `scripts/research/phase29_pointB_sweep.py` (parallel, BLAS 1 per worker, memory-guarded), `phase29_pointB_stage1.py`.
+
+## Addendum 2026-10-27 - option 2 (compact 7 tiles), user decision after point B stage 1 failed
+Shared aperture dropped (pointing criterion not met). Build the compact 7-tile layout (R30 or R40, whichever meets the relaxed criterion with the better worst case), continuous scanning at low gain.
+Relaxed criterion: pointing within +-8 deg worst case and gain dip <= 3 dB for theta <= 30 deg; 30-45 deg reported as is. Weights tuned per direction (<= 3 active ports, parallel, `phase29_compact7_tune.py`).
+HFSS package `hfss_exports/phase29_compact7/` (`phase29_compact7_export.py`, `src/export/compact7_export.py`); one fresh-subagent verification; no merge, no tag.

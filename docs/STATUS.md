@@ -89,6 +89,13 @@ within +-3 deg, gain dip 2.3 dB; 30-45 deg band: pointing up to 30 deg, dip 4.1 
 `pointB_sweep.json`. Coupling at 32 mm port spacing: raw estimate -21 dB (calibrated with the one-board bias -47 dB; not calibrated at this spacing). Seven separate small tiles
 (R 30-40 mm) are closer to the criterion (median pointing 1.2-1.8 deg, dip 1.4-1.5 dB, max pointing 6.7-8.5 deg) but are not a shared aperture.
 
+## Phase 29 compact 7-tile board (`hfss_exports/phase29_compact7/`, 2026-10-27) - MODEL_ONLY, HFSS package ready, not yet run
+
+Seven R 40 mm hexagons side by side, one monopole each (7 ports), 676 slotted-circle cells, continuous scanning by weights on <= 3 ports. User criterion (relaxed): pointing <= 8 deg and gain dip <= 3 dB
+for theta <= 30 deg: MET in the model (worst pointing 5.0 deg, dip 2.1 dB, peak gains 5.9-8.0 dBi); 30-45 deg band as is: worst pointing 21 deg, 15 % of directions within 8 deg, dip 2.6 dB.
+R30 ties on the worst case (4.96 vs 4.98 deg) and has lower gain; R40 chosen by the gain tie-break. Coupling between tiles and S11 are NOT modelled (NOT_AVAILABLE_FROM_CURRENT_DATA until the HFSS S-matrix).
+Numbers: `results/phase29/compact7_tune.json`; package: predictions, `weights_table.csv`, AEDT scripts, README (run order, Edit Sources).
+
 ## Open next steps
 
 Order of work, with what each needs from the user (HFSS runs are the user's):

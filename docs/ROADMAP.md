@@ -4,11 +4,37 @@ Authoritative roadmap and project track from the project lead, paired with verif
 
 ---
 
+## PARKED 2026-10-27 (Phase 28, branch `phase28-coded-holographic-v2`; the user switched projects, resume later)
+
+**Architecture decided (design level, MODEL_ONLY except where stated):** side/sector-fed surface-wave hologram with a Yagi-type launcher (driven pin + reflector post + directors), SCALAR 1-bit, LINEAR polarisation, ONE MA4AGP907 (= MADP-000907-14020)
+PIN diode per cell, individual control line per cell, 9 mm pitch, RT/duroid 5880 3.175 mm, 10.0 GHz, 150 mm hexagon (724 cells, 724 diodes). Diode model `MEASURED_VENDOR_SPARAM` (`src/ris/diodes_measured.py`, extraction
+`scripts/research/phase28_diode_extract.py`; R 3.3 / 2.4 / 2.0 ohm at 5 / 10 / 15 mA, C 28.2 fF at 0 V, no series L visible). Lead cell: loop cell R4 (6.6 mm loop, 1.2 mm strip, diode in the middle of one side), **HFSS_CHECKED at ROT 0, normal incidence,
+9 - 11 GHz** (one run: all sheet-admittance components within 4.3 % of the MoM, Delta B 4.22 mS against 4.05 mS; `hfss_results/phase28_loop_R4/NOTES.md`; calibration hook `src/ris/loop_cell_calibration.py`). Cells stay UNROTATED (the diode axis along x fixes a clean
+x polarisation; model: single beam, SLL -14 to -21 dB, 21 - 23 dBi with a placeholder launch fraction; 1-bit sampling limits the scan toward the feed to about 30 deg). Earlier cell tracks (G, J, two-diode searches) are superseded; their
+files stay as history.
+
+**User note (2026-10-27 HFSS run):** the state files were swapped in the project: `OFF.csv` carries the R = 2.4 ohm state (lossy, isotropic) and `ON.csv` the C = 28.2 fF state (open, anisotropic). Which of the files or the boundaries was
+swapped is still TO BE CONFIRMED by the user. (The first HFSS build used hand-set boundaries; `build_cell.py` is fixed since 9ea6897 and tested against an AEDT recording stub, but not yet re-run in AEDT.)
+
+**State of the open items, and the next steps in order:**
+1. **Rotated-load solver bug** (`transverse_conducts=False` on a rotated load gives ON = OFF). Cause found: the documented R3 limit (the 1e12 ohm transverse penalty locks the Cartesian rooftops on a rotated region). Done: a `UserWarning`
+   in `check_load_geometry` (results bit-identical, fast suite 2900 passed), a minimal reproduction and a rotation-covariance physics test (conducting rotated loads: 2 - 7 % at 30 / 45 deg). NOT done: a real fix of blocked rotated loads
+   (would need a basis aligned with the load or a projected constraint); not needed for the unrotated lead cell. Rotated-cell MoM results are good to 10 - 17 % only (staircase of the rotated geometry).
+2. **Launcher design + HFSS package.** Model (coupled grounded posts through the TM0 wave, two feed calibrations) and package `hfss_exports/phase28_launcher/` exist with predictions (width 77 - 79 deg, S11 -8.7 / -15.9 dB, F/B 5 - 8 dB, predictions only).
+   NOT done: any HFSS run; the model neglects near-field/space-wave mutual impedances and the loaded-surface edge. Next: user's HFSS run (bare slab first, then OFF-state loop surface), then re-tune.
+3. **Phase 28 item 5:** app design mode (side-fed scalar 1-bit hologram synthesis, codebook per beam, forward-model predictions) and the full-board HFSS export (150 mm hexagon, 724 cells; smaller board first).
+4. **Full-board HFSS check** (user): beam angle, gain, SLL, cross-pol against the forward model.
+5. **Oblique / rotated-cell HFSS checks:** polarisation turned by 20 / 40 deg in the Floquet cell (the directionality check of `hfss_exports/phase28_loop_R4/`), the rotated cell, the measured diode reactance, package inductance.
+
+**Scope:** design and solver/tool work verified in HFSS. NO fabrication, bias-network or FPGA work. Nothing here is merged to main, tagged or deleted; branch state is the last commit on `phase28-coded-holographic-v2`.
+
+---
+
 ## 1. Planned Track (Authoritative)
 
 1. **Deliverables:** (a) a monopole-fed coded (PIN-diode reconfigurable) holographic metasurface antenna at X-band with integrated monopole feed and FPGA beam steering (the proposal's "digital coded metasurface antenna"); (b) the HMSA Designer app with the tensor-CP flow and coded holographic design mode; (c) the MoM solver/tool itself, to be submitted later. *Dropped/parked:* reflectarray / plane-wave RIS designs with external feed, and transmitarrays.
 2. **Done:** HMSA Phases 8–27 (app, multiport/coded, hexagon SLL optimiser, tensor-CP hexagon HFSS-validated at 10.5 GHz, 23.03 dBi RHCP); RIS R1 (loads, oblique), R2 (diode models), R3 (CP-2 cell; HFSS-checked at 10.5 GHz), R4 (state library; v2 full-grid library built on the server and passing the held-out gate, 2026-10-24); R5-1 to R5-3 (tolerance check, plane-wave forward model, coding synthesis); R5-5 (RIS designer page in the app); R5-6 infrastructure (RIS board exporter; 3×3 smoke package verified in AEDT).
-3. **In progress:** Phase 28 (monopole-fed coded holographic metasurface antenna), branch `phase28-coded-holographic-v2`: **items 0 (re-plan), 1 (literature, verified DOIs only) and 2 (feasibility with the Phase 26 forward model: pitch, bit depth, required contrast in physical units, diode / shift-register / bias-line counts) done; at the item-2 stop point ■ awaiting the user's decision.** The first attempt (`review/gemini-*` on the hub) is kept as a record only: its item 0 was reused, its items 1-5 were reviewed and not used.
+3. **PARKED 2026-10-27 (see the PARKED section above):** Phase 28 (monopole-fed coded holographic metasurface antenna), branch `phase28-coded-holographic-v2`: **items 0 (re-plan), 1 (literature, verified DOIs only) and 2 (feasibility with the Phase 26 forward model: pitch, bit depth, required contrast in physical units, diode / shift-register / bias-line counts) done; at the item-2 stop point ■ awaiting the user's decision.** The first attempt (`review/gemini-*` on the hub) is kept as a record only: its item 0 was reused, its items 1-5 were reviewed and not used.
 4. **Next, in order:**
    - Item 2 stop point approval (pitch, bit depth, polarization scope, diode count).
    - Item 3: Diode-loaded subwavelength cell candidates (dispersion/eigenmode with diode loads in each state, ±20% diode tolerance, HFSS eigenmode check package).
@@ -29,7 +55,7 @@ Every item below cites ground truth verified on `phase20-ris` / `main` as of 202
 
 | Track Item | Stated Status | Verified Evidence | Commit / Hash |
 |---|---|---|---|
-| **Phase 28: Monopole-fed Coded Holographic Antenna** | In progress (items 0-2 done at 10.0 GHz, item-3 cell candidates done, at the item-3 stop point; MODEL_ONLY, nothing validated) | Brief `docs/briefs/PHASE28_CODED_HOLOGRAPHIC_ANTENNA.md`; branch `phase28-coded-holographic-v2`. | `dd8d81e` (brief on this branch) |
+| **Phase 28: Monopole-fed Coded Holographic Antenna** | PARKED 2026-10-27 (was: in progress; items 0-2 done at 10.0 GHz, item-3 cell candidates done, at the item-3 stop point; MODEL_ONLY, nothing validated) | Brief `docs/briefs/PHASE28_CODED_HOLOGRAPHIC_ANTENNA.md`; branch `phase28-coded-holographic-v2`. | `dd8d81e` (brief on this branch) |
 | **Deliverables (a): Coded Holographic Antenna** | In progress (feasibility study at 10.0 GHz done; converged candidate cells characterised, MODEL_ONLY, none HFSS-validated) | Integrated monopole launch + leaky-wave forward model (`src/hologram/leaky_forward.py`); diode models in `src/ris/diodes.py`. | Phase 28 active |
 | **Deliverables (b): HMSA Designer App** | Tensor CP flow complete; RIS designer page built (parked) | App entry points `/tensor_cp.html` (`src/app/routers/tensor_cp.py`) and `/ris.html` (`src/app/routers/ris.py`, `src/ris/service.py`). | `4b87212` (Phase 27 close-out), `26b2433` (R5-5 RIS page) |
 | **Deliverables (c): MoM Solver Tool** | in use; frozen core; the solver deliverable is not yet packaged | Periodic layered Green's function, rooftop basis, and impedance assembly in `src/solver.py`, `src/green_function.py`, `src/mom_matrix.py`, `src/sparameters.py`. | Tag `v1.1-handoff` |

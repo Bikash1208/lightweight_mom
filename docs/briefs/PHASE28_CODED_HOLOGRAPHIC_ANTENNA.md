@@ -66,3 +66,27 @@ board package (smaller board first), bias-layout sketch.
 - Design or optimise a cell before the item 2 stop point is approved.
 - Delete anything from the RIS track (park and label only).
 - Fit surrogates and call them physics; idealised-cell results must say so.
+
+## PARKED 2026-10-27 (Phase 28, branch `phase28-coded-holographic-v2`; the user switched projects, resume later)
+
+**Architecture decided (design level, MODEL_ONLY except where stated):** side/sector-fed surface-wave hologram with a Yagi-type launcher (driven pin + reflector post + directors), SCALAR 1-bit, LINEAR polarisation, ONE MA4AGP907 (= MADP-000907-14020)
+PIN diode per cell, individual control line per cell, 9 mm pitch, RT/duroid 5880 3.175 mm, 10.0 GHz, 150 mm hexagon (724 cells, 724 diodes). Diode model `MEASURED_VENDOR_SPARAM` (`src/ris/diodes_measured.py`, extraction
+`scripts/research/phase28_diode_extract.py`; R 3.3 / 2.4 / 2.0 ohm at 5 / 10 / 15 mA, C 28.2 fF at 0 V, no series L visible). Lead cell: loop cell R4 (6.6 mm loop, 1.2 mm strip, diode in the middle of one side), **HFSS_CHECKED at ROT 0, normal incidence,
+9 - 11 GHz** (one run: all sheet-admittance components within 4.3 % of the MoM, Delta B 4.22 mS against 4.05 mS; `hfss_results/phase28_loop_R4/NOTES.md`; calibration hook `src/ris/loop_cell_calibration.py`). Cells stay UNROTATED (the diode axis along x fixes a clean
+x polarisation; model: single beam, SLL -14 to -21 dB, 21 - 23 dBi with a placeholder launch fraction; 1-bit sampling limits the scan toward the feed to about 30 deg). Earlier cell tracks (G, J, two-diode searches) are superseded; their
+files stay as history.
+
+**User note (2026-10-27 HFSS run):** the state files were swapped in the project: `OFF.csv` carries the R = 2.4 ohm state (lossy, isotropic) and `ON.csv` the C = 28.2 fF state (open, anisotropic). Which of the files or the boundaries was
+swapped is still TO BE CONFIRMED by the user. (The first HFSS build used hand-set boundaries; `build_cell.py` is fixed since 9ea6897 and tested against an AEDT recording stub, but not yet re-run in AEDT.)
+
+**State of the open items, and the next steps in order:**
+1. **Rotated-load solver bug** (`transverse_conducts=False` on a rotated load gives ON = OFF). Cause found: the documented R3 limit (the 1e12 ohm transverse penalty locks the Cartesian rooftops on a rotated region). Done: a `UserWarning`
+   in `check_load_geometry` (results bit-identical, fast suite 2900 passed), a minimal reproduction and a rotation-covariance physics test (conducting rotated loads: 2 - 7 % at 30 / 45 deg). NOT done: a real fix of blocked rotated loads
+   (would need a basis aligned with the load or a projected constraint); not needed for the unrotated lead cell. Rotated-cell MoM results are good to 10 - 17 % only (staircase of the rotated geometry).
+2. **Launcher design + HFSS package.** Model (coupled grounded posts through the TM0 wave, two feed calibrations) and package `hfss_exports/phase28_launcher/` exist with predictions (width 77 - 79 deg, S11 -8.7 / -15.9 dB, F/B 5 - 8 dB, predictions only).
+   NOT done: any HFSS run; the model neglects near-field/space-wave mutual impedances and the loaded-surface edge. Next: user's HFSS run (bare slab first, then OFF-state loop surface), then re-tune.
+3. **Phase 28 item 5:** app design mode (side-fed scalar 1-bit hologram synthesis, codebook per beam, forward-model predictions) and the full-board HFSS export (150 mm hexagon, 724 cells; smaller board first).
+4. **Full-board HFSS check** (user): beam angle, gain, SLL, cross-pol against the forward model.
+5. **Oblique / rotated-cell HFSS checks:** polarisation turned by 20 / 40 deg in the Floquet cell (the directionality check of `hfss_exports/phase28_loop_R4/`), the rotated cell, the measured diode reactance, package inductance.
+
+**Scope:** design and solver/tool work verified in HFSS. NO fabrication, bias-network or FPGA work. Nothing here is merged to main, tagged or deleted; branch state is the last commit on `phase28-coded-holographic-v2`.

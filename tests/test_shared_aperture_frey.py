@@ -61,7 +61,7 @@ def _beam(th, ph, th0, ph0, w):
     tg, pg = np.meshgrid(th, ph, indexing="ij")
     ang = np.degrees(np.arccos(np.clip(np.sum(c._unit(tg, pg) * c._unit(th0, ph0), axis=-1), -1, 1)))
     a = np.exp(-2 * np.log(2) * (ang / w) ** 2)  # amplitude; power -3 dB at ang = w / 2
-    return a, 1j * a  # (E_theta, E_phi) = (a, j a): pure RHCP
+    return a, -1j * a  # (E_theta, E_phi) = (a, -j a): pure RHCP in the project convention (E_R = (E_theta - j E_phi)/sqrt2 pairs with +j)
 
 
 def test_crossover_of_two_gaussian_beams_one_hpbw_apart_is_minus_3_db():

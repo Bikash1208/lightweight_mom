@@ -38,3 +38,6 @@ Code: `src/hologram/shared_aperture_multiport.py`, `scripts/research/phase29_poi
 Shared aperture dropped (pointing criterion not met). Build the compact 7-tile layout (R30 or R40, whichever meets the relaxed criterion with the better worst case), continuous scanning at low gain.
 Relaxed criterion: pointing within +-8 deg worst case and gain dip <= 3 dB for theta <= 30 deg; 30-45 deg reported as is. Weights tuned per direction (<= 3 active ports, parallel, `phase29_compact7_tune.py`).
 HFSS package `hfss_exports/phase29_compact7/` (`phase29_compact7_export.py`, `src/export/compact7_export.py`); one fresh-subagent verification; no merge, no tag.
+
+## Addendum 2026-10-27 - design point B3 (replaces B2; user asleep, unattended)
+One shared 150 mm hexagon, 7 monopoles (centre + ring 1.35-1.5 lambda0), Frey et al. angle-dependent superposition + GA; cones a (+-20 deg, ~13 deg beams, tilt 13) and b (+-25 deg, ~17 deg, tilt 17). Targets: pointing <= 2 deg, gain dip <= 3 dB over the whole cone. Driver: `scripts/research/phase29_B3_driver.py` (conservative readings in its docstring). Package only after a first-pass success.

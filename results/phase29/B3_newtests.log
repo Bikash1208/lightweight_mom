@@ -1,0 +1,50 @@
+....FF......................                                             [100%]
+================================== FAILURES ===================================
+______ test_crossover_of_two_gaussian_beams_one_hpbw_apart_is_minus_3_db ______
+
+    def test_crossover_of_two_gaussian_beams_one_hpbw_apart_is_minus_3_db():
+        import phase29_pointB3 as b3
+    
+        th, ph = np.arange(0.0, 90.1, 1.0), np.arange(0.0, 360.0, 1.0)
+        F = [_beam(th, ph, 0.0, 0.0, 13.0)] + [_beam(th, ph, 13.0, 60.0 * k, 13.0) for k in range(6)]
+        pm = [{"peak_theta_phi": (0.0, 0.0)}] + [{"peak_theta_phi": (13.0, 60.0 * k)} for k in range(6)]
+        x = b3.crossovers(F, th, ph, pm)
+>       assert x["centre_outer"]["mean_db"] == pytest.approx(-3.0, abs=0.4)
+E       assert 0.0 == -3.0 ± 0.4
+E         
+E         comparison failed
+E         Obtained: 0.0
+E         Expected: -3.0 ± 0.4
+
+tests\test_shared_aperture_frey.py:74: AssertionError
+_ test_sum_and_difference_patterns_have_a_null_at_the_sum_peak_for_symmetric_beams _
+
+    def test_sum_and_difference_patterns_have_a_null_at_the_sum_peak_for_symmetric_beams():
+        import phase29_pointB3 as b3
+    
+        th, ph = np.arange(0.0, 90.1, 1.0), np.arange(0.0, 360.0, 1.0)
+        F = [_beam(th, ph, 0.0, 0.0, 20.0)] + [_beam(th, ph, 13.0, 60.0 * k, 20.0) for k in range(6)]
+>       r = b3.sum_diff(F, th, ph)
+            ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_shared_aperture_frey.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+scripts\research\phase29_pointB3.py:225: in sum_diff
+    "sll_db": float(gs["sum"][ang > 1.5 * hp].max() - gs["sum"].max()),
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = array([], dtype=float64), axis = None, out = None, keepdims = False
+initial = <no value>, where = True
+
+    def _amax(a, axis=None, out=None, keepdims=False,
+              initial=_NoValue, where=True):
+>       return umr_maximum(a, axis, None, out, keepdims, initial, where)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       ValueError: zero-size array to reduction operation maximum which has no identity
+
+.venv\Lib\site-packages\numpy\_core\_methods.py:41: ValueError
+=========================== short test summary info ===========================
+FAILED tests/test_shared_aperture_frey.py::test_crossover_of_two_gaussian_beams_one_hpbw_apart_is_minus_3_db
+FAILED tests/test_shared_aperture_frey.py::test_sum_and_difference_patterns_have_a_null_at_the_sum_peak_for_symmetric_beams
+2 failed, 26 passed in 603.77s (0:10:03)

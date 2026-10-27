@@ -1,0 +1,668 @@
+{
+ "started": "2026-10-27 23:21",
+ "decisions": [
+  "first pass: passing cones none (pass = pointing <= 2 deg and dip <= 3 dB over the whole cone, tuned weights)",
+  "no cone passes: second design pass (<= 100 min GA) on cone b (lower merit 12.14 = pointing/2 + dip/3)",
+  "second pass done on cone b; pass2 result passes=False; no package built (second-pass success is only recorded: run phase29_B3_export.py --cone b)"
+ ],
+ "a": {
+  "ring_over_lambda0": 1.42,
+  "cells": 1414,
+  "slots": [
+   2,
+   1,
+   200,
+   1211
+  ],
+  "port_gain_dbi": [
+   15.0,
+   14.0,
+   13.5,
+   15.7,
+   15.2,
+   14.4,
+   14.3
+  ],
+  "port_hpbw_deg": [
+   9,
+   10,
+   13,
+   11,
+   10,
+   9,
+   12
+  ],
+  "port_sll_db": [
+   -0.9,
+   -2.0,
+   -1.9,
+   -2.5,
+   -1.9,
+   -2.2,
+   -2.4
+  ],
+  "port_peak_theta_phi": [
+   [
+    9,
+    322
+   ],
+   [
+    20,
+    352
+   ],
+   [
+    22,
+    66
+   ],
+   [
+    13,
+    121
+   ],
+   [
+    19,
+    171
+   ],
+   [
+    22,
+    247
+   ],
+   [
+    17,
+    273
+   ]
+  ],
+  "crossover_mean_db": {
+   "centre_outer": -9.3,
+   "outer_outer": -9.4
+  },
+  "sum": {
+   "peak_gain_dbi": 8.4,
+   "peak_theta_phi_deg": [
+    11,
+    181
+   ],
+   "hpbw_deg": 11.2,
+   "sll_db": -1.5
+  },
+  "delta_null_db": {
+   "delta_x": -8.2,
+   "delta_y": -14.0
+  },
+  "scan_tuned": {
+   "n": 241,
+   "gain_ref_dbi": 16.35,
+   "max_pointing_error_deg": 33.32,
+   "median_pointing_error_deg": 1.43,
+   "fraction_within_2deg": 0.62,
+   "fraction_within_3deg": 0.78,
+   "max_gain_dip_db": 5.64,
+   "min_gain_dbi": 10.71,
+   "pass_pointing_2deg": false,
+   "pass_dip_3db": false
+  },
+  "scan_mrc": {
+   "max_pointing_error_deg": 33.54,
+   "max_gain_dip_db": 3.85,
+   "min_gain_dbi": 12.5,
+   "gain_ref_dbi": 16.35,
+   "median_pointing_error_deg": 2.05,
+   "fraction_within_2deg": 0.49
+  },
+  "cone_edge": [
+   [
+    30.0,
+    8.7,
+    11.5
+   ],
+   [
+    90.0,
+    1.0,
+    15.4
+   ],
+   [
+    150.0,
+    11.3,
+    13.9
+   ],
+   [
+    210.0,
+    13.3,
+    13.3
+   ],
+   [
+    270.0,
+    1.2,
+    14.7
+   ],
+   [
+    330.0,
+    8.5,
+    13.0
+   ]
+  ],
+  "coupling_raw_db_range": [
+   -26.4,
+   -22.0
+  ],
+  "coupling_calibrated_db_range": [
+   -52.7,
+   -48.3
+  ],
+  "ceiling_gap_db": {
+   "ceiling_dbi_as_given": 23.7,
+   "best_port_dbi": 15.7,
+   "mean_port_dbi": 14.6,
+   "gap_best_port_db": 8.0,
+   "gap_mean_port_db": 9.1,
+   "gap_min_scan_db": 13.0
+  },
+  "pass": false,
+  "merit": 18.53615788772213
+ },
+ "b": {
+  "ring_over_lambda0": 1.4,
+  "cells": 1412,
+  "slots": [
+   0,
+   8,
+   1400,
+   4
+  ],
+  "port_gain_dbi": [
+   14.8,
+   13.4,
+   14.9,
+   16.1,
+   14.5,
+   13.9,
+   15.4
+  ],
+  "port_hpbw_deg": [
+   13,
+   12,
+   12,
+   9,
+   10,
+   9,
+   9
+  ],
+  "port_sll_db": [
+   -0.4,
+   -3.0,
+   -3.3,
+   -4.7,
+   -4.2,
+   -2.6,
+   -4.9
+  ],
+  "port_peak_theta_phi": [
+   [
+    8,
+    161
+   ],
+   [
+    14,
+    11
+   ],
+   [
+    18,
+    42
+   ],
+   [
+    15,
+    110
+   ],
+   [
+    18,
+    156
+   ],
+   [
+    24,
+    249
+   ],
+   [
+    18,
+    293
+   ]
+  ],
+  "crossover_mean_db": {
+   "centre_outer": -10.6,
+   "outer_outer": -5.8
+  },
+  "sum": {
+   "peak_gain_dbi": 9.4,
+   "peak_theta_phi_deg": [
+    17,
+    93
+   ],
+   "hpbw_deg": 9.2,
+   "sll_db": -1.7
+  },
+  "delta_null_db": {
+   "delta_x": -10.0,
+   "delta_y": -1.3
+  },
+  "scan_tuned": {
+   "n": 241,
+   "gain_ref_dbi": 17.08,
+   "max_pointing_error_deg": 20.34,
+   "median_pointing_error_deg": 2.04,
+   "fraction_within_2deg": 0.49,
+   "fraction_within_3deg": 0.68,
+   "max_gain_dip_db": 5.89,
+   "min_gain_dbi": 11.19,
+   "pass_pointing_2deg": false,
+   "pass_dip_3db": false
+  },
+  "scan_mrc": {
+   "max_pointing_error_deg": 35.69,
+   "max_gain_dip_db": 5.77,
+   "min_gain_dbi": 11.31,
+   "gain_ref_dbi": 17.08,
+   "median_pointing_error_deg": 3.03,
+   "fraction_within_2deg": 0.33
+  },
+  "cone_edge": [
+   [
+    30.0,
+    4.2,
+    12.2
+   ],
+   [
+    90.0,
+    4.0,
+    13.7
+   ],
+   [
+    150.0,
+    6.1,
+    15.3
+   ],
+   [
+    210.0,
+    20.3,
+    13.0
+   ],
+   [
+    270.0,
+    8.9,
+    14.0
+   ],
+   [
+    330.0,
+    3.9,
+    12.7
+   ]
+  ],
+  "coupling_raw_db_range": [
+   -26.5,
+   -22.2
+  ],
+  "coupling_calibrated_db_range": [
+   -52.8,
+   -48.4
+  ],
+  "ceiling_gap_db": {
+   "ceiling_dbi_as_given": 21.7,
+   "best_port_dbi": 16.1,
+   "mean_port_dbi": 14.7,
+   "gap_best_port_db": 5.6,
+   "gap_mean_port_db": 7.0,
+   "gap_min_scan_db": 10.5
+  },
+  "pass": false,
+  "merit": 12.135425427143328
+ },
+ "frey_trend": {
+  "checks": {
+   "gain_falls_with_n_frey": true,
+   "gain_monotone_non_increasing_frey": true,
+   "frey_minus_aia_min_db": 1.452041375517787,
+   "frey_minus_aia_max_db": 5.488481134602562,
+   "sll_deteriorates_with_n_frey": true
+  },
+  "gain_frey_dbi": [
+   24.6,
+   23.0,
+   22.5,
+   21.7,
+   21.4,
+   20.1,
+   19.1
+  ],
+  "gain_diff_db": [
+   1.45,
+   2.44,
+   2.84,
+   4.11,
+   4.03,
+   4.57,
+   5.49
+  ],
+  "sll_frey_db": [
+   -12.0,
+   -7.6,
+   -7.6,
+   -4.4,
+   -6.2,
+   -5.9,
+   -4.5
+  ]
+ },
+ "pass1_b": {
+  "ring_over_lambda0": 1.4,
+  "cells": 1412,
+  "slots": [
+   0,
+   8,
+   1400,
+   4
+  ],
+  "port_gain_dbi": [
+   14.8,
+   13.4,
+   14.9,
+   16.1,
+   14.5,
+   13.9,
+   15.4
+  ],
+  "port_hpbw_deg": [
+   13,
+   12,
+   12,
+   9,
+   10,
+   9,
+   9
+  ],
+  "port_sll_db": [
+   -0.4,
+   -3.0,
+   -3.3,
+   -4.7,
+   -4.2,
+   -2.6,
+   -4.9
+  ],
+  "port_peak_theta_phi": [
+   [
+    8,
+    161
+   ],
+   [
+    14,
+    11
+   ],
+   [
+    18,
+    42
+   ],
+   [
+    15,
+    110
+   ],
+   [
+    18,
+    156
+   ],
+   [
+    24,
+    249
+   ],
+   [
+    18,
+    293
+   ]
+  ],
+  "crossover_mean_db": {
+   "centre_outer": -10.6,
+   "outer_outer": -5.8
+  },
+  "sum": {
+   "peak_gain_dbi": 9.4,
+   "peak_theta_phi_deg": [
+    17,
+    93
+   ],
+   "hpbw_deg": 9.2,
+   "sll_db": -1.7
+  },
+  "delta_null_db": {
+   "delta_x": -10.0,
+   "delta_y": -1.3
+  },
+  "scan_tuned": {
+   "n": 241,
+   "gain_ref_dbi": 17.08,
+   "max_pointing_error_deg": 20.34,
+   "median_pointing_error_deg": 2.04,
+   "fraction_within_2deg": 0.49,
+   "fraction_within_3deg": 0.68,
+   "max_gain_dip_db": 5.89,
+   "min_gain_dbi": 11.19,
+   "pass_pointing_2deg": false,
+   "pass_dip_3db": false
+  },
+  "scan_mrc": {
+   "max_pointing_error_deg": 35.69,
+   "max_gain_dip_db": 5.77,
+   "min_gain_dbi": 11.31,
+   "gain_ref_dbi": 17.08,
+   "median_pointing_error_deg": 3.03,
+   "fraction_within_2deg": 0.33
+  },
+  "cone_edge": [
+   [
+    30.0,
+    4.2,
+    12.2
+   ],
+   [
+    90.0,
+    4.0,
+    13.7
+   ],
+   [
+    150.0,
+    6.1,
+    15.3
+   ],
+   [
+    210.0,
+    20.3,
+    13.0
+   ],
+   [
+    270.0,
+    8.9,
+    14.0
+   ],
+   [
+    330.0,
+    3.9,
+    12.7
+   ]
+  ],
+  "coupling_raw_db_range": [
+   -26.5,
+   -22.2
+  ],
+  "coupling_calibrated_db_range": [
+   -52.8,
+   -48.4
+  ],
+  "ceiling_gap_db": {
+   "ceiling_dbi_as_given": 21.7,
+   "best_port_dbi": 16.1,
+   "mean_port_dbi": 14.7,
+   "gap_best_port_db": 5.6,
+   "gap_mean_port_db": 7.0,
+   "gap_min_scan_db": 10.5
+  },
+  "pass": false,
+  "merit": 12.135425427143328
+ },
+ "b_pass2": {
+  "ring_over_lambda0": 1.41,
+  "cells": 1411,
+  "slots": [
+   1,
+   30,
+   1377,
+   3
+  ],
+  "port_gain_dbi": [
+   16.8,
+   14.0,
+   16.1,
+   14.7,
+   15.1,
+   14.2,
+   15.3
+  ],
+  "port_hpbw_deg": [
+   8,
+   11,
+   12,
+   13,
+   12,
+   12,
+   10
+  ],
+  "port_sll_db": [
+   -4.9,
+   -2.2,
+   -7.9,
+   -4.4,
+   -4.5,
+   -2.0,
+   -4.0
+  ],
+  "port_peak_theta_phi": [
+   [
+    0,
+    181
+   ],
+   [
+    23,
+    25
+   ],
+   [
+    14,
+    57
+   ],
+   [
+    21,
+    99
+   ],
+   [
+    18,
+    160
+   ],
+   [
+    21,
+    267
+   ],
+   [
+    19,
+    284
+   ]
+  ],
+  "crossover_mean_db": {
+   "centre_outer": -7.1,
+   "outer_outer": -8.2
+  },
+  "sum": {
+   "peak_gain_dbi": 10.0,
+   "peak_theta_phi_deg": [
+    17,
+    90
+   ],
+   "hpbw_deg": 10.2,
+   "sll_db": -0.9
+  },
+  "delta_null_db": {
+   "delta_x": -7.4,
+   "delta_y": -4.9
+  },
+  "scan_tuned": {
+   "n": 241,
+   "gain_ref_dbi": 17.73,
+   "max_pointing_error_deg": 17.23,
+   "median_pointing_error_deg": 2.28,
+   "fraction_within_2deg": 0.43,
+   "fraction_within_3deg": 0.63,
+   "max_gain_dip_db": 5.65,
+   "min_gain_dbi": 12.08,
+   "pass_pointing_2deg": false,
+   "pass_dip_3db": false
+  },
+  "scan_mrc": {
+   "max_pointing_error_deg": 28.39,
+   "max_gain_dip_db": 5.41,
+   "min_gain_dbi": 12.32,
+   "gain_ref_dbi": 17.73,
+   "median_pointing_error_deg": 5.19,
+   "fraction_within_2deg": 0.29
+  },
+  "cone_edge": [
+   [
+    30.0,
+    2.0,
+    13.7
+   ],
+   [
+    90.0,
+    4.9,
+    13.3
+   ],
+   [
+    150.0,
+    4.0,
+    13.7
+   ],
+   [
+    210.0,
+    17.2,
+    14.3
+   ],
+   [
+    270.0,
+    2.1,
+    12.9
+   ],
+   [
+    330.0,
+    15.7,
+    14.5
+   ]
+  ],
+  "coupling_raw_db_range": [
+   -26.4,
+   -22.4
+  ],
+  "coupling_calibrated_db_range": [
+   -52.7,
+   -48.7
+  ],
+  "ceiling_gap_db": {
+   "ceiling_dbi_as_given": 21.7,
+   "best_port_dbi": 16.8,
+   "mean_port_dbi": 15.2,
+   "gap_best_port_db": 4.9,
+   "gap_mean_port_db": 6.5,
+   "gap_min_scan_db": 9.6
+  },
+  "pass": false,
+  "merit": 10.496544692678592
+ },
+ "new_tests": {
+  "rc": 1,
+  "tail": "FAILED tests/test_shared_aperture_frey.py::test_sum_and_difference_patterns_have_a_null_at_the_sum_peak_for_symmetric_beams | 2 failed, 26 passed in 603.77s (0:10:03)"
+ },
+ "fast_suite": {
+  "rc": -9,
+  "tail": "........................................................................ [ 90%] | ................................................."
+ }
+}

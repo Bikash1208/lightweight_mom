@@ -96,6 +96,11 @@ for theta <= 30 deg: MET in the model (worst pointing 5.0 deg, dip 2.1 dB, peak 
 R30 ties on the worst case (4.96 vs 4.98 deg) and has lower gain; R40 chosen by the gain tie-break. Coupling between tiles and S11 are NOT modelled (NOT_AVAILABLE_FROM_CURRENT_DATA until the HFSS S-matrix).
 Numbers: `results/phase29/compact7_tune.json`; package: predictions, `weights_table.csv`, AEDT scripts, README (run order, Edit Sources).
 
+
+## Phase 29 design point B3 (shared 150 mm hexagon, 7 ports, Frey angle-dependent superposition + GA) - MODEL_ONLY, overnight run 2026-10-27 23:21
+
+cone a: gains 13.5-15.7 dBi, HPBW 9-13 deg, scan worst pointing 33.32 deg (target 2), dip 5.64 dB (target 3), pass=False; cone b: gains 13.4-16.1 dBi, HPBW 9-13 deg, scan worst pointing 20.34 deg (target 2), dip 5.89 dB (target 3), pass=False. Decisions: first pass: passing cones none (pass = pointing <= 2 deg and dip <= 3 dB over the whole cone, tuned weights) | no cone passes: second design pass (<= 100 min GA) on cone b (lower merit 12.14 = pointing/2 + dip/3) | second pass done on cone b; pass2 result passes=False; no package built (second-pass success is only recorded: run phase29_B3_export.py --cone b). HFSS package: not built. Numbers: `results/phase29/B3_summary.json`, `pointB3_<cone>.json`.
+
 ## Open next steps
 
 Order of work, with what each needs from the user (HFSS runs are the user's):

@@ -73,10 +73,12 @@ file** (last release tag/commit, capability matrix, open next steps) as part of 
 - No run manifest / diagnostic-bundle download wired into the app yet (`src/manifest.py` exists and
   is tested, nothing attaches it to a job â€” `docs/ARCHITECTURE.md`).
 
-## Phase 29 (seven-hexagon cluster, branch `phase29-seven-hex`, 2026-10-27) — MODEL_ONLY, stopped at the review stop point
+## Phase 29 (seven-hexagon cluster, branch `phase29-seven-hex`, 2026-10-27) - MODEL_ONLY, stopped at the review stop point
 
-Centre broadside + six outer tensor-CP tiles; per-tile and pair-excitation forward model (no inter-tile coupling). Result: pairs merge into
-one steerable beam only when the two beams are closer than about one beamwidth (150 mm tile: <= 6 deg, 75 mm: <= 10 deg); at 45 deg they never do.
+Centre broadside + six outer tensor-CP tiles; per-tile and pair-excitation forward model (no inter-tile coupling). Result: at 45/30/20/15/10 deg
+outer tilt no pair ever gives one beam (two lobes at every phase). A single in-between lobe appears only for SOME relative phases (3-7 of 12)
+and only when the beams are closer than about one beamwidth: 150 mm tile at 6 and 4 deg; 75 mm tile at 10 deg (all pairs) and 6/4 deg
+(centre+outer only). At 45 deg the outer tile AR is 5.4-5.6 dB at the peak (worst over the beam 6.6-6.8 dB), above the 3 dB target.
 Numbers: `results/phase29/README.md`, `seven_hex.json`. HFSS package for the 7-tile board: not started (after review).
 
 ## Open next steps

@@ -36,6 +36,17 @@ import math
 import math
 oProject = oDesktop.GetActiveProject()
 oDesign = oProject.GetActiveDesign()
+import sys
+def note(level, text):
+    # print-only, never raises: a failed message must not stop the script
+    try:
+        oDesktop.AddMessage(oProject.GetName(), oDesign.GetName(), level, text)
+    except Exception:
+        pass
+    try:
+        sys.stdout.write(str(text) + "\n")
+    except Exception:
+        pass
 oBnd = oDesign.GetModule("BoundarySetup")
 Z = mm(H)
 A = math.radians(ROT_DEG)
@@ -57,6 +68,9 @@ args = ["NAME:D0_RLC", "Objects:=", ["D0"],
 try:
     oBnd.EditLumpedRLC("D0_RLC", args)
 except Exception:
-    oBnd.DeleteBoundaries(["D0_RLC"])
-    oBnd.AssignLumpedRLC(args)
-oDesktop.AddMessage(oProject.GetName(), oDesign.GetName(), 0, "State %s set on D0 (the inductor sheet D1, if any, is unchanged)." % STATE)
+    try:
+        oBnd.DeleteBoundaries(["D0_RLC"])
+        oBnd.AssignLumpedRLC(args)
+    except Exception as exc2:
+        note(2, 'reassigning the lumped RLC failed: ' + str(exc2))
+note(0, "State %s set on D0 (the inductor sheet D1, if any, is unchanged)." % STATE)

@@ -27,7 +27,7 @@ Cell: period 9.0 mm; RT/duroid 5880 (eps_r 2.2, tan d 0.0009) 3.175 mm on PEC; z
 
 ## Run order
 1. **Convention first:** the bare grounded slab (delete the metal and the RLC sheets, or use `bare_grounded_slab_reference.csv`) at theta = 0: apply any 180 deg TM sign shift HFSS shows to every TM entry.
-2. `STATE = "ON"`, `ROT_DEG = 0`: run `build_cell.py`; read the messages (three assignments are not yet run in AEDT; each falls back to a message). Floquet port: modes 1, 2 (TE: E along y, TM: E along x at phi = 0), de-embed 25 mm to the pattern plane (top of the substrate), `scan_theta` = 0.
+2. `STATE = "ON"`, `ROT_DEG = 0`: run `build_cell.py`; read the messages (the periodic walls are four master/slave pairs, one pair per face: substrate X, air X, substrate Y, air Y; they and the Floquet port have not run successfully in AEDT yet, and every failure only prints a message naming the pair or boundary to assign by hand). Floquet port: modes 1, 2 (TE: E along y, TM: E along x at phi = 0), de-embed 25 mm to the pattern plane (top of the substrate), `scan_theta` = 0.
 3. Analyze; export complex Floquet S11 (modes 1, 2). Then `set_state.py` with `STATE = "OFF"`; Analyze; export.
 4. Optional: `ROT_DEG = 20` (rebuild); optional: `R_ON = "3.3ohm"` (5 mA).
 

@@ -48,6 +48,17 @@ with open(CODING_CSV) as fh:
 assert sorted(state) == [c[0] for c in CELLS], "coding does not match the 102-cell layout"
 oProject = oDesktop.GetActiveProject()
 oDesign = oProject.GetActiveDesign()
+import sys
+def note(level, text):
+    # print-only, never raises: a failed message must not stop the script
+    try:
+        oDesktop.AddMessage(oProject.GetName(), oDesign.GetName(), level, text)
+    except Exception:
+        pass
+    try:
+        sys.stdout.write(str(text) + "\n")
+    except Exception:
+        pass
 oBnd = oDesign.GetModule("BoundarySetup")
 used_delete = 0
 for cid, cx, cy in CELLS:
@@ -59,6 +70,9 @@ for cid, cx, cy in CELLS:
             oBnd.EditLumpedRLC(name + "_RLC", args)
         except Exception:
             used_delete += 1
-            oBnd.DeleteBoundaries([name + "_RLC"])
-            oBnd.AssignLumpedRLC(args)
-oDesktop.AddMessage(oProject.GetName(), oDesign.GetName(), 0, "Coding %s applied to %d cells (%d via delete+assign)." % (CODING_CSV, len(CELLS), used_delete))
+            try:
+                oBnd.DeleteBoundaries([name + "_RLC"])
+                oBnd.AssignLumpedRLC(args)
+            except Exception as exc2:
+                note(2, 'reassigning the lumped RLC failed: ' + str(exc2))
+note(0, "Coding %s applied to %d cells (%d via delete+assign)." % (CODING_CSV, len(CELLS), used_delete))

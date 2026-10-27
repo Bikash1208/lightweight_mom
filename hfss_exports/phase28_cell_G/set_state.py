@@ -42,6 +42,17 @@ STATE_ON = [[0, 2], [4, 6], [1, 3], [5, 7]]
 
 oProject = oDesktop.GetActiveProject()
 oDesign = oProject.GetActiveDesign()
+import sys
+def note(level, text):
+    # print-only, never raises: a failed message must not stop the script
+    try:
+        oDesktop.AddMessage(oProject.GetName(), oDesign.GetName(), level, text)
+    except Exception:
+        pass
+    try:
+        sys.stdout.write(str(text) + "\n")
+    except Exception:
+        pass
 oBnd = oDesign.GetModule("BoundarySetup")
 Z = mm(H)
 for k, nk in enumerate(NECKS):
@@ -49,6 +60,9 @@ for k, nk in enumerate(NECKS):
     try:
         oBnd.EditLumpedRLC("D%d_RLC" % k, args)
     except Exception:
-        oBnd.DeleteBoundaries(["D%d_RLC" % k])
-        oBnd.AssignLumpedRLC(args)
-oDesktop.AddMessage(oProject.GetName(), oDesign.GetName(), 0, "State %d set (ON sites %s)." % (STATE, STATE_ON[STATE]))
+        try:
+            oBnd.DeleteBoundaries(["D%d_RLC" % k])
+            oBnd.AssignLumpedRLC(args)
+        except Exception as exc2:
+            note(2, 'reassigning the lumped RLC failed: ' + str(exc2))
+note(0, "State %d set (ON sites %s)." % (STATE, STATE_ON[STATE]))

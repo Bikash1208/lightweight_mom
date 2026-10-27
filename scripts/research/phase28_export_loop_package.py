@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts" / "research"))
 
+from aedt_script_hardening import harden  # noqa: E402
 import phase28_loop_rotation as lr  # noqa: E402
 
 from src.dispersion.sheet_model import _y_slab  # noqa: E402
@@ -151,7 +152,7 @@ def lit(obj):
 
 def build_script():
     g = (ROOT / "hfss_exports/phase28_cell_G/build_cell.py").read_text(encoding="utf-8")
-    periodic = g[g.index("def faces_at(x, y):"): g.index("oAna = oDesign.GetModule")]
+    periodic = "def faces_at(x, y):\n    pass  # marker: replaced by the periodic-wall block of aedt_script_hardening.harden\n\n"
     common = g[g.index("def attrs("): g.index("def rlc_args(")]
     consts = f"""LS_NH = 0.0                # package inductance [nH]: 0 (measured: none visible); 0.2 = untested sensitivity, no prediction
 STATE = "ON"               # "ON" or "OFF"
@@ -223,7 +224,10 @@ for k, (x0, x1) in enumerate(elems):
 oBnd.AssignPerfectE(["NAME:PerfE_Ground", "Objects:=", ["Ground"], "InfGroundPlane:=", False])
 oBnd.AssignPerfectE(["NAME:PerfE_Metal", "Objects:=", ["Metal"], "InfGroundPlane:=", False])
 for k, kind in enumerate(kinds(STATE)):
-    oBnd.AssignLumpedRLC(rlc_single("D%d" % k, kind, ELEM_LINES[k]))
+    try:
+        oBnd.AssignLumpedRLC(rlc_single("D%d" % k, kind, ELEM_LINES[k]))
+    except Exception as exc:
+        note(2, "Lumped RLC D%d (%s) failed (%s): assign it by hand (one element type, current line along the diode axis, README)." % (k, kind, str(exc)))
 '''
     tail = '''oAna = oDesign.GetModule("AnalysisSetup")
 oAna.InsertSetup("HfssDriven", ["NAME:Setup1", "Frequency:=", "10GHz", "MaxDeltaS:=", 0.01, "MaximumPasses:=", 15, "MinimumPasses:=", 2,
@@ -305,7 +309,7 @@ def readme(summ, rep):
           "**What HFSS checks.** A Floquet cell cannot launch a surface wave. The directionality is checked with a normal-incidence plane wave whose linear polarisation is turned by psi: from the complex S_xx, S_yy, S_xy of each state, e^T S e (co) and e_perp^T S e (cross) at psi = 0, 20, 40 deg must follow `mom_reference.csv`. ON should be isotropic (co(psi) independent of psi); OFF should depend on psi.", "",
           "## Run order",
           "1. **Convention first:** the bare grounded slab (delete the metal and the RLC sheets, or use `bare_grounded_slab_reference.csv`) at theta = 0: apply any 180 deg TM sign shift HFSS shows to every TM entry.",
-          "2. `STATE = \"ON\"`, `ROT_DEG = 0`: run `build_cell.py`; read the messages (three assignments are not yet run in AEDT; each falls back to a message). Floquet port: modes 1, 2 (TE: E along y, TM: E along x at phi = 0), de-embed 25 mm to the pattern plane (top of the substrate), `scan_theta` = 0.",
+          "2. `STATE = \"ON\"`, `ROT_DEG = 0`: run `build_cell.py`; read the messages (the periodic walls are four master/slave pairs, one pair per face: substrate X, air X, substrate Y, air Y; they and the Floquet port have not run successfully in AEDT yet, and every failure only prints a message naming the pair or boundary to assign by hand). Floquet port: modes 1, 2 (TE: E along y, TM: E along x at phi = 0), de-embed 25 mm to the pattern plane (top of the substrate), `scan_theta` = 0.",
           "3. Analyze; export complex Floquet S11 (modes 1, 2). Then `set_state.py` with `STATE = \"OFF\"`; Analyze; export.",
           "4. Optional: `ROT_DEG = 20` (rebuild); optional: `R_ON = \"3.3ohm\"` (5 mA).", "",
           "## Pass criteria (ASSUMED thresholds, stated before the run)",
@@ -340,8 +344,8 @@ def main():
             w.writerow([f"{f:g}", f"{m:.4f}", f"{p:.3f}"])
     (OUT / "predictions_summary.json").write_text(json.dumps({"labels": ["MODEL_ONLY", "MEASURED_VENDOR_SPARAM", "NOT_HFSS_VALIDATED"], **summ}, indent=1), encoding="utf-8")
     (OUT / "measured_cell_report.json").write_text(json.dumps(rep, indent=1, default=float), encoding="utf-8")
-    (OUT / "build_cell.py").write_text(build_script(), encoding="utf-8")
-    (OUT / "set_state.py").write_text(set_state_script(), encoding="utf-8")
+    (OUT / "build_cell.py").write_text(harden(build_script()), encoding="utf-8")
+    (OUT / "set_state.py").write_text(harden(set_state_script()), encoding="utf-8")
     (OUT / "README.md").write_text(readme(summ, rep), encoding="utf-8")
     print("written", len(pred), "prediction rows")
 

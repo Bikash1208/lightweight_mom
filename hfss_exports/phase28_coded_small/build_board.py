@@ -47,6 +47,17 @@ oProject = oDesktop.NewProject()
 oProject.InsertDesign("HFSS", "phase28_coded_small", "DrivenModal", "")
 oDesign = oProject.SetActiveDesign("phase28_coded_small")
 oEditor = oDesign.SetActiveEditor("3D Modeler")
+import sys
+def note(level, text):
+    # print-only, never raises: a failed message must not stop the script
+    try:
+        oDesktop.AddMessage(oProject.GetName(), oDesign.GetName(), level, text)
+    except Exception:
+        pass
+    try:
+        sys.stdout.write(str(text) + "\n")
+    except Exception:
+        pass
 oEditor.SetModelUnits(["NAME:Units Parameter", "Units:=", "mm", "Rescale:=", False])
 oProject.GetDefinitionManager().AddMaterial(["NAME:HMSA_substrate", "CoordinateSystemType:=", "Cartesian",
     "BulkOrSurfaceType:=", 1, ["NAME:PhysicsTypes", "set:=", ["Electromagnetic"]],
@@ -117,7 +128,7 @@ for cid, cx, cy in CELLS:
         except Exception as e:
             failed.append("D%d_%d" % (cid, k))
 if failed:
-    oDesktop.AddMessage(oProject.GetName(), "phase28_coded_small", 2, "Lumped RLC assignment failed for %d sheets (first: %s)." % (len(failed), failed[0]))
+    note(2, "Lumped RLC assignment failed for %d sheets (first: %s)." % (len(failed), failed[0]))
 oEditor.CreateBox(["NAME:BoxParameters", "XPosition:=", x_lo + "-pad_xy", "YPosition:=", y_lo + "-pad_xy", "ZPosition:=", "-pad_bot",
     "XSize:=", mm(WX) + "+2*pad_xy", "YSize:=", mm(WY) + "+2*pad_xy", "ZSize:=", "pad_bot+" + Z + "+pad_top"],
     attrs("Air", "air", True, "(143 175 143)", 0.9))
@@ -134,4 +145,4 @@ oRad.InsertFarFieldSphereSetup(["NAME:3D", "UseCustomRadiationSurface:=", False,
     "ThetaStep:=", "1deg", "PhiStart:=", "-180deg", "PhiStop:=", "180deg", "PhiStep:=", "1deg", "UseLocalCS:=", False])
 oEditor.FitAll()
 oProject.SaveAs(oDesktop.GetProjectDirectory() + "/phase28_coded_small.aedt", True)
-oDesktop.AddMessage(oProject.GetName(), "phase28_coded_small", 0, "Built: %d cells, %d diode sheets (coding beam_030_225), 1 monopole, 1 lumped port. Validate, Analyze; switch beams with set_coding.py." % (len(CELLS), 8 * len(CELLS)))
+note(0, "Built: %d cells, %d diode sheets (coding beam_030_225), 1 monopole, 1 lumped port. Validate, Analyze; switch beams with set_coding.py." % (len(CELLS), 8 * len(CELLS)))

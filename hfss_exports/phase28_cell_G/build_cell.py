@@ -44,6 +44,17 @@ oProject = oDesktop.NewProject()
 oProject.InsertDesign("HFSS", "phase28_cell_G", "DrivenModal", "")
 oDesign = oProject.SetActiveDesign("phase28_cell_G")
 oEditor = oDesign.SetActiveEditor("3D Modeler")
+import sys
+def note(level, text):
+    # print-only, never raises: a failed message must not stop the script
+    try:
+        oDesktop.AddMessage(oProject.GetName(), oDesign.GetName(), level, text)
+    except Exception:
+        pass
+    try:
+        sys.stdout.write(str(text) + "\n")
+    except Exception:
+        pass
 oEditor.SetModelUnits(["NAME:Units Parameter", "Units:=", "mm", "Rescale:=", False])
 oProject.GetDefinitionManager().AddMaterial(["NAME:RT5880_board", "CoordinateSystemType:=", "Cartesian",
     "BulkOrSurfaceType:=", 1, ["NAME:PhysicsTypes", "set:=", ["Electromagnetic"]],
@@ -71,37 +82,45 @@ oBnd = oDesign.GetModule("BoundarySetup")
 oBnd.AssignPerfectE(["NAME:PerfE_Ground", "Objects:=", ["Ground"], "InfGroundPlane:=", False])
 oBnd.AssignPerfectE(["NAME:PerfE_Metal", "Objects:=", ["Metal"], "InfGroundPlane:=", False])
 for k, nk in enumerate(NECKS):
-    oBnd.AssignLumpedRLC(rlc_args("D%d" % k, k in STATE_ON[STATE], nk["line"], Z))
+    try:
+        oBnd.AssignLumpedRLC(rlc_args("D%d" % k, k in STATE_ON[STATE], nk["line"], Z))
+    except Exception as exc:
+        note(2, "Lumped RLC D%d failed (%s): assign it by hand (one element type, current line along the neck, README)." % (k, str(exc)))
 
-def faces_at(x, y):
-    ids = []
-    for body, z in (("Substrate", H / 2.0), ("Air", H + LID / 2.0)):
-        ids.append(int(oEditor.GetFaceByPosition(["NAME:FaceParameters", "BodyName:=", body,
-                                                  "XPosition:=", mm(x), "YPosition:=", mm(y), "ZPosition:=", mm(z)])))
-    return ids
+def one_face(body, x, y, z):
+    # exactly one face id: AssignMaster / AssignSlave take one face each
+    return int(oEditor.GetFaceByPosition(["NAME:FaceParameters", "BodyName:=", body, "XPosition:=", mm(x), "YPosition:=", mm(y), "ZPosition:=", mm(z)]))
 
-# periodic walls (scan angle linked to the Floquet port) -- NOT yet run in AEDT; if it fails assign by hand (README step 2)
-try:
-    pairs = (("X", (-P / 2, 0.0), (P / 2, 0.0), ((-P / 2, -P / 2), (-P / 2, P / 2)), ((P / 2, -P / 2), (P / 2, P / 2))),
-             ("Y", (0.0, -P / 2), (0.0, P / 2), ((-P / 2, -P / 2), (P / 2, -P / 2)), ((-P / 2, P / 2), (P / 2, P / 2))))
-    for tag, mc, sc, mu, su in pairs:
-        oBnd.AssignMaster(["NAME:Master" + tag, "Faces:=", faces_at(mc[0], mc[1]),
-            "CoordSysVector:=", ["NAME:Vectors", "Origin:=", [mm(mu[0][0]), mm(mu[0][1]), "0mm"], "UPos:=", [mm(mu[1][0]), mm(mu[1][1]), "0mm"]],
+# periodic walls: one master/slave pair PER FACE (substrate and air box separately), scan angle linked to the Floquet port. NOT yet run successfully in AEDT: if a pair fails the message names it,
+# assign that pair by hand (README step 2).
+for tag, body, z0, zc in (("s", "Substrate", 0.0, H / 2.0), ("a", "Air", H, H + LID / 2.0)):
+    try:
+        oBnd.AssignMaster(["NAME:MasterX" + tag, "Faces:=", [one_face(body, -P / 2, 0.0, zc)],
+            "CoordSysVector:=", ["NAME:Vectors", "Origin:=", [mm(-P / 2), mm(-P / 2), mm(z0)], "UPos:=", [mm(-P / 2), mm(P / 2), mm(z0)]],
             "ReverseV:=", False])
-        oBnd.AssignSlave(["NAME:Slave" + tag, "Faces:=", faces_at(sc[0], sc[1]),
-            "CoordSysVector:=", ["NAME:Vectors", "Origin:=", [mm(su[0][0]), mm(su[0][1]), "0mm"], "UPos:=", [mm(su[1][0]), mm(su[1][1]), "0mm"]],
-            "ReverseU:=", False, "Master:=", "Master" + tag, "UseScanAngle:=", True, "Phi:=", "scan_phi", "Theta:=", "scan_theta"])
-except Exception as exc:
-    oDesktop.AddMessage(oProject.GetName(), "phase28_cell_G", 2, "Master/slave assignment failed (" + str(exc) + "): assign the X and Y pairs by hand with the scan angle, README step 2.")
+        oBnd.AssignSlave(["NAME:SlaveX" + tag, "Faces:=", [one_face(body, P / 2, 0.0, zc)],
+            "CoordSysVector:=", ["NAME:Vectors", "Origin:=", [mm(P / 2), mm(-P / 2), mm(z0)], "UPos:=", [mm(P / 2), mm(P / 2), mm(z0)]],
+            "ReverseU:=", False, "Master:=", "MasterX" + tag, "UseScanAngle:=", True, "Phi:=", "scan_phi", "Theta:=", "scan_theta"])
+    except Exception as exc:
+        note(2, "Periodic X pair '" + tag + "' (" + body + ") failed (" + str(exc) + "): assign it by hand, README step 2.")
+    try:
+        oBnd.AssignMaster(["NAME:MasterY" + tag, "Faces:=", [one_face(body, 0.0, -P / 2, zc)],
+            "CoordSysVector:=", ["NAME:Vectors", "Origin:=", [mm(-P / 2), mm(-P / 2), mm(z0)], "UPos:=", [mm(P / 2), mm(-P / 2), mm(z0)]],
+            "ReverseV:=", False])
+        oBnd.AssignSlave(["NAME:SlaveY" + tag, "Faces:=", [one_face(body, 0.0, P / 2, zc)],
+            "CoordSysVector:=", ["NAME:Vectors", "Origin:=", [mm(-P / 2), mm(P / 2), mm(z0)], "UPos:=", [mm(P / 2), mm(P / 2), mm(z0)]],
+            "ReverseU:=", False, "Master:=", "MasterY" + tag, "UseScanAngle:=", True, "Phi:=", "scan_phi", "Theta:=", "scan_theta"])
+    except Exception as exc:
+        note(2, "Periodic Y pair '" + tag + "' (" + body + ") failed (" + str(exc) + "): assign it by hand, README step 2.")
 try:
-    top = int(oEditor.GetFaceByPosition(["NAME:FaceParameters", "BodyName:=", "Air", "XPosition:=", "0mm", "YPosition:=", "0mm", "ZPosition:=", mm(H + LID)]))
+    top = one_face("Air", 0.0, 0.0, H + LID)
     oBnd.AssignFloquetPort(["NAME:FloquetPort1", "Faces:=", [top], "NumModes:=", 2, "RenormalizeAllTerminals:=", True,
         "UseScanAngle:=", True, "Phi:=", "scan_phi", "Theta:=", "scan_theta", "DoDeembed:=", True, "DeembedDist:=", mm(LID),
         ["NAME:Modes", ["NAME:Mode1", "ModeNum:=", 1, "UseIntLine:=", False, "CharImp:=", "Zpi"],
                        ["NAME:Mode2", "ModeNum:=", 2, "UseIntLine:=", False, "CharImp:=", "Zpi"]],
         "ShowReporterFilter:=", False, "ReporterFilter:=", [True, True]])
 except Exception as exc:
-    oDesktop.AddMessage(oProject.GetName(), "phase28_cell_G", 2, "Floquet port assignment failed (" + str(exc) + "): assign it by hand on the top face of Air, 2 modes, de-embed %.1f mm, README step 2." % LID)
+    note(2, "Floquet port assignment failed (" + str(exc) + "): assign it by hand on the top face of Air, 2 modes, de-embed " + mm(LID) + ", README step 2.")
 oAna = oDesign.GetModule("AnalysisSetup")
 oAna.InsertSetup("HfssDriven", ["NAME:Setup1", "Frequency:=", "10GHz", "MaxDeltaS:=", 0.01, "MaximumPasses:=", 15, "MinimumPasses:=", 2,
     "MinimumConvergedPasses:=", 2, "PercentRefinement:=", 30, "IsEnabled:=", True, "BasisOrder:=", 1, "DoLambdaRefine:=", True,
@@ -110,4 +129,4 @@ oAna.InsertFrequencySweep("Setup1", ["NAME:Sweep", "IsEnabled:=", True, "RangeTy
     "RangeStep:=", "0.25GHz", "Type:=", "Discrete", "SaveFields:=", False, "SaveRadFields:=", False])
 oEditor.FitAll()
 oProject.SaveAs(oDesktop.GetProjectDirectory() + "/phase28_cell_G.aedt", True)
-oDesktop.AddMessage(oProject.GetName(), "phase28_cell_G", 0, "Built state %d. Check the 8 RLC boundaries, the periodic pairs and the Floquet port, set scan_theta/scan_phi, Analyze." % STATE)
+note(0, "Built state %d. Check the 8 RLC boundaries, the periodic pairs and the Floquet port, set scan_theta/scan_phi, Analyze." % STATE)

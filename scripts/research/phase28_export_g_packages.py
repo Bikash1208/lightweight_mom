@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts" / "research"))
 
+from aedt_script_hardening import harden  # noqa: E402
 import phase28_g_geometry as geo  # noqa: E402
 import phase28_small_board as sb  # noqa: E402
 
@@ -216,7 +217,10 @@ oBnd = oDesign.GetModule("BoundarySetup")
 oBnd.AssignPerfectE(["NAME:PerfE_Ground", "Objects:=", ["Ground"], "InfGroundPlane:=", False])
 oBnd.AssignPerfectE(["NAME:PerfE_Metal", "Objects:=", ["Metal"], "InfGroundPlane:=", False])
 for k, nk in enumerate(NECKS):
-    oBnd.AssignLumpedRLC(rlc_args("D%d" % k, k in STATE_ON[STATE], nk["line"], Z))
+    try:
+        oBnd.AssignLumpedRLC(rlc_args("D%d" % k, k in STATE_ON[STATE], nk["line"], Z))
+    except Exception as exc:
+        note(2, "Lumped RLC D%d failed (%s): assign it by hand (one element type, current line along the neck, README)." % (k, str(exc)))
 
 def faces_at(x, y):
     ids = []
@@ -258,7 +262,7 @@ oProject.SaveAs(oDesktop.GetProjectDirectory() + "/phase28_cell_G.aedt", True)
 oDesktop.AddMessage(oProject.GetName(), "phase28_cell_G", 0, "Built state %d. Check the 8 RLC boundaries, the periodic pairs and the Floquet port, set scan_theta/scan_phi, Analyze." % STATE)
 '''
     )
-    (CELL_DIR / "build_cell.py").write_text(build, encoding="utf-8")
+    (CELL_DIR / "build_cell.py").write_text(harden(build), encoding="utf-8")
     setstate = (
         head.replace("single G cell", "set the diode state of the built single G cell")
         + COMMON
@@ -278,7 +282,7 @@ for k, nk in enumerate(NECKS):
 oDesktop.AddMessage(oProject.GetName(), oDesign.GetName(), 0, "State %d set (ON sites %s)." % (STATE, STATE_ON[STATE]))
 '''
     )
-    (CELL_DIR / "set_state.py").write_text(setstate, encoding="utf-8")
+    (CELL_DIR / "set_state.py").write_text(harden(setstate), encoding="utf-8")
     rows = reference_rows(lib)
     with (CELL_DIR / "mom_reference.csv").open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
@@ -470,7 +474,7 @@ oProject.SaveAs(oDesktop.GetProjectDirectory() + "/phase28_coded_small.aedt", Tr
 oDesktop.AddMessage(oProject.GetName(), "phase28_coded_small", 0, "Built: %d cells, %d diode sheets (coding beam_030_225), 1 monopole, 1 lumped port. Validate, Analyze; switch beams with set_coding.py." % (len(CELLS), 8 * len(CELLS)))
 '''
     )
-    (BOARD_DIR / "build_board.py").write_text(build, encoding="utf-8")
+    (BOARD_DIR / "build_board.py").write_text(harden(build), encoding="utf-8")
     setcoding = (
         head.replace("Builds the geometry ONCE; the diode states of any coding are set by set_coding.py.", "Sets the diode states of the built model from a coding CSV.")
         + "import csv\n"
@@ -505,7 +509,7 @@ for cid, cx, cy in CELLS:
 oDesktop.AddMessage(oProject.GetName(), oDesign.GetName(), 0, "Coding %s applied to %d cells (%d via delete+assign)." % (CODING_CSV, len(CELLS), used_delete))
 '''
     )
-    (BOARD_DIR / "set_coding.py").write_text(setcoding, encoding="utf-8")
+    (BOARD_DIR / "set_coding.py").write_text(harden(setcoding), encoding="utf-8")
     return preds, len(cells)
 
 

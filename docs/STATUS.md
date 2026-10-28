@@ -111,6 +111,11 @@ Rung 1 PASS: one feed through the B3 chain reproduces Phase 26 (D_ap 28.5 dBi, 2
 
 Is the high SLL of the 150 mm B3 designs due to aperture size or to the cell model / synthesis? Numbers: `results/phase29/B3s300_summary.json` (7 feeds, 4 feeds, single-feed baseline).
 
+
+## Phase 29 angle-dependent tensor model + re-synthesis (2026-10-28) - MODEL_ONLY
+
+LUT `results/phase29/angle_lut_v1.npz` (slot x orientation x incidence, Bloch sheet tensor from periodic MoM), forward model `src/hologram/shared_aperture_tensor.py`, validation, 4 feeds at 300 mm and 7 feeds at 150 mm re-synthesised; numbers in `results/phase29/tensor_summary.json`. Two-feed HFSS check package: `hfss_exports/phase29_twofeed/` (old and new model predictions).
+
 ## Open next steps
 
 Order of work, with what each needs from the user (HFSS runs are the user's):

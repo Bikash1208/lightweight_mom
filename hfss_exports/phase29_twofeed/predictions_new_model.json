@@ -1,0 +1,151 @@
+{
+ "labels": [
+  "MODEL_ONLY",
+  "NOT_HFSS_VALIDATED",
+  "SOLVER_SUPERCELL",
+  "INTER_PORT_COUPLING_NOT_MODELLED"
+ ],
+ "model": "NEW: angle-dependent full-tensor cell (results/phase29/angle_lut_v1.npz, src/hologram/shared_aperture_tensor.py)",
+ "two_feed": {
+  "per_port_alone": [
+   {
+    "peak_rhcp_gain_dbi": 18.721461011670858,
+    "peak_theta_phi_deg": [
+     4.649663649305869,
+     0.002452491186099255
+    ],
+    "pointing_error_deg": 0.9996636648317575,
+    "hpbw_deg": 6.450632254922445,
+    "sll_rel_db_outside_1p5_hpbw": -11.860997885056893,
+    "n_lobes_within_3db": 1,
+    "axial_ratio_at_peak_db": 0.992522420955,
+    "xpd_at_peak_db": 24.871523496064203,
+    "port": 1,
+    "feed_xy_mm": [
+     19.199232367172677,
+     0.0
+    ],
+    "beam_design_theta_phi_deg": [
+     3.65,
+     0.0
+    ]
+   },
+   {
+    "peak_rhcp_gain_dbi": 18.71973038165678,
+    "peak_theta_phi_deg": [
+     4.642125148016353,
+     179.82276122011623
+    ],
+    "pointing_error_deg": 0.9922067160455776,
+    "hpbw_deg": 6.495196133006168,
+    "sll_rel_db_outside_1p5_hpbw": -11.689888111650824,
+    "n_lobes_within_3db": 1,
+    "axial_ratio_at_peak_db": 1.094293668654585,
+    "xpd_at_peak_db": 24.02568643249498,
+    "port": 2,
+    "feed_xy_mm": [
+     -19.199232367172677,
+     0.0
+    ],
+    "beam_design_theta_phi_deg": [
+     3.65,
+     180.0
+    ]
+   }
+  ],
+  "weighted": {
+   "port1_plus_port2_in_phase": {
+    "peak_rhcp_gain_dbi": 16.01129643530936,
+    "peak_theta_phi_deg": [
+     4.945754788740705,
+     358.7746796007765
+    ],
+    "pointing_error_deg": 4.945754788740684,
+    "hpbw_deg": 10.79811570056434,
+    "sll_rel_db_outside_1p5_hpbw": -10.51689362318367,
+    "n_lobes_within_3db": 3,
+    "axial_ratio_at_peak_db": 1.3249950468720377,
+    "xpd_at_peak_db": 22.36942165419807,
+    "port_power_W": [
+     0.4999999999999999,
+     0.4999999999999999
+    ],
+    "port_phase_deg": [
+     0.0,
+     0.0
+    ]
+   },
+   "port1_minus_port2_antiphase": {
+    "peak_rhcp_gain_dbi": 15.820517925291625,
+    "peak_theta_phi_deg": [
+     4.45799211104112,
+     1.8119825008379848
+    ],
+    "pointing_error_deg": 4.457992111041133,
+    "hpbw_deg": 8.673892304987323,
+    "sll_rel_db_outside_1p5_hpbw": -9.635662628071955,
+    "n_lobes_within_3db": 2,
+    "axial_ratio_at_peak_db": 0.9560110122299039,
+    "xpd_at_peak_db": 25.196390562615104,
+    "port_power_W": [
+     0.4999999999999999,
+     0.4999999999999999
+    ],
+    "port_phase_deg": [
+     0.0,
+     180.0
+    ]
+   }
+  },
+  "crossover_db_each": [
+   -6.664291861227255,
+   -6.538921662438897
+  ]
+ },
+ "single_feed_control": {
+  "per_port_alone": [
+   {
+    "peak_rhcp_gain_dbi": 22.87418803262429,
+    "peak_theta_phi_deg": [
+     0.5,
+     188.0
+    ],
+    "pointing_error_deg": 0.49999999999986244,
+    "hpbw_deg": 7.0700335023905465,
+    "sll_rel_db_outside_1p5_hpbw": -23.81897722844715,
+    "n_lobes_within_3db": 1,
+    "axial_ratio_at_peak_db": 0.288135502966436,
+    "xpd_at_peak_db": 35.60574704983977,
+    "port": 1,
+    "feed_xy_mm": [
+     0.0,
+     0.0
+    ],
+    "beam_design_theta_phi_deg": [
+     0.0,
+     0.0
+    ]
+   }
+  ],
+  "weighted": {}
+ },
+ "old_model_for_comparison": {
+  "two_feed_per_port": [
+   {
+    "peak_rhcp_gain_dbi": 20.64167653539367,
+    "hpbw_deg": 6.443665513219828,
+    "sll_rel_db_outside_1p5_hpbw": -11.455917964622978
+   },
+   {
+    "peak_rhcp_gain_dbi": 20.643272111968038,
+    "hpbw_deg": 6.443665513219828,
+    "sll_rel_db_outside_1p5_hpbw": -11.449585269042153
+   }
+  ],
+  "control": {
+   "peak_rhcp_gain_dbi": 23.110729855769314,
+   "hpbw_deg": 7.0700335023905465,
+   "sll_rel_db_outside_1p5_hpbw": -24.189468964496147
+  }
+ }
+}

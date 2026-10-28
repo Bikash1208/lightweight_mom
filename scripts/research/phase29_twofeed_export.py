@@ -185,6 +185,47 @@ def main():
         (OUT / "predictions.json").write_text(json.dumps(pred, indent=1, default=float), encoding="utf-8")
         (OUT / "README.md").write_text(readme(pred), encoding="utf-8")
         print("wrote", OUT)
+    else:
+        from src.hologram import shared_aperture_tensor as st
+
+        table = dbg._S["table"]
+        lut = st.AngleLUT(ROOT / "results/phase29/angle_lut_v1.npz", table)
+        tilt = HPBW_SINGLE / 2
+        two = [(SPACING / 2, 0.0, tilt, 0.0), (-SPACING / 2, 0.0, tilt, 180.0)]
+        d2 = st.design_tensor(table, lut, R_MM, two, [0.0, 0.0], n_psi=360)
+        d1 = st.design_tensor(table, lut, R_MM, [(0.0, 0.0, 0.0, 0.0)], [0.0], n_psi=360)
+        F2, F1 = sa.port_fields(d2, dbg._S["green"], th, ph), sa.port_fields(d1, dbg._S["green"], th, ph)
+        p2 = write_set(
+            d2,
+            F2,
+            th,
+            ph,
+            [(tilt, 0.0), (tilt, 180.0)],
+            {"port1_plus_port2_in_phase": [1, 1], "port1_minus_port2_antiphase": [1, -1]},
+            "two",
+            "new_model",
+            OUT,
+        )
+        p1 = write_set(d1, F1, th, ph, [(0.0, 0.0)], {}, "control", "new_model_control", OUT)
+        old = json.loads((OUT / "predictions.json").read_text())
+        new = {
+            "labels": ["MODEL_ONLY", "NOT_HFSS_VALIDATED", "SOLVER_SUPERCELL", "INTER_PORT_COUPLING_NOT_MODELLED"],
+            "model": "NEW: angle-dependent full-tensor cell (results/phase29/angle_lut_v1.npz, src/hologram/shared_aperture_tensor.py)",
+            "two_feed": p2,
+            "single_feed_control": p1,
+            "old_model_for_comparison": {
+                "two_feed_per_port": [
+                    {k: q[k] for k in ("peak_rhcp_gain_dbi", "hpbw_deg", "sll_rel_db_outside_1p5_hpbw")}
+                    for q in old["two_feed"]["per_port_alone"]
+                ],
+                "control": {
+                    k: old["single_feed_control"]["per_port_alone"][0][k]
+                    for k in ("peak_rhcp_gain_dbi", "hpbw_deg", "sll_rel_db_outside_1p5_hpbw")
+                },
+            },
+        }
+        (OUT / "predictions_new_model.json").write_text(json.dumps(new, indent=1, default=float), encoding="utf-8")
+        print("wrote new-model predictions")
 
 
 def readme(p):

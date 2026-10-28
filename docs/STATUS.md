@@ -106,6 +106,11 @@ cone a: gains 13.5-15.7 dBi, HPBW 9-13 deg, scan worst pointing 33.32 deg (targe
 
 Rung 1 PASS: one feed through the B3 chain reproduces Phase 26 (D_ap 28.5 dBi, 23.4-23.5 dBi, SLL -22.6 to -22.8 dB). Rung 2 FAIL on SLL: 4 feeds at Frey's scale give ~23 dBi/feed but SLL -7 to -10 dB (single-feed control -24 dB); not slot snapping, not the GA. Model limitation of the shared-aperture superposition suspected (no angle-dependent impedance / weak-modulation regime). `results/phase29/B3debug*_summary.json`.
 
+
+## Phase 29 B3 diagnostic at Frey's scale (R 300 mm, 2026-10-28) - MODEL_ONLY, no HFSS package
+
+Is the high SLL of the 150 mm B3 designs due to aperture size or to the cell model / synthesis? Numbers: `results/phase29/B3s300_summary.json` (7 feeds, 4 feeds, single-feed baseline).
+
 ## Open next steps
 
 Order of work, with what each needs from the user (HFSS runs are the user's):

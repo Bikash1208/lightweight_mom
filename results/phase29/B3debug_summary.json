@@ -1,0 +1,470 @@
+{
+ "started": "2026-10-28 07:07",
+ "questions": {
+  "slot_snapping": "YES: the slot (L, W) is one of the 4 table slots {(4.4,1.2), (4.6,1.6), (4.8,1.6), (4.8,2.0)} chosen per cell (as in Phase 26); the axis is continuous; alpha/beta come from the table at the nearest of 5 K columns. Continuous-kappa variants below.",
+  "ga_fitness_150mm_B3": "mean port gain - 0.5 max(0, worst pointing - 2 deg) - 1.0 max(0, gain dip - 2.5 dB) - 0.15 mean max(0, |HPBW - target| - 2): SLL is NOT in the fitness (scan_300 run: + 0.3 mean max(0, SLL + 15))",
+  "other_pins_in_forward_model": "NO: the model is the aperture current of the slotted cells only; the other monopole pins / coax holes appear only as a 6.5 mm cell keep-out; no pin scattering, no pin direct radiation (the Phase 26 launch fraction 0.592/0.62 is a constant)."
+ },
+ "rung1": {
+  "reference_phase26": {
+   "D_ap_dbi": 28.477911312158874,
+   "gain_launch_bare_dbi": 23.511963450519115,
+   "sll_15deg_cone_db": -22.77399475110991,
+   "ar_peak_db": 2.50416507339554
+  },
+  "A_phase26_cells_through_B3_chain": {
+   "D_ap_dbi": 28.4798625242794,
+   "gain_launch_bare_dbi": 23.486953404974642,
+   "eta_conv": 0.5350413920397071,
+   "sll_15deg_cone_db": -22.645121709716012,
+   "sll_1p5hpbw_db": -19.827353700485205,
+   "hpbw_deg": 7.273394618587147,
+   "ar_peak_db": 2.5033919780586427,
+   "peak_theta_phi": [
+    30.0,
+    224.0
+   ]
+  },
+  "B_B3_design_rule": {
+   "q0=30": {
+    "D_ap_dbi": 28.79789081428126,
+    "gain_launch_bare_dbi": 20.688435638014813,
+    "eta_conv": 0.2610554568129198,
+    "sll_15deg_cone_db": -15.307741897054829,
+    "sll_1p5hpbw_db": -15.307741897054832,
+    "hpbw_deg": 6.548650872700937,
+    "ar_peak_db": 2.42702663837684,
+    "peak_theta_phi": [
+     30.0,
+     226.0
+    ],
+    "slot_LW_mm": [
+     [
+      4.4,
+      1.2
+     ],
+     [
+      4.6,
+      1.6
+     ],
+     [
+      4.8,
+      1.6
+     ],
+     [
+      4.8,
+      2.0
+     ]
+    ],
+    "cells_per_slot": [
+     726,
+     442,
+     31,
+     231
+    ],
+    "levels_used": 4
+   },
+   "q0=100": {
+    "D_ap_dbi": 28.63374013593444,
+    "gain_launch_bare_dbi": 23.351106322859625,
+    "eta_conv": 0.500512481300179,
+    "sll_15deg_cone_db": -22.83503686964547,
+    "sll_1p5hpbw_db": -16.964595200092266,
+    "hpbw_deg": 6.953956336606636,
+    "ar_peak_db": 2.5410063222570454,
+    "peak_theta_phi": [
+     30.0,
+     224.0
+    ],
+    "slot_LW_mm": [
+     [
+      4.4,
+      1.2
+     ],
+     [
+      4.6,
+      1.6
+     ],
+     [
+      4.8,
+      1.6
+     ],
+     [
+      4.8,
+      2.0
+     ]
+    ],
+    "cells_per_slot": [
+     72,
+     375,
+     776,
+     207
+    ],
+    "levels_used": 4
+   },
+   "q0=300": {
+    "D_ap_dbi": 28.26696858862599,
+    "gain_launch_bare_dbi": 23.50083137994096,
+    "eta_conv": 0.5637214656562709,
+    "sll_15deg_cone_db": -20.858917642339247,
+    "sll_1p5hpbw_db": -20.858917642339247,
+    "hpbw_deg": 7.441195092077292,
+    "ar_peak_db": 2.5323922508407906,
+    "peak_theta_phi": [
+     30.0,
+     224.0
+    ],
+    "slot_LW_mm": [
+     [
+      4.4,
+      1.2
+     ],
+     [
+      4.6,
+      1.6
+     ],
+     [
+      4.8,
+      1.6
+     ],
+     [
+      4.8,
+      2.0
+     ]
+    ],
+    "cells_per_slot": [
+     4,
+     313,
+     940,
+     173
+    ],
+    "levels_used": 4
+   },
+   "q0=1000": {
+    "D_ap_dbi": 28.17557780953702,
+    "gain_launch_bare_dbi": 23.498361324885618,
+    "eta_conv": 0.5753824946053262,
+    "sll_15deg_cone_db": -19.795874575805435,
+    "sll_1p5hpbw_db": -19.79587457580543,
+    "hpbw_deg": 7.610378669148172,
+    "ar_peak_db": 2.5487978865957457,
+    "peak_theta_phi": [
+     30.0,
+     224.0
+    ],
+    "slot_LW_mm": [
+     [
+      4.4,
+      1.2
+     ],
+     [
+      4.6,
+      1.6
+     ],
+     [
+      4.8,
+      1.6
+     ],
+     [
+      4.8,
+      2.0
+     ]
+    ],
+    "cells_per_slot": [
+     0,
+     302,
+     962,
+     166
+    ],
+    "levels_used": 3
+   },
+   "q0=10000": {
+    "D_ap_dbi": 28.17557780953702,
+    "gain_launch_bare_dbi": 23.498361324885618,
+    "eta_conv": 0.5753824946053262,
+    "sll_15deg_cone_db": -19.795874575805435,
+    "sll_1p5hpbw_db": -19.79587457580543,
+    "hpbw_deg": 7.610378669148172,
+    "ar_peak_db": 2.5487978865957457,
+    "peak_theta_phi": [
+     30.0,
+     224.0
+    ],
+    "slot_LW_mm": [
+     [
+      4.4,
+      1.2
+     ],
+     [
+      4.6,
+      1.6
+     ],
+     [
+      4.8,
+      1.6
+     ],
+     [
+      4.8,
+      2.0
+     ]
+    ],
+    "cells_per_slot": [
+     0,
+     302,
+     962,
+     166
+    ],
+    "levels_used": 3
+   },
+   "q0=100000": {
+    "D_ap_dbi": 28.175827690719405,
+    "gain_launch_bare_dbi": 23.498709581301938,
+    "eta_conv": 0.575395528164571,
+    "sll_15deg_cone_db": -19.795894856102827,
+    "sll_1p5hpbw_db": -19.795894856102823,
+    "hpbw_deg": 7.610378669148172,
+    "ar_peak_db": 2.5492539778558827,
+    "peak_theta_phi": [
+     30.0,
+     224.0
+    ],
+    "slot_LW_mm": [
+     [
+      4.4,
+      1.2
+     ],
+     [
+      4.6,
+      1.6
+     ],
+     [
+      4.8,
+      1.6
+     ],
+     [
+      4.8,
+      2.0
+     ]
+    ],
+    "cells_per_slot": [
+     0,
+     302,
+     964,
+     164
+    ],
+    "levels_used": 3
+   }
+  },
+  "B_best_q0": 100.0,
+  "B_best_q0_continuous_kappa": {
+   "D_ap_dbi": 28.634217877254045,
+   "gain_launch_bare_dbi": 23.35158406417923,
+   "eta_conv": 0.500512481300179,
+   "sll_15deg_cone_db": -22.858909674898737,
+   "sll_1p5hpbw_db": -16.98838405657382,
+   "hpbw_deg": 6.953956336606636,
+   "ar_peak_db": 2.5501060873200614,
+   "peak_theta_phi": [
+    30.0,
+    224.0
+   ]
+  },
+  "C_phase26_rule_in_B3_path": {
+   "D_ap_dbi": 28.477495532377908,
+   "gain_launch_bare_dbi": 23.484332299503656,
+   "eta_conv": 0.5350100867143968,
+   "sll_15deg_cone_db": -22.654224187593517,
+   "sll_1p5hpbw_db": -19.824697071650203,
+   "hpbw_deg": 7.273394618587147,
+   "ar_peak_db": 2.5070061725947266,
+   "peak_theta_phi": [
+    30.0,
+    224.0
+   ],
+   "slot_LW_mm": [
+    [
+     4.4,
+     1.2
+    ],
+    [
+     4.6,
+     1.6
+    ],
+    [
+     4.8,
+     1.6
+    ],
+    [
+     4.8,
+     2.0
+    ]
+   ],
+   "cells_per_slot": [
+    27,
+    340,
+    867,
+    196
+   ],
+   "levels_used": 4
+  },
+  "C_continuous_kappa": {
+   "D_ap_dbi": 28.47825165751908,
+   "gain_launch_bare_dbi": 23.48508842464483,
+   "eta_conv": 0.5350100867143968,
+   "sll_15deg_cone_db": -22.626542041253135,
+   "sll_1p5hpbw_db": -19.831623228090056,
+   "hpbw_deg": 7.273394618587147,
+   "ar_peak_db": 2.511584568185383,
+   "peak_theta_phi": [
+    30.0,
+    224.0
+   ]
+  },
+  "verdict": {
+   "chain_reproduces_phase26 (A: |dD_ap| <= 1 dB and SLL within 3 dB)": true,
+   "B3_design_rule_reproduces_phase26 (B best q0)": true,
+   "phase26_rule_in_B3_path_reproduces (C)": true
+  },
+  "rung1_pass": true
+ },
+ "rung2": {
+  "aperture_R_mm": 216.73800094497156,
+  "ring_mm": 27.1518148008081,
+  "spacing_lambda0": 1.35,
+  "tilt_deg": 2.5,
+  "offsets0": {
+   "gain_dbi": [
+    23.1,
+    23.1,
+    22.8,
+    22.8
+   ],
+   "sll_1p5hpbw_db": [
+    -7.9,
+    -7.9,
+    -7.1,
+    -7.1
+   ],
+   "sll_15deg_cone_db": [
+    -9.7,
+    -9.7,
+    -10.2,
+    -10.2
+   ]
+  },
+  "ga_offsets": {
+   "genes": [
+    0.012334261852662337,
+    0.0,
+    0.0,
+    1.1509272327091034,
+    0.0
+   ],
+   "gain_dbi": [
+    23.1,
+    23.1,
+    22.8,
+    22.8
+   ],
+   "sll_1p5hpbw_db": [
+    -7.8,
+    -7.9,
+    -7.1,
+    -7.1
+   ],
+   "sll_15deg_cone_db": [
+    -9.7,
+    -9.7,
+    -10.2,
+    -10.2
+   ],
+   "hpbw_deg": [
+    4.7,
+    4.7,
+    4.8,
+    4.8
+   ],
+   "ar_peak_db": [
+    0.2,
+    0.2,
+    0.3,
+    0.3
+   ],
+   "peak_theta_phi": [
+    [
+     3.0,
+     0.0
+    ],
+    [
+     3.0,
+     180.0
+    ],
+    [
+     2.0,
+     90.0
+    ],
+    [
+     2.0,
+     270.0
+    ]
+   ]
+  },
+  "slot_levels": {
+   "slot_LW_mm": [
+    [
+     4.4,
+     1.2
+    ],
+    [
+     4.6,
+     1.6
+    ],
+    [
+     4.8,
+     1.6
+    ],
+    [
+     4.8,
+     2.0
+    ]
+   ],
+   "cells_per_slot": [
+    119,
+    2752,
+    0,
+    114
+   ],
+   "levels_used": 3
+  },
+  "continuous_kappa": [
+   {
+    "gain_launch_bare_dbi": 23.1,
+    "sll_15deg_cone_db": -9.8,
+    "sll_1p5hpbw_db": -7.9
+   },
+   {
+    "gain_launch_bare_dbi": 23.1,
+    "sll_15deg_cone_db": -9.8,
+    "sll_1p5hpbw_db": -7.9
+   },
+   {
+    "gain_launch_bare_dbi": 22.9,
+    "sll_15deg_cone_db": -10.2,
+    "sll_1p5hpbw_db": -7.1
+   },
+   {
+    "gain_launch_bare_dbi": 22.8,
+    "sll_15deg_cone_db": -10.2,
+    "sll_1p5hpbw_db": -7.1
+   }
+  ],
+  "single_feed_control": {
+   "gain_launch_bare_dbi": 27.7,
+   "sll_15deg_cone_db": -27.1,
+   "sll_1p5hpbw_db": -23.8,
+   "hpbw_deg": 5.1
+  },
+  "rung2_pass": false
+ },
+ "rung3": "not reached"
+}

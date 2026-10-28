@@ -38,12 +38,14 @@ def feed_ports(ring_mm, rot_deg=0.0, radial_jitter_mm=None, tangential_jitter_mm
 
 
 def design_frey(
-    table, r_mm, ports, offsets_deg, w0_mm, q0, mode="frey", n_iter=2, n_psi=240, weight_exp=0.0, defocus_rad=0.0
+    table, r_mm, ports, offsets_deg, w0_mm, q0, mode="frey", n_iter=2, n_psi=240, weight_exp=0.0, defocus_rad=0.0, march_fn=None
 ):
     """Shared-aperture design by angle-dependent superposition (module docstring). `ports`: `[(x_mm, y_mm, theta_deg, phi_deg)]` (any number of feeds),
     `offsets_deg`: hologram offset per feed. `weight_exp`: orientation weights `(|s_n| kappa_n)^weight_exp` (0 = the paper's uniform mean).
     `defocus_rad` (scalar or one per feed): extra objective phase `defocus_rad (|r| / r_mm)^2` (r from the aperture centre) added to every feed's objective: a quadratic (defocus) phase that
     broadens the beam; 0 = the paper's pencil beams.
+    `march_fn(j, feed_m, beam_rad) -> march dict` (optional): replaces `march_design` as the per-feed ideal design (e.g. the Phase 26 `march_rays` with its
+    per-ray conversion and taper); default None = unchanged.
     Returns the dict `shared_aperture_multiport.port_fields` / `scan_table` consume (`x_m, y_m, J, eta_conv, ...`)."""
     k0 = t.K0
     xm, ym = (a * 1e-3 for a in sa.aperture_cells(r_mm, ports))
@@ -59,7 +61,11 @@ def design_frey(
 
     s_list, kappa_des, psi_c, dxy, ph_des = [], [], [], [], []
     for j in range(n_p):
-        m = sa.march_design(table, poly, feeds[j], k0, beams[j][0], beams[j][1], q0, window, n_psi)
+        m = (
+            march_fn(j, feeds[j], beams[j])
+            if march_fn is not None
+            else sa.march_design(table, poly, feeds[j], k0, beams[j][0], beams[j][1], q0, window, n_psi)
+        )
         s, alpha, _, ps, ph = sa.incident(m, feeds[j], xm, ym)
         s_list.append(s)
         ph_des.append(ph)
@@ -121,6 +127,7 @@ def design_frey(
         "J": cur,
         "eta_conv": [a["eta_conv"] for a in ana],
         "march": ana,
+        "kappa_des": kappa_des,
         "feeds_m": feeds,
         "beams": beams,
         "mean_abs_orientation_error_rad_history": hist,

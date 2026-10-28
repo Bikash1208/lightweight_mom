@@ -75,7 +75,7 @@ def field_metrics(J, x, y, beam, eta_conv, theta=None, phi=None):
         "sll_15deg_cone_db": float(m["rhcp_sll_db"]),
         "sll_1p5hpbw_db": float(g[ang > 1.5 * hp].max() - g.max()),
         "hpbw_deg": float(hp),
-        "ar_peak_db": float(m["ar_at_peak_db"]),
+        "ar_peak_db": float(m["ar_at_peak_db"]), "xpd_peak_db": float(m["xpd_at_peak_db"]),
         "peak_theta_phi": [float(m["peak_rhcp_theta_deg"]), float(m["peak_rhcp_phi_deg"])],
     }
 

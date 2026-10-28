@@ -1,0 +1,146 @@
+{
+ "labels": [
+  "MODEL_ONLY",
+  "NOT_HFSS_VALIDATED",
+  "SOLVER_SUPERCELL",
+  "INTER_PORT_COUPLING_NOT_MODELLED"
+ ],
+ "model": "OLD: radial reflection cell (kappa independent of the incidence angle)",
+ "frequency_ghz": 10.54,
+ "geometry": {
+  "hexagon_circumradius_mm": 150.0,
+  "feed_spacing_mm": 38.39846473434535,
+  "feed_spacing_lambda0": 1.35,
+  "beam_tilt_deg": 3.65,
+  "beam_separation_deg": 7.3,
+  "n_cells": 1425,
+  "control_n_cells": 1430
+ },
+ "two_feed": {
+  "per_port_alone": [
+   {
+    "peak_rhcp_gain_dbi": 20.64167653539367,
+    "peak_theta_phi_deg": [
+     4.71931817806672,
+     0.06503871519664868
+    ],
+    "pointing_error_deg": 1.0693285383567601,
+    "hpbw_deg": 6.443665513219828,
+    "sll_rel_db_outside_1p5_hpbw": -11.455917964622978,
+    "n_lobes_within_3db": 1,
+    "axial_ratio_at_peak_db": 0.15383810068985002,
+    "xpd_at_peak_db": 41.055834916172756,
+    "port": 1,
+    "feed_xy_mm": [
+     19.199232367172677,
+     0.0
+    ],
+    "beam_design_theta_phi_deg": [
+     3.65,
+     0.0
+    ]
+   },
+   {
+    "peak_rhcp_gain_dbi": 20.643272111968038,
+    "peak_theta_phi_deg": [
+     4.7199622663405725,
+     180.06588497543643
+    ],
+    "pointing_error_deg": 1.0699728930397043,
+    "hpbw_deg": 6.443665513219828,
+    "sll_rel_db_outside_1p5_hpbw": -11.449585269042153,
+    "n_lobes_within_3db": 1,
+    "axial_ratio_at_peak_db": 0.19365570060623322,
+    "xpd_at_peak_db": 39.05664013023883,
+    "port": 2,
+    "feed_xy_mm": [
+     -19.199232367172677,
+     0.0
+    ],
+    "beam_design_theta_phi_deg": [
+     3.65,
+     180.0
+    ]
+   }
+  ],
+  "weighted": {
+   "port1_plus_port2_in_phase": {
+    "peak_rhcp_gain_dbi": 17.81876543790321,
+    "peak_theta_phi_deg": [
+     5.242719252431875,
+     179.26720140158312
+    ],
+    "pointing_error_deg": 5.242719252431898,
+    "hpbw_deg": 10.442447077339034,
+    "sll_rel_db_outside_1p5_hpbw": -8.711492763363283,
+    "n_lobes_within_3db": 3,
+    "axial_ratio_at_peak_db": 0.13197861286006135,
+    "xpd_at_peak_db": 42.38698197447246,
+    "port_power_W": [
+     0.4999999999999999,
+     0.4999999999999999
+    ],
+    "port_phase_deg": [
+     0.0,
+     0.0
+    ]
+   },
+   "port1_minus_port2_antiphase": {
+    "peak_rhcp_gain_dbi": 17.454167078742902,
+    "peak_theta_phi_deg": [
+     4.533525597861287,
+     182.10567636698124
+    ],
+    "pointing_error_deg": 4.53352559786126,
+    "hpbw_deg": 9.15504155357584,
+    "sll_rel_db_outside_1p5_hpbw": -10.052308201389616,
+    "n_lobes_within_3db": 2,
+    "axial_ratio_at_peak_db": 0.5145842415625738,
+    "xpd_at_peak_db": 30.570296374015562,
+    "port_power_W": [
+     0.4999999999999999,
+     0.4999999999999999
+    ],
+    "port_phase_deg": [
+     0.0,
+     180.0
+    ]
+   }
+  },
+  "crossover_db_each": [
+   -7.471493669621541,
+   -7.476643945676761
+  ]
+ },
+ "single_feed_control": {
+  "per_port_alone": [
+   {
+    "peak_rhcp_gain_dbi": 23.110729855769314,
+    "peak_theta_phi_deg": [
+     0.5,
+     346.0
+    ],
+    "pointing_error_deg": 0.49999999999986244,
+    "hpbw_deg": 7.0700335023905465,
+    "sll_rel_db_outside_1p5_hpbw": -24.189468964496147,
+    "n_lobes_within_3db": 1,
+    "axial_ratio_at_peak_db": 0.2461621847307295,
+    "xpd_at_peak_db": 36.97304063411806,
+    "port": 1,
+    "feed_xy_mm": [
+     0.0,
+     0.0
+    ],
+    "beam_design_theta_phi_deg": [
+     0.0,
+     0.0
+    ]
+   }
+  ],
+  "weighted": {}
+ },
+ "reading": "model: single feed SLL about -22 dB, two feeds about -11 dB (Frey et al. report -18.5 dB for their two-feed case): HFSS decides whether the superposition loses ~11 dB of SLL.",
+ "s11": "NOT_AVAILABLE_FROM_CURRENT_DATA",
+ "port_coupling": "NOT_AVAILABLE_FROM_CURRENT_DATA (not modelled)",
+ "new_model": "predictions_new_model.json is added when the angle-dependent model exists"
+}

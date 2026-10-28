@@ -9,7 +9,7 @@ from unittest import mock
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = sorted(p for d in ("phase29_compact7", "phase29_B3") for p in (ROOT / "hfss_exports" / d).glob("*.py"))
+SCRIPTS = sorted(p for d in ("phase29_compact7", "phase29_B3", "phase29_twofeed") for p in (ROOT / "hfss_exports" / d).glob("*.py"))
 pytestmark = pytest.mark.skipif(not SCRIPTS, reason="HFSS packages not generated")
 
 
@@ -40,10 +40,11 @@ def test_no_hard_coded_design_name_no_fstrings_and_failures_never_stop_the_scrip
     _run(path, fail=True)
 
 
-@pytest.mark.parametrize("path", [p for p in SCRIPTS if p.name == "build_board.py"], ids=lambda p: p.parent.name)
+@pytest.mark.parametrize("path", [p for p in SCRIPTS if p.name.startswith("build_board")], ids=lambda p: f"{p.parent.name}/{p.name}")
 def test_board_has_seven_ports_seven_pins_and_one_radiation_boundary(path):
     _, mod, glob = _run(path)
-    assert mod.AssignLumpedPort.call_count == 7 and len(glob["FEEDS"]) == 7
+    n = len(glob["FEEDS"])
+    assert mod.AssignLumpedPort.call_count == n and n in (1, 2, 7)
     assert mod.AssignRadiation.call_count == 1
-    assert [c.args[0][0] for c in mod.AssignLumpedPort.call_args_list] == [f"NAME:Port{k}" for k in range(1, 8)]
+    assert [c.args[0][0] for c in mod.AssignLumpedPort.call_args_list] == [f"NAME:Port{k}" for k in range(1, n + 1)]
     assert len(glob["CELLS"]) > 300

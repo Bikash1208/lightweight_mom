@@ -116,6 +116,11 @@ Is the high SLL of the 150 mm B3 designs due to aperture size or to the cell mod
 
 LUT `results/phase29/angle_lut_v1.npz` (slot x orientation x incidence, Bloch sheet tensor from periodic MoM), forward model `src/hologram/shared_aperture_tensor.py`, validation, 4 feeds at 300 mm and 7 feeds at 150 mm re-synthesised; numbers in `results/phase29/tensor_summary.json`. Two-feed HFSS check package: `hfss_exports/phase29_twofeed/` (old and new model predictions).
 
+
+## Phase 29 weak-modulation synthesis test (2026-10-28) - MODEL_ONLY
+
+Fixed modulation index M = 0.08 / 0.13 / 0.20 per sub-hologram, real slot table vs virtual continuous cell, 4 feeds 300 mm and the two-feed 150 mm case: `results/phase29/weakmod_summary.json`.
+
 ## Open next steps
 
 Order of work, with what each needs from the user (HFSS runs are the user's):

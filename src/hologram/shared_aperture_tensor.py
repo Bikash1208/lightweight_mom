@@ -72,6 +72,15 @@ class AngleLUT:
         mean_alpha = np.nanmean(table.alpha, axis=1)
         self.g_col = np.sqrt(np.nan_to_num(table.alpha, nan=0.0) / mean_alpha[:, None])  # (slot, K column)
         self.dbeta = self.beta - self.beta.mean(axis=1, keepdims=True)
+        yb = self.Y.mean(axis=1)  # orientation-averaged sheet (slot, psi, 2, 2): the common mean impedance
+        self.ybar_ref = float(np.mean(np.abs(np.einsum("spij,pi,pj->sp", yb, k, k))))
+        self.kappa_old = kappa_old
+        self.k_unit = (
+            float(np.mean(self.c)) * self.ybar_ref
+        )  # strength of a sub-hologram with modulation index 1 (|dY| = |Ybar|)
+        self.M_slot = (
+            mag / self.ybar_ref
+        )  # modulation index |dY| / |Ybar| of each table slot (orientation / direction averaged)
         self.table = table
 
     def _ip(self, psi):
@@ -106,7 +115,20 @@ def aperture_cells(r_mm, ports, centre_mm=(0.0, 0.0)):
 
 
 def march_analysis_tensor(
-    table, lut, poly_m, feed_m, k0, th0, ph0, cell_xy_m, cell_slot, cell_ia, n_psi=180, drho=0.5e-3, rho_min=0.007
+    table,
+    lut,
+    poly_m,
+    feed_m,
+    k0,
+    th0,
+    ph0,
+    cell_xy_m,
+    cell_slot,
+    cell_ia,
+    n_psi=180,
+    drho=0.5e-3,
+    rho_min=0.007,
+    cell_scale=None,
 ):
     """`shared_aperture_multiport.march_analysis` with the angle-dependent cell: at each step `alpha = |f|^2 / 2` and `beta = beta_table + dbeta` for the local slot, orientation and ray direction."""
     from .tensor_leaky_cp import modulation_k as mk
@@ -119,6 +141,7 @@ def march_analysis_tensor(
     ok = dist.reshape(px.shape) <= sa.CELL_REACH_MM * 1e-3
     node_slot = np.where(ok, np.asarray(cell_slot)[idx].reshape(px.shape), -1)
     node_ia = np.asarray(cell_ia)[idx].reshape(px.shape)
+    node_scale = None if cell_scale is None else np.asarray(cell_scale)[idx].reshape(px.shape)
     inside = rho[None, :] <= r_edge[:, None]
     cur_w, cur_phi, cur_beta = np.ones(psi.size), np.zeros(psi.size), np.full(psi.size, sa.BETA0)
     for k, r in enumerate(rho):
@@ -127,6 +150,8 @@ def march_analysis_tensor(
         has = (s >= 0) & inside[:, k] & (r >= rho_min)
         sn = np.maximum(s, 0)
         fkk, fsk, db = lut.response(sn, node_ia[:, k], psi, col)
+        if node_scale is not None:  # virtual continuous-strength cell (weak-modulation test)
+            fkk, fsk, db = fkk * node_scale[:, k], fsk * node_scale[:, k], db * node_scale[:, k]
         a_used = np.where(has, 0.5 * (np.abs(fkk) ** 2 + np.abs(fsk) ** 2), 0.0)
         b_used = np.where(has, np.nan_to_num(table.beta[sn, col]) + db, sa.BETA0)
         m["alpha"][:, k], m["beta"][:, k], m["w"][:, k], m["phi_ref"][:, k], m["slot"][:, k], m["K"][:, k] = (
@@ -143,7 +168,7 @@ def march_analysis_tensor(
     return sa._finish(m, k0)
 
 
-def cell_current(march, lut, table, feed_m, x_m, y_m, slot, ia, th0, ph0):
+def cell_current(march, lut, table, feed_m, x_m, y_m, slot, ia, th0, ph0, cell_scale=None):
     """Per-cell current of one feed (n, 2) complex (global x / y) from the analysis march and the angle-dependent response."""
     s, _, _, psi_c, _ = sa.incident(march, feed_m, x_m, y_m)
     kh = np.stack([np.cos(psi_c), np.sin(psi_c)], axis=-1)
@@ -151,6 +176,8 @@ def cell_current(march, lut, table, feed_m, x_m, y_m, slot, ia, th0, ph0):
     amp = np.sum(s * kh, axis=-1)
     col = table.column(modulation_k(sa.BETA0, psi_c, th0, ph0))
     fkk, fsk, _ = lut.response(slot, ia, psi_c, col)
+    if cell_scale is not None:
+        fkk, fsk = fkk * cell_scale, fsk * cell_scale
     return amp[:, None] * (fkk[:, None] * kh + fsk[:, None] * sh)
 
 
@@ -166,9 +193,15 @@ def design_tensor(
     defocus_rad=0.0,
     eta_design=0.9,
     taper_c=0.5,
+    weak_M=None,
+    virtual_slot=None,
+    lam_max=None,
 ):
     """Frey-style shared-aperture design on the angle-dependent model (module docstring). `ports`: `[(x_mm, y_mm, theta_deg, phi_deg)]`, `centre_mm`: hexagon centre. Returns the dict
-    `shared_aperture_multiport.port_fields` / `scan_table` consume (`x_m, y_m, J, eta_conv, ports, beams, feeds_m, march`, plus `slot`, `axis_rad`, `slot_L_mm`, `slot_W_mm`, `kappa_des`)."""
+    `shared_aperture_multiport.port_fields` / `scan_table` consume (`x_m, y_m, J, eta_conv, ports, beams, feeds_m, march`, plus `slot`, `axis_rad`, `slot_L_mm`, `slot_W_mm`, `kappa_des`).
+    `weak_M` (Frey's weak modulation): every sub-hologram gets the FIXED modulation index `weak_M` (target strength `weak_M * lut.k_unit * g_n(r)`, `g_n` the Phase 26 taper shape normalised to 1), a first-order
+    perturbation around the common mean impedance. `virtual_slot`: instead of the 4 discrete table slots use the tensor SHAPE of that slot with a CONTINUOUS strength factor `lambda` in [0, `lam_max`]
+    (default: strongest table slot / that slot) per cell: a VIRTUAL cell (not realisable with the table) that separates the synthesis physics from the table's resolution."""
     k0 = t.K0
     xm, ym = (a * 1e-3 for a in aperture_cells(r_mm, ports, centre_mm))
     poly = sa.hexagon_m(r_mm) + np.asarray(centre_mm) * 1e-3
@@ -184,6 +217,9 @@ def design_tensor(
     ]
     inc = [sa.incident(ideal[j], feeds[j], xm, ym) for j in range(n_p)]
     kappa_des = np.array([np.sqrt(2.0 * i[1]) for i in inc])
+    if weak_M is not None:
+        kappa_des = weak_M * lut.k_unit * kappa_des / np.maximum(kappa_des.max(axis=1, keepdims=True), 1e-12)
+    scale = None
     psi_c = np.array([i[3] for i in inc])
     s_amp = np.array([np.sqrt(np.sum(np.abs(i[0]) ** 2, axis=-1)) for i in inc])
     ph_cur = np.array([i[4] for i in inc])
@@ -211,21 +247,56 @@ def design_tensor(
             kappa_des * np.cos(chi - psi_c),
             kappa_des * np.sin(chi - psi_c),
         )  # target components along k_hat, s_hat, (n_p, n)
-        err = np.zeros((len(table.slots), N_DENSE, xm.size))
-        for j in range(n_p):
-            wgt = s_amp[j] ** 2
-            err += wgt * (np.abs(dk[j] - tk[j]) ** 2 + np.abs(ds[j] - ts_[j]) ** 2)
-        flat = err.reshape(-1, xm.size)
-        best = np.argmin(flat, axis=0)
-        slot, ia = best // N_DENSE, best % N_DENSE
+        if virtual_slot is None:
+            err = np.zeros((len(table.slots), N_DENSE, xm.size))
+            for j in range(n_p):
+                wgt = s_amp[j] ** 2
+                err += wgt * (np.abs(dk[j] - tk[j]) ** 2 + np.abs(ds[j] - ts_[j]) ** 2)
+            flat = err.reshape(-1, xm.size)
+            best = np.argmin(flat, axis=0)
+            slot, ia = best // N_DENSE, best % N_DENSE
+        else:
+            v = virtual_slot
+            lmax = (lut.kappa_old[-1] / lut.kappa_old[v]) if lam_max is None else lam_max
+            num = np.zeros((N_DENSE, xm.size))
+            den = np.zeros_like(num)
+            for j in range(n_p):
+                wgt = s_amp[j] ** 2
+                num += wgt * np.real(np.conj(dk[j][v]) * tk[j] + np.conj(ds[j][v]) * ts_[j])
+                den += wgt * (np.abs(dk[j][v]) ** 2 + np.abs(ds[j][v]) ** 2)
+            lam = np.clip(num / np.maximum(den, 1e-30), 0.0, lmax)
+            err = np.zeros_like(num)
+            for j in range(n_p):
+                err += s_amp[j] ** 2 * (np.abs(lam * dk[j][v] - tk[j]) ** 2 + np.abs(lam * ds[j][v] - ts_[j]) ** 2)
+            ia = np.argmin(err, axis=0)
+            slot = np.full(xm.size, v)
+            scale = lam[ia, np.arange(xm.size)]
         ana = [
-            march_analysis_tensor(table, lut, poly, feeds[j], k0, beams[j][0], beams[j][1], cxy, slot, ia, n_psi)
+            march_analysis_tensor(
+                table, lut, poly, feeds[j], k0, beams[j][0], beams[j][1], cxy, slot, ia, n_psi, cell_scale=scale
+            )
             for j in range(n_p)
         ]
         inc2 = [sa.incident(ana[j], feeds[j], xm, ym) for j in range(n_p)]
         s_amp = np.array([np.sqrt(np.sum(np.abs(i[0]) ** 2, axis=-1)) for i in inc2])
         ph_cur = np.array([i[4] for i in inc2])
-    cur = [cell_current(ana[j], lut, table, feeds[j], xm, ym, slot, ia, beams[j][0], beams[j][1]) for j in range(n_p)]
+    cur = [
+        cell_current(ana[j], lut, table, feeds[j], xm, ym, slot, ia, beams[j][0], beams[j][1], scale)
+        for j in range(n_p)
+    ]
+    strength = np.array(
+        [
+            np.sqrt(
+                np.sum(np.abs(c_) ** 2, axis=-1)
+                / np.maximum(
+                    np.abs(np.sum(inc2[j][0] * np.stack([np.cos(inc2[j][3]), np.sin(inc2[j][3])], axis=-1), axis=-1))
+                    ** 2,
+                    1e-30,
+                )
+            )
+            for j, c_ in enumerate(cur)
+        ]
+    )
     return {
         "r_mm": r_mm,
         "ports": ports,
@@ -243,4 +314,6 @@ def design_tensor(
         "kappa_des": kappa_des,
         "centre_mm": tuple(centre_mm),
         "mode": "tensor",
+        "cell_scale": scale,
+        "index_rms": [float(np.sqrt(np.mean(strength[j] ** 2)) / lut.k_unit) for j in range(n_p)],
     }

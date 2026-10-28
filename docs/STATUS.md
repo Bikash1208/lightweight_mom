@@ -101,6 +101,11 @@ Numbers: `results/phase29/compact7_tune.json`; package: predictions, `weights_ta
 
 cone a: gains 13.5-15.7 dBi, HPBW 9-13 deg, scan worst pointing 33.32 deg (target 2), dip 5.64 dB (target 3), pass=False; cone b: gains 13.4-16.1 dBi, HPBW 9-13 deg, scan worst pointing 20.34 deg (target 2), dip 5.89 dB (target 3), pass=False. Decisions: first pass: passing cones none (pass = pointing <= 2 deg and dip <= 3 dB over the whole cone, tuned weights) | no cone passes: second design pass (<= 100 min GA) on cone b (lower merit 12.14 = pointing/2 + dip/3) | second pass done on cone b; pass2 result passes=False; no package built (second-pass success is only recorded: run phase29_B3_export.py --cone b). HFSS package: not built. Numbers: `results/phase29/B3_summary.json`, `pointB3_<cone>.json`.
 
+
+## Phase 29 B3 debugging ladder (2026-10-28) - MODEL_ONLY
+
+Rung 1 PASS: one feed through the B3 chain reproduces Phase 26 (D_ap 28.5 dBi, 23.4-23.5 dBi, SLL -22.6 to -22.8 dB). Rung 2 FAIL on SLL: 4 feeds at Frey's scale give ~23 dBi/feed but SLL -7 to -10 dB (single-feed control -24 dB); not slot snapping, not the GA. Model limitation of the shared-aperture superposition suspected (no angle-dependent impedance / weak-modulation regime). `results/phase29/B3debug*_summary.json`.
+
 ## Open next steps
 
 Order of work, with what each needs from the user (HFSS runs are the user's):

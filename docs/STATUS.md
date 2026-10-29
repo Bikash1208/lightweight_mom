@@ -121,6 +121,10 @@ LUT `results/phase29/angle_lut_v1.npz` (slot x orientation x incidence, Bloch sh
 
 Fixed modulation index M = 0.08 / 0.13 / 0.20 per sub-hologram, real slot table vs virtual continuous cell, 4 feeds 300 mm and the two-feed 150 mm case: `results/phase29/weakmod_summary.json`.
 
+## Phase 29 two-feed board, HFSS_CHECKED (2026-10-29)
+
+Two-feed 150 mm board, user-run HFSS at 10.54 GHz (baseline; HFSS peak frequency was ~10.83 GHz, cause not established, meshing suspected): P1 17.5 dBi / -8.9 dB SLL, P2 16.6 dBi / -8.1 dB. Model offsets: -2.5 dB gain, +3.5 dB SLL (`scripts/research/phase29_calibration.py`); applied as a margin to every Phase 29 multi-feed prediction. Seven-port package (raw and calibrated predictions): `hfss_exports/phase29_sevenport/`. Label: HFSS_CHECKED (two-feed only; seven-port is MODEL_ONLY).
+
 ## Open next steps
 
 Order of work, with what each needs from the user (HFSS runs are the user's):

@@ -196,6 +196,7 @@ def design_tensor(
     weak_M=None,
     virtual_slot=None,
     lam_max=None,
+    cell_weight=None,
 ):
     """Frey-style shared-aperture design on the angle-dependent model (module docstring). `ports`: `[(x_mm, y_mm, theta_deg, phi_deg)]`, `centre_mm`: hexagon centre. Returns the dict
     `shared_aperture_multiport.port_fields` / `scan_table` consume (`x_m, y_m, J, eta_conv, ports, beams, feeds_m, march`, plus `slot`, `axis_rad`, `slot_L_mm`, `slot_W_mm`, `kappa_des`).
@@ -219,6 +220,8 @@ def design_tensor(
     kappa_des = np.array([np.sqrt(2.0 * i[1]) for i in inc])
     if weak_M is not None:
         kappa_des = weak_M * lut.k_unit * kappa_des / np.maximum(kappa_des.max(axis=1, keepdims=True), 1e-12)
+    if cell_weight is not None:  # segmented aperture: per-cell taper of the target strength, shape (n_cells,) or (n_ports, n_cells)
+        kappa_des = kappa_des * np.broadcast_to(np.asarray(cell_weight, dtype=float), kappa_des.shape)
     scale = None
     psi_c = np.array([i[3] for i in inc])
     s_amp = np.array([np.sqrt(np.sum(np.abs(i[0]) ** 2, axis=-1)) for i in inc])

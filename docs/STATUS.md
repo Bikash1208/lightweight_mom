@@ -125,6 +125,10 @@ Fixed modulation index M = 0.08 / 0.13 / 0.20 per sub-hologram, real slot table 
 
 Two-feed 150 mm board, user-run HFSS at 10.54 GHz (baseline; HFSS peak frequency was ~10.83 GHz, cause not established, meshing suspected): P1 17.5 dBi / -8.9 dB SLL, P2 16.6 dBi / -8.1 dB. Model offsets: -2.5 dB gain, +3.5 dB SLL (`scripts/research/phase29_calibration.py`); applied as a margin to every Phase 29 multi-feed prediction. Seven-port package (raw and calibrated predictions): `hfss_exports/phase29_sevenport/`. Label: HFSS_CHECKED (two-feed only; seven-port is MODEL_ONLY).
 
+## Phase 29 segmented aperture, option A (2026-10-30) - MODEL_ONLY
+
+150 mm hexagon, 7 equal-area regions (centre + 6 sectors), one single-feed hologram per region, tapered boundaries: per-port 10.0-11.4 dBi (calibrated 7.5-8.9), SLL -7.4..-11.3 dB raw; minimum gain inside theta <= 45 deg: switched -7.5 dBi, blended (7-port MRC) -2.5 dBi (calibrated -10.0 / -5.0). Package hfss_exports/phase29_segmented/, summary results/phase29/segmented_summary.json.
+
 ## Open next steps
 
 Order of work, with what each needs from the user (HFSS runs are the user's):

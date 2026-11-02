@@ -8,8 +8,8 @@ JS-only here; the Ulm GeMiC conference PDF is excluded by the journals-only rule
 |---|---|---|
 | Faenzi, Minatti, Gonzalez-Ovejero, Caminita, Martini, Della Giovampaola, Maci, "Metasurface Antennas: New Models, Applications and Realizations" | 10.1038/s41598-019-46522-z | Sci. Rep. 9, 2019 (open access, PMC6629853) |
 | Minatti, Faenzi, Martini, Caminita, De Vita, Gonzalez-Ovejero, Maci, "Modulated Metasurface Antennas for Space: Synthesis, Analysis and Realizations" | 10.1109/TAP.2014.2377718 | IEEE TAP 63(4), 1288-1300, 2015 |
-| Fong, Colburn, Ottusch, Visher, Sievenpiper, "Scalar and Tensor Holographic Artificial Impedance Surfaces" | 10.1109/TAP.2010.2055812 | IEEE TAP, 2010 |
-| Teniou, Roussel, Capet, Sauleau, Ettorre, "Implementation of Radiating Aperture Field Distribution Using Tensorial Metasurfaces" (authors beyond first: unchecked) | 10.1109/TAP.2017.2751652 | IEEE TAP, 2017 |
+| Fong et al., "Scalar and Tensor Holographic Artificial Impedance Surfaces" | 10.1109/TAP.2010.2055812 | IEEE TAP, 2010 |
+| Teniou et al., "Implementation of Radiating Aperture Field Distribution Using Tensorial Metasurfaces" | 10.1109/TAP.2017.2751652 | IEEE TAP, 2017 |
 | Frey, Doering, Riese, Waldschmidt, Chaloun, "Angle-Dependent Synthesis Method for Holographic Multi-Feed Antennas" | 10.1109/OJAP.2023.3261903 | IEEE OJAP 4, 392-407, 2023 |
 
 Note: the brief lists Frey OJAP 2023 as "elliptical patch with centre slot". Crossref confirms only the

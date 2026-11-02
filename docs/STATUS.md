@@ -123,11 +123,23 @@ Fixed modulation index M = 0.08 / 0.13 / 0.20 per sub-hologram, real slot table 
 
 ## Phase 29 two-feed board, HFSS_CHECKED (2026-10-29)
 
-Two-feed 150 mm board, user-run HFSS at 10.54 GHz (baseline; HFSS peak frequency was ~10.83 GHz, cause not established, meshing suspected): P1 17.5 dBi / -8.9 dB SLL, P2 16.6 dBi / -8.1 dB. Model offsets: -2.5 dB gain, +3.5 dB SLL (`scripts/research/phase29_calibration.py`); applied as a margin to every Phase 29 multi-feed prediction. Seven-port package (raw and calibrated predictions): `hfss_exports/phase29_sevenport/`. Label: HFSS_CHECKED (two-feed only; seven-port is MODEL_ONLY).
+Two-feed 150 mm board, user-run HFSS at 10.54 GHz (baseline; HFSS peak frequency was ~10.83 GHz, cause not established, meshing suspected): P1 17.5 dBi / -8.9 dB SLL, P2 16.6 dBi / -8.1 dB. Model offsets: -2.5 dB gain, +3.5 dB SLL (`scripts/research/phase29_calibration.py`) - **SUPERSEDED 2026-11-02 (see Phase 30 below): do not apply this margin in any reporting.** Seven-port package (raw and calibrated predictions): `hfss_exports/phase29_sevenport/`. Label: HFSS_CHECKED (two-feed only; seven-port is MODEL_ONLY).
 
 ## Phase 29 segmented aperture, option A (2026-10-30) - MODEL_ONLY
 
 150 mm hexagon, 7 equal-area regions (centre + 6 sectors), one single-feed hologram per region, tapered boundaries: per-port 10.0-11.4 dBi (calibrated 7.5-8.9), SLL -7.4..-11.3 dB raw; minimum gain inside theta <= 45 deg: switched -7.5 dBi, blended (7-port MRC) -2.5 dBi (calibrated -10.0 / -5.0). Package hfss_exports/phase29_segmented/, summary results/phase29/segmented_summary.json.
+
+## Phase 30 (new unit cell for the multi-port HMSA, branch `phase30-new-cell`, opened 2026-11-02) - design change, MODEL_ONLY
+
+**Why.** HFSS (user-run, 10.54 GHz) on the Phase 26 tensor cell (6.4 mm lattice, RT5880 1.575 mm, coax-probe monopole feeds) shows a common failure on every Phase 29 board:
+- Two-feed 150 mm board: P1 17.5 dBi / SLL -8.9 dB, P2 16.6 dBi / -8.1 dB (model ~19.4 dBi / ~-12 dB).
+- 7-port shared-aperture board: per-port 11.3-13.4 dBi, SLL -1.2..-6 dB. The **raw** forward model matched HFSS gain (P1 13.4 vs 13.6 dBi), so the -2.5 dB / +3.5 dB calibration margin is **superseded** (file kept, marked superseded). Blended steering works to about theta ~12 deg at 10-13 dBi.
+- compact7 board: 7.0-10.5 dBi per port; blended steering to theta ~30 deg at 5-9 dBi.
+- On every board 48-68 % of each port's power is radiated near the surface (theta 60-90 deg, ~98 % Etheta, 6-/12-fold azimuthal ripple): the TM surface wave reaches the hexagon edge un-leaked; only ~7 % of power lands in the main-beam cone. Opposite-hand power in the beam ~25 %, AR at beam peaks 0.5-5.3 dB. Radiation boundary was >= lambda/2 (not an artefact).
+- Root cause (hypothesis, to be tested by the screening): impedance swing of the current cell too small (anisotropy ~1.2-1.5:1, M max insufficient), so alpha (leakage per length) is too low for a ~5.3 lambda board.
+
+**Goal.** New cell (geometry + substrate) giving < 10 % edge power on the 150 mm hexagon (alpha/k >= ~0.03, M up to ~0.5 with taper), full tensor with anisotropy >= ~3:1 (CP AR < 3 dB), well-behaved/ideally directionally selective for multi-feed surface-wave arrival, smooth M(size) from 0, single-layer, pitch <= ~lambda_g/5.
+Work items 0-5 in `docs/briefs/PHASE30_NEW_CELL.md`; stop after item 2 (ranked table, top 2, recommendation) for approval. Status: item 0 (docs) done.
 
 ## Open next steps
 

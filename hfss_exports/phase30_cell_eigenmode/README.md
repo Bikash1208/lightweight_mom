@@ -3,7 +3,7 @@
 Cell: Rogers RO3010 (eps_r 10.2, tan d 0.0022) 0.635 mm on PEC ground, 3.2 mm square cell, full-fill super-ellipse n = 4 (major = minor = 3.05 mm,
 gap 0.15 mm), centre slot along x, PEC patch (sheet). Same master/slave + PEC-lid construction as `hfss_exports/slotted_cell_eigenmode/`
 (Phase 26; the boundary dialogs there were the part not verified in AEDT: check Primary/Secondary pairs and the phase delays).
-Air column 30 mm with a PEC lid (field at the lid ~ e^(-kappa 30 mm), kappa = 0.8-1.0 k0 -> ~1e-6: negligible).
+Air column 60 mm with a PEC lid (field at the lid ~ e^(-kappa 60 mm) = 2e-5 for kappa = 0.83 k0: negligible; with 30 mm it would be 4e-3).
 
 ## Cells (picked from `results/phase30/refine/`)
 | Script | Slot L x W mm | M_t (model) | Bloch phase per cell |

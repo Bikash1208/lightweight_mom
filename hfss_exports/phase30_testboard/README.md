@@ -20,7 +20,7 @@ Files: `layout.csv` (x, y, slot L, W, angle, alpha, beta, M_t per cell), `predic
 ## Predictions (written before any HFSS run)
 | Quantity | ACTIVE | CONTROL |
 |---|---|---|
-| Surface-wave power reaching the edge | **40 %** (first-order alpha, table max 13.1 Np/m) ... **58 %** (alpha x 0.53 = the Floquet/first-order ratio of the strongest cell) | ~100 % (alpha_diel + alpha_cond ~0.2 + 0.4 Np/m over 45 mm: ~3 % absorbed) |
+| Surface-wave power reaching the edge | **40 %** (first-order alpha, table max 13.1 Np/m) ... **58 %** (alpha x 0.53 = the Floquet/first-order ratio of the strongest cell) | ~100 % (alpha_diel + alpha_cond ~0.2 + 0.4 Np/m over 45 mm: ~6 % absorbed, estimated from the E1 cell losses) |
 | Radiating-aperture directivity, RHCP, broadside | 19.7 dBi (aperture current only; flat-aperture limit 19.9 dBi: treat as optimistic, ideal model) | NA |
 | Gain upper bound (launch fraction 1) | 17.4 dBi (edge 40 %) ... 15.9 dBi (edge 58 %) | NA |
 | AR at peak / RHCP SLL outside 24 deg / LHCP-RHCP | 1.1 dB / -22 dB / -24 dB (aperture current only) | NA |

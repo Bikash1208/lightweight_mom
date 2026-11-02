@@ -139,7 +139,12 @@ Two-feed 150 mm board, user-run HFSS at 10.54 GHz (baseline; HFSS peak frequency
 - Root cause (hypothesis, to be tested by the screening): impedance swing of the current cell too small (anisotropy ~1.2-1.5:1, M max insufficient), so alpha (leakage per length) is too low for a ~5.3 lambda board.
 
 **Goal.** New cell (geometry + substrate) giving < 10 % edge power on the 150 mm hexagon (alpha/k >= ~0.03, M up to ~0.5 with taper), full tensor with anisotropy >= ~3:1 (CP AR < 3 dB), well-behaved/ideally directionally selective for multi-feed surface-wave arrival, smooth M(size) from 0, single-layer, pitch <= ~lambda_g/5.
-Work items 0-5 in `docs/briefs/PHASE30_NEW_CELL.md`; stop after item 2 (ranked table, top 2, recommendation) for approval. Status: item 0 (docs) done.
+Work items 0-5 in `docs/briefs/PHASE30_NEW_CELL.md`; stop after item 2 (ranked table, top 2, recommendation) for approval. Status (2026-11-03): items 0-3 done, MODEL_ONLY, nothing run in HFSS yet.
+- Item 2 screen (696 cells, `results/phase30/ITEM2_REPORT.md`) -> approved cell: Rogers RO3010 0.635 mm, 3.2 mm pitch, full-fill super-ellipse (n = 4) + centre slot, gap 0.15 mm.
+- Refined screen (`results/phase30/REFINE_REPORT.md`): M_t 0.06-0.64 (slot length), anisotropy to 4.6:1, X_bar 314 ohm, alpha/k0 0.031 (Floquet) - 0.058 (first order); tensor rotation holds to 1-3 % only when the outline stays fixed and the slot turns;
+  **NOT mesh-converged** (beta +-4 %, alpha factor 1.5-2), very sensitive to eps_r (10.2 -> 11.2: beta/k0 1.30 -> 1.57) and to the gap (+-0.025 mm: X_bar tens of ohm); edge power on 150 mm: 28-46 % tapered, **< 10 % NOT met**.
+- Literature: only Faenzi 2019 was read; Fong/Minatti/Teniou/Frey DOIs verified, contents NOT read (`results/phase30/LITERATURE.md`).
+- HFSS eigenmode package `hfss_exports/phase30_cell_eigenmode/` (4 unit cells + leaky supercell, predictions first) and single-feed test board `hfss_exports/phase30_testboard/` (active + control; edge 40-58 %, launch fraction/direct radiation/diffraction NA): ready, not yet run.
 
 ## Open next steps
 

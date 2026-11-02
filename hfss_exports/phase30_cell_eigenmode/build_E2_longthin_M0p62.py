@@ -13,7 +13,7 @@ oDesign = oProject.SetActiveDesign("E2_longthin_M0p62")
 oEditor = oDesign.SetActiveEditor("3D Modeler")
 oEditor.SetModelUnits(["NAME:Units Parameter", "Units:=", "mm", "Rescale:=", False])
 
-P = 3.2; H = 0.635; LID = 30.0; D = 0.0
+P = 3.2; H = 0.635; LID = 60.0; D = 0.0
 PX_CELLS = 1
 MAJOR = 3.0500000000000003; MINOR = 3.0500000000000003; EXPO = 4.0
 SLOT_L = 2.2875; SLOT_W = 0.1

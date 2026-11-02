@@ -13,7 +13,7 @@ oDesign = oProject.SetActiveDesign("S1_supercell_leaky")
 oEditor = oDesign.SetActiveEditor("3D Modeler")
 oEditor.SetModelUnits(["NAME:Units Parameter", "Units:=", "mm", "Rescale:=", False])
 
-P = 3.2; H = 0.635; LID = 30.0; D = 0.0
+P = 3.2; H = 0.635; LID = 60.0; D = 0.0
 PX_CELLS = 7
 MAJOR = 3.0500000000000003; MINOR = 3.0500000000000003; EXPO = 4.0
 SLOT_L = 1.891; SLOT_W = 0.58

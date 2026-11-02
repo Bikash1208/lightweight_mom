@@ -1,0 +1,75 @@
+{
+ "labels": [
+  "MODEL_ONLY",
+  "NOT_HFSS_VALIDATED",
+  "LAUNCH_FRACTION_NOT_MODELLED"
+ ],
+ "board": {
+  "shape": "circle",
+  "diameter_mm": 90.0,
+  "cells": 572,
+  "substrate": "RO3010 0.635 mm",
+  "pitch_mm": 3.2,
+  "feed": "coax probe monopole, centre, 6.0 mm above substrate",
+  "beam": "broadside RHCP"
+ },
+ "design": {
+  "eta_design": 0.8,
+  "taper_c": 0.5,
+  "alpha_max_available_np_m": 13.073391519220548,
+  "M_t_cap": 0.66,
+  "n_table_cells": 22
+ },
+ "active": {
+  "eta_conv_surface_wave_to_aperture": 0.5973264137932773,
+  "edge_fraction_surface_wave": 0.40267358620672267,
+  "pattern_of_aperture_current": {
+   "directivity_rhcp_dbi": 19.679376555886073,
+   "ar_at_peak_db": 1.1382516604220452,
+   "peak_theta_deg": 0.0,
+   "peak_phi_deg": 175.0,
+   "rhcp_sll_db_outside_24deg": -22.220287104588543,
+   "radiated_fraction_theta_gt_60": 0.0005462965385407755,
+   "radiated_fraction_theta_le_12": 0.6859808822299297,
+   "lhcp_over_rhcp_at_peak_db": -23.684538048703395
+  },
+  "gain_rhcp_upper_bound_dbi_launch1": 17.441493752762966,
+  "by_radius": {
+   "4-12 mm": {
+    "alpha_np_m_mean": 6.002600697504903,
+    "M_t_mean": 0.4021995253339178,
+    "beta_over_k0_mean": 1.2544171844589254
+   },
+   "12-20 mm": {
+    "alpha_np_m_mean": 11.160273909764635,
+    "M_t_mean": 0.577553603470529,
+    "beta_over_k0_mean": 1.2832783710695326
+   },
+   "20-28 mm": {
+    "alpha_np_m_mean": 13.073391519220543,
+    "M_t_mean": 0.6210588435597957,
+    "beta_over_k0_mean": 1.2804670685310147
+   },
+   "28-36 mm": {
+    "alpha_np_m_mean": 13.073391519220548,
+    "M_t_mean": 0.6210588435597956,
+    "beta_over_k0_mean": 1.2804670685310147
+   },
+   "36-45 mm": {
+    "alpha_np_m_mean": 13.073391519220547,
+    "M_t_mean": 0.6210588435597957,
+    "beta_over_k0_mean": 1.2804670685310149
+   }
+  }
+ },
+ "control": {
+  "edge_fraction_surface_wave": 1.0,
+  "note": "isotropic cells: first-order alpha = 0, only dielectric/conductor loss (alpha_d ~0.2, alpha_c ~0.4 Np/m); expected near-zero RHCP broadside gain; the radiation that remains is monopole direct radiation + edge diffraction (NOT modelled: NA)"
+ },
+ "NA": [
+  "launch fraction of the monopole into the surface wave",
+  "monopole direct radiation pattern",
+  "edge diffraction pattern",
+  "HFSS gain"
+ ]
+}

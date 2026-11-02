@@ -12,9 +12,7 @@ JS-only here; the Ulm GeMiC conference PDF is excluded by the journals-only rule
 | Teniou et al., "Implementation of Radiating Aperture Field Distribution Using Tensorial Metasurfaces" | 10.1109/TAP.2017.2751652 | IEEE TAP, 2017 |
 | Frey, Doering, Riese, Waldschmidt, Chaloun, "Angle-Dependent Synthesis Method for Holographic Multi-Feed Antennas" | 10.1109/OJAP.2023.3261903 | IEEE OJAP 4, 392-407, 2023 |
 
-Note: the brief lists Frey OJAP 2023 as "elliptical patch with centre slot". Crossref confirms only the
-title; the cell geometry in that paper is `NOT_VERIFIED` (a conference precursor mentions a slot-angle
-shared cell, not citable). Teniou/Sauleau/Ettorre 2017 TAP verified as above (also a related IJMWT 2017 and TAP 2019 paper exist).
+Note: the brief lists Frey OJAP 2023 as "elliptical patch with centre slot"; Crossref confirms only the title, the cell geometry in that paper is UNCONFIRMED (see status section below).
 
 ## Table (Faenzi 2019, read from open full text; other rows not read)
 
@@ -36,9 +34,17 @@ Edge absorber/rim: not mentioned in the part read; published boards are 6-13.5 l
 our 150 mm hexagon (~2.6 lambda radius), i.e. 2-5x larger, so they reach low edge power by length
 rather than by a rim.
 
-## Rows still to read (needs user-supplied full text or browser access)
-Fong 2010 (tensor HIS, X-band CP; reactance range, anisotropy), Minatti 2015 (space MTS, cell/taper),
-Teniou 2017 (tensor aperture-field), Frey 2023 (multi-feed angle-dependent; cell, substrate, SLL).
+## Status of the four papers not read (2026-11-02, item 2 of the follow-up)
+Bibliographic data verified against Crossref (title, journal, year, volume, pages; authors for Fong and Teniou):
+- Fong, Colburn, Ottusch, Visher, Sievenpiper, IEEE TAP 58(10), 3212-3221, 2010, 10.1109/TAP.2010.2055812 - DOI VERIFIED, content NOT read.
+- Minatti, Faenzi, Martini, Caminita, De Vita, Gonzalez-Ovejero, Maci, IEEE TAP 63(4), 1288-1300, 2015, 10.1109/TAP.2014.2377718 - DOI VERIFIED, content NOT read.
+- Teniou, Roussel, Capet, Piau, Casaletti, IEEE TAP 65(11), 5895-5907, 2017, 10.1109/TAP.2017.2751652 - DOI VERIFIED, content NOT read.
+- Frey, Doering, Riese, Waldschmidt, Chaloun, IEEE OJAP 4, 392-407, 2023, 10.1109/OJAP.2023.3261903 - DOI VERIFIED, content NOT read.
+Full text could not be retrieved by the tools available (IEEE Xplore needs a browser session; an automated download was
+refused by the session's safety layer and is not repeated). **No claim in this repository is based on these four papers' contents**:
+every table row above is Faenzi 2019 (open access, read in full). The cell-geometry attribution of the brief ("Frey: elliptical
+patch with centre slot") is therefore UNCONFIRMED. If the PDFs/text are provided, the Fong/Minatti/Teniou/Frey rows
+(cell, substrate, pitch, reactance range, anisotropy, efficiency, edge treatment) can be filled in.
 
 ## Conclusions (from verified rows + physics; labelled as inference where so)
 1. Every published efficient design uses substrates thinner/higher-er than ours (er 3-10, 0.5-0.76 mm vs

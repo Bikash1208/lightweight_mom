@@ -69,3 +69,15 @@ def test_testboard_lattice_is_fourfold_symmetric_and_clear_of_the_feed():
     assert np.hypot(x, y).max() <= T.R_BOARD
     pts = {(round(a, 9), round(b, 9)) for a, b in zip(x, y, strict=True)}
     assert all(((round(-a, 9), round(b, 9)) in pts) and ((round(a, 9), round(-b, 9)) in pts) for a, b in pts)
+
+
+def test_eigenmode_step_geometry_roundtrip(tmp_path):
+    """The STEP of E1 re-reads with 4 named bodies, the 0.15 mm gap and the L x W slot (cadquery/OCP)."""
+    pytest.importorskip("cadquery")
+    import phase30_eigenmode_step as S
+
+    path = tmp_path / "E1.step"
+    S.build("E1_strong_M0p64", path)
+    out = S.check("E1_strong_M0p64", path)
+    assert out["all_pass"], out["checks"]
+    assert out["slot_LxW_mm_from_area_and_bbox"] == [1.89, 0.58]

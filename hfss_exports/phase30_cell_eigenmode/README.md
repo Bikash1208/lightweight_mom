@@ -1,4 +1,4 @@
-# phase30_cell_eigenmode - HFSS eigenmode check of the Phase 30 cell (MODEL_ONLY predictions, written BEFORE any HFSS run; scripts NOT run in AEDT by the author)
+# phase30_cell_eigenmode - HFSS eigenmode check of the Phase 30 cell (MODEL_ONLY predictions, written BEFORE any HFSS run; AEDT scripts REMOVED: they did not run on the user machine; use the STEP files and `HFSS_SETUP.md`)
 
 Cell: Rogers RO3010 (eps_r 10.2, tan d 0.0022) 0.635 mm on PEC ground, 3.2 mm square cell, full-fill super-ellipse n = 4 (major = minor = 3.05 mm,
 gap 0.15 mm), centre slot along x, PEC patch (sheet). Same master/slave + PEC-lid construction as `hfss_exports/slotted_cell_eigenmode/`
@@ -6,13 +6,13 @@ gap 0.15 mm), centre slot along x, PEC patch (sheet). Same master/slave + PEC-li
 Air column 60 mm with a PEC lid (field at the lid ~ e^(-kappa 60 mm) = 2e-5 for kappa = 0.83 k0: negligible; with 30 mm it would be 4e-3).
 
 ## Cells (picked from `results/phase30/refine/`)
-| Script | Slot L x W mm | M_t (model) | Bloch phase per cell |
+| Model (STEP file `<name>.step`; the former `build_*.py` are gone, see git 8d43eed) | Slot L x W mm | M_t (model) | Bloch phase per cell |
 |---|---|---|---|
-| `build_E1_strong_M0p64.py` | 1.89 x 0.58 | 0.64 | 52.72 deg |
-| `build_E2_longthin_M0p62.py` | 2.29 x 0.10 | 0.62 | 51.86 deg |
-| `build_E3_mid_M0p27.py` | 1.89 x 0.10 | 0.27 | 48.96 deg |
-| `build_E4_weak_M0p12.py` | 1.53 x 0.10 | 0.12 | 47.69 deg |
-| `build_S1_supercell_leaky.py` | E1 x 7 cells, slot axis rotating 0..154 deg in 25.7 deg steps, radiation boundary on top | -- | 6.74 deg per 22.4 mm supercell |
+| E1_strong_M0p64 | 1.89 x 0.58 | 0.64 | 52.72 deg |
+| E2_longthin_M0p62 | 2.29 x 0.10 | 0.62 | 51.86 deg |
+| E3_mid_M0p27 | 1.89 x 0.10 | 0.27 | 48.96 deg |
+| E4_weak_M0p12 | 1.53 x 0.10 | 0.12 | 47.69 deg |
+| S1_supercell_leaky | E1 x 7 cells, slot axis rotating 0..154 deg in 25.7 deg steps, radiation boundary on top | -- | 6.74 deg per 22.4 mm supercell |
 
 The phase per cell is beta(10.54 GHz) x 3.2 mm with the model's mean beta (E1: 1.302 k0). Each script sets `PHASE_X` (along x, slot-parallel); for the y direction
 swap the two phases (`phase_x = 0`, `phase_y = PHASE_X`). Run each script, set the phases, Analyze; the bound mode is the lowest eigenmode whose
@@ -41,3 +41,7 @@ Unverified: the AssignRadiation face call and the master/slave pair on the 22.4 
 
 ## Files
 `predictions.json` (all numbers above, all meshes, all roots with their TM fractions); generator `scripts/research/phase30_eigenmode_package.py`.
+
+## STEP package (supersedes the AEDT-script instructions above)
+Manual setup: `HFSS_SETUP.md`. Geometry check (body counts, bbox, gap 0.15 mm, slot sizes): `step_check.json`. Generator: `scripts/research/phase30_eigenmode_step.py`. In S1 the outline is fixed and only the slot turns (the removed script rotated the whole patch, inconsistent with the model).
+STEP files are gitignored; copies in `C:\hmsa_sync\data\phase30_cell_eigenmode\`.

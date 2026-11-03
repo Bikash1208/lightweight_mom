@@ -3,7 +3,7 @@
 Runs on the server itself (this session is the server). Base: branch `phase30-new-cell`.
 
 ```
-python scripts/research/phase30_cell_screen.py results/phase30/screen --mesh 48 --workers 44
+python scripts/research/phase30_cell_screen.py results/phase30/screen --mesh 48 --workers 64
 ```
 
 Output `results/phase30/screen/cell_screen.json` (one row per cell; unresolved-gap rows flagged by `gap_mesh_cells < 1.5`).

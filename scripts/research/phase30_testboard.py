@@ -15,6 +15,7 @@ is NOT modelled (NA); gain is given for launch fraction 1 (an upper bound).
 
 import csv
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -30,7 +31,7 @@ from src.materials import Substrate  # noqa: E402
 from src.pattern.vector_aperture_pattern import _vector_far_field, circular_components, copol_component  # noqa: E402
 
 OUT = ROOT / "hfss_exports" / "phase30_testboard"
-F = 10.54e9
+F = float(os.environ.get("P30_F0", 10.54e9))  # default unchanged
 K0 = free_space_wavenumber(F)
 PITCH = 3.2e-3
 MAJOR_MM = 3.05
@@ -38,7 +39,7 @@ EXPO = 4.0
 H_MM = 0.635
 R_BOARD = 0.045  # 90 mm circle
 RHO_CLEAR = 4.0e-3  # keep-out for the coax opening (r_out 2.05 mm) + one cell
-SUB = Substrate("ro3010", 10.2, 0.0022, H_MM * 1e-3)
+SUB = Substrate("ro3010", float(os.environ.get("P30_EPS", 10.2)), 0.0022, H_MM * 1e-3)
 M_CAP = 0.66
 
 

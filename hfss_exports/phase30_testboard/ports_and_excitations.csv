@@ -1,0 +1,11 @@
+item,value
+port_name,"P1 (lumped port, 50 ohm)"
+port_body,"PORT (annulus sheet, r 0.635 .. 2.05 mm, z = 0)"
+integration_line,"from the pin surface (r 0.635, z 0) to the ground opening edge (r 2.05, z 0), radial; direction: pin -> ground"
+reference_impedance_ohm,50
+renormalise,yes (50 ohm); no de-embedding
+excitation,"1 W accepted, phase 0 deg"
+pin_body,"PIN (solid, r 0.635 mm, z 0 .. 6.635 mm = 6.0 mm above the substrate): assign Perfect E"
+pin_position_mm,"(0, 0)"
+frequency_ghz,10.05 (solution); optional interpolating sweep 9.5 - 10.6 GHz
+note,S11 only (one port). Nothing else is driven.

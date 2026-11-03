@@ -1,0 +1,325 @@
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [  2%]
+...........................................s............................ [  4%]
+........................................................................ [  7%]
+........................................................................ [  9%]
+........................................................................ [ 12%]
+.................................................s...................... [ 14%]
+...................................................................sss.. [ 16%]
+..........................................................ss............ [ 19%]
+........................................................................ [ 21%]
+............................ss.......................................... [ 24%]
+........................................................................ [ 26%]
+........................................................................ [ 28%]
+........................................................................ [ 31%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................F.....................F......... [ 38%]
+......................F................................................. [ 40%]
+.................................................ssss................... [ 43%]
+........................................................................ [ 45%]
+..........F..............................ss..............FF............. [ 48%]
+........................................................................ [ 50%]
+...................................s.................................... [ 52%]
+.....sssss....................ss.......sss.s....ssss....sss.......s..... [ 55%]
+.......ssssssss.....ssssssssssssssssssssssssssss....sssssss.......ssss.. [ 57%]
+....sssss......sssssss....................................sss........... [ 60%]
+.sssssssss......................................................sss..... [ 62%]
+.................................................................ssss... [ 65%]
+........................................................................ [ 67%]
+........................................................................ [ 69%]
+..................s..................................................... [ 72%]
+....ss.................................................................. [ 74%]
+.....sss................................................................ [ 77%]
+........................................................................ [ 79%]
+........................................................................ [ 81%]
+........................................................................ [ 84%]
+.............................................s...sssss.................. [ 86%]
+........................................................................ [ 89%]
+........................................................................ [ 91%]
+..................................................................s..... [ 93%]
+........................................................................ [ 96%]
+.....................................................sss................ [ 98%]
+......................................                                   [100%]
+================================== FAILURES ===================================
+_____________ test_solve_richardson_mode_reports_convergence_fit ______________
+[gw5] win32 -- Python 3.13.5 C:\lightweight_mom\.venv\Scripts\python.exe
+
+client = <starlette.testclient.TestClient object at 0x000001EC87D557B0>
+
+    def test_solve_richardson_mode_reports_convergence_fit(client):
+        resp = client.post("/api/unit_cell/solve", json={"config": _config(), "mesh_mode": "richardson"})
+>       job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_app_unit_cell.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+client = <starlette.testclient.TestClient object at 0x000001EC87D557B0>
+job_id = 'a969f85f-89cf-41af-9a5c-85d89e195445', timeout = 60.0
+
+    def _wait_for_job(client, job_id, timeout=30.0):
+        deadline = time.monotonic() + timeout
+        while True:
+            resp = client.get(f"/api/jobs/{job_id}")
+            job = resp.json()
+            if job["status"] in ("done", "failed", "cancelled"):
+                return job
+            if time.monotonic() > deadline:
+>               raise TimeoutError(f"job {job_id} did not finish in {timeout}s: {job}")
+E               TimeoutError: job a969f85f-89cf-41af-9a5c-85d89e195445 did not finish in 60.0s: {'id': 'a969f85f-89cf-41af-9a5c-85d89e195445', 'kind': 'unit_cell_solve', 'status': 'running', 'progress': 0.0, 'progress_message': 'solving 1/1 (12.500 GHz)', 'error': None, 'created_at': 1793713029.1564817, 'started_at': 1793713029.4236598, 'finished_at': None}
+
+tests\test_app_unit_cell.py:46: TimeoutError
+_ test_solve_richardson_mode_record_shows_the_extrapolated_value_not_the_finest_mesh _
+[gw5] win32 -- Python 3.13.5 C:\lightweight_mom\.venv\Scripts\python.exe
+
+client = <starlette.testclient.TestClient object at 0x000001EC87AFE650>
+
+    def test_solve_richardson_mode_record_shows_the_extrapolated_value_not_the_finest_mesh(client):
+        """PHASE13B A1: at resonance (L=W=6mm, grounded, 12.5 GHz) the finest FAST_CELL_COUNTS mesh
+        (48 cells) and the dx->0 extrapolation differ by several degrees -- the displayed/recorded
+        S11_xx_phase_deg must be the extrapolated value, not silently the raw finest-mesh solve."""
+        resp = client.post(
+            "/api/unit_cell/solve",
+            json={
+                "config": _config(
+                    period_x=8.0e-3,
+                    period_y=8.0e-3,
+                    substrate={**_SUBSTRATE, "backing": "pec"},
+                    geometry={"type": "rectangle", "length": 6.0e-3, "width": 6.0e-3},
+                    reference_planes={"top_air_thickness": 5.0e-3},
+                ),
+                "mesh_mode": "richardson",
+            },
+        )
+>       job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_app_unit_cell.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+client = <starlette.testclient.TestClient object at 0x000001EC87AFE650>
+job_id = '745f1079-3bd6-46ee-b315-8bd33180c14a', timeout = 60.0
+
+    def _wait_for_job(client, job_id, timeout=30.0):
+        deadline = time.monotonic() + timeout
+        while True:
+            resp = client.get(f"/api/jobs/{job_id}")
+            job = resp.json()
+            if job["status"] in ("done", "failed", "cancelled"):
+                return job
+            if time.monotonic() > deadline:
+>               raise TimeoutError(f"job {job_id} did not finish in {timeout}s: {job}")
+E               TimeoutError: job 745f1079-3bd6-46ee-b315-8bd33180c14a did not finish in 60.0s: {'id': '745f1079-3bd6-46ee-b315-8bd33180c14a', 'kind': 'unit_cell_solve', 'status': 'running', 'progress': 0.0, 'progress_message': 'solving 1/1 (12.500 GHz)', 'error': None, 'created_at': 1793713094.929901, 'started_at': 1793713095.8458416, 'finished_at': None}
+
+tests\test_app_unit_cell.py:46: TimeoutError
+_____________ test_single_aperture_coded_with_the_automatic_pair ______________
+[gw4] win32 -- Python 3.13.5 C:\lightweight_mom\.venv\Scripts\python.exe
+
+client = <starlette.testclient.TestClient object at 0x000002329C59F460>
+
+    def test_single_aperture_coded_with_the_automatic_pair(client):
+        upload_id = _upload_example_field(client)
+        body = {
+            "upload_id": upload_id, "frequency_hz": F, "period_mm": 6.4,
+            "object_beams": [{"theta_deg": 20.0, "phi_deg": 0.0}], "n_bits": 1,
+            "eps_r": 2.2, "tan_delta": 0.0009, "thickness_mm": 1.575, "two_state": {"source": "auto"},
+        }
+>       job = _wait_for_job(client, client.post("/api/hmsa/synthesize_coded", json=body).json()["id"], timeout=120)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_app_phase22_auto_states.py:108: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+client = <starlette.testclient.TestClient object at 0x000002329C59F460>
+job_id = 'c34d020e-b76e-4800-8941-1a1f83482408', timeout = 120
+
+    def _wait_for_job(client, job_id, timeout=60.0):
+        deadline = time.monotonic() + timeout
+        while True:
+            resp = client.get(f"/api/jobs/{job_id}")
+            job = resp.json()
+            if job["status"] in ("done", "failed", "cancelled"):
+                return job
+            if time.monotonic() > deadline:
+>               raise TimeoutError(f"job {job_id} did not finish in {timeout}s: {job}")
+E               TimeoutError: job c34d020e-b76e-4800-8941-1a1f83482408 did not finish in 120s: {'id': 'c34d020e-b76e-4800-8941-1a1f83482408', 'kind': 'hmsa_synthesize_coded', 'status': 'running', 'progress': 0.0, 'progress_message': 'MoM solve: square 6.00 mm on the 64-cell mesh', 'error': None, 'created_at': 1793713056.9596477, 'started_at': 1793713057.1944032, 'finished_at': None}
+
+tests\test_app_phase15_ports_and_coded.py:35: TimeoutError
+__________________ test_synthesize_coded_one_bit_square_only __________________
+[gw2] win32 -- Python 3.13.5 C:\lightweight_mom\.venv\Scripts\python.exe
+
+client = <starlette.testclient.TestClient object at 0x0000015AC2EEAEB0>
+grounded_library = 'test-phase15-ports-2ac1d6f2'
+
+    def test_synthesize_coded_one_bit_square_only(client, grounded_library):
+>       job = _synthesize_coded_one_bit_square_only(client, grounded_library)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_app_phase15_ports_and_coded.py:168: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_app_phase15_ports_and_coded.py:164: in _synthesize_coded_one_bit_square_only
+    return _wait_for_job(client, resp.json()["id"], timeout=60.0)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+client = <starlette.testclient.TestClient object at 0x0000015AC2EEAEB0>
+job_id = 'ade1dcfa-aef2-4a05-a24d-1157f3d6a890', timeout = 60.0
+
+    def _wait_for_job(client, job_id, timeout=60.0):
+        deadline = time.monotonic() + timeout
+        while True:
+            resp = client.get(f"/api/jobs/{job_id}")
+            job = resp.json()
+            if job["status"] in ("done", "failed", "cancelled"):
+                return job
+            if time.monotonic() > deadline:
+>               raise TimeoutError(f"job {job_id} did not finish in {timeout}s: {job}")
+E               TimeoutError: job ade1dcfa-aef2-4a05-a24d-1157f3d6a890 did not finish in 60.0s: {'id': 'ade1dcfa-aef2-4a05-a24d-1157f3d6a890', 'kind': 'hmsa_synthesize_coded', 'status': 'running', 'progress': 0.0, 'progress_message': '', 'error': None, 'created_at': 1793713458.4728723, 'started_at': 1793713458.472984, 'finished_at': None}
+
+tests\test_app_phase15_ports_and_coded.py:35: TimeoutError
+______________________ test_sidelobe_endpoint_end_to_end ______________________
+[gw4] win32 -- Python 3.13.5 C:\lightweight_mom\.venv\Scripts\python.exe
+
+tmp_path = WindowsPath('C:/Users/Bikash/AppData/Local/Temp/2/pytest-of-Bikash/pytest-13/popen-gw4/test_sidelobe_endpoint_end_to_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002329B5554A0>
+
+    def test_sidelobe_endpoint_end_to_end(tmp_path, monkeypatch):
+        """`/api/sidelobes/optimize` on a finished hex4 job: a new job result with the optimised board,
+        before/after tables on the held-out grid, and an exportable layout."""
+        import time
+    
+        from fastapi.testclient import TestClient
+    
+        from src.app.main import create_app
+    
+        monkeypatch.setenv("LWMOM_APP_DATA_DIR", str(tmp_path / "data"))
+        import types
+    
+        import src.hologram.auto_states as auto_mod
+    
+        def fake_auto_states(n_bits, substrate, f, period_m, fixed_L_mm=None, cache_dir=None, **_):
+            shift = (f - F) / 1e9 * 60.0  # no MoM in the fast suite: a linear stand-in for the re-solved cells
+            return types.SimpleNamespace(
+                states=[
+                    types.SimpleNamespace(gamma=np.exp(1j * np.radians(138.0))),
+                    types.SimpleNamespace(gamma=np.exp(1j * np.radians(-41.0 - shift))),
+                ]
+            )
+    
+        monkeypatch.setattr(auto_mod, "auto_states", fake_auto_states)
+        client = TestClient(create_app())
+    
+        def wait(job_id, timeout=300):
+            t0 = time.monotonic()
+            while True:
+                job = client.get(f"/api/jobs/{job_id}").json()
+                if job["status"] in ("done", "failed", "cancelled"):
+                    return job
+                assert time.monotonic() - t0 < timeout
+                time.sleep(0.1)
+    
+        body = _request({"preset": "hex4", "side_mm": 50.0, "gap_mm": 0.0})
+        synth = wait(client.post("/api/hmsa/synthesize_ports", json=body).json()["id"])
+        assert synth["status"] == "done", synth
+        req = {
+            "source_job_id": synth["id"],
+            "frequency_hz": F,
+            "period_mm": 6.4,
+            "eps_r": 2.2,
+            "tan_delta": 0.0009,
+            "thickness_mm": 1.575,
+            "polarization": "rhcp",
+            "mode": "single",
+            "max_flips": 15,
+            "frequency_check_percent": 2.0,
+            "port_beams": [[{"theta_deg": 30.0, "phi_deg": 45.0 + 90.0 * k}] for k in range(4)],
+        }
+>       opt = wait(client.post("/api/sidelobes/optimize", json=req).json()["id"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_app_phase23_hex4.py:263: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+job_id = 'ec8bcd11-68a9-4706-b273-f645ba60ba5f', timeout = 300
+
+    def wait(job_id, timeout=300):
+        t0 = time.monotonic()
+        while True:
+            job = client.get(f"/api/jobs/{job_id}").json()
+            if job["status"] in ("done", "failed", "cancelled"):
+                return job
+>           assert time.monotonic() - t0 < timeout
+E           AssertionError: assert (620414.8662386 - 620113.6351574) < 300
+E            +  where 620414.8662386 = <built-in function monotonic>()
+E            +    where <built-in function monotonic> = <module 'time' (built-in)>.monotonic
+
+tests\test_app_phase23_hex4.py:244: AssertionError
+_________________ test_export_chains_off_a_one_bit_coded_job __________________
+[gw2] win32 -- Python 3.13.5 C:\lightweight_mom\.venv\Scripts\python.exe
+
+client = <starlette.testclient.TestClient object at 0x0000015AC5C48210>
+grounded_library = 'test-phase15-ports-77581300'
+
+    def test_export_chains_off_a_one_bit_coded_job(client, grounded_library):
+>       synth_job = _synthesize_coded_one_bit_square_only(client, grounded_library)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_app_phase15_ports_and_coded.py:185: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_app_phase15_ports_and_coded.py:164: in _synthesize_coded_one_bit_square_only
+    return _wait_for_job(client, resp.json()["id"], timeout=60.0)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+client = <starlette.testclient.TestClient object at 0x0000015AC5C48210>
+job_id = '6b0e7442-bba7-4ca0-b369-18a9e3d43fcf', timeout = 60.0
+
+    def _wait_for_job(client, job_id, timeout=60.0):
+        deadline = time.monotonic() + timeout
+        while True:
+            resp = client.get(f"/api/jobs/{job_id}")
+            job = resp.json()
+            if job["status"] in ("done", "failed", "cancelled"):
+                return job
+            if time.monotonic() > deadline:
+>               raise TimeoutError(f"job {job_id} did not finish in {timeout}s: {job}")
+E               TimeoutError: job 6b0e7442-bba7-4ca0-b369-18a9e3d43fcf did not finish in 60.0s: {'id': '6b0e7442-bba7-4ca0-b369-18a9e3d43fcf', 'kind': 'hmsa_synthesize_coded', 'status': 'running', 'progress': 0.0, 'progress_message': '', 'error': None, 'created_at': 1793713575.0259018, 'started_at': 1793713575.111711, 'finished_at': None}
+
+tests\test_app_phase15_ports_and_coded.py:35: TimeoutError
+============================== warnings summary ===============================
+.venv\Lib\site-packages\fastapi\testclient.py:1: 32 warnings
+  C:\lightweight_mom\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_export_exact_board.py: 5 warnings
+tests/test_app_phase21_multiport.py: 2 warnings
+tests/test_app_phase23_hex4.py: 2 warnings
+tests/test_transmitarray_export.py: 9 warnings
+tests/test_phase30_refine.py: 1 warning
+  C:\lightweight_mom\.venv\Lib\site-packages\cadquery\utils.py:82: FutureWarning: save will be removed in the next release.
+    warn(f"{f.__name__} will be removed in the next release.", FutureWarning)
+
+tests/test_sweep_definition.py::test_cell_ids_are_deterministic_unique_and_sensitive_to_everything_that_matters
+  C:\lightweight_mom\tests\test_sweep_definition.py:251: UserWarning: 1 group(s) of mesh-identical geometries on this mesh (cells_x=8, cells_y=16): 1 of 3 OK cell(s) discretize to the exact same metal mask as another cell in this sweep, and will solve to bit-identical S-parameters despite differing continuous geometry (discretization.py)
+    other = [c.cell_id for c in plan_sweep(sweep_config(**change), d).cells]
+
+tests/test_sweep_definition.py::test_cell_ids_are_deterministic_unique_and_sensitive_to_everything_that_matters
+  C:\lightweight_mom\tests\test_sweep_definition.py:251: UserWarning: 1 group(s) of mesh-identical geometries on this mesh (cells_x=16, cells_y=16): 1 of 3 OK cell(s) discretize to the exact same metal mask as another cell in this sweep, and will solve to bit-identical S-parameters despite differing continuous geometry (discretization.py)
+    other = [c.cell_id for c in plan_sweep(sweep_config(**change), d).cells]
+
+tests/test_sparameters_oblique.py::test_grating_order_warning_and_record_at_an_angle_that_makes_a_higher_order_propagate
+  C:\lightweight_mom\tests\test_sparameters_oblique.py:170: UserWarning: a Floquet harmonic is inside the grounded slab's TM0 surface-wave interval (k0=209.585, Re(k_substrate)=310.864 rad/m; margin 0.199 x k0): S-parameters near a surface-wave resonance may be numerically sensitive
+    s = compute_s_parameters_oblique(uc, F, MeshSettings(16, 16, 10), _planes("pec"), math.radians(20.0), 0.0)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_app_unit_cell.py::test_solve_richardson_mode_reports_convergence_fit
+FAILED tests/test_app_unit_cell.py::test_solve_richardson_mode_record_shows_the_extrapolated_value_not_the_finest_mesh
+FAILED tests/test_app_phase22_auto_states.py::test_single_aperture_coded_with_the_automatic_pair
+FAILED tests/test_app_phase15_ports_and_coded.py::test_synthesize_coded_one_bit_square_only
+FAILED tests/test_app_phase23_hex4.py::test_sidelobe_endpoint_end_to_end - As...
+FAILED tests/test_app_phase15_ports_and_coded.py::test_export_chains_off_a_one_bit_coded_job
+6 failed, 2855 passed, 129 skipped, 54 warnings in 10857.62s (3:00:57)

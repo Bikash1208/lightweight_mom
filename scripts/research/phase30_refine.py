@@ -57,7 +57,7 @@ SUB = Substrate("ro3010", EPS_R, TAND, H)
 THETA = np.radians(17.0)
 EXPO = 4.0
 GAP = 0.15e-3
-F0 = 10.54e9
+F0 = float(os.environ.get("P30_F0", 10.54e9))  # default unchanged; the eps_r 11.2 library sets 10.05e9
 
 
 def make_cell(major, ratio, slot_l, slot_w, angle=0.0):

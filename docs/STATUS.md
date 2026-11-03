@@ -146,6 +146,9 @@ Work items 0-5 in `docs/briefs/PHASE30_NEW_CELL.md`; stop after item 2 (ranked t
 - Literature: only Faenzi 2019 was read; Fong/Minatti/Teniou/Frey DOIs verified, contents NOT read (`results/phase30/LITERATURE.md`).
 - HFSS eigenmode package `hfss_exports/phase30_cell_eigenmode/` (4 unit cells + leaky supercell, predictions first) and single-feed test board `hfss_exports/phase30_testboard/` (active + control; edge 40-58 %, launch fraction/direct radiation/diffraction NA): ready, not yet run.
 
+- 2026-11-03 HFSS (user-run) E1 eigenmode at 53 deg/cell: eps_r 10.2 x 10.861 / y 10.232 GHz (model m48 10.912 / 10.269, +0.5 %); eps_r 11.2 x 10.478 / y 9.862 (model 10.528 / 9.876) -> axis dispersion and the eps_r response AGREE (-3.5 % in f at fixed phase; the "1.30 -> 1.57" is the shift at fixed FREQUENCY, not a discrepancy); diagonal (53/53) 13.189 vs model 11.19 GHz NOT reproduced; leaky supercell S1 (eps_r 11.2): f 10.068 GHz as predicted but Q 403 vs model 45-91 (Radiation top; PML re-run pending) - `results/phase30/HFSS_EIGEN_E1.md`, `LIBRARY_REPORT.md`. The AEDT scripts were replaced by STEP files + manual setup sheets (`HFSS_SETUP.md`).
+- Library (2026-11-03): design value eps_r 11.2, operating point 10.05 GHz (E1 M_t ~0.65), 31 slots, 4464-tensor angle LUT, held-out (60 off-grid points) median 0.2 % / max 3.0 % (`results/phase30/library/`, `LIBRARY_REPORT.md`); test board retargeted (`hfss_exports/phase30_testboard/`, STEP + `HFSS_TESTBOARD_SETUP.md`): model edge 39 % (first order) ... 83 % if alpha is 4.8x lower as the S1 Q suggests; to be run by the user once the S1 PML result is in. 7-port board NOT started.
+
 ## Open next steps
 
 Order of work, with what each needs from the user (HFSS runs are the user's):

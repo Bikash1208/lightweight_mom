@@ -39,3 +39,6 @@ Files: `layout.csv` (x, y, slot L, W, angle, alpha, beta, M_t per cell), `predic
    load the feed; the accepted-power normalisation must be used for every gain.
 Epsilon_r caution: run ACTIVE at eps_r 10.2 and, as a sensitivity run, 11.2 (Rogers 'design Dk') - the model's X_bar/beta moves by
 +45 ohm / +0.27 k0 for +1 in eps_r (`results/phase30/refine/eps11p2_sensitivity.json`), so a measured eps_r is needed before a build.
+
+## STEP package (eps_r 11.2, 10.05 GHz; supersedes the AEDT scripts, removed because they did not run on the user machine)
+Manual setup, predictions and the table to copy back: `HFSS_TESTBOARD_SETUP.md`. Port table: `ports_and_excitations.csv`. Geometry check: `step_check.json`. Generators: `scripts/research/phase30_testboard.py` (design; env P30_EPS=11.2 P30_F0=10.05e9; table results/phase30/library/uniform_table.json) and `phase30_testboard_step.py`. STEP files are gitignored; copies in C:\hmsa_sync\data\phase30_testboard\.

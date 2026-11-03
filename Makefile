@@ -1,6 +1,7 @@
-.PHONY: setup test-fast test-full lint format app clean distclean clean-app-outputs
+.PHONY: setup test-fast test-fast-par test-full lint format app clean distclean clean-app-outputs
 
-VENV := .venv/bin
+# POSIX default. Windows compute server: `make VENV=.venv313/Scripts <target>` (CPython 3.13.17 venv, docs/STATUS.md).
+VENV ?= .venv/bin
 
 setup:
 	python3 -m venv .venv
@@ -10,6 +11,10 @@ setup:
 
 test-fast:
 	$(VENV)/python -m pytest -m "not slow" -q
+
+# All logical cores (needs pytest-xdist; one BLAS thread per worker). Known: none of the app polling tests fail on the 64-thread server.
+test-fast-par:
+	OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 $(VENV)/python -m pytest -m "not slow" -q -n logical
 
 test-full:
 	$(VENV)/python -m pytest -q

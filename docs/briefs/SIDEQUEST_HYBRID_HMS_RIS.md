@@ -77,3 +77,4 @@ first, no unrequested sweeps, detail in repo files not chat.
 Approved by the user: architecture A, 2 quadrants, centre feed, 3 gate rows, isolation target 20 dB per strip; 4 quadrants later with the same gate cell.
 
 - Round 4: dog-bone test board ARCHIVED (negative result, not run). Mushroom-type via-diode gate: `results/sidequest_hybrid/MUSHROOM_CELL.md`, package `hfss_exports/sidequest_mushroom_cell/` (eigenmode, ON/OFF, PEC lid 30 mm); thin-wire via MoM extension scoped (planning only).
+- Round 5: HFSS mushroom baseline returned (OFF ok, ON failed, resonance 2.2x low); model recalibrated (`results/sidequest_hybrid/MUSHROOM_CALIBRATION.md`); four ON variants + two OFF twins in `hfss_exports/sidequest_mushroom_variants/` (user runs phases 90 and 180 only). Via-MoM extension parked.

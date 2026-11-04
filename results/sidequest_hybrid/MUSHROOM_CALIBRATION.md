@@ -1,0 +1,10 @@
+# Mushroom gate cell — recalibration on the HFSS baseline eigenmode (MODEL_ONLY)
+
+HFSS (user, `hfss_results/sidequest_mushroom_baseline/NOTES.md`): OFF matched the first model (3.86 / 7.66 / 10.98 / ... GHz, beta/k0 1.06). **ON failed**: lowest band flat at 4.9-5.1 GHz (f(180) = 4.92), second band 7.74 / 11.14 GHz at 60 / 90 deg.
+The first model (wire-medium slab, L_eff = 2.18 nH, f0 = 10.98 GHz) was wrong by 2.2x in resonance frequency (LC product 4.8x too small); the OFF state does not probe the via inductance (the diode capacitance dominates), which is why it passed.
+Two recalibrations (`sidequest_mushroom_calibrate.py`, `sidequest_mushroom_m2.py`, `sidequest_mushroom_predict.py`), both with the patch sheet from the MoM unchanged:
+- **M2**: wire-medium via with L_eff x kappa, kappa = 4.77 (10.4 nH) from f_ON(180) = 4.92 GHz. Keeps the flat local-resonance shape (baseline ON 4.52 / 4.72 / 4.84 / 4.92 GHz at 90-180 deg vs HFSS 4.9-5.1; OFF 3.84 / 7.56 / 11.3 / 13.9, beta 1.018 vs HFSS 3.86 / 7.66 / 10.98 / 12.54, 1.06).
+- **M1**: plain slab in parallel with a series branch L_br (6.0 nH from the same point). Reproduces the ON second band (7.66 / 11.2 vs 7.74 / 11.14) and OFF at 30-60 deg, but its lowest band disperses (3.3 -> 4.9 GHz) and OFF beta is 1.148.
+The truth lies between: the HFSS OFF beta (1.06) is between M2 (1.02) and M1 (1.15). Calibrated uncertainty: +-10 % on M2 values, M1 as the low alternative.
+Physical reading: the series inductance of the via path (via, pad, bridge, current spreading) is about 4-5x the thin-slab estimate mu0 h; the patch sheet capacitance is right (OFF). A patch-size change alone cannot restore 10.5-11 GHz: in M2 the 180-deg resonance only rises to 9.9 GHz for a 2.4 mm patch (OFF beta then 1.01: no longer matched), in M1 to 6.7 GHz. Reaching 10.5-11 GHz needs the series inductance cut by about 3-4x (shorter/wider path, several vias), which the next variants cannot test within "one diode, pitch 6.4 mm" except through the diode gap and via radius levers of V4.
+The via-MoM extension stays parked.

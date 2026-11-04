@@ -37,17 +37,17 @@ PAD, GD = 0.8e-3, 0.4e-3  # pad side, pad-to-patch gap (diode gap)
 ETA0 = 376.730313
 
 
-def cell(w):
-    hh = PAD / 2 + GD
+def cell(w, gd=GD, pad=PAD):
+    hh = pad / 2 + gd
     ring = (AxisRect(-(w / 2 + hh) / 2, 0.0, w / 2 - hh, w), AxisRect((w / 2 + hh) / 2, 0.0, w / 2 - hh, w),
-            AxisRect(0.0, (w / 2 + hh) / 2, 2 * hh, w / 2 - hh), AxisRect(0.0, -(w / 2 + hh) / 2, 2 * hh, w / 2 - hh), AxisRect(0.0, 0.0, PAD, PAD))
+            AxisRect(0.0, (w / 2 + hh) / 2, 2 * hh, w / 2 - hh), AxisRect(0.0, -(w / 2 + hh) / 2, 2 * hh, w / 2 - hh), AxisRect(0.0, 0.0, pad, pad))
     return UnitCell(RectangularLattice(P, P), CompositeGeometry(metal=ring), SUB, Metal(), backing="pec")
 
 
-def sheet_table(w, freqs_ghz, mesh=32):
+def sheet_table(w, freqs_ghz, mesh=32, gd=GD, pad=PAD):
     out = []
     for f in freqs_ghz:
-        y = sheet_tensor(cell(w), f * 1e9, mesh)
+        y = sheet_tensor(cell(w, gd, pad), f * 1e9, mesh)
         out.append([f, complex(y[0, 0]).imag * 1e3, complex(y[1, 1]).imag * 1e3])
     return out
 
@@ -113,8 +113,14 @@ class Model:
                 prev = None
                 continue
             v = self.resid(state, f, beta, lid)
+            if not np.isfinite(v):
+                prev = None
+                continue
             if prev is not None and np.sign(v) != np.sign(prev[1]) and abs(v) < 1e2 and abs(prev[1]) < 1e2:
-                out.append(brentq(lambda ff: self.resid(state, ff, beta, lid), prev[0], f))
+                try:
+                    out.append(brentq(lambda ff: self.resid(state, ff, beta, lid), prev[0], f))
+                except ValueError:
+                    pass
             prev = (f, v)
         return out
 

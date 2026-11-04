@@ -43,3 +43,24 @@ def test_step_variants_have_the_named_parts():
         parts = ce.import_named_parts(str(ROOT / f"hfss_exports/sidequest_mushroom_cell/cell_{st}.step"))
         assert {"Substrate", "Ground", "Via", "Pad", "Patch", "Air", f"D_{st}"} <= set(parts)
         assert parts["Air"]["bbox_mm"][5] == pytest.approx(30.0) and parts["Via"]["n_solids"] == 1
+
+
+def test_variant_predictions_are_ordered_and_files_exist():
+    d = ROOT / "hfss_exports/sidequest_mushroom_variants"
+    pred = json.loads((d / "predictions.json").read_text(encoding="utf-8"))
+    f180 = {k: v["S0"]["M2"]["ON_180"] for k, v in pred["variants"].items()}
+    assert f180["V1"] > f180["V2"] > f180["V3"]  # smaller patch -> higher resonance (calibrated M2)
+    assert all(v["S0"]["M1"]["ON_180"] < v["S0"]["M2"]["ON_180"] for v in pred["variants"].values())  # M1 is the low-side alternative
+    assert sorted(pred["files"]) == sorted(["V1_ON.step", "V1_OFF.step", "V2_ON.step", "V2_OFF.step", "V3_ON.step", "V4_ON.step"])
+    for f in pred["files"]:
+        assert (d / f).exists()
+
+
+def test_variant_step_via_radius_and_patch_volume():
+    pytest.importorskip("cadquery")
+    from src import cad_export as ce
+
+    d = ROOT / "hfss_exports/sidequest_mushroom_variants"
+    p = ce.import_named_parts(str(d / "V4_ON.step"))
+    assert p["Via"]["volume_mm3"] == pytest.approx(np.pi * 0.5**2 * 1.575, rel=1e-3)
+    assert p["Patch"]["volume_mm3"] == pytest.approx((2.8**2 - 2.4**2) * 0.035, rel=1e-3)  # hole = pad 0.8 + 2 x 0.8 gap = 2.4

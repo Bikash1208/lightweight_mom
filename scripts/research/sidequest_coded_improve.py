@@ -23,6 +23,7 @@ BETA_K0 = 1.07
 A0 = 0.70  # Np/m, baseline cell swing +-1 (converged estimate 0.65-0.75)
 AA0 = 0.095  # Np/m, ohmic absorption for the baseline cell with half its diodes ON
 LAUNCH0 = 0.627
+AA_BG = 0.0  # Np/m background (dielectric + conductor) loss of the stack; 0 in the original RT5880 study
 BETA = BETA_K0 * st.K0
 AREA = 58.457e-3  # m^2, hexagon of side 150 mm
 LAM0 = 299792458.0 / 10.54e9
@@ -87,13 +88,15 @@ class Board:
 
 
 def unit_currents(bd, amp):
-    """J_unit for element e: (pi/2) amp (u.rhat) u e^{-j beta rho}; returns {e: (jx, jy)} and co-pol contributions c[e][k]."""
+    """J_unit for element e in {x, y, xy}: (pi/2) amp v_e e^{-j beta rho}, v_x = (rho_x, 0), v_y = (0, rho_y), v_xy = (rho_y, rho_x) (= Delta Y rho_hat for Delta Y = x x, y y, x y + y x);
+    returns {e: (jx, jy)} and co-pol contributions c[e][k]."""
     j, c = {}, {}
     ph = np.exp(-1j * BETA * bd.rho)
-    for e, u in U.items():
-        d = u[0] * bd.rhat[0] + u[1] * bd.rhat[1]
-        f = (np.pi / 2) * amp * d * ph
-        j[e] = (f * u[0], f * u[1])
+    rx, ry = bd.rhat[0], bd.rhat[1]
+    vec = {"x": (rx, 0 * rx), "y": (0 * ry, ry), "xy": (ry, rx)}
+    for e, (v0, v1) in vec.items():
+        f = (np.pi / 2) * amp * ph
+        j[e] = (f * v0, f * v1)
         c[e] = []
         for k in range(2):
             t = st.JONES[POLS[k]]
@@ -119,39 +122,56 @@ def combos(vs, vw):
     return opts
 
 
-def option_arrays(vs, pairs):
-    """vs: static values; pairs: list of (mA, mB, onA, onB, gon) switched pairs. Returns arrays over options:
-    mx (n,2), my (n,2), nd (n,), loss (n,2,2) = ON-conduction weight per state for the x and y element."""
-    mx, my, nd, ld = [], [], [], []
+def option_arrays(vs, pairs, tens=None):
+    """vs: static values; pairs: list of (mA, mB, onA, onB, gon) switched pairs; tens: static tensor options (mx, my, mxy) (E1-type cells, both elements static, no diode).
+    Returns mx (n,2), my (n,2), mxy (n,2), nd (n,), loss (n,2,2), flag_tensor (n,)."""
+    mx, my, mxy, nd, ld, ft = [], [], [], [], [], []
+
+    def add(a, b, c3, n, l, f=False):
+        mx.append(a); my.append(b); mxy.append(c3); nd.append(n); ld.append(l); ft.append(f)
+
+    z2 = (0.0, 0.0)
     for a in vs:
         for b in vs:
-            mx.append((a, a)); my.append((b, b)); nd.append(0); ld.append(((0, 0), (0, 0)))
+            add((a, a), (b, b), z2, 0, (z2, z2))
     for p in pairs:
         for b in vs:
-            mx.append((p[0], p[1])); my.append((b, b)); nd.append(1); ld.append(((p[2] * p[4], p[3] * p[4]), (0, 0)))
-            mx.append((b, b)); my.append((p[0], p[1])); nd.append(1); ld.append(((0, 0), (p[2] * p[4], p[3] * p[4])))
+            add((p[0], p[1]), (b, b), z2, 1, ((p[2] * p[4], p[3] * p[4]), z2))
+            add((b, b), (p[0], p[1]), z2, 1, (z2, (p[2] * p[4], p[3] * p[4])))
     for p in pairs:
         for q in pairs:
-            mx.append((p[0], p[1])); my.append((q[0], q[1])); nd.append(2); ld.append(((p[2] * p[4], p[3] * p[4]), (q[2] * q[4], q[3] * q[4])))
-    return np.array(mx, float), np.array(my, float), np.array(nd, float), np.array(ld, float)
+            add((p[0], p[1]), (q[0], q[1]), z2, 2, ((p[2] * p[4], p[3] * p[4]), (q[2] * q[4], q[3] * q[4])))
+    for t in (tens or []):
+        add((t[0], t[0]), (t[1], t[1]), (t[2], t[2]), 0, (z2, z2), True)
+    return np.array(mx, float), np.array(my, float), np.array(mxy, float), np.array(nd, float), np.array(ld, float), np.array(ft, bool)
+
+
+def e1_options(m_max, levels=(0.35, 0.7, 1.0), n_angles=16):
+    """Static tensor options of the E1-type slotted cell: Delta Y = delta [cos2a (xx - yy) + sin2a (xy + yx)], delta in levels * m_max, 2a in n_angles directions, plus the empty option."""
+    out = [(0.0, 0.0, 0.0)]
+    for lv in levels:
+        for a in np.arange(n_angles) * 2 * np.pi / n_angles:
+            out.append((lv * m_max * np.cos(a), -lv * m_max * np.cos(a), lv * m_max * np.sin(a)))
+    return out
 
 
 def bit_sets():
     return np.array([-1.0, 1.0]), [(1.0, -1.0, 0, 1, 1.0), (-1.0, 1.0, 1, 0, 1.0)]  # pair (mA, mB, A uses ON, B uses ON, g_on): m=+1 is OFF, m=-1 is ON
 
 
-def design(bd, amp, vs, pairs, eps, lam, mu=0.0, g=1.0, w=(1.0, 1.0), scale=None, ring=None, g_ring=1.0):
-    """Per-cell least squares over the option product. Returns m (2 states, 2 elements, n), nd (n,), loss (2 states, n). scale (n,) multiplies all values (taper)."""
+def design(bd, amp, vs, pairs, eps, lam, mu=0.0, g=1.0, w=(1.0, 1.0), scale=None, ring=None, g_ring=1.0, tens=None, e1_scale=None):
+    """Per-cell least squares over the option product. Returns m (2 states, 3 elements x/y/xy, n), nd (n,), loss (2 states, n).
+    scale (n,) multiplies all values (taper); e1_scale (n,) multiplies only the E1 tensor options."""
     _, c = unit_currents(bd, amp)
-    mx, my, nd, ld = option_arrays(vs, pairs)
+    mx, my, mxy, nd, ld, ft = option_arrays(vs, pairs, tens)
     sc = np.ones(bd.n) if scale is None else scale
+    sce = np.ones(bd.n) if e1_scale is None else e1_scale
+    fac = np.where(ft[None, :], (sc * sce)[:, None], sc[:, None])  # (n, nopt)
     cost = np.zeros((bd.n, mx.shape[0]))
     for k in range(2):
         gg = g if ring is None else np.where(ring, g_ring, g)
         tau = gg * amp * np.exp(-1j * eps[k])
-        cx = c["x"][k][:, None] * sc[:, None]
-        cy = c["y"][k][:, None] * sc[:, None]
-        pred = cx * mx[None, :, k] + cy * my[None, :, k]
+        pred = (c["x"][k][:, None] * mx[None, :, k] + c["y"][k][:, None] * my[None, :, k] + c["xy"][k][:, None] * mxy[None, :, k]) * fac
         cost += w[k] * np.abs(tau[:, None] - pred) ** 2
     scale_c = np.mean(np.abs(g * amp) ** 2)
     cost = cost / scale_c + lam * nd[None, :]
@@ -164,10 +184,12 @@ def design(bd, amp, vs, pairs, eps, lam, mu=0.0, g=1.0, w=(1.0, 1.0), scale=None
             lossc += (ld[None, :, 0, k] * wx[0][:, None] + ld[None, :, 1, k] * wx[1][:, None])
         cost = cost + mu * lossc
     best = np.argmin(cost, axis=1)
-    m = np.zeros((2, 2, bd.n))
+    f_best = fac[np.arange(bd.n), best]
+    m = np.zeros((2, 3, bd.n))
     for k in range(2):
-        m[k, 0] = mx[best, k] * sc
-        m[k, 1] = my[best, k] * sc
+        m[k, 0] = mx[best, k] * f_best
+        m[k, 1] = my[best, k] * f_best
+        m[k, 2] = mxy[best, k] * f_best
     loss = np.zeros((2, bd.n))
     for k in range(2):
         loss[k] = ld[best, 0, k] * wx[0] + ld[best, 1, k] * wx[1]
@@ -178,15 +200,20 @@ def realise(bd, amp, m):
     j, _ = unit_currents(bd, amp)
     cur = []
     for k in range(2):
-        cur.append((m[k, 0] * j["x"][0] + m[k, 1] * j["y"][0], m[k, 0] * j["x"][1] + m[k, 1] * j["y"][1]))
+        cur.append((sum(m[k, i] * j[e][0] for i, e in enumerate(("x", "y", "xy"))), sum(m[k, i] * j[e][1] for i, e in enumerate(("x", "y", "xy")))))
     return cur
 
 
-def amplitude_profile(bd, m, loss, a0_scale=None):
+def _vec2(bd, m):
+    """|Delta Y rho_hat|^2 per state: (m_x rho_x + m_xy rho_y)^2 + (m_xy rho_x + m_y rho_y)^2."""
+    rx, ry = bd.rhat
+    return [(m[k, 0] * rx + m[k, 2] * ry) ** 2 + (m[k, 2] * rx + m[k, 1] * ry) ** 2 for k in range(2)]
+
+
+def amplitude_profile(bd, m, loss):
     """alpha_i from the actual values, loss integral -> amp_i (radiated amplitude per unit m) and the converted fraction / edge power."""
-    wx = np.array([bd.rhat[0] ** 2, bd.rhat[1] ** 2])
-    alpha = A0 * np.mean([(m[k, 0] ** 2) * wx[0] + (m[k, 1] ** 2) * wx[1] for k in range(2)], axis=0)
-    aa = 2 * AA0 * np.mean(loss, axis=0)
+    alpha = A0 * np.mean(_vec2(bd, m), axis=0)
+    aa = AA_BG + 2 * AA0 * np.mean(loss, axis=0)
     integ, ie = bd.profile(alpha, aa)
     amp = np.sqrt(2 * A0 / bd.rho) * np.exp(-integ)
     w = 2 * alpha * np.exp(-2 * integ) / bd.rho * st.PITCH**2 / (2 * np.pi)
@@ -195,14 +222,12 @@ def amplitude_profile(bd, m, loss, a0_scale=None):
 
 def evaluate(bd, amp, m, launch, conv):
     cur = realise(bd, amp, m)
-    wx = np.array([bd.rhat[0] ** 2, bd.rhat[1] ** 2])
     out = []
+    a_id = np.sqrt(np.mean(_vec2(bd, m), axis=0)) * amp
     for k in range(2):
         et, ep = st.far_field(bd.x, bd.y, *cur[k])
         t = st.JONES[POLS[k]]
         j = st.jones_to_current(t, THETA, PHIS[k])
-        a_id = np.sqrt(np.maximum(m[k, 0] ** 2 * wx[0] + m[k, 1] ** 2 * wx[1], 1e-30)) * amp  # |J|/(pi/2) magnitude profile of the realised cells
-        a_id = np.sqrt(np.mean([m[q, 0] ** 2 * wx[0] + m[q, 1] ** 2 * wx[1] for q in range(2)], axis=0)) * amp
         idl = a_id * np.exp(-1j * st.K0 * np.sin(THETA) * (bd.x * np.cos(PHIS[k]) + bd.y * np.sin(PHIS[k])))
         ei, epi = st.far_field(bd.x, bd.y, j[0] * idl, j[1] * idl)
         mi = st.metrics(ei, epi, THETA, PHIS[k], POLS[k])
@@ -214,31 +239,12 @@ def evaluate(bd, amp, m, launch, conv):
     return out
 
 
-def run(vs, pairs, lam, eps, mu=0.0, g=1.0, launch=LAUNCH0, w=(1.0, 1.0), iters=3, scale=None, bd=None, amp_override=None):
-    bd = bd or Board()
-    amp = np.sqrt(2 * A0 / bd.rho) * np.exp(-0.5 * (A0 + AA0) * (bd.rho - st.RHO_KEEP))
-    for _ in range(iters):
-        m, nd, loss = design(bd, amp, vs, pairs, eps, lam, mu, g, w, scale, ring, g_ring)
-        amp, conv, edge, alpha, aa = amplitude_profile(bd, m, loss)
-    res = evaluate(bd, amp, m, launch, conv)
-    stat = {"static_frac": float(1 - nd.sum() / (2 * bd.n)), "diodes": int(nd.sum()), "SW_to_beam": conv, "edge": edge, "ap_eff": [10 ** ((r["gain_dbi"] - DMAX_DBI) / 10) for r in res],
-            "mean_abs_m": float(np.mean(np.abs(m))), "ON_frac": float(np.mean(loss) * 2)}
-    # control lines: distinct complement classes of the (mA,mB) sign words over switched elements
-    words = set()
-    for e in range(2):
-        sw = np.abs(m[0, e] - m[1, e]) > 1e-9
-        for a, b in zip(np.sign(m[0, e][sw]), np.sign(m[1, e][sw]), strict=True):
-            words.add((a, b) if a > 0 else (-a, -b))
-    stat["lines_with_inverters"] = len(words)
-    return {"states": res, **stat}, (bd, amp, m, nd, loss)
-
-
 def phase_resolution(bd, amp, m, eps, g=1.0):
     """rms phase error [deg] of the realised co-pol contribution against the target phase, amplitude weighted; effective uniform step sqrt(12) * rms."""
     _, c = unit_currents(bd, amp)
     e2, wsum = 0.0, 0.0
     for k in range(2):
-        pred = m[k, 0] * c["x"][k] + m[k, 1] * c["y"][k]
+        pred = m[k, 0] * c["x"][k] + m[k, 1] * c["y"][k] + m[k, 2] * c["xy"][k]
         tau = g * amp * np.exp(-1j * eps[k])
         d = np.angle(pred * np.conj(tau))
         wgt = np.abs(tau) ** 2
@@ -248,7 +254,7 @@ def phase_resolution(bd, amp, m, eps, g=1.0):
     return float(rms), float(np.sqrt(12) * rms)
 
 
-def tune_lambda(bd, amp, vs, pairs, eps, target=766, **kw):  # kw: mu, g, w, scale, ring, g_ring
+def tune_lambda(bd, amp, vs, pairs, eps, target=766, **kw):  # kw: mu, g, w, scale, ring, g_ring, tens, e1_scale
     """Smallest lambda with diodes <= target (design only, amplitude profile frozen)."""
     lo, hi = 0.0, 3.0
     for _ in range(9):
@@ -261,25 +267,26 @@ def tune_lambda(bd, amp, vs, pairs, eps, target=766, **kw):  # kw: mu, g, w, sca
     return hi
 
 
-def full_run(vs, pairs, eps, mu=0.0, g=1.0, launch=LAUNCH0, w=(1.0, 1.0), scale=None, target=766, bd=None, ring=None, g_ring=1.0):
+def full_run(vs, pairs, eps, mu=0.0, g=1.0, launch=LAUNCH0, w=(1.0, 1.0), scale=None, target=766, bd=None, ring=None, g_ring=1.0, tens=None, e1_scale=None):
     """lambda tuned so that diodes <= target, 3 amplitude iterations."""
     bd = bd or Board()
     amp = np.sqrt(2 * A0 / bd.rho) * np.exp(-0.5 * (A0 + AA0) * (bd.rho - st.RHO_KEEP))
-    lam = 0.3
-    for it in range(3):
-        lam = tune_lambda(bd, amp, vs, pairs, eps, target, mu=mu, g=g, w=w, scale=scale, ring=ring, g_ring=g_ring)
-        m, nd, loss = design(bd, amp, vs, pairs, eps, lam, mu, g, w, scale, ring, g_ring)
+    kw = dict(mu=mu, g=g, w=w, scale=scale, ring=ring, g_ring=g_ring, tens=tens, e1_scale=e1_scale)
+    for _ in range(3):
+        lam = tune_lambda(bd, amp, vs, pairs, eps, target, **kw)
+        m, nd, loss = design(bd, amp, vs, pairs, eps, lam, **kw)
         amp, conv, edge, alpha, aa = amplitude_profile(bd, m, loss)
-    lam = tune_lambda(bd, amp, vs, pairs, eps, target, mu=mu, g=g, w=w, scale=scale, ring=ring, g_ring=g_ring)
-    m, nd, loss = design(bd, amp, vs, pairs, eps, lam, mu, g, w, scale, ring, g_ring)
+    lam = tune_lambda(bd, amp, vs, pairs, eps, target, **kw)
+    m, nd, loss = design(bd, amp, vs, pairs, eps, lam, **kw)
     amp2, conv, edge, alpha, aa = amplitude_profile(bd, m, loss)
     res = evaluate(bd, amp2, m, launch, conv)
     rms, step = phase_resolution(bd, amp2, m, eps, g)
     nsw = int((nd > 0).sum())
     words = {(1, 0)} if nsw else set()  # every switched diode is driven (ON,OFF) or (OFF,ON): one complement class per axis
+    dmax = DMAX_DBI
     out = {"states": res, "lambda": float(lam), "static_frac": float(1 - nd.sum() / (2 * bd.n)), "diodes": int(nd.sum()), "lines_with_inverters": len(words), "SW_to_beam": conv, "edge": edge,
-           "ap_eff": [10 ** ((r["gain_dbi"] - DMAX_DBI) / 10) for r in res], "rms_phase_deg": rms, "eff_step_deg": step, "mean_abs_m": float(np.mean(np.abs(m))), "ON_loss": float(np.mean(loss) * 2),
-           "alpha_mean": float(alpha.mean()), "aa_mean": float(aa.mean())}
+           "ap_eff": [10 ** ((r["gain_dbi"] - dmax) / 10) for r in res], "rms_phase_deg": rms, "eff_step_deg": step, "mean_abs_m": float(np.mean(np.abs(m))), "ON_loss": float(np.mean(loss) * 2),
+           "alpha_mean": float(alpha.mean()), "aa_mean": float(aa.mean()), "e1_cell_frac": float(np.mean(np.abs(m[0, 2]) > 1e-9))}
     return out, (bd, amp2, m, nd, loss, alpha, aa)
 
 

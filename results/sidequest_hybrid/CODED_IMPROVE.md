@@ -64,3 +64,5 @@ The efficiency gap is not closed by I1-I7: 90 % of the surface-wave power is nev
 
 ## HFSS checklist (before any claim)
 Rim 0.2 mm cell, 4 states; position-0.8 mm / 1.2 mm / 2.0 mm cell variants (ON/OFF Y, loss); the 10 mm / 3 mm top-hat launcher (launch fraction, S11, match); the sub-library interpolation (reduced-swing cells); first-order leakage and scalar element factor on the board.
+
+> **Superseded in part by `CODED_CELL_SEARCH.md` (round 12):** the cell tensor used here was extracted at normal incidence; the surface-wave (Bloch, kt = beta) tensor gives alpha_beam 1.3-1.9 Np/m instead of 0.7, so the board absolute numbers (17-19 dBi, edge 80 %) are conservative by about 2-3 dB; the ranking of the items I1-I7 (only the diode-position/loss item helps, taper and edge rings do not) should be re-checked with the corrected cell.

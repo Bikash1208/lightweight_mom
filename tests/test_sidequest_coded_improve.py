@@ -21,8 +21,8 @@ def test_library_maps_the_baseline_cell_to_plus_minus_one():
 
 def test_bit_design_values_and_diode_count():
     m, nd, loss = I.design(BD, AMP, VS, PAIRS, [0.0, 0.0], 0.6)
-    assert set(np.unique(m)) <= {-1.0, 1.0}
-    static_el = (np.abs(m[0] - m[1]) < 1e-12)  # (2 elements, n)
+    assert set(np.unique(m[:, :2])) <= {-1.0, 1.0} and not m[:, 2].any()
+    static_el = (np.abs(m[0, :2] - m[1, :2]) < 1e-12)  # (2 elements, n)
     assert int((~static_el).sum()) == int(nd.sum())
     assert np.all(loss >= 0) and loss.max() <= 1.0 + 1e-12
 
@@ -44,3 +44,13 @@ def test_launcher_baseline_matches_the_model_value():
 
     s = PinLaunch(10.54e9, 2.2, 1.575e-3, Launcher(top_above_surface_m=6e-3, pin_radius_m=0.305e-3), tan_delta=0.0009).split()
     assert abs(s["launch_fraction"] - 0.627) < 0.01
+
+
+def test_e1_tensor_options_radiate_the_same_power_in_every_direction():
+    tens = I.e1_options(1.3)
+    mx, my, mxy, nd, ld, ft = I.option_arrays(np.array([0.0]), [], tens)
+    assert ft.sum() == len(tens) and np.all(nd[ft] == 0)
+    rx, ry = np.cos(np.linspace(0, 2 * np.pi, 7)), np.sin(np.linspace(0, 2 * np.pi, 7))
+    for i in np.flatnonzero(ft)[1:]:
+        p = (mx[i, 0] * rx + mxy[i, 0] * ry) ** 2 + (mxy[i, 0] * rx + my[i, 0] * ry) ** 2  # |Delta Y rho_hat|^2
+        assert np.allclose(p, p[0]) and abs(p[0] - (mx[i, 0] ** 2 + mxy[i, 0] ** 2)) < 1e-12  # trace-free tensor: reflection, norm preserved

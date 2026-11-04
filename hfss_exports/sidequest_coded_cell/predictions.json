@@ -1,0 +1,166 @@
+{
+ "freq_GHz": [
+  7.0,
+  8.5,
+  9.5,
+  10.0,
+  10.54,
+  11.0,
+  11.5,
+  12.5,
+  13.5,
+  14.5
+ ],
+ "Yxx_mS": {
+  "OFF": [
+   [
+    0.0010191441771668797,
+    1.8851825506867088
+   ],
+   [
+    0.0012554558865639583,
+    2.306951845860064
+   ],
+   [
+    0.0014192891398517506,
+    2.5947373377066567
+   ],
+   [
+    0.0015031723507184544,
+    2.7393000513149097
+   ],
+   [
+    0.0015956238449127593,
+    2.8974516622850253
+   ],
+   [
+    0.0016761237204227584,
+    3.0345395780521347
+   ],
+   [
+    0.0017654338934888583,
+    3.185196879019411
+   ],
+   [
+    0.0019502022250576698,
+    3.4915263088629174
+   ],
+   [
+    0.0021449078983707902,
+    3.808570938739044
+   ],
+   [
+    0.002350826181829506,
+    4.135465775724325
+   ]
+  ],
+  "ON": [
+   [
+    0.2092953220975214,
+    5.484932587589452
+   ],
+   [
+    0.4157681088042737,
+    7.202785034433564
+   ],
+   [
+    0.6785995481183578,
+    8.609924688647224
+   ],
+   [
+    0.8705199168131725,
+    9.421900181452548
+   ],
+   [
+    1.147863098481845,
+    10.405041058695575
+   ],
+   [
+    1.4628580806049394,
+    11.348658685289461
+   ],
+   [
+    1.9233307976186518,
+    12.5029642796786
+   ],
+   [
+    3.4483864169935474,
+    15.310092161998561
+   ],
+   [
+    6.520112893913336,
+    18.865487810025304
+   ],
+   [
+    12.9666351073704,
+    22.627091387806317
+   ]
+  ]
+ },
+ "predictions": [
+  {
+   "phase_deg": 90,
+   "light_line_GHz": 11.711,
+   "OFF_f_GHz": 11.317,
+   "OFF_beta_over_k0": 1.0348,
+   "ON_f_GHz": 10.617,
+   "ON_beta_over_k0": 1.103
+  },
+  {
+   "phase_deg": 120,
+   "light_line_GHz": 15.614,
+   "OFF_f_GHz": ">14.5 (outside the Y(f) table)",
+   "ON_f_GHz": 12.679,
+   "ON_beta_over_k0": 1.2315
+  }
+ ],
+ "label": "MODEL_ONLY: MoM Y_xx(f) of the cell as a uniform sheet (mesh 32), TM0 transverse resonance; the cell's gaps and the band edge near 180 deg are not modelled; uncertainty about +-5 % in frequency",
+ "cell_mm": {
+  "lattice": 6.4,
+  "patch_x": 6.0,
+  "patch_y": 4.8,
+  "diode_gap": 0.4,
+  "footprint_y": 1.2,
+  "substrate": 1.575,
+  "metal": 0.035,
+  "lid_above_patch_plane": 30.0
+ },
+ "diode_values_10p54": {
+  "D_ON_R_ohm": 2.44,
+  "D_OFF_C_fF": 28.16
+ },
+ "exact_dims": [
+  {
+   "state": "ON",
+   "bodies": 5,
+   "sheets": 1,
+   "EXACT_DIMS": "PASS",
+   "inexact_literals": 0,
+   "n_snapped": 8,
+   "max_snap_mm": 2.22044604925e-16,
+   "snap_check": "{'n_vertices': 60, 'n_distinct_snapped_vertices': 36, 'merged_groups_from_noise': 0, 'max_raw_separation_in_merged_group_mm': 0.0, 'distinct_merge_violations': [], 'collapsed_edges': 0, 'min_distinct_",
+   "bbox_mm": [
+    -3.2,
+    3.2,
+    -1.61,
+    30.0
+   ]
+  },
+  {
+   "state": "OFF",
+   "bodies": 5,
+   "sheets": 1,
+   "EXACT_DIMS": "PASS",
+   "inexact_literals": 0,
+   "n_snapped": 8,
+   "max_snap_mm": 2.22044604925e-16,
+   "snap_check": "{'n_vertices': 60, 'n_distinct_snapped_vertices': 36, 'merged_groups_from_noise': 0, 'max_raw_separation_in_merged_group_mm': 0.0, 'distinct_merge_violations': [], 'collapsed_edges': 0, 'min_distinct_",
+   "bbox_mm": [
+    -3.2,
+    3.2,
+    -1.61,
+    30.0
+   ]
+  }
+ ]
+}

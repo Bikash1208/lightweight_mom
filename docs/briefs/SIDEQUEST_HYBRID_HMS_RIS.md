@@ -66,6 +66,10 @@ first, no unrequested sweeps, detail in repo files not chat.
 
 ## Status
 - [x] 0 brief
-- [ ] 1 literature (BLOCKED: api.crossref.org and DOI resolvers are outside the session network allow-list; no DOI can be verified)
+- [~] 1 literature: 8 user-supplied DOIs recorded, BIBLIOGRAPHIC_ONLY (`results/sidequest_hybrid/LITERATURE.md`; doi.org / crossref not reachable)
 - [x] 2 architecture study ■ (`results/sidequest_hybrid/ARCH_STUDY.md`; awaiting approval)
-- [ ] 3 cell   - [ ] 4 placement   - [ ] 5 HFSS package
+- [x] 1b coherent gate-ring reflection (`results/sidequest_hybrid/GATE_REFLECTION.md`)
+- [~] 3 gate cell (`results/sidequest_hybrid/GATE_CELL.md`): 16 dB (not 20 dB) isolation, pass state mismatched; stop and report
+- [ ] 4 placement   - [ ] 5 HFSS package
+
+Approved by the user: architecture A, 2 quadrants, centre feed, 3 gate rows, isolation target 20 dB per strip; 4 quadrants later with the same gate cell.

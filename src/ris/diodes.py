@@ -189,15 +189,17 @@ def madp_000907_off(l_s=None, r_p=None):
     )
 
 
-def diode_load(model, x, y, length, width, direction="x", transverse_conducts=False):
+def diode_load(model, x, y, length, width, direction="x", transverse_conducts=None):
     """A `LumpedLoad` for `model` on a region of `length` (along `direction`) x `width` (across), centred at (x, y) [m].
 
     The region is the diode/pad footprint: a parameter, not a constant. `transverse_conducts=False` is the physical lumped
     element (R1 finding: a transversely conducting strip is not the empty gap). A model without R_p is a plain series RLC and
     becomes the R1 R/L/C load itself (bit-identical); with R_p the load calls `model.impedance(f)` at every frequency.
     """
-    from ..loads import LumpedLoad
+    from ..loads import LumpedLoad, default_transverse_conducts
 
+    if transverse_conducts is None:  # Phase 28: False for x/y (unchanged), True for a rotated axis (see loads.default_transverse_conducts)
+        transverse_conducts = default_transverse_conducts(direction)
     kw = dict(x=x, y=y, length=length, width=width, direction=direction, transverse_conducts=transverse_conducts)
     if model.R_p is None:
         return LumpedLoad(R=model.R_s, L=model.L_s, C=model.C_T, **kw)
@@ -254,7 +256,9 @@ def _chain_load(direction, x, y, offset, length, width, elem):
     from ..loads import LumpedLoad
 
     ox, oy = _axis_offsets(direction, offset)
-    return LumpedLoad(x + ox, y + oy, length, width, direction, transverse_conducts=False, **elem)
+    from ..loads import default_transverse_conducts
+
+    return LumpedLoad(x + ox, y + oy, length, width, direction, transverse_conducts=default_transverse_conducts(direction), **elem)
 
 
 def _chain_rect(direction, x, y, offset, length, width):

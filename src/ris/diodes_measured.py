@@ -11,7 +11,7 @@ from pathlib import Path
 
 import numpy as np
 
-from ..loads import LumpedLoad
+from ..loads import LumpedLoad, default_transverse_conducts
 
 DATA = Path(__file__).resolve().parents[2] / "results/phase28/diodes/ma4agp907_series_z.json"
 LABEL = "MEASURED_VENDOR_SPARAM"
@@ -44,5 +44,7 @@ def z_of_f(state, scale=None):
     return z
 
 
-def load(state, x, y, length, width, direction="x", scale=None):
-    return LumpedLoad(x=x, y=y, length=length, width=width, direction=direction, z_of_f=z_of_f(state, scale), transverse_conducts=False)
+def load(state, x, y, length, width, direction="x", scale=None, transverse_conducts=None):
+    """`transverse_conducts=None` (default): False for x/y (unchanged), True for a rotated axis (Phase 28 fix, `loads.default_transverse_conducts`)."""
+    tc = default_transverse_conducts(direction) if transverse_conducts is None else transverse_conducts
+    return LumpedLoad(x=x, y=y, length=length, width=width, direction=direction, z_of_f=z_of_f(state, scale), transverse_conducts=tc)

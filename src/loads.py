@@ -111,6 +111,20 @@ class LumpedLoad:
         return self.x - hx, self.x + hx, self.y - hy, self.y + hy
 
 
+def default_transverse_conducts(direction):
+    """Phase 28 fix: the transverse-conduction default for a diode/lumped element on `direction`.
+
+    Axis-aligned ("x" / "y" / 0 / 90 deg): False (the physical lumped element, unchanged). A rotated axis: True. On a staircased x/y rooftop mesh the
+    pointwise block `v . J = 0` (v = unit vector across the axis) forces J_x : J_y = cos : sin at every point of the region, which for the few mesh
+    cells of a diode footprint leaves no current at all, so the region is an open circuit in EVERY diode state (ON == OFF, found in Phase 28; the
+    pointwise-uniform-current test of `test_loads_rotated.py` passes because uniform J is the one admissible pattern). The tensor sheet `Z_L u u^T`
+    with a conducting transverse direction is the well-posed model (rotation covariance tested in `tests/test_loads_rotated_diode.py`)."""
+    if isinstance(direction, str):
+        return False
+    ang = float(direction) % 180.0
+    return ang not in (0.0, 90.0)
+
+
 def _tent_product_integral(c1, c2, h, a, b):
     """Integral over [a, b] of tent(x - c1; h) * tent(x - c2; h), tent(u; h) = max(0, 1 - |u|/h). Exact (piecewise quadratic)."""
     pts = sorted({a, b, *(c + s * h for c in (c1, c2) for s in (-1.0, 0.0, 1.0))})
@@ -156,6 +170,13 @@ def check_load_geometry(loads, unit_cell, nx=None, ny=None):
             warnings.warn(
                 f"load {k}: part of its region is not metal in the unit-cell pattern, so no basis function crosses it there "
                 "and the load has no (or a partial) effect: include the region in the geometry as conductor",
+                UserWarning,
+                stacklevel=3,
+            )
+        if ld.is_rotated and not ld.transverse_conducts and not ld.open_circuit:
+            warnings.warn(
+                f"load {k}: a rotated load with transverse_conducts=False blocks v.J = 0 pointwise on x/y rooftops and freezes the region to an open "
+                "circuit in every state (Phase 28 finding); use transverse_conducts=True (see loads.default_transverse_conducts)",
                 UserWarning,
                 stacklevel=3,
             )

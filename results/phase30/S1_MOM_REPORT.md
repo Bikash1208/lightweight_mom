@@ -19,3 +19,23 @@ LOCALITY: ruled out as the cause of the HFSS deficit. Dropping locality makes th
 Q split expected from HFSS (m48 MoM): Q_rad 17 (Im f 0.29 GHz), Q_total 16.7, Q_dielectric ~ 400 (m24/m32: 555-563; 1/Q_d = 1/Q_tot - 1/Q_rad is a small difference of large terms at Q ~ 17, so 400-560 +-). Dielectric energy fraction p_e = 1/(Q_d tan d) ~ 0.8 (m24/m32), >0.8 and not meaningful beyond 1 at m48. Hence HFSS Q = 403 equals the pure dielectric Q: **the HFSS S1 mode behaves as if it did not radiate**. Falsifiable predictions for the pending HFSS runs: tan d = 0 with the same radiation top -> Q stays ~ 400-600 or higher if the boundary does not absorb the broadside leakage; PML top -> Q ~ 15-40, f_i ~ 0.15-0.3 GHz; PEC lid -> a cavity (no decay). Suspect HFSS setup (radiation-boundary distance / reflection, the lid) before the model.
 
 Labels: MODEL_ONLY, NOT_HFSS_VALIDATED. Not done: m64 (41k unknowns, ~1 h per stage), ky0 != 0, mesh-converged Q.
+
+## Addendum (2026-11-04): vs the HFSS PML run, mesh and F convergence (MODEL_ONLY)
+
+HFSS S1 PML top (eps_r 11.2, ph_x 6.74 deg): f = 9.394/9.655/10.558/10.954/12.747/12.875 GHz, Q = 830/286/282/477/169/176; near 10 GHz Q ~ 280, alpha/k0 ~ 0.011 total.
+
+Q_rad of the bright x-mode (tan d = 0, kx0 = 6.74 deg/supercell, F = 2n), logs `s1_mom_Q_vs_mesh_F_kx6p74.log`:
+
+| mesh | N | f (GHz) | Q_rad |
+|---|---|---|---|
+| 24 | 5174 | 10.424 | 49 |
+| 32 | 9756 | 10.15 | 32 |
+| 40 | 15712 | 10.06 | 30 |
+| 48 | 23092 | 10.05 | 19 |
+| 64 | 40182 | 10.196 | 38.5 |
+
+- Q_rad 17 does NOT survive m64: Q_rad(m) scatters 19-49 (non-monotone; gap staircase), best estimate 30-40 (alpha/k0 ~ 0.04 by the alpha ~ 1/Q scaling at fixed v_g: not re-solved). Still 7-9x below the HFSS Q ~ 280.
+- F: m24 F = 1n/2n/3n/4n -> Q 48.9/48.9/49.1/49.1; m32 F = 1n/2n/3n -> 32.4/32.5/32.6. The Floquet truncation is not the cause (< 1 %).
+- Mode match (m24 scan at Im f = 0.08, `s1_mom_m24_modescan_imf0p08.log`): bright x-mode 10.4-10.55 <-> HFSS 10.558 (Q 282); MoM 10.8 <-> HFSS 10.954; MoM 12.74 (Q 402) <-> HFSS 12.747 (Q 169); 12.95 <-> 12.875. The other HFSS modes (9.39, 9.655) lie below the scanned MoM peaks at m24 (converged-mesh modes shift down 0.2-0.5 GHz). The mode-by-mode match is by frequency only, no eigenvector comparison.
+- Where the MoM radiation could be overestimated (untested): (1) staircase of the 0.15 mm gap and of the rotated slot (Q scatter +-40 % with mesh; the near-field of a narrow gap sets the n = 0 harmonic coupling); (2) infinite lateral periodicity (no edge, no truncation of the leaky wave by a finite supercell count: Bloch real kx0 with the n = 0 harmonic always in the light cone); (3) ideal PEC ground and zero-thickness PEC pattern (HFSS metal and finite-thickness ground); (4) the n = 0 harmonic is the only radiating order, so any error in the lowest-harmonic substrate/air Green function at small kt directly scales Q_rad (checked equal to the production assembler for real k, 1e-12); (5) HFSS side: PML distance and eigen-solver damping accuracy, 6-mode request (a Q ~ 20-40 mode may not be returned), mesh of the 0.15 mm gap.
+- Not done: eigenvector (field) comparison, an independent far-field power check of Q_rad, a finer-than-m64 mesh, a staircase-free (curved-edge) basis.

@@ -33,3 +33,22 @@ Pointing is exact (25.0, 0) and (25.0, 180) in every row. The ideal-pol referenc
 
 ## Risks
 Scalar element factor and first-order leakage for a rotated tensor (no HFSS); alpha of the disc varies 0.54-0.67 Np/m with footprint staircase and mesh; the R2 cell is assumed, not solved.
+
+## 6. Solved crossed two-diode cell (round 9) — replaces the assumed R2 numbers above
+Cell (`sidequest_coded_cross_cell.py`, data `coded_cross_scan.json`): the 6.0 mm disc cut by a vertical and a horizontal 0.4 mm slit (through the disc, four islands), x diode (0.4 x 1.2 mm, along x) bridging the vertical slit at y = +1.6 mm, y diode bridging the horizontal slit at x = +1.6 mm; one island floats. Measured MA4AGP907, MoM mesh 64 (mesh 32 within 5 %). Four states (Y in mS, [xx, xy; yx, yy]):
+| x/y diode | Y_xx | Y_xy | Y_yy |
+|---|---|---|---|
+| OFF/OFF | 2.15j | -0.02j | 2.15j |
+| ON/OFF | 0.13+4.05j | -0.18j | 2.16j |
+| OFF/ON | 2.16j | -0.18j | 0.13+4.05j |
+| ON/ON | 0.44+5.07j | -1.92j | 0.44+5.07j |
+* dY per axis: x diode alone 1.90j mS (y OFF), 2.91j mS (y ON); mean **2.40j + 0.28 mS**; same for y. The two diodes are **not additive** (ON/ON has Y_xy = -1.92j mS and a larger dY): not in the model below.
+* **alpha_beam 0.070 Np/m** (mesh 32: 0.073), alpha_abs 0.155 Np/m, **beta/k0 1.030** (mean sheet 3.36j mS). The disc with one rotated diode has dY 4.97 mS and 0.67 Np/m: the crossed cell is **10x weaker**, because one diode bridges only 1.2 mm of the 6 mm island row and the other island floats.
+* Variants (mesh 64): four diodes (two per axis, driven in pairs): dY 2.72 mS, alpha 0.110 Np/m; half-length slits (rim connects the islands): dY of the wrong sign or ~0 (alpha <= 0.09 / 1.1 at a rim-limited sheet shift): rejected.
+K = 2 RHCP/LHCP with this cell (same optimiser, `sidequest_coded_pol_cross.py`, `coded_pol_cross_results.json`):
+| lambda | static | diodes | lines (inv / no inv) | gain A / B [dBi] | SLL [dB] | AR [dB] | XPD [dB] |
+|---|---|---|---|---|---|---|---|
+| 0 | 51.7 % | 1380 | 1 / 2 | 7.9 / 8.0 | -14.9 / -14.4 | 1.0 / 0.8 | 25 / 26 |
+| **0.5** | **72.3 %** | **792** | **1 / 2** | **7.6 / 7.6** | -13.8 / -13.8 | 0.9 / 0.9 | 25.5 |
+| 0.8 | 78.1 % | 626 | 1 / 2 | 7.3 / 7.3 | -10.6 / -10.4 | 1.0 / 0.9 | 25 |
+Ideal-pol reference 9.3 dBi; eta = 0.011. Polarisation purity is excellent, the gain is not: **7.6 dBi vs 16.4 dBi for the rotated disc**.

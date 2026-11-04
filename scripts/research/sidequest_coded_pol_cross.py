@@ -10,7 +10,9 @@ import sidequest_arch_study as st
 import sidequest_coded_cell as cc
 import sidequest_coded_pol as P
 
-scan = json.loads(Path("results/sidequest_hybrid/coded_cross_scan.json").read_text(encoding="utf-8"))
+VARIANT = sys.argv[1] if len(sys.argv) > 1 else "rim"  # "rim": slits 5.6 mm long (0.2 mm rim), "through": slits cut through the disc
+fn = "coded_cross_rim_scan.json" if VARIANT == "rim" else "coded_cross_scan.json"
+scan = json.loads(Path("results/sidequest_hybrid/" + fn).read_text(encoding="utf-8"))
 a = [o for o in scan if o["mesh"] == 64 and not o["four"]][0]["analysis"]
 delta = complex(*a["dXX_mS"]) * 1e-3
 iso = complex(*a["Y_iso_mS"]) * 1e-3
@@ -30,4 +32,4 @@ if __name__ == "__main__":
         s = f["states"]
         print("R2x", lam, "eps_B %.1f static %.3f diodes %d lines %d/%d" % (r["eps_B_deg"], f["static_frac"], f["diodes"], f["lines_with_inverters"], f["lines_no_inverters"]),
               "gain", [round(x["gain_dbi"], 1) for x in s], "ideal", round(s[0]["G_ideal_dbi"], 1), "SLL", [round(x["SLL_db"], 1) for x in s], "AR", [round(x["AR_db"], 1) for x in s], "XPD", [round(x["XPD_db"], 1) for x in s], "eta", round(s[0]["converted_beam_power"], 4), flush=True)
-    Path("results/sidequest_hybrid/coded_pol_cross_results.json").write_text(json.dumps({"cell": {"beta_k0": P.BETA_K0, "alpha0": P.A0, "alpha_abs0": P.AABS0}, "designs": out}, indent=1, default=float), encoding="utf-8", newline="\n")
+    Path("results/sidequest_hybrid/coded_pol_cross_%s_results.json" % VARIANT).write_text(json.dumps({"cell": {"beta_k0": P.BETA_K0, "alpha0": P.A0, "alpha_abs0": P.AABS0}, "designs": out}, indent=1, default=float), encoding="utf-8", newline="\n")

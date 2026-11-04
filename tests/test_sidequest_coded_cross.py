@@ -26,3 +26,10 @@ def test_x_y_transposition_symmetry_and_reciprocity(ys):
     assert np.allclose(ys["ON", "OFF"], ys["OFF", "ON"][::-1, ::-1], rtol=1e-6, atol=1e-9)
     for y in ys.values():
         assert abs(y[0, 1] - y[1, 0]) < 1e-9 * abs(y).max()
+
+
+def test_rim_slits_switch_independently_and_lower_the_sheet():
+    y = {(a, b): sheet_tensor(X.cross_cell(a, b, ls=2.8), gc.F0, 32) for a in ("OFF", "ON") for b in ("OFF", "ON")}
+    assert (y["ON", "OFF"][0, 0] - y["OFF", "OFF"][0, 0]).imag < -2e-3  # ON removes slit capacitance
+    assert abs(y["ON", "OFF"][1, 1] - y["OFF", "OFF"][1, 1]) < 2e-4
+    assert abs(y["ON", "ON"][0, 0] - y["ON", "OFF"][0, 0]) < 0.3e-3  # near additive

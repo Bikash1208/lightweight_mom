@@ -66,4 +66,6 @@ first, no unrequested sweeps, detail in repo files not chat.
 
 ## Status
 - [x] 0 brief
-- [ ] 1 literature   - [ ] 2 architecture study ■   - [ ] 3 cell   - [ ] 4 placement   - [ ] 5 HFSS package
+- [ ] 1 literature (BLOCKED: api.crossref.org and DOI resolvers are outside the session network allow-list; no DOI can be verified)
+- [x] 2 architecture study ■ (`results/sidequest_hybrid/ARCH_STUDY.md`; awaiting approval)
+- [ ] 3 cell   - [ ] 4 placement   - [ ] 5 HFSS package

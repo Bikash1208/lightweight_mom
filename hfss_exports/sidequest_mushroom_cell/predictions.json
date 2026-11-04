@@ -1,0 +1,158 @@
+{
+ "label": "MODEL_ONLY (lumped wire-medium via model + MoM patch sheet; uncertainty ~ +-5 % in frequency, the HFSS eigenmode decides)",
+ "cell_mm": {
+  "lattice": 6.4,
+  "patch": 5.6,
+  "pad": 0.8,
+  "diode_gap": 0.4,
+  "via_radius": 0.2,
+  "substrate": 1.575,
+  "lid_height_above_patch_plane": 30.0
+ },
+ "lc_theory": {
+  "L_nH": 1.9792033717615698,
+  "C_pF": 0.171722246733612,
+  "f0_GHz": 8.632997985970663,
+  "BW_frac": 0.2849714575405931,
+  "note": "Sievenpiper LC with w = 5.6, g = 0.8: C overestimates the MoM sheet capacitance (0.0975 pF) by 1.76x, f0 8.6 GHz vs 11.0 GHz; the design uses the MoM sheet"
+ },
+ "diode_values_10p54": {
+  "D_ON_R_ohm": 2.44,
+  "D_OFF_C_fF": 28.16
+ },
+ "ON_stopband_GHz": {
+  "lower_edge_phase180_TM": 10.151,
+  "upper_edge_via_patch_resonance": 10.975,
+  "covers_10p54_pm_0p3": true
+ },
+ "OFF_beta_over_k0_at_10p54": 1.0795,
+ "hologram_average_beta_over_k0": 1.065,
+ "eigenmode_table_with_lid": [
+  {
+   "phase_deg": 0,
+   "light_line_GHz": 0.0,
+   "ON_TM_surface_band_GHz": null,
+   "ON_all_model_crossings_GHz": [
+    4.712,
+    4.997,
+    8.925,
+    9.993,
+    11.803
+   ],
+   "OFF_TM_surface_band_GHz": null,
+   "OFF_all_model_crossings_GHz": [
+    4.683,
+    4.997,
+    8.521,
+    9.993,
+    11.1
+   ]
+  },
+  {
+   "phase_deg": 30,
+   "light_line_GHz": 3.904,
+   "ON_TM_surface_band_GHz": 3.785,
+   "ON_all_model_crossings_GHz": [
+    3.785,
+    3.904,
+    5.932,
+    6.341,
+    9.446
+   ],
+   "OFF_TM_surface_band_GHz": 3.842,
+   "OFF_all_model_crossings_GHz": [
+    2.632,
+    3.842,
+    3.904,
+    5.982,
+    6.341
+   ]
+  },
+  {
+   "phase_deg": 60,
+   "light_line_GHz": 7.807,
+   "ON_TM_surface_band_GHz": 7.222,
+   "ON_all_model_crossings_GHz": [
+    7.222,
+    7.807,
+    8.505,
+    9.269,
+    10.869
+   ],
+   "OFF_TM_surface_band_GHz": 7.598,
+   "OFF_all_model_crossings_GHz": [
+    5.264,
+    7.598,
+    7.807,
+    8.71,
+    9.269
+   ]
+  },
+  {
+   "phase_deg": 90,
+   "light_line_GHz": 11.711,
+   "ON_TM_surface_band_GHz": 9.006,
+   "ON_all_model_crossings_GHz": [
+    9.006,
+    11.711,
+    11.941,
+    12.732,
+    13.428
+   ],
+   "OFF_TM_surface_band_GHz": 10.761,
+   "OFF_all_model_crossings_GHz": [
+    7.895,
+    10.761,
+    11.711,
+    11.98,
+    12.732
+   ]
+  },
+  {
+   "phase_deg": 120,
+   "light_line_GHz": 15.614,
+   "ON_TM_surface_band_GHz": 9.653,
+   "ON_all_model_crossings_GHz": [
+    9.653,
+    15.614,
+    15.741
+   ],
+   "OFF_TM_surface_band_GHz": 13.071,
+   "OFF_all_model_crossings_GHz": [
+    10.527,
+    13.071,
+    15.614,
+    15.714
+   ]
+  },
+  {
+   "phase_deg": 150,
+   "light_line_GHz": 19.518,
+   "ON_TM_surface_band_GHz": 9.965,
+   "ON_all_model_crossings_GHz": [
+    9.965
+   ],
+   "OFF_TM_surface_band_GHz": 15.132,
+   "OFF_all_model_crossings_GHz": [
+    13.159,
+    15.132
+   ]
+  },
+  {
+   "phase_deg": 180,
+   "light_line_GHz": 23.421,
+   "ON_TM_surface_band_GHz": 10.151,
+   "ON_all_model_crossings_GHz": [
+    10.151
+   ],
+   "OFF_TM_surface_band_GHz": null,
+   "OFF_all_model_crossings_GHz": []
+  }
+ ],
+ "reading_notes": [
+  "TM surface band = the crossing just below the light line (f = c*phase/(2 pi a)); crossings at/above the light line are lid (parallel-plate) modes.",
+  "ON is lossy (R = 2.44 ohm): HFSS reports complex frequencies; compare Re(f).",
+  "OFF: the TM surface band leaves the 16 GHz window above ~120 deg (model), 'None' is not a failure.",
+  "Modes whose field is concentrated in the substrate between patch/pad and ground (large Ez at the via) are the surface-wave band; TE-like bands (Ey) are not in the table."
+ ]
+}

@@ -75,3 +75,5 @@ first, no unrequested sweeps, detail in repo files not chat.
 - [ ] 4 placement (blocked until a gate that blocks exists)   - [ ] 5b full-antenna HFSS package
 
 Approved by the user: architecture A, 2 quadrants, centre feed, 3 gate rows, isolation target 20 dB per strip; 4 quadrants later with the same gate cell.
+
+- Round 4: dog-bone test board ARCHIVED (negative result, not run). Mushroom-type via-diode gate: `results/sidequest_hybrid/MUSHROOM_CELL.md`, package `hfss_exports/sidequest_mushroom_cell/` (eigenmode, ON/OFF, PEC lid 30 mm); thin-wire via MoM extension scoped (planning only).

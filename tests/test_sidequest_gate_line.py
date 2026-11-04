@@ -41,3 +41,18 @@ def test_cell_dimensions_must_be_on_the_mesh_grid():
 
     with pytest.raises(ValueError):
         gc.make_dogbone(1.23e-3, 0.8e-3, 6.0e-3, 0.4e-3, "ON", lt=5.6e-3)
+
+
+def test_conductive_sheet_has_damped_quasi_tem_root():
+    roots = gc.roots_all((100.1 + 68.0j) * 1e-3)
+    assert any(1.40 < r.real / gc.K0 < 1.55 and 5.0 < -r.imag < 15.0 for r in roots)  # sheet over ground: PPW-like mode, alpha ~ 8.6 Np/m
+
+
+def test_transition_row_matches_the_pass_state():
+    import sidequest_gate_match as gm
+
+    yg = 0.0009e-3 + 2.5e-3j
+    s11_bare, _ = gm.cascade(YREF, [(yg, 3)])
+    tr = [(1j * 5.64e-3, 1)]
+    s11, s21 = gm.cascade(YREF, tr + [(yg, 3)] + tr)
+    assert -20 * np.log10(abs(s11_bare)) < 10 and -20 * np.log10(abs(s11)) > 15 and -20 * np.log10(abs(s21)) < 0.5

@@ -70,6 +70,8 @@ first, no unrequested sweeps, detail in repo files not chat.
 - [x] 2 architecture study ■ (`results/sidequest_hybrid/ARCH_STUDY.md`; awaiting approval)
 - [x] 1b coherent gate-ring reflection (`results/sidequest_hybrid/GATE_REFLECTION.md`)
 - [~] 3 gate cell (`results/sidequest_hybrid/GATE_CELL.md`): 16 dB (not 20 dB) isolation, pass state mismatched; stop and report
-- [ ] 4 placement   - [ ] 5 HFSS package
+- [x] round 3 (`results/sidequest_hybrid/GATE_RETUNE_MATCH.md`): retune, transition-row match (RL 22 dB), ring with real pass state; **correction: the ON gate blocks only ~3 dB once the damped quasi-TEM root is included**
+- [x] 5a HFSS gate test package `hfss_exports/sidequest_gate_test/` (STEP, 35 sites, D_ON/D_OFF groups, predictions both states)
+- [ ] 4 placement (blocked until a gate that blocks exists)   - [ ] 5b full-antenna HFSS package
 
 Approved by the user: architecture A, 2 quadrants, centre feed, 3 gate rows, isolation target 20 dB per strip; 4 quadrants later with the same gate cell.

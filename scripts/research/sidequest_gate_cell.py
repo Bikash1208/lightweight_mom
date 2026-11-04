@@ -151,3 +151,72 @@ def make_dogbone(e, s, h, g, state, scale=None, direction="x", lt=6.0e-3, wd=Non
 def y_xx(cell, mesh):
     y = sheet_tensor(cell, F0, mesh)
     return y, complex(y[0, 0])
+
+
+class at_freq:
+    """Context manager: evaluate the line model at another frequency (module globals K0, W0, F0 swapped, restored on exit)."""
+
+    def __init__(self, f_hz):
+        self.f = f_hz
+
+    def __enter__(self):
+        g = globals()
+        self.old = (g["F0"], g["K0"], g["W0"])
+        g["F0"], g["K0"], g["W0"] = self.f, free_space_wavenumber(self.f), angular_frequency(self.f)
+
+    def __exit__(self, *a):
+        g = globals()
+        g["F0"], g["K0"], g["W0"] = self.old
+
+
+def no_mode_band(freqs_hz, ys):
+    """Frequencies (Hz) at which the sheet admittance has no bound TM0 mode, and the contiguous interval around the middle of them."""
+    flags = []
+    for f, y in zip(freqs_hz, ys, strict=True):
+        with at_freq(f):
+            flags.append(beta_complex(y) is None)
+    return np.array(flags)
+
+
+def roots_all(y, re_max=1.7):
+    """All decaying (Re gamma > 0) complex roots beta = beta' - j alpha of F(beta) = y + Y_air + Y_slab with 1 < beta' < re_max k0 and 0 <= alpha <= 0.6 k0
+    (multi-start least squares). Includes the weakly bound TM0-like mode AND the damped parallel-plate-like (quasi-TEM) mode of a conductive sheet over the
+    ground plane, which the single-root `beta_complex` can miss or reject (its upper limit sqrt(eps_r) k0 is wrong for a lossy sheet)."""
+    from scipy.optimize import root
+
+    out = []
+    for br in np.concatenate([[1.00005, 1.0005, 1.005], np.linspace(1.02, re_max, 36)]):
+        for bi in (0.0, -0.002, -0.01, -0.04, -0.15, -0.4):
+            def fun(v):
+                z = _f((v[0] - 1j * v[1]) * K0, y)
+                return [z.real, z.imag]
+            try:
+                s = root(fun, [br, -bi], method="hybr", tol=1e-13)
+            except Exception:  # noqa: BLE001
+                continue
+            if not s.success or abs(fun(s.x)[0]) + abs(fun(s.x)[1]) > 1e-9:
+                continue
+            b = (s.x[0] - 1j * s.x[1]) * K0
+            if b.imag > 1e-12:
+                b = b.conjugate()
+            g = np.sqrt(b**2 - K0**2 + 0j)
+            if g.real > 1e-6 * K0 and K0 * (1 + 1e-9) < b.real < re_max * K0 and -0.6 * K0 <= b.imag <= 1e-9:
+                if not any(abs(b - o) < 1e-6 * K0 for o in out):
+                    out.append(b)
+    return out
+
+
+def strip_transmission_modes(y_ref, y_gate, n_rows, pitch=P):
+    """Single-mode line model for EVERY root of the gate sheet; returns the list and the root of the largest |S21| (conservative: transmission is carried by the least
+    attenuated mode; mode coupling is not modelled)."""
+    br = beta_complex(y_ref)
+    zr = zm(br)
+    res = []
+    for bg in roots_all(y_gate):
+        zg = zm(bg)
+        th = bg * n_rows * pitch
+        a, b, c, d = np.cos(th), 1j * zg * np.sin(th), 1j * np.sin(th) / zg, np.cos(th)
+        den = a + b / zr + c * zr + d
+        res.append({"beta_k0": [float(bg.real / K0), float(-bg.imag / K0)], "alpha_np_m": float(-bg.imag), "S21_db": float(20 * np.log10(abs(2 / den))),
+                    "S11_db": float(20 * np.log10(max(abs((a + b / zr - c * zr - d) / den), 1e-12)))})
+    return res

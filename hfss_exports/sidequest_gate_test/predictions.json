@@ -1,0 +1,157 @@
+{
+ "label": "MODEL_ONLY (single-mode line model + cylindrical-harmonic feed model, infinite plane: board edges, pin direct radiation and the finite 83 x 70 mm size are NOT modelled)",
+ "cells_mm": {
+  "ref_square": 5.8,
+  "trans_square": 5.4,
+  "gate": "dog-bone e1.6 s1.2 h6.0 g0.4 lt6.0 wd0.8"
+ },
+ "sheets_ms_10p54": {
+  "ref_b": 7.49,
+  "trans_b": 5.44,
+  "gate_OFF_xx": "0.001+2.5j",
+  "gate_OFF_yy": "6.6j",
+  "gate_ON_xx": "100.1+68.0j",
+  "gate_ON_yy": "6.6j"
+ },
+ "stack_OFF": [
+  {
+   "psi_rel_deg": 0,
+   "RL_db": 22.6938711193177,
+   "IL_db": 0.02802193888353227
+  },
+  {
+   "psi_rel_deg": 15,
+   "RL_db": 25.48967746685968,
+   "IL_db": 0.017000056103295975
+  },
+  {
+   "psi_rel_deg": 30,
+   "RL_db": 47.87116759154034,
+   "IL_db": 0.0051569130180713265
+  },
+  {
+   "psi_rel_deg": 45,
+   "RL_db": 21.255547956198768,
+   "IL_db": 0.03843842010378957
+  }
+ ],
+ "gate_OFF_without_transition": [
+  {
+   "psi_rel_deg": 0,
+   "RL_db": 8.350266016448538,
+   "IL_db": 0.689121463042732
+  },
+  {
+   "psi_rel_deg": 45,
+   "RL_db": 12.277504421360604,
+   "IL_db": 0.26839480400298976
+  }
+ ],
+ "stack_ON_real": [
+  {
+   "psi_rel_deg": 0,
+   "S21_db": -2.946267404695809,
+   "S11_db": -10.493691478935489,
+   "mode_beta_k0": 1.456739606492374,
+   "alpha_np_m": 8.592427216932599
+  },
+  {
+   "psi_rel_deg": 15,
+   "S21_db": -3.1129916737116177,
+   "S11_db": -10.120127359416902,
+   "mode_beta_k0": 1.4547504415869357,
+   "alpha_np_m": 9.15111588128603
+  },
+  {
+   "psi_rel_deg": 30,
+   "S21_db": -3.6853135836844646,
+   "S11_db": -9.003705837490926,
+   "mode_beta_k0": 1.4474233642834062,
+   "alpha_np_m": 11.133178071164414
+  },
+  {
+   "psi_rel_deg": 45,
+   "S21_db": -4.932419885151492,
+   "S11_db": -7.198776143587526,
+   "mode_beta_k0": 1.4282539322505898,
+   "alpha_np_m": 15.814597290459606
+  }
+ ],
+ "board": {
+  "OFF": {
+   "S11_db": -44.798821671021294,
+   "P_front": 0.5125051829669285,
+   "P_back": 0.48383302456041566,
+   "front_over_back_db": 0.2500275348205703
+  },
+  "ON_real": {
+   "S11_db": -20.4962082662732,
+   "P_front": 0.5093136933729375,
+   "P_back": 0.23914168403038089,
+   "front_over_back_db": 3.2833006953344315
+  },
+  "ON_ideal_block_phase_sweep": [
+   {
+    "phase_deg": 0.0,
+    "S11_db": -13.244201327490774,
+    "P_front": 0.72347073222323,
+    "P_back": 0.05281390440742237,
+    "front_over_back_db": 11.366726915239028
+   },
+   {
+    "phase_deg": 45.0,
+    "S11_db": -13.096512853962238,
+    "P_front": 0.7672898203364602,
+    "P_back": 0.040661836085485986,
+    "front_over_back_db": 12.757724511222827
+   },
+   {
+    "phase_deg": 90.0,
+    "S11_db": -10.965806932898605,
+    "P_front": 0.709800543137146,
+    "P_back": 0.03547563270362998,
+    "front_over_back_db": 13.012061775441936
+   },
+   {
+    "phase_deg": 135.0,
+    "S11_db": -7.320460795074361,
+    "P_front": 0.4299851557844348,
+    "P_back": 0.03645588089908135,
+    "front_over_back_db": 10.716858661116417
+   },
+   {
+    "phase_deg": 180.0,
+    "S11_db": -4.28241437341832,
+    "P_front": 0.0257836372365957,
+    "P_back": 0.0001324305070397149,
+    "front_over_back_db": 22.893561403850377
+   },
+   {
+    "phase_deg": 225.0,
+    "S11_db": -8.772623806039531,
+    "P_front": 0.5530212831541225,
+    "P_back": 0.03315257722262146,
+    "front_over_back_db": 12.222245502148095
+   },
+   {
+    "phase_deg": 270.0,
+    "S11_db": -11.079459797831447,
+    "P_front": 0.7401761578903059,
+    "P_back": 0.017816035463910845,
+    "front_over_back_db": 16.185240232348374
+   },
+   {
+    "phase_deg": 315.0,
+    "S11_db": -12.116518312812603,
+    "P_front": 0.7260206349693481,
+    "P_back": 0.03723873421828784,
+    "front_over_back_db": 12.89954053942121
+   }
+  ]
+ },
+ "falsifiers": [
+  "ON-state surface |E| 1 mm above the board at x = -(25..38) mm vs OFF: model says only 3-5 dB lower (leaky block). A drop of >= 15 dB would falsify the model (the cell then blocks as originally claimed).",
+  "OFF-state |E| along -x equal to +x within 1 dB (transition rows matched). A step of > 2 dB at the gate would falsify the pass-state match.",
+  "S11 ON vs OFF: model -21 dB (leaky block) / -5 to -13 dB (ideal block, phase unknown); S11 better than -10 dB in both states is expected only for the leaky block."
+ ]
+}

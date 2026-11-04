@@ -1,5 +1,12 @@
 # Step 2 — switchable gate cell, architecture A-2q (MODEL_ONLY, solver-internal)
 
+> **CORRECTION (round 3, supersedes every isolation/stopband statement below).** `beta_complex` returned the first root of the transverse-resonance equation and
+> rejected roots with Re beta > sqrt(eps_r) k0; for a conductive ON sheet it therefore reported "no bound TM0 mode" although a **damped quasi-TEM (sheet-over-ground)
+> mode** exists (beta ~ 1.46 k0, alpha ~ 8.6 Np/m, `gc.roots_all`). With every root included (conservative: the least attenuated mode carries the power) the ON gate transmits
+> **-2 to -3.5 dB over 10.0-11.0 GHz for 3 rows (isolation ~ 2-3 dB, not 16-18 dB)**; the "16.3 dB at 10.6 GHz" came from the weakly-bound root alone. The only strong blocker
+> in the single-layer, via-less model is a sheet with b <~ -150 mS and low loss, which the dog-bone does not reach. See `GATE_RETUNE_MATCH.md`.
+
+
 Scripts: `scripts/research/sidequest_gate_cell.py` (cell, mode solver, strip line model), `sidequest_gate_screen.py`, `sidequest_gate_search.py`
 (screening), `sidequest_gate_final.py` + `sidequest_gate_report.py` (characterisation) -> `gate_cell_final.json`; tests `tests/test_sidequest_gate_line.py`.
 Imported additively from branch `phase28-coded-holographic-v2` (new files only, no solver change): `src/ris/diodes_measured.py`,

@@ -1,0 +1,85 @@
+{
+ "label": "MODEL_ONLY geometry checks on the re-imported STEP",
+ "all_pass": true,
+ "step_mb": 97.6,
+ "checks": {
+  "bodies_and_names": {
+   "ok": true,
+   "n_objects": 724,
+   "n_sheets": 720,
+   "n_GA": 360,
+   "n_GB": 360
+  },
+  "metal_single_part_lumps": {
+   "ok": true,
+   "lumps": 1432,
+   "expected": 1432,
+   "note": "one named part; lumps are DC-isolated (patches, ground, probe)"
+  },
+  "patch_vs_design_map": {
+   "ok": true,
+   "n_patches": 1430,
+   "off_grid_or_wrong_shape": 0,
+   "map_mismatches": 0
+  },
+  "template_dims": {
+   "ok": true,
+   "disc_d": 6.0,
+   "slit_L": 5.6,
+   "slit_W": 0.4,
+   "rim": 0.2
+  },
+  "no_intersections": {
+   "ok": true,
+   "substrate_x_ground_probe": 0.0,
+   "substrate_x_patches": 0.0
+  },
+  "substrate": {
+   "ok": true,
+   "thickness": 1.575,
+   "volume_mm3": 97043.230039294
+  },
+  "air_box_ground_to_lid_single_face_walls": {
+   "ok": true,
+   "faces": 6,
+   "z": [
+    -1.61,
+    20.0
+   ],
+   "top_above_probe_mm": 14.0
+  },
+  "probe_and_port": {
+   "ok": true,
+   "pin_r": 0.635,
+   "pin_top_above_substrate": 6.0,
+   "port_r": [
+    0.635,
+    2.05
+   ],
+   "port_z": -1.575,
+   "port_area": 11.935774428967354
+  },
+  "sheet_geometry": {
+   "ok": true,
+   "n_checked": 720,
+   "size": "0.4 x 1.0",
+   "z": 0.0175,
+   "bad": 0,
+   "DX_DY_clearance_min_mm": 0.1414
+  },
+  "sheet_edges_on_metal": {
+   "ok": true,
+   "note": "sheet short edges at x = cx +-0.2 (DX) / y = cy +-0.2 (DY): the slit walls of the template; z = patch mid-plane",
+   "sample": 40
+  },
+  "EXACT_DIMS": {
+   "ok": true,
+   "inexact_literals": 0,
+   "n_snapped": 5899,
+   "max_snap_mm": 2.279066887566e-16,
+   "grid_mm": 0.001,
+   "positions": "integer index x 6.4 (um integers, one division)",
+   "outline_vertices": "(0, +-154), (+-133.368, +-77); apothem 133.368 (regular hexagon 154 would be 133.3679..: 0.0001 mm)"
+  }
+ }
+}

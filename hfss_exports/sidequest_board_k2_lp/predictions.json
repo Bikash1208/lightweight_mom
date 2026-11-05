@@ -1,0 +1,69 @@
+{
+ "labels": [
+  "MODEL_ONLY",
+  "cell HFSS-validated (C/C 10.670, R/R 11.006 GHz at 90 deg; dY -3.13 mS, alpha 0.844 Np/m); board NOT HFSS-validated",
+  "gain = ideal-aperture directivity x launch 0.627 (bare probe) x surface-wave-to-beam conversion x scalar-cell element factor"
+ ],
+ "design": {
+  "frequency_ghz": 10.54,
+  "K": 2,
+  "cells": 1430,
+  "switched_cells": 360,
+  "diode_sheets": 720,
+  "static_open": 526,
+  "static_strap": 544,
+  "static_pct": 74.8,
+  "lines": "1 (+ inverter): GA on the line, GB on its complement",
+  "source": "results/sidequest_hybrid/scalar_board.json, row LP-V eps_B 180 bit lam 0.28 (720 diodes)"
+ },
+ "states": [
+  {
+   "state": "A",
+   "R_A_ohm": 2.44,
+   "R_B_ohm": 1000000000.0,
+   "groups_ON": "GA",
+   "target_theta_deg": 25.0,
+   "target_phi_deg": 0.0,
+   "peak_gain_dbi": 15.15,
+   "peak_theta_deg": 25.0,
+   "peak_phi_deg": 0.0,
+   "sll_db": -13.5,
+   "xpd_db": 32.8,
+   "polarisation": "LP phi-hat (LP-V)",
+   "s11_db": -15.0,
+   "s11_note": "bare calibrated probe (Phase 26 board, HFSS S11 -15.0 dB, same stack and probe); the hologram's loading of the probe is NOT modelled",
+   "launch_fraction": 0.627,
+   "sw_to_beam_fraction": 0.19,
+   "efficiency_of_accepted_power_into_beam": 0.119,
+   "edge_power_pct_of_surface_wave": 76.6,
+   "aperture_efficiency_pct": 3.6
+  },
+  {
+   "state": "B",
+   "R_A_ohm": 1000000000.0,
+   "R_B_ohm": 2.44,
+   "groups_ON": "GB",
+   "target_theta_deg": 25.0,
+   "target_phi_deg": 180.0,
+   "peak_gain_dbi": 15.15,
+   "peak_theta_deg": 25.0,
+   "peak_phi_deg": 180.0,
+   "sll_db": -13.5,
+   "xpd_db": 32.8,
+   "polarisation": "LP phi-hat (LP-V)",
+   "s11_db": -15.0,
+   "s11_note": "bare calibrated probe (Phase 26 board, HFSS S11 -15.0 dB, same stack and probe); the hologram's loading of the probe is NOT modelled",
+   "launch_fraction": 0.627,
+   "sw_to_beam_fraction": 0.19,
+   "efficiency_of_accepted_power_into_beam": 0.119,
+   "edge_power_pct_of_surface_wave": 76.6,
+   "aperture_efficiency_pct": 3.6
+  }
+ ],
+ "falsifiers": "peak gain < 12 dBi, peak more than 3 deg from (25, 0) / (25, 180), SLL above -8 dB, or the A and B patterns not mirror images (phi 0 vs 180)",
+ "NA": [
+  "board S11 with the hologram",
+  "HFSS gain",
+  "direct radiation of the probe (not patterned)"
+ ]
+}

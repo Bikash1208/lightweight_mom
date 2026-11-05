@@ -34,3 +34,35 @@ The segmented number is an estimate (quarter aperture with the same conversion f
 
 ## Risks
 Model-level only; library shapes from the normal-incidence rows; LP states unsupported by this cell; K = 4 line count 7 per axis is the design rule, not an optimum (not minimised by a word-merging step here).
+
+# Round 14 — minimum line count and a real quadrant (4 probes + SP4T) model
+
+## A. Minimum number of control lines, K = 4 (CP set B)
+A line drives one complement class of ON-patterns (with an inverter); the 14 non-constant 4-bit ON-patterns form **7 classes**. Design restricted to L allowed classes on both axes (`sidequest_k4_lines.py`; I1+I2+I5 options, lambda 0.555, eps (0, 0, 0, 180) deg; exhaustive over class subsets for L <= 3, greedy backward elimination for L = 4-6; score = mean gain - 0.5 dB per dB of SLL above -12.7 dB):
+| L (per axis) | lines without inverters | mean gain [dBi] | worst SLL [dB] | static [%] | diodes | best classes |
+|---|---|---|---|---|---|---|
+| 7 | 14 | 19.78 | -15.2 | 55.5 | 1274 | all |
+| 6 | 12 | 19.66 | -14.9 | 56.4 | 1248 | |
+| 5 | 10 | 19.54 | -15.2 | 57.8 | 1206 | |
+| 4 | 8 | 19.38 | -16.0 | 59.3 | 1164 | 0011, 0101, 0110, 0111 |
+| **3** | **6** | **19.22** | **-15.7** | **60.8** | **1120** | **0011, 0101, 0110** (the three two-of-four patterns) |
+| 2 | 4 | 17.74 | **-7.1 (fails)** | 72.2 | 796 | 0011, 0101 |
+| 1 | 2 | 15.49 | -0.1 (fails) | 85.4 | 417 | 0110 |
+**Minimum: 3 lines per axis with inverters (6 without), 0.56 dB below the 7-line design**, SLL -15.7 dB, XPD 22-25 dB, 1120 diodes (280 per state). L = 2 fails the -12.7 dB SLL limit for every class pair and every epsilon in {0, pi}^3 (168 designs, best -7.3 dB, `coded_k4_lines_eps.json`). If x and y diodes of the same class share a physical line the total is 3 lines + inverters (6 if the axes are wired separately); the K = 2 board needs 1 per axis. Subsets for L = 4-6 are greedy (not proven optimal); the search is over the same class set on both axes and a fixed lambda (static fraction adapts).
+
+## B. Segmented comparator: 4 probes, quarter-aperture holograms
+Model (`sidequest_quadrant_board.py`, `quadrant_board.json`): state k uses the 90-degree wedge of the hexagon centred on phi_k (about 380 cells, 14.3-15.0e3 mm^2), its own probe on the wedge axis at 0.75 of the centroid distance (62 mm from the board centre; 0.3-1.3 scanned, best 0.75-1.0), omnidirectional launch (launch fraction 0.627), only the wedge's cells radiate (**ideal isolation of the other wedges: an upper bound**), static cells only (0 diodes; 1-bit and 9-level options, best chosen), the same cell, alpha, loss and power bookkeeping as the coded board with the radial geometry measured from the probe. Gain = geometric gain - IL(SP4T) (parameter).
+| state | pol | geometric gain [dBi] | SLL [dB] | XPD [dB] | AR [dB] | ap. eff. (wedge) [%] | SW->beam [%] | edge [%] |
+|---|---|---|---|---|---|---|---|---|
+| A (phi 0) | RHCP | 12.86 | -14.4 | 21.8 | 1.42 | 8.4 | 20 | 76 |
+| B (phi 90) | LHCP | 12.48 | -15.4 | 25.3 | 0.94 | 8.0 | 20 | 77 |
+| C (phi 180) | RHCP | 12.86 | -14.4 | 21.8 | 1.42 | 8.4 | 20 | 76 |
+| D (phi 270) | LHCP | 12.48 | -15.4 | 25.3 | 0.94 | 8.0 | 20 | 77 |
+Gain against SP4T insertion loss:
+| IL [dB] | segmented A/B [dBi] | coded 7 lines [dBi] | coded 3 lines [dBi] | coded - segmented (7 lines) |
+|---|---|---|---|---|
+| 0 | 12.9 / 12.5 | 19.8 | 19.2 | +6.9 / +7.3 |
+| 0.8 | 12.1 / 11.7 | 19.8 | 19.2 | +7.7 / +8.1 |
+| 1.5 | 11.4 / 11.0 | 19.8 | 19.2 | +8.4 / +8.8 |
+| 2.0 | 10.9 / 10.5 | 19.8 | 19.2 | +8.9 / +9.3 |
+The coded board is **6.9-9.3 dB** above the segmented board; the earlier estimate (14.2 dBi = dedicated 21.0 - 6.0 - 0.8) was optimistic by about 2 dB, because a quarter-aperture board converts only 20 % of the probe power (edge 76 %) against 36 % for the full aperture, with the same cell alpha. The segmented board needs 0 diodes in the aperture (plus the SP4T and four probes). Caveats: omnidirectional probe at one position per wedge (a directional launcher or gate ring, not modelled, would raise it), ideal isolation, no coupling between probes.

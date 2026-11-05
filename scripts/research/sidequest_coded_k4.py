@@ -72,13 +72,19 @@ def words(K, allw=False):
     return [w for w in itertools.product((0, 1), repeat=K) if allw or 0 < sum(w) < K]
 
 
-def options(K, vs, geoms, force_switched=False, allw=False):
+def canon(w):
+    return min(tuple(w), tuple(1 - np.array(w)))
+
+
+def options(K, vs, geoms, force_switched=False, allw=False, cls_x=None, cls_y=None):
     """Option arrays: mx, my (nopt, K); nd; loss (nopt, 2, K) ON-weight (g_on * word); wx, wy: word ids (or -1) for line counting."""
     W = words(K, allw)
     sw = []  # (values (K,), on (K,), id)
     for gi, (moff, mon, gon) in enumerate(geoms):
         for wi, w in enumerate(W):
             sw.append((np.array([mon if b else moff for b in w]), np.array(w) * gon, wi))
+    swx = sw if cls_x is None else [t for t in sw if canon(W[t[2]]) in cls_x]
+    swy = sw if cls_y is None else [t for t in sw if canon(W[t[2]]) in cls_y]
     mx, my, nd, ld, wx, wy = [], [], [], [], [], []
     z = np.zeros(K)
 
@@ -89,12 +95,14 @@ def options(K, vs, geoms, force_switched=False, allw=False):
         for a in vs:
             for b in vs:
                 add(np.full(K, a), np.full(K, b), 0, z, z, -1, -1)
-        for s_ in sw:
+        for s_ in swx:
             for b in vs:
                 add(s_[0], np.full(K, b), 1, s_[1], z, s_[2], -1)
+        for s_ in swy:
+            for b in vs:
                 add(np.full(K, b), s_[0], 1, z, s_[1], -1, s_[2])
-    for s_ in sw:
-        for q in sw:
+    for s_ in swx:
+        for q in swy:
             add(s_[0], q[0], 2, s_[1], q[1], s_[2], q[2])
     return (np.array(mx), np.array(my), np.array(nd, float), np.array(ld), np.array(wx), np.array(wy), W)
 

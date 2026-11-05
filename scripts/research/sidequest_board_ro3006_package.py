@@ -261,12 +261,12 @@ def docs(cells, ev, ok_all, res, size_mb, kinds, n_sw):
         st = s[k]
         states.append({"state": nm, "name": "default (unpowered, diodes OFF)" if nm == "1" else "circuit ON (diodes ON)", "D_sheets": "no boundary" if nm == "1" else f"one Impedance boundary, Rs = {RS} ohm/sq (W/L = 2.5)",
                        "target_theta_deg": 25.0, "target_phi_deg": 0.0 if nm == "1" else 180.0, "peak_dir_theta_phi_deg": st["peak_dir"], "gain_at_design_direction_dbi": round(st["gain_design_dir"], 2), "peak_gain_dbi": round(st["gain_peak"], 2),
-                       "sll_aperture_db": round(st["SLL_aperture_db"], 2), "sll_nonbeam_floor_db": round(st["SLL_floor_db"], 2), "sll_total_db": round(st["SLL_total_db"], 2),
+                       "sll_aperture_db": round(st["SLL_aperture_db"], 2), "sll_21deg_exclusion_db": round(st.get("SLL_21deg_db", float("nan")), 2), "sll_nonbeam_floor_db": round(st["SLL_floor_db"], 2), "sll_total_db": round(st["SLL_total_db"], 2),
                        "other_beam_level_dbi": round(st["other_beam_dbi"], 2), "isolation_db": round(st["isolation_db"], 2), "xpd_db": round(st["XPD_db"], 1), "polarisation": "LP phi-hat (LP-V)",
                        "s11_db": s11["s11_estimate_db"][k], "s11_note": s11["model"]})
     pred = {"labels": ["MODEL_ONLY", f"cell: RO3006 r {RCELL}, MoM mesh 96; switched pairs at the HFSS-calibrated contrast (ON fixed, OFF contrast x0.75 from the r 2.20 cell check: ON 10.3617 / OFF 10.0193 GHz at 90 deg), static cells at the full MoM depth; the cell at r {RCELL} and the board are NOT HFSS-validated",
                        "launch 0.71 (bare slab, spectral model; the pad would give up to 0.96, UNVALIDATED); gain offsets from board_K2_default HFSS: state 1 -1.78 dB (9.1 dBi), state 2 -2.7 dB (8.3 dBi)"],
-            "design": {"id": f"RO3006 r {RCELL}, design (i) one group D_*", "frequency_ghz": F_GHZ, "hexagon_circumradius_mm": R_UM / 1000, "cells": n_cells, "switched_cells": n_sw, "diode_sheets": n_sheets, "diodes": 2 * n_sw,
+            "state_dependent_beta_over_k0": ev["cfg"].get("betas"), "design": {"id": f"RO3006 r {RCELL}, design (i) one group D_*", "frequency_ghz": F_GHZ, "hexagon_circumradius_mm": R_UM / 1000, "cells": n_cells, "switched_cells": n_sw, "diode_sheets": n_sheets, "diodes": 2 * n_sw,
                        "cells_by_type": {"/".join(map(str, k)): v for k, v in kinds.items()}, "A0_np_per_m": ev["A0"], "beta_over_k0": ev["beta_k0"], "config": ev["cfg"], "lam": ev["lam"], "SW_to_beam_pct": round(100 * ev["conv"], 1), "SW_at_edge_pct": round(100 * ev["edge"], 1), "nonbeam_NB": round(ev["NB"], 3)},
             "states": states, "probe": s11,
             "sidelobe_floor": "SLL_total = max(aperture SLL, 10 log(NB x 2.0) - gain): NB = (1 - launch) + launch x SW_at_edge is the state-independent diffuse power (direct probe + edge; HFSS ffd of board_K2_default: ring 60-90 + back = 71-76 % of the power, uniform in azimuth, D about 1.6 dBi). The strongest HFSS sidelobes of that board (8.3 / 8.2 dBi) are conical rings at theta 12-26 deg from the state-common static hologram, which the model underestimates by 10-17 dB: the MODEL SLL IS NOT VALIDATED",
@@ -294,6 +294,9 @@ def docs(cells, ev, ok_all, res, size_mb, kinds, n_sw):
 **Cost (ESTIMATE)**: {cost['tets_M'][0]}-{cost['tets_M'][1]} M tets, {cost['ram_gb'][0]}-{cost['ram_gb'][1]} GB, {cost['time_state1_min'][0]}-{cost['time_state1_min'][1]} min state 1 (reference: RT5880 board 1.28 M tets, 53 GB, 18 min).
 """
     (OUT / "HFSS_SETUP.md").write_text(setup, encoding="utf-8", newline="\n")
+    if os.environ.get("NOSYNC"):
+        print("NOT synced (NOSYNC set)", flush=True)
+        return
     SYNC.mkdir(parents=True, exist_ok=True)
     for f in OUT.iterdir():
         shutil.copy2(f, SYNC / f.name)

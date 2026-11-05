@@ -1,0 +1,132 @@
+{
+ "labels": [
+  "MODEL_ONLY",
+  "cell: RO3006 r 2.3, MoM mesh 96; switched pairs at the HFSS-calibrated contrast (ON fixed, OFF contrast x0.75 from the r 2.20 cell check: ON 10.3617 / OFF 10.0193 GHz at 90 deg), static cells at the full MoM depth; the cell at r 2.3 and the board are NOT HFSS-validated",
+  "launch 0.71 (bare slab, spectral model; the pad would give up to 0.96, UNVALIDATED); gain offsets from board_K2_default HFSS: state 1 -1.78 dB (9.1 dBi), state 2 -2.7 dB (8.3 dBi)"
+ ],
+ "state_dependent_beta_over_k0": [
+  1.33,
+  1.26
+ ],
+ "design": {
+  "id": "RO3006 r 2.3, design (i) one group D_*",
+  "frequency_ghz": 10.5,
+  "hexagon_circumradius_mm": 150.0,
+  "cells": 1350,
+  "switched_cells": 257,
+  "diode_sheets": 514,
+  "diodes": 514,
+  "cells_by_type": {
+   "ST/open/0.929": 1045,
+   "SW/open/1.0": 208,
+   "SW/open/0.643": 30,
+   "ST/open/1.0": 48,
+   "SW/open/0.786": 7,
+   "SW/open/0.929": 12
+  },
+  "A0_np_per_m": 19.916532022221134,
+  "beta_over_k0": 1.295,
+  "config": {
+   "multi_pairs": true,
+   "kappa": 2.0,
+   "inv_taper": 0.5,
+   "ring": 1.5,
+   "sweeps": 3,
+   "outer": 2,
+   "betas": [
+    1.33,
+    1.26
+   ],
+   "beta_state_scan": [
+    -0.2,
+    -0.15,
+    -0.1,
+    -0.05,
+    -0.025,
+    0.0,
+    0.025,
+    0.05,
+    0.1,
+    0.15
+   ],
+   "decouple": true,
+   "g": 2.0,
+   "mu": 70.0,
+   "keep": true
+  },
+  "lam": 0.207890625,
+  "SW_to_beam_pct": 78.2,
+  "SW_at_edge_pct": 13.6,
+  "nonbeam_NB": 0.386
+ },
+ "states": [
+  {
+   "state": "1",
+   "name": "default (unpowered, diodes OFF)",
+   "D_sheets": "no boundary",
+   "target_theta_deg": 25.0,
+   "target_phi_deg": 0.0,
+   "peak_dir_theta_phi_deg": [
+    25.0,
+    0.0
+   ],
+   "gain_at_design_direction_dbi": 14.96,
+   "peak_gain_dbi": 14.96,
+   "sll_aperture_db": -13.38,
+   "sll_21deg_exclusion_db": -12.47,
+   "sll_nonbeam_floor_db": -16.07,
+   "sll_total_db": -13.38,
+   "other_beam_level_dbi": -2.21,
+   "isolation_db": 17.16,
+   "xpd_db": 27.5,
+   "polarisation": "LP phi-hat (LP-V)",
+   "s11_db": -9.1,
+   "s11_note": "thin-pin FD, PinLength 5.0 mm, bare launch geometry (cells from 6.5 mm): R 24 ohm, X +5 ohm -> S11 -9 dB; with the launch pad (rho_in 2.6 mm, UNVALIDATED): R 43 ohm, X +9 ohm -> S11 -18 dB"
+  },
+  {
+   "state": "2",
+   "name": "circuit ON (diodes ON)",
+   "D_sheets": "one Impedance boundary, Rs = 6.1 ohm/sq (W/L = 2.5)",
+   "target_theta_deg": 25.0,
+   "target_phi_deg": 180.0,
+   "peak_dir_theta_phi_deg": [
+    25.0,
+    180.0
+   ],
+   "gain_at_design_direction_dbi": 12.14,
+   "peak_gain_dbi": 12.14,
+   "sll_aperture_db": -13.78,
+   "sll_21deg_exclusion_db": -11.39,
+   "sll_nonbeam_floor_db": -13.26,
+   "sll_total_db": -13.26,
+   "other_beam_level_dbi": -4.89,
+   "isolation_db": 17.03,
+   "xpd_db": 20.3,
+   "polarisation": "LP phi-hat (LP-V)",
+   "s11_db": -9.1,
+   "s11_note": "thin-pin FD, PinLength 5.0 mm, bare launch geometry (cells from 6.5 mm): R 24 ohm, X +5 ohm -> S11 -9 dB; with the launch pad (rho_in 2.6 mm, UNVALIDATED): R 43 ohm, X +9 ohm -> S11 -18 dB"
+  }
+ ],
+ "probe": {
+  "model": "thin-pin FD, PinLength 5.0 mm, bare launch geometry (cells from 6.5 mm): R 24 ohm, X +5 ohm -> S11 -9 dB; with the launch pad (rho_in 2.6 mm, UNVALIDATED): R 43 ohm, X +9 ohm -> S11 -18 dB",
+  "acceptance": "S11 <= -10 dB (goal -15 dB), tuned in HFSS with PinLength 4.5-6.5 mm",
+  "tuning_direction": "+1 mm PinLength: R +11 ohm, X +25 ohm; pad radius / PinLength / pin diameter are the HFSS variables",
+  "s11_estimate_db": [
+   -9.1,
+   -9.1
+  ],
+  "s11_estimate_with_pad_db": [
+   -18.2,
+   -18.2
+  ],
+  "note": "the hologram's loading of the probe is NOT modelled; the model's baseline probe gave -12.7 dB against HFSS -15 dB"
+ },
+ "sidelobe_floor": "SLL_total = max(aperture SLL, 10 log(NB x 2.0) - gain): NB = (1 - launch) + launch x SW_at_edge is the state-independent diffuse power (direct probe + edge; HFSS ffd of board_K2_default: ring 60-90 + back = 71-76 % of the power, uniform in azimuth, D about 1.6 dBi). The strongest HFSS sidelobes of that board (8.3 / 8.2 dBi) are conical rings at theta 12-26 deg from the state-common static hologram, which the model underestimates by 10-17 dB: the MODEL SLL IS NOT VALIDATED",
+ "falsifiers": "peak gain more than 4 dB below the prediction, peak more than 3 deg from (25, 0) / (25, 180), isolation below 8 dB, strongest sidelobe above -3 dB, or the two patterns not mirror images",
+ "NA": [
+  "board S11 with the hologram",
+  "HFSS gain",
+  "RO3006 r 2.3 cell eigenfrequencies in HFSS (the r 2.20 cell is checked)",
+  "tolerance / pointing over corners (later work, paper notes)"
+ ]
+}

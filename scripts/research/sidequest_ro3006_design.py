@@ -175,7 +175,7 @@ def cd_design(np, K, D, bd, amp, opt, eps, lam, mu, g, nu, sweeps, m0, seed=0, m
     return m, nd[cur], loss, cur
 
 
-def evaluate(np, K, D, bd, m, nd, launch):
+def evaluate(np, K, D, bd, m, nd, launch, betas_rad=None):
     """Full-grid far field per state with the amplitude profile of this m; returns calibrated numbers."""
     st = D.st
     sw = nd > 0
@@ -184,11 +184,17 @@ def evaluate(np, K, D, bd, m, nd, launch):
     amp = np.sqrt(2 * K.A0 / bd.rho) * np.exp(-0.5 * (K.A0 + K.AA0) * (bd.rho - st.RHO_KEEP))
     for _ in range(4):
         amp, conv, edge = K.amp_profile(bd, m, loss)
-    j, _ = bd.unit(amp)
+    unit_k = getattr(bd, "_unit_orig", bd.unit)
+    j, _ = unit_k(amp)
     a_id = np.sqrt(np.mean(K.vec2(bd, m), axis=0)) * amp
     out = {"conv": float(conv), "edge": float(edge), "diodes": int(nd.sum()), "states": []}
     nb = (1 - launch) + launch * edge
     for k in range(2):
+        if betas_rad is not None:
+            base_b = K.BETA
+            K.BETA = betas_rad[k]
+            j, _ = unit_k(amp)
+            K.BETA = base_b
         cur = (m[k, 0] * j["x"][0] + m[k, 1] * j["y"][0], m[k, 0] * j["x"][1] + m[k, 1] * j["y"][1])
         et, ep = st.far_field(bd.x, bd.y, *cur)
         jj = st.jones_to_current(st.JONES[bd.pols[k]], K.THETA, bd.phis[k])
@@ -212,8 +218,10 @@ def evaluate(np, K, D, bd, m, nd, launch):
         gpk = float(10 * np.log10(scale * inten[ipk])) + OFFSET[k]
         floor_abs = 10 * math.log10(nb * DNB)
         sll_ap = float(mb["SLL_db"])
+        cosd21 = np.cos(st.TG) * np.cos(K.THETA) + np.sin(st.TG) * np.sin(K.THETA) * np.cos(st.PG - bd.phis[k])
+        sll21 = float(10 * np.log10(inten[np.degrees(np.arccos(np.clip(cosd21, -1, 1))) > 21.0].max() / inten[i0] + 1e-30))
         ring = {t: float(10 * np.log10(np.median(inten[int(np.argmin(np.abs(np.degrees(st.TG[:, 0]) - t)))]) / inten.max() + 1e-30)) for t in (12, 24)}
-        out["states"].append({"ring_median_rel_peak_db": ring, "gain_design_dir": g_cal, "gain_peak": gpk, "peak_dir": [float(np.degrees(st.TG[ipk])), float(np.degrees(st.PG[ipk]))], "SLL_aperture_db": sll_ap, "SLL_floor_db": floor_abs - gpk, "SLL_total_db": max(sll_ap, floor_abs - gpk),
+        out["states"].append({"ring_median_rel_peak_db": ring, "gain_design_dir": g_cal, "gain_peak": gpk, "peak_dir": [float(np.degrees(st.TG[ipk])), float(np.degrees(st.PG[ipk]))], "SLL_aperture_db": sll_ap, "SLL_21deg_db": sll21, "SLL_floor_db": floor_abs - gpk, "SLL_total_db": max(sll_ap, floor_abs - gpk),
                               "other_beam_dbi": oth + OFFSET[k], "isolation_db": g_cal - (oth + OFFSET[k]), "XPD_db": float(mb["XPD_db"])})
     out["NB"] = nb
     return out
@@ -225,7 +233,29 @@ def run_config(args):
     global MAXD
     MAXD = cfg.get("maxd", 514)
     lib = load_lib(cfg.get("mesh", 96), cfg.get("decouple", False))
+    if cfg.get("betas"):  # state-dependent real beta/k0: A0 = mean of the A0 at the two betas (dY as in the library)
+        import sidequest_a0_direct as A_
+
+        a0s = [A_.a0_direct(A_.ybar_for_beta(bk, ER, H * 1e-3, F), lib["dY_cal_mS"] * 1e-3, ER, H * 1e-3, F, tand=TD)[0] for bk in cfg["betas"]]
+        lib["A0"] = float(sum(a0s) / 2)
+        lib["beta_k0"] = float(sum(cfg["betas"]) / 2)
     np, K, D, bd = engine(lib, cfg.get("launch", 0.71))
+    betas_rad = None
+    if cfg.get("betas"):
+        betas_rad = [b * D.st.K0 for b in cfg["betas"]]
+        orig = bd.unit
+        bd._unit_orig = orig
+
+        def unit_sd(amp_, _orig=orig, _K=K, _br=betas_rad):
+            base_ = _K.BETA
+            _K.BETA = _br[0]
+            j0, c0 = _orig(amp_)
+            _K.BETA = _br[1]
+            _j1, c1 = _orig(amp_)
+            _K.BETA = base_
+            return j0, {e: [c0[e][0], c1[e][1]] for e in c0}
+
+        bd.unit = unit_sd
     if cfg.get("rim_db"):  # absorbing rim (extra part): amplitude loss a over the outer 12.8 mm, 2 a w = ln(10^(db/10))
         a_rim = math.log(10 ** (cfg["rim_db"] / 10)) / (2 * 12.8e-3)
         rim = np.where(bd.rho > bd.redge - 12.8e-3, a_rim, 0.0)
@@ -281,7 +311,16 @@ def run_config(args):
         for _it in range(cfg.get("outer", 3)):
             m, nd, loss, cur = cd_design(np, K, D, bd, amp, opt, eps, lam, mu, g, cfg.get("nu", 0.0), cfg.get("sweeps", 4), cur, mu_sep=cfg.get("mu_sep", 0.0), sl_mode=cfg.get("sl_mode", "far"), kappa=cfg.get("kappa", 0.0))
             amp, _c, _e = K.amp_profile(bd, m, loss)
-    ev = evaluate(np, K, D, bd, m, nd, cfg.get("launch", 0.71))
+    ev = evaluate(np, K, D, bd, m, nd, cfg.get("launch", 0.71), betas_rad)
+    if cfg.get("beta_state_scan") and betas_rad is not None:
+        sc = []
+        for k in range(2):
+            for d in cfg["beta_state_scan"]:
+                bb = list(betas_rad)
+                bb[k] += d * D.st.K0
+                e = evaluate(np, K, D, bd, m, nd, cfg.get("launch", 0.71), bb)
+                sc.append({"state": k + 1, "dbeta": d, "gain_design_dir": e["states"][k]["gain_design_dir"], "peak_dir": e["states"][k]["peak_dir"], "SLL_aperture_db": e["states"][k]["SLL_aperture_db"]})
+        ev["beta_state_scan"] = sc
     if cfg.get("beta_shifts"):  # the SAME board with a different real beta/k0 (design beta unchanged): pointing and design-direction gain margin
         base = K.BETA
         scan = []

@@ -128,5 +128,66 @@
   "HFSS gain",
   "RO3006 r 2.3 cell eigenfrequencies in HFSS (the r 2.20 cell is checked)",
   "tolerance / pointing over corners (later work, paper notes)"
- ]
+ ],
+ "sll_definition": "highest peak outside the main lobe's first null (first local minimum along radial cuts from the peak), or 2 x HPBW if no null within that radius; relative to the peak",
+ "v2_new_sll_definition": {
+  "state1": {
+   "sll_db": -12.7,
+   "sll_dir_theta_phi": [
+    46.0,
+    350.0
+   ]
+  },
+  "state2": {
+   "sll_db": -12.3,
+   "sll_dir_theta_phi": [
+    47.0,
+    196.0
+   ]
+  },
+  "note": "aperture pattern of the model; the earlier 1.2 x HPBW-exclusion numbers were -13.4 / -13.8 dB"
+ },
+ "expected_hpbw_deg": {
+  "state1": {
+   "elevation": 15.5,
+   "azimuth_angular": 7.5,
+   "azimuth_in_phi": 17.7
+  },
+  "state2": {
+   "elevation": 16.5,
+   "azimuth_angular": 7.5,
+   "azimuth_in_phi": 17.7
+  },
+  "check_on_board_K2_default": {
+   "model": {
+    "elevation": 10.0,
+    "azimuth_angular": 7.0
+   },
+   "HFSS": {
+    "state1": {
+     "elevation": 10.0,
+     "azimuth_angular": 8.5
+    },
+    "state2": {
+     "elevation": 9.0,
+     "azimuth_angular": 9.0
+    }
+   },
+   "note": "the model reproduced the HFSS elevation width and under-estimated the azimuth width by 1.5-2 deg"
+  }
+ },
+ "sll_gap_check_on_board_K2_default": {
+  "model_new_definition_db": [
+   -4.8,
+   -5.3
+  ],
+  "HFSS_new_definition_db": [
+   -0.7,
+   -1.2
+  ],
+  "gap_db": [
+   4.1,
+   4.1
+  ]
+ }
 }

@@ -1,0 +1,82 @@
+{
+ "labels": [
+  "MODEL_ONLY",
+  "cell HFSS-validated for the switching (C/C 10.670, R/R 11.006 GHz at 90 deg; dY -3.13 mS, alpha 0.844 Np/m, beta/k0 1.0731 back-out at 10.54 GHz, not re-derived at 10.5); analog static cells and the board are NOT HFSS-validated",
+  "gain = ideal-aperture directivity x launch 0.627 (bare probe) x surface-wave-to-beam conversion x scalar-cell element factor"
+ ],
+ "design": {
+  "id": "(i) family A only, one group D_*",
+  "frequency_ghz": 10.5,
+  "hexagon_circumradius_mm": 120,
+  "cells": 846,
+  "switched_cells": 168,
+  "diode_sheets": 336,
+  "diodes": 336,
+  "static_pct_cells": 80.1,
+  "cells_by_type": {
+   "ST/open/2.6": 368,
+   "SW/open/2.8": 168,
+   "ST/open/2.2": 117,
+   "ST/open/2.8": 113,
+   "ST/strap/2.8": 13,
+   "ST/open/1.8": 5,
+   "ST/strap/2.2": 6,
+   "ST/open/1.0": 7,
+   "ST/open/0.0": 49
+  },
+  "suppression_weight_mu": 30.0,
+  "pol": "LP-V",
+  "eps_B_deg": 225,
+  "lam": 0.28,
+  "g": 2.0
+ },
+ "states": [
+  {
+   "state": "1",
+   "name": "default (unpowered, diodes OFF)",
+   "D_sheets": "no boundary",
+   "target_theta_deg": 25.0,
+   "target_phi_deg": 0.0,
+   "peak_gain_dbi": 8.34,
+   "peak_dir_theta_phi_deg": [
+    25,
+    0
+   ],
+   "sll_db": -11.2,
+   "xpd_db": 25.1,
+   "aperture_efficiency_pct": 1.2,
+   "polarisation": "LP phi-hat (LP-V)",
+   "other_beam_level_dbi": -7.1,
+   "other_beam_rel_to_own_peak_db": -15.4,
+   "s11_db": -15.0,
+   "s11_note": "bare calibrated probe (Phase 26 board, HFSS S11 -15.0 dB, same stack and probe); the hologram's loading of the probe is NOT modelled"
+  },
+  {
+   "state": "2",
+   "name": "circuit ON (diodes ON)",
+   "D_sheets": "one Impedance boundary, Rs = 6.1 ohm/sq",
+   "target_theta_deg": 25.0,
+   "target_phi_deg": 180.0,
+   "peak_gain_dbi": 8.38,
+   "peak_dir_theta_phi_deg": [
+    25,
+    180
+   ],
+   "sll_db": -11.1,
+   "xpd_db": 20.4,
+   "aperture_efficiency_pct": 1.2,
+   "polarisation": "LP phi-hat (LP-V)",
+   "other_beam_level_dbi": -8.4,
+   "other_beam_rel_to_own_peak_db": -16.8,
+   "s11_db": -15.0,
+   "s11_note": "bare calibrated probe (Phase 26 board, HFSS S11 -15.0 dB, same stack and probe); the hologram's loading of the probe is NOT modelled"
+  }
+ ],
+ "falsifiers": "peak gain more than 4 dB below the prediction, peak more than 3 deg from (25, 0) / (25, 180), the other beam within 8 dB of the own beam (predicted -15 dB), or the two patterns not mirror images",
+ "NA": [
+  "board S11 with the hologram",
+  "HFSS gain",
+  "direct radiation of the probe (not patterned)",
+  "tets / RAM / time of the Phase 26 150 mm board (not recorded)"
+ ]
+}

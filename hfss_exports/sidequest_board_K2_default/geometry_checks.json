@@ -1,0 +1,112 @@
+{
+ "label": "MODEL_ONLY geometry checks on the re-imported STEP",
+ "all_pass": true,
+ "step_mb": 70.7,
+ "checks": {
+  "bodies_and_names": {
+   "ok": true,
+   "n_objects": 518,
+   "n_sheets": 514,
+   "groups": "all sheets D_* (one group)"
+  },
+  "metal_single_part_lumps": {
+   "ok": true,
+   "lumps": 1340,
+   "expected": 1340,
+   "note": "ONE named part; lumps are DC-isolated (patches, ground, probe)"
+  },
+  "patch_vs_design_map": {
+   "ok": true,
+   "n_patches": 1338,
+   "off_grid": 0,
+   "map_mismatches": 0,
+   "template_types": 8
+  },
+  "rim_template_dims": {
+   "ok": true,
+   "disc_d": 6.0,
+   "slit_L": 5.6,
+   "slit_W": 0.4,
+   "rim": 0.2
+  },
+  "no_intersections": {
+   "ok": true,
+   "substrate_x_ground_probe": 0.0,
+   "substrate_x_patches": 0.0
+  },
+  "substrate": {
+   "ok": true,
+   "thickness": 1.575,
+   "circumradius_mm": 150.0,
+   "volume_mm3": 92067.46483929835
+  },
+  "outline_circumradius": {
+   "ok": true,
+   "y_extent_mm": [
+    -150.0,
+    150.0
+   ],
+   "x_extent_mm": [
+    -129.90400000001148,
+    129.90400000001148
+   ]
+  },
+  "discs_inside_outline": {
+   "ok": true,
+   "min_clearance_disc_to_edge_mm": 0.45
+  },
+  "air_box_ground_to_lid_single_face_walls": {
+   "ok": true,
+   "faces": 6,
+   "z": [
+    -1.61,
+    20.0
+   ],
+   "top_above_probe_mm": 14.0,
+   "lambda_over_4_mm": 7.14,
+   "lateral_pad_mm": 10.0
+  },
+  "probe_and_port": {
+   "ok": true,
+   "pin_r": 0.635,
+   "pin_top_above_substrate": 6.0,
+   "port_r": [
+    0.635,
+    2.05
+   ],
+   "port_z": -1.575
+  },
+  "sheet_geometry": {
+   "ok": true,
+   "n_checked": 514,
+   "size": "0.4 (gap, across the slit) x 1.0 (width, along it)",
+   "z": 0.0175,
+   "bad": 0,
+   "DX_DY_clearance_min_mm": 0.1414,
+   "sheet_corner_to_patch_max_mm": 2.842170943040401e-14,
+   "gap_mm": [
+    0.4
+   ],
+   "width_mm": [
+    1.0
+   ]
+  },
+  "Rs_from_the_real_sheet_size": {
+   "ok": true,
+   "R_on_ohm": 2.44,
+   "width_mm": 1.0,
+   "gap_mm": 0.4,
+   "Rs_ohm_per_sq": 6.1,
+   "formula": "Rs = R_on * width / gap"
+  },
+  "EXACT_DIMS": {
+   "ok": true,
+   "inexact_literals": 0,
+   "n_snapped": 5531,
+   "max_snap_mm": 2.021097863639e-15,
+   "grid_mm": 0.001,
+   "positions": "integer index x 6.4 (um integers, one division)",
+   "outline_vertices_mm": "(0, +-150.0), (+-129.904, +-75.0); circumradius exact, x rounded to 1 um (R*sqrt(3)/2 = 129.90381)"
+  }
+ }
+}

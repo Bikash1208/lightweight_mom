@@ -1,0 +1,11 @@
+# HFSS: family-B unit cell (through-slit RT5880 cell, ON RAISES Y), eigenmode OFF/ON at 90 deg. EXPORT STANDARD. Predictions MODEL_ONLY (`predictions.json`).
+
+**1. Assign material `pec` to `METAL_PEC` (4 island patches + ground = ONE named part, DC-isolated lumps; the STEP imports as vacuum).** `SUBSTRATE`: RT5880 (eps_r 2.2, tan d 0.0009), z -1.575..0.
+**2. `AIR`** = one vacuum box z = -1.610 ... +30 mm, 6.4 x 6.4, ONE face per side wall; it overlaps `SUBSTRATE` and `METAL_PEC` on purpose; first in the tree. **Lattice pairs on the four side faces of `AIR` only.** **3. PEC lid:** Perfect E on the top face of `AIR` (z = +30).
+**Files:** `cellB_geometry.step` (`METAL_PEC`, `SUBSTRATE`, `AIR`, `DX_SHEET`, `DY_SHEET`), `states.csv`, `predictions.json`, `geometry_checks.json` (all PASS on the re-imported STEP), `results_template.csv`.
+**Geometry** (mm): disc r 3.0 (35 um copper, z 0..0.035) cut by a cross slit 0.4 wide THROUGH the disc (four islands, no rim); ground 35 um (z -1.610..-1.575). Sheets at z = 0.0175: `DX_SHEET` 0.4 x 1.0 across the vertical slit at y = +1.5..2.5; `DY_SHEET` 1.0 x 0.4 across the horizontal slit at x = +1.5..2.5; edges on the island faces.
+**4. States:** OFF = **no boundary** on the sheets. ON = **ONE Impedance boundary on `DX_SHEET` and `DY_SHEET`: Rs = 6.1 ohm/sq (= 2.44 ohm x 1.0 / 0.4 from the real sheet size), reactance 0** (not an RLC).
+**5. Eigenmode:** Lattice Pair 1 (x faces, Phase Delay `$ph_x`), Pair 2 (y faces, `$ph_y`); x run `$ph_x = 90deg`, `$ph_y = 0deg`; y run swapped (the cell is x/y symmetric: expect equal values). Min frequency 5 GHz, 8 modes, delta f 0.1 %; mesh: substrate 1 mm, islands 0.2 mm, sheets 0.1 mm. Clean Up Solutions before each run. The bound mode is the TM0 below the light line 11.711 GHz (track it by the Ez fraction in each state).
+**Record** (`results_template.csv`): f of the TM0 mode for OFF and ON, x and y.
+**Prediction (MODEL_ONLY, +-0.15 GHz):** family B OFF 11.3481 GHz, ON 10.8664 GHz (shift -0.4817 GHz); pipeline check on the HFSS-validated family-A cell: model 10.6619 / 11.0066 GHz against HFSS 10.670 / 11.006.
+**Falsifier:** ON must lie BELOW OFF (Y rises); ON above OFF, or |shift| < 0.05 GHz, means family B is not available in this geometry. Report the shift; a board for design (ii) is built only after this cell passes.

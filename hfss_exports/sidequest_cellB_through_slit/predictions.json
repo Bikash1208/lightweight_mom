@@ -1,0 +1,28 @@
+{
+ "label": "MODEL_ONLY (loaded Bloch tensor, mesh 64, transverse resonance with the 30 mm PEC lid, +-0.15 GHz); OFF = open slit, ON = 2.44 ohm only",
+ "bare_substrate_GHz_with_lid": 11.4238715533449,
+ "rows": [
+  {
+   "cell": "B_through_slit_pos2.0",
+   "ls_mm": 3.1,
+   "pos_mm": 2.0,
+   "f_OFF_GHz": 11.3481,
+   "f_ON_GHz": 10.8664,
+   "shift_ON_minus_OFF_GHz": -0.4817
+  },
+  {
+   "cell": "A_rim_pos0.8 (HFSS-validated cell)",
+   "ls_mm": 2.8,
+   "pos_mm": 0.8,
+   "f_OFF_GHz": 10.6619,
+   "f_ON_GHz": 11.0066,
+   "shift_ON_minus_OFF_GHz": 0.3447
+  }
+ ],
+ "HFSS_reference_A": {
+  "C/C (open)": 10.67,
+  "R/R": 11.006,
+  "note": "A pipeline check: model open slit 10.662, R/R 11.014"
+ },
+ "falsifier": "ON must be BELOW OFF for family B (Y rises, resonance moves down); if ON is above OFF, or the shift is below 0.05 GHz, family B is not available in this geometry"
+}

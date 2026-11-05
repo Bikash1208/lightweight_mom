@@ -1,0 +1,61 @@
+{
+ "label": "MODEL_ONLY geometry checks on the re-imported STEP",
+ "all_pass": true,
+ "checks": {
+  "bodies_and_names": {
+   "ok": true,
+   "names": [
+    "AIR",
+    "DX_SHEET",
+    "DY_SHEET",
+    "METAL_PEC",
+    "SUBSTRATE"
+   ]
+  },
+  "four_islands_symmetric": {
+   "ok": true,
+   "islands": 4,
+   "island_volume_mm3": 0.20683155335500958,
+   "ground_lumps": 1,
+   "note": "one named part METAL_PEC; lumps DC-isolated (4 islands + ground)"
+  },
+  "disc_minus_through_slit": {
+   "ok": true,
+   "total_volume": 0.8273262134200917,
+   "expected": 0.8273262134201648,
+   "slit_width_mm": 0.4
+  },
+  "island_gap": {
+   "ok": true,
+   "min_distance_between_islands_mm": 0.4
+  },
+  "no_intersections": {
+   "ok": true,
+   "substrate_x_metal": 0.0
+  },
+  "sheets": {
+   "ok": true,
+   "DX": "0.4 x 1.0 at (0, 2.0)",
+   "DY": "1.0 x 0.4 at (2.0, 0)",
+   "z": 0.0175,
+   "corner_to_metal_max_mm": 0.0,
+   "DX_DY_clearance_mm": 1.8385,
+   "Rs_ohm_per_sq": 6.1
+  },
+  "air_box_ground_to_lid_single_face_walls": {
+   "ok": true,
+   "faces": 6,
+   "z": [
+    -1.61,
+    30.0
+   ]
+  },
+  "EXACT_DIMS": {
+   "ok": true,
+   "inexact_literals": 0,
+   "n_snapped": 29,
+   "max_snap_mm": 2.279066887566e-16,
+   "grid_mm": 0.001
+  }
+ }
+}

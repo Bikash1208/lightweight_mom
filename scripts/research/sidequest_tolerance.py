@@ -24,6 +24,11 @@ for sr, se, sg in itertools.product((-1, 1), repeat=3):
     CASES["c" + "".join("+" if s > 0 else "-" for s in (sr, se, sg))] = (round(R0 + 0.05 * sr, 4), round(E0 + 0.15 * se, 4), round(G0 + 0.03 * sg, 4))
 
 
+TAG = os.environ.get("TOL_TAG", "")
+if os.environ.get("TOL_CASES"):  # second study: explicit cases {name: [r, er, G]}
+    CASES = {k: tuple(v) for k, v in json.loads(os.environ["TOL_CASES"]).items()}
+
+
 def mom_job(a):
     warnings.simplefilter("ignore")
     import sidequest_gate_cell as gc
@@ -47,7 +52,7 @@ def stage_mom():
         jobs += [(n, "open", 1.0), (n, "ON", 1.0), (n, "none", 0.0)] + [(n, "open", f) for f in FR[1:]] + [(n, "strap", 2.2 / 2.8), (n, "strap", 1.0)]
     with ProcessPoolExecutor(40) as ex:
         res = list(ex.map(mom_job, jobs))
-    Path("results/sidequest_hybrid/k2_tolerance_lib.json").write_text(json.dumps(res, indent=1), encoding="utf-8", newline="\n")
+    Path(f"results/sidequest_hybrid/k2_tolerance{TAG}_lib.json").write_text(json.dumps(res, indent=1), encoding="utf-8", newline="\n")
     import sidequest_a0_direct as A
     import sidequest_leaf_cell as L1
     from src.materials import Substrate
@@ -70,16 +75,19 @@ def stage_mom():
         out[n] = {"stack": "RO3006_1.27", "r": r, "er": e, "G": g, "Ybar_mS": mid, "dY_mS": dy * 1e3, "A0_mom": float(a0m), "A0_cal": float(a0c), "beta_k0": float(bk), "X_off": xo, "X_on": xn, "dX": xo - xn,
                   "levels": lev, "static_range": [min(lev.values()), max(lev.values())], "stack_par": [e, TD, H], "Rs_on": 2.44 * 1.0 / g}
         print(n, "r %.3f er %.2f G %.2f  dY %.2f A0cal %.2f beta %.3f dX %.0f" % (r, e, g, dy * 1e3, a0c, bk, xo - xn), flush=True)
-    Path("results/sidequest_hybrid/k2_tolerance_summary.json").write_text(json.dumps(out, indent=1), encoding="utf-8", newline="\n")
+    Path(f"results/sidequest_hybrid/k2_tolerance{TAG}_summary.json").write_text(json.dumps(out, indent=1), encoding="utf-8", newline="\n")
+
+
+LAUNCHES = ((0.71, "bare"),) if os.environ.get("TOL_BAREONLY") else ((0.71, "bare"), (0.96, "pad"))
 
 
 def stage_board():
-    os.environ["FAM_SUMMARY"] = "results/sidequest_hybrid/k2_tolerance_summary.json"
+    os.environ["FAM_SUMMARY"] = f"results/sidequest_hybrid/k2_tolerance{TAG}_summary.json"
     import sidequest_family_design as FD
-    jobs = [(n, l, t, 0) for n in CASES for l, t in ((0.71, "bare"), (0.96, "pad"))]
+    jobs = [(n, l, t, 0) for n in CASES for l, t in LAUNCHES]
     with ProcessPoolExecutor(len(jobs)) as ex:
         res = list(ex.map(FD.board_job, jobs))
-    Path("results/sidequest_hybrid/k2_tolerance_boards.json").write_text(json.dumps(res, indent=1, default=float), encoding="utf-8", newline="\n")
+    Path(f"results/sidequest_hybrid/k2_tolerance{TAG}_boards.json").write_text(json.dumps(res, indent=1, default=float), encoding="utf-8", newline="\n")
     for r in res:
         print(r["fam"], r["tag"], "L %.2f lam %.3f diodes %d gain %s conv %.3f edge %.3f" % (r["launch"], r["lam"], r["diodes"], [round(x, 2) for x in r["gain_model"]], r["conv"], r["edge_surv"]), flush=True)
 

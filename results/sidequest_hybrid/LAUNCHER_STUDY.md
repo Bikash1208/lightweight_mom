@@ -1,5 +1,8 @@
 # New direction: switched surface-wave launcher (method 1), two-probe fallback (method 2), polarisation switching (method 3) — MODEL_ONLY
 
+> **PENDING CELL VALIDATION (2026-11-05):** HFSS shows the rim-disc cell does not switch (90 deg along x: OFF 11.059 / ON 11.055 GHz; model 10.53 / 11.00). Every number in this document that depends on the crossed rim-disc cell (alpha, dY, board gain, diode counts) is on hold until a cell is HFSS-confirmed. See `results/sidequest_hybrid/CELL_VALIDATION.md`.
+
+
 Scripts: `sidequest_launcher_model.py` (network), `_scan.py`, `_gain.py`, `sidequest_twoprobe_model.py`; tests `tests/test_sidequest_launcher.py`; data `launcher_scan2q.json`, `launcher_board_gain.json`, `twoprobe_model.json`.
 References (bibliographic-only, none opened here): Zhao/Pan/Shen, IEEE TAP 2026, doi 10.1109/TAP.2025.3621516 (user-verified; Yagi launcher + coded hologram); Wang et al., IEEE AWPL 2024 (multifeed beam-switchable holographic); Li/Tang/Xiao, IEEE Access 2019 (polarisation-reconfigurable holographic, polarisation-insensitive hologram). No DOIs for the last two (not supplied, not verified).
 

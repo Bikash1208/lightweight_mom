@@ -1,5 +1,8 @@
 # Grouped coded hologram (K fixed states, 1-bit, shared control lines) — model level, MODEL_ONLY
 
+> **PENDING CELL VALIDATION (2026-11-05):** HFSS shows the rim-disc cell does not switch (90 deg along x: OFF 11.059 / ON 11.055 GHz; model 10.53 / 11.00). Every number in this document that depends on the crossed rim-disc cell (alpha, dY, board gain, diode counts) is on hold until a cell is HFSS-confirmed. See `results/sidequest_hybrid/CELL_VALIDATION.md`.
+
+
 Scripts: `sidequest_coded_cell.py` (cell pair), `sidequest_coded_model.py` (board model + greedy), `sidequest_coded_run.py`; tests `tests/test_sidequest_coded.py`; data `coded_cell_scan.json`, `coded_cell_mesh64.json`, `coded_hologram_results.json`.
 Reference idea: 1-bit coded hologram with one MA4AGP907 per cell (Zhao/Pan/Shen, IEEE TAP 2026, 10.1109/TAP.2025.3621516; bibliographic-only, not opened).
 

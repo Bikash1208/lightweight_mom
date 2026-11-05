@@ -1,4 +1,7 @@
 # Cell search for a stronger leakage cell (round 12): RO3010 primary vs RT5880 secondary — MODEL_ONLY
+
+> **PENDING CELL VALIDATION (2026-11-05):** HFSS shows the rim-disc cell does not switch (90 deg along x: OFF 11.059 / ON 11.055 GHz; model 10.53 / 11.00). Every number in this document that depends on the crossed rim-disc cell (alpha, dY, board gain, diode counts) is on hold until a cell is HFSS-confirmed. See `results/sidequest_hybrid/CELL_VALIDATION.md`.
+
 Code: `scripts/research/sidequest_cell_search.py` (cell builders + loaded Bloch tensor), `..._full.py` (4 states), `..._sens.py` (eps_r, mesh), `sidequest_search_board.py`, `..._board_sens.py` (K = 2 boards, same engine as round 11 with a 3rd tensor element and a background loss). Data `cell_search_*.json`, `cell_search_board_*.json`. Tests `tests/test_sidequest_cell_search.py`.
 
 ## 0. Correction of the earlier RT5880 numbers (read first)

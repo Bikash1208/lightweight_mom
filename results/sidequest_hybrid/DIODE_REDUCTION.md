@@ -1,4 +1,7 @@
 # Fewer diodes: ideas D1-D6 side by side, K = 2 and K = 4 (CP set B) — MODEL_ONLY, nothing adopted
+
+> **PENDING CELL VALIDATION (2026-11-05):** HFSS shows the rim-disc cell does not switch (90 deg along x: OFF 11.059 / ON 11.055 GHz; model 10.53 / 11.00). Every number in this document that depends on the crossed rim-disc cell (alpha, dY, board gain, diode counts) is on hold until a cell is HFSS-confirmed. See `results/sidequest_hybrid/CELL_VALIDATION.md`.
+
 Same RT5880 cell (rim disc, diodes at 0.8 mm), same engine and option sets (I1+I2+I5; K = 4 with 3 line classes per axis), `scripts/research/sidequest_diode_reduction*.py`, data `diode_reduction.json` / `_all.csv` / `_tables.md` (every row), figure `diode_reduction_pareto.png`, rotated cell `rotated_board_chi0.json`, `rotated_board_chi45.json`, tests `tests/test_sidequest_diode_reduction.py`.
 **Baselines (reproduced):** K = 4: 1120 diodes, 3 + 3 lines (6 + 6 without inverters), 19.22 dBi mean (19.16-19.26), SLL -15.7 dB, XPD 22.4, ap. eff. 9.2 %. K = 2: 743 diodes, 1 + 1 lines (2 + 2), 20.24 dBi, SLL -16.1 dB, XPD 28.9, ap. eff. 11.6 %.
 **Feasible** = SLL <= -12.7 dB and mean gain within 2 dB of the baseline and diodes <= baseline. Rows with SLL above -12.7 dB are shown faint in the figure and never reported as designs.

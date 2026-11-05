@@ -9,7 +9,7 @@ from scipy.sparse.linalg import spsolve
 EPS0, C0 = 8.8541878128e-12, 299792458.0
 
 
-def solve(f, er, tand, h, t, ys, rho_in, a=0.635e-3, rmax=0.10, ztop=0.030, drho=0.127e-3, nsl=10, ab_r=0.025, ab_z=0.012, sig=2.0, fit_zmax=0.010, rho_m=None):
+def solve(f, er, tand, h, t, ys, rho_in, a=0.635e-3, rmax=0.10, ztop=0.030, drho=0.127e-3, nsl=10, ab_r=0.025, ab_z=0.012, sig=2.0, fit_zmax=0.010, rho_m=None, disc_r=0.0):
     w = 2 * math.pi * f; k0 = w / C0
     dz = h / nsl; naz = int(round(ztop / dz)); nz = nsl + naz
     zc = np.concatenate([-h + (np.arange(nsl) + .5) * dz, (np.arange(naz) + .5) * dz])
@@ -33,6 +33,7 @@ def solve(f, er, tand, h, t, ys, rho_in, a=0.635e-3, rmax=0.10, ztop=0.030, drho
     rcz = 0.5 * dz / eps[:, :-1] + 0.5 * dz / eps[:, 1:]
     rcz[:, nsl - 1] = rcz[:, nsl - 1] + (ys / (w * EPS0)) * (rc >= rho_in)
     gz = 1.0 / rcz
+    gz[rc < disc_r, nsl - 1] = 0.0                                              # printed PEC top disc (radius disc_r) at z = 0: no flux through it
     up = np.zeros((nr, nz), complex); dn = np.zeros((nr, nz), complex)
     up[:, :-1] = gz / dz; dn[:, 1:] = gz / dz
     diag -= up + dn
@@ -41,7 +42,10 @@ def solve(f, er, tand, h, t, ys, rho_in, a=0.635e-3, rmax=0.10, ztop=0.030, drho
     diag[:, -1] -= 1.0 / (dz * 0.5 * dz / eps[:, -1])                           # top wall u = 0
     rows += [idx.ravel()]; cols += [idx.ravel()]; vals += [diag.ravel()]
     r_ = np.concatenate(rows); c_ = np.concatenate(cols); v_ = np.concatenate(vals)
-    I = np.array([(math.sin(k0 * (t - z)) if z > 0 else math.sin(k0 * t)) if z <= t else 0.0 for z in zc]); i0 = math.sin(k0 * t)
+    if t > 0:
+        I = np.array([(math.sin(k0 * (t - z)) if z > 0 else math.sin(k0 * t)) if z <= t else 0.0 for z in zc]); i0 = math.sin(k0 * t)
+    else:  # pin ends at the top surface: uniform current through the slab (feeds the printed disc)
+        I = np.array([1.0 if z < 0 else 0.0 for z in zc]); i0 = 1.0
     pin = np.zeros((nr, nz), bool); pin[:npin, :] = (zc <= t)[None, :]
     pin_i = idx[pin]
     keep = ~np.isin(r_, pin_i)                                                  # rows of the pin cells are replaced by identity

@@ -4,6 +4,7 @@ Probe: pin r 0.635 mm, PinLength 5.0 mm above the substrate (starting point, tun
     python sidequest_board_ro3006_package.py [design.json] [outdir] [syncname]    (design.json from sidequest_ro3006_design.py final)"""
 import csv
 import json
+import os
 import shutil
 import sys
 import warnings
@@ -19,14 +20,15 @@ import numpy as np
 from sidequest_board_k2_lp_package import read_names
 from src.transmitarray.export import inexact_literals, snap_step_text, verify_snap
 
-DESIGN = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "results/sidequest_hybrid/ro3006_board_design_r2.22.json"
+DESIGN = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / f"results/sidequest_hybrid/ro3006_board_design_r{RCELL}.json"
 OUTNAME = sys.argv[2] if len(sys.argv) > 2 else "sidequest_board_RO3006"
 SYNCNAME = sys.argv[3] if len(sys.argv) > 3 else "board_RO3006"
 OUT = ROOT / "hfss_exports" / OUTNAME
 SYNC = Path(r"C:\hmsa_sync\data\sidequest") / SYNCNAME
 R_UM = 150000
 PITCH_UM, HSUB_UM, T_UM, GT_UM = 6400, 1270, 35, 35
-R_DISC_UM, G_UM, WD_UM, POS_UM = 2220, 400, 1000, 800
+RCELL = float(os.environ.get("RO_R", "2.22"))
+R_DISC_UM, G_UM, WD_UM, POS_UM = int(round(RCELL * 1000)), 400, 1000, 800
 PIN_R_UM, PORT_R_UM, PIN_TOP_UM = 635, 2050, 5000
 PAD_XY_UM, AIR_TOP_UM = 10000, 20000
 PADIN_UM, PADOUT_UM = 1300, 3000
@@ -34,7 +36,7 @@ HEX_X_UM = int(round(R_UM * np.sqrt(3) / 2))
 HEX_Y_UM = R_UM // 2
 F_GHZ, R_ON, ER, TAND = 10.5, 2.44, 6.15, 0.002
 RS = R_ON * WD_UM / G_UM
-LS_UM = {0.0: 0, 0.357: 721, 0.643: 1300, 0.786: 1588, 0.929: 1877, 1.0: 2020}   # slit half-length (rim 0.2 at 1.0); MoM used (r - 0.2) x fraction, differences <= 0.5 um
+LS_UM = {0.0: 0, **{f: int(round(f * (R_DISC_UM - 200))) for f in (0.357, 0.643, 0.786, 0.929)}, 1.0: R_DISC_UM - 200}   # slit half-length (rim 0.2 at 1.0); the MoM used (r - 0.2) x fraction, differences <= 0.5 um; fr 0.643 gives >= 1.3 mm (sheet footprint fits)
 mm = lambda u: u / 1000.0  # noqa: E731
 
 
@@ -262,14 +264,14 @@ def docs(cells, ev, ok_all, res, size_mb, kinds, n_sw):
                        "sll_aperture_db": round(st["SLL_aperture_db"], 2), "sll_nonbeam_floor_db": round(st["SLL_floor_db"], 2), "sll_total_db": round(st["SLL_total_db"], 2),
                        "other_beam_level_dbi": round(st["other_beam_dbi"], 2), "isolation_db": round(st["isolation_db"], 2), "xpd_db": round(st["XPD_db"], 1), "polarisation": "LP phi-hat (LP-V)",
                        "s11_db": s11["s11_estimate_db"][k], "s11_note": s11["model"]})
-    pred = {"labels": ["MODEL_ONLY", "cell: RO3006 r 2.22, MoM mesh 96 with the HFSS calibration (ON fixed, OFF contrast x0.75 from the r 2.20 cell check: ON 10.3617 / OFF 10.0193 GHz at 90 deg); the cell at r 2.22 and the board are NOT HFSS-validated",
+    pred = {"labels": ["MODEL_ONLY", f"cell: RO3006 r {RCELL}, MoM mesh 96; switched pairs at the HFSS-calibrated contrast (ON fixed, OFF contrast x0.75 from the r 2.20 cell check: ON 10.3617 / OFF 10.0193 GHz at 90 deg), static cells at the full MoM depth; the cell at r {RCELL} and the board are NOT HFSS-validated",
                        "launch 0.71 (bare slab, spectral model; the pad would give up to 0.96, UNVALIDATED); gain offsets from board_K2_default HFSS: state 1 -1.78 dB (9.1 dBi), state 2 -2.7 dB (8.3 dBi)"],
-            "design": {"id": "RO3006 r 2.22, design (i) one group D_*", "frequency_ghz": F_GHZ, "hexagon_circumradius_mm": R_UM / 1000, "cells": n_cells, "switched_cells": n_sw, "diode_sheets": n_sheets, "diodes": 2 * n_sw,
+            "design": {"id": f"RO3006 r {RCELL}, design (i) one group D_*", "frequency_ghz": F_GHZ, "hexagon_circumradius_mm": R_UM / 1000, "cells": n_cells, "switched_cells": n_sw, "diode_sheets": n_sheets, "diodes": 2 * n_sw,
                        "cells_by_type": {"/".join(map(str, k)): v for k, v in kinds.items()}, "A0_np_per_m": ev["A0"], "beta_over_k0": ev["beta_k0"], "config": ev["cfg"], "lam": ev["lam"], "SW_to_beam_pct": round(100 * ev["conv"], 1), "SW_at_edge_pct": round(100 * ev["edge"], 1), "nonbeam_NB": round(ev["NB"], 3)},
             "states": states, "probe": s11,
-            "sidelobe_floor": "SLL_total = max(aperture SLL, 10 log(NB x 7.45) - gain): NB = (1 - launch) + launch x SW_at_edge is the state-independent non-beam power (direct probe + edge); 7.45 = peaking factor from the HFSS sidelobes of board_K2_default (8.3 / 8.2 dBi in both states)",
+            "sidelobe_floor": "SLL_total = max(aperture SLL, 10 log(NB x 2.0) - gain): NB = (1 - launch) + launch x SW_at_edge is the state-independent diffuse power (direct probe + edge; HFSS ffd of board_K2_default: ring 60-90 + back = 71-76 % of the power, uniform in azimuth, D about 1.6 dBi). The strongest HFSS sidelobes of that board (8.3 / 8.2 dBi) are conical rings at theta 12-26 deg from the state-common static hologram, which the model underestimates by 10-17 dB: the MODEL SLL IS NOT VALIDATED",
             "falsifiers": "peak gain more than 4 dB below the prediction, peak more than 3 deg from (25, 0) / (25, 180), isolation below 8 dB, strongest sidelobe above -3 dB, or the two patterns not mirror images",
-            "NA": ["board S11 with the hologram", "HFSS gain", "RO3006 r 2.22 cell eigenfrequencies in HFSS (the r 2.20 cell is checked)", "tolerance / pointing over corners (later work, paper notes)"]}
+            "NA": ["board S11 with the hologram", "HFSS gain", f"RO3006 r {RCELL} cell eigenfrequencies in HFSS (the r 2.20 cell is checked)", "tolerance / pointing over corners (later work, paper notes)"]}
     (OUT / "predictions.json").write_text(json.dumps(pred, indent=1, default=float), encoding="utf-8", newline="\n")
     eqv = lambda c, sh: c + 0.25 * sh  # noqa: E731
     r_t = eqv(n_cells, n_sheets) / eqv(1338, 514)
@@ -288,7 +290,7 @@ def docs(cells, ev, ok_all, res, size_mb, kinds, n_sw):
 **5. Solution**: ONE frequency **{F_GHZ} GHz**, Driven Modal, first-order basis, max passes 6, max delta S 0.02, no sweep. Mesh: substrate max length 0.6 mm (eps_r 6.15), patch faces 0.3 mm, `D_*` sheets 0.15 mm, probe and port 0.3 mm, lambda refinement on. Mesh reuse state 1 -> 2 allowed (say so).
 **6. Export (per state)**: far-field infinite sphere theta 0..180, phi 0..360 step **2 deg**, **complex rETheta and rEPhi in V** (full sphere), one CSV per state (`rE_state1.csv`, `rE_state2.csv`); complex **S11** at {F_GHZ} GHz; antenna parameters; passes, delta S, tets, peak RAM, solve time per state.
 **Probe tuning**: acceptance S11 <= -10 dB (goal -15). Model starting point PinLength 5.0 mm (S11 about -9 dB, R 24 ohm, X +5 ohm); **+1 mm PinLength = R +11 ohm, X +25 ohm**; the pad (r {mm(PADIN_UM):g}..{mm(PADOUT_UM):g}) is expected to raise R (model: R 43 ohm at 5 mm, S11 -18 dB, UNVALIDATED). Sweep PinLength 4.5-6.5 mm and the pin diameter.
-**Model predictions (MODEL_ONLY; launch 0.71)**: state 1 gain at (25, 0) {states[0]['gain_at_design_direction_dbi']} dBi (peak {states[0]['peak_gain_dbi']} at {states[0]['peak_dir_theta_phi_deg']}), SLL aperture {states[0]['sll_aperture_db']} dB, non-beam floor {states[0]['sll_nonbeam_floor_db']} dB, **SLL total {states[0]['sll_total_db']} dB**, isolation {states[0]['isolation_db']} dB; state 2 gain at (25, 180) {states[1]['gain_at_design_direction_dbi']} dBi (peak {states[1]['peak_gain_dbi']} at {states[1]['peak_dir_theta_phi_deg']}), SLL aperture {states[1]['sll_aperture_db']} dB, floor {states[1]['sll_nonbeam_floor_db']} dB, **SLL total {states[1]['sll_total_db']} dB**, isolation {states[1]['isolation_db']} dB. The -13 dB SLL target is NOT reached (floor-limited, see `K2_RO3006_BOARD.md`). Falsifiers: `predictions.json`.
+**Model predictions (MODEL_ONLY; launch 0.71)**: state 1 gain at (25, 0) {states[0]['gain_at_design_direction_dbi']} dBi (peak {states[0]['peak_gain_dbi']} at {states[0]['peak_dir_theta_phi_deg']}), SLL aperture {states[0]['sll_aperture_db']} dB, non-beam floor {states[0]['sll_nonbeam_floor_db']} dB, **SLL total {states[0]['sll_total_db']} dB**, isolation {states[0]['isolation_db']} dB; state 2 gain at (25, 180) {states[1]['gain_at_design_direction_dbi']} dBi (peak {states[1]['peak_gain_dbi']} at {states[1]['peak_dir_theta_phi_deg']}), SLL aperture {states[1]['sll_aperture_db']} dB, floor {states[1]['sll_nonbeam_floor_db']} dB, **SLL total {states[1]['sll_total_db']} dB**, isolation {states[1]['isolation_db']} dB. The model SLL total is the number above; the model underestimates the HFSS conical rings of board_K2_default by 10-17 dB (K2_SLL_FIXES.md), so the -13 dB target is a model result only. Falsifiers: `predictions.json`.
 **Cost (ESTIMATE)**: {cost['tets_M'][0]}-{cost['tets_M'][1]} M tets, {cost['ram_gb'][0]}-{cost['ram_gb'][1]} GB, {cost['time_state1_min'][0]}-{cost['time_state1_min'][1]} min state 1 (reference: RT5880 board 1.28 M tets, 53 GB, 18 min).
 """
     (OUT / "HFSS_SETUP.md").write_text(setup, encoding="utf-8", newline="\n")

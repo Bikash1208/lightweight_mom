@@ -20,13 +20,13 @@ ER, TD, H = 6.15, 0.002, 1.27
 R_CELL = float(os.environ.get("RO_R", "2.22"))
 CAL = 0.75
 OFFSET = {0: -1.78, 1: -2.7}
-DNB = 7.45
+DNB = 2.0   # non-beam floor peaking: HFSS ffd of board_K2_default: ring 60-90 + back = 71-76 % of the power, azimuthally uniform, D about 1.6 dBi (the 8.3 dBi sidelobes are aperture lobes at theta 12-26, not the floor)
 MARGIN = (R_CELL + 0.2) * 1e-3  # disc + 0.2 mm to the outline
 MAXD = 514
 RES = Path("results/sidequest_hybrid")
 
 
-def load_lib(mesh=96):
+def load_lib(mesh=96, decouple=False):
     d = json.loads((RES / f"ro3006_r{R_CELL}_mesh{mesh}_lib.json").read_text())
     rows = d["rows"]
 
@@ -46,6 +46,13 @@ def load_lib(mesh=96):
     for f in (0.643, 0.786, 0.929):
         yon = g("ON", f)
         pairs[f] = (m(g("open", f)), m(yon), yon.real / yn.real)
+    if decouple:
+        # statics at full MoM depth; switched pairs limited to the calibrated contrast (ON fixed): m_off_cal = m_on + CAL (m_off - m_on); A0 and beta from the full MoM pair / mean
+        pairs = {f: (v[1] + CAL * (v[0] - v[1]), v[1], v[2]) for f, v in pairs.items()}
+        import sidequest_a0_direct as A0m
+
+        a0f, bkf = A0m.a0_direct(mid * 1e-3, abs(yo - yn) * 1e-3, ER, H * 1e-3, F, tand=TD)
+        return {"levels": lev, "pairs": pairs, "A0": float(a0f), "beta_k0": float(bkf), "Ybar_cal_mS": mid, "dY_cal_mS": abs(yo - yn), "Ybar_mom_mS": mid, "dY_mom_mS": abs(yo - yn), "Y_off": [yo.real, yo.imag], "Y_on": [yn.real, yn.imag], "mesh": mesh, "decoupled": True}
     # calibration: Y_cal = Y_ON + CAL (Y - Y_ON) (affine, ON fixed)
     mid_c = mid - half * (1 - CAL)
     half_c = CAL * half
@@ -85,7 +92,7 @@ def element_matrix(np, K, D, bd, amp, th_deg, ph_deg):
     return np.stack([et, ep], axis=1)
 
 
-def cd_design(np, K, D, bd, amp, opt, eps, lam, mu, g, nu, sweeps, m0, seed=0, mu_sep=0.0):
+def cd_design(np, K, D, bd, amp, opt, eps, lam, mu, g, nu, sweeps, m0, seed=0, mu_sep=0.0, sl_mode="far", kappa=0.0):
     mx, _my, nd, ld, _w1, _w2, _W = opt
     n, nopt = bd.n, mx.shape[0]
     _, c = bd.unit(amp)
@@ -97,6 +104,11 @@ def cd_design(np, K, D, bd, amp, opt, eps, lam, mu, g, nu, sweeps, m0, seed=0, m
         pred = c["x"][k][:, None] * mx[None, :, k] + c["y"][k][:, None] * mx[None, :, k]
         own += np.abs(tau[:, None] - pred) ** 2
     own = own / s + lam * nd[None, :]
+    if kappa:  # neutral static: where the two states' targets disagree, penalise radiating static levels
+        t1, t2 = g * amp * np.exp(-1j * eps[0]), g * amp * np.exp(-1j * eps[1])
+        dis = np.abs(t1 - t2) ** 2 / s
+        dis = dis / dis.mean()
+        own += kappa * dis[:, None] * (mx[None, :, 0] ** 2 + mx[None, :, 1] ** 2) / 2 * (nd[None, :] == 0)
     # directions: coarse grid + the two design directions
     th = np.arange(0.0, 89.0, 4.0)
     ph = np.arange(0.0, 359.0, 6.0)
@@ -110,7 +122,10 @@ def cd_design(np, K, D, bd, amp, opt, eps, lam, mu, g, nu, sweeps, m0, seed=0, m
     for k in range(2):
         cosd = np.cos(np.radians(thd)) * math.cos(math.radians(25)) + np.sin(np.radians(thd)) * math.sin(math.radians(25)) * np.cos(np.radians(phd) - math.radians(0 if k == 0 else 180))
         dist = np.degrees(np.arccos(np.clip(cosd, -1, 1)))
-        sl.append(dist > 35.0)
+        if sl_mode == "ring":  # theta 8-32 deg cone, outside 12 deg of the own beam (includes the other beam)
+            sl.append((thd >= 8.0) & (thd <= 32.0) & (dist > 12.0))
+        else:
+            sl.append(dist > 35.0)
     cur = m0.copy()
     rng = np.random.default_rng(seed)
     pen = mu / (n * s)
@@ -197,7 +212,8 @@ def evaluate(np, K, D, bd, m, nd, launch):
         gpk = float(10 * np.log10(scale * inten[ipk])) + OFFSET[k]
         floor_abs = 10 * math.log10(nb * DNB)
         sll_ap = float(mb["SLL_db"])
-        out["states"].append({"gain_design_dir": g_cal, "gain_peak": gpk, "peak_dir": [float(np.degrees(st.TG[ipk])), float(np.degrees(st.PG[ipk]))], "SLL_aperture_db": sll_ap, "SLL_floor_db": floor_abs - gpk, "SLL_total_db": max(sll_ap, floor_abs - gpk),
+        ring = {t: float(10 * np.log10(np.median(inten[int(np.argmin(np.abs(np.degrees(st.TG[:, 0]) - t)))]) / inten.max() + 1e-30)) for t in (12, 24)}
+        out["states"].append({"ring_median_rel_peak_db": ring, "gain_design_dir": g_cal, "gain_peak": gpk, "peak_dir": [float(np.degrees(st.TG[ipk])), float(np.degrees(st.PG[ipk]))], "SLL_aperture_db": sll_ap, "SLL_floor_db": floor_abs - gpk, "SLL_total_db": max(sll_ap, floor_abs - gpk),
                               "other_beam_dbi": oth + OFFSET[k], "isolation_db": g_cal - (oth + OFFSET[k]), "XPD_db": float(mb["XPD_db"])})
     out["NB"] = nb
     return out
@@ -206,8 +222,23 @@ def evaluate(np, K, D, bd, m, nd, launch):
 def run_config(args):
     name, cfg = args
     warnings.simplefilter("ignore")
-    lib = load_lib(cfg.get("mesh", 96))
+    global MAXD
+    MAXD = cfg.get("maxd", 514)
+    lib = load_lib(cfg.get("mesh", 96), cfg.get("decouple", False))
     np, K, D, bd = engine(lib, cfg.get("launch", 0.71))
+    if cfg.get("rim_db"):  # absorbing rim (extra part): amplitude loss a over the outer 12.8 mm, 2 a w = ln(10^(db/10))
+        a_rim = math.log(10 ** (cfg["rim_db"] / 10)) / (2 * 12.8e-3)
+        rim = np.where(bd.rho > bd.redge - 12.8e-3, a_rim, 0.0)
+
+        def ap(bd_, m_, loss_):
+            alpha = K.A0 * np.mean(K.vec2(bd_, m_), axis=0)
+            aa = K.AA_BG + 2 * K.AA0 * np.mean(loss_, axis=0) + rim
+            integ, ie = bd_.profile(alpha, aa)
+            amp_ = np.sqrt(2 * K.A0 / bd_.rho) * np.exp(-integ)
+            w_ = 2 * alpha * np.exp(-2 * integ) / bd_.rho * D.st.PITCH ** 2 / (2 * np.pi)
+            return amp_, float(w_.sum()), float(np.mean(np.exp(-2 * ie)))
+
+        K.amp_profile = ap
     st = D.st
     lv = lib["levels"]
     if cfg.get("binary_statics"):
@@ -223,6 +254,8 @@ def run_config(args):
     if cfg.get("taper") is not None:
         we = cfg["taper"]
         w = we + (1 - we) * (1 - np.clip(bd.rho / bd.redge, 0, 1) ** 2)
+    if cfg.get("inv_taper"):  # inverse taper: target amplitude rising towards the rim (stronger modulation at large radius)
+        w = w * (1.0 + cfg["inv_taper"] * np.clip(bd.rho / bd.redge, 0, 1) ** 2)
     if cfg.get("ring"):
         w = np.where(bd.rho > bd.redge - 12.8e-3, w * cfg["ring"], w)
     g = g0 * w
@@ -241,12 +274,12 @@ def run_config(args):
         r = D.run_design(bd, opt, eps, hi, g, mu=mu)
     lam = float(r["lam"])
     m, nd, amp = r["m"], r["nd"], r["amp"]
-    if cfg.get("nu"):
+    if cfg.get("nu") or cfg.get("kappa"):
         # stage 2: sidelobe-aware coordinate descent (start = design_null assignment)
         mxo = opt[0]
         cur = np.array([int(np.argmin(np.abs(mxo[:, 0] - m[0, 0, i]) + np.abs(mxo[:, 1] - m[1, 0, i]) + 1.0 * (opt[2] != nd[i]))) for i in range(bd.n)])
         for _it in range(cfg.get("outer", 3)):
-            m, nd, loss, cur = cd_design(np, K, D, bd, amp, opt, eps, lam, mu, g, cfg["nu"], cfg.get("sweeps", 4), cur, mu_sep=cfg.get("mu_sep", 0.0))
+            m, nd, loss, cur = cd_design(np, K, D, bd, amp, opt, eps, lam, mu, g, cfg.get("nu", 0.0), cfg.get("sweeps", 4), cur, mu_sep=cfg.get("mu_sep", 0.0), sl_mode=cfg.get("sl_mode", "far"), kappa=cfg.get("kappa", 0.0))
             amp, _c, _e = K.amp_profile(bd, m, loss)
     ev = evaluate(np, K, D, bd, m, nd, cfg.get("launch", 0.71))
     ev.update({"name": name, "cfg": {k: v for k, v in cfg.items()}, "lam": lam, "A0": lib["A0"], "beta_k0": lib["beta_k0"]})
@@ -273,7 +306,7 @@ def summarize(ev):
     s = ev["states"]
     return "%-26s diodes %3d | gain(design dir) %.1f / %.1f | peak dir (%.0f,%.0f)/(%.0f,%.0f) | SLL ap %.1f / %.1f floor %.1f / %.1f total %.1f / %.1f | iso %.1f / %.1f | edge %.0f%% conv %.0f%%" % (
         ev["name"], ev["diodes"], s[0]["gain_design_dir"], s[1]["gain_design_dir"], *s[0]["peak_dir"], *s[1]["peak_dir"], s[0]["SLL_aperture_db"], s[1]["SLL_aperture_db"], s[0]["SLL_floor_db"], s[1]["SLL_floor_db"],
-        s[0]["SLL_total_db"], s[1]["SLL_total_db"], s[0]["isolation_db"], s[1]["isolation_db"], 100 * ev["edge"], 100 * ev["conv"])
+        s[0]["SLL_total_db"], s[1]["SLL_total_db"], s[0]["isolation_db"], s[1]["isolation_db"], 100 * ev["edge"], 100 * ev["conv"]) + " | ring med th12 %.1f/%.1f th24 %.1f/%.1f" % (s[0]["ring_median_rel_peak_db"][12], s[1]["ring_median_rel_peak_db"][12], s[0]["ring_median_rel_peak_db"][24], s[1]["ring_median_rel_peak_db"][24])
 
 
 ABL = [("B0 binary statics, 1 pair", {"binary_statics": True}),

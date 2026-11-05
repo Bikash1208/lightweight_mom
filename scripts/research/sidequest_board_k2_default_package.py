@@ -43,14 +43,15 @@ def design():
     """Re-run the chosen configuration of design (i) (k2_default_designs.json) for this board size; returns cells (ix, iy, kind, key) and the per-state model numbers."""
     res = json.loads((ROOT / "results/sidequest_hybrid/k2_default_designs.json").read_text(encoding="utf-8"))
     best = res["rows"]["i"]["best"] if R_UM == 150000 else res["rows"]["i_R%d" % (R_UM // 1000)]["best"]
+    LAM = float(os.environ["K2_LAM"]) if os.environ.get("K2_LAM") else best["lam"]  # K2_LAM: lambda override (scan result); then the stored design is not reproduced
     stat, _pairs, _norm = D.library()
     levels = sorted({round(v[0], 4) for v in stat.values()})
     D.setup(F_GHZ * 1e9, R_UM / 1e6, D.MARGIN)
     bd = K.KBoard([0, 180], [best["pol"], best["pol"]])
-    r = D.run_design(bd, D.options(levels, [(1.0, -1.0, 1.0)], [(0, 1)]), [0.0, np.radians(best["eps_B_deg"])], best["lam"], best["g"], mu=best["mu"])
+    r = D.run_design(bd, D.options(levels, [(1.0, -1.0, 1.0)], [(0, 1)]), [0.0, np.radians(best["eps_B_deg"])], LAM, best["g"], mu=best["mu"])
     sm = D.summarise(r, "i", bd)
     sm.update({"pol": best["pol"], "eps_B_deg": best["eps_B_deg"]})
-    assert abs(sm["gain_dbi"][0] - best["gain_dbi"][0]) < 0.01 and sm["diodes"] == best["diodes"], "re-run does not reproduce the stored design"
+    assert os.environ.get("K2_LAM") or abs(sm["gain_dbi"][0] - best["gain_dbi"][0]) < 0.01 and sm["diodes"] == best["diodes"], "re-run does not reproduce the stored design"
     ix = np.rint(bd.x / 6.4e-3).astype(int)
     iy = np.rint(bd.y / 6.4e-3).astype(int)
     assert np.allclose(ix * 6.4e-3, bd.x, atol=1e-9) and np.allclose(iy * 6.4e-3, bd.y, atol=1e-9)

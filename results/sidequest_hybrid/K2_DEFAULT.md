@@ -40,3 +40,13 @@ Peak directions (25, 0) / (25, 180) in every row. XPD (i): 28.4 / 27.0 dB; apert
 * The wrong-beam penalty is a design choice (mu 30), not an HFSS-validated parameter; gain and isolation trade (table).
 * Polarisation LP-V (phi-hat, scalar cell J = m rho-hat E); CP waits for the 4-diode cell's HFSS check (`docs/briefs/SIDEQUEST_4QUADRANT.md`).
 * lam 0.28 and g 2.0 are the old design's operating point, not re-optimised (a lower lam would admit more switched cells; not run).
+
+## Lambda scan of design (i) (2026-11-05, 150 mm, LP-V, eps_B 180, mu 30, g 2.0; `k2_default_lambda_scan.json`)
+| lam | diodes (switched) | gain [dBi] | SLL [dB] | isolation [dB] |
+|---|---|---|---|---|
+| 0.28 (current package `board_K2_default`) | 514 (257) | 11.19 / 11.44 | -11.7 / -11.8 | -15.3 / -15.9 |
+| 0.20 | 608 (304) | 11.69 / 11.95 | -12.0 / -12.4 | -16.1 / -16.6 |
+| 0.14 | 686 (343) | 11.99 / 12.07 | -12.5 / -11.8 | -17.2 / -17.9 |
+| 0.10 | 746 (373) | 12.19 / 12.21 | -12.6 / -11.8 | -17.7 / -18.1 |
+| 0.05 | 812 (406) | 12.27 / 12.29 | -12.2 / -12.6 | -17.7 / -18.6 |
+Gain rises 1.08 dB (min state) at lam 0.05 with isolation <= -17.7 dB: the rule (>= 1 dB at <= -15 dB) is met, so a second package `hfss_exports/sidequest_board_K2_default_lam005/` (812 diodes, all checks PASS, 8.6-24 M tets, 86-359 GB) was built NEXT TO the current one; `board_K2_default` was not touched (it is the one being run in HFSS). Family B stays future work (through-slit cell weak; a better ON-raises-Y topology to be proposed later).

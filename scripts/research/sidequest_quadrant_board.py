@@ -114,4 +114,4 @@ if __name__ == "__main__":
             continue
         out[f"feed_{frac}"] = rows
         print(frac, [(round(x["gain_geom"], 2), round(x["SLL"], 1), round(x["SW_to_beam"], 2), round(x["edge"], 2)) for x in rows], flush=True)
-    Path("results/sidequest_hybrid/quadrant_board.json").write_text(json.dumps(out, indent=1, default=float), encoding="utf-8", newline="\n")
+    Path("results/sidequest_hybrid/quadrant_board" + K.TAG + ".json").write_text(json.dumps(out, indent=1, default=float), encoding="utf-8", newline="\n")

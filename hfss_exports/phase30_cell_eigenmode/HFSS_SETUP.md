@@ -1,5 +1,8 @@
 # HFSS_SETUP - Phase 30 cell eigenmode check (manual, from STEP; MODEL_ONLY predictions below were written before any HFSS run)
 
+> **Note (2026-11-05):** this sheet already instructs selecting both the SUB-side and AIR-side faces for every periodic pair (the failure mode found later was lattice pairs on single faces, leaving substrate walls PEC) and does not state the `pec` material step; see `hfss_exports/EXPORT_STANDARD.md`. The E1 eigenmode results (`results/phase30/HFSS_EIGEN_E1.md`) agree with the model to 0.5 %, so they are unlikely to be affected; confirm which setup was used.
+
+
 **Files** (mm, origin at the cell centre on the ground plane; z up): `E1_strong_M0p64.step`, `E2_longthin_M0p62.step`, `E3_mid_M0p27.step`, `E4_weak_M0p12.step`, `S1_supercell_leaky.step`.
 Bodies in each: **SUB** (solid, 3.2 x 3.2 x 0.635, z 0..0.635; S1: 22.4 x 3.2), **GND** (sheet, z = 0), **PATCH** (sheet at z = 0.635, 72-vertex n = 4 super-ellipse 3.05 mm, gap 0.15 mm to the cell edge, rectangular slot cut out; S1: 7 sheets), **AIR** (solid, same footprint, z 0.635..60.635: **height 60.0 mm = 94.5 x the substrate**; lid is 6x = 3.81 mm minimum, but 60 mm keeps the lid field ~2e-5 so the predictions hold - do not shorten).
 Slots (L x W, along x): E1 1.89 x 0.58, E2 2.29 x 0.10, E3 1.89 x 0.10, E4 1.53 x 0.10. S1 = E1 x 7 cells (x = -9.6 ... +9.6), slot angle 0, 25.7, 51.4 ... 154.3 deg; outline fixed, only the slot turns.

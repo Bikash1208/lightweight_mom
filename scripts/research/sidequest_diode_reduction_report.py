@@ -1,16 +1,18 @@
 """Tables, Pareto fronts and figure for the fewer-diodes study. Reads diode_reduction.json and rotated_board_chi0/chi45.json."""
 import csv
 import json
+import os
 from pathlib import Path
 
 import numpy as np
 
 R = Path("results/sidequest_hybrid")
+TAG = ("_" + os.environ["K4_TAG"]) if os.environ.get("K4_TAG") else ""
 SLL_LIM = -12.7
-d = json.loads((R / "diode_reduction.json").read_text(encoding="utf-8"))
+d = json.loads((R / f"diode_reduction{TAG}.json").read_text(encoding="utf-8"))
 rows = d["rows"] if isinstance(d, dict) else d
 rows = [r for r in rows if "error" not in r]
-for ch in ("chi0", "chi45"):
+for ch in (("chi0", "chi45") if not TAG else ()):  # D4 (rotated disc) was not recalibrated
     f = R / f"rotated_board_{ch}.json"
     if f.exists():
         for r in json.loads(f.read_text(encoding="utf-8"))["rows"]:
@@ -68,8 +70,8 @@ for kn in ("K2", "K4b"):
     out += [fmt(r) for r in front]
     out.append(f"\nBest with <= 360 diodes (SLL ok, loss <= 2 dB): {fmt(summary[kn][360]) if summary[kn][360] else 'NONE; closest SLL-ok: ' + (fmt(summary[kn]['360_closest']) if summary[kn].get('360_closest') else 'none')}")
     out.append(f"\nBest with <= 500 diodes: {fmt(summary[kn][500]) if summary[kn][500] else 'NONE; closest SLL-ok: ' + (fmt(summary[kn]['500_closest']) if summary[kn].get('500_closest') else 'none')}")
-(R / "diode_reduction_tables.md").write_text("\n".join(out) + "\n", encoding="utf-8", newline="\n")
-with open(R / "diode_reduction_all.csv", "w", newline="", encoding="utf-8") as fh:
+(R / f"diode_reduction_tables{TAG}.md").write_text("\n".join(out) + "\n", encoding="utf-8", newline="\n")
+with open(R / f"diode_reduction_all{TAG}.csv", "w", newline="", encoding="utf-8") as fh:
     w = csv.writer(fh)
     w.writerow(["K", "id", "diodes", "static_pct", "lines_x", "lines_y", "gain_mean", "gain_per_state", "SLL_worst", "XPD_min", "ap_eff_pct", "feasible_SLL"])
     for r in rows:
@@ -103,8 +105,8 @@ for ax, kn in zip(axs, ("K2", "K4b"), strict=True):
     ax.set_xlabel("diodes"); ax.set_ylabel("mean gain per state [dBi]"); ax.set_title(f"{kn}: gain vs diodes (faint = SLL > {SLL_LIM} dB)")
     ax.set_xlim(0, b["diodes"] * 1.05); ax.grid(alpha=0.3)
 axs[1].legend(fontsize=7, ncol=2, loc="lower right")
-fig.tight_layout(); fig.savefig(R / "diode_reduction_pareto.png", dpi=140)
-(R / "diode_reduction_summary.json").write_text(json.dumps({kn: {str(k): (v if v is None else {a: v[a] for a in ("id", "spec", "diodes", "gain", "gain_mean", "SLL_worst", "XPD_min", "ap_eff_pct", "lines_x", "lines_y", "static_pct")}) for k, v in summary[kn].items()} for kn in summary}, indent=1, default=str), encoding="utf-8", newline="\n")
+fig.tight_layout(); fig.savefig(R / f"diode_reduction_pareto{TAG}.png", dpi=140)
+(R / f"diode_reduction_summary{TAG}.json").write_text(json.dumps({kn: {str(k): (v if v is None else {a: v[a] for a in ("id", "spec", "diodes", "gain", "gain_mean", "SLL_worst", "XPD_min", "ap_eff_pct", "lines_x", "lines_y", "static_pct")}) for k, v in summary[kn].items()} for kn in summary}, indent=1, default=str), encoding="utf-8", newline="\n")
 print("\n".join(out[:1]))
 for kn in summary:
     for k, v in summary[kn].items():

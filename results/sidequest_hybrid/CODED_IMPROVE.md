@@ -1,6 +1,6 @@
 # Coded HMS K = 2: efficiency items I1-I7 at equal or lower diode / line count — MODEL_ONLY
 
-> **PENDING CELL VALIDATION (2026-11-05):** HFSS shows the rim-disc cell does not switch (90 deg along x: OFF 11.059 / ON 11.055 GHz; model 10.53 / 11.00). Every number in this document that depends on the crossed rim-disc cell (alpha, dY, board gain, diode counts) is on hold until a cell is HFSS-confirmed. See `results/sidequest_hybrid/CELL_VALIDATION.md`.
+> **PENDING CELL VALIDATION (2026-11-05):** HFSS (air box, pec metal) shows the crossed two-diode rim-disc cell switches ONLY with both diodes ON (C/C 10.670, R/C 10.665, C/R 10.690, R/R 11.006 GHz at 90 deg); the model's per-axis independence is falsified. Every number in this document that depends on independent per-axis switching of this cell (alpha per axis, polarisation switching, board gain, diode counts) is on hold. See `results/sidequest_hybrid/CELL_INDEPENDENCE.md`.
 
 Chosen cell: crossed split disc, rim 0.200 mm, two diodes per cell (x, y), measured MA4AGP907. Board: hexagon of side/circumradius 150 mm (58.5e3 mm^2, Dmax = 4 pi A / lambda^2 = 29.6 dBi), centre probe, states A RHCP (25, 0), B LHCP (25, 180).
 Code: `scripts/research/sidequest_coded_improve.py` (model), `sidequest_coded_lib.py` (MoM sub-library), `sidequest_coded_improve_run.py` (I1-I6, alone and cumulative), `sidequest_coded_improve_i7.py` (I7), `sidequest_launcher_opt.py` (I4). Data `coded_lib.json`, `coded_improve*.json`, `launcher_opt.json`. Tests `tests/test_sidequest_coded_improve.py`.

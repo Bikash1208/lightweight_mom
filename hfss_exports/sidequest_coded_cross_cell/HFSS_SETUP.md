@@ -1,5 +1,8 @@
 # HFSS: crossed two-diode rim cell, 4 states, eigenmode 90 / 120 deg along x and y (one page). NOT SENT. MODEL_ONLY predictions in `predictions.json`.
 
+> **EXPORT STANDARD (2026-11-05, `hfss_exports/EXPORT_STANDARD.md`) - applies to this sheet:** (1) **assign material `pec` to every metal object and the ground: STEP imports as vacuum, without this nothing works**; (2) periodic pairs on **single side faces of ONE air box that spans from the ground bottom to the lid** (substrate side walls inside the box; pairs on the air faces above the substrate alone leave the substrate walls PEC); (3) Clean Up Solutions before each run. The STEP files of this package predate the standard (separate `Air` body starting at the substrate top): draw the air box (x, y = +-3.2 mm, z from the ground bottom to the lid) in HFSS and put the pairs on its faces.
+
+
 **Files** (identical geometry, mm, +z up, patch plane z = 0, all coordinates on a 0.001 mm grid; `EXACT_DIMS` = PASS for all four): `cell_xOFF_yOFF.step`, `cell_xON_yOFF.step`, `cell_xOFF_yON.step`, `cell_xON_yON.step`.
 Bodies (4 solids + 2 sheets each): `Substrate` (RT5880, eps_r 2.2, tan d 0.0009, 6.4 x 6.4, z -1.575..0), `Ground` (35 um, z -1.610..-1.575), `Patch` (circle r = 3.000, 35 um, minus two 0.4 mm slits
 along y (x -0.2..0.2) and along x (y -0.2..0.2), each 5.6 mm long: **rim 0.200 mm** at every slit end, so the patch is one connected body), `Air` (6.4 x 6.4, z 0..30, patch cut out).

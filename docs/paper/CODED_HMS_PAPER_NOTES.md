@@ -1,6 +1,6 @@
 # Grouped coded holographic metasurface antenna — paper notes (living document)
 
-> **PENDING CELL VALIDATION (2026-11-05):** HFSS shows the rim-disc cell does not switch (90 deg along x: OFF 11.059 / ON 11.055 GHz; model 10.53 / 11.00). Every number in this file that depends on the crossed rim-disc cell (alpha, dY, board gain, diode counts) is on hold until a cell is HFSS-confirmed. See `results/sidequest_hybrid/CELL_VALIDATION.md`.
+> **PENDING CELL VALIDATION (2026-11-05):** HFSS (air box, pec metal) shows the crossed two-diode rim-disc cell switches ONLY with both diodes ON (C/C 10.670, R/C 10.665, C/R 10.690, R/R 11.006 GHz at 90 deg); the model's per-axis independence is falsified. Every number in this file that depends on independent per-axis switching of this cell (alpha per axis, polarisation switching, board gain, diode counts) is on hold. See `results/sidequest_hybrid/CELL_INDEPENDENCE.md`.
 
 
 ## Headline claim (draft)
@@ -84,3 +84,6 @@ Same RT5880 cell, K = 4 CP set (baseline 1120 diodes, 3 + 3 lines, 19.22 dBi, SL
 
 ## Cell validation status (2026-11-05)
 First HFSS run of the rim-disc cell showed no switching (OFF 11.059 / ON 11.055 GHz at 90 deg); root cause: STEP imported the patch as vacuum (no material in STEP), plus a corner contact of the two diode sheets. New package with a single geometry file, named bodies, automatic geometry/contact checks on the re-imported STEP and a bare-substrate sanity check (HFSS 11.07 GHz; model 11.42 GHz, 3 % offset unexplained). All coded-hologram results above remain **pending cell validation**. Details: `results/sidequest_hybrid/CELL_VALIDATION.md`.
+
+## Finding (2026-11-05): the crossed two-diode cell does not switch per axis in HFSS
+HFSS with the corrected setup (air box ground-to-lid, pec metal): C/C 10.670, R/C 10.665, C/R 10.690, R/R 11.006 GHz at 90 deg along x. **Only both diodes together switch** (+0.336 GHz); the MoM predicts independent switching (single diode +0.46 GHz). The MoM agrees with HFSS at the two extremes (C/C with the diode capacitance ineffective: 10.662 vs 10.670; R/R 11.014 vs 11.006) but not for single-diode states; strap-length, mesh and missing-rim tests do not reproduce the HFSS behaviour. **Consequence:** handedness/polarisation switching with independent x and y diodes is unconfirmed; every K = 2 / K = 4 / diode-reduction result that relies on it stays "pending cell validation". Candidates: (i) 4-diode cell with both slit halves bridged (MoM: independent, dY_x -4.4 mS, cross 0.1 mS, alpha 1.6 Np/m; HFSS check package `hfss_exports/sidequest_rt5880_cell_4diode/`); (ii) the current cell as a scalar 1-bit switch (both diodes on one line; HFSS-supported dY -3.13 mS, alpha 0.84 Np/m, linear polarisation only: K = 2 same-polarisation beams, 504 diodes 13.6 dBi SLL -13.6 dB, 848 diodes 15.4 dBi). Details: `results/sidequest_hybrid/CELL_INDEPENDENCE.md`.

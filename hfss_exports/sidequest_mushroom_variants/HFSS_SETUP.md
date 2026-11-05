@@ -1,5 +1,8 @@
 # HFSS: mushroom gate cell, four ON variants (+ two OFF twins) — eigenmode, phases 90 and 180 only. MODEL_ONLY predictions.
 
+> **EXPORT STANDARD (2026-11-05, `hfss_exports/EXPORT_STANDARD.md`) - applies to this sheet:** (1) **assign material `pec` to every metal object and the ground: STEP imports as vacuum, without this nothing works**; (2) periodic pairs on **single side faces of ONE air box that spans from the ground bottom to the lid** (substrate side walls inside the box; pairs on the air faces above the substrate alone leave the substrate walls PEC); (3) Clean Up Solutions before each run. The STEP files of this package predate the standard (separate `Air` body starting at the substrate top): draw the air box (x, y = +-3.2 mm, z from the ground bottom to the lid) in HFSS and put the pairs on its faces.
+
+
 Same stack, boundaries and diode representation as `hfss_exports/sidequest_mushroom_cell/HFSS_SETUP.md` (RT5880 1.575 mm, pitch 6.4 mm, PEC `Ground`/`Patch`/`Pad`/`Via`, PEC lid = top face of `Air` at z = +30 mm,
 master/slave periodic, y phase 0, eigenmode, min 2 GHz, 8 modes, lid modes removed as before). Sheet `D_ON`: Lumped RLC **R = 2.44 ohm**; `D_OFF`: **C = 28.16 fF**; current along +x across the gap.
 All variants: pad 0.8 mm, via top at the pad, diode between pad and patch. Table `variants.csv`.

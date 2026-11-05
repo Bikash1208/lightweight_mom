@@ -24,3 +24,6 @@ B is a weak switch (ΔY 2.3 -> 4.6 mS on-axis, shift only -0.13 GHz, alpha ~0.07
 
 ## Rim convergence (priority 2) and the no-rim cell (priority 3)
 No collapse with mesh: Delta Y (on-axis, rim 0.2 mm, pos 0.8) = -5.45 / -4.84 / -4.53 mS at mesh 32 / 64 / 96 (1 / 2 / 3 cells across the rim), still converging toward about -4.2 mS (`CODED_CELL_SEARCH.md`). Mesh 128 (4 cells across 0.2 mm) does not fit in memory (32 k unknowns, ~17 GB dense matrix); not run. The vacuum-patch diagnosis explains the HFSS result without invoking the rim; the rim sensitivity stays open until a cell is HFSS-confirmed. B predicted above.
+
+## Update (2026-11-05, after the corrected HFSS runs)
+The vacuum-patch / PEC-substrate-wall setup errors are fixed (air box ground to lid, `pec` assigned): C/C 10.670, R/C 10.665, C/R 10.690, R/R 11.006 GHz. **Only both diodes together switch**; see `CELL_INDEPENDENCE.md`. The statement "the cell switches" holds for the both-diode (scalar) switch only. The first-package sanity value "bare substrate 11.07 GHz" was measured with PEC substrate walls and is invalid (model 11.42).

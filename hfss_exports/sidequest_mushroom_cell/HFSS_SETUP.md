@@ -1,5 +1,8 @@
 # HFSS: switchable via-to-ground (mushroom-type) gate cell — eigenmode (one page). MODEL_ONLY predictions in `predictions.json`; nothing is HFSS-validated.
 
+> **EXPORT STANDARD (2026-11-05, `hfss_exports/EXPORT_STANDARD.md`) - applies to this sheet:** (1) **assign material `pec` to every metal object and the ground: STEP imports as vacuum, without this nothing works**; (2) periodic pairs on **single side faces of ONE air box that spans from the ground bottom to the lid** (substrate side walls inside the box; pairs on the air faces above the substrate alone leave the substrate walls PEC); (3) Clean Up Solutions before each run. The STEP files of this package predate the standard (separate `Air` body starting at the substrate top): draw the air box (x, y = +-3.2 mm, z from the ground bottom to the lid) in HFSS and put the pairs on its faces.
+
+
 **Files.** `cell_ON.step` (sheet `D_ON`), `cell_OFF.step` (sheet `D_OFF`): identical geometry, mm, +z up, patch plane z = 0. Parts: `Substrate` (RT5880, eps_r 2.2, tan d 0.0009, z -1.575..0, via hole),
 `Ground` (35 um, z -1.610..-1.575), `Via` (r 0.2, z -1.575..0), `Pad` (0.8 x 0.8, 35 um), `Patch` (5.6 x 5.6 with a 1.6 x 1.6 hole, 35 um; 0.8 mm gap to the next cell), `Air` (6.4 x 6.4, z 0..30, metal cut out), one sheet.
 The MA4AGP907 sits **at the via top**: it bridges the 0.4 mm gap between `Pad` (on the via) and `Patch`, current along +x (sheet x 0.4..0.8, y -0.4..0.4 at z +0.0175).

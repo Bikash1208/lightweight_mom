@@ -1,6 +1,6 @@
 """Geometry-consistency and contact checks of the crossed-diode rim-disc cell (bodies METAL_PEC = patch + ground, SUBSTRATE, AIR, sheets DX_SHEET, DY_SHEET) against the MoM geometry.
 Used (a) on the shapes before export and (b) on the RE-IMPORTED STEP file:   python check_step_cell.py <file.step> [--pos 0.8] [--wd 1.0] [--ls 2.8] [--g 0.4]   (mm; ls >= 3.0: no rim)
-Checks (reported as GEOM_CHECKS): bodies_and_names, no_intersections (pairwise common volume of all solids), air_is_box_minus_metal (volume), patch_vs_MoM (mask on a 0.05 mm grid, diode windows and the disc boundary band excluded),
+Checks (reported as GEOM_CHECKS): bodies_and_names, no_intersections (METAL_PEC parts and SUBSTRATE pairwise disjoint), air_box_ground_to_lid_single_face_walls (AIR = one box ground bottom to lid, 6 faces, contains all solids: the export standard), patch_vs_MoM (mask on a 0.05 mm grid, diode windows and the disc boundary band excluded),
 rims_at_4_ends, symmetry (mirror x, mirror y), sheet_edge_coincidence (long edges lie on the patch side faces, ends on the faces, centre in the gap, z = patch mid-plane, size), sheet_to_sheet_clearance (>= 0.1 mm),
 sheet_to_other_slit_clearance (>= 0.1 mm to the patch faces the other sheet bridges)."""
 import argparse
@@ -21,6 +21,7 @@ from OCP.TopAbs import TopAbs_IN
 
 R_DISC, T, H, GT, LID, P = 3.0, 0.035, 1.575, 0.035, 30.0, 6.4
 NAMES = ("METAL_PEC", "SUBSTRATE", "AIR", "DX_SHEET", "DY_SHEET")
+NAMES4 = ("METAL_PEC", "SUBSTRATE", "AIR", "DX_TOP", "DX_BOTTOM", "DY_RIGHT", "DY_LEFT")
 TOL = 1e-7
 
 
@@ -53,7 +54,7 @@ def classify(shape):
     return out
 
 
-def check(shape, pos=0.8, ls=2.8, g=0.4, wd=1.0, step_text=None, min_clearance=0.1, step=0.05):
+def check(shape, pos=0.8, ls=2.8, g=0.4, wd=1.0, step_text=None, min_clearance=0.1, step=0.05, both=False):
     c = classify(shape)
     res = {}
     ok_all = True
@@ -63,29 +64,40 @@ def check(shape, pos=0.8, ls=2.8, g=0.4, wd=1.0, step_text=None, min_clearance=0
         res[name] = {"ok": bool(ok), **kw}
         ok_all &= bool(ok)
 
-    names_ok = True if step_text is None else all(n in step_text for n in NAMES)
-    rec("bodies_and_names", len(c["patch"]) == 1 and len(c["ground"]) == 1 and len(c["substrate"]) == 1 and len(c["air"]) == 1 and len(c["sheets"]) == 2 and names_ok,
+    nsh = 4 if both else 2
+    names_ok = True if step_text is None else all(n in step_text for n in (NAMES4 if both else NAMES))
+    rec("bodies_and_names", len(c["patch"]) == 1 and len(c["ground"]) == 1 and len(c["substrate"]) == 1 and len(c["air"]) == 1 and len(c["sheets"]) == nsh and names_ok,
         patch=len(c["patch"]), ground=len(c["ground"]), substrate=len(c["substrate"]), air=len(c["air"]), sheets=len(c["sheets"]), names_in_file=names_ok)
-    if not (c["patch"] and c["air"] and c["substrate"] and c["ground"]) or len(c["sheets"]) != 2:
+    if not (c["patch"] and c["air"] and c["substrate"] and c["ground"]) or len(c["sheets"]) != nsh:
         return {"PASS": False, "checks": res}
     patch, ground, sub, air = c["patch"][0], c["ground"][0], c["substrate"][0], c["air"][0]
     solids = {"patch": patch, "ground": ground, "substrate": sub, "air": air}
     inter = {}
-    for a_, b_ in [("patch", "ground"), ("patch", "substrate"), ("patch", "air"), ("ground", "substrate"), ("ground", "air"), ("substrate", "air")]:
-        v = solids[a_].intersect(solids[b_]).Volume()
-        inter[f"{a_}&{b_}"] = float(v)
-    rec("no_intersections", max(inter.values()) < 1e-9, common_volume_mm3=inter)
-    v_expect = P * P * LID - patch.Volume()
-    rec("air_is_box_minus_metal", abs(air.Volume() - v_expect) < 1e-6 * v_expect, air_volume=float(air.Volume()), expected=float(v_expect))
+    for a_, b_ in [("patch", "ground"), ("patch", "substrate"), ("ground", "substrate")]:
+        inter[f"{a_}&{b_}"] = float(solids[a_].intersect(solids[b_]).Volume())
+    rec("no_intersections", max(inter.values()) < 1e-9, common_volume_mm3=inter, note="METAL_PEC (patch, ground) and SUBSTRATE are pairwise disjoint; AIR overlaps them on purpose (export standard)")
+    contained = {k: abs(air.intersect(solids[k]).Volume() - solids[k].Volume()) < 1e-6 * max(1.0, solids[k].Volume()) for k in ("patch", "ground", "substrate")}
+    afaces = air.Faces()
+    side = [f for f in afaces if abs(f.normalAt().z) < 1e-9]
+    walls_ok = len(afaces) == 6 and len(side) == 4 and all(abs(f.Area() - P * (LID + H + GT)) < 1e-6 for f in side)
+    bb_air = air.BoundingBox()
+    span_ok = abs(bb_air.zmin + H + GT) < 1e-6 and abs(bb_air.zmax - LID) < 1e-6 and abs(bb_air.xlen - P) < 1e-6 and abs(bb_air.ylen - P) < 1e-6
+    rec("air_box_ground_to_lid_single_face_walls", all(contained.values()) and walls_ok and span_ok, faces=len(afaces), side_faces=len(side), z_span=[round(bb_air.zmin, 4), round(bb_air.zmax, 4)], contains_all_solids=contained)
     # MoM mask
     import sidequest_cell_search as C
 
-    mom = C.cell("rt5880", "OFF", "OFF", diam=6.0, g=g, ls=ls, pos=pos, wd=wd)
+    if both:
+        import sidequest_cell_independence as CI
+
+        w = [("OFF", pos - wd / 2, pos + wd / 2), ("OFF", -pos - wd / 2, -pos + wd / 2)]
+        mom = CI.build(ls, w, w)
+    else:
+        mom = C.cell("rt5880", "OFF", "OFF", diam=6.0, g=g, ls=ls, pos=pos, wd=wd)
     xs = np.arange(-3.0, 3.0 + 1e-9, step)
     X, Y = np.meshgrid(xs, xs, indexing="ij")
     keep = np.hypot(X, Y) < R_DISC - 0.12
-    win_x = (np.abs(X) <= g / 2 + 1e-9) & (Y >= pos - wd / 2 - 1e-9) & (Y <= pos + wd / 2 + 1e-9)
-    win_y = (np.abs(Y) <= g / 2 + 1e-9) & (X >= pos - wd / 2 - 1e-9) & (X <= pos + wd / 2 + 1e-9)
+    win_x = (np.abs(X) <= g / 2 + 1e-9) & (np.abs(np.abs(Y) - pos if both else Y - pos) <= wd / 2 + 1e-9)
+    win_y = (np.abs(Y) <= g / 2 + 1e-9) & (np.abs(np.abs(X) - pos if both else X - pos) <= wd / 2 + 1e-9)
     keep &= ~(win_x | win_y)
     for e in (g / 2, ls, pos - wd / 2, pos + wd / 2):
         keep &= (np.abs(np.abs(X) - e) > 1e-6) & (np.abs(np.abs(Y) - e) > 1e-6)
@@ -118,21 +130,23 @@ def check(shape, pos=0.8, ls=2.8, g=0.4, wd=1.0, step_text=None, min_clearance=0
         size_ok = abs(gap_len - g) < 1e-6 and abs(width - wd) < 1e-6
         axes.append("x" if along_y else "y")
         info.append({"axis": "x" if along_y else "y", "centre": [round(cen.x, 4), round(cen.y, 4), round(cen.z, 4)], "gap_len": round(gap_len, 4), "width": round(width, 4), "long_edges_on_patch": bool(long_ok), "end_points_on_patch": bool(ends_ok), "centre_in_gap": bool(centre_gap), "size_ok": bool(size_ok)})
-    rec("sheet_edge_coincidence", all(i["long_edges_on_patch"] and i["end_points_on_patch"] and i["centre_in_gap"] and i["size_ok"] for i in info) and sorted(axes) == ["x", "y"], sheets=info)
-    d_ss = c["sheets"][0].distance(c["sheets"][1])
+    rec("sheet_edge_coincidence", all(i["long_edges_on_patch"] and i["end_points_on_patch"] and i["centre_in_gap"] and i["size_ok"] for i in info) and sorted(axes) == (["x", "x", "y", "y"] if both else ["x", "y"]), sheets=info)
+    d_ss = min(a_.distance(b_) for i_, a_ in enumerate(c["sheets"]) for b_ in c["sheets"][i_ + 1:])
     rec("sheet_to_sheet_clearance", d_ss >= min_clearance - 1e-9, distance_mm=float(d_ss), required=min_clearance)
-    # clearance from each sheet to the patch faces bridged by the other sheet
+    # clearance from each sheet to the patch faces bridged by sheets of the OTHER axis
     worst = 1e9
-    for k in (0, 1):
-        other, this = c["sheets"][1 - k], c["sheets"][k]
-        for fc in patch.Faces():
-            if fc.distance(other) < TOL and fc.distance(this) > TOL:  # a face the other sheet bridges and this sheet does not touch
-                worst = min(worst, fc.distance(this))
+    for k, this in enumerate(c["sheets"]):
+        for m_, other in enumerate(c["sheets"]):
+            if axes[m_] == axes[k]:
+                continue
+            for fc in patch.Faces():
+                if fc.distance(other) < TOL and fc.distance(this) > TOL:
+                    worst = min(worst, fc.distance(this))
     rec("sheet_to_other_slit_clearance", worst >= min_clearance - 1e-9, distance_mm=float(worst), required=min_clearance)
     return {"PASS": bool(ok_all), "checks": res}
 
 
-def check_file(path, **kw):
+def check_file(path, **kw):  # kw as in check(), e.g. both=True for the four-diode cell
     text = Path(path).read_text(encoding="utf-8")
     shp = cq.importers.importStep(str(path)).val()
     comp = cq.Compound.makeCompound(list(cq.importers.importStep(str(path)).vals())) if not hasattr(shp, "Solids") else shp

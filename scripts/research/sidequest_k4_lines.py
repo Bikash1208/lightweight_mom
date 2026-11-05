@@ -61,4 +61,4 @@ if __name__ == "__main__":
             out[str(L)] = best
             cur = [tuple(c) for c in best["classes"]]
             print(f"L={L}", round(best["gain_mean"], 2), best["SLL_worst"], best["static_pct"], best["diodes"], best["classes"], flush=True)
-    Path("results/sidequest_hybrid/coded_k4_lines.json").write_text(json.dumps(out, indent=1, default=float), encoding="utf-8", newline="\n")
+    Path("results/sidequest_hybrid/coded_k4_lines" + K.TAG + ".json").write_text(json.dumps(out, indent=1, default=float), encoding="utf-8", newline="\n")

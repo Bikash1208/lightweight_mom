@@ -10,7 +10,7 @@ import numpy as np
 
 import sidequest_coded_k4 as K
 
-OUT = Path("results/sidequest_hybrid/coded_k4_" + "_".join(sys.argv[1:] or ["all"]) + ".json")
+OUT = Path("results/sidequest_hybrid/coded_k4_" + "_".join(sys.argv[1:] or ["all"]) + K.TAG + ".json")
 LOG = {}
 STAT, PAIRS = K.library()
 VS_BIT = np.array([-1.0, 1.0])

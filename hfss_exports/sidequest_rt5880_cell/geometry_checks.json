@@ -16,16 +16,23 @@
     "common_volume_mm3": {
      "patch&ground": 0.0,
      "patch&substrate": 0.0,
-     "patch&air": 0.0,
-     "ground&substrate": 0.0,
-     "ground&air": 0.0,
-     "substrate&air": 0.0
-    }
+     "ground&substrate": 0.0
+    },
+    "note": "METAL_PEC (patch, ground) and SUBSTRATE are pairwise disjoint; AIR overlaps them on purpose (export standard)"
    },
-   "air_is_box_minus_metal": {
+   "air_box_ground_to_lid_single_face_walls": {
     "ok": true,
-    "air_volume": 1227.9615983141189,
-    "expected": 1227.9615983141193
+    "faces": 6,
+    "side_faces": 4,
+    "z_span": [
+     -1.61,
+     30.0
+    ],
+    "contains_all_solids": {
+     "patch": true,
+     "ground": true,
+     "substrate": true
+    }
    },
    "patch_vs_MoM": {
     "ok": true,
@@ -95,7 +102,7 @@
    "EXACT_DIMS": {
     "ok": true,
     "inexact_literals": 0,
-    "n_snapped": 13,
+    "n_snapped": 9,
     "max_snap_mm": 2.22044604925e-16,
     "bbox_x": [
      -3.2,
@@ -125,16 +132,23 @@
     "common_volume_mm3": {
      "patch&ground": 0.0,
      "patch&substrate": 0.0,
-     "patch&air": 0.0,
-     "ground&substrate": 0.0,
-     "ground&air": 0.0,
-     "substrate&air": 0.0
-    }
+     "ground&substrate": 0.0
+    },
+    "note": "METAL_PEC (patch, ground) and SUBSTRATE are pairwise disjoint; AIR overlaps them on purpose (export standard)"
    },
-   "air_is_box_minus_metal": {
+   "air_box_ground_to_lid_single_face_walls": {
     "ok": true,
-    "air_volume": 1227.9615983141186,
-    "expected": 1227.9615983141193
+    "faces": 6,
+    "side_faces": 4,
+    "z_span": [
+     -1.61,
+     30.0
+    ],
+    "contains_all_solids": {
+     "patch": true,
+     "ground": true,
+     "substrate": true
+    }
    },
    "patch_vs_MoM": {
     "ok": true,
@@ -204,7 +218,7 @@
    "EXACT_DIMS": {
     "ok": true,
     "inexact_literals": 0,
-    "n_snapped": 13,
+    "n_snapped": 9,
     "max_snap_mm": 2.22044604925e-16,
     "bbox_x": [
      -3.2,

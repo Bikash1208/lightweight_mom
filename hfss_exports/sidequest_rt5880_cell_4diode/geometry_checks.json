@@ -1,0 +1,272 @@
+{
+ "before_export": {
+  "PASS": true,
+  "checks": {
+   "bodies_and_names": {
+    "ok": true,
+    "patch": 1,
+    "ground": 1,
+    "substrate": 1,
+    "air": 1,
+    "sheets": 4,
+    "names_in_file": true
+   },
+   "no_intersections": {
+    "ok": true,
+    "common_volume_mm3": {
+     "patch&ground": 0.0,
+     "patch&substrate": 0.0,
+     "ground&substrate": 0.0
+    },
+    "note": "METAL_PEC (patch, ground) and SUBSTRATE are pairwise disjoint; AIR overlaps them on purpose (export standard)"
+   },
+   "air_box_ground_to_lid_single_face_walls": {
+    "ok": true,
+    "faces": 6,
+    "side_faces": 4,
+    "z_span": [
+     -1.61,
+     30.0
+    ],
+    "contains_all_solids": {
+     "patch": true,
+     "ground": true,
+     "substrate": true
+    }
+   },
+   "patch_vs_MoM": {
+    "ok": true,
+    "points": 8509,
+    "mismatch_fraction": 0.0,
+    "first_mismatches": []
+   },
+   "rims_at_4_ends": {
+    "ok": true,
+    "expected_present": true,
+    "top_bottom_right_left": [
+     true,
+     true,
+     true,
+     true
+    ]
+   },
+   "symmetry": {
+    "ok": true,
+    "mirror_x_asymmetric_points": 0,
+    "mirror_y_asymmetric_points": 0,
+    "tested": 289
+   },
+   "sheet_edge_coincidence": {
+    "ok": true,
+    "sheets": [
+     {
+      "axis": "x",
+      "centre": [
+       0.0,
+       0.8,
+       0.0175
+      ],
+      "gap_len": 0.4,
+      "width": 1.0,
+      "long_edges_on_patch": true,
+      "end_points_on_patch": true,
+      "centre_in_gap": true,
+      "size_ok": true
+     },
+     {
+      "axis": "x",
+      "centre": [
+       0.0,
+       -0.8,
+       0.0175
+      ],
+      "gap_len": 0.4,
+      "width": 1.0,
+      "long_edges_on_patch": true,
+      "end_points_on_patch": true,
+      "centre_in_gap": true,
+      "size_ok": true
+     },
+     {
+      "axis": "y",
+      "centre": [
+       0.8,
+       -0.0,
+       0.0175
+      ],
+      "gap_len": 0.4,
+      "width": 1.0,
+      "long_edges_on_patch": true,
+      "end_points_on_patch": true,
+      "centre_in_gap": true,
+      "size_ok": true
+     },
+     {
+      "axis": "y",
+      "centre": [
+       -0.8,
+       -0.0,
+       0.0175
+      ],
+      "gap_len": 0.4,
+      "width": 1.0,
+      "long_edges_on_patch": true,
+      "end_points_on_patch": true,
+      "centre_in_gap": true,
+      "size_ok": true
+     }
+    ]
+   },
+   "sheet_to_sheet_clearance": {
+    "ok": true,
+    "distance_mm": 0.14142135623730956,
+    "required": 0.1
+   },
+   "sheet_to_other_slit_clearance": {
+    "ok": true,
+    "distance_mm": 0.09999999999999995,
+    "required": 0.1
+   },
+   "EXACT_DIMS": {
+    "ok": true,
+    "inexact_literals": 0,
+    "n_snapped": 9
+   }
+  }
+ },
+ "re_imported_step": {
+  "PASS": true,
+  "checks": {
+   "bodies_and_names": {
+    "ok": true,
+    "patch": 1,
+    "ground": 1,
+    "substrate": 1,
+    "air": 1,
+    "sheets": 4,
+    "names_in_file": true
+   },
+   "no_intersections": {
+    "ok": true,
+    "common_volume_mm3": {
+     "patch&ground": 0.0,
+     "patch&substrate": 0.0,
+     "ground&substrate": 0.0
+    },
+    "note": "METAL_PEC (patch, ground) and SUBSTRATE are pairwise disjoint; AIR overlaps them on purpose (export standard)"
+   },
+   "air_box_ground_to_lid_single_face_walls": {
+    "ok": true,
+    "faces": 6,
+    "side_faces": 4,
+    "z_span": [
+     -1.61,
+     30.0
+    ],
+    "contains_all_solids": {
+     "patch": true,
+     "ground": true,
+     "substrate": true
+    }
+   },
+   "patch_vs_MoM": {
+    "ok": true,
+    "points": 8509,
+    "mismatch_fraction": 0.0,
+    "first_mismatches": []
+   },
+   "rims_at_4_ends": {
+    "ok": true,
+    "expected_present": true,
+    "top_bottom_right_left": [
+     true,
+     true,
+     true,
+     true
+    ]
+   },
+   "symmetry": {
+    "ok": true,
+    "mirror_x_asymmetric_points": 0,
+    "mirror_y_asymmetric_points": 0,
+    "tested": 289
+   },
+   "sheet_edge_coincidence": {
+    "ok": true,
+    "sheets": [
+     {
+      "axis": "x",
+      "centre": [
+       0.0,
+       0.8,
+       0.0175
+      ],
+      "gap_len": 0.4,
+      "width": 1.0,
+      "long_edges_on_patch": true,
+      "end_points_on_patch": true,
+      "centre_in_gap": true,
+      "size_ok": true
+     },
+     {
+      "axis": "x",
+      "centre": [
+       0.0,
+       -0.8,
+       0.0175
+      ],
+      "gap_len": 0.4,
+      "width": 1.0,
+      "long_edges_on_patch": true,
+      "end_points_on_patch": true,
+      "centre_in_gap": true,
+      "size_ok": true
+     },
+     {
+      "axis": "y",
+      "centre": [
+       0.8,
+       -0.0,
+       0.0175
+      ],
+      "gap_len": 0.4,
+      "width": 1.0,
+      "long_edges_on_patch": true,
+      "end_points_on_patch": true,
+      "centre_in_gap": true,
+      "size_ok": true
+     },
+     {
+      "axis": "y",
+      "centre": [
+       -0.8,
+       -0.0,
+       0.0175
+      ],
+      "gap_len": 0.4,
+      "width": 1.0,
+      "long_edges_on_patch": true,
+      "end_points_on_patch": true,
+      "centre_in_gap": true,
+      "size_ok": true
+     }
+    ]
+   },
+   "sheet_to_sheet_clearance": {
+    "ok": true,
+    "distance_mm": 0.14142135623730948,
+    "required": 0.1
+   },
+   "sheet_to_other_slit_clearance": {
+    "ok": true,
+    "distance_mm": 0.09999999999999998,
+    "required": 0.1
+   },
+   "EXACT_DIMS": {
+    "ok": true,
+    "inexact_literals": 0,
+    "n_snapped": 9
+   }
+  }
+ }
+}

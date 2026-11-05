@@ -17,7 +17,11 @@ import sidequest_arch_study as st
 import sidequest_coded_improve as I
 
 THETA = np.radians(25.0)
-A0, AA0, AA_BG, BETA_K0, LAUNCH = 1.84, 0.094, 0.15, 1.079, 0.627
+import os
+
+# defaults: round-13 values (Bloch MoM cell, pos 0.8, footprint 1.2 mm). HFSS-calibrated run: K4_A0=0.844 K4_BETA_K0=1.0731 K4_TAG=hfsscal (HFSS 2026-11-05: OFF/OFF 10.670, DX ON 11.006 GHz at 90 deg)
+A0, AA0, AA_BG, BETA_K0, LAUNCH = (float(os.environ.get("K4_A0", 1.84)), float(os.environ.get("K4_AA0", 0.094)), float(os.environ.get("K4_AA_BG", 0.15)), float(os.environ.get("K4_BETA_K0", 1.079)), 0.627)
+TAG = ("_" + os.environ["K4_TAG"]) if os.environ.get("K4_TAG") else ""
 BETA = BETA_K0 * st.K0
 LAM0 = 299792458.0 / 10.54e9
 DMAX = 10 * np.log10(4 * np.pi * I.AREA / LAM0**2)

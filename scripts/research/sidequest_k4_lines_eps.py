@@ -35,4 +35,4 @@ if __name__ == "__main__":
     ok = [r for r in res if r["SLL_worst"] <= -12.7]
     best = max(res, key=lambda r: r["gain_mean"] - 0.5 * max(0, r["SLL_worst"] + 12.7))
     print("feasible (SLL <= -12.7):", len(ok), "of", len(res), "best:", best, flush=True)
-    Path("results/sidequest_hybrid/coded_k4_lines_eps.json").write_text(json.dumps({"all": res, "best": best}, indent=1, default=float), encoding="utf-8", newline="\n")
+    Path("results/sidequest_hybrid/coded_k4_lines_eps" + K.TAG + ".json").write_text(json.dumps({"all": res, "best": best}, indent=1, default=float), encoding="utf-8", newline="\n")

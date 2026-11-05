@@ -13,7 +13,7 @@ import sidequest_arch_study as st
 import sidequest_coded_k4 as K
 import sidequest_diode_reduction as D
 
-OUT = Path("results/sidequest_hybrid/diode_reduction.json")
+OUT = Path("results/sidequest_hybrid/diode_reduction" + K.TAG + ".json")
 _OPT = {}
 
 

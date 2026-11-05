@@ -1,6 +1,6 @@
 # Coded hologram, K = 2 with a different polarisation per state (round 8) — MODEL_ONLY
 
-> **PENDING CELL VALIDATION (2026-11-05):** HFSS shows the rim-disc cell does not switch (90 deg along x: OFF 11.059 / ON 11.055 GHz; model 10.53 / 11.00). Every number in this document that depends on the crossed rim-disc cell (alpha, dY, board gain, diode counts) is on hold until a cell is HFSS-confirmed. See `results/sidequest_hybrid/CELL_VALIDATION.md`.
+> **PENDING CELL VALIDATION (2026-11-05):** HFSS (air box, pec metal) shows the crossed two-diode rim-disc cell switches ONLY with both diodes ON (C/C 10.670, R/C 10.665, C/R 10.690, R/R 11.006 GHz at 90 deg); the model's per-axis independence is falsified. Every number in this document that depends on independent per-axis switching of this cell (alpha per axis, polarisation switching, board gain, diode counts) is on hold. See `results/sidequest_hybrid/CELL_INDEPENDENCE.md`.
 
 
 State A **RHCP at (25 deg, 0 deg)**, state B **LHCP at (25 deg, 180 deg)**; 150 mm hexagon, 10.54 GHz, Phase 26 RT5880 stack, centre probe (launch 0.627), 1430 cells, one MA4AGP907 per switched cell.

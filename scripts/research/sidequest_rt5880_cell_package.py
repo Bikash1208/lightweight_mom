@@ -1,4 +1,5 @@
-"""HFSS package, RT5880 chosen cell (rim disc, diodes 0.8 mm from the centre): ONE geometry STEP (METAL_PEC, SUBSTRATE, AIR, DX_SHEET, DY_SHEET) + state table (states differ only in RLC values) + predictions.
+"""EXPORT STANDARD (2026-11-05): AIR = one box from the ground bottom to the lid (single face per side wall, intentionally overlapping the solids), METAL_PEC to be assigned material pec in HFSS (STEP carries no material).
+HFSS package, RT5880 chosen cell (rim disc, diodes 0.8 mm from the centre): ONE geometry STEP (METAL_PEC, SUBSTRATE, AIR, DX_SHEET, DY_SHEET) + state table (states differ only in RLC values) + predictions.
 Geometry = the MoM model: disc r 3.000, slits 0.4 wide, 5.6 long (rim 0.200 at all four ends), x diode across the vertical slit at y = +0.8, y diode across the horizontal slit at x = +0.8, footprint 0.4 x 1.0 mm
 (inner edge 0.3 mm from the slit crossing: the two sheets are 0.14 mm apart; footprint 1.2 mm would make their corners touch). Checks run before export and again on the re-imported STEP.
     python sidequest_rt5880_cell_package.py   -> hfss_exports/sidequest_rt5880_cell/"""
@@ -47,7 +48,7 @@ def build(ls=LS, pos=POS, wd=WD):
     ground = box(0, 0, P, P, -H - GT, -H)
     metal = cq.Compound.makeCompound([patch.val(), ground.val()])
     sub = box(0, 0, P, P, -H, 0)
-    air = box(0, 0, P, P, 0, LID).cut(patch)
+    air = box(0, 0, P, P, -H - GT, LID)  # EXPORT STANDARD: one vacuum box from the ground bottom to the lid, one face per side wall (lattice pairs on single faces); it overlaps SUBSTRATE and METAL_PEC on purpose, nothing is subtracted
     return {"METAL_PEC": metal, "SUBSTRATE": sub.val(), "AIR": air.val(), "DX_SHEET": sheet(0, pos, G, wd), "DY_SHEET": sheet(pos, 0, wd, G)}
 
 
@@ -168,6 +169,8 @@ if __name__ == "__main__":
     (OUT / "geometry_checks.json").write_text(json.dumps({"before_export": pre, "re_imported_step": post}, indent=1, default=str), encoding="utf-8", newline="\n")
     if not (pre["PASS"] and post["PASS"]):
         sys.exit("geometry checks failed: no predictions, no package")
+    if "--keep-predictions" in sys.argv:
+        sys.exit(0)
     with open(OUT / "states.csv", "w", encoding="utf-8", newline="\n") as fh:
         fh.write("state,DX_SHEET_element,DX_value,DY_SHEET_element,DY_value,note\n")
         for sx, sy in itertools.product(("OFF", "ON"), repeat=2):

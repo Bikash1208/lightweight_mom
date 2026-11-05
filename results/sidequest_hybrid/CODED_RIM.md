@@ -1,6 +1,6 @@
 # Crossed rim cell: rim width robustness and mesh convergence (round 10) — MODEL_ONLY
 
-> **PENDING CELL VALIDATION (2026-11-05):** HFSS shows the rim-disc cell does not switch (90 deg along x: OFF 11.059 / ON 11.055 GHz; model 10.53 / 11.00). Every number in this document that depends on the crossed rim-disc cell (alpha, dY, board gain, diode counts) is on hold until a cell is HFSS-confirmed. See `results/sidequest_hybrid/CELL_VALIDATION.md`.
+> **PENDING CELL VALIDATION (2026-11-05):** HFSS (air box, pec metal) shows the crossed two-diode rim-disc cell switches ONLY with both diodes ON (C/C 10.670, R/C 10.665, C/R 10.690, R/R 11.006 GHz at 90 deg); the model's per-axis independence is falsified. Every number in this document that depends on independent per-axis switching of this cell (alpha per axis, polarisation switching, board gain, diode counts) is on hold. See `results/sidequest_hybrid/CELL_INDEPENDENCE.md`.
 
 Cell: 6.0 mm disc, two 0.4 mm slits of length 2 x (3.0 - rim), x diode at (0, +1.6) and y diode at (+1.6, 0), measured MA4AGP907. Code `sidequest_coded_rim.py`, `sidequest_coded_rim_board.py`; data `coded_rim/rim*_m*.json`, `coded_rim_board.json`, `coded_rim_extrap.json`.
 dY = Y_xx(ON/OFF) - Y_xx(OFF/OFF) (other diode OFF); alpha/beta from the first-order leakage model; board = K = 2 RHCP (25, 0) / LHCP (25, 180), two diodes per cell, lambda 0.5 (eps_B scanned, <= 1 dB). Mesh edge: 0.2 / 0.1 / 0.0667 mm at mesh 32 / 64 / 96.

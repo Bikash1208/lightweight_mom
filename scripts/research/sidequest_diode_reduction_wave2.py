@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import sidequest_diode_reduction as D
 from sidequest_diode_reduction_run import run_spec
 
-OUT = Path("results/sidequest_hybrid/diode_reduction.json")
+OUT = Path("results/sidequest_hybrid/diode_reduction" + D.K.TAG + ".json")
 
 if __name__ == "__main__":
     d = json.loads(OUT.read_text(encoding="utf-8"))

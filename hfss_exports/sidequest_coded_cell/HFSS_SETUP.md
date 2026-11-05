@@ -1,5 +1,8 @@
 # HFSS: 1-bit coded-hologram cell, ON / OFF eigenmode (one page). NOT SENT. MODEL_ONLY predictions in `predictions.json`; nothing is HFSS-validated.
 
+> **EXPORT STANDARD (2026-11-05, `hfss_exports/EXPORT_STANDARD.md`) - applies to this sheet:** (1) **assign material `pec` to every metal object and the ground: STEP imports as vacuum, without this nothing works**; (2) periodic pairs on **single side faces of ONE air box that spans from the ground bottom to the lid** (substrate side walls inside the box; pairs on the air faces above the substrate alone leave the substrate walls PEC); (3) Clean Up Solutions before each run. The STEP files of this package predate the standard (separate `Air` body starting at the substrate top): draw the air box (x, y = +-3.2 mm, z from the ground bottom to the lid) in HFSS and put the pairs on its faces.
+
+
 **Files.** `cell_ON.step` (sheet `D_ON`), `cell_OFF.step` (sheet `D_OFF`): identical geometry, mm, +z up, patch plane z = 0, every coordinate on a 0.001 mm grid (`EXACT_DIMS` = PASS, see below).
 Bodies (5 solids + 1 sheet each): `Substrate` (RT5880, eps_r 2.2, tan d 0.0009, 6.4 x 6.4, z -1.575..0), `Ground` (35 um, z -1.610..-1.575), `Patch_L`, `Patch_R` (2.8 x 4.8, 35 um, x = -3.0..-0.2 and 0.2..3.0, y = -2.4..2.4),
 `Air` (6.4 x 6.4, z 0..30, metal cut out), sheet `D_ON` / `D_OFF` (0.4 x 1.2, x -0.2..0.2, y -0.6..0.6, z +0.0175) bridging the 0.4 mm gap. The split patch is 6.0 mm long: 0.4 mm gap to the next cell.

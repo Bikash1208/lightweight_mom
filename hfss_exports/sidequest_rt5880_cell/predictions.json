@@ -1301,5 +1301,43 @@
     ]
    ]
   ]
- }
+ },
+ "hfss_2026_11_05": {
+  "setup": "air box ground-bottom to lid, single-face lattice pairs, METAL_PEC pec, clean solves",
+  "x_run_90deg_GHz": {
+   "C/C": 10.67,
+   "R/C": 10.665,
+   "C/R": 10.69,
+   "R/R": 11.006
+  },
+  "reading": "only both diodes together switch (R/R +0.336 GHz); each diode alone: no switch (R/C -0.005, C/R +0.020); MoM additivity falsified",
+  "implied_at_extremes": {
+   "B_CC_mS": 10.069,
+   "B_RR_mS": 6.941,
+   "dY_both_mS": -3.128,
+   "Y_mean_mS": 8.505,
+   "beta_m_over_k0": 1.0731,
+   "alpha_beam_Np_per_m_scalar_switch": 0.844
+  },
+  "model_vs_hfss": {
+   "C/C": {
+    "model_diode_28fF": 10.525,
+    "model_open_slits": 10.662,
+    "hfss": 10.67
+   },
+   "R/R": {
+    "model": 11.014,
+    "hfss": 11.006
+   },
+   "R/C": {
+    "model": 10.99,
+    "hfss": 10.665
+   },
+   "C/R": {
+    "model": 10.528,
+    "hfss": 10.69
+   }
+  }
+ },
+ "bare_substrate_note": "the 11.07 GHz bare value was measured with PEC substrate side walls (single-face pairs): invalid; model 11.42 GHz (lid) expected with the air-box standard"
 }

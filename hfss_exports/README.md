@@ -1,5 +1,7 @@
 # HFSS export packages
 
+**Export standard for periodic/eigenmode packages: `EXPORT_STANDARD.md` (pec material step, air box ground-bottom-to-lid with single-face side walls, named bodies, automatic geometry checks).**
+
 Each subfolder is a self-contained HFSS import package (STEP + layout CSV/JSON/DXF + an
 `HFSS_README.md` with Floquet-port/PEC/thickness setup notes) for one design, plus whatever
 real HFSS results exist for it. Raw HFSS Touchstone exports (`*.s36p`, `*.s4p`) are gitignored —

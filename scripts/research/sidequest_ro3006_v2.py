@@ -167,11 +167,15 @@ def evaluate_gen(np, K, D, bd, m, nd, launch, betas_rad, wanted, ideal=None, dis
             ins, u0b = SLD.analyze(th_g, ph_g, inten, peak=(25.0, float(np.degrees(bd.phis[b]))), return_mask=True)
             inside |= ins
             u_peaks.append(u0b)
+        hpbw = {}
+        for b in beams:
+            a_ = SLD.analyze(th_g, ph_g, inten, peak=(25.0, float(np.degrees(bd.phis[b]))))
+            hpbw[b] = {"elevation": float(a_["HPBW_elevation_deg"]), "azimuth_angular": float(a_["HPBW_azimuth_angular_deg"])}
         outside = np.where(inside | (st.TG > np.radians(90.0)), -np.inf, inten)
         sl_fn = float(10 * np.log10(outside.max() / max(u_peaks)))
         sl_fn_weak = float(10 * np.log10(outside.max() / min(u_peaks)))
         jfn = np.unravel_index(np.argmax(outside), outside.shape)
-        out["states"].append({"SLL_firstnull_db": sl_fn, "SLL_firstnull_vs_weaker_db": sl_fn_weak, "SLL_firstnull_dir": [float(np.degrees(st.TG[jfn])), float(np.degrees(st.PG[jfn]))], "beam_gain_dbi": {"b1_(25,0)": lvl[0], "b2_(25,180)": lvl[1]}, "SLL_db": sl - max(lvl[b] for b in beams), "SLL_vs_weaker_beam_db": sl - ref,
+        out["states"].append({"SLL_firstnull_db": sl_fn, "SLL_firstnull_vs_weaker_db": sl_fn_weak, "SLL_firstnull_dir": [float(np.degrees(st.TG[jfn])), float(np.degrees(st.PG[jfn]))], "hpbw": hpbw, "beam_gain_raw_model_dbi": {"b1_(25,0)": lvl[0] - OFFSET[k], "b2_(25,180)": lvl[1] - OFFSET[k]}, "beam_gain_dbi": {"b1_(25,0)": lvl[0], "b2_(25,180)": lvl[1]}, "SLL_db": sl - max(lvl[b] for b in beams), "SLL_vs_weaker_beam_db": sl - ref,
                               "peak_dir": [float(np.degrees(st.TG[ipk])), float(np.degrees(st.PG[ipk]))], "wanted": beams, "balance_db": (lvl[0] - lvl[1]) if len(beams) == 2 else None,
                               "isolation_db": (lvl[beams[0]] - lvl[1 - beams[0]]) if len(beams) == 1 else None, "ring_median_rel_peak_db": ring,
                               "floor_db": 10 * math.log10(nb * RD.DNB) - max(lvl[b] for b in beams)})

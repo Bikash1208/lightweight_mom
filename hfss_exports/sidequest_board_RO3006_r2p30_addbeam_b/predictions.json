@@ -1,0 +1,176 @@
+{
+ "labels": [
+  "MODEL_ONLY",
+  "add-a-beam (b): beam 1 always on, beam 2 switched; w2 1.25, eps_B 0; each state designed with its own real beta/k0 (1.33 / 1.26)",
+  "gains calibrated with the board_K2_default offsets (state 1 -1.78 dB, state 2 -2.7 dB): TO BE RE-CALIBRATED with the v2 HFSS offsets before running (see recalibration)"
+ ],
+ "state_dependent_beta_over_k0": [
+  1.33,
+  1.26
+ ],
+ "design": {
+  "id": "RO3006 r 2.30, add-a-beam (b), one group D_*",
+  "frequency_ghz": 10.5,
+  "hexagon_circumradius_mm": 150.0,
+  "cells": 1350,
+  "switched_cells": 250,
+  "diode_sheets": 500,
+  "diodes": 500,
+  "cells_by_type": {
+   "ST/open/1.0": 480,
+   "SW/open/1.0": 219,
+   "ST/open/0.929": 268,
+   "ST/strap/1.0": 35,
+   "ST/open/0.786": 66,
+   "ST/strap/0.786": 11,
+   "ST/open/0.643": 15,
+   "SW/open/0.929": 23,
+   "ST/none/0.0": 218,
+   "SW/open/0.786": 6,
+   "ST/open/0.357": 7,
+   "SW/open/0.643": 2
+  },
+  "A0_np_per_m": 19.916532022221134,
+  "beta_over_k0": 1.295,
+  "config": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 0.0,
+   "w2": 1.25,
+   "keep": true,
+   "betas": [
+    1.33,
+    1.26
+   ]
+  },
+  "lam": 0.015625,
+  "SW_to_beam_pct": 89.8,
+  "SW_at_edge_pct": 1.4,
+  "nonbeam_NB": 0.3,
+  "beam2_on_off_contrast_db": 12.49
+ },
+ "states": [
+  {
+   "state": "1",
+   "name": "default (unpowered, diodes OFF): beam 1 only",
+   "D_sheets": "no boundary (or Impedance Rs = 1e6 ohm/sq)",
+   "wanted_beams_theta_phi_deg": [
+    [
+     25.0,
+     0.0
+    ]
+   ],
+   "beam1_25_0_gain_dbi_calibrated": 17.14,
+   "beam2_25_180_gain_dbi_calibrated": 0.21,
+   "beam1_gain_dbi_raw_model": 18.92,
+   "beam2_gain_dbi_raw_model": 1.99,
+   "peak_dir_theta_phi_deg": [
+    25.0,
+    0.0
+   ],
+   "sll_first_null_db_rel_stronger_beam": -12.6,
+   "sll_first_null_db_rel_weaker_beam": -12.6,
+   "sll_dir_theta_phi": [
+    21.0,
+    50.0
+   ],
+   "beam_balance_b1_minus_b2_db": null,
+   "isolation_beam1_minus_level_at_beam2_db": 16.92,
+   "expected_hpbw_deg": {
+    "beam1": {
+     "elevation": 14.5,
+     "azimuth_angular": 8.0
+    }
+   },
+   "ring_median_rel_peak_db_model": {
+    "12": -17.716444844964915,
+    "24": -16.171076303397754
+   },
+   "nonbeam_floor_db": -19.36
+  },
+  {
+   "state": "2",
+   "name": "circuit ON (diodes ON): beam 1 + beam 2",
+   "D_sheets": "one Impedance boundary, Rs = 6.1 ohm/sq (W/L = 2.5), reactance 0",
+   "wanted_beams_theta_phi_deg": [
+    [
+     25.0,
+     0.0
+    ],
+    [
+     25.0,
+     180.0
+    ]
+   ],
+   "beam1_25_0_gain_dbi_calibrated": 15.19,
+   "beam2_25_180_gain_dbi_calibrated": 12.71,
+   "beam1_gain_dbi_raw_model": 17.89,
+   "beam2_gain_dbi_raw_model": 15.41,
+   "peak_dir_theta_phi_deg": [
+    25.0,
+    0.0
+   ],
+   "sll_first_null_db_rel_stronger_beam": -11.9,
+   "sll_first_null_db_rel_weaker_beam": -9.41,
+   "sll_dir_theta_phi": [
+    25.0,
+    54.0
+   ],
+   "beam_balance_b1_minus_b2_db": 2.49,
+   "isolation_beam1_minus_level_at_beam2_db": null,
+   "expected_hpbw_deg": {
+    "beam1": {
+     "elevation": 13.5,
+     "azimuth_angular": 8.0
+    },
+    "beam2": {
+     "elevation": 16.0,
+     "azimuth_angular": 7.5
+    }
+   },
+   "ring_median_rel_peak_db_model": {
+    "12": -14.9075202923519,
+    "24": -13.944166049115934
+   },
+   "nonbeam_floor_db": -17.42
+  }
+ ],
+ "probe": {
+  "model": "thin-pin FD, PinLength 5.0 mm, bare launch geometry (cells from 6.5 mm): R 24 ohm, X +5 ohm -> S11 -9 dB; with the launch pad (rho_in 2.6 mm, UNVALIDATED): R 43 ohm, X +9 ohm -> S11 -18 dB",
+  "acceptance": "S11 <= -10 dB (goal -15 dB), tuned in HFSS with PinLength 4.5-6.5 mm",
+  "tuning_direction": "+1 mm PinLength: R +11 ohm, X +25 ohm; pad radius / PinLength / pin diameter are the HFSS variables",
+  "s11_estimate_db": [
+   -9.1,
+   -9.1
+  ],
+  "s11_estimate_with_pad_db": [
+   -18.2,
+   -18.2
+  ],
+  "note": "the hologram's loading of the probe is NOT modelled; the model's baseline probe gave -12.7 dB against HFSS -15 dB"
+ },
+ "sidelobe_floor": "SLL_total = max(aperture SLL, 10 log(NB x 2.0) - gain): NB = (1 - launch) + launch x SW_at_edge is the state-independent diffuse power (direct probe + edge; HFSS ffd of board_K2_default: ring 60-90 + back = 71-76 % of the power, uniform in azimuth, D about 1.6 dBi). The strongest HFSS sidelobes of that board (8.3 / 8.2 dBi) are conical rings at theta 12-26 deg from the state-common static hologram, which the model underestimates by 10-17 dB: the MODEL SLL IS NOT VALIDATED",
+ "falsifiers": "beam 1 more than 3 deg from (25, 0) in either state; beam-2 on/off contrast (state 2 minus state 1 level at (25, 180)) below 8 dB; beam balance in state 2 worse than 6 dB; beam 1 more than 4 dB below the prediction after re-calibration; strongest sidelobe above the gap-corrected SLL by more than 3 dB",
+ "NA": [
+  "board S11 with the hologram",
+  "HFSS gain",
+  "RO3006 r 2.3 cell eigenfrequencies in HFSS (the r 2.20 cell is checked)",
+  "tolerance / pointing over corners (later work, paper notes)"
+ ],
+ "recalibration": {
+  "rule": "offset_k = HFSS gain of the v2 board in state k (design direction) minus the raw model gain of v2 in state k; add the new offset_k to the raw model gains of this board (beam1_gain_dbi_raw_model, beam2_gain_dbi_raw_model) of the same state",
+  "v2_raw_model_gain_at_design_direction_dbi": {
+   "state1": 16.78,
+   "state2": 14.8
+  },
+  "current_offsets_db": {
+   "1": -1.78,
+   "2": -2.7
+  },
+  "example": "calibrated beam 1 in state 2 = raw (17.89) + offset_2"
+ },
+ "sll_definition": "highest peak outside the first null of every wanted beam (2 x HPBW if none), relative to the stronger beam; the HFSS gap seen on board_K2_default with this definition is +4.1 dB (model -4.8 / -5.3, HFSS -0.7 / -1.2)",
+ "xpd_note": "XPD not computed for this variant"
+}

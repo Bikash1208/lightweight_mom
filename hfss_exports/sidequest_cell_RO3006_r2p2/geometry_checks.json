@@ -1,0 +1,71 @@
+{
+ "label": "MODEL_ONLY geometry checks on the re-imported STEP",
+ "all_pass": true,
+ "checks": {
+  "bodies_and_names": {
+   "ok": true,
+   "names": [
+    "AIR",
+    "DX_SHEET",
+    "DY_SHEET",
+    "METAL_PEC",
+    "SUBSTRATE"
+   ]
+  },
+  "metal_one_part_two_lumps": {
+   "ok": true,
+   "patch_lumps": 1,
+   "ground_lumps": 1
+  },
+  "patch_disc_minus_cross_slit": {
+   "ok": true,
+   "volume": 0.4257857955181327,
+   "expected": 0.42578579551811113,
+   "radius_mm": 2.2,
+   "slit_width_mm": 0.4,
+   "slit_length_mm": 4.0,
+   "rim_mm": 0.20000000000000018
+  },
+  "ground": {
+   "ok": true,
+   "z": [
+    -1.305,
+    -1.27
+   ],
+   "xlen": 6.4
+  },
+  "substrate": {
+   "ok": true,
+   "thickness_mm": 1.27
+  },
+  "no_intersections": {
+   "ok": true,
+   "substrate_x_metal": 0.0
+  },
+  "sheets": {
+   "ok": true,
+   "DX": "0.4 x 1.0 at (0, 0.8)",
+   "DY": "1.0 x 0.4 at (0.8, 0)",
+   "z": 0.0175,
+   "corner_to_metal_max_mm": 0.0,
+   "DX_DY_clearance_mm": 0.1414,
+   "W_over_L": 2.5,
+   "Rs_ohm_per_sq": 6.1
+  },
+  "air_box_ground_to_lid_single_face_walls": {
+   "ok": true,
+   "faces": 6,
+   "z": [
+    -1.305,
+    30.0
+   ]
+  },
+  "EXACT_DIMS": {
+   "ok": true,
+   "inexact_literals": 0,
+   "n_snapped": 8,
+   "max_snap_mm": 1.553909241522e-16,
+   "grid_mm": 0.001
+  }
+ }
+}

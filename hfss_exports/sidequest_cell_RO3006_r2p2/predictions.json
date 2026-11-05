@@ -1,0 +1,48 @@
+{
+ "label": "MODEL_ONLY: loaded Bloch tensor (mesh 64), transverse resonance with the 30 mm PEC lid, 90 deg phase along x (beta = pi/2 / 6.4 mm); OFF = open slit, ON = 2.44 ohm only (Rs 6.1 ohm/sq on the 0.4 x 1.0 sheets)",
+ "phase_deg": 90,
+ "rows": [
+  {
+   "case": "nominal",
+   "r_mm": 2.2,
+   "eps_r": 6.15,
+   "f_OFF_GHz": 9.8989,
+   "f_ON_GHz": 10.3558,
+   "shift_ON_minus_OFF_GHz": 0.4569
+  },
+  {
+   "case": "r-0.05",
+   "r_mm": 2.1500000000000004,
+   "eps_r": 6.15,
+   "f_OFF_GHz": 10.0375,
+   "f_ON_GHz": 10.4339,
+   "shift_ON_minus_OFF_GHz": 0.3964
+  },
+  {
+   "case": "r+0.05",
+   "r_mm": 2.25,
+   "eps_r": 6.15,
+   "f_OFF_GHz": 9.8146,
+   "f_ON_GHz": 10.2764,
+   "shift_ON_minus_OFF_GHz": 0.4618
+  },
+  {
+   "case": "er-0.15",
+   "r_mm": 2.2,
+   "eps_r": 6.0,
+   "f_OFF_GHz": 9.9793,
+   "f_ON_GHz": 10.4159,
+   "shift_ON_minus_OFF_GHz": 0.4366
+  },
+  {
+   "case": "er+0.15",
+   "r_mm": 2.2,
+   "eps_r": 6.300000000000001,
+   "f_OFF_GHz": 9.819,
+   "f_ON_GHz": 10.2949,
+   "shift_ON_minus_OFF_GHz": 0.4759
+  }
+ ],
+ "bare_substrate_TM0_GHz_with_lid": 4.7222,
+ "note": "the RT5880 version of this pipeline matched HFSS to 0.01 GHz (model 10.662 / 11.007, HFSS 10.670 / 11.006); the RO3006 cell is not HFSS-checked. +-0.15 GHz is the stated model uncertainty; nominal-case sensitivities are in the other rows."
+}

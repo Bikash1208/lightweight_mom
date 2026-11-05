@@ -102,7 +102,7 @@ def stage_launch():
 def board_job(a):
     warnings.simplefilter("ignore")
     fam, launch, tag, rim_db = a
-    fs = json.loads(Path("results/sidequest_hybrid/k2_family_summary.json").read_text())[fam]
+    fs = json.loads(Path(os.environ.get("FAM_SUMMARY", "results/sidequest_hybrid/k2_family_summary.json")).read_text())[fam]
     os.environ["K4_A0"] = "%.4f" % fs["A0_cal"]
     os.environ["K4_BETA_K0"] = "%.4f" % fs["beta_k0"]
     import numpy as np

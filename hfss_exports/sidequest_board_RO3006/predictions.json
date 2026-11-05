@@ -1,0 +1,108 @@
+{
+ "labels": [
+  "MODEL_ONLY",
+  "cell: RO3006 r 2.22, MoM mesh 96 with the HFSS calibration (ON fixed, OFF contrast x0.75 from the r 2.20 cell check: ON 10.3617 / OFF 10.0193 GHz at 90 deg); the cell at r 2.22 and the board are NOT HFSS-validated",
+  "launch 0.71 (bare slab, spectral model; the pad would give up to 0.96, UNVALIDATED); gain offsets from board_K2_default HFSS: state 1 -1.78 dB (9.1 dBi), state 2 -2.7 dB (8.3 dBi)"
+ ],
+ "design": {
+  "id": "RO3006 r 2.22, design (i) one group D_*",
+  "frequency_ghz": 10.5,
+  "hexagon_circumradius_mm": 150.0,
+  "cells": 1352,
+  "switched_cells": 252,
+  "diode_sheets": 504,
+  "diodes": 504,
+  "cells_by_type": {
+   "ST/open/0.929": 637,
+   "SW/open/1.0": 243,
+   "ST/open/0.786": 160,
+   "ST/open/1.0": 179,
+   "ST/strap/1.0": 23,
+   "SW/open/0.929": 8,
+   "ST/open/0.643": 16,
+   "ST/strap/0.786": 7,
+   "ST/open/0.357": 6,
+   "ST/none/0.0": 72,
+   "SW/open/0.786": 1
+  },
+  "A0_np_per_m": 1.5290466577545891,
+  "beta_over_k0": 1.1860839278215718,
+  "config": {
+   "multi_pairs": true,
+   "g": 3.0,
+   "keep": true
+  },
+  "lam": 0.277734375,
+  "SW_to_beam_pct": 23.8,
+  "SW_at_edge_pct": 70.5,
+  "nonbeam_NB": 0.791
+ },
+ "states": [
+  {
+   "state": "1",
+   "name": "default (unpowered, diodes OFF)",
+   "D_sheets": "no boundary",
+   "target_theta_deg": 25.0,
+   "target_phi_deg": 0.0,
+   "peak_dir_theta_phi_deg": [
+    25.0,
+    0.0
+   ],
+   "gain_at_design_direction_dbi": 12.5,
+   "peak_gain_dbi": 12.5,
+   "sll_aperture_db": -11.87,
+   "sll_nonbeam_floor_db": -4.8,
+   "sll_total_db": -4.8,
+   "other_beam_level_dbi": -0.49,
+   "isolation_db": 12.99,
+   "xpd_db": 29.5,
+   "polarisation": "LP phi-hat (LP-V)",
+   "s11_db": -9.1,
+   "s11_note": "thin-pin FD, PinLength 5.0 mm, bare launch geometry (cells from 6.5 mm): R 24 ohm, X +5 ohm -> S11 -9 dB; with the launch pad (rho_in 2.6 mm, UNVALIDATED): R 43 ohm, X +9 ohm -> S11 -18 dB"
+  },
+  {
+   "state": "2",
+   "name": "circuit ON (diodes ON)",
+   "D_sheets": "one Impedance boundary, Rs = 6.1 ohm/sq (W/L = 2.5)",
+   "target_theta_deg": 25.0,
+   "target_phi_deg": 180.0,
+   "peak_dir_theta_phi_deg": [
+    25.0,
+    180.0
+   ],
+   "gain_at_design_direction_dbi": 11.85,
+   "peak_gain_dbi": 11.85,
+   "sll_aperture_db": -11.91,
+   "sll_nonbeam_floor_db": -4.15,
+   "sll_total_db": -4.15,
+   "other_beam_level_dbi": -1.23,
+   "isolation_db": 13.09,
+   "xpd_db": 30.7,
+   "polarisation": "LP phi-hat (LP-V)",
+   "s11_db": -9.1,
+   "s11_note": "thin-pin FD, PinLength 5.0 mm, bare launch geometry (cells from 6.5 mm): R 24 ohm, X +5 ohm -> S11 -9 dB; with the launch pad (rho_in 2.6 mm, UNVALIDATED): R 43 ohm, X +9 ohm -> S11 -18 dB"
+  }
+ ],
+ "probe": {
+  "model": "thin-pin FD, PinLength 5.0 mm, bare launch geometry (cells from 6.5 mm): R 24 ohm, X +5 ohm -> S11 -9 dB; with the launch pad (rho_in 2.6 mm, UNVALIDATED): R 43 ohm, X +9 ohm -> S11 -18 dB",
+  "acceptance": "S11 <= -10 dB (goal -15 dB), tuned in HFSS with PinLength 4.5-6.5 mm",
+  "tuning_direction": "+1 mm PinLength: R +11 ohm, X +25 ohm; pad radius / PinLength / pin diameter are the HFSS variables",
+  "s11_estimate_db": [
+   -9.1,
+   -9.1
+  ],
+  "s11_estimate_with_pad_db": [
+   -18.2,
+   -18.2
+  ],
+  "note": "the hologram's loading of the probe is NOT modelled; the model's baseline probe gave -12.7 dB against HFSS -15 dB"
+ },
+ "sidelobe_floor": "SLL_total = max(aperture SLL, 10 log(NB x 7.45) - gain): NB = (1 - launch) + launch x SW_at_edge is the state-independent non-beam power (direct probe + edge); 7.45 = peaking factor from the HFSS sidelobes of board_K2_default (8.3 / 8.2 dBi in both states)",
+ "falsifiers": "peak gain more than 4 dB below the prediction, peak more than 3 deg from (25, 0) / (25, 180), isolation below 8 dB, strongest sidelobe above -3 dB, or the two patterns not mirror images",
+ "NA": [
+  "board S11 with the hologram",
+  "HFSS gain",
+  "RO3006 r 2.22 cell eigenfrequencies in HFSS (the r 2.20 cell is checked)",
+  "tolerance / pointing over corners (later work, paper notes)"
+ ]
+}

@@ -1,0 +1,27 @@
+# Side-quest commits (branch `sidequest-hybrid-hms-ris`, from `phase30-new-cell` 474218e), oldest first
+
+- `cce1942` Side quest: brief for hybrid HMS + sparse RIS quadrant-switched antenna (item 0)
+- `fee17ca` Side quest item 2: idealised architecture study (A gate vs B sparse hologram, 2/4 quadrants), MODEL_ONLY
+- `6b1a92a` Side quest step 1: coherent gate-ring reflection model for A-2q (S11, open-quadrant gain, radius sweep, lossy block), MODEL_ONLY
+- `aa59133` Side quest step 2 / item 3: switchable gate cell (dog-bone, one MA4AGP907, 0/90 deg), line-model strip isolation, bibliographic-only literature list
+- `ead5b63` Side quest round 3: retuned gate cell, transition-row pass match, ring model with real pass/block states, HFSS gate test package
+- `09f07ae` Side quest round 4: mushroom-type via-diode gate cell estimate, HFSS eigenmode package (ON/OFF), via-MoM extension plan; dog-bone board archived
+- `bde82f2` Side quest: force-add the two small mushroom-cell STEP files (gitignored by default, 157 kB each)
+- `b1f66e9` Side quest round 5: recalibrate mushroom model on the HFSS baseline (ON resonance 2.2x low), four ON variants + two OFF twins (STEP force-added), HFSS result indexed
+- `d38e0bc` Side quest round 6: switched parasitic-pin launcher model (12 pins, F/B 10.6 dB, S11 -10.3 dB), two-probe fallback, polarisation-switching note
+- `b16914b` Side quest round 7: grouped coded 1-bit hologram, K=2 and K=4 (cell pair, static fraction, diodes, control lines, gain/SLL, joint optimisation), model level
+- `fcc6691` Fix rotated diode loads (Phase 28 bug): default transverse_conducts=True for non-axis directions
+- `b56fa11` Side quest round 8: K=2 polarisation-switched coded hologram (RHCP/LHCP), rotated 1-diode cells vs 2 diodes per cell, model level
+- `6a9900e` Side quest round 8: HFSS unit-cell package for the 1-bit coded cell (ON/OFF, eigenmode 90/120 deg, PEC lid, EXACT_DIMS pass), not sent
+- `6940106` Side quest round 9: solved crossed two-diode cell (4 states, alpha 0.07 Np/m) and K=2 RHCP/LHCP redesign (7.6 dBi vs 16.4 dBi rotated disc)
+- `9e5259a` Side quest round 9b: rim-slit crossed two-diode cell (alpha 0.92 Np/m, beta/k0 1.065, 4 states) and K=2 RHCP/LHCP redesign: 73 % static, 766 diodes, 18.2 dBi
+- `973b391` Side quest round 10: rim robustness (0.2 mm chosen, >=0.25 mm costs 1.7-2.5 dB), mesh convergence (alpha 0.65-0.75 Np/m), crossed rim cell HFSS package (4 states, not sent), brie
+- `8d217a3` Side quest round 11: coded HMS efficiency items I1-I7 (cell sub-library, analog statics, pre-phased pairs, taper, launcher scan, diode position/loss, edge rings, joint optimisati
+- `1965807` Side quest round 12: cell search (RO3010 notch superpixel vs RT5880 variants), loaded Bloch tensor correction, K=2 boards, sensitivities, paper notes
+- `e14ccb0` Soften eps_r tolerance remark
+- `e8c993a` HFSS unit-cell package for the chosen RT5880 cell (rim disc, diodes at 0.8 mm): 4 STEP states, eigenmode 90 deg along x and y (8 runs), predictions, alpha back-out script
+- `2e27db6` Side quest round 13: K=4 coded board model on RT5880 (CP set 19.8 dBi, 55% static; LP states unsupported), comparators, paper notes update, trimmed HFSS setup sheet
+- `13991db` Side quest round 14: K=4 minimum control lines (3 per axis), real quadrant model for the segmented comparator, paper notes
+- `f8132be` Side quest round 15: fewer-diodes study D1-D6 (K=2 and K=4), Pareto front, tables, rotated-cell D4, paper notes
+- `d979e9f` Re-export RT5880 HFSS package: one STEP with named bodies (METAL_PEC, SUBSTRATE, AIR, DX/DY_SHEET), footprint 1.0 mm (sheets no longer touch), automatic geometry/contact checks o
+- `aa6e47f` Cell independence study after the corrected HFSS runs: MoM does not reproduce the AND-like switching, 4-diode independent-axes candidate + HFSS package, scalar-switch fallback, e

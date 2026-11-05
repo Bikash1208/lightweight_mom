@@ -1,16 +1,22 @@
 [
  {
-  "conv": 0.8998369753986944,
-  "edge": 0.020762625636998346,
-  "diodes": 514,
+  "conv": 0.9049564034066551,
+  "edge": 0.0138218132569742,
+  "diodes": 324,
   "states": [
    {
+    "SLL_firstnull_db": -13.266664510837769,
+    "SLL_firstnull_vs_weaker_db": -13.266664510837769,
+    "SLL_firstnull_dir": [
+     46.0,
+     0.0
+    ],
     "beam_gain_dbi": {
-     "b1_(25,0)": 18.301854326543804,
-     "b2_(25,180)": -3.118932809929368
+     "b1_(25,0)": 18.540994525966056,
+     "b2_(25,180)": -9.150859261853226
     },
-    "SLL_db": -13.004422457109975,
-    "SLL_vs_weaker_beam_db": -13.004422457109975,
+    "SLL_db": -12.63956816863272,
+    "SLL_vs_weaker_beam_db": -12.63956816863272,
     "peak_dir": [
      25.0,
      0.0
@@ -19,20 +25,26 @@
      0
     ],
     "balance_db": null,
-    "isolation_db": 21.420787136473173,
+    "isolation_db": 27.691853787819284,
     "ring_median_rel_peak_db": {
-     "12": -20.650192839586854,
-     "24": -18.36429381817623
+     "12": -20.135541460695098,
+     "24": -19.164042162950633
     },
-    "floor_db": -20.452238871028342
+    "floor_db": -20.76218290805127
    },
    {
+    "SLL_firstnull_db": -13.081905684153824,
+    "SLL_firstnull_vs_weaker_db": 5.2844107220673475,
+    "SLL_firstnull_dir": [
+     21.0,
+     306.0
+    ],
     "beam_gain_dbi": {
-     "b1_(25,0)": 16.837838060991928,
-     "b2_(25,180)": 9.372087393438335
+     "b1_(25,0)": 17.901206950526305,
+     "b2_(25,180)": -0.3702152440913311
     },
-    "SLL_db": -12.612403117598138,
-    "SLL_vs_weaker_beam_db": -5.146652450044546,
+    "SLL_db": -13.155508786259656,
+    "SLL_vs_weaker_beam_db": 5.115913408357981,
     "peak_dir": [
      25.0,
      0.0
@@ -41,253 +53,58 @@
      0,
      1
     ],
-    "balance_db": 7.465750667553593,
+    "balance_db": 18.271422194617635,
     "isolation_db": null,
     "ring_median_rel_peak_db": {
-     "12": -18.223197809446525,
-     "24": -16.192752889822163
+     "12": -20.54520074090988,
+     "24": -19.07268585256149
     },
-    "floor_db": -18.988222605476466
+    "floor_db": -20.122395332611518
    }
   ],
-  "NB": 0.3047414642022689,
-  "name": "add-a-beam dec eps0 g2.0",
+  "NB": 0.29981348741245173,
+  "beam2_on_off_contrast_db": 8.780644017761894,
+  "name": "add w2=0.3 eps0",
   "cfg": {
    "mode": "add",
    "decouple": true,
    "g": 2.0,
    "mu": 30.0,
    "eps_B": 0.0,
-   "margin": true
+   "w2": 0.3
   },
-  "lam": 0.0,
+  "lam": 0.015625,
   "A0": 19.916532022221134,
   "A0_states": [
    20.63167687555667,
    19.201387168885596
   ],
-  "switched_cells": 257,
+  "switched_cells": 162,
   "n_cells": 1350,
-  "switched_fraction": 0.19037037037037038,
-  "cells_that_must_switch_fraction": 0.84,
-  "compromise_static_cells": 897,
-  "cells_deviating_>0.5_from_ideal": 1165,
-  "margin_raw": [
-   {
-    "state": 1,
-    "dbeta": -0.2,
-    "beam_intensity": [
-     5168110.664826221
-    ],
-    "peak_dir": [
-     26.0,
-     18.0
-    ],
-    "peak_intensity": 7859229.468425582
-   },
-   {
-    "state": 1,
-    "dbeta": -0.15,
-    "beam_intensity": [
-     11939551.791692832
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 11939551.791692832
-   },
-   {
-    "state": 1,
-    "dbeta": -0.1,
-    "beam_intensity": [
-     23220232.194320403
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 23220232.194320403
-   },
-   {
-    "state": 1,
-    "dbeta": -0.05,
-    "beam_intensity": [
-     32207074.02042261
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 32207074.02042261
-   },
-   {
-    "state": 1,
-    "dbeta": 0.0,
-    "beam_intensity": [
-     33297490.812687293
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 33297490.812687293
-   },
-   {
-    "state": 1,
-    "dbeta": 0.05,
-    "beam_intensity": [
-     25750481.1478988
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 25750481.1478988
-   },
-   {
-    "state": 1,
-    "dbeta": 0.1,
-    "beam_intensity": [
-     14361036.35957862
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 14361036.35957862
-   },
-   {
-    "state": 1,
-    "dbeta": 0.15,
-    "beam_intensity": [
-     5757293.292759151
-    ],
-    "peak_dir": [
-     25.0,
-     342.0
-    ],
-    "peak_intensity": 7954631.139772102
-   },
-   {
-    "state": 2,
-    "dbeta": -0.2,
-    "beam_intensity": [
-     2102455.398522543,
-     697906.7249077819
-    ],
-    "peak_dir": [
-     25.0,
-     22.0
-    ],
-    "peak_intensity": 4986753.128546935
-   },
-   {
-    "state": 2,
-    "dbeta": -0.15,
-    "beam_intensity": [
-     4622237.184891663,
-     1826369.2894555316
-    ],
-    "peak_dir": [
-     25.0,
-     20.0
-    ],
-    "peak_intensity": 6525359.256715537
-   },
-   {
-    "state": 2,
-    "dbeta": -0.1,
-    "beam_intensity": [
-     11559026.468993114,
-     3694441.056585659
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 11559026.468993114
-   },
-   {
-    "state": 2,
-    "dbeta": -0.05,
-    "beam_intensity": [
-     21588496.49022599,
-     5133405.092174479
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 21588496.49022599
-   },
-   {
-    "state": 2,
-    "dbeta": 0.0,
-    "beam_intensity": [
-     29377165.422432598,
-     5265446.827719212
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 29377165.422432598
-   },
-   {
-    "state": 2,
-    "dbeta": 0.05,
-    "beam_intensity": [
-     30202684.680390585,
-     4018328.6888384195
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 30202684.680390585
-   },
-   {
-    "state": 2,
-    "dbeta": 0.1,
-    "beam_intensity": [
-     23457517.02593943,
-     2207845.953271437
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 23457517.02593943
-   },
-   {
-    "state": 2,
-    "dbeta": 0.15,
-    "beam_intensity": [
-     13280166.650507635,
-     1013629.2636071069
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 13280166.650507635
-   }
-  ],
+  "switched_fraction": 0.12,
+  "cells_that_must_switch_fraction": 0.8533333333333334,
+  "compromise_static_cells": 993,
+  "cells_deviating_>0.5_from_ideal": 1110,
   "cells": null
  },
  {
-  "conv": 0.9146812515589962,
-  "edge": 0.021631450415485993,
-  "diodes": 514,
+  "conv": 0.8958435529323363,
+  "edge": 0.013954057863746927,
+  "diodes": 322,
   "states": [
    {
+    "SLL_firstnull_db": -13.183612361331527,
+    "SLL_firstnull_vs_weaker_db": -13.183612361331527,
+    "SLL_firstnull_dir": [
+     43.0,
+     340.0
+    ],
     "beam_gain_dbi": {
-     "b1_(25,0)": 18.35738461598428,
-     "b2_(25,180)": -2.3698048890640235
+     "b1_(25,0)": 18.521807038024278,
+     "b2_(25,180)": -7.3680822629315115
     },
-    "SLL_db": -13.727167828239743,
-    "SLL_vs_weaker_beam_db": -13.727167828239743,
+    "SLL_db": -13.292806702770324,
+    "SLL_vs_weaker_beam_db": -13.292806702770324,
     "peak_dir": [
      25.0,
      0.0
@@ -296,20 +113,26 @@
      0
     ],
     "balance_db": null,
-    "isolation_db": 20.727189505048305,
+    "isolation_db": 25.88988930095579,
     "ring_median_rel_peak_db": {
-     "12": -18.800416179687,
-     "24": -17.91918731869254
+     "12": -19.88003985566514,
+     "24": -18.926279017013215
     },
-    "floor_db": -20.498986944283043
+    "floor_db": -20.741635537350923
    },
    {
+    "SLL_firstnull_db": -12.832237720045427,
+    "SLL_firstnull_vs_weaker_db": 5.406106199207533,
+    "SLL_firstnull_dir": [
+     42.0,
+     338.0
+    ],
     "beam_gain_dbi": {
-     "b1_(25,0)": 16.595600930914546,
-     "b2_(25,180)": 10.02085153857853
+     "b1_(25,0)": 17.771494113884682,
+     "b2_(25,180)": -0.40561830343794103
     },
-    "SLL_db": -12.902863776856822,
-    "SLL_vs_weaker_beam_db": -6.3281143845208065,
+    "SLL_db": -12.932229876689458,
+    "SLL_vs_weaker_beam_db": 5.244882540633164,
     "peak_dir": [
      25.0,
      0.0
@@ -318,530 +141,58 @@
      0,
      1
     ],
-    "balance_db": 6.574749392336017,
+    "balance_db": 18.177112417322622,
     "isolation_db": null,
     "ring_median_rel_peak_db": {
-     "12": -16.891349054796954,
-     "24": -15.711007559053119
+     "12": -19.998953715866254,
+     "24": -18.949988814553084
     },
-    "floor_db": -18.73720325921331
+    "floor_db": -19.991322613211327
    }
   ],
-  "NB": 0.3053583297949951,
-  "name": "add-a-beam dec eps45 g2.0",
-  "cfg": {
-   "mode": "add",
-   "decouple": true,
-   "g": 2.0,
-   "mu": 30.0,
-   "eps_B": 45.0,
-   "margin": true
-  },
-  "lam": 0.0,
-  "A0": 19.916532022221134,
-  "A0_states": [
-   20.63167687555667,
-   19.201387168885596
-  ],
-  "switched_cells": 257,
-  "n_cells": 1350,
-  "switched_fraction": 0.19037037037037038,
-  "cells_that_must_switch_fraction": 0.8355555555555556,
-  "compromise_static_cells": 889,
-  "cells_deviating_>0.5_from_ideal": 1174,
-  "margin_raw": [
-   {
-    "state": 1,
-    "dbeta": -0.2,
-    "beam_intensity": [
-     5061435.487287954
-    ],
-    "peak_dir": [
-     27.0,
-     342.0
-    ],
-    "peak_intensity": 7836603.1228322005
-   },
-   {
-    "state": 1,
-    "dbeta": -0.15,
-    "beam_intensity": [
-     11273219.931869598
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 11273219.931869598
-   },
-   {
-    "state": 1,
-    "dbeta": -0.1,
-    "beam_intensity": [
-     22585545.59684677
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 22585545.59684677
-   },
-   {
-    "state": 1,
-    "dbeta": -0.05,
-    "beam_intensity": [
-     31931153.018639963
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 31931153.018639963
-   },
-   {
-    "state": 1,
-    "dbeta": 0.0,
-    "beam_intensity": [
-     33554479.31737367
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 33554479.31737367
-   },
-   {
-    "state": 1,
-    "dbeta": 0.05,
-    "beam_intensity": [
-     26404582.08895272
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 26404582.08895272
-   },
-   {
-    "state": 1,
-    "dbeta": 0.1,
-    "beam_intensity": [
-     15049336.365312573
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 15049336.365312573
-   },
-   {
-    "state": 1,
-    "dbeta": 0.15,
-    "beam_intensity": [
-     6709333.140246988
-    ],
-    "peak_dir": [
-     27.0,
-     16.0
-    ],
-    "peak_intensity": 8581474.638691163
-   },
-   {
-    "state": 2,
-    "dbeta": -0.2,
-    "beam_intensity": [
-     1531112.876920531,
-     1175819.2999172227
-    ],
-    "peak_dir": [
-     26.0,
-     330.0
-    ],
-    "peak_intensity": 4666857.953864538
-   },
-   {
-    "state": 2,
-    "dbeta": -0.15,
-    "beam_intensity": [
-     3836616.626953689,
-     2096043.407029151
-    ],
-    "peak_dir": [
-     28.0,
-     342.0
-    ],
-    "peak_intensity": 6392336.621780102
-   },
-   {
-    "state": 2,
-    "dbeta": -0.1,
-    "beam_intensity": [
-     9529946.419396056,
-     4253906.330044771
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 9529946.419396056
-   },
-   {
-    "state": 2,
-    "dbeta": -0.05,
-    "beam_intensity": [
-     19250148.73734598,
-     5981021.770960326
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 19250148.73734598
-   },
-   {
-    "state": 2,
-    "dbeta": 0.0,
-    "beam_intensity": [
-     27642170.45696768,
-     6082729.222873825
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 27642170.45696768
-   },
-   {
-    "state": 2,
-    "dbeta": 0.05,
-    "beam_intensity": [
-     29774727.437023573,
-     4491124.493294925
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 29774727.437023573
-   },
-   {
-    "state": 2,
-    "dbeta": 0.1,
-    "beam_intensity": [
-     24295406.282075483,
-     2341021.244138116
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 24295406.282075483
-   },
-   {
-    "state": 2,
-    "dbeta": 0.15,
-    "beam_intensity": [
-     14628095.522135109,
-     1198811.8351246205
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 14628095.522135109
-   }
-  ],
-  "cells": null
- },
- {
-  "conv": 0.9077452710043693,
-  "edge": 0.021422051082652865,
-  "diodes": 514,
-  "states": [
-   {
-    "beam_gain_dbi": {
-     "b1_(25,0)": 18.230136569646632,
-     "b2_(25,180)": -2.267070564618087
-    },
-    "SLL_db": -12.33859016057714,
-    "SLL_vs_weaker_beam_db": -12.33859016057714,
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "wanted": [
-     0
-    ],
-    "balance_db": null,
-    "isolation_db": 20.49720713426472,
-    "ring_median_rel_peak_db": {
-     "12": -18.510164756188374,
-     "24": -18.449913700156696
-    },
-    "floor_db": -20.373853915268022
-   },
-   {
-    "beam_gain_dbi": {
-     "b1_(25,0)": 16.41504204606867,
-     "b2_(25,180)": 10.467037077478167
-    },
-    "SLL_db": -11.901394211997737,
-    "SLL_vs_weaker_beam_db": -5.953389243407234,
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "wanted": [
-     0,
-     1
-    ],
-    "balance_db": 5.948004968590503,
-    "isolation_db": null,
-    "ring_median_rel_peak_db": {
-     "12": -15.987141860467089,
-     "24": -16.564410814917252
-    },
-    "floor_db": -18.55875939169006
-   }
-  ],
-  "NB": 0.30520965626868357,
-  "name": "add-a-beam dec eps90 g2.0",
+  "NB": 0.29990738108326037,
+  "beam2_on_off_contrast_db": 6.96246395949357,
+  "name": "add w2=0.3 eps90",
   "cfg": {
    "mode": "add",
    "decouple": true,
    "g": 2.0,
    "mu": 30.0,
    "eps_B": 90.0,
-   "margin": true
+   "w2": 0.3
   },
-  "lam": 0.0,
+  "lam": 0.015625,
   "A0": 19.916532022221134,
   "A0_states": [
    20.63167687555667,
    19.201387168885596
   ],
-  "switched_cells": 257,
+  "switched_cells": 161,
   "n_cells": 1350,
-  "switched_fraction": 0.19037037037037038,
-  "cells_that_must_switch_fraction": 0.8414814814814815,
-  "compromise_static_cells": 899,
-  "cells_deviating_>0.5_from_ideal": 1162,
-  "margin_raw": [
-   {
-    "state": 1,
-    "dbeta": -0.2,
-    "beam_intensity": [
-     4977091.5662173955
-    ],
-    "peak_dir": [
-     26.0,
-     342.0
-    ],
-    "peak_intensity": 7993985.534213207
-   },
-   {
-    "state": 1,
-    "dbeta": -0.15,
-    "beam_intensity": [
-     11333854.764250513
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 11333854.764250513
-   },
-   {
-    "state": 1,
-    "dbeta": -0.1,
-    "beam_intensity": [
-     22412871.383933406
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 22412871.383933406
-   },
-   {
-    "state": 1,
-    "dbeta": -0.05,
-    "beam_intensity": [
-     31291611.411498114
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 31291611.411498114
-   },
-   {
-    "state": 1,
-    "dbeta": 0.0,
-    "beam_intensity": [
-     32436033.420266274
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 32436033.420266274
-   },
-   {
-    "state": 1,
-    "dbeta": 0.05,
-    "beam_intensity": [
-     25133421.053755138
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 25133421.053755138
-   },
-   {
-    "state": 1,
-    "dbeta": 0.1,
-    "beam_intensity": [
-     14087126.67761406
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 14087126.67761406
-   },
-   {
-    "state": 1,
-    "dbeta": 0.15,
-    "beam_intensity": [
-     6024606.344133435
-    ],
-    "peak_dir": [
-     26.0,
-     16.0
-    ],
-    "peak_intensity": 7652234.888720174
-   },
-   {
-    "state": 2,
-    "dbeta": -0.2,
-    "beam_intensity": [
-     2116585.673968279,
-     938673.4424200638
-    ],
-    "peak_dir": [
-     26.0,
-     338.0
-    ],
-    "peak_intensity": 4782969.169158906
-   },
-   {
-    "state": 2,
-    "dbeta": -0.15,
-    "beam_intensity": [
-     4653929.985448044,
-     2385467.6407796782
-    ],
-    "peak_dir": [
-     26.0,
-     342.0
-    ],
-    "peak_intensity": 6173362.482475246
-   },
-   {
-    "state": 2,
-    "dbeta": -0.1,
-    "beam_intensity": [
-     10585149.927146623,
-     4673232.646493568
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 10585149.927146623
-   },
-   {
-    "state": 2,
-    "dbeta": -0.05,
-    "beam_intensity": [
-     19581985.005674224,
-     6534302.528959949
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 19581985.005674224
-   },
-   {
-    "state": 2,
-    "dbeta": 0.0,
-    "beam_intensity": [
-     26394781.452343076,
-     6709959.1939667305
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 26394781.452343076
-   },
-   {
-    "state": 2,
-    "dbeta": 0.05,
-    "beam_intensity": [
-     26824132.989685193,
-     4962230.493260557
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 26824132.989685193
-   },
-   {
-    "state": 2,
-    "dbeta": 0.1,
-    "beam_intensity": [
-     20537340.450627495,
-     2433683.060173154
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 20537340.450627495
-   },
-   {
-    "state": 2,
-    "dbeta": 0.15,
-    "beam_intensity": [
-     11406198.706380328,
-     1455401.7239063415
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 11406198.706380328
-   }
-  ],
+  "switched_fraction": 0.11925925925925926,
+  "cells_that_must_switch_fraction": 0.8548148148148148,
+  "compromise_static_cells": 994,
+  "cells_deviating_>0.5_from_ideal": 1113,
   "cells": null
  },
  {
-  "conv": 0.9253953736305875,
-  "edge": 0.02033127191146753,
-  "diodes": 514,
+  "conv": 0.902907700621296,
+  "edge": 0.013877023100514838,
+  "diodes": 338,
   "states": [
    {
+    "SLL_firstnull_db": -12.87320503815598,
+    "SLL_firstnull_vs_weaker_db": -12.87320503815598,
+    "SLL_firstnull_dir": [
+     43.0,
+     340.0
+    ],
     "beam_gain_dbi": {
-     "b1_(25,0)": 18.359851892904736,
-     "b2_(25,180)": -2.4597241188147825
+     "b1_(25,0)": 18.604154321279577,
+     "b2_(25,180)": -5.38990851623232
     },
-    "SLL_db": -13.336090116826163,
-    "SLL_vs_weaker_beam_db": -13.336090116826163,
+    "SLL_db": -12.685479843215678,
+    "SLL_vs_weaker_beam_db": -12.685479843215678,
     "peak_dir": [
      25.0,
      0.0
@@ -850,297 +201,26 @@
      0
     ],
     "balance_db": null,
-    "isolation_db": 20.81957601171952,
+    "isolation_db": 23.994062837511898,
     "ring_median_rel_peak_db": {
-     "12": -18.988939393940434,
-     "24": -19.0571968663603
+     "12": -21.63926215586851,
+     "24": -20.780787090704486
     },
-    "floor_db": -20.514603234205524
+    "floor_db": -20.824774923978556
    },
    {
-    "beam_gain_dbi": {
-     "b1_(25,0)": 16.83231218295494,
-     "b2_(25,180)": 9.69484094576065
-    },
-    "SLL_db": -12.775037369873854,
-    "SLL_vs_weaker_beam_db": -5.637566132679564,
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "wanted": [
-     0,
-     1
-    ],
-    "balance_db": 7.1374712371942906,
-    "isolation_db": null,
-    "ring_median_rel_peak_db": {
-     "12": -16.92470515306798,
-     "24": -17.661331341541846
-    },
-    "floor_db": -18.987063524255724
-   }
-  ],
-  "NB": 0.304435203057142,
-  "name": "add-a-beam dec eps135 g2.0",
-  "cfg": {
-   "mode": "add",
-   "decouple": true,
-   "g": 2.0,
-   "mu": 30.0,
-   "eps_B": 135.0,
-   "margin": true
-  },
-  "lam": 0.0,
-  "A0": 19.916532022221134,
-  "A0_states": [
-   20.63167687555667,
-   19.201387168885596
-  ],
-  "switched_cells": 257,
-  "n_cells": 1350,
-  "switched_fraction": 0.19037037037037038,
-  "cells_that_must_switch_fraction": 0.8237037037037037,
-  "compromise_static_cells": 881,
-  "cells_deviating_>0.5_from_ideal": 1164,
-  "margin_raw": [
-   {
-    "state": 1,
-    "dbeta": -0.2,
-    "beam_intensity": [
-     5229084.153629942
-    ],
-    "peak_dir": [
+    "SLL_firstnull_db": -12.92171084052946,
+    "SLL_firstnull_vs_weaker_db": 3.601424994919864,
+    "SLL_firstnull_dir": [
      26.0,
-     18.0
+     308.0
     ],
-    "peak_intensity": 8254479.308943954
-   },
-   {
-    "state": 1,
-    "dbeta": -0.15,
-    "beam_intensity": [
-     11015310.485231867
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 11015310.485231867
-   },
-   {
-    "state": 1,
-    "dbeta": -0.1,
-    "beam_intensity": [
-     22128360.38699611
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 22128360.38699611
-   },
-   {
-    "state": 1,
-    "dbeta": -0.05,
-    "beam_intensity": [
-     31245039.796562735
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 31245039.796562735
-   },
-   {
-    "state": 1,
-    "dbeta": 0.0,
-    "beam_intensity": [
-     32655807.957462706
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 32655807.957462706
-   },
-   {
-    "state": 1,
-    "dbeta": 0.05,
-    "beam_intensity": [
-     25475410.86684807
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 25475410.86684807
-   },
-   {
-    "state": 1,
-    "dbeta": 0.1,
-    "beam_intensity": [
-     14368840.110519676
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 14368840.110519676
-   },
-   {
-    "state": 1,
-    "dbeta": 0.15,
-    "beam_intensity": [
-     5825324.449439725
-    ],
-    "peak_dir": [
-     25.0,
-     342.0
-    ],
-    "peak_intensity": 7528552.059909101
-   },
-   {
-    "state": 2,
-    "dbeta": -0.2,
-    "beam_intensity": [
-     2249790.2284611803,
-     476767.23720932903
-    ],
-    "peak_dir": [
-     23.0,
-     324.0
-    ],
-    "peak_intensity": 5074279.592958745
-   },
-   {
-    "state": 2,
-    "dbeta": -0.15,
-    "beam_intensity": [
-     4776848.712701063,
-     1230079.5170712797
-    ],
-    "peak_dir": [
-     25.0,
-     18.0
-    ],
-    "peak_intensity": 6829996.658715366
-   },
-   {
-    "state": 2,
-    "dbeta": -0.1,
-    "beam_intensity": [
-     10583546.483321222,
-     3101449.486446174
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 10583546.483321222
-   },
-   {
-    "state": 2,
-    "dbeta": -0.05,
-    "beam_intensity": [
-     20551464.055651475,
-     4951670.25056585
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 20551464.055651475
-   },
-   {
-    "state": 2,
-    "dbeta": 0.0,
-    "beam_intensity": [
-     28392662.556954738,
-     5488570.550343203
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 28392662.556954738
-   },
-   {
-    "state": 2,
-    "dbeta": 0.05,
-    "beam_intensity": [
-     29218026.239864413,
-     4270496.624564469
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 29218026.239864413
-   },
-   {
-    "state": 2,
-    "dbeta": 0.1,
-    "beam_intensity": [
-     22468731.863302644,
-     2218161.0525160963
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 22468731.863302644
-   },
-   {
-    "state": 2,
-    "dbeta": 0.15,
-    "beam_intensity": [
-     12421017.355022378,
-     982040.7235110349
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 12421017.355022378
-   }
-  ],
-  "cells": null
- },
- {
-  "conv": 0.8870270314961988,
-  "edge": 0.01881874902172745,
-  "diodes": 514,
-  "states": [
-   {
     "beam_gain_dbi": {
-     "b1_(25,0)": 18.064630522632545,
-     "b2_(25,180)": -0.5610257395770393
+     "b1_(25,0)": 17.86491748455181,
+     "b2_(25,180)": 1.341781649102482
     },
-    "SLL_db": -12.511957750826024,
-    "SLL_vs_weaker_beam_db": -12.511957750826024,
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "wanted": [
-     0
-    ],
-    "balance_db": null,
-    "isolation_db": 18.625656262209585,
-    "ring_median_rel_peak_db": {
-     "12": -18.59727924953519,
-     "24": -18.56415751480865
-    },
-    "floor_db": -20.234728629460932
-   },
-   {
-    "beam_gain_dbi": {
-     "b1_(25,0)": 16.51681098815303,
-     "b2_(25,180)": 10.389531375685966
-    },
-    "SLL_db": -11.236678564966827,
-    "SLL_vs_weaker_beam_db": -5.109398952499764,
+    "SLL_db": -12.6578562677382,
+    "SLL_vs_weaker_beam_db": 3.865279567711127,
     "peak_dir": [
      25.0,
      0.0
@@ -1149,253 +229,58 @@
      0,
      1
     ],
-    "balance_db": 6.127279612467063,
+    "balance_db": 16.523135835449327,
     "isolation_db": null,
     "ring_median_rel_peak_db": {
-     "12": -17.22005740598441,
-     "24": -17.913819736024834
+     "12": -21.5988270236435,
+     "24": -18.808313243921642
     },
-    "floor_db": -18.686909094981417
+    "floor_db": -20.08553808725079
    }
   ],
-  "NB": 0.3033613118054265,
-  "name": "add-a-beam dec eps180 g2.0",
+  "NB": 0.2998526864013656,
+  "beam2_on_off_contrast_db": 6.731690165334802,
+  "name": "add w2=0.3 eps180",
   "cfg": {
    "mode": "add",
    "decouple": true,
    "g": 2.0,
    "mu": 30.0,
    "eps_B": 180.0,
-   "margin": true
+   "w2": 0.3
   },
-  "lam": 0.0,
+  "lam": 0.015625,
   "A0": 19.916532022221134,
   "A0_states": [
    20.63167687555667,
    19.201387168885596
   ],
-  "switched_cells": 257,
+  "switched_cells": 169,
   "n_cells": 1350,
-  "switched_fraction": 0.19037037037037038,
-  "cells_that_must_switch_fraction": 0.8414814814814815,
-  "compromise_static_cells": 905,
-  "cells_deviating_>0.5_from_ideal": 1164,
-  "margin_raw": [
-   {
-    "state": 1,
-    "dbeta": -0.2,
-    "beam_intensity": [
-     4707332.885201612
-    ],
-    "peak_dir": [
-     27.0,
-     18.0
-    ],
-    "peak_intensity": 7818869.359214434
-   },
-   {
-    "state": 1,
-    "dbeta": -0.15,
-    "beam_intensity": [
-     10554995.107234452
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 10554995.107234452
-   },
-   {
-    "state": 1,
-    "dbeta": -0.1,
-    "beam_intensity": [
-     21073674.539127182
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 21073674.539127182
-   },
-   {
-    "state": 1,
-    "dbeta": -0.05,
-    "beam_intensity": [
-     29572704.506949615
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 29572704.506949615
-   },
-   {
-    "state": 1,
-    "dbeta": 0.0,
-    "beam_intensity": [
-     30721993.79558494
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 30721993.79558494
-   },
-   {
-    "state": 1,
-    "dbeta": 0.05,
-    "beam_intensity": [
-     23804668.127334915
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 23804668.127334915
-   },
-   {
-    "state": 1,
-    "dbeta": 0.1,
-    "beam_intensity": [
-     13332239.817663103
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 13332239.817663103
-   },
-   {
-    "state": 1,
-    "dbeta": 0.15,
-    "beam_intensity": [
-     5567554.678467509
-    ],
-    "peak_dir": [
-     24.000000000000004,
-     18.0
-    ],
-    "peak_intensity": 7070825.588021025
-   },
-   {
-    "state": 2,
-    "dbeta": -0.2,
-    "beam_intensity": [
-     2262526.4957427843,
-     654282.5075484787
-    ],
-    "peak_dir": [
-     24.000000000000004,
-     328.0
-    ],
-    "peak_intensity": 5358019.156145735
-   },
-   {
-    "state": 2,
-    "dbeta": -0.15,
-    "beam_intensity": [
-     4806466.179136013,
-     1781322.9597198134
-    ],
-    "peak_dir": [
-     27.0,
-     16.0
-    ],
-    "peak_intensity": 6354706.329321013
-   },
-   {
-    "state": 2,
-    "dbeta": -0.1,
-    "beam_intensity": [
-     10473915.754988134,
-     4365423.588894748
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 10473915.754988134
-   },
-   {
-    "state": 2,
-    "dbeta": -0.05,
-    "beam_intensity": [
-     19648410.983528234,
-     6455878.515785854
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 19648410.983528234
-   },
-   {
-    "state": 2,
-    "dbeta": 0.0,
-    "beam_intensity": [
-     26586950.654152576,
-     6485478.710166576
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 26586950.654152576
-   },
-   {
-    "state": 2,
-    "dbeta": 0.05,
-    "beam_intensity": [
-     26937660.806118045,
-     4453624.053485226
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 26937660.806118045
-   },
-   {
-    "state": 2,
-    "dbeta": 0.1,
-    "beam_intensity": [
-     20403306.087469596,
-     2022685.2588058747
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 20403306.087469596
-   },
-   {
-    "state": 2,
-    "dbeta": 0.15,
-    "beam_intensity": [
-     11054578.075668933,
-     1094927.1706268052
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 11054578.075668933
-   }
-  ],
+  "switched_fraction": 0.12518518518518518,
+  "cells_that_must_switch_fraction": 0.8444444444444444,
+  "compromise_static_cells": 972,
+  "cells_deviating_>0.5_from_ideal": 1107,
   "cells": null
  },
  {
-  "conv": 0.8980521241610582,
-  "edge": 0.020801941298813305,
-  "diodes": 504,
+  "conv": 0.8968858533746287,
+  "edge": 0.013512232330016794,
+  "diodes": 340,
   "states": [
    {
+    "SLL_firstnull_db": -13.815288165465628,
+    "SLL_firstnull_vs_weaker_db": -13.815288165465628,
+    "SLL_firstnull_dir": [
+     26.0,
+     310.0
+    ],
     "beam_gain_dbi": {
-     "b1_(25,0)": 18.424708905117022,
-     "b2_(25,180)": -1.8217748260526878
+     "b1_(25,0)": 18.381684945463384,
+     "b2_(25,180)": -8.264770764277591
     },
-    "SLL_db": -12.805297225416613,
-    "SLL_vs_weaker_beam_db": -12.805297225416613,
+    "SLL_db": -12.629564180233846,
+    "SLL_vs_weaker_beam_db": -12.629564180233846,
     "peak_dir": [
      25.0,
      0.0
@@ -1404,20 +289,26 @@
      0
     ],
     "balance_db": null,
-    "isolation_db": 20.24648373116971,
+    "isolation_db": 26.646455709740977,
     "ring_median_rel_peak_db": {
-     "12": -19.90893272414842,
-     "24": -19.42880113413504
+     "12": -20.37300299607281,
+     "24": -19.06692037747281
     },
-    "floor_db": -20.574695656899692
+    "floor_db": -20.606058441219517
    },
    {
+    "SLL_firstnull_db": -13.496512415114053,
+    "SLL_firstnull_vs_weaker_db": 3.0323573623424953,
+    "SLL_firstnull_dir": [
+     19.0,
+     304.0
+    ],
     "beam_gain_dbi": {
-     "b1_(25,0)": 17.119142901079027,
-     "b2_(25,180)": 9.390971202121364
+     "b1_(25,0)": 17.702997726092097,
+     "b2_(25,180)": 1.1741279486355465
     },
-    "SLL_db": -12.447078969192695,
-    "SLL_vs_weaker_beam_db": -4.718907270235033,
+    "SLL_db": -13.206153343239919,
+    "SLL_vs_weaker_beam_db": 3.3227164342166304,
     "peak_dir": [
      25.0,
      0.0
@@ -1426,26 +317,1699 @@
      0,
      1
     ],
-    "balance_db": 7.728171698957663,
+    "balance_db": 16.52886977745655,
     "isolation_db": null,
     "ring_median_rel_peak_db": {
-     "12": -18.27893211924571,
-     "24": -18.51098188667989
+     "12": -20.088870167678795,
+     "24": -18.559281804801245
     },
-    "floor_db": -19.269129652861697
+    "floor_db": -19.92737122184823
    }
   ],
-  "NB": 0.3047693783221575,
-  "name": "add-a-beam dec eps225 g2.0",
+  "NB": 0.29959368495431193,
+  "beam2_on_off_contrast_db": 9.438898712913137,
+  "name": "add w2=0.3 eps270",
   "cfg": {
    "mode": "add",
    "decouple": true,
    "g": 2.0,
    "mu": 30.0,
-   "eps_B": 225.0,
-   "margin": true
+   "eps_B": 270.0,
+   "w2": 0.3
   },
-  "lam": 0.0,
+  "lam": 0.015625,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 170,
+  "n_cells": 1350,
+  "switched_fraction": 0.1259259259259259,
+  "cells_that_must_switch_fraction": 0.8518518518518519,
+  "compromise_static_cells": 983,
+  "cells_deviating_>0.5_from_ideal": 1113,
+  "cells": null
+ },
+ {
+  "conv": 0.9016499547409853,
+  "edge": 0.014655551687301625,
+  "diodes": 364,
+  "states": [
+   {
+    "SLL_firstnull_db": -13.859765641955267,
+    "SLL_firstnull_vs_weaker_db": -13.859765641955267,
+    "SLL_firstnull_dir": [
+     25.0,
+     50.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 18.040028281944434,
+     "b2_(25,180)": -3.3703772073952605
+    },
+    "SLL_db": -12.37208321564114,
+    "SLL_vs_weaker_beam_db": -12.37208321564114,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 21.410405489339695,
+    "ring_median_rel_peak_db": {
+     "12": -19.83749297871654,
+     "24": -17.87021360012067
+    },
+    "floor_db": -20.252650370944647
+   },
+   {
+    "SLL_firstnull_db": -12.320056922719553,
+    "SLL_firstnull_vs_weaker_db": -3.1004650716509046,
+    "SLL_firstnull_dir": [
+     23.0,
+     56.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 17.145283932484592,
+     "b2_(25,180)": 7.925692081415945
+    },
+    "SLL_db": -11.992188683733072,
+    "SLL_vs_weaker_beam_db": -2.7725968326644264,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": 9.219591851068646,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -18.851455517469944,
+     "24": -16.34793645783432
+    },
+    "floor_db": -19.357906021484805
+   }
+  ],
+  "NB": 0.30040544169798417,
+  "beam2_on_off_contrast_db": 11.296069288811205,
+  "name": "add w2=0.7 eps0",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 0.0,
+   "w2": 0.7
+  },
+  "lam": 0.015625,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 182,
+  "n_cells": 1350,
+  "switched_fraction": 0.1348148148148148,
+  "cells_that_must_switch_fraction": 0.8192592592592592,
+  "compromise_static_cells": 932,
+  "cells_deviating_>0.5_from_ideal": 1151,
+  "cells": null
+ },
+ {
+  "conv": 0.9215801656904655,
+  "edge": 0.014099033656149576,
+  "diodes": 340,
+  "states": [
+   {
+    "SLL_firstnull_db": -13.51136604747964,
+    "SLL_firstnull_vs_weaker_db": -13.51136604747964,
+    "SLL_firstnull_dir": [
+     26.0,
+     308.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 18.055368177879217,
+     "b2_(25,180)": -2.117731462355642
+    },
+    "SLL_db": -13.151903687589169,
+    "SLL_vs_weaker_beam_db": -13.151903687589169,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 20.17309964023486,
+    "ring_median_rel_peak_db": {
+     "12": -18.782460406348925,
+     "24": -18.228611864199557
+    },
+    "floor_db": -20.273706367673928
+   },
+   {
+    "SLL_firstnull_db": -13.094164606074653,
+    "SLL_firstnull_vs_weaker_db": -3.9336809464366755,
+    "SLL_firstnull_dir": [
+     26.0,
+     306.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 17.185791028936777,
+     "b2_(25,180)": 8.025307369298801
+    },
+    "SLL_db": -12.73770541921468,
+    "SLL_vs_weaker_beam_db": -3.577221759576706,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": 9.160483659637976,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -16.86087218601531,
+     "24": -17.381619199507433
+    },
+    "floor_db": -19.404129218731487
+   }
+  ],
+  "NB": 0.30001031389586624,
+  "beam2_on_off_contrast_db": 10.143038831654444,
+  "name": "add w2=0.7 eps90",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 90.0,
+   "w2": 0.7
+  },
+  "lam": 0.015625,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 170,
+  "n_cells": 1350,
+  "switched_fraction": 0.1259259259259259,
+  "cells_that_must_switch_fraction": 0.8251851851851851,
+  "compromise_static_cells": 952,
+  "cells_deviating_>0.5_from_ideal": 1159,
+  "cells": null
+ },
+ {
+  "conv": 0.9018044542553916,
+  "edge": 0.01226994745351932,
+  "diodes": 350,
+  "states": [
+   {
+    "SLL_firstnull_db": -13.678730035628455,
+    "SLL_firstnull_vs_weaker_db": -13.678730035628455,
+    "SLL_firstnull_dir": [
+     26.0,
+     310.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 18.00325329280079,
+     "b2_(25,180)": -1.0864833864709442
+    },
+    "SLL_db": -12.691211009500496,
+    "SLL_vs_weaker_beam_db": -12.691211009500496,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 19.089736679271734,
+    "ring_median_rel_peak_db": {
+     "12": -19.01873137723614,
+     "24": -18.77576448210208
+    },
+    "floor_db": -20.240431543869278
+   },
+   {
+    "SLL_firstnull_db": -12.469199508118036,
+    "SLL_firstnull_vs_weaker_db": -3.066775879161581,
+    "SLL_firstnull_dir": [
+     41.0,
+     334.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 17.090281697077085,
+     "b2_(25,180)": 7.68785806812063
+    },
+    "SLL_db": -12.089300605215392,
+    "SLL_vs_weaker_beam_db": -2.6868769762589384,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": 9.402423628956456,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -18.388469044887138,
+     "24": -17.72390641769644
+    },
+    "floor_db": -19.327459948145574
+   }
+  ],
+  "NB": 0.2987116626919988,
+  "beam2_on_off_contrast_db": 8.774341454591575,
+  "name": "add w2=0.7 eps180",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 180.0,
+   "w2": 0.7
+  },
+  "lam": 0.015625,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 175,
+  "n_cells": 1350,
+  "switched_fraction": 0.12962962962962962,
+  "cells_that_must_switch_fraction": 0.8325925925925926,
+  "compromise_static_cells": 958,
+  "cells_deviating_>0.5_from_ideal": 1156,
+  "cells": null
+ },
+ {
+  "conv": 0.8979095104295378,
+  "edge": 0.014187083474496896,
+  "diodes": 340,
+  "states": [
+   {
+    "SLL_firstnull_db": -12.574416725487321,
+    "SLL_firstnull_vs_weaker_db": -12.574416725487321,
+    "SLL_firstnull_dir": [
+     44.0,
+     342.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 18.12603744422118,
+     "b2_(25,180)": -1.7288964269854314
+    },
+    "SLL_db": -12.574416725487321,
+    "SLL_vs_weaker_beam_db": -12.574416725487321,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 19.85493387120661,
+    "ring_median_rel_peak_db": {
+     "12": -19.91026429583757,
+     "24": -18.82601610668094
+    },
+    "floor_db": -20.343470756714186
+   },
+   {
+    "SLL_firstnull_db": -12.687339514822444,
+    "SLL_firstnull_vs_weaker_db": -2.312644728950825,
+    "SLL_firstnull_dir": [
+     21.0,
+     54.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 17.378002775045594,
+     "b2_(25,180)": 7.008913747440235
+    },
+    "SLL_db": -12.80170254898728,
+    "SLL_vs_weaker_beam_db": -2.4326135213819207,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": 10.369089027605359,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -19.64765498906074,
+     "24": -17.90714430345985
+    },
+    "floor_db": -19.5954360875386
+   }
+  ],
+  "NB": 0.3000728292668928,
+  "beam2_on_off_contrast_db": 8.737810174425666,
+  "name": "add w2=0.7 eps270",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 270.0,
+   "w2": 0.7
+  },
+  "lam": 0.015625,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 170,
+  "n_cells": 1350,
+  "switched_fraction": 0.1259259259259259,
+  "cells_that_must_switch_fraction": 0.8414814814814815,
+  "compromise_static_cells": 972,
+  "cells_deviating_>0.5_from_ideal": 1149,
+  "cells": null
+ },
+ {
+  "conv": 0.9043674543791866,
+  "edge": 0.0139174385423292,
+  "diodes": 408,
+  "states": [
+   {
+    "SLL_firstnull_db": -12.721811191851028,
+    "SLL_firstnull_vs_weaker_db": -12.721811191851028,
+    "SLL_firstnull_dir": [
+     20.0,
+     59.99999999999999
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 17.581621657266346,
+     "b2_(25,180)": -1.8287612149852517
+    },
+    "SLL_db": -12.2068541731315,
+    "SLL_vs_weaker_beam_db": -12.2068541731315,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 19.4103828722516,
+    "ring_median_rel_peak_db": {
+     "12": -19.18781694241663,
+     "24": -16.937898315959117
+    },
+    "floor_db": -19.801826673622394
+   },
+   {
+    "SLL_firstnull_db": -12.08033266000761,
+    "SLL_firstnull_vs_weaker_db": -4.99544696672732,
+    "SLL_firstnull_dir": [
+     21.0,
+     52.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 16.781878096635392,
+     "b2_(25,180)": 9.6969924033551
+    },
+    "SLL_db": -12.117999955348065,
+    "SLL_vs_weaker_beam_db": -5.033114262067772,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": 7.084885693280292,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -17.812688653501297,
+     "24": -16.289222642714257
+    },
+    "floor_db": -19.00208311299144
+   }
+  ],
+  "NB": 0.29988138136505377,
+  "beam2_on_off_contrast_db": 11.525753618340351,
+  "name": "add w2=1.0 eps0",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 0.0,
+   "w2": 1.0
+  },
+  "lam": 0.015625,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 204,
+  "n_cells": 1350,
+  "switched_fraction": 0.1511111111111111,
+  "cells_that_must_switch_fraction": 0.8088888888888889,
+  "compromise_static_cells": 908,
+  "cells_deviating_>0.5_from_ideal": 1184,
+  "cells": null
+ },
+ {
+  "conv": 0.9058597511276244,
+  "edge": 0.013777147646855023,
+  "diodes": 394,
+  "states": [
+   {
+    "SLL_firstnull_db": -13.373566668044873,
+    "SLL_firstnull_vs_weaker_db": -13.373566668044873,
+    "SLL_firstnull_dir": [
+     47.0,
+     0.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 17.50460622150606,
+     "b2_(25,180)": 0.3551416926117146
+    },
+    "SLL_db": -12.890439085552899,
+    "SLL_vs_weaker_beam_db": -12.890439085552899,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 17.149464528894345,
+    "ring_median_rel_peak_db": {
+     "12": -18.40870534308809,
+     "24": -16.765241767719814
+    },
+    "floor_db": -19.726254000146387
+   },
+   {
+    "SLL_firstnull_db": -13.675458653351647,
+    "SLL_firstnull_vs_weaker_db": -7.874287771018728,
+    "SLL_firstnull_dir": [
+     43.0,
+     338.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 16.46920375998354,
+     "b2_(25,180)": 10.675336241633705
+    },
+    "SLL_db": -13.38312104809923,
+    "SLL_vs_weaker_beam_db": -7.589253529749397,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": 5.793867518349835,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -15.681311777032567,
+     "24": -16.49206809393878
+    },
+    "floor_db": -18.690851538623868
+   }
+  ],
+  "NB": 0.2997817748292671,
+  "beam2_on_off_contrast_db": 10.32019454902199,
+  "name": "add w2=1.0 eps90",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 90.0,
+   "w2": 1.0
+  },
+  "lam": 0.015625,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 197,
+  "n_cells": 1350,
+  "switched_fraction": 0.14592592592592593,
+  "cells_that_must_switch_fraction": 0.8014814814814815,
+  "compromise_static_cells": 906,
+  "cells_deviating_>0.5_from_ideal": 1180,
+  "cells": null
+ },
+ {
+  "conv": 0.9013249568475452,
+  "edge": 0.012192522518287532,
+  "diodes": 434,
+  "states": [
+   {
+    "SLL_firstnull_db": -13.708894715270937,
+    "SLL_firstnull_vs_weaker_db": -13.708894715270937,
+    "SLL_firstnull_dir": [
+     40.0,
+     29.999999999999996
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 17.419281051641903,
+     "b2_(25,180)": 0.15230932701754551
+    },
+    "SLL_db": -12.26702116153238,
+    "SLL_vs_weaker_beam_db": -12.26702116153238,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 17.26697172462436,
+    "ring_median_rel_peak_db": {
+     "12": -17.426243240808994,
+     "24": -17.705255121130033
+    },
+    "floor_db": -19.657258605439928
+   },
+   {
+    "SLL_firstnull_db": -11.998336875311587,
+    "SLL_firstnull_vs_weaker_db": -6.572352930440767,
+    "SLL_firstnull_dir": [
+     42.0,
+     334.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 16.204712272180366,
+     "b2_(25,180)": 10.778728327309544
+    },
+    "SLL_db": -11.222207462570683,
+    "SLL_vs_weaker_beam_db": -5.79622351769986,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": 5.425983944870822,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -15.766207281824878,
+     "24": -17.941332708360292
+    },
+    "floor_db": -18.44268982597839
+   }
+  ],
+  "NB": 0.2986566909879842,
+  "beam2_on_off_contrast_db": 10.626419000291998,
+  "name": "add w2=1.0 eps180",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 180.0,
+   "w2": 1.0
+  },
+  "lam": 0.015625,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 217,
+  "n_cells": 1350,
+  "switched_fraction": 0.16074074074074074,
+  "cells_that_must_switch_fraction": 0.8340740740740741,
+  "compromise_static_cells": 928,
+  "cells_deviating_>0.5_from_ideal": 1177,
+  "cells": null
+ },
+ {
+  "conv": 0.8872299897986217,
+  "edge": 0.014927468728741294,
+  "diodes": 408,
+  "states": [
+   {
+    "SLL_firstnull_db": -12.114808350199697,
+    "SLL_firstnull_vs_weaker_db": -12.114808350199697,
+    "SLL_firstnull_dir": [
+     44.0,
+     342.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 17.612715269091186,
+     "b2_(25,180)": -0.6650760825320485
+    },
+    "SLL_db": -12.114808350199699,
+    "SLL_vs_weaker_beam_db": -12.114808350199699,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 18.277791351623236,
+    "ring_median_rel_peak_db": {
+     "12": -19.48802220613084,
+     "24": -18.246563432109145
+    },
+    "floor_db": -19.82254718096191
+   },
+   {
+    "SLL_firstnull_db": -13.972573108186698,
+    "SLL_firstnull_vs_weaker_db": -7.4935564439094815,
+    "SLL_firstnull_dir": [
+     26.0,
+     52.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 16.60506378796482,
+     "b2_(25,180)": 10.126047123687606
+    },
+    "SLL_db": -12.10650977007499,
+    "SLL_vs_weaker_beam_db": -5.627493105797776,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": 6.479016664277214,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -17.738078575497656,
+     "24": -16.996283647638887
+    },
+    "floor_db": -18.814895699835542
+   }
+  ],
+  "NB": 0.30059850279740635,
+  "beam2_on_off_contrast_db": 10.791123206219654,
+  "name": "add w2=1.0 eps270",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 270.0,
+   "w2": 1.0
+  },
+  "lam": 0.015625,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 204,
+  "n_cells": 1350,
+  "switched_fraction": 0.1511111111111111,
+  "cells_that_must_switch_fraction": 0.8281481481481482,
+  "compromise_static_cells": 932,
+  "cells_deviating_>0.5_from_ideal": 1173,
+  "cells": null
+ },
+ {
+  "conv": 0.9128894770501018,
+  "edge": 0.013305591459340115,
+  "diodes": 448,
+  "states": [
+   {
+    "SLL_firstnull_db": -12.413120126550108,
+    "SLL_firstnull_vs_weaker_db": -12.413120126550108,
+    "SLL_firstnull_dir": [
+     23.0,
+     52.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 16.93679805235277,
+     "b2_(25,180)": 1.3147822480797242
+    },
+    "SLL_db": -11.508761280045444,
+    "SLL_vs_weaker_beam_db": -11.508761280045444,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 15.622015804273046,
+    "ring_median_rel_peak_db": {
+     "12": -16.94290177779961,
+     "24": -15.447246579269105
+    },
+    "floor_db": -19.163298866966546
+   },
+   {
+    "SLL_firstnull_db": -11.308636185001461,
+    "SLL_firstnull_vs_weaker_db": -10.021491490561106,
+    "SLL_firstnull_dir": [
+     16.0,
+     216.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 14.712399169682396,
+     "b2_(25,180)": 13.425254475242038
+    },
+    "SLL_db": -11.46290087839484,
+    "SLL_vs_weaker_beam_db": -10.175756183954483,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": 1.2871446944403573,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -13.905984661669617,
+     "24": -13.009067437008738
+    },
+    "floor_db": -16.93889998429617
+   }
+  ],
+  "NB": 0.2994469699361315,
+  "beam2_on_off_contrast_db": 12.110472227162314,
+  "name": "add w2=1.4 eps0",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 0.0,
+   "w2": 1.4
+  },
+  "lam": 0.03125,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 224,
+  "n_cells": 1350,
+  "switched_fraction": 0.16592592592592592,
+  "cells_that_must_switch_fraction": 0.8118518518518518,
+  "compromise_static_cells": 899,
+  "cells_deviating_>0.5_from_ideal": 1224,
+  "cells": null
+ },
+ {
+  "conv": 0.9153713878065795,
+  "edge": 0.013586373228693271,
+  "diodes": 466,
+  "states": [
+   {
+    "SLL_firstnull_db": -12.272860697580793,
+    "SLL_firstnull_vs_weaker_db": -12.272860697580793,
+    "SLL_firstnull_dir": [
+     26.0,
+     308.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 17.09864308874056,
+     "b2_(25,180)": 0.8125044736025064
+    },
+    "SLL_db": -11.95348211438716,
+    "SLL_vs_weaker_beam_db": -11.95348211438716,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 16.286138615138054,
+    "ring_median_rel_peak_db": {
+     "12": -17.159493169828764,
+     "24": -16.856340462009005
+    },
+    "floor_db": -19.322253575427332
+   },
+   {
+    "SLL_firstnull_db": -11.265297454691435,
+    "SLL_firstnull_vs_weaker_db": -9.569333720646032,
+    "SLL_firstnull_dir": [
+     16.0,
+     216.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 15.077520994500542,
+     "b2_(25,180)": 13.38155726045514
+    },
+    "SLL_db": -11.585695884599524,
+    "SLL_vs_weaker_beam_db": -9.88973215055412,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": 1.695963734045403,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -14.159250932946703,
+     "24": -16.035720029476753
+    },
+    "floor_db": -17.30113148118732
+   }
+  ],
+  "NB": 0.29964632499237226,
+  "beam2_on_off_contrast_db": 12.569052786852632,
+  "name": "add w2=1.4 eps90",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 90.0,
+   "w2": 1.4
+  },
+  "lam": 0.03125,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 233,
+  "n_cells": 1350,
+  "switched_fraction": 0.1725925925925926,
+  "cells_that_must_switch_fraction": 0.8088888888888889,
+  "compromise_static_cells": 893,
+  "cells_deviating_>0.5_from_ideal": 1208,
+  "cells": null
+ },
+ {
+  "conv": 0.9037551018872761,
+  "edge": 0.010919675117140678,
+  "diodes": 470,
+  "states": [
+   {
+    "SLL_firstnull_db": -12.785733896776339,
+    "SLL_firstnull_vs_weaker_db": -12.785733896776339,
+    "SLL_firstnull_dir": [
+     23.0,
+     164.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 16.789419899659713,
+     "b2_(25,180)": 1.393846366629391
+    },
+    "SLL_db": -12.436390726004792,
+    "SLL_vs_weaker_beam_db": -12.436390726004792,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 15.395573533030321,
+    "ring_median_rel_peak_db": {
+     "12": -16.054348065432688,
+     "24": -16.397128431447776
+    },
+    "floor_db": -19.040558931359893
+   },
+   {
+    "SLL_firstnull_db": -12.091363688469798,
+    "SLL_firstnull_vs_weaker_db": -10.209631114273105,
+    "SLL_firstnull_dir": [
+     19.0,
+     138.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 14.967698085936789,
+     "b2_(25,180)": 13.085965511740095
+    },
+    "SLL_db": -12.047189780186411,
+    "SLL_vs_weaker_beam_db": -10.165457205989718,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": 1.8817325741966933,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -13.916834599295997,
+     "24": -15.138521561301722
+    },
+    "floor_db": -17.21883711763697
+   }
+  ],
+  "NB": 0.2977529693331699,
+  "beam2_on_off_contrast_db": 11.692119145110704,
+  "name": "add w2=1.4 eps180",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 180.0,
+   "w2": 1.4
+  },
+  "lam": 0.03125,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 235,
+  "n_cells": 1350,
+  "switched_fraction": 0.17407407407407408,
+  "cells_that_must_switch_fraction": 0.8148148148148148,
+  "compromise_static_cells": 892,
+  "cells_deviating_>0.5_from_ideal": 1197,
+  "cells": null
+ },
+ {
+  "conv": 0.8811354845958717,
+  "edge": 0.013877348403886663,
+  "diodes": 480,
+  "states": [
+   {
+    "SLL_firstnull_db": -9.79420449367886,
+    "SLL_firstnull_vs_weaker_db": -9.79420449367886,
+    "SLL_firstnull_dir": [
+     21.0,
+     32.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 16.979614927963603,
+     "b2_(25,180)": 1.2478159166546992
+    },
+    "SLL_db": -11.656252816804919,
+    "SLL_vs_weaker_beam_db": -11.656252816804919,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 15.731799011308903,
+    "ring_median_rel_peak_db": {
+     "12": -18.167735890492008,
+     "24": -16.55703010517972
+    },
+    "floor_db": -19.20023218545468
+   },
+   {
+    "SLL_firstnull_db": -10.233523524230081,
+    "SLL_firstnull_vs_weaker_db": -8.992652442594746,
+    "SLL_firstnull_dir": [
+     24.000000000000004,
+     334.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 14.674304632096149,
+     "b2_(25,180)": 13.433433550460816
+    },
+    "SLL_db": -11.209469446917062,
+    "SLL_vs_weaker_beam_db": -9.968598365281728,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": 1.2408710816353334,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -15.250656789158327,
+     "24": -13.9187344107638
+    },
+    "floor_db": -16.894921889587227
+   }
+  ],
+  "NB": 0.29985291736675956,
+  "beam2_on_off_contrast_db": 12.185617633806116,
+  "name": "add w2=1.4 eps270",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 270.0,
+   "w2": 1.4
+  },
+  "lam": 0.03125,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 240,
+  "n_cells": 1350,
+  "switched_fraction": 0.17777777777777778,
+  "cells_that_must_switch_fraction": 0.8222222222222222,
+  "compromise_static_cells": 895,
+  "cells_deviating_>0.5_from_ideal": 1203,
+  "cells": null
+ },
+ {
+  "conv": 0.916181186724301,
+  "edge": 0.009448681388611718,
+  "diodes": 478,
+  "states": [
+   {
+    "SLL_firstnull_db": -10.696113725819243,
+    "SLL_firstnull_vs_weaker_db": -10.696113725819243,
+    "SLL_firstnull_dir": [
+     28.0,
+     194.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 15.984802580405995,
+     "b2_(25,180)": 2.7261001911633835
+    },
+    "SLL_db": -10.696113725819245,
+    "SLL_vs_weaker_beam_db": -10.696113725819245,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 13.258702389242611,
+    "ring_median_rel_peak_db": {
+     "12": -15.823098166310277,
+     "24": -14.32290107041089
+    },
+    "floor_db": -18.251201810031763
+   },
+   {
+    "SLL_firstnull_db": -10.8330577035066,
+    "SLL_firstnull_vs_weaker_db": -8.617948445818662,
+    "SLL_firstnull_dir": [
+     18.0,
+     230.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 12.759897822704286,
+     "b2_(25,180)": 14.975007080392224
+    },
+    "SLL_db": -11.080474846883597,
+    "SLL_vs_weaker_beam_db": -8.865365589195658,
+    "peak_dir": [
+     25.0,
+     180.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": -2.2151092576879385,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -14.64359125509034,
+     "24": -13.910491033217001
+    },
+    "floor_db": -17.241406310017993
+   }
+  ],
+  "NB": 0.29670856378591437,
+  "beam2_on_off_contrast_db": 12.248906889228842,
+  "name": "add w2=2.0 eps0",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 0.0,
+   "w2": 2.0
+  },
+  "lam": 0.0625,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 239,
+  "n_cells": 1350,
+  "switched_fraction": 0.17703703703703705,
+  "cells_that_must_switch_fraction": 0.8311111111111111,
+  "compromise_static_cells": 908,
+  "cells_deviating_>0.5_from_ideal": 1239,
+  "cells": null
+ },
+ {
+  "conv": 0.9104549562117736,
+  "edge": 0.010611100389688021,
+  "diodes": 506,
+  "states": [
+   {
+    "SLL_firstnull_db": -10.873880881387127,
+    "SLL_firstnull_vs_weaker_db": -10.873880881387127,
+    "SLL_firstnull_dir": [
+     28.0,
+     166.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 16.354195170006015,
+     "b2_(25,180)": 3.114476752221056
+    },
+    "SLL_db": -10.873880881387123,
+    "SLL_vs_weaker_beam_db": -10.873880881387123,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 13.23971841778496,
+    "ring_median_rel_peak_db": {
+     "12": -15.931636249101814,
+     "24": -15.940904015039308
+    },
+    "floor_db": -18.608530937470935
+   },
+   {
+    "SLL_firstnull_db": -9.35841199691711,
+    "SLL_firstnull_vs_weaker_db": -8.10720930327628,
+    "SLL_firstnull_dir": [
+     16.0,
+     218.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 13.504803297672087,
+     "b2_(25,180)": 14.756005991312914
+    },
+    "SLL_db": -11.682471842563704,
+    "SLL_vs_weaker_beam_db": -10.431269148922876,
+    "peak_dir": [
+     25.0,
+     180.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": -1.2512026936408276,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -13.478545784461682,
+     "24": -14.666225973104272
+    },
+    "floor_db": -17.010341758777834
+   }
+  ],
+  "NB": 0.2975338812766785,
+  "beam2_on_off_contrast_db": 11.64152923909186,
+  "name": "add w2=2.0 eps90",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 90.0,
+   "w2": 2.0
+  },
+  "lam": 0.0625,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 253,
+  "n_cells": 1350,
+  "switched_fraction": 0.1874074074074074,
+  "cells_that_must_switch_fraction": 0.8044444444444444,
+  "compromise_static_cells": 867,
+  "cells_deviating_>0.5_from_ideal": 1233,
+  "cells": null
+ },
+ {
+  "conv": 0.9065644333413225,
+  "edge": 0.008090901217681698,
+  "diodes": 508,
+  "states": [
+   {
+    "SLL_firstnull_db": -8.981514520952274,
+    "SLL_firstnull_vs_weaker_db": -8.981514520952274,
+    "SLL_firstnull_dir": [
+     26.0,
+     164.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 15.537767977292683,
+     "b2_(25,180)": 3.668817884253479
+    },
+    "SLL_db": -8.981514520952274,
+    "SLL_vs_weaker_beam_db": -8.981514520952274,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 11.868950093039203,
+    "ring_median_rel_peak_db": {
+     "12": -14.295274467729818,
+     "24": -15.169888510374996
+    },
+    "floor_db": -17.818300667825106
+   },
+   {
+    "SLL_firstnull_db": -10.659802919010906,
+    "SLL_firstnull_vs_weaker_db": -8.85333684132207,
+    "SLL_firstnull_dir": [
+     19.0,
+     216.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 12.933110282740927,
+     "b2_(25,180)": 14.739576360429762
+    },
+    "SLL_db": -11.290505393041716,
+    "SLL_vs_weaker_beam_db": -9.48403931535288,
+    "peak_dir": [
+     25.0,
+     180.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": -1.8064660776888353,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -13.81399499915458,
+     "24": -14.88135391576354
+    },
+    "floor_db": -17.020109050962187
+   }
+  ],
+  "NB": 0.29574453986455407,
+  "beam2_on_off_contrast_db": 11.070758476176284,
+  "name": "add w2=2.0 eps180",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 180.0,
+   "w2": 2.0
+  },
+  "lam": 0.0625,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 254,
+  "n_cells": 1350,
+  "switched_fraction": 0.18814814814814815,
+  "cells_that_must_switch_fraction": 0.7925925925925926,
+  "compromise_static_cells": 849,
+  "cells_deviating_>0.5_from_ideal": 1232,
+  "cells": null
+ },
+ {
+  "conv": 0.8884589796791038,
+  "edge": 0.010631964160365834,
+  "diodes": 490,
+  "states": [
+   {
+    "SLL_firstnull_db": -9.849016079789031,
+    "SLL_firstnull_vs_weaker_db": -9.849016079789031,
+    "SLL_firstnull_dir": [
+     21.0,
+     32.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 16.10998178906023,
+     "b2_(25,180)": 2.3521381224660383
+    },
+    "SLL_db": -10.820936107237092,
+    "SLL_vs_weaker_beam_db": -10.820936107237092,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 13.757843666594194,
+    "ring_median_rel_peak_db": {
+     "12": -16.88553051598585,
+     "24": -14.707650407693203
+    },
+    "floor_db": -18.364101340329235
+   },
+   {
+    "SLL_firstnull_db": -9.14679201374362,
+    "SLL_firstnull_vs_weaker_db": -7.2634948515497655,
+    "SLL_firstnull_dir": [
+     20.0,
+     24.000000000000004
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 12.9785200465606,
+     "b2_(25,180)": 14.861817208754456
+    },
+    "SLL_db": -10.63489481034955,
+    "SLL_vs_weaker_beam_db": -8.751597648155695,
+    "peak_dir": [
+     25.0,
+     180.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": -1.8832971621938555,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -15.920994307784191,
+     "24": -13.716062056650944
+    },
+    "floor_db": -17.11593676002346
+   }
+  ],
+  "NB": 0.2975486945538598,
+  "beam2_on_off_contrast_db": 12.509679086288418,
+  "name": "add w2=2.0 eps270",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 270.0,
+   "w2": 2.0
+  },
+  "lam": 0.0625,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 245,
+  "n_cells": 1350,
+  "switched_fraction": 0.1814814814814815,
+  "cells_that_must_switch_fraction": 0.8,
+  "compromise_static_cells": 863,
+  "cells_deviating_>0.5_from_ideal": 1225,
+  "cells": null
+ },
+ {
+  "conv": 0.9013405925611857,
+  "edge": 0.006314455119923124,
+  "diodes": 492,
+  "states": [
+   {
+    "SLL_firstnull_db": -6.0942870714479955,
+    "SLL_firstnull_vs_weaker_db": -6.0942870714479955,
+    "SLL_firstnull_dir": [
+     27.0,
+     196.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 14.028104556047955,
+     "b2_(25,180)": 5.290131586560331
+    },
+    "SLL_db": -6.094287071447995,
+    "SLL_vs_weaker_beam_db": -6.094287071447995,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 8.737972969487625,
+    "ring_median_rel_peak_db": {
+     "12": -12.138190126703659,
+     "24": -12.271714821693449
+    },
+    "floor_db": -16.327198431083723
+   },
+   {
+    "SLL_firstnull_db": -10.74504508859118,
+    "SLL_firstnull_vs_weaker_db": -5.017515410756901,
+    "SLL_firstnull_dir": [
+     19.0,
+     236.00000000000003
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 10.107731787203356,
+     "b2_(25,180)": 15.835261465037636
+    },
+    "SLL_db": -10.779819698596793,
+    "SLL_vs_weaker_beam_db": -5.052290020762514,
+    "peak_dir": [
+     25.0,
+     180.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": -5.72752967783428,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -16.93763111569003,
+     "24": -15.024390556560046
+    },
+    "floor_db": -18.1343553400734
+   }
+  ],
+  "NB": 0.29448326313514545,
+  "beam2_on_off_contrast_db": 10.545129878477304,
+  "name": "add w2=3.0 eps0",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 0.0,
+   "w2": 3.0
+  },
+  "lam": 0.109375,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 246,
+  "n_cells": 1350,
+  "switched_fraction": 0.18222222222222223,
+  "cells_that_must_switch_fraction": 0.8755555555555555,
+  "compromise_static_cells": 951,
+  "cells_deviating_>0.5_from_ideal": 1273,
+  "cells": null
+ },
+ {
+  "conv": 0.9120670529640205,
+  "edge": 0.005860610928153408,
+  "diodes": 500,
+  "states": [
+   {
+    "SLL_firstnull_db": -5.583297690187015,
+    "SLL_firstnull_vs_weaker_db": -5.583297690187015,
+    "SLL_firstnull_dir": [
+     27.0,
+     164.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 13.939812258584778,
+     "b2_(25,180)": 5.7263568004049406
+    },
+    "SLL_db": -5.583297690187015,
+    "SLL_vs_weaker_beam_db": -5.583297690187015,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 8.213455458179837,
+    "ring_median_rel_peak_db": {
+     "12": -12.829990666852353,
+     "24": -13.20283871989151
+    },
+    "floor_db": -16.24366087106346
+   },
+   {
+    "SLL_firstnull_db": -10.397838289901538,
+    "SLL_firstnull_vs_weaker_db": -4.7521073860080145,
+    "SLL_firstnull_dir": [
+     19.0,
+     220.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 10.125299369657693,
+     "b2_(25,180)": 15.771030273551215
+    },
+    "SLL_db": -11.219614545712098,
+    "SLL_vs_weaker_beam_db": -5.573883641818575,
+    "peak_dir": [
+     25.0,
+     180.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": -5.645730903893522,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -18.181674670487705,
+     "24": -15.603501254563186
+    },
+    "floor_db": -18.0748788860299
+   }
+  ],
+  "NB": 0.29416103375898894,
+  "beam2_on_off_contrast_db": 10.044673473146275,
+  "name": "add w2=3.0 eps90",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 90.0,
+   "w2": 3.0
+  },
+  "lam": 0.125,
+  "A0": 19.916532022221134,
+  "A0_states": [
+   20.63167687555667,
+   19.201387168885596
+  ],
+  "switched_cells": 250,
+  "n_cells": 1350,
+  "switched_fraction": 0.18518518518518517,
+  "cells_that_must_switch_fraction": 0.8666666666666667,
+  "compromise_static_cells": 933,
+  "cells_deviating_>0.5_from_ideal": 1280,
+  "cells": null
+ },
+ {
+  "conv": 0.9104900437911905,
+  "edge": 0.005016463123687301,
+  "diodes": 504,
+  "states": [
+   {
+    "SLL_firstnull_db": -6.144101801322895,
+    "SLL_firstnull_vs_weaker_db": -6.144101801322895,
+    "SLL_firstnull_dir": [
+     27.0,
+     164.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 14.138775078178133,
+     "b2_(25,180)": 4.985941562931868
+    },
+    "SLL_db": -6.144101801322898,
+    "SLL_vs_weaker_beam_db": -6.144101801322898,
+    "peak_dir": [
+     25.0,
+     0.0
+    ],
+    "wanted": [
+     0
+    ],
+    "balance_db": null,
+    "isolation_db": 9.152833515246265,
+    "ring_median_rel_peak_db": {
+     "12": -12.557907745753807,
+     "24": -13.020493830464687
+    },
+    "floor_db": -16.451481346858895
+   },
+   {
+    "SLL_firstnull_db": -12.045406684786217,
+    "SLL_firstnull_vs_weaker_db": -7.311608327339388,
+    "SLL_firstnull_dir": [
+     44.0,
+     208.0
+    ],
+    "beam_gain_dbi": {
+     "b1_(25,0)": 10.750226424172453,
+     "b2_(25,180)": 15.484024781619283
+    },
+    "SLL_db": -11.230240471943397,
+    "SLL_vs_weaker_beam_db": -6.496442114496568,
+    "peak_dir": [
+     25.0,
+     180.0
+    ],
+    "wanted": [
+     0,
+     1
+    ],
+    "balance_db": -4.73379835744683,
+    "isolation_db": null,
+    "ring_median_rel_peak_db": {
+     "12": -15.173983577525734,
+     "24": -16.203011595135003
+    },
+    "floor_db": -17.796731050300046
+   }
+  ],
+  "NB": 0.293561688817818,
+  "beam2_on_off_contrast_db": 10.498083218687416,
+  "name": "add w2=3.0 eps180",
+  "cfg": {
+   "mode": "add",
+   "decouple": true,
+   "g": 2.0,
+   "mu": 30.0,
+   "eps_B": 180.0,
+   "w2": 3.0
+  },
+  "lam": 0.109375,
   "A0": 19.916532022221134,
   "A0_states": [
    20.63167687555667,
@@ -1454,225 +2018,29 @@
   "switched_cells": 252,
   "n_cells": 1350,
   "switched_fraction": 0.18666666666666668,
-  "cells_that_must_switch_fraction": 0.8325925925925926,
-  "compromise_static_cells": 895,
-  "cells_deviating_>0.5_from_ideal": 1165,
-  "margin_raw": [
-   {
-    "state": 1,
-    "dbeta": -0.2,
-    "beam_intensity": [
-     5396261.724135861
-    ],
-    "peak_dir": [
-     27.0,
-     18.0
-    ],
-    "peak_intensity": 8576346.920148542
-   },
-   {
-    "state": 1,
-    "dbeta": -0.15,
-    "beam_intensity": [
-     12205853.560336044
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 12205853.560336044
-   },
-   {
-    "state": 1,
-    "dbeta": -0.1,
-    "beam_intensity": [
-     23979615.92825781
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 23979615.92825781
-   },
-   {
-    "state": 1,
-    "dbeta": -0.05,
-    "beam_intensity": [
-     33067141.12605927
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 33067141.12605927
-   },
-   {
-    "state": 1,
-    "dbeta": 0.0,
-    "beam_intensity": [
-     33678729.4318287
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 33678729.4318287
-   },
-   {
-    "state": 1,
-    "dbeta": 0.05,
-    "beam_intensity": [
-     25429696.82118232
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 25429696.82118232
-   },
-   {
-    "state": 1,
-    "dbeta": 0.1,
-    "beam_intensity": [
-     13706084.77760919
-    ],
-    "peak_dir": [
-     25.0,
-     358.0
-    ],
-    "peak_intensity": 13706084.77760919
-   },
-   {
-    "state": 1,
-    "dbeta": 0.15,
-    "beam_intensity": [
-     6149941.553844588
-    ],
-    "peak_dir": [
-     25.0,
-     342.0
-    ],
-    "peak_intensity": 8697658.472118886
-   },
-   {
-    "state": 2,
-    "dbeta": -0.2,
-    "beam_intensity": [
-     2673950.3102608887,
-     573935.9720193736
-    ],
-    "peak_dir": [
-     28.0,
-     18.0
-    ],
-    "peak_intensity": 6306691.503617026
-   },
-   {
-    "state": 2,
-    "dbeta": -0.15,
-    "beam_intensity": [
-     5593597.951573857,
-     1643682.7625222662
-    ],
-    "peak_dir": [
-     27.0,
-     16.0
-    ],
-    "peak_intensity": 7989324.082714645
-   },
-   {
-    "state": 2,
-    "dbeta": -0.1,
-    "beam_intensity": [
-     12569435.98946685,
-     3707075.8849499873
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 12569435.98946685
-   },
-   {
-    "state": 2,
-    "dbeta": -0.05,
-    "beam_intensity": [
-     23257503.864197724,
-     5263189.7094162805
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 23257503.864197724
-   },
-   {
-    "state": 2,
-    "dbeta": 0.0,
-    "beam_intensity": [
-     30817609.589968324,
-     5199778.421985402
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 30817609.589968324
-   },
-   {
-    "state": 2,
-    "dbeta": 0.05,
-    "beam_intensity": [
-     30466151.740581803,
-     3688191.8768456546
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 30466151.740581803
-   },
-   {
-    "state": 2,
-    "dbeta": 0.1,
-    "beam_intensity": [
-     22402610.9589453,
-     1870064.9374781046
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 22402610.9589453
-   },
-   {
-    "state": 2,
-    "dbeta": 0.15,
-    "beam_intensity": [
-     11636279.939262804,
-     993540.2961684329
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 11636279.939262804
-   }
-  ],
+  "cells_that_must_switch_fraction": 0.8770370370370371,
+  "compromise_static_cells": 944,
+  "cells_deviating_>0.5_from_ideal": 1283,
   "cells": null
  },
  {
-  "conv": 0.8882939519532259,
-  "edge": 0.022671951280977928,
-  "diodes": 514,
+  "conv": 0.8840982277273772,
+  "edge": 0.005374752891589508,
+  "diodes": 486,
   "states": [
    {
+    "SLL_firstnull_db": -5.352626055519543,
+    "SLL_firstnull_vs_weaker_db": -5.352626055519543,
+    "SLL_firstnull_dir": [
+     25.0,
+     198.0
+    ],
     "beam_gain_dbi": {
-     "b1_(25,0)": 18.379591381313634,
-     "b2_(25,180)": -2.4295116371568666
+     "b1_(25,0)": 13.73366651523715,
+     "b2_(25,180)": 4.973995281098305
     },
-    "SLL_db": -12.836454810703835,
-    "SLL_vs_weaker_beam_db": -12.836454810703835,
+    "SLL_db": -5.3526260555195435,
+    "SLL_vs_weaker_beam_db": -5.3526260555195435,
     "peak_dir": [
      25.0,
      0.0
@@ -1681,538 +2049,66 @@
      0
     ],
     "balance_db": null,
-    "isolation_db": 20.809103018470502,
+    "isolation_db": 8.759671234138846,
     "ring_median_rel_peak_db": {
-     "12": -20.864352837517522,
-     "24": -18.838619972371653
+     "12": -12.900521709521055,
+     "24": -13.187341460745506
     },
-    "floor_db": -20.51069948108858
+    "floor_db": -16.042611036883088
    },
    {
+    "SLL_firstnull_db": -11.843429930730341,
+    "SLL_firstnull_vs_weaker_db": -5.9959816244958635,
+    "SLL_firstnull_dir": [
+     22.0,
+     232.00000000000003
+    ],
     "beam_gain_dbi": {
-     "b1_(25,0)": 16.738888996889216,
-     "b2_(25,180)": 10.256830177453857
+     "b1_(25,0)": 9.606007978881248,
+     "b2_(25,180)": 15.453456285115728
     },
-    "SLL_db": -12.321451354533153,
-    "SLL_vs_weaker_beam_db": -5.839392535097795,
+    "SLL_db": -10.63070346745004,
+    "SLL_vs_weaker_beam_db": -4.78325516121556,
     "peak_dir": [
      25.0,
-     0.0
+     180.0
     ],
     "wanted": [
      0,
      1
     ],
-    "balance_db": 6.482058819435359,
+    "balance_db": -5.8474483062344795,
     "isolation_db": null,
     "ring_median_rel_peak_db": {
-     "12": -18.72464772911206,
-     "24": -17.168520596170378
+     "12": -16.8577206719748,
+     "24": -15.259976507869998
     },
-    "floor_db": -18.86999709666416
+    "floor_db": -17.762400806761665
    }
   ],
-  "NB": 0.3060970854094944,
-  "name": "add-a-beam dec eps270 g2.0",
+  "NB": 0.2938160745530286,
+  "beam2_on_off_contrast_db": 10.479461004017423,
+  "name": "add w2=3.0 eps270",
   "cfg": {
    "mode": "add",
    "decouple": true,
    "g": 2.0,
    "mu": 30.0,
    "eps_B": 270.0,
-   "margin": true
+   "w2": 3.0
   },
-  "lam": 0.0,
+  "lam": 0.109375,
   "A0": 19.916532022221134,
   "A0_states": [
    20.63167687555667,
    19.201387168885596
   ],
-  "switched_cells": 257,
+  "switched_cells": 243,
   "n_cells": 1350,
-  "switched_fraction": 0.19037037037037038,
-  "cells_that_must_switch_fraction": 0.8414814814814815,
-  "compromise_static_cells": 902,
-  "cells_deviating_>0.5_from_ideal": 1171,
-  "margin_raw": [
-   {
-    "state": 1,
-    "dbeta": -0.2,
-    "beam_intensity": [
-     4982275.312314023
-    ],
-    "peak_dir": [
-     26.0,
-     18.0
-    ],
-    "peak_intensity": 7588240.757091648
-   },
-   {
-    "state": 1,
-    "dbeta": -0.15,
-    "beam_intensity": [
-     11746047.146579625
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 11746047.146579625
-   },
-   {
-    "state": 1,
-    "dbeta": -0.1,
-    "beam_intensity": [
-     23169797.92178553
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 23169797.92178553
-   },
-   {
-    "state": 1,
-    "dbeta": -0.05,
-    "beam_intensity": [
-     32294018.544303305
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 32294018.544303305
-   },
-   {
-    "state": 1,
-    "dbeta": 0.0,
-    "beam_intensity": [
-     33416808.242319014
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 33416808.242319014
-   },
-   {
-    "state": 1,
-    "dbeta": 0.05,
-    "beam_intensity": [
-     25799637.807127193
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 25799637.807127193
-   },
-   {
-    "state": 1,
-    "dbeta": 0.1,
-    "beam_intensity": [
-     14311349.780817797
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 14311349.780817797
-   },
-   {
-    "state": 1,
-    "dbeta": 0.15,
-    "beam_intensity": [
-     5943043.758644629
-    ],
-    "peak_dir": [
-     26.0,
-     342.0
-    ],
-    "peak_intensity": 8385873.874757682
-   },
-   {
-    "state": 2,
-    "dbeta": -0.2,
-    "beam_intensity": [
-     2338892.9283951935,
-     997037.3848112473
-    ],
-    "peak_dir": [
-     21.0,
-     29.999999999999996
-    ],
-    "peak_intensity": 5361130.756692134
-   },
-   {
-    "state": 2,
-    "dbeta": -0.15,
-    "beam_intensity": [
-     4888663.055629297,
-     2427810.1466226373
-    ],
-    "peak_dir": [
-     25.0,
-     18.0
-    ],
-    "peak_intensity": 6864201.687244611
-   },
-   {
-    "state": 2,
-    "dbeta": -0.1,
-    "beam_intensity": [
-     11354715.714234913,
-     4788519.876285093
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 11354715.714234913
-   },
-   {
-    "state": 2,
-    "dbeta": -0.05,
-    "beam_intensity": [
-     21049432.43484053,
-     6460655.914444898
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 21049432.43484053
-   },
-   {
-    "state": 2,
-    "dbeta": 0.0,
-    "beam_intensity": [
-     28307076.253239483,
-     6363408.920885925
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 28307076.253239483
-   },
-   {
-    "state": 2,
-    "dbeta": 0.05,
-    "beam_intensity": [
-     28666295.042279232,
-     4630717.144289324
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 28666295.042279232
-   },
-   {
-    "state": 2,
-    "dbeta": 0.1,
-    "beam_intensity": [
-     21844856.841115337,
-     2392518.912325793
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 21844856.841115337
-   },
-   {
-    "state": 2,
-    "dbeta": 0.15,
-    "beam_intensity": [
-     11999573.729392262,
-     972897.8292054753
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 11999573.729392262
-   }
-  ],
-  "cells": null
- },
- {
-  "conv": 0.8929195461897154,
-  "edge": 0.022232514958834864,
-  "diodes": 514,
-  "states": [
-   {
-    "beam_gain_dbi": {
-     "b1_(25,0)": 18.37618332352507,
-     "b2_(25,180)": -3.5793079172855
-    },
-    "SLL_db": -13.074002579349553,
-    "SLL_vs_weaker_beam_db": -13.074002579349553,
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "wanted": [
-     0
-    ],
-    "balance_db": null,
-    "isolation_db": 21.95549124081057,
-    "ring_median_rel_peak_db": {
-     "12": -19.585260750281247,
-     "24": -18.659116147162948
-    },
-    "floor_db": -20.511720373995274
-   },
-   {
-    "beam_gain_dbi": {
-     "b1_(25,0)": 16.59453618989187,
-     "b2_(25,180)": 9.958087744954426
-    },
-    "SLL_db": -12.524679271381224,
-    "SLL_vs_weaker_beam_db": -5.888230826443782,
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "wanted": [
-     0,
-     1
-    ],
-    "balance_db": 6.636448444937443,
-    "isolation_db": null,
-    "ring_median_rel_peak_db": {
-     "12": -18.69804395649208,
-     "24": -16.03672343520107
-    },
-    "floor_db": -18.730073240362074
-   }
-  ],
-  "NB": 0.3057850856207728,
-  "name": "add-a-beam dec eps315 g2.0",
-  "cfg": {
-   "mode": "add",
-   "decouple": true,
-   "g": 2.0,
-   "mu": 30.0,
-   "eps_B": 315.0,
-   "margin": true
-  },
-  "lam": 0.0,
-  "A0": 19.916532022221134,
-  "A0_states": [
-   20.63167687555667,
-   19.201387168885596
-  ],
-  "switched_cells": 257,
-  "n_cells": 1350,
-  "switched_fraction": 0.19037037037037038,
-  "cells_that_must_switch_fraction": 0.8444444444444444,
-  "compromise_static_cells": 896,
-  "cells_deviating_>0.5_from_ideal": 1155,
-  "margin_raw": [
-   {
-    "state": 1,
-    "dbeta": -0.2,
-    "beam_intensity": [
-     5196650.659449063
-    ],
-    "peak_dir": [
-     26.0,
-     342.0
-    ],
-    "peak_intensity": 7735344.627628831
-   },
-   {
-    "state": 1,
-    "dbeta": -0.15,
-    "beam_intensity": [
-     11912433.7650513
-    ],
-    "peak_dir": [
-     26.0,
-     0.0
-    ],
-    "peak_intensity": 11912433.7650513
-   },
-   {
-    "state": 1,
-    "dbeta": -0.1,
-    "beam_intensity": [
-     23359687.474436086
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 23359687.474436086
-   },
-   {
-    "state": 1,
-    "dbeta": -0.05,
-    "beam_intensity": [
-     32656951.20988758
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 32656951.20988758
-   },
-   {
-    "state": 1,
-    "dbeta": 0.0,
-    "beam_intensity": [
-     34075393.45759285
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 34075393.45759285
-   },
-   {
-    "state": 1,
-    "dbeta": 0.05,
-    "beam_intensity": [
-     26698789.423633225
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 26698789.423633225
-   },
-   {
-    "state": 1,
-    "dbeta": 0.1,
-    "beam_intensity": [
-     15202386.694314485
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 15202386.694314485
-   },
-   {
-    "state": 1,
-    "dbeta": 0.15,
-    "beam_intensity": [
-     6749599.624143385
-    ],
-    "peak_dir": [
-     24.000000000000004,
-     342.0
-    ],
-    "peak_intensity": 9008238.255282333
-   },
-   {
-    "state": 2,
-    "dbeta": -0.2,
-    "beam_intensity": [
-     1820068.5030080741,
-     835836.314624454
-    ],
-    "peak_dir": [
-     24.000000000000004,
-     34.0
-    ],
-    "peak_intensity": 5014714.675532567
-   },
-   {
-    "state": 2,
-    "dbeta": -0.15,
-    "beam_intensity": [
-     4053115.8949161884,
-     1859609.5416965042
-    ],
-    "peak_dir": [
-     25.0,
-     22.0
-    ],
-    "peak_intensity": 6000320.881721222
-   },
-   {
-    "state": 2,
-    "dbeta": -0.1,
-    "beam_intensity": [
-     10703600.034203976,
-     4012943.2414089963
-    ],
-    "peak_dir": [
-     26.0,
-     0.0
-    ],
-    "peak_intensity": 10703600.034203976
-   },
-   {
-    "state": 2,
-    "dbeta": -0.05,
-    "beam_intensity": [
-     20174250.219127443,
-     5803856.693539521
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 20174250.219127443
-   },
-   {
-    "state": 2,
-    "dbeta": 0.0,
-    "beam_intensity": [
-     27943185.42866085,
-     6062228.101958909
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 27943185.42866085
-   },
-   {
-    "state": 2,
-    "dbeta": 0.05,
-    "beam_intensity": [
-     29352580.780316435,
-     4575694.383130359
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 29352580.780316435
-   },
-   {
-    "state": 2,
-    "dbeta": 0.1,
-    "beam_intensity": [
-     23392863.040300764,
-     2342184.1644744994
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 23392863.040300764
-   },
-   {
-    "state": 2,
-    "dbeta": 0.15,
-    "beam_intensity": [
-     13644978.353145685,
-     1075300.4277270846
-    ],
-    "peak_dir": [
-     25.0,
-     0.0
-    ],
-    "peak_intensity": 13644978.353145685
-   }
-  ],
+  "switched_fraction": 0.18,
+  "cells_that_must_switch_fraction": 0.8755555555555555,
+  "compromise_static_cells": 957,
+  "cells_deviating_>0.5_from_ideal": 1284,
   "cells": null
  }
 ]

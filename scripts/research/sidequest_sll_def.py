@@ -11,7 +11,7 @@ import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 
 
-def analyze(th_deg, ph_deg, u, peak=None, r_max=70.0, dr=0.5):
+def analyze(th_deg, ph_deg, u, peak=None, r_max=70.0, dr=0.5, return_mask=False):
     """th_deg (nt,), ph_deg (np,) with phi covering 360 (periodic), u (nt, np) intensity (linear). Returns peak, HPBW cuts, first-null radii, SLL (dB below the peak) and its direction."""
     ph = np.asarray(ph_deg, float)
     phe = np.concatenate([ph, [ph[0] + 360.0]]) if abs((ph[-1] - ph[0]) - 360.0) > 1e-6 else ph.copy()
@@ -74,6 +74,8 @@ def analyze(th_deg, ph_deg, u, peak=None, r_max=70.0, dr=0.5):
     outside = np.where(inside | (TT > 90.0), -np.inf, u)
     j = np.unravel_index(np.argmax(outside), outside.shape)
     sll = 10 * math.log10(outside[j] / u0)
+    if return_mask:
+        return inside, u0
     return {"peak_dir": [tp, pp], "HPBW_elevation_deg": el, "HPBW_azimuth_angular_deg": az, "HPBW_mean_deg": float(hp_mean), "first_null_radius_deg": {int(a): (None if np.isnan(r_null[a]) else float(r_null[a])) for a in alphas[::3]},
             "n_dirs_without_null": int(sum(np.isnan(r_null[a]) for a in alphas)), "SLL_db": float(sll), "SLL_dir": [float(TT[j]), float(PP[j])], "mainlobe_radius_mean_deg": float(rr.mean())}
 

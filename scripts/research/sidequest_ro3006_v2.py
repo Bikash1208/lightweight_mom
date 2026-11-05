@@ -13,6 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 warnings.simplefilter("ignore")
 import sidequest_ro3006_design as RD
+import sidequest_sll_def as SLD
 
 F = RD.F
 OFFSET = RD.OFFSET
@@ -48,7 +49,7 @@ def couplings(np, K, bd, amp, betas_rad):
     return C
 
 
-def design_gen(np, K, bd, amp, opt, C, wanted, eps, lam, mu, g, kappa, sweeps, maxd, wrong, seed=0, w_amp=None):
+def design_gen(np, K, bd, amp, opt, C, wanted, eps, lam, mu, g, kappa, sweeps, maxd, wrong, seed=0, wts=None):
     """wanted: {s: [beams]}; wrong: list of (s, b) beams to suppress; eps[b]: beam phase."""
     mx, _my, nd, ld, _a, _b, _W = opt
     n, nopt = bd.n, mx.shape[0]
@@ -57,7 +58,7 @@ def design_gen(np, K, bd, amp, opt, C, wanted, eps, lam, mu, g, kappa, sweeps, m
     tau = {}
     for s, bs in wanted.items():
         for b in bs:
-            amp_sb = g * amp * np.exp(-1j * eps[b]) / math.sqrt(len(bs))
+            amp_sb = g * amp * np.exp(-1j * eps[b]) * ((wts or {}).get((s, b), 1.0) if wts is not None else 1.0 / math.sqrt(len(bs)))
             tau[(s, b)] = amp_sb
             own += np.abs(amp_sb[:, None] - C[(s, b)][:, None] * mx[None, :, s]) ** 2
     own = own / s_norm + lam * nd[None, :]
@@ -68,19 +69,26 @@ def design_gen(np, K, bd, amp, opt, C, wanted, eps, lam, mu, g, kappa, sweeps, m
         den = sum(np.abs(C[(s, b)]) ** 2 for b in bs)
         ideal[s] = np.where(den > 1e-9 * den.max(), num / np.maximum(den, 1e-300), 0.0)  # cells on the axes do not couple to the LP-V beam (den = 0)
     dis = np.abs(ideal[0] - ideal[1])
-    if kappa:
-        d2 = dis ** 2 / np.mean(dis ** 2)
+    if kappa:  # neutral-static weight as in the strong routine: |tau_1 - tau_2|^2 of the two states' targets (swap), normalised to its mean
+        if (0, 0) in tau and (1, 1) in tau:
+            d2 = np.abs(tau[(0, 0)] - tau[(1, 1)]) ** 2 / s_norm
+            d2 = d2 / d2.mean()
+        else:
+            d2 = dis ** 2 / np.mean(dis ** 2)
         own += kappa * d2[:, None] * (mx[None, :, 0] ** 2 + mx[None, :, 1] ** 2) / 2 * (nd[None, :] == 0)
-    # start: best static everywhere, the maxd/2 cells with the largest benefit from switching get their best switched option (diode cap respected from the start)
     stat = nd == 0
-    best_stat = np.argmin(np.where(stat[None, :], own, np.inf), axis=1)
-    best_sw = np.argmin(np.where(~stat[None, :], own, np.inf), axis=1)
-    ar = np.arange(n)
-    benefit = own[ar, best_stat] - own[ar, best_sw]
-    order = np.argsort(-benefit)[: int(maxd // 2)]
-    order = order[benefit[order] > 0]
-    cur = best_stat.copy()
-    cur[order] = best_sw[order]
+    if maxd is None:  # priced allocation (lam per diode), no hard cap: the caller bisects lam
+        cur = np.argmin(own, axis=1)
+        maxd = 10 ** 9
+    else:  # start: best static everywhere, the maxd/2 cells with the largest benefit from switching get their best switched option
+        best_stat = np.argmin(np.where(stat[None, :], own, np.inf), axis=1)
+        best_sw = np.argmin(np.where(~stat[None, :], own, np.inf), axis=1)
+        ar = np.arange(n)
+        benefit = own[ar, best_stat] - own[ar, best_sw]
+        order = np.argsort(-benefit)[: int(maxd // 2)]
+        order = order[benefit[order] > 0]
+        cur = best_stat.copy()
+        cur[order] = best_sw[order]
     pen = mu / (n * s_norm)
     W = {sb: np.sum(C[sb] * mx[cur, sb[0]]) for sb in wrong}
     rng = np.random.default_rng(seed)
@@ -152,7 +160,18 @@ def evaluate_gen(np, K, D, bd, m, nd, launch, betas_rad, wanted, ideal=None, dis
         sl = float(g0 + 10 * np.log10(inten[mask].max() / inten_i[i0] + 1e-30)) + OFFSET[k]
         ipk = np.unravel_index(np.argmax(inten), inten.shape)
         ring = {t: float(10 * np.log10(np.median(inten[int(np.argmin(np.abs(np.degrees(st.TG[:, 0]) - t)))]) / inten.max() + 1e-30)) for t in (12, 24)}
-        out["states"].append({"beam_gain_dbi": {"b1_(25,0)": lvl[0], "b2_(25,180)": lvl[1]}, "SLL_db": sl - max(lvl[b] for b in beams), "SLL_vs_weaker_beam_db": sl - ref,
+        th_g, ph_g = np.degrees(st.TG[:, 0]), np.degrees(st.PG[0])
+        inside = np.zeros(inten.shape, bool)
+        u_peaks = []
+        for b in beams:
+            ins, u0b = SLD.analyze(th_g, ph_g, inten, peak=(25.0, float(np.degrees(bd.phis[b]))), return_mask=True)
+            inside |= ins
+            u_peaks.append(u0b)
+        outside = np.where(inside | (st.TG > np.radians(90.0)), -np.inf, inten)
+        sl_fn = float(10 * np.log10(outside.max() / max(u_peaks)))
+        sl_fn_weak = float(10 * np.log10(outside.max() / min(u_peaks)))
+        jfn = np.unravel_index(np.argmax(outside), outside.shape)
+        out["states"].append({"SLL_firstnull_db": sl_fn, "SLL_firstnull_vs_weaker_db": sl_fn_weak, "SLL_firstnull_dir": [float(np.degrees(st.TG[jfn])), float(np.degrees(st.PG[jfn]))], "beam_gain_dbi": {"b1_(25,0)": lvl[0], "b2_(25,180)": lvl[1]}, "SLL_db": sl - max(lvl[b] for b in beams), "SLL_vs_weaker_beam_db": sl - ref,
                               "peak_dir": [float(np.degrees(st.TG[ipk])), float(np.degrees(st.PG[ipk]))], "wanted": beams, "balance_db": (lvl[0] - lvl[1]) if len(beams) == 2 else None,
                               "isolation_db": (lvl[beams[0]] - lvl[1 - beams[0]]) if len(beams) == 1 else None, "ring_median_rel_peak_db": ring,
                               "floor_db": 10 * math.log10(nb * RD.DNB) - max(lvl[b] for b in beams)})
@@ -194,17 +213,37 @@ def run(args):
     kappa = cfg.get("kappa", 2.0) if mode == "swap" else 0.0
     mu = cfg.get("mu", 30.0)
     amp = np.sqrt(2 * K.A0 / bd.rho) * np.exp(-0.5 * (K.A0 + K.AA0) * (bd.rho - D.st.RHO_KEEP))
-    lam = 0.0
-    C = couplings(np, K, bd, amp, betas_rad)
-    m, nd, loss, cur, ideal, dis = design_gen(np, K, bd, amp, opt, C, wanted, eps, lam, mu, g, kappa, 4, MAXD, wrong)
-    best = (lam, m, nd, loss, cur, ideal, dis)
+    wts = {(0, 0): 1.0, (1, 0): 1.0, (1, 1): cfg.get("w2", 1.0)} if mode == "add" else None
+
+    def design_at(lam_, amp_, sweeps_):
+        C_ = couplings(np, K, bd, amp_, betas_rad)
+        return design_gen(np, K, bd, amp_, opt, C_, wanted, eps, lam_, mu, g, kappa, sweeps_, None, wrong, wts=wts)
+
+    lo, hi, best = 0.0, 2.0, None
+    for _ in range(7):  # priced allocation: smallest price per diode with <= MAXD diodes
+        lam = 0.5 * (lo + hi)
+        out = design_at(lam, amp, cfg.get('sweeps_bis', 4))
+        amp, _c, _e = K.amp_profile(bd, out[0], out[2])
+        if int(out[1].sum()) > MAXD:
+            lo = lam
+        else:
+            hi = lam
+            best = (lam,) + out
+    if best is None:
+        lam = hi
+        best = (lam,) + design_at(lam, amp, cfg.get('sweeps_bis', 4))
     lam, m, nd, loss, cur, ideal, dis = best
-    for _ in range(2):  # re-design with the converged amplitude profile
+    for _ in range(cfg.get('outer', 2)):  # re-design with the converged amplitude profile; raise the price until <= MAXD
         amp, _c, _e = K.amp_profile(bd, m, loss)
-        C = couplings(np, K, bd, amp, betas_rad)
-        m, nd, loss, cur, ideal, dis = design_gen(np, K, bd, amp, opt, C, wanted, eps, lam, mu, g, kappa, 5, MAXD, wrong)
+        for _try in range(5):
+            out = design_at(lam, amp, cfg.get('sweeps_fin', 5))
+            if int(out[1].sum()) <= MAXD:
+                break
+            lam *= 1.08
+        m, nd, loss, cur, ideal, dis = out
     ev = evaluate_gen(np, K, D, bd, m, nd, 0.71, betas_rad, wanted)
     amp, _c, _e = K.amp_profile(bd, m, loss)
+    ev["beam2_on_off_contrast_db"] = ev["states"][1]["beam_gain_dbi"]["b2_(25,180)"] - ev["states"][0]["beam_gain_dbi"]["b2_(25,180)"]
     # compromise cells and the switching requirement
     sw = nd > 0
     must = float(np.mean(dis > 0.5))
@@ -252,17 +291,17 @@ def run(args):
 def summarize(e):
     s = e["states"]
     b = lambda st_, k: st_["beam_gain_dbi"][k]  # noqa: E731
-    return "%-34s diodes %3d sw %.1f%% must-switch %.0f%% compromise-static %d | S1 b1 %.1f b2 %.1f SLL %.1f iso %s | S2 b1 %.1f b2 %.1f SLL %.1f (vs weaker %.1f) bal %s | edge %.0f%% A0 %.1f" % (
-        e["name"], e["diodes"], 100 * e["switched_fraction"], 100 * e["cells_that_must_switch_fraction"], e["compromise_static_cells"], b(s[0], "b1_(25,0)"), b(s[0], "b2_(25,180)"), s[0]["SLL_db"], None if s[0]["isolation_db"] is None else round(s[0]["isolation_db"], 1),
-        b(s[1], "b1_(25,0)"), b(s[1], "b2_(25,180)"), s[1]["SLL_db"], s[1]["SLL_vs_weaker_beam_db"], None if s[1]["balance_db"] is None else round(s[1]["balance_db"], 1), 100 * e["edge"], e["A0"])
+    return "%-30s diodes %3d | S1 b1 %.1f b2 %.1f SLLfn %.1f | S2 b1 %.1f b2 %.1f SLLfn %.1f (vs weaker %.1f) bal %s | contrast(b2) %.1f dB | edge %.0f%% A0 %.1f | [21deg SLL %.1f / %.1f]" % (
+        e["name"], e["diodes"], b(s[0], "b1_(25,0)"), b(s[0], "b2_(25,180)"), s[0]["SLL_firstnull_db"], b(s[1], "b1_(25,0)"), b(s[1], "b2_(25,180)"), s[1]["SLL_firstnull_db"], s[1]["SLL_firstnull_vs_weaker_db"], None if s[1]["balance_db"] is None else round(s[1]["balance_db"], 1),
+        e["beam2_on_off_contrast_db"], 100 * e["edge"], e["A0"], s[0]["SLL_db"], s[1]["SLL_db"])
 
 
 if __name__ == "__main__":
     what = sys.argv[1]
     if what == "swap":
-        cfgs = [(f"v2 swap {'dec' if dec else 'cpl'} g{g} mu{mu}", {"mode": "swap", "decouple": dec, "g": g, "mu": mu, "margin": True}) for dec in (True, False) for g in (1.5, 2.0) for mu in (30.0, 70.0)]
+        cfgs = [(f"v2 swap dec g{g} mu{mu}", {"mode": "swap", "decouple": True, "g": g, "mu": mu}) for g in (1.5, 2.0) for mu in (30.0, 70.0)]
     elif what == "add":
-        cfgs = [(f"add-a-beam dec eps{e} g{g}", {"mode": "add", "decouple": True, "g": g, "mu": 30.0, "eps_B": float(e), "margin": True}) for e in range(0, 360, 45) for g in (2.0,)]
+        cfgs = [(f"add w2={w2} eps{e}", {"mode": "add", "decouple": True, "g": 2.0, "mu": 30.0, "eps_B": float(e), "w2": w2}) for w2 in (0.3, 0.7, 1.0, 1.4, 2.0, 3.0) for e in (0, 90, 180, 270)]
     else:
         cfgs = [("custom", json.loads(what))]
     with ProcessPoolExecutor(min(len(cfgs), 32)) as ex:

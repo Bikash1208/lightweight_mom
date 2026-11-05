@@ -282,6 +282,15 @@ def run_config(args):
             m, nd, loss, cur = cd_design(np, K, D, bd, amp, opt, eps, lam, mu, g, cfg.get("nu", 0.0), cfg.get("sweeps", 4), cur, mu_sep=cfg.get("mu_sep", 0.0), sl_mode=cfg.get("sl_mode", "far"), kappa=cfg.get("kappa", 0.0))
             amp, _c, _e = K.amp_profile(bd, m, loss)
     ev = evaluate(np, K, D, bd, m, nd, cfg.get("launch", 0.71))
+    if cfg.get("beta_shifts"):  # the SAME board with a different real beta/k0 (design beta unchanged): pointing and design-direction gain margin
+        base = K.BETA
+        scan = []
+        for d in cfg["beta_shifts"]:
+            K.BETA = base + d * D.st.K0
+            e = evaluate(np, K, D, bd, m, nd, cfg.get("launch", 0.71))
+            scan.append({"dbeta_over_k0": d, "beta_over_k0": lib["beta_k0"] + d, "states": e["states"], "conv": e["conv"], "edge": e["edge"]})
+        K.BETA = base
+        ev["beta_scan"] = scan
     ev.update({"name": name, "cfg": {k: v for k, v in cfg.items()}, "lam": lam, "A0": lib["A0"], "beta_k0": lib["beta_k0"]})
     if cfg.get("keep"):
         import numpy as np2

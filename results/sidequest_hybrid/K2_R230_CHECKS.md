@@ -1,0 +1,35 @@
+# r 2.30 board: decoupling check, real beta/k0 and margin, cone diagnosis plan - MODEL_ONLY (2026-11-06); nothing built
+Package under test (state 1 running in HFSS): `hfss_exports/sidequest_board_RO3006_r2p30/`.
+
+## 1. The SLL of the final design without the decoupled static depth (`ro3006_r2.3_decoupling_compare.json`)
+Same combination (r 2.30, kappa 2, inverse taper 0.5, ring x1.5, 514 diodes), only the cell calibration differs. Coupled = every level scaled by the HFSS contrast (A0 11.3, beta/k0 1.346); decoupled = statics at full MoM depth, switched pairs at x0.75 contrast (A0 16.9, beta/k0 1.404):
+| g, mu | coupled SLL S1 / S2, gain S1 / S2 | decoupled SLL S1 / S2, gain S1 / S2 |
+|---|---|---|
+| 1.5, 30 | -13.6 / -12.6, 17.5 / 12.5 | -13.0 / -12.3, 15.9 / 13.3 |
+| 1.5, 70 | -12.8 / -12.4, 17.6 / 12.2 | -13.7 / -12.8, 15.8 / 13.0 |
+| **2.0, 30** | **-13.9 / -12.4, 17.3 / 12.2** | **-13.6 / -13.2, 15.7 / 13.2** (the package) |
+| 2.0, 70 | -13.0 / -11.8, 17.2 / 11.8 | -13.0 / -10.1, 15.3 / 12.6 |
+| 3.0, 30 | -14.1 / -11.0, 16.2 / 10.8 | -13.0 / -12.0, 14.6 / 11.9 |
+| 3.0, 70 | -12.9 / -10.4, 16.3 / 10.2 | -12.6 / -11.4, 14.3 / 11.8 |
+Without the decoupling the same recipe gives **-13.9 / -12.4 dB (g 2, mu 30)**, best of the six -13.6 / -12.6; with it -13.6 / -13.2. The difference (+0.3 in state 1, -0.8 in state 2) is inside the scatter of the scan (about 1 dB): **the decoupling does not carry the result**. Its effect is on the balance of the two states: coupled gives 17.3 / 12.2 dBi (5.1 dB apart), decoupled 15.7 / 13.2 dBi (2.5 dB apart). It was kept because the HFSS cell check says the switched pair has x0.75 of the MoM contrast while nothing says the statics do; on its own (item 7 of the ranking, r 2.22 design_null) it made the SLL worse, in the combination it does not.
+
+## 2. Real beta/k0 of the r 2.30 board and the margin to break-up (`sidequest_beta_real.py`, `k2_beta_real_r2.3.json`; board-mean susceptance of the 1350 cells -> TM0 beta)
+| | design beta/k0 | state 1 (all OFF) | state 2 (all ON) |
+|---|---|---|---|
+| MoM raw board mean | 1.404 (pair mid) | 1.376 | 1.298 |
+| with the HFSS offsets of the r 2.20 check (open-slit cells -0.34 / -0.82 / -0.85 mS from mesh 80 / 96 / 64, ON cells -0.10 mS) | 1.404 | **1.312 - 1.350** | **1.248 - 1.276** |
+Two effects: (a) the engine uses ONE beta for both states, but the mean loading is lower in state 2 (257 cells switched ON lower the mean susceptance): state 2 is 0.08 below state 1 already in the MoM; (b) the OFF branch (open-slit cells, including the 1033 neutral statics) is lower in HFSS than in the MoM, which lowers beta further. Real minus design beta: **state 1: -0.054 .. -0.092; state 2: -0.128 .. -0.156.**
+Margin: the same board (design beta 1.404 fixed) evaluated at a lower real beta (`beta_shifts` scan; both states shifted together): dbeta 0 -> 15.7 / 13.2 dBi at the design directions; -0.05 -> 15.1 / 12.5; -0.10 -> 13.2 / 10.6 (peaks still at (25,0) / (25,180)); **-0.15 -> 9.5 / 7.2 dBi, peaks at (26, 340) / (26, 162) (beam broken up); -0.20 -> 3.1 / 1.5 dBi**. Positive side: +0.05 -> 15.0 / 12.6, +0.10 -> 13.0 / 10.9, peaks stay.
+So the break-up threshold is at about dbeta -0.15 (negative side; the positive side is benign). **State 1 has a margin of about 0.06-0.10 (expected gain loss 1-2 dB, no break-up); state 2 sits at the threshold (-0.128 .. -0.156): expected state-2 loss 4-6 dB and a possibly split beam near (26, 162).** This is a model estimate (no HFSS value of this cell exists, the offset is taken from r 2.20). The cure, if state 2 breaks up, is a state-dependent beta in the design (hologram phase of state 2 computed with beta_2 = beta_1 - 0.08 and the HFSS-offset lowering applied to both): a redesign without new cells.
+
+## 3. Cone diagnosis plan (prepared, nothing built)
+New evidence from the ffd (`sidequest_ffd_harmonics.py`, `hfss_ffd_harmonics.json`): azimuthal harmonics of the field on the rings: **theta 12: 97 % of the power sits in n = 0 (40 %) and n = +-6 (29 % + 27 %), identical in state 1, state 2 and the common mode** (the difference mode is broad: n = 6 / -6 / 0 / +-2); theta 24: n = 0 39 %, n = +-6 7 %, n = +-3 5 %, 80 % captured by |n| <= 8. A six-fold harmonic is the signature of the HEXAGONAL OUTLINE: the strong theta 12 ring is an axisymmetric field (n = 0) modulated by the hexagon (n = +-6), i.e. rim diffraction of the residual surface wave, not the hologram (a hologram radiates n = +-1, +-2 ...). The model edge power of board_K2_default is 82 %; the r 2.30 design has 21 % (model). Expected change if this is right: the theta 12 ring drops by 10 log(0.21 / 0.825) = about 6 dB, n = 0 / +-6 stay dominant.
+If state 1 of the r 2.30 board still shows the ring, the mechanisms the model misses and the cheapest test that separates each:
+| # | mechanism (missed by the model) | signature in the ffd | single cheapest test | cost |
+|---|---|---|---|---|
+| 1 | Rim diffraction of residual SW (hexagonal outline) | theta 12 ring, n = 0 and +-6 only, state-common, scales with the SW at the edge | **Free:** compare the theta 12 ring level and its n-spectrum of the new state 1 with `hfss_ring_levels.json` of board_K2_default (prediction -6 dB, n = 0, +-6 remain); no run | none |
+| 2 | Feed / direct radiation (pin + pad) | n = 0 only, at theta >= 50 (monopole pattern), no n = +-6 | HFSS of the ground + substrate + probe + pad WITHOUT cells (15 s, small mesh): ring and back level of the feed alone | minutes |
+| 3 | Discrete-cell scattering and mutual coupling (cell Y differs from the infinite-periodic library; cell-to-cell scatter) | broad azimuth spectrum, no hexagon symmetry, grows with the number of different neighbours | HFSS eigenmode (90 deg) of a 2 x 1 supercell (neutral + OFF switched) against the mean of the two single-cell runs: shift of the frequency = coupling error of Y; one extra run of the existing cell package | minutes |
+| 4 | Quantisation harmonics (7-level statics + 1-bit switching: harmonics of m radiate at other angles) | discrete lobes at angles set by 2 k_m, 3 k_m; n = +-1, +-2 content of the difference mode | **Model-side, free:** evaluate the board pattern with the continuous (unquantised) m and compare the ring; in the model the ring is -16 / -22 dB so a harmonic source of the size of HFSS needs the cell response to be strongly non-linear: then a second HFSS cell run at an intermediate level shows it | model: seconds |
+| 5 | Neutral-cell level error (1033 cells at m about +0.05 in the MoM; 10-15 % level error from the OFF branch) | state-common, n = 0 dominated (a uniform error does not radiate, only the neutral / switched boundary and level scatter do) | HFSS board with ALL cells neutral (no switched cells, probe + pad): any ring seen is rim + feed + neutral error; separate it from items 1-2 by (2) and from the hologram by the static-only run (b) | one board run |
+The order of use if the ring is there: 1 (free) -> 2 -> 5 -> 3 -> 4. Items 3 and 5 would also calibrate the model's cone amplitude (10-17 dB low), which the fix ranking needs.

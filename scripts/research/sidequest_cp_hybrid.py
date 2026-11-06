@@ -20,7 +20,7 @@ from src.green_function import LayeredGreenFunction
 from src.hologram import tensor_cp_design as T
 from src.hologram.leaky_forward import pattern_budget
 from src.hologram.tensor_leaky_cp import SupercellTable, cell_design, march_rays
-from src.pattern.vector_aperture_pattern import circular_components, copol_component
+from src.pattern.vector_aperture_pattern import circular_components, copol_component, copol_label
 
 PKG = ROOT / "hfss_exports/sidequest_board_k2_lp"
 RES = ROOT / "results/sidequest_hybrid"
@@ -42,7 +42,12 @@ def load_cells():
     return x, y, kind, grp
 
 
+GB_PAIR = None  # (Y_open, Y_ON) [S] override for a different switched-cell geometry (step 3)
+
+
 def lib_y():
+    if GB_PAIR is not None:
+        return {"open": GB_PAIR[0], "ON": GB_PAIR[1]}
     lib = json.loads((RES / "k2_default_lib.json").read_text())["rows"]
     g = lambda m: complex(*next(r for r in lib if r["family"] == "A" and abs(r["ls"] - 2.8) < 1e-9 and r["mode"] == m)["Y_mS"][0]) * 1e-3
     return {"open": g("open"), "ON": g("ON")}
@@ -249,11 +254,11 @@ if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "placement":
 
 
 # ------------------------------------------------------------------------------------------------ joint optimisation (GB sites + tensor slot 90-degree rotations = sign flips)
-def joint_opt(rel_sign=-1.0, ncell=180, mu=4.0, loss_budget_db=0.4, max_iter=400, log=print):
+def joint_opt(rel_sign=-1.0, ncell=180, mu=4.0, loss_budget_db=0.4, max_iter=400, log=print, eta_design=0.9):
     from src.pattern.vector_aperture_pattern import _vector_far_field
 
     x, y, kind, grp = load_cells()
-    cache = tensor_design(x, y)
+    cache = tensor_design(x, y, eta_design=eta_design)
     table, m, d = cache
     green = LayeredGreenFunction(T.SUB, F, backing="pec")
     n = len(x)
@@ -364,3 +369,95 @@ if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "sweep":
         print({k: (round(v, 2) if isinstance(v, float) else v) for k, v in sm.items()}, flush=True)
         np.savez(RES / f"cp_hybrid_design_n{ncell}_lb{lb}.npz", gb=jo["gb_mask"], flip=jo["flip"], x=jo["x"], y=jo["y"])
     (RES / "cp_hybrid_sweep.json").write_text(json.dumps(out, indent=1, default=float), encoding="utf-8", newline="\n")
+
+
+def joint_opt2(rel_sign=-1.0, ncell=180, mu=4.0, loss_budget_db=2.0, xpd_min_db=16.0, max_iter=600, eta_design=0.9, log=print, max_flips=80):
+    """As joint_opt, plus an explicit beam-1 cross-polar (LHCP) constraint in both GB states and ncell > 180 (extra GB sites chosen by the beam-2 projection)."""
+    from src.pattern.vector_aperture_pattern import _vector_far_field
+
+    x, y, kind, grp = load_cells()
+    cache = tensor_design(x, y, eta_design=eta_design)
+    table, m, d = cache
+    green = LayeredGreenFunction(T.SUB, F, backing="pec")
+    n = len(x)
+    th2, ph2 = np.radians(BEAM2[0]), np.radians(BEAM2[1])
+    u2 = np.array([np.cos(th2) * np.sin(ph2), np.cos(ph2)])
+    allm = np.ones(n, bool)
+    gxo, gyo, _ = gb_currents(d, allm, False, rel_sign)
+    gxn, gyn, _ = gb_currents(d, allm, True, rel_sign)
+    jt = (d["jx"], d["jy"])
+
+    def fld(jx, jy, beam):
+        out = np.zeros((n, 2), complex)
+        for i in range(n):
+            et, ep = _vector_far_field(np.array([beam[0]]), np.array([beam[1]]), x[i:i + 1], y[i:i + 1], np.array([jx[i]]), np.array([jy[i]]), F, green, P, P)
+            out[i] = (et[0], ep[0])
+        return out
+
+    v2 = {nm: fld(*j, BEAM2) for nm, j in (("t", jt), ("off", (gxo, gyo)), ("on", (gxn, gyn)))}
+    v1 = {nm: fld(*j, BEAM1) for nm, j in (("t", jt), ("off", (gxo, gyo)), ("on", (gxn, gyn)))}
+    c2 = {k: v[:, 0] * u2[0] + v[:, 1] * u2[1] for k, v in v2.items()}
+    cc = {k: [circular_components(v[i, 0], v[i, 1]) for i in range(n)] for k, v in v1.items()}
+    ico = 1 if copol_label("rhcp") == "E_L" else 0  # in this project's basis the RHCP co-pol is E_L (index 1)
+    bR = {k: np.array([a[ico] for a in vv]) for k, vv in cc.items()}
+    bL = {k: np.array([a[1 - ico] for a in vv]) for k, vv in cc.items()}
+    cur_gb = grp == "GB"
+    if ncell <= 180:
+        order = np.argsort(-np.real(c2["on"] * np.conj(c2["on"][cur_gb].sum())))
+        gb = np.zeros(n, bool)
+        gb[[i for i in order if cur_gb[i]][:ncell]] = True
+    else:
+        ref = c2["on"][cur_gb].sum()
+        gb = cur_gb.copy()
+        extra = [i for i in np.argsort(-np.real(c2["on"] * np.conj(ref))) if not cur_gb[i]][: ncell - 180]
+        gb[extra] = True
+    s = np.ones(n)
+    B0 = abs(bR["t"][~cur_gb].sum() + bR["off"][cur_gb].sum())
+    floor = (B0 ** 2) * 10 ** (-loss_budget_db / 10)
+    xr = 10 ** (-xpd_min_db / 10)
+
+    def state(gb, s):
+        FT, BT, LT = np.sum((s * c2["t"])[~gb]), np.sum((s * bR["t"])[~gb]), np.sum((s * bL["t"])[~gb])
+        return (FT + c2["off"][gb].sum(), FT + c2["on"][gb].sum(), BT + bR["off"][gb].sum(), BT + bR["on"][gb].sum(), LT + bL["off"][gb].sum(), LT + bL["on"][gb].sum())
+
+    def cost(Fo, Fn, Bo, Bn, Lo, Ln):
+        pen = lambda B: np.maximum(floor - np.abs(B) ** 2, 0.0) * 50.0
+        pa = lambda B, L: np.maximum(np.abs(L) ** 2 - xr * np.abs(B) ** 2, 0.0) * 50.0
+        return -np.abs(Fn) ** 2 + mu * np.abs(Fo) ** 2 + pen(Bo) + pen(Bn) + pa(Bo, Lo) + pa(Bn, Ln)
+
+    scale = abs(c2["on"][cur_gb].sum()) ** 2
+    cur = cost(*state(gb, s)) / scale
+    for it in range(max_iter):
+        Fo, Fn, Bo, Bn, Lo, Ln = state(gb, s)
+        T_idx = np.nonzero(~gb)[0]
+        dF = -2 * s[T_idx] * c2["t"][T_idx]
+        dB = -2 * s[T_idx] * bR["t"][T_idx]
+        dL = -2 * s[T_idx] * bL["t"][T_idx]
+        cf = cost(Fo + dF, Fn + dF, Bo + dB, Bn + dB, Lo + dL, Ln + dL) / scale
+        if int(np.sum(s < 0)) >= max_flips:
+            cf = np.where(s[T_idx] < 0, cf, np.inf)
+        G_idx = np.nonzero(gb)[0]
+        sw = lambda a: (a["t"][G_idx][:, None]) - 0
+        def pair(key_st):
+            return ((c2["t"][G_idx] - c2[key_st][G_idx])[:, None] + (-s[T_idx] * c2["t"][T_idx] + c2[key_st][T_idx])[None, :],
+                    (bR["t"][G_idx] - bR[key_st][G_idx])[:, None] + (-s[T_idx] * bR["t"][T_idx] + bR[key_st][T_idx])[None, :],
+                    (bL["t"][G_idx] - bL[key_st][G_idx])[:, None] + (-s[T_idx] * bL["t"][T_idx] + bL[key_st][T_idx])[None, :])
+        dFo, dBo, dLo = pair("off")
+        dFn, dBn, dLn = pair("on")
+        cs = cost(Fo + dFo, Fn + dFn, Bo + dBo, Bn + dBn, Lo + dLo, Ln + dLn) / scale
+        bf, bs = cf.min(), cs.min()
+        if min(bf, bs) >= cur - 1e-9:
+            break
+        if bf <= bs:
+            k = T_idx[int(np.argmin(cf))]
+            s[k] *= -1
+            cur = bf
+        else:
+            a, b = np.unravel_index(int(np.argmin(cs)), cs.shape)
+            j, k = G_idx[a], T_idx[b]
+            gb[j] = False
+            s[j] = 1.0
+            gb[k] = True
+            s[k] = 1.0
+            cur = bs
+    return {"gb_mask": gb, "flip": s, "cache": cache, "x": x, "y": y, "grp": grp, "iters": it}

@@ -25,3 +25,18 @@ Contrast is flat (9-11 dB) down to 180 diodes; the beam-2 level falls 1.3 dB (30
 3. Mutual coupling between rotated tensor slots and GB crossed-slit cells is not modelled; AR may differ either way.
 ## CP feasibility notes (not part of this package)
 (ii) Switchable CP would need a cell whose two orthogonal axes are independently switchable (e.g. two diodes per cell on the slot axes with opposite-handed 90-degree rotated states, one line per handedness or per axis) with a susceptance step at least 5x the GB cell's 2.6 mS so that its radiated power per area is comparable to the tensor cells (alpha 4 Np/m); with one line only the cell must flip the sign of J (slot rotation by 90 degrees is the sign flip: a pair of diodes that selects between two orthogonally oriented slots).
+
+## HFSS result of this package (user, 2026-11-06, 10.5 GHz) and calibration of the model
+HFSS: beam 1 RHCP **20.3 / 20.7 dBi** (beam 2 ON / OFF), AR **1.0 / 1.2 dB**; beam 2 LP (E_phi) at (25, 180): **9.4 dBi ON / -2.2 dBi OFF**, contrast **11.6 dB**; balance (beam 1 - beam 2, ON) **10.9 dB**; beam-1 change 0.4 dB; strongest other lobe **-12.7 / -13.2 dB** (theta 12 deg); power within theta < 30 deg 22 %, horizon / back about 64 %. Beam 2 ON at S_w 6.1 -> sign **-1 confirmed** (taken as: ON = the 6.1 ohm/sq state; to be confirmed by the user).
+| quantity | model | HFSS | offset used from now on |
+|---|---|---|---|
+| beam 1 OFF / ON [dBi] | 22.4 / 22.2 | 20.7 / 20.3 | **-1.8 dB** (model high) |
+| beam 2 OFF / ON [dBi] | -3.5 / 7.7 | -2.2 / 9.4 | **+1.5 dB** (model low) |
+| contrast | 11.2 | 11.6 | none (+0.4) |
+| balance | 14.5 | 10.9 | **-3.3 dB** (model pessimistic) |
+| beam-1 change ON - OFF | -0.16 | -0.4 | none |
+| AR OFF / ON | 2.1 / 2.1 | 1.2 / 1.0 | x 0.5 |
+| strongest other lobe / SLL | -14.2 / -14.0 raw (-11.7 / -11.5 with the +2.5 offset) | -13.2 / -12.7 | **raw model + 1.0 dB** (the +2.5 dB offset of the LP A/B board is too pessimistic for the hybrid) |
+| power in theta < 30 deg | about 24 % of the accepted power (0.9 x 0.592 x 0.454) | 22 % | consistent |
+| horizon + back | unconverted SW + pin direct, about 73 % | about 64 % | consistent |
+The model is therefore pessimistic on the balance by 3.3 dB (beam 1 1.8 dB high, beam 2 1.5 dB low): a model balance of 6.6 dB corresponds to an HFSS balance of about 3.3 dB. The delivered package's optimiser also used the cross-pol index as the beam-1 amplitude (see `SIDEQUEST_CP_STEP3.md`); its evaluation was correct.

@@ -26,6 +26,9 @@ MU0 = 4e-7 * np.pi
 LAMINATES = {
     # name: (er, tand_10GHz) -- data sheet values, see LAMINATES.md for sources
     "RO3006": (6.15, 0.0020),
+    "RT5880": (2.2, 0.0009),
+    "RT5880_lo": (2.18, 0.0009),  # assumed Dk tolerance +-0.02 (Rogers RT/duroid 5880 datasheet value, not re-verified here)
+    "RT5880_hi": (2.22, 0.0009),
     "RO3003": (3.00, 0.0010),
     "RO4003C": (3.38, 0.0027),
     "RO4003C_lo": (3.33, 0.0027),  # Dk -0.05 (Rogers spec +-0.05, process)

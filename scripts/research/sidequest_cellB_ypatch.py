@@ -78,3 +78,16 @@ if __name__ == "__main__":
         jobs += [(l2, h, g0, 60, 0.0, kr, 6.4) for l2 in ("RO4003C_lo", "RO4003C_hi") for kr in KR]
         jobs += [(lam, h, g0, 80, psi, kr, 6.4) for psi in (0.0, 45.0) for kr in KR]
         run(jobs, ROOT / "results/sidequest_hybrid/cellB_ypatch_d2.json", workers=8)
+    if what == "rt_explore":
+        jobs = [("RT5880", 1.575, g, 64, 0.0, kr, 6.4) for g in (0.4, 0.8, 1.2, 1.6, 2.0) for kr in KR]
+        run(jobs, ROOT / "results/sidequest_hybrid/cellB_rt5880_explore.json", workers=8)
+    if what == "rt_a":
+        h, g0 = 1.575, 0.4
+        jobs = [("RT5880", h, g0, 32, psi, kr, 6.4) for psi in (0.0, 45.0) for kr in KR]
+        jobs += [("RT5880", h, g0, 64, psi, kr, 6.4) for psi in (0.0, 45.0) for kr in KR]
+        jobs += [("RT5880", h, g, 64, 0.0, kr, 6.4) for g in (0.2, 0.6) for kr in KR]
+        jobs += [(l2, h, g0, 64, 0.0, kr, 6.4) for l2 in ("RT5880_lo", "RT5880_hi") for kr in KR]
+        run(jobs, ROOT / "results/sidequest_hybrid/cellB_rt5880_a.json", workers=8)
+    if what == "rt_b":
+        jobs = [("RT5880", 1.575, 0.4, 96, 0.0, kr, 6.4) for kr in KR]
+        run(jobs, ROOT / "results/sidequest_hybrid/cellB_rt5880_b.json", workers=4)

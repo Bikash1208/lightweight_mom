@@ -1,0 +1,156 @@
+{
+ "labels": [
+  "MODEL_ONLY",
+  "NOT_HFSS_VALIDATED",
+  "lumped branch (cascade) + MoM patch grid; lid 30 mm"
+ ],
+ "cell": {
+  "C_s_pF": 0.216,
+  "R_b_ohm": 4700,
+  "island_fF": 10,
+  "resistor_fF": 8,
+  "diode": "MA4AGP907 measured (2.44 ohm / 28.16 fF)"
+ },
+ "eigenmode_with_lid_GHz": [
+  {
+   "direction": "x",
+   "state": "OFF",
+   "beta_p_deg": 90.0,
+   "bloch_phases_deg": [
+    90.0,
+    0.0
+   ],
+   "f_GHz": 10.0778
+  },
+  {
+   "direction": "x",
+   "state": "OFF",
+   "beta_p_deg": 110.0,
+   "bloch_phases_deg": [
+    110.0,
+    0.0
+   ],
+   "f_GHz": 11.44
+  },
+  {
+   "direction": "x",
+   "state": "ON",
+   "beta_p_deg": 90.0,
+   "bloch_phases_deg": [
+    90.0,
+    0.0
+   ],
+   "f_GHz": 11.3802
+  },
+  {
+   "direction": "x",
+   "state": "ON",
+   "beta_p_deg": 110.0,
+   "bloch_phases_deg": [
+    110.0,
+    0.0
+   ],
+   "f_GHz": 13.2812
+  },
+  {
+   "direction": "45deg",
+   "state": "OFF",
+   "beta_p_deg": 99.0,
+   "bloch_phases_deg": [
+    70.0,
+    70.0
+   ],
+   "f_GHz": 10.6456
+  },
+  {
+   "direction": "45deg",
+   "state": "OFF",
+   "beta_p_deg": 120.0,
+   "bloch_phases_deg": [
+    84.85,
+    84.85
+   ],
+   "f_GHz": 12.0483
+  },
+  {
+   "direction": "45deg",
+   "state": "ON",
+   "beta_p_deg": 99.0,
+   "bloch_phases_deg": [
+    70.0,
+    70.0
+   ],
+   "f_GHz": 12.2609
+  },
+  {
+   "direction": "45deg",
+   "state": "ON",
+   "beta_p_deg": 120.0,
+   "bloch_phases_deg": [
+    84.85,
+    84.85
+   ],
+   "f_GHz": null
+  }
+ ],
+ "sensitivity_90deg_x_GHz": {
+  "via L -8%": {
+   "OFF": 10.107,
+   "ON": 11.4139
+  },
+  "via L +8%": {
+   "OFF": 10.0464,
+   "ON": 11.348
+  },
+  "diode C +20%": {
+   "OFF": 10.0093,
+   "ON": 11.3802
+  },
+  "C_s +20%": {
+   "OFF": 10.0578,
+   "ON": 11.3512
+  },
+  "kappa 0.7": {
+   "OFF": 10.1773,
+   "ON": 11.5119
+  }
+ },
+ "Q_from_loss_estimate_x90": {
+  "OFF": {
+   "alpha_loss_Np_per_m": 1.9388392010714808,
+   "vg_over_c": 0.5234643893385703,
+   "Q_lossy_estimate": 104.05562350330001
+  },
+  "ON": {
+   "alpha_loss_Np_per_m": 0.13493069350010306,
+   "vg_over_c": 0.7304917034720045,
+   "Q_lossy_estimate": 1209.9073992422493
+  }
+ },
+ "bands": "f +-0.15 GHz (+-0.3 GHz for the 45 deg runs and for the first run of the hardware: the hardware inductances and pad capacitances are lumped); Q within a factor 2 (copper loss and the anti-pad leakage are not in it)",
+ "falsifiers": [
+  "ON above OFF by less than 0.15 GHz or ON below OFF (the cell does not switch as modelled)",
+  "the shift ON - OFF at 90 deg differs from the predicted by more than 0.3 GHz (kappa / hardware parasitics wrong: re-tune C_s with the rule below)",
+  "x and y runs differ by more than 0.2 GHz without a hardware explanation",
+  "a second mode between OFF and ON frequencies near 10.5 GHz (a resonance of the choke / pads)"
+ ],
+ "retune_rule": "if the HFSS beta_mean (average of the OFF and ON beta at the same frequency, equivalently the mean sheet) is off by d, change C_s by about d / 0.0027 per 5 % (C_s +5 % = beta_mean +0.0024); the step moves -1.5 % per +5 % C_s",
+ "sheet_impedances_ohm_per_sq_at_10p5GHz": {
+  "CS": [
+   0.2,
+   -53.681
+  ],
+  "D_ON": [
+   2.44,
+   -0.011
+  ],
+  "D_OFF": [
+   0.0,
+   -538.268
+  ],
+  "RB": [
+   262.813,
+   -651.934
+  ]
+ }
+}

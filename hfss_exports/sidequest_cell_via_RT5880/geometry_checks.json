@@ -1,0 +1,113 @@
+{
+ "label": "MODEL_ONLY geometry checks on the re-imported STEP",
+ "all_pass": true,
+ "checks": {
+  "bodies_and_names": {
+   "ok": true,
+   "names": [
+    "AIR",
+    "CS_SHEET",
+    "D_SHEET",
+    "METAL_PEC",
+    "PLY",
+    "RB_SHEET",
+    "SUBSTRATE"
+   ]
+  },
+  "metal_one_part_four_lumps": {
+   "ok": true,
+   "lumps": 4,
+   "note": "patch+via+land pad | ground+K pad+blind via | island+A_up | bias pad+trunk"
+  },
+  "patch_via_land": {
+   "ok": true,
+   "patch_mm": 6.0,
+   "via_radius_mm": 0.15,
+   "land_mm": "0.5 x 0.5",
+   "z": [
+    -1.746,
+    0.035
+   ]
+  },
+  "ground_with_antipad_slot_and_blind_via": {
+   "ok": true,
+   "slot_mm": [
+    -0.55,
+    1.15,
+    -0.45,
+    1.25
+   ],
+   "slot_area_mm2": 2.8899999999999997,
+   "volume": 1.34822300858013,
+   "approx_expected": 1.3493225660088823
+  },
+  "substrate_ply": {
+   "ok": true,
+   "substrate_mm": 1.575,
+   "ply_mm": 0.101
+  },
+  "no_intersections": {
+   "ok": true,
+   "substrate_x_metal": 0.0,
+   "ply_x_metal": 0.0
+  },
+  "lumps_do_not_touch": {
+   "ok": true,
+   "max_pair_overlap_mm3": 0.0
+  },
+  "air_box_back_to_lid_single_face_walls": {
+   "ok": true,
+   "faces": 6,
+   "z": [
+    -4.746,
+    30.0
+   ]
+  },
+  "sheets": {
+   "ok": true,
+   "CS_SHEET": {
+    "geometry_ok": true,
+    "corner_to_metal_mm": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "L_mm": 0.3,
+    "W_mm": 0.3,
+    "W_over_L": 1.0
+   },
+   "D_SHEET": {
+    "geometry_ok": true,
+    "corner_to_metal_mm": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "L_mm": 0.3,
+    "W_mm": 0.3,
+    "W_over_L": 1.0
+   },
+   "RB_SHEET": {
+    "geometry_ok": true,
+    "corner_to_metal_mm": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "L_mm": 0.5,
+    "W_mm": 0.2,
+    "W_over_L": 0.4
+   }
+  },
+  "EXACT_DIMS": {
+   "ok": true,
+   "inexact_literals": 0,
+   "n_snapped": 11,
+   "max_snap_mm": 2.22044604925e-16,
+   "grid_mm": 0.001
+  }
+ }
+}

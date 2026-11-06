@@ -1,0 +1,158 @@
+{
+ "labels": [
+  "MODEL_ONLY",
+  "NOT_HFSS_VALIDATED",
+  "CP part: Phase 26 tensor engine anchored to the HFSS 23.03 dBi (anchor -0.48 dB)",
+  "GB part: SWHB-consistent Born element, A/B board calibrated (launch 0.62 incl.)"
+ ],
+ "design": {
+  "beam1": "fixed RHCP at (25, 0), tensor rotating-slot cells (Phase 26 table, eta_design 0.9, taper 0.5), 1250 cells of which 50 are rotated by 90 deg (joint optimisation)",
+  "beam2": "LP-V (phi-hat) at (25, 180), 180 GB crossed-slit cells (2 diodes each = 360 diodes), ONE group GB, S_w 1e6 (OFF, default) / 6.1 ohm/sq (ON)",
+  "joint_optimisation": "GB sites (102 of 180 relocated from the A/B board) + 50 tensor slots rotated by 90 deg so that the tensor background at beam 2 cancels the GB OFF field and adds to the GB ON field; beam-1 amplitude loss budget 2 dB (realised: see below)"
+ },
+ "primary_relative_sign": "-1 (physical argument: a slit across E RAISES the sheet susceptance (K2 library: open cross slit 8.69 mS vs solid disc 5.18 mS) -> tensor J = -c M E in the Phase 26 convention)",
+ "GB_OFF_default": {
+  "beam1_rhcp_gain_dbi": 22.3904610470284,
+  "beam1_peak_dir": [
+   25.0,
+   0.0
+  ],
+  "AR_peak_db": 2.0818514900787637,
+  "AR_worst_in_minus3dB_beam_db": 2.7593226317368504,
+  "XPD_db": 18.469334216979384,
+  "HPBW_deg": 7.0,
+  "level_at_25_180_dbi_total": -3.4854733776881557,
+  "SLL_db_with_2p5_offset": -11.742804508006257,
+  "SLL_db_model": -14.242804508006257
+ },
+ "GB_ON": {
+  "beam1_rhcp_gain_dbi": 22.23094428052036,
+  "AR_peak_db": 2.1252904008495106,
+  "AR_worst_in_minus3dB_beam_db": 2.8583502004291814,
+  "beam2_total_gain_dbi_at_25_180": 7.748005429862541,
+  "beam2_rhcp_dbi": 4.2924092962719556,
+  "beam2_lhcp_dbi": 5.141560206550847,
+  "beam2_pol_tilt_from_thetahat_deg": -83.51953596841547,
+  "beam2_XPD_phihat_vs_thetahat_db": 18.156542635546476,
+  "beam2_HPBW_deg": 9.86111111111111,
+  "SLL_db_with_2p5_offset": -11.517657017041213,
+  "SLL_db_model": -14.017657017041213
+ },
+ "beam2_contrast_db": 11.233478807550696,
+ "two_beam_balance_db_beam1_minus_beam2_ON": 14.48293885065782,
+ "comparison_current_LP_board_HFSS": {
+  "beam1_dbi": 13.2,
+  "contrast_db": 6.5,
+  "GB_ON_beam2_dbi": 8.8,
+  "SLL_db": -5
+ },
+ "tensor_beta_over_k0": {
+  "min_mean_max": [
+   1.051,
+   1.062,
+   1.073
+  ],
+  "GB_static_model_beta": "1.056-1.063 (A/B calibration)",
+  "wave_speed_jump": "none (<= 0.01)"
+ },
+ "bands": {
+  "beam1_gain_db": "+-1.0 (Phase 26 anchored; model AR is pessimistic: HFSS 1.2-1.3 vs model 2.5 on that board)",
+  "beam2_gain_db": "+-3",
+  "contrast_db": "+-3 and SIGN-CRITICAL (see falsifiers)",
+  "pointing_deg": "+-2",
+  "SLL_db": "+-3 (the +2.5 dB offset is applied)"
+ },
+ "falsifiers": [
+  "beam 2 (25, 180) is HIGHER with S_w = 1e6 than with 6.1 ohm/sq (relative sign of tensor and GB cells wrong: the design inverts; the model gives beam 2 at +7.9 dBi OFF and -1.3 dBi ON)",
+  "beam-1 RHCP below 20 dBi or AR at the peak above 3 dB in either state",
+  "beam-2 contrast below 5 dB",
+  "peak direction of beam 1 more than 3 deg from (25, 0)"
+ ],
+ "relative_sign_alternative_model_result": {
+  "b2_off_dbi": 7.578125694643065,
+  "b2_on_dbi": -3.8866678099708905,
+  "contrast_db": -11.464793504613954,
+  "b1_off_dbi": 22.232453347952973,
+  "ar_off": 2.1390193524545205
+ },
+ "diode_reduction_model_only_rel_minus1": {
+  "n180_lb0.4_mu4.0": {
+   "ncell": 180,
+   "diodes": 360,
+   "b2_on_dbi": 8.032605636210327,
+   "b2_off_dbi": -1.1239329567727627,
+   "contrast_db": 9.15653859298309,
+   "balance_b1_minus_b2_on_db": 14.06447897754494,
+   "b1_off_dbi": 22.262779955675175,
+   "ar_off": 2.4853477579318692,
+   "sll_off_with_offset": -11.978602034247674,
+   "flips": 68,
+   "gb_sites_changed": 102
+  },
+  "n150_lb0.4_mu4.0": {
+   "ncell": 150,
+   "diodes": 300,
+   "b2_on_dbi": 6.704828193869262,
+   "b2_off_dbi": -2.788792430378328,
+   "contrast_db": 9.49362062424759,
+   "balance_b1_minus_b2_on_db": 15.649788883144176,
+   "b1_off_dbi": 22.464757723291502,
+   "ar_off": 2.3736313821175035,
+   "sll_off_with_offset": -12.418197959123493,
+   "flips": 54,
+   "gb_sites_changed": 83
+  },
+  "n120_lb0.4_mu4.0": {
+   "ncell": 120,
+   "diodes": 240,
+   "b2_on_dbi": 5.1297910670934925,
+   "b2_off_dbi": -6.015146323896011,
+   "contrast_db": 11.144937390989504,
+   "balance_b1_minus_b2_on_db": 17.407303612723087,
+   "b1_off_dbi": 22.646158000985757,
+   "ar_off": 2.36950064599297,
+   "sll_off_with_offset": -12.473333153386632,
+   "flips": 55,
+   "gb_sites_changed": 69
+  },
+  "n90_lb0.4_mu4.0": {
+   "ncell": 90,
+   "diodes": 180,
+   "b2_on_dbi": 3.289246221700477,
+   "b2_off_dbi": -6.365306805448673,
+   "contrast_db": 9.65455302714915,
+   "balance_b1_minus_b2_on_db": 19.427620752814715,
+   "b1_off_dbi": 22.789771009033124,
+   "ar_off": 2.327849703998809,
+   "sll_off_with_offset": -13.183277631552993,
+   "flips": 41,
+   "gb_sites_changed": 51
+  },
+  "n180_lb1.0_mu4.0": {
+   "ncell": 180,
+   "diodes": 360,
+   "b2_on_dbi": 7.900098784042642,
+   "b2_off_dbi": -1.6699405143139354,
+   "contrast_db": 9.570039298356578,
+   "balance_b1_minus_b2_on_db": 14.215307259697328,
+   "b1_off_dbi": 22.279072435198604,
+   "ar_off": 2.315796661016523,
+   "sll_off_with_offset": -11.900318974912956,
+   "flips": 60,
+   "gb_sites_changed": 104
+  },
+  "n180_lb2.0_mu4.0": {
+   "ncell": 180,
+   "diodes": 360,
+   "b2_on_dbi": 7.748005429862541,
+   "b2_off_dbi": -3.4854733776881557,
+   "contrast_db": 11.233478807550696,
+   "balance_b1_minus_b2_on_db": 14.48293885065782,
+   "b1_off_dbi": 22.3904610470284,
+   "ar_off": 2.0818514900787637,
+   "sll_off_with_offset": -11.742804508006257,
+   "flips": 50,
+   "gb_sites_changed": 102
+  }
+ }
+}

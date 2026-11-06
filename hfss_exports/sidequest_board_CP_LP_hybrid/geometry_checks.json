@@ -1,0 +1,68 @@
+{
+ "label": "MODEL_ONLY geometry checks on the re-imported STEP",
+ "all_pass": true,
+ "step_mb": 38.2,
+ "checks": {
+  "bodies_and_names": {
+   "ok": true,
+   "n_objects": 364,
+   "n_sheets": 360
+  },
+  "metal_single_part_lumps": {
+   "ok": true,
+   "lumps": 1432,
+   "expected": 1432
+  },
+  "patch_vs_design_map": {
+   "ok": true,
+   "n_patches": 1430,
+   "bad": 0
+  },
+  "tensor_slot_sizes_vs_table": {
+   "ok": true,
+   "max_deviation_mm": 0.0012,
+   "note": "corners rounded to 1 um; L x W of the Phase 26 table within +-0.0015 mm"
+  },
+  "no_intersections": {
+   "ok": true,
+   "substrate_x_ground_probe": 0.0,
+   "substrate_x_patches": 0.0
+  },
+  "substrate": {
+   "ok": true,
+   "thickness": 1.575
+  },
+  "air_box": {
+   "ok": true,
+   "z": [
+    -1.61,
+    20.0
+   ],
+   "faces": 6
+  },
+  "probe_and_port": {
+   "ok": true,
+   "pin_r": 0.635,
+   "pin_top_above_substrate": 6.0,
+   "port_r": [
+    0.635,
+    2.05
+   ]
+  },
+  "sheet_geometry": {
+   "ok": true,
+   "n_checked": 360,
+   "size": "0.4 x 1.0",
+   "z": 0.0175,
+   "bad": 0
+  },
+  "EXACT_DIMS": {
+   "ok": true,
+   "inexact_literals": 0,
+   "n_snapped": 3561,
+   "max_snap_mm": 2.84217094304e-14,
+   "grid_mm": 0.001,
+   "positions": "integer index x 6.4; tensor slot corners rounded to 1 um"
+  }
+ }
+}

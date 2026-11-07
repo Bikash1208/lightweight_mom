@@ -7,12 +7,13 @@
 
 Substrates (eps_r, tan d, thickness mm: p list): RT5880 (2.2, 0.0009, 3.175: 11.6); RO3006 (6.15, 0.0020 = repo LAMINATES, 1.28 = thickest
 standard single sheet, about half of the 2.5 mm asked: 10, 11.6); TMM6 (6.3, 0.0023, 2.54: 10).  Gap p - 2r in {0.4,0.6,0.8,1.0}, L/(2r) in
-{0.5..0.9} with rim r - L/2 >= 0.4 mm, W in {0.4,0.8,1.2,1.6}.  mesh 64, F = 2n.  Single-thread BLAS.
+{0.6..0.9} with rim r - L/2 >= 0.35 mm, W in {0.4,0.8,1.2,1.6}.  mesh 64, F = 2n.  Single-thread BLAS.
 One Z assembly per (geometry class NOCUT / OPEN / BRIDGE, direction x / y, kt node); the four loaded states share the BRIDGE assembly
 (load matrix added); nodes are added adaptively until every state's beta is within 0.004 k0 of a node (max 4), Y(kt) linear in between.
 Resonance flag: sign of Im Y_xx / Im Y_yy at normal incidence at 5.0 and 6.6 GHz (NOCUT and the BRIDGE states) differs -> RESONANCE_5.0_6.6.
 """
 import argparse
+import math
 import json
 import os
 import sys
@@ -40,9 +41,9 @@ SUBS = {
     "TMM6": (("tmm6", 6.3, 0.0023, 2.54), [10.0]),
 }
 GUESS = {"RT5880": 1.09, "RO3006": 1.3, "TMM6": 1.3}
-GAPS = (0.4, 0.6, 0.8, 1.0)
-RATIOS = (0.5, 0.6, 0.7, 0.8, 0.9)
-WS = (0.4, 0.8, 1.2, 1.6)
+GAPS = (0.4, 0.6, 0.73, 0.8, 1.0)  # 0.73 = anchor scaled
+RATIOS = (0.6, 0.7, 0.8, 0.9)
+WS = (1.6, 2.4, 2.9, 3.6)  # anchor slot 1.6 x 1.82 scaled = 2.9 mm wide
 ALL_STATES = [s for v in S.CLASS_STATES.values() for s in v]
 
 
@@ -55,10 +56,14 @@ def rows(substrates):
                 r = (p - gap) / 2
                 for q in RATIOS:
                     L = 2 * r * q
-                    if r - L / 2 < 0.4 - 1e-9:
+                    if r - L / 2 < 0.35 - 1e-9:
                         continue
                     for w in WS:
+                        if math.hypot(L / 2, w / 2) >= r - 1e-9:
+                            continue  # slot corner outside the disc: invalid geometry
                         out.append(dict(id=f"{name}_p{p:g}_g{gap:g}_q{q:g}_W{w:g}", sub_name=name, sub=sub, p=p, gap=gap, ratio=q, r=r, L=L, W=w))
+    # anchor-first ordering: nearest (gap, ratio, W) to the scaled anchor (0.73, 0.8, 2.9) first, then outward
+    out.sort(key=lambda d: (abs(d["gap"] - 0.73) / 0.3) ** 2 + (abs(d["ratio"] - 0.8) / 0.1) ** 2 + (abs(d["W"] - 2.9) / 0.8) ** 2)
     return out
 
 
@@ -131,7 +136,7 @@ def run_row(row, pool=None):
         v["alpha_np_per_m"] = float(v["alpha_np_per_m"])
     d = lambda a, b: states[a]["Delta_mS"] / states[b]["Delta_mS"]
     out = dict(row=row, states=states, nodes=sorted(nodes), resonance_flip=flip, resonance_flag=bool(flip),
-               rho_nom=d("ON_BAR50", "OFF_BAR50"), rho_max=d("ON_BAR50_MAX", "OFF_BAR50_HI"), rho_open=d("ON_BAR50", "OFF_OPEN"),
+               rho_nom=d("ON_BAR50", "OFF_BAR50"), rho_max=d("ON_BAR50_MAX", "OFF_BAR50"), rho_open=d("ON_BAR50", "OFF_OPEN"),
                rho_vs_nocut=d("ON_BAR50", "NOCUT"),
                dA_par=states["ON_BAR50"]["A_par_mS"] - states["OFF_BAR50"]["A_par_mS"],
                dA_perp=states["ON_BAR50"]["A_perp_mS"] - states["OFF_BAR50"]["A_perp_mS"],
@@ -187,7 +192,7 @@ if __name__ == "__main__":
     if a.stage == "list":
         print(len(rs), "rows", {s: sum(r["sub_name"] == s for r in rs) for s in subs})
     elif a.stage == "pilot":
-        row = [r for r in rs if abs(r["gap"] - 0.6) < 1e-9 and abs(r["ratio"] - 0.7) < 1e-9 and abs(r["W"] - 0.8) < 1e-9][0]
+        row = rs[0]  # the anchor-nearest row (gap 0.73, L/2r 0.8, W 2.9)
         t0 = time.time()
         with Pool(6) as pool:
             res = run_row(row, pool)
@@ -209,7 +214,7 @@ if __name__ == "__main__":
         (OUT / f"provenance_run_{'_'.join(subs)}.json").write_text(json.dumps(prov, indent=1, default=str))
         print(f"run {subs}: {len(todo)}/{len(rs)} rows, {nw} workers", flush=True)
         t0 = time.time()
-        with Pool(min(nw, max(1, len(todo)))) as pool:
+        with Pool(min(nw, max(1, len(todo))), maxtasksperchild=1) as pool:
             for k, res in enumerate(pool.imap_unordered(worker, todo)):
                 with open(OUT / f"rows_{res['row']['sub_name']}.jsonl", "a") as fh:
                     fh.write(json.dumps(jc(res)) + "\n")

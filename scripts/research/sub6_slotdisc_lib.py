@@ -17,6 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 import numpy as np
+from src.errors import LwmomError
 
 from src._validate import finite_real
 from src.basis_functions import MeshSettings, RooftopBasis
@@ -35,7 +36,7 @@ from src.solver import solve
 MM = 1e-3
 F = 5.8e9
 K0 = free_space_wavenumber(F)
-G_C = 0.65 * MM
+G_C = 1.00 * MM  # BAR50-02V SC79 footprint: pads 0.35 mm, 1.35 mm c-c (user correction; was 0.65 -> g065)
 DIODE_ALONG = 0.35 * MM
 THETA_BEAM = math.radians(25.0)
 
@@ -80,12 +81,16 @@ class SlotDiscNotch:
         return inside
 
 
+def _z_off_bar50(f):
+    w = 2 * np.pi * f
+    return 1j * w * 0.6e-9 + 1.0 / (1.0 / 5000.0 + 1j * w * 0.15e-12)
+
+
 STATES = {
     # name: (notch?, load kwargs or None)
     "NOCUT": (False, None),
     "OFF_OPEN": (True, "open"),
-    "OFF_BAR50": (True, dict(C=0.15e-12, L=0.6e-9)),
-    "OFF_BAR50_HI": (True, dict(C=0.20e-12, L=0.6e-9)),
+    "OFF_BAR50": (True, dict(z_of_f=_z_off_bar50)),  # (0.15 pF || 5 kohm) in series with 0.6 nH
     "ON_BAR50": (True, dict(R=3.0, L=0.6e-9)),
     "ON_BAR50_MAX": (True, dict(R=4.5, L=0.6e-9)),
 }
@@ -116,7 +121,7 @@ def y_tensor(cell, mesh, kx0, ky0, f=F, basis=None):
 
 
 # ------------------------------------------------------------------------------------------------ nodes and self-consistent beta
-CLASS_STATES = {"NOCUT": ["NOCUT"], "OPEN": ["OFF_OPEN"], "BRIDGE": ["OFF_BAR50", "OFF_BAR50_HI", "ON_BAR50", "ON_BAR50_MAX"]}
+CLASS_STATES = {"NOCUT": ["NOCUT"], "OPEN": ["OFF_OPEN"], "BRIDGE": ["OFF_BAR50", "ON_BAR50", "ON_BAR50_MAX"]}
 
 
 def make_sub(sub):
@@ -169,7 +174,12 @@ def state_summary(nodes, st, sub, f=F, theta=THETA_BEAM, guess=1.05):
     for _ in range(40):
         yx, yy = interp_y(nodes, st, kt)
         ybar = 0.5 * (yx[0, 0].imag + yy[1, 1].imag)
-        b = find_beta_from_sheet_admittance(1j * ybar, s, f).beta_rad_per_m / k0
+        try:
+            b = find_beta_from_sheet_admittance(1j * ybar, s, f).beta_rad_per_m / k0
+        except LwmomError as e:  # no bound mode in (k0, 2.5 k0) for this state at this kt: flag it, do not abort the row
+            nan = float("nan")
+            return dict(beta_over_k0=nan, Y_par_mS=nan, Y_perp_mS=nan, Delta_mS=nan, mean_mS=nan, A_par_mS=nan, A_perp_mS=nan,
+                        alpha_np_per_m=nan, extrapolated=False, nearest_node_dist=0.0, status="NO_ROOT", Im_Ybar_mS=ybar * 1e3, kt=kt)
         if abs(b - kt) < 1e-5:
             break
         kt = 0.5 * (kt + b)

@@ -40,10 +40,14 @@ SUBS = {
     "TMM6": (("tmm6", 6.3, 0.0023, 2.54), [10.0]),
 }
 GUESS = {"RT5880": 1.06, "RO3006": 1.3, "TMM6": 1.3}
-GAPS = (0.4, 0.6, 0.8, 1.0)
-RATIOS = (0.5, 0.6, 0.7, 0.8, 0.9)
-WS = (0.4, 0.8, 1.2, 1.6)
+GAPS = (0.4, 0.6, 0.73, 0.8, 1.0)  # 0.73 = anchor scaled (grid correction 2026-11-07)
+RATIOS = (0.6, 0.7, 0.8, 0.9)
+WS = (1.6, 2.4, 2.9, 3.6)  # anchor slot 1.6 x 1.817 = 2.9 mm
+RIM_MIN, CORNER_MIN = 0.35, 0.2  # mm: rim r - L/2 (job); slot-corner rim sqrt((L/2)^2+(W/2)^2) vs r (below the mesh-64 cell 0.18 mm = disc broken, rows skipped)
 ALL_STATES = [s for v in S.CLASS_STATES.values() for s in v]
+
+
+SKIPPED = []
 
 
 def rows(substrates):
@@ -55,10 +59,14 @@ def rows(substrates):
                 r = (p - gap) / 2
                 for q in RATIOS:
                     L = 2 * r * q
-                    if r - L / 2 < 0.4 - 1e-9:
+                    if r - L / 2 < RIM_MIN - 1e-9:
                         continue
                     for w in WS:
+                        if r - np.hypot(L / 2, w / 2) < CORNER_MIN:
+                            SKIPPED.append(f"{name}_p{p:g}_g{gap:g}_q{q:g}_W{w:g}")
+                            continue
                         out.append(dict(id=f"{name}_p{p:g}_g{gap:g}_q{q:g}_W{w:g}", sub_name=name, sub=sub, p=p, gap=gap, ratio=q, r=r, L=L, W=w))
+    out.sort(key=lambda r: abs(r["W"] - 2.9) / 2.9 + abs(r["ratio"] - 0.8) / 0.8 + abs(r["gap"] - 0.73) / 0.73)  # anchor-nearest first
     return out
 
 
@@ -185,9 +193,9 @@ if __name__ == "__main__":
     rs = rows(subs)
     OUT.mkdir(parents=True, exist_ok=True)
     if a.stage == "list":
-        print(len(rs), "rows", {s: sum(r["sub_name"] == s for r in rs) for s in subs})
+        print(len(rs), "rows", {s: sum(r["sub_name"] == s for r in rs) for s in subs}, "skipped (corner rim < 0.2 mm):", len(SKIPPED), SKIPPED)
     elif a.stage == "pilot":
-        row = [r for r in rs if abs(r["gap"] - 0.6) < 1e-9 and abs(r["ratio"] - 0.7) < 1e-9 and abs(r["W"] - 0.8) < 1e-9][0]
+        row = [r for r in rs if abs(r["gap"] - 0.73) < 1e-9 and abs(r["ratio"] - 0.8) < 1e-9 and abs(r["W"] - 2.9) < 1e-9][0]
         t0 = time.time()
         with Pool(6) as pool:
             res = run_row(row, pool)

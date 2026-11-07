@@ -37,3 +37,9 @@ Report results/sub6_slotdisc/CELL_SCAN.md (gates first, best-leakage table, rho 
   Same r / L / W / state grid as RO3006.
 - Anchor: hex150_tensor_cp_single majority cell (D 6.0, slot 4.8 x 1.6, p 6.4 -> scaled p 11.63 mm). Accepted.
 - SlotDiscNotch (duck-typed geometry, in the script) accepted; it must reproduce SlottedCircularPatch exactly without a notch (kept as a test).
+
+## Amendment 2 2026-11-07 (user: grid correction, W was not scaled from the anchor)
+- W set {1.6, 2.4, 2.9, 3.6} mm (anchor slot 1.6 x 1.82 = 2.9 mm wide; 0.4 and 0.8 dropped). L/(2r) set {0.6, 0.7, 0.8, 0.9} (anchor 0.8).
+- Gap p - 2r set {0.4, 0.6, 0.8, 1.0} plus 0.73 (anchor scaled). Rim r - L/2 >= 0.35 mm (was 0.4). Rows closest to the anchor first (W 2.9, L/2r 0.8, gap 0.73), then outward.
+- Script deviation (flagged): rows whose slot-corner rim r - sqrt((L/2)^2 + (W/2)^2) is below 0.2 mm (about one mesh-64 cell) are skipped.
+- Notch width: user wrote "notch 1.00 mm still apply"; the job text has g_c = 0.65 mm. Clarification requested; script option SUB6_NOTCH_MM (default 0.65).

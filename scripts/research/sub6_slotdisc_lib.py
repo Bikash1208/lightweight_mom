@@ -9,6 +9,7 @@ The diode sheet (LumpedLoad, direction "y": current across the notch) is g_c acr
 region is metal in the pattern (so rooftops cross it), OFF_OPEN removes it (empty notch).
 """
 import math
+import os
 import sys
 import time
 from dataclasses import dataclass
@@ -35,7 +36,7 @@ from src.solver import solve
 MM = 1e-3
 F = 5.8e9
 K0 = free_space_wavenumber(F)
-G_C = 0.65 * MM
+G_C = float(os.environ.get('SUB6_NOTCH_MM', '0.65')) * MM  # notch width = diode sheet length across the gap (job text: 0.65 mm)
 DIODE_ALONG = 0.35 * MM
 THETA_BEAM = math.radians(25.0)
 

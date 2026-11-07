@@ -227,17 +227,27 @@ if __name__ == "__main__":
             f = OUT / f"rows_{s}.jsonl"
             if f.exists():
                 allr += [json.loads(l) for l in f.read_text().splitlines() if l.strip()]
-        best = sorted(allr, key=lambda r: -min(r["alpha_on"], r["alpha_off"]))[:3]
-        out = []
+        best = sorted(allr, key=lambda r: -max(r["alpha_on"], r["alpha_off"]))[:3]  # best leakage = the stronger of the two states
+        tasks, meta = [], []
         for b in best:
             row = b["row"]
             spec_t = (tuple(row["sub"]), row["p"], row["r"], row["L"], row["W"])
+            for kt in b["nodes"]:
+                for cls in S.CLASS_STATES:
+                    for d in "xy":
+                        tasks.append((spec_t, cls, d, float(kt), 96, 192, S.F)); meta.append(row["id"])
+        with Pool(12) as pool:  # mesh 96 / F 192: about 5 GB and 1500-2000 s per assembly
+            outs = pool.map(S.node_task, tasks)
+        out = []
+        for b in best:
+            row = b["row"]
             nodes = {}
-            with Pool(6) as pool:
-                for kt in b["nodes"]:
-                    for o in pool.map(S.node_task, [(spec_t, cls, d, float(kt), 96, 192, S.F) for cls in S.CLASS_STATES for d in "xy"]):
-                        nodes.setdefault(o["kt"], {}).setdefault(o["direction"], {}).update(o["Y"])
-            st96 = {st: S.state_summary(nodes, st, row["sub"], guess=GUESS[row["sub_name"]]) for st in ("OFF_BAR50", "ON_BAR50")}
-            out.append(dict(id=row["id"], mesh64={st: b["states"][st]["alpha_np_per_m"] for st in st96}, mesh96={st: st96[st]["alpha_np_per_m"] for st in st96}))
+            for m, o in zip(meta, outs):
+                if m == row["id"]:
+                    nodes.setdefault(o["kt"], {}).setdefault(o["direction"], {}).update(o["Y"])
+            st96 = {st: S.state_summary(nodes, st, row["sub"], guess=GUESS[row["sub_name"]]) for st in ALL_STATES}
+            out.append(dict(id=row["id"], mesh64={st: b["states"][st]["alpha_np_per_m"] for st in st96}, mesh96={st: st96[st]["alpha_np_per_m"] for st in st96},
+                            beta64={st: b["states"][st]["beta_over_k0"] for st in st96}, beta96={st: st96[st]["beta_over_k0"] for st in st96},
+                            delta64={st: jc(b["states"][st]["Delta_mS"]) for st in st96}, delta96={st: jc(st96[st]["Delta_mS"]) for st in st96}))
             print(out[-1], flush=True)
         (OUT / f"mesh_check_{'_'.join(subs)}.json").write_text(json.dumps(jc(out), indent=1))

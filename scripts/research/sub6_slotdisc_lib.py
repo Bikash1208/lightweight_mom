@@ -192,4 +192,7 @@ def next_node(nodes, states, sub, tol=0.004, f=F):
         r = state_summary(nodes, st, sub, f)
         if r["nearest_node_dist"] > tol:
             bs.append(r["beta_over_k0"])
-    return None if not bs else float(np.median(bs))
+    if not bs:
+        return None
+    kt = float(np.median(bs))
+    return None if any(abs(kt - k) < 3e-4 for k in nodes) or len(nodes) >= 4 else kt  # no duplicate nodes (pilot wasted 2 solves on 1.0579)

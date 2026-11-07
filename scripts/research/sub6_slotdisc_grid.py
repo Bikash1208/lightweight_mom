@@ -1,12 +1,12 @@
 """SUB6 slot-disc cell scan grid (MODEL_ONLY).  jobs/sub6-slotdisc-cell-scan.md (+ Amendment 2026-11-07).
 
-    python sub6_slotdisc_grid.py list    [--substrates RT5880,RO3006,TMM6]
+    python sub6_slotdisc_grid.py list    [--substrates RT5880,RO3006]
     python sub6_slotdisc_grid.py pilot   [--substrates ...]          one row, assemblies in parallel, prints time + projection
     python sub6_slotdisc_grid.py run     [--substrates ...] [--workers N]    resumable; rows -> results/sub6_slotdisc/rows_<SUB>.jsonl
     python sub6_slotdisc_grid.py mesh    [--substrates ...]          mesh 64 / 96 check on the 3 best-leakage rows
 
 Substrates (eps_r, tan d, thickness mm: p list): RT5880 (2.2, 0.0009, 3.175: 11.6); RO3006 (6.15, 0.0020 = repo LAMINATES, 1.28 = thickest
-standard single sheet, about half of the 2.5 mm asked: 10, 11.6); TMM6 (6.3, 0.0023, 2.54: 10).  Gap p - 2r in {0.4,0.6,0.8,1.0}, L/(2r) in
+standard single sheet, about half of the 2.5 mm asked: 10, 11.6); TMM6 cancelled.  Gap p - 2r in {0.4,0.6,0.8,1.0}, L/(2r) in
 {0.5..0.9} with rim r - L/2 >= 0.4 mm, W in {0.4,0.8,1.2,1.6}.  mesh 64, F = 2n.  Single-thread BLAS.
 One Z assembly per (geometry class NOCUT / OPEN / BRIDGE, direction x / y, kt node); the four loaded states share the BRIDGE assembly
 (load matrix added); nodes are added adaptively until every state's beta is within 0.004 k0 of a node (max 4), Y(kt) linear in between.
@@ -37,9 +37,8 @@ N, FO = 64, 128
 SUBS = {
     "RT5880": (("rt5880", 2.2, 0.0009, 3.175), [11.6]),
     "RO3006": (("ro3006", 6.15, 0.0020, 1.28), [10.0, 11.6]),
-    "TMM6": (("tmm6", 6.3, 0.0023, 2.54), [10.0]),
-}
-GUESS = {"RT5880": 1.06, "RO3006": 1.3, "TMM6": 1.3}
+    }
+GUESS = {"RT5880": 1.06, "RO3006": 1.3}
 GAPS = (0.4, 0.6, 0.73, 0.8, 1.0)  # 0.73 = anchor scaled (grid correction 2026-11-07)
 RATIOS = (0.6, 0.7, 0.8, 0.9)
 WS = (1.6, 2.4, 2.9, 3.6)  # anchor slot 1.6 x 1.817 = 2.9 mm
@@ -139,7 +138,7 @@ def run_row(row, pool=None):
         v["alpha_np_per_m"] = float(v["alpha_np_per_m"])
     d = lambda a, b: states[a]["Delta_mS"] / states[b]["Delta_mS"]
     out = dict(row=row, states=states, nodes=sorted(nodes), resonance_flip=flip, resonance_flag=bool(flip),
-               rho_nom=d("ON_BAR50", "OFF_BAR50"), rho_max=d("ON_BAR50_MAX", "OFF_BAR50_HI"), rho_open=d("ON_BAR50", "OFF_OPEN"),
+               rho_nom=d("ON_BAR50", "OFF_BAR50"), rho_open=d("ON_BAR50", "OFF_OPEN"),
                rho_vs_nocut=d("ON_BAR50", "NOCUT"),
                dA_par=states["ON_BAR50"]["A_par_mS"] - states["OFF_BAR50"]["A_par_mS"],
                dA_perp=states["ON_BAR50"]["A_perp_mS"] - states["OFF_BAR50"]["A_perp_mS"],
@@ -183,7 +182,7 @@ def free_gb():
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("stage", choices=["list", "pilot", "run", "mesh"])
-    ap.add_argument("--substrates", default="RT5880,RO3006,TMM6")
+    ap.add_argument("--substrates", default="RT5880,RO3006")
     ap.add_argument("--workers", type=int, default=0)
     a = ap.parse_args()
     subs = [s.strip() for s in a.substrates.split(",") if s.strip()]
@@ -204,7 +203,7 @@ if __name__ == "__main__":
         print(f"pilot row {row['id']}: {dt:.0f} s wall with 6 parallel assemblies, {len(res['nodes'])} nodes, {n_assm} assemblies; "
               f"single-thread row = ~{n_assm * 330 / 3600:.1f} h-equivalent {n_assm * 330 / 60:.0f} min; projected {len(rs)} rows: {len(rs) * n_assm * 330 / 3600:.0f} core-h")
         (OUT / f"pilot_{row['id']}.json").write_text(json.dumps(jc(res), indent=1))
-        print(json.dumps({k: jc(v) for k, v in res.items() if k in ("rho_nom", "rho_max", "rho_open", "alpha_on", "alpha_off", "leakage", "alpha_ratio_on_over_off", "resonance_flip", "nodes")}))
+        print(json.dumps({k: jc(v) for k, v in res.items() if k in ("rho_nom", "rho_open", "alpha_on", "alpha_off", "leakage", "alpha_ratio_on_over_off", "resonance_flip", "nodes")}))
     elif a.stage == "run":
         done = set()
         for s in subs:

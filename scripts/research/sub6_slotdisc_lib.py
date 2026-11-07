@@ -36,7 +36,7 @@ from src.solver import solve
 MM = 1e-3
 F = 5.8e9
 K0 = free_space_wavenumber(F)
-G_C = float(os.environ.get('SUB6_NOTCH_MM', '0.65')) * MM  # notch width = diode sheet length across the gap (job text: 0.65 mm)
+G_C = float(os.environ.get('SUB6_NOTCH_MM', '1.00')) * MM  # notch width = diode sheet length across the gap (Amendment 3: 1.00 mm, BAR50-02V SC79 pads 0.35 x 0.35 at 1.35 mm pitch)
 DIODE_ALONG = 0.35 * MM
 THETA_BEAM = math.radians(25.0)
 
@@ -81,14 +81,18 @@ class SlotDiscNotch:
         return inside
 
 
+def z_off_bar50(f_hz, C=0.15e-12, R_par=5e3, L=0.6e-9):
+    """OFF_BAR50 (Amendment 3): (C || R_par) + L."""
+    w = 2 * math.pi * f_hz
+    return 1j * w * L + 1.0 / (1.0 / R_par + 1j * w * C)
+
+
 STATES = {
-    # name: (notch?, load kwargs or None)
+    # name: (notch?, load kwargs or None).  OFF_BAR50_HI / ON_BAR50_MAX removed (Amendment 3; run later on the 5 best rows only)
     "NOCUT": (False, None),
     "OFF_OPEN": (True, "open"),
-    "OFF_BAR50": (True, dict(C=0.15e-12, L=0.6e-9)),
-    "OFF_BAR50_HI": (True, dict(C=0.20e-12, L=0.6e-9)),
+    "OFF_BAR50": (True, dict(z_of_f=z_off_bar50)),
     "ON_BAR50": (True, dict(R=3.0, L=0.6e-9)),
-    "ON_BAR50_MAX": (True, dict(R=4.5, L=0.6e-9)),
 }
 
 
@@ -117,7 +121,7 @@ def y_tensor(cell, mesh, kx0, ky0, f=F, basis=None):
 
 
 # ------------------------------------------------------------------------------------------------ nodes and self-consistent beta
-CLASS_STATES = {"NOCUT": ["NOCUT"], "OPEN": ["OFF_OPEN"], "BRIDGE": ["OFF_BAR50", "OFF_BAR50_HI", "ON_BAR50", "ON_BAR50_MAX"]}
+CLASS_STATES = {"NOCUT": ["NOCUT"], "OPEN": ["OFF_OPEN"], "BRIDGE": ["OFF_BAR50", "ON_BAR50"]}
 
 
 def make_sub(sub):

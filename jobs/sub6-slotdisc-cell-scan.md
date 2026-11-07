@@ -43,3 +43,11 @@ Report results/sub6_slotdisc/CELL_SCAN.md (gates first, best-leakage table, rho 
 - Gap p - 2r set {0.4, 0.6, 0.8, 1.0} plus 0.73 (anchor scaled). Rim r - L/2 >= 0.35 mm (was 0.4). Rows closest to the anchor first (W 2.9, L/2r 0.8, gap 0.73), then outward.
 - Script deviation (flagged): rows whose slot-corner rim r - sqrt((L/2)^2 + (W/2)^2) is below 0.2 mm (about one mesh-64 cell) are skipped.
 - Notch width: user wrote "notch 1.00 mm still apply"; the job text has g_c = 0.65 mm. Clarification requested; script option SUB6_NOTCH_MM (default 0.65).
+
+## Amendment 3 2026-11-07 (user)
+- Notch g_c = 1.00 mm (BAR50-02V data sheet, SC79 footprint: pads 0.35 x 0.35 mm at 1.35 mm centre-to-centre). Diode sheet 1.00 across x 0.35 along the rim, all states
+  (replaces the 0.65 mm of the first text).
+- States: OFF_BAR50 = (0.15 pF || 5 kohm) + 0.6 nH; ON_BAR50 = 3.0 ohm + 0.6 nH. OFF_BAR50_HI and ON_BAR50_MAX removed (run them later on the 5 best rows only).
+  NOCUT and OFF_OPEN stay.
+- Skip rule (slot-corner rim < 0.2 mm) accepted. TMM6 cancelled (not available). RO3006 runs on AEM-LAB1 (server 2). RT5880 (p 11.6) runs here, start now.
+- The pilot and the first partial run (0.65 mm notch, old grid) are obsolete: results/sub6_slotdisc/obsolete/.

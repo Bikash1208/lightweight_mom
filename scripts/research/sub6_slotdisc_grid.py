@@ -138,8 +138,15 @@ def run_row(row, pool=None):
                alpha_on=states["ON_BAR50"]["alpha_np_per_m"], alpha_off=states["OFF_BAR50"]["alpha_np_per_m"],
                seconds=time.time() - t0)
     a_on, a_off = out["alpha_on"], out["alpha_off"]
-    out["leakage_gate"] = "LEAKAGE_OK" if min(a_on, a_off) >= 1.0 else ("LEAKAGE_LOW_" + "+".join(n for n, a in (("ON", a_on), ("OFF", a_off)) if a < 1.0))
+    out["alpha_ratio_on_over_off"] = a_on / a_off if a_off > 0 else float("nan")
+    out["leakage"] = leakage_class(a_on, a_off)
     return out
+
+
+def leakage_class(a_on, a_off, thr=1.0):
+    """Per-row leakage class at 25 deg (user correction 2026-11-07): OK_BOTH | OK_ON_ONLY | OK_OFF_ONLY | LOW (threshold 1 Np/m)."""
+    on, off = a_on >= thr, a_off >= thr
+    return "OK_BOTH" if on and off else "OK_ON_ONLY" if on else "OK_OFF_ONLY" if off else "LOW"
 
 
 def worker(row):
@@ -189,7 +196,7 @@ if __name__ == "__main__":
         print(f"pilot row {row['id']}: {dt:.0f} s wall with 6 parallel assemblies, {len(res['nodes'])} nodes, {n_assm} assemblies; "
               f"single-thread row = ~{n_assm * 330 / 3600:.1f} h-equivalent {n_assm * 330 / 60:.0f} min; projected {len(rs)} rows: {len(rs) * n_assm * 330 / 3600:.0f} core-h")
         (OUT / f"pilot_{row['id']}.json").write_text(json.dumps(jc(res), indent=1))
-        print(json.dumps({k: jc(v) for k, v in res.items() if k in ("rho_nom", "rho_max", "rho_open", "alpha_on", "alpha_off", "leakage_gate", "resonance_flip", "nodes")}))
+        print(json.dumps({k: jc(v) for k, v in res.items() if k in ("rho_nom", "rho_max", "rho_open", "alpha_on", "alpha_off", "leakage", "alpha_ratio_on_over_off", "resonance_flip", "nodes")}))
     elif a.stage == "run":
         done = set()
         for s in subs:
@@ -206,7 +213,7 @@ if __name__ == "__main__":
             for k, res in enumerate(pool.imap_unordered(worker, todo)):
                 with open(OUT / f"rows_{res['row']['sub_name']}.jsonl", "a") as fh:
                     fh.write(json.dumps(jc(res)) + "\n")
-                print(f"[{time.time() - t0:7.0f}s] {len(done) + k + 1}/{len(rs)} {res['row']['id']} alpha ON/OFF {res['alpha_on']:.2f}/{res['alpha_off']:.2f} {res['leakage_gate']}", flush=True)
+                print(f"[{time.time() - t0:7.0f}s] {len(done) + k + 1}/{len(rs)} {res['row']['id']} alpha ON/OFF {res['alpha_on']:.2f}/{res['alpha_off']:.2f} {res['leakage']}", flush=True)
     else:
         allr = []
         for s in subs:

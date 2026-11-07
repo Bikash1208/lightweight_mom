@@ -30,3 +30,10 @@ Gates (named states): ANCHOR_REPRODUCED (scaled anchor alpha within 2x of the 10
 LEAKAGE_OK where alpha_leak >= 1 Np/m in the state that carries the beam, else LEAKAGE_LOW; MESH check 64/96 on the 3 best rows.
 Pilot one row first: report the solve time and projected total; if the projection is over 24 h, stop and ask.
 Report results/sub6_slotdisc/CELL_SCAN.md (gates first, best-leakage table, rho and A per row), commit, push to hub, STOP.
+
+## Amendment 2026-11-07 (user)
+- RO3006: single 1.28 mm laminate (the thickest standard single sheet; flag in the report that it is about half of the 2.5 mm asked for). NO 2-layer 2.56 mm stack.
+- ADD Rogers TMM6, single laminate: eps_r 6.3 (design Dk), tan d 0.0023 (Rogers TMM6 page), thickness 2.54 mm (0.100 in), p = 10 mm only.
+  Same r / L / W / state grid as RO3006.
+- Anchor: hex150_tensor_cp_single majority cell (D 6.0, slot 4.8 x 1.6, p 6.4 -> scaled p 11.63 mm). Accepted.
+- SlotDiscNotch (duck-typed geometry, in the script) accepted; it must reproduce SlottedCircularPatch exactly without a notch (kept as a test).

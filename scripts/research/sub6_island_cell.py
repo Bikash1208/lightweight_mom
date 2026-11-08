@@ -56,6 +56,8 @@ WS = (2.9, 3.6, 4.4)
 RATIOS = (0.7, 0.8, 0.9)
 LI_OVER_L = (0.3, 0.5, 0.7)
 CLEAR = (0.3, 0.6)
+if os.environ.get("ISL_GRID") == "refine":  # job sub6-island-refine: grid around ISL_W2.9_q0.8_Li0.5_c0.6 (diode gap stays 1.00 mm = GAP_CELLS)
+    WS, RATIOS, LI_OVER_L, CLEAR = (2.6, 2.9, 3.2), (0.75, 0.8, 0.85), (0.4, 0.5, 0.6), (0.5, 0.6, 0.7)
 GAP_CELLS = int(os.environ.get("ISL_GAP_CELLS", "5"))  # 5 cells = 0.906 mm at mesh 64; mesh 96: 8 cells = 0.967 mm
 CORNER_MIN, RIM_MIN = 0.2, 0.35
 ISL_STATES = ["OFF_BAR50", "ON_BAR50"]

@@ -57,8 +57,6 @@ def edge_tables():
               Apoff=np.zeros(n, complex), Apon=np.zeros(n, complex), Aqoff=np.zeros(n, complex), Aqon=np.zeros(n, complex))
     sgn = np.where(np.array([z(r["Delta_mS"]["ON_BAR50"]).imag / z(r["Delta_mS"]["OFF_BAR50"]).imag for r in sel]) > 0, 1.0, -1.0)
     sw["ratio"] = sgn * np.sqrt(sw["aon"] / sw["aoff"])
-    # alpha_OFF vs theta (0, 45, 90) of the same (q, W): for the theta-aware sensitivity
-    sw["alpha_theta"] = [{r2["theta"]: r2["alpha_OFF"] for r2 in J if r2["q"] == r["q"] and r2["W"] == r["W"]} for r in sel]
     T["sw"] = sw
     T["n_edge_rows_total"], T["n_edge_theta90"] = len(J), sum(r["theta"] == 90 for r in J)
     return T
@@ -255,7 +253,9 @@ def line_stats(D):
                 string_V_total_if_series=float(volts.sum()))
 
 
-def theta_stats(D, ph, direction, flips):
+def theta_stats(D, ph, direction, flips, tol_deg=7.5):
+    """Angle between the hologram slot axis of every switched cell and its string (0 = slot along the string, 90 = across = the tabulated row).  The edge-diode table has theta = 0 / 45 / 90 only:
+    cells whose angle is NOT within tol_deg of one of them need an angle table that does not exist yet (NEED_ANGLE_TABLE); nothing is interpolated or guessed."""
     S = D["S"]
     phiR = np.arctan2(S.y, S.x)
     chi = np.arctan2(direction[:, 1], direction[:, 0])
@@ -263,18 +263,14 @@ def theta_stats(D, ph, direction, flips):
     ang_line = np.zeros(S.n)
     for l in D["lines"]:
         ang_line[l["cells"]] = 0.0 if l["axis"] == "x" else math.pi / 2
-    rel = np.abs(((axis - ang_line + math.pi / 2) % math.pi) - math.pi / 2)  # 0 = slot along the line, 90 deg = slot across (the table row)
+    rel = np.degrees(np.abs(((axis - ang_line + math.pi / 2) % math.pi) - math.pi / 2))
     m = D["mask"] & D["live"]
-    r = np.degrees(rel[m])
-    sw = D["swt"]
-    fac = []
-    for i in np.nonzero(m)[0]:
-        at = sw["alpha_theta"][D["isw"][i]]
-        th = np.degrees(rel[i])
-        a = np.interp(th, [0, 45, 90], [at[0], at[45], at[90]])
-        fac.append(math.sqrt(max(a, 0.0) / at[90]))
-    fac = np.array(fac)
-    return dict(theta_rel_mean_deg=float(r.mean()), theta_rel_frac_ge67=float(np.mean(r >= 67.5)), theta_aware_amp_factor_mean=float(fac.mean()), theta_aware_frac_below_half=float(np.mean(fac < 0.5)))
+    r = rel[m]
+    near = np.min(np.abs(r[:, None] - np.array([0.0, 45.0, 90.0])[None, :]), axis=1) <= tol_deg
+    near90 = np.abs(r - 90.0) <= tol_deg
+    hist, _ = np.histogram(r, bins=[0, 15, 30, 45, 60, 75, 90.001])
+    return dict(theta_rel_mean_deg=float(r.mean()), theta_frac_within_tol_of_0_45_90=float(near.mean()), theta_frac_within_tol_of_90=float(near90.mean()), theta_frac_need_angle_table=float(1.0 - near.mean()),
+                theta_hist_15deg_bins="/".join(str(int(h)) for h in hist), theta_tol_deg=tol_deg, NEED_ANGLE_TABLE=bool(near.mean() < 1.0))
 
 
 def beta_effect(D, sa, ph, direction, flips, launch):
@@ -299,10 +295,13 @@ def beta_effect(D, sa, ph, direction, flips, launch):
     return out
 
 
+DESIGN = None  # sub6_board_edge2 sets this to its chord-aware design function
+
+
 def edge_task(a):
     side, n, pl, taper, excl, launch = a
     T = edge_tables()
-    D = design_edge(side, n, pl, taper, excl, T)
+    D = (DESIGN or design_edge)(side, n, pl, taper, excl, T)
     sa = R4.site_arrays(D)
     ph = R4.physics(D, sa)
     dirs = {w: X.directions_w(D, ph, w) for w in X.W_GRID}

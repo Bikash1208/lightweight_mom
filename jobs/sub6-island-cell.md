@@ -1,0 +1,4 @@
+# sub6-island-cell (MODEL_ONLY; branch compute/sub6-island-cell from compute/sub6-slotdisc-cell-scan)
+RT5880 3.175, p 11.6, 5.8 GHz, mesh 64 (state the gap resolution). Cell: closed slotted disc (anchor r 5.435, slot L x W along x) + rectangular metal ISLAND centred in the slot (length Li, clearance 0.3 or 0.6 mm to the slot edges) + ONE BAR50 sheet across a 1.00 mm clearance between the island's +y long edge and the slot's +y edge, at the island centre (1.00 across x 0.35 mm).
+Sweep: slot W 2.9, 3.6, 4.4; L/2r 0.7, 0.8, 0.9; Li/L 0.3, 0.5, 0.7; other-side clearance 0.3 and 0.6 mm. (Confirmed by user: clearance on the island's -y long edge; short-end clearance = (L-Li)/2.)
+States: OFF_BAR50, ON_BAR50, ISLAND_ABSENT. Report alpha_OFF, alpha_ON, beta/k0, Delta, A_perp, rho, LEAKAGE class, resonance proxy. Gate OK: alpha_ON or alpha_OFF >= 1 Np/m and |rho-1| >= 1. Full worker pool, commit, push github, RESULT format, STOP.

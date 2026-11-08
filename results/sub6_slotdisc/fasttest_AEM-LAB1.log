@@ -1,0 +1,280 @@
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [  2%]
+........................................................................ [  4%]
+........................................................................ [  7%]
+........................................................................ [  9%]
+........................................................................ [ 11%]
+............ss......................................................ss.. [ 14%]
+........................................................................ [ 16%]
+........................................................................ [ 18%]
+sss..................................................................... [ 21%]
+........................................................................ [ 23%]
+........................................................................ [ 25%]
+........................................................................ [ 28%]
+........................................................................ [ 30%]
+........................................................................ [ 32%]
+........................................................................ [ 35%]
+........................................................................ [ 37%]
+........................................................................ [ 39%]
+........................................................................ [ 42%]
+ss...................................................................... [ 44%]
+........................................................................ [ 46%]
+..........................ssssss........................................ [ 49%]
+.........................................................s.............. [ 51%]
+....................................s................................... [ 53%]
+......sssss....................ss.......sss.s....ssss....sss.......s.... [ 56%]
+.........s.ss.s.ss.s.s........sss.ssss.sssss.sssssssssssssssss.......sss [ 58%]
+s......sssss......sssssss.....................................sss....... [ 60%]
+......sssssssss......................................................... [ 63%]
+........................................................................ [ 65%]
+.............................ssss....................................... [ 67%]
+...................................................................F..FF [ 70%]
+........................................................................ [ 72%]
+...............................ssssss................................... [ 74%]
+........................................................................ [ 77%]
+.....................................................ss................. [ 79%]
+........................................................................ [ 81%]
+........................................................................ [ 84%]
+........................................................................ [ 86%]
+........................................................................ [ 88%]
+..................s............ss.s.s............................s...... [ 91%]
+........................................................................ [ 93%]
+..................................................................ssss.. [ 95%]
+........................................................ss....ssss...... [ 98%]
+....F.F.F.F.F..............................................              [100%]
+================================== FAILURES ===================================
+______ test_preexisting_case_is_bit_identical_to_main[cp2_madp_1100_s11] ______
+[gw6] win32 -- Python 3.13.5 C:\lightweight_mom\.venv\Scripts\python.exe
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'cp2_madp_1100_s11'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('fe4ecaa59044...855a4a796d344' == '4bbc9582dc90...f78d1bfd5fc93'
+E         
+E         - 4bbc9582dc90713d6fbae6fcc5bbe4337e5d1e5c499843ea46cf78d1bfd5fc93
+E         + fe4ecaa59044c27d8ad44ff6fd2c8ad3d590ef2bfb017c94194855a4a796d344)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+_ test_preexisting_case_is_bit_identical_to_main[load_matrix_d30_explicit_blocked] _
+[gw6] win32 -- Python 3.13.5 C:\lightweight_mom\.venv\Scripts\python.exe
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'load_matrix_d30_explicit_blocked'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('c2a130e8c806...5e310c1f7bea1' == '4af34f34879d...3dbdebadc7132'
+E         
+E         - 4af34f34879d027d2f3609aee114a7b0fc497d2302fc9ab744c3dbdebadc7132
+E         + c2a130e8c80676e2b52f768d6ec973779d49d4c65e16a1b742d5e310c1f7bea1)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+_ test_preexisting_case_is_bit_identical_to_main[load_matrix_d30_explicit_conducting] _
+[gw6] win32 -- Python 3.13.5 C:\lightweight_mom\.venv\Scripts\python.exe
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'load_matrix_d30_explicit_conducting'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('8d44c70b7c83...0996d2ce72e25' == '4c8102821805...82b627abbb0c9'
+E         
+E         - 4c8102821805b8bfaea35ed3423e918344cb5cf5f062bf07c9382b627abbb0c9
+E         + 8d44c70b7c834ef2ce39c7bc624f9d54eb1f44fce5756b4b1720996d2ce72e25)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+_____ test_preexisting_case_is_bit_identical_to_main[cp2_ideal_0000_s11] ______
+[gw13] win32 -- Python 3.13.5 C:\lightweight_mom\.venv\Scripts\python.exe
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'cp2_ideal_0000_s11'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('eda0af5aee71...2d37252408431' == '220f02c87eed...506972b1a7d2f'
+E         
+E         - 220f02c87eed7987430bcfb5f2b0f886b68eefae248b98ed9e4506972b1a7d2f
+E         + eda0af5aee71ccfee505a0c85676eb1b6a7756c324a0198e8bd2d37252408431)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+_____ test_preexisting_case_is_bit_identical_to_main[cp2_ideal_0100_s11] ______
+[gw13] win32 -- Python 3.13.5 C:\lightweight_mom\.venv\Scripts\python.exe
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'cp2_ideal_0100_s11'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('0d20bb7993e8...25f77d6e7fcc8' == '3e093e89a5d8...387259ecbbee5'
+E         
+E         - 3e093e89a5d8e1e4b2b9eea3f2edfd6ba4e4f09807a50830d2b387259ecbbee5
+E         + 0d20bb7993e83428c83fa39b441519241bf1df239641c8ef2c925f77d6e7fcc8)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+_____ test_preexisting_case_is_bit_identical_to_main[cp2_ideal_1100_s11] ______
+[gw13] win32 -- Python 3.13.5 C:\lightweight_mom\.venv\Scripts\python.exe
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'cp2_ideal_1100_s11'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('e1505cfed94c...99fb7365041e6' == '586d01997329...354d82df589ed'
+E         
+E         - 586d0199732990992b6aac94afcf755d5a39e2dddb0479577d5354d82df589ed
+E         + e1505cfed94cfd9d3855abc3d66fc6103c279c25520def1dddc99fb7365041e6)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+______ test_preexisting_case_is_bit_identical_to_main[cp2_madp_0000_s11] ______
+[gw13] win32 -- Python 3.13.5 C:\lightweight_mom\.venv\Scripts\python.exe
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'cp2_madp_0000_s11'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('f468b6617a18...4d02090673143' == '0b06b7ba8ccb...145d4e73022a9'
+E         
+E         - 0b06b7ba8ccbe0d4b630ea3a2703b75d33eb872029699c14777145d4e73022a9
+E         + f468b6617a1830b7977b76e41611961caa91f79894229065f2e4d02090673143)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+______ test_preexisting_case_is_bit_identical_to_main[cp2_madp_0100_s11] ______
+[gw13] win32 -- Python 3.13.5 C:\lightweight_mom\.venv\Scripts\python.exe
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'cp2_madp_0100_s11'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('d6a3406f3725...5abbefb87b293' == '46531b5dff46...928bea7fc2bce'
+E         
+E         - 46531b5dff46f76895dfec0cc6e0c82f23d512d7cd3ec41ac6f928bea7fc2bce
+E         + d6a3406f37258e08bbbb85f71911ab23e6b5acfd9d8785b71ec5abbefb87b293)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+============================== warnings summary ===============================
+.venv\Lib\site-packages\fastapi\testclient.py:1: 24 warnings
+  C:\lightweight_mom\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_export_exact_board.py: 5 warnings
+tests/test_app_phase23_hex4.py: 2 warnings
+tests/test_phase30_refine.py: 1 warning
+tests/test_transmitarray_export.py: 12 warnings
+tests/test_app_phase21_multiport.py: 2 warnings
+  C:\lightweight_mom\.venv\Lib\site-packages\cadquery\utils.py:82: FutureWarning: save will be removed in the next release.
+    warn(f"{f.__name__} will be removed in the next release.", FutureWarning)
+
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+  C:\lightweight_mom\src\dispersion\sheet_model.py:75: RuntimeWarning: overflow encountered in tan
+    return -1j * (omega * EPS0 * eps_c / kz) / np.tan(kz * thickness_m)
+
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+  C:\lightweight_mom\scripts\research\sidequest_gate_cell.py:69: RuntimeWarning: overflow encountered in scalar power
+    beta = np.sqrt(K0**2 + gam**2 + 0j)
+
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+  C:\lightweight_mom\scripts\research\sidequest_gate_cell.py:69: RuntimeWarning: invalid value encountered in scalar power
+    beta = np.sqrt(K0**2 + gam**2 + 0j)
+
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+  C:\lightweight_mom\src\dispersion\sheet_model.py:79: RuntimeWarning: invalid value encountered in scalar power
+    alpha = np.sqrt(beta**2 - k0**2 + 0j)
+
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+  C:\lightweight_mom\src\dispersion\sheet_model.py:80: RuntimeWarning: invalid value encountered in scalar divide
+    return 1j * omega * EPS0 / alpha
+
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+  C:\lightweight_mom\src\dispersion\sheet_model.py:74: RuntimeWarning: invalid value encountered in scalar power
+    kz = np.sqrt(eps_c * k0**2 - beta**2)
+
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+  C:\lightweight_mom\src\dispersion\sheet_model.py:75: RuntimeWarning: invalid value encountered in scalar divide
+    return -1j * (omega * EPS0 * eps_c / kz) / np.tan(kz * thickness_m)
+
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+  C:\lightweight_mom\src\dispersion\sheet_model.py:75: RuntimeWarning: invalid value encountered in scalar multiply
+    return -1j * (omega * EPS0 * eps_c / kz) / np.tan(kz * thickness_m)
+
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+  C:\lightweight_mom\src\dispersion\sheet_model.py:79: RuntimeWarning: invalid value encountered in sqrt
+    alpha = np.sqrt(beta**2 - k0**2 + 0j)
+
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+  C:\lightweight_mom\src\dispersion\sheet_model.py:74: RuntimeWarning: invalid value encountered in sqrt
+    kz = np.sqrt(eps_c * k0**2 - beta**2)
+
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+  C:\lightweight_mom\scripts\research\sidequest_gate_cell.py:85: RuntimeWarning: invalid value encountered in scalar divide
+    step = _fg(g, y)[0] / d
+
+tests/test_sparameters_oblique.py::test_grating_order_warning_and_record_at_an_angle_that_makes_a_higher_order_propagate
+  C:\lightweight_mom\tests\test_sparameters_oblique.py:170: UserWarning: a Floquet harmonic is inside the grounded slab's TM0 surface-wave interval (k0=209.585, Re(k_substrate)=310.864 rad/m; margin 0.199 x k0): S-parameters near a surface-wave resonance may be numerically sensitive
+    s = compute_s_parameters_oblique(uc, F, MeshSettings(16, 16, 10), _planes("pec"), math.radians(20.0), 0.0)
+
+tests/test_sweep_definition.py::test_cell_ids_are_deterministic_unique_and_sensitive_to_everything_that_matters
+  C:\lightweight_mom\tests\test_sweep_definition.py:251: UserWarning: 1 group(s) of mesh-identical geometries on this mesh (cells_x=8, cells_y=16): 1 of 3 OK cell(s) discretize to the exact same metal mask as another cell in this sweep, and will solve to bit-identical S-parameters despite differing continuous geometry (discretization.py)
+    other = [c.cell_id for c in plan_sweep(sweep_config(**change), d).cells]
+
+tests/test_sweep_definition.py::test_cell_ids_are_deterministic_unique_and_sensitive_to_everything_that_matters
+  C:\lightweight_mom\tests\test_sweep_definition.py:251: UserWarning: 1 group(s) of mesh-identical geometries on this mesh (cells_x=16, cells_y=16): 1 of 3 OK cell(s) discretize to the exact same metal mask as another cell in this sweep, and will solve to bit-identical S-parameters despite differing continuous geometry (discretization.py)
+    other = [c.cell_id for c in plan_sweep(sweep_config(**change), d).cells]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[cp2_madp_1100_s11]
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[load_matrix_d30_explicit_blocked]
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[load_matrix_d30_explicit_conducting]
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[cp2_ideal_0000_s11]
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[cp2_ideal_0100_s11]
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[cp2_ideal_1100_s11]
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[cp2_madp_0000_s11]
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[cp2_madp_0100_s11]
+8 failed, 2946 passed, 129 skipped, 93 warnings in 950.64s (0:15:50)

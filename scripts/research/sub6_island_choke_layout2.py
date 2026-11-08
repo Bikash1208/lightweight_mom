@@ -177,5 +177,112 @@ def fit():
     return res
 
 
+# ------------------------------------------------------------------ decision (user, 2026-11-09): single 120-degree stub at each line end, layout that fits at the both-direction |J| minima
+def build_single(via, d0n, dn, flip, s, n_runs, link, lead, l_mm=None, r2=None):
+    """parts: [pad, bias trace (0.3 mm, `lead` long), runs/joints (0.15 mm), link (0.15 mm), stub]; ls and link on the 0.001 mm grid (total line length = l_mm within about 0.002 mm)."""
+    l_mm = l_mm or 7.571
+    r2 = r2 or 3.148
+    d0 = np.array(DIRS[d0n], float)
+    d = np.array(DIRS[dn], float)
+    nrm = np.array([-d[1], d[0]]) * flip
+    pm = round(W_CH + s, 3)
+    ls = round((l_mm - link - (n_runs - 1) * pm) / n_runs, 3)
+    link = round(l_mm - n_runs * ls - (n_runs - 1) * pm, 3)
+    if not (L0.LS_MIN <= ls <= L0.LS_MAX) or link < 0.3:
+        return None
+    p = np.array(via, float)
+    path = [tuple(p)]
+    p = p + d0 * lead
+    path.append(tuple(p))
+    parts = [L0.circle_poly(via, PAD_R), L0.rect(path[0], path[1], W_BIAS)]
+    side = 1.0
+    for k in range(n_runs):
+        q = p + nrm * side * ls
+        parts.append(L0.rect(tuple(p), tuple(q), W_CH))
+        path.append(tuple(q))
+        p = q
+        if k < n_runs - 1:
+            q = p + d * pm
+            parts.append(L0.rect(tuple(p), tuple(q), W_CH))
+            path.append(tuple(q))
+            p = q
+        side = -side
+    q = p + d * link
+    parts.append(L0.rect(tuple(p), tuple(q), W_CH))
+    path.append(tuple(q))
+    a0 = math.atan2(d[1], d[0])
+    parts.append(sector(tuple(q), a0, r2, ANG))
+    return dict(via=via, dir0=d0n, dir=dn, flip=flip, path=path, parts=parts, apex=tuple(np.round(q, 3)), n_runs=n_runs, ls=ls, link=link, lead=lead, spacing=s, pitch=pm, w=W_CH, r2=r2, angle=ANG, axis_angle=a0)
+
+
+def self_gap_single(c):
+    pr = c["parts"]
+    n = len(pr)
+    g = 1e9
+    for i in range(n):
+        for j in range(i + 1, n):
+            if j == i + 1 or (i, j) == (0, 2):
+                continue
+            g = min(g, L0.poly_dist(pr[i], pr[j]))
+    return g
+
+
+def gaps_single(chokes):
+    out = dict(between=1e9, images=1e9, self=1e9, outside_cell=0.0)
+    for a, b in itertools.combinations(chokes, 2):
+        out["between"] = min(out["between"], min(L0.poly_dist(pa, pb) for pa in a["parts"] for pb in b["parts"]))
+    for a in chokes:
+        for b in chokes:
+            for ix, iy in itertools.product((-1, 0, 1), repeat=2):
+                if (ix, iy) != (0, 0):
+                    out["images"] = min(out["images"], min(L0.poly_dist(pa, pb) for pa in a["parts"] for pb in L0.shift(b["parts"], ix * P, iy * P)))
+        out["self"] = min(out["self"], self_gap_single(a))
+        xs = [x for poly in a["parts"] for x, _ in poly]
+        ys = [y for poly in a["parts"] for _, y in poly]
+        out["outside_cell"] = max(out["outside_cell"], max(xs) - P / 2, -P / 2 - min(xs), max(ys) - P / 2, -P / 2 - min(ys), 0.0)
+    return out
+
+
+def fit_single():
+    """spacing 0.6 mm first (largest meander gap that fits), then 0.45 and 0.3; pairs pruned: the in-cell gap between the two chokes first, the cross-image gaps only when it can improve the best."""
+    RES.mkdir(parents=True, exist_ok=True)
+    des = design()
+    best = None
+    for s in (0.6, 0.45, 0.3):
+        cands = {"I": [], "D": []}
+        for name, via in (("I", VIA_I), ("D", VIA_D)):
+            for d0n, dn, fl, n, lk, ld in itertools.product(DIRS, DIRS, (1, -1), range(1, 6), (0.5, 1.0, 2.0), (0.3, 0.6)):
+                c = build_single(via, d0n, dn, fl, s, n, lk, ld, des["l_mm"], des["r2_mm"])
+                if c is None:
+                    continue
+                g = gaps_single([c])
+                if g["outside_cell"] <= 1e-9 and min(g["self"], g["images"]) >= GAP_MIN - 1e-9:
+                    cands[name].append((g, c))
+        print(f"s = {s}: single-stub candidates: island {len(cands['I'])}, disc {len(cands['D'])}", flush=True)
+        for (ga, a), (gb, b) in itertools.product(cands["I"], cands["D"]):
+            between = min(L0.poly_dist(pa, pb) for pa in a["parts"] for pb in b["parts"])
+            inter0 = min(between, ga["images"], gb["images"])
+            if inter0 < GAP_MIN or (best is not None and inter0 < best[0][0]):
+                continue
+            cross = min(min(L0.poly_dist(pa, pb) for pa in x["parts"] for pb in L0.shift(y["parts"], ix * P, iy * P)) for x, y in ((a, b), (b, a)) for ix, iy in itertools.product((-1, 0, 1), repeat=2) if (ix, iy) != (0, 0))
+            inter = min(inter0, cross)
+            selfg = min(ga["self"], gb["self"])
+            key = (round(inter, 3), round(selfg, 3), -(a["n_runs"] + b["n_runs"]))  # largest gap between the chokes and to the periodic images (the "1.9 mm" figure), then the largest self gap
+            if inter >= GAP_MIN and selfg >= GAP_MIN and (best is None or key > best[0]):
+                g = dict(between=between, images=min(ga["images"], gb["images"], cross), self=selfg, outside_cell=0.0, inter_choke_min=inter)
+                best = (key, g, a, b)
+        if best is not None:
+            print("best so far", round(best[0][0], 3), "at s =", s, flush=True)
+            break
+    res = dict(fits=best is not None, vias=dict(island=VIA_I, disc=VIA_D), design={k: v for k, v in des.items() if k != "ms"}, ms=des["ms"], antipads=antipads_ok())
+    if best:
+        _, g, a, b = best
+        res.update(gaps=g, chokes=[{k: (v if not isinstance(v, (np.ndarray, np.generic)) else float(v)) for k, v in c.items() if k not in ("parts", "path")} for c in (a, b)],
+                   paths=[[list(map(float, pt)) for pt in c["path"]] for c in (a, b)])
+        print("FIT", {k: round(v, 3) for k, v in g.items()}, [(c["dir0"], c["dir"], c["flip"], c["n_runs"], c["ls"], c["link"], c["lead"], c["spacing"]) for c in (a, b)], flush=True)
+    (RES / "layout_fit_single.json").write_text(json.dumps(res, indent=1, default=lambda o: [o.real, o.imag] if isinstance(o, complex) else float(o)))
+    return res, (best[2], best[3]) if best else None
+
+
 if __name__ == "__main__":
-    {"fit": fit}[sys.argv[1]]()
+    {"fit": fit, "fit_single": fit_single}[sys.argv[1]]()

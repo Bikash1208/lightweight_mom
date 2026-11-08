@@ -1,0 +1,676 @@
+{
+ "labels": [
+  "MODEL_ONLY",
+  "NOT_HFSS_VALIDATED",
+  "PREDICTED_BEFORE_HFSS_RUN"
+ ],
+ "frame": "rotated +90 deg about z: slot along y, ACROSS the slot = x = $ph_x, ALONG = $ph_y",
+ "p_mm": 11.6,
+ "reference": "the f_MoM values are the NO-VIA MoM numbers of the island package (no vias, no choke, no FR4 layer); the difference HFSS(v2) - MoM and HFSS(v3) - HFSS(v2) at equal phase is the via / choke effect",
+ "series_models": {
+  "OFF": "(0.15 pF || 5 kohm) + 0.6 nH",
+  "ON": "3.0 ohm + 0.6 nH"
+ },
+ "parallel_equivalents_5p8GHz": {
+  "OFF": {
+   "R_ohm": 3876.27800586662,
+   "Z_series": [
+    6.6842207036368055,
+    -160.82667345142323
+   ],
+   "C_pF": 0.1703274007041134,
+   "L_nH": null
+  },
+  "ON": {
+   "R_ohm": 162.36647618527007,
+   "Z_series": [
+    3.0,
+    21.86548486898496
+   ],
+   "C_pF": null,
+   "L_nH": 0.6112947217199395
+  }
+ },
+ "parallel_equivalents_vs_f": {
+  "5.2": {
+   "OFF": {
+    "R_ohm": 4085.481806804041,
+    "Z_series": [
+     8.313011736077533,
+     -184.10201531588152
+    ],
+    "C_pF": 0.16591041748360386,
+    "L_nH": null
+   },
+   "ON": {
+    "R_ohm": 131.09956944261899,
+    "Z_series": [
+     3.0,
+     19.60353815840031
+    ],
+    "C_pF": null,
+    "L_nH": 0.6140515694770254
+   }
+  },
+  "5.5": {
+   "OFF": {
+    "R_ohm": 3983.045808038979,
+    "Z_series": [
+     7.432181902578872,
+     -171.89381502490693
+    ],
+    "C_pF": 0.16802970347549492,
+    "L_nH": null
+   },
+   "ON": {
+    "R_ohm": 146.30665590381747,
+    "Z_series": [
+     3.0,
+     20.734511513692635
+    ],
+    "C_pF": null,
+    "L_nH": 0.6125604773110336
+   }
+  },
+  "5.8": {
+   "OFF": {
+    "R_ohm": 3876.27800586662,
+    "Z_series": [
+     6.6842207036368055,
+     -160.82667345142323
+    ],
+    "C_pF": 0.1703274007041134,
+    "L_nH": null
+   },
+   "ON": {
+    "R_ohm": 162.36647618527007,
+    "Z_series": [
+     3.0,
+     21.86548486898496
+    ],
+    "C_pF": null,
+    "L_nH": 0.6112947217199395
+   }
+  },
+  "6.1": {
+   "OFF": {
+    "R_ohm": 3765.4094992252985,
+    "Z_series": [
+     6.043698689204468,
+     -150.73312230873512
+    ],
+    "C_pF": 0.17281600994459068,
+    "L_nH": null
+   },
+   "ON": {
+    "R_ohm": 179.27903028697682,
+    "Z_series": [
+     3.0,
+     22.996458224277287
+    ],
+    "C_pF": null,
+    "L_nH": 0.6102110840811279
+   }
+  },
+  "6.4": {
+   "OFF": {
+    "R_ohm": 3650.6836577934378,
+    "Z_series": [
+     5.490989200158005,
+     -141.47690120914027
+    ],
+    "C_pF": 0.17550961164209594,
+    "L_nH": null
+   },
+   "ON": {
+    "R_ohm": 197.04431820893763,
+    "Z_series": [
+     3.0,
+     24.12743157956961
+    ],
+    "C_pF": null,
+    "L_nH": 0.6092762314125676
+   }
+  }
+ },
+ "cell": {
+  "row_id": "ISL_W2.9_q0.8_Li0.5_c0.6",
+  "real_mesh_dims_mm": {
+   "slot_L_mm": 8.7,
+   "slot_W_mm": 2.9,
+   "island_Li_mm": 4.35,
+   "island_Wi_mm": 1.45,
+   "clear_minus_y_mm": 0.54375,
+   "gap_plus_y_mm": 0.90625,
+   "clear_short_ends_mm": 2.175,
+   "mesh_cell_mm": 0.18125
+  },
+  "mean_sheet_5p8GHz_mesh64": {
+   "OFF_BAR50": {
+    "beta_over_k0": 1.104136378696593,
+    "alpha_np_per_m": 2.4945530313214066
+   },
+   "ON_BAR50": {
+    "beta_over_k0": 1.004836077299309,
+    "alpha_np_per_m": 0.0532068223397121
+   }
+  },
+  "gate": "OK",
+  "leakage": "OK_OFF_ONLY",
+  "rho": [
+   -5.637392466331794,
+   -2.922864225580708
+  ],
+  "resonance_flip": []
+ },
+ "variants": {
+  "v2": "vias (island + disc) with 2.0 x 0.3 mm bias stubs, no choke",
+  "v3": "vias + one 120-deg radial-stub choke per via"
+ },
+ "vias_rotated_frame_mm": {
+  "island": [
+   0.53,
+   -1.78
+  ],
+  "disc": [
+   3.63,
+   -3.63
+  ],
+  "drill_mm": 0.3,
+  "pad_mm": 0.6,
+  "antipad_mm": 1.0
+ },
+ "vias_island_frame_mm": {
+  "island": [
+   -1.78,
+   -0.53
+  ],
+  "disc": [
+   -3.63,
+   -3.63
+  ]
+ },
+ "choke_design": {
+  "h_mm": 0.8,
+  "w_mm": 0.15,
+  "angle_deg": 120.0,
+  "r1_mm": 0.08660254037844387,
+  "r2_mm": 3.1478509126372884,
+  "l_mm": 7.571000203977922,
+  "zin_min_ohm": 2785.8455771956737,
+  "zin_f0": [
+   4286.098354101186,
+   238.8875346349342
+  ],
+  "zs_f0": [
+   1.0720658628188389,
+   4.485925307278707e-08
+  ],
+  "via_len_mm": 4.045,
+  "via_L_nH": 4.035088711208632,
+  "Yload_max_uS": 353.9438310090975,
+  "Zv_min_ohm": 2825.3070470220932,
+  "zin_butterfly_min_ohm": 3340.9134072654297,
+  "zin_butterfly_f0": [
+   5073.943461279032,
+   335.27833769650107
+  ],
+  "ms": {
+   "eps_eff": 2.907285736943487,
+   "z0": 121.37765811447709,
+   "alpha_np_m": 2.5631937190701635,
+   "alpha_d": 1.7596764451642806,
+   "alpha_c": 0.8035172739058829,
+   "beta0_rad_m": 207.267408711825,
+   "quarter_wave_mm": 7.578597795753113,
+   "w_eff_mm": 0.20372573667148783
+  }
+ },
+ "choke_layout_rotated_frame": [
+  {
+   "via": [
+    0.53,
+    -1.78
+   ],
+   "apex": [
+    -2.519,
+    -1.78
+   ],
+   "path": [
+    [
+     0.53,
+     -1.78
+    ],
+    [
+     0.23000000000000004,
+     -1.78
+    ],
+    [
+     0.23000000000000004,
+     -4.191
+    ],
+    [
+     -0.52,
+     -4.191
+    ],
+    [
+     -0.52,
+     -1.7799999999999998
+    ],
+    [
+     -2.519,
+     -1.7799999999999998
+    ]
+   ],
+   "n_runs": 2,
+   "ls_mm": 2.411,
+   "link_mm": 1.999,
+   "lead_mm": 0.3,
+   "meander_gap_mm": 0.6,
+   "axis_angle_deg": 180.0
+  },
+  {
+   "via": [
+    3.63,
+    -3.63
+   ],
+   "apex": [
+    2.816,
+    0.471
+   ],
+   "path": [
+    [
+     3.63,
+     -3.63
+    ],
+    [
+     3.63,
+     -3.03
+    ],
+    [
+     2.816,
+     -3.03
+    ],
+    [
+     2.816,
+     -2.28
+    ],
+    [
+     3.63,
+     -2.28
+    ],
+    [
+     3.63,
+     -1.5299999999999998
+    ],
+    [
+     2.816,
+     -1.5299999999999998
+    ],
+    [
+     2.816,
+     -0.7799999999999998
+    ],
+    [
+     3.63,
+     -0.7799999999999998
+    ],
+    [
+     3.63,
+     -0.029999999999999805
+    ],
+    [
+     2.816,
+     -0.029999999999999805
+    ],
+    [
+     2.816,
+     0.4710000000000002
+    ]
+   ],
+   "n_runs": 5,
+   "ls_mm": 0.814,
+   "link_mm": 0.501,
+   "lead_mm": 0.6,
+   "meander_gap_mm": 0.6,
+   "axis_angle_deg": 90.0
+  }
+ ],
+ "choke_gaps_mm": {
+  "between": 1.9109999999999996,
+  "images": 2.0031490873627114,
+  "self": 0.426,
+  "outside_cell": 0.0,
+  "inter_choke_min": 1.9109999999999996
+ },
+ "fr4": {
+  "t_mm": 0.8,
+  "eps_r": 4.4,
+  "tan_d": 0.02,
+  "assumed": true
+ },
+ "runs": [
+  {
+   "variant": "v3",
+   "state": "OFF",
+   "file": "ISL_choke3.step",
+   "direction": "across",
+   "ph_x_deg": 95,
+   "ph_y_deg": 0,
+   "tier": 1,
+   "priority": 1,
+   "f_MoM_noVia_GHz": 5.8181793415218745,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C01"
+  },
+  {
+   "variant": "v3",
+   "state": "ON",
+   "file": "ISL_choke3.step",
+   "direction": "across",
+   "ph_x_deg": 80,
+   "ph_y_deg": 0,
+   "tier": 1,
+   "priority": 1,
+   "f_MoM_noVia_GHz": 5.716318142845071,
+   "f_MoM_noVia_other_branch_GHz": 5.189393987756599,
+   "run_id": "C02"
+  },
+  {
+   "variant": "v2",
+   "state": "OFF",
+   "file": "ISL_vias2.step",
+   "direction": "across",
+   "ph_x_deg": 95,
+   "ph_y_deg": 0,
+   "tier": 1,
+   "priority": 2,
+   "f_MoM_noVia_GHz": 5.8181793415218745,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C03"
+  },
+  {
+   "variant": "v2",
+   "state": "ON",
+   "file": "ISL_vias2.step",
+   "direction": "across",
+   "ph_x_deg": 80,
+   "ph_y_deg": 0,
+   "tier": 1,
+   "priority": 2,
+   "f_MoM_noVia_GHz": 5.716318142845071,
+   "f_MoM_noVia_other_branch_GHz": 5.189393987756599,
+   "run_id": "C04"
+  },
+  {
+   "variant": "v3",
+   "state": "OFF",
+   "file": "ISL_choke3.step",
+   "direction": "along",
+   "ph_x_deg": 0,
+   "ph_y_deg": 85,
+   "tier": 1,
+   "priority": 3,
+   "f_MoM_noVia_GHz": 5.783994870058285,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C05"
+  },
+  {
+   "variant": "v3",
+   "state": "ON",
+   "file": "ISL_choke3.step",
+   "direction": "along",
+   "ph_x_deg": 0,
+   "ph_y_deg": 85,
+   "tier": 1,
+   "priority": 3,
+   "f_MoM_noVia_GHz": 5.773477774876318,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C06"
+  },
+  {
+   "variant": "v2",
+   "state": "OFF",
+   "file": "ISL_vias2.step",
+   "direction": "along",
+   "ph_x_deg": 0,
+   "ph_y_deg": 85,
+   "tier": 1,
+   "priority": 4,
+   "f_MoM_noVia_GHz": 5.783994870058285,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C07"
+  },
+  {
+   "variant": "v2",
+   "state": "ON",
+   "file": "ISL_vias2.step",
+   "direction": "along",
+   "ph_x_deg": 0,
+   "ph_y_deg": 85,
+   "tier": 1,
+   "priority": 4,
+   "f_MoM_noVia_GHz": 5.773477774876318,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C08"
+  },
+  {
+   "variant": "v3",
+   "state": "OFF",
+   "file": "ISL_choke3.step",
+   "direction": "across",
+   "ph_x_deg": 90,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_noVia_GHz": 5.670505346369464,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C09"
+  },
+  {
+   "variant": "v3",
+   "state": "OFF",
+   "file": "ISL_choke3.step",
+   "direction": "across",
+   "ph_x_deg": 100,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_noVia_GHz": 5.950467677778158,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C10"
+  },
+  {
+   "variant": "v3",
+   "state": "ON",
+   "file": "ISL_choke3.step",
+   "direction": "across",
+   "ph_x_deg": 85,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_noVia_GHz": 6.050357430706787,
+   "f_MoM_noVia_other_branch_GHz": 5.2840204621151,
+   "run_id": "C11"
+  },
+  {
+   "variant": "v3",
+   "state": "ON",
+   "file": "ISL_choke3.step",
+   "direction": "across",
+   "ph_x_deg": 90,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_noVia_GHz": 6.338627254957708,
+   "f_MoM_noVia_other_branch_GHz": 5.3689164826164895,
+   "run_id": "C12"
+  },
+  {
+   "variant": "v3",
+   "state": "OFF",
+   "file": "ISL_choke3.step",
+   "direction": "along",
+   "ph_x_deg": 0,
+   "ph_y_deg": 80,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_noVia_GHz": 5.495380977015819,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C13"
+  },
+  {
+   "variant": "v3",
+   "state": "OFF",
+   "file": "ISL_choke3.step",
+   "direction": "along",
+   "ph_x_deg": 0,
+   "ph_y_deg": 90,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_noVia_GHz": 6.059548117071871,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C14"
+  },
+  {
+   "variant": "v3",
+   "state": "ON",
+   "file": "ISL_choke3.step",
+   "direction": "along",
+   "ph_x_deg": 0,
+   "ph_y_deg": 80,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_noVia_GHz": 5.48608995245637,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C15"
+  },
+  {
+   "variant": "v3",
+   "state": "ON",
+   "file": "ISL_choke3.step",
+   "direction": "along",
+   "ph_x_deg": 0,
+   "ph_y_deg": 90,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_noVia_GHz": 6.055006275168847,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C16"
+  },
+  {
+   "variant": "v2",
+   "state": "OFF",
+   "file": "ISL_vias2.step",
+   "direction": "across",
+   "ph_x_deg": 90,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_noVia_GHz": 5.670505346369464,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C17"
+  },
+  {
+   "variant": "v2",
+   "state": "OFF",
+   "file": "ISL_vias2.step",
+   "direction": "across",
+   "ph_x_deg": 100,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_noVia_GHz": 5.950467677778158,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C18"
+  },
+  {
+   "variant": "v2",
+   "state": "ON",
+   "file": "ISL_vias2.step",
+   "direction": "across",
+   "ph_x_deg": 85,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_noVia_GHz": 6.050357430706787,
+   "f_MoM_noVia_other_branch_GHz": 5.2840204621151,
+   "run_id": "C19"
+  },
+  {
+   "variant": "v2",
+   "state": "ON",
+   "file": "ISL_vias2.step",
+   "direction": "across",
+   "ph_x_deg": 90,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_noVia_GHz": 6.338627254957708,
+   "f_MoM_noVia_other_branch_GHz": 5.3689164826164895,
+   "run_id": "C20"
+  },
+  {
+   "variant": "v2",
+   "state": "OFF",
+   "file": "ISL_vias2.step",
+   "direction": "along",
+   "ph_x_deg": 0,
+   "ph_y_deg": 80,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_noVia_GHz": 5.495380977015819,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C21"
+  },
+  {
+   "variant": "v2",
+   "state": "OFF",
+   "file": "ISL_vias2.step",
+   "direction": "along",
+   "ph_x_deg": 0,
+   "ph_y_deg": 90,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_noVia_GHz": 6.059548117071871,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C22"
+  },
+  {
+   "variant": "v2",
+   "state": "ON",
+   "file": "ISL_vias2.step",
+   "direction": "along",
+   "ph_x_deg": 0,
+   "ph_y_deg": 80,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_noVia_GHz": 5.48608995245637,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C23"
+  },
+  {
+   "variant": "v2",
+   "state": "ON",
+   "file": "ISL_vias2.step",
+   "direction": "along",
+   "ph_x_deg": 0,
+   "ph_y_deg": 90,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_noVia_GHz": 6.055006275168847,
+   "f_MoM_noVia_other_branch_GHz": null,
+   "run_id": "C24"
+  }
+ ],
+ "sanity_runs": [
+  {
+   "run_id": "S1",
+   "what": "bare substrate (ground + RT5880, no metal on top, no FR4), $ph_x = 90, $ph_y = 0",
+   "f_model_GHz": 6.291368789188153,
+   "priority": 1,
+   "note": "model 6.291 GHz open air / 6.291 GHz with the 150 mm lid; a different value means a setup error"
+  }
+ ],
+ "modes_to_record": "modes 1-4 for the runs of priority 1 and 2 (f, Q, Ez over the patch decays upward = bound TM-like mode); ON across has two MoM branches (island resonance below, TM mode above)"
+}

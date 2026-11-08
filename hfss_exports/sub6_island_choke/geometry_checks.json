@@ -1,0 +1,504 @@
+{
+ "label": "MODEL_ONLY geometry checks on the re-imported STEP files",
+ "all_pass": true,
+ "parameters": {
+  "P_mm": 11.6,
+  "substrate_mm": 3.175,
+  "patch_t_mm": 0.035,
+  "ground_t_mm": 0.035,
+  "fr4": {
+   "t_mm": 0.8,
+   "eps_r": 4.4,
+   "tan_d": 0.02,
+   "assumed": true
+  },
+  "z_levels": {
+   "ground": [
+    -3.21,
+    -3.175
+   ],
+   "fr4": [
+    -4.01,
+    -3.21
+   ],
+   "bottom_copper": [
+    -4.045,
+    -4.01
+   ],
+   "air": [
+    -34.045,
+    150.0
+   ]
+  },
+  "vias_island_frame": {
+   "island": [
+    -1.78,
+    -0.53
+   ],
+   "disc": [
+    -3.63,
+    -3.63
+   ],
+   "drill_mm": 0.3,
+   "pad_mm": 0.6,
+   "antipad_mm": 1.0
+  },
+  "frame": "rotated +90 deg about z: slot along y, ACROSS = x = $ph_x",
+  "chokes": {
+   "fits": true,
+   "vias": {
+    "island": [
+     -1.78,
+     -0.53
+    ],
+    "disc": [
+     -3.63,
+     -3.63
+    ]
+   },
+   "design": {
+    "h_mm": 0.8,
+    "w_mm": 0.15,
+    "angle_deg": 120.0,
+    "r1_mm": 0.08660254037844387,
+    "r2_mm": 3.1478509126372884,
+    "l_mm": 7.571000203977922,
+    "zin_min_ohm": 2785.8455771956737,
+    "zin_f0": [
+     4286.098354101186,
+     238.8875346349342
+    ],
+    "zs_f0": [
+     1.0720658628188389,
+     4.485925307278707e-08
+    ],
+    "via_len_mm": 4.045,
+    "via_L_nH": 4.035088711208632,
+    "Yload_max_uS": 353.9438310090975,
+    "Zv_min_ohm": 2825.3070470220932,
+    "zin_butterfly_min_ohm": 3340.9134072654297,
+    "zin_butterfly_f0": [
+     5073.943461279032,
+     335.27833769650107
+    ]
+   },
+   "ms": {
+    "eps_eff": 2.907285736943487,
+    "z0": 121.37765811447709,
+    "alpha_np_m": 2.5631937190701635,
+    "alpha_d": 1.7596764451642806,
+    "alpha_c": 0.8035172739058829,
+    "beta0_rad_m": 207.267408711825,
+    "quarter_wave_mm": 7.578597795753113,
+    "w_eff_mm": 0.20372573667148783
+   },
+   "antipads": {
+    "antipad_to_antipad_mm": 2.6100554012369392,
+    "antipad_to_cell_edge_mm": 1.67,
+    "ok": true
+   },
+   "gaps": {
+    "between": 1.9109999999999996,
+    "images": 2.0031490873627114,
+    "self": 0.426,
+    "outside_cell": 0.0,
+    "inter_choke_min": 1.9109999999999996
+   },
+   "chokes": [
+    {
+     "via": [
+      -1.78,
+      -0.53
+     ],
+     "dir0": "+y",
+     "dir": "+y",
+     "flip": 1,
+     "apex": [
+      -1.78,
+      2.519
+     ],
+     "n_runs": 2,
+     "ls": 2.411,
+     "link": 1.999,
+     "lead": 0.3,
+     "spacing": 0.6,
+     "pitch": 0.75,
+     "w": 0.15,
+     "r2": 3.1478509126372884,
+     "angle": 120.0,
+     "axis_angle": 1.5707963267948966
+    },
+    {
+     "via": [
+      -3.63,
+      -3.63
+     ],
+     "dir0": "+x",
+     "dir": "+x",
+     "flip": 1,
+     "apex": [
+      0.471,
+      -2.816
+     ],
+     "n_runs": 5,
+     "ls": 0.814,
+     "link": 0.501,
+     "lead": 0.6,
+     "spacing": 0.6,
+     "pitch": 0.75,
+     "w": 0.15,
+     "r2": 3.1478509126372884,
+     "angle": 120.0,
+     "axis_angle": 0.0
+    }
+   ],
+   "paths": [
+    [
+     [
+      -1.78,
+      -0.53
+     ],
+     [
+      -1.78,
+      -0.23000000000000004
+     ],
+     [
+      -4.191,
+      -0.23000000000000004
+     ],
+     [
+      -4.191,
+      0.52
+     ],
+     [
+      -1.7799999999999998,
+      0.52
+     ],
+     [
+      -1.7799999999999998,
+      2.519
+     ]
+    ],
+    [
+     [
+      -3.63,
+      -3.63
+     ],
+     [
+      -3.03,
+      -3.63
+     ],
+     [
+      -3.03,
+      -2.816
+     ],
+     [
+      -2.28,
+      -2.816
+     ],
+     [
+      -2.28,
+      -3.63
+     ],
+     [
+      -1.5299999999999998,
+      -3.63
+     ],
+     [
+      -1.5299999999999998,
+      -2.816
+     ],
+     [
+      -0.7799999999999998,
+      -2.816
+     ],
+     [
+      -0.7799999999999998,
+      -3.63
+     ],
+     [
+      -0.029999999999999805,
+      -3.63
+     ],
+     [
+      -0.029999999999999805,
+      -2.816
+     ],
+     [
+      0.4710000000000002,
+      -2.816
+     ]
+    ]
+   ]
+  },
+  "v2_stubs": {
+   "length_mm": 2.0,
+   "width_mm": 0.3,
+   "direction": "+x of the island frame"
+  }
+ },
+ "files": {
+  "ISL_vias2.step": {
+   "all_pass": true,
+   "checks": {
+    "bodies_and_names": {
+     "ok": true,
+     "names": [
+      "AIR",
+      "DIODE_SHEET",
+      "METAL_PEC",
+      "SUBSTRATE",
+      "SUBSTRATE_FR4"
+     ]
+    },
+    "metal_parts": {
+     "ok": true,
+     "parts": 3,
+     "note": "disc patch + via(+choke), floating island + via(+choke), ground with two anti-pads"
+    },
+    "top_layer_vs_nominal_geometry": {
+     "ok": true,
+     "points": 13225,
+     "mismatches": 0
+    },
+    "vias_through_substrate": {
+     "ok": true,
+     "overlap_mm3": 0.44885505038164153,
+     "expected_two_barrels_mm3": 0.4488550503816417
+    },
+    "vias_through_fr4": {
+     "ok": true,
+     "overlap_mm3": 0.1130973355292325,
+     "expected_mm3": 0.11309733552923257
+    },
+    "vias_clear_of_ground": {
+     "ok": true,
+     "copper_to_ground_mm": 0.34999999999999987,
+     "expected_radial_clearance_mm": 0.35
+    },
+    "no_intersections": {
+     "ok": true,
+     "patch_x_ground": 0.0,
+     "island_x_ground": 0.0,
+     "island_x_patch": 0.0
+    },
+    "bottom_layer_gaps": {
+     "ok": true,
+     "between_stubs_mm": 2.65,
+     "to_periodic_images_mm": 7.992466460589394,
+     "inside_cell": true
+    },
+    "air_box_single_face_walls": {
+     "ok": true,
+     "faces": 6,
+     "z": [
+      -34.045,
+      150.0
+     ],
+     "below_bottom_copper_mm": 30.0,
+     "contains_all_solids": true
+    },
+    "stack": {
+     "ok": true,
+     "substrate_mm": 3.175,
+     "fr4_mm": 0.8,
+     "bottom_copper_z": [
+      -4.045,
+      -4.01
+     ]
+    },
+    "sheet_size_position": {
+     "ok": true,
+     "across_x_mm": [
+      -1.45,
+      -0.44999999999999996
+     ],
+     "along_y_mm": [
+      -0.175,
+      0.175
+     ],
+     "z_mm": 0.0175,
+     "current_line": [
+      [
+       -0.45,
+       0.0,
+       0.0175
+      ],
+      [
+       -1.45,
+       0.0,
+       0.0175
+      ]
+     ]
+    },
+    "sheet_edges_on_metal_edges": {
+     "ok": true,
+     "corner_to_metal_mm": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "EXACT_DIMS": {
+     "ok": true,
+     "inexact_literals_audit": 0,
+     "inexact_vs_design_table": 0,
+     "n_snapped": 189,
+     "exactify": {
+      "n_literals": 2846,
+      "n_snapped": 0,
+      "max_change": 0.0,
+      "n_colours": 5
+     },
+     "grid_mm": 0.001,
+     "verify_snap": {
+      "n_vertices": 78,
+      "n_distinct_snapped_vertices": 70,
+      "merged_groups_from_noise": 0,
+      "max_raw_separation_in_merged_group_mm": 0.0,
+      "distinct_merge_violations": "[]",
+      "collapsed_edges": 0,
+      "min_distinct_vertex_separation_mm": 0.035,
+      "n_vertex_pairs_closer_than_0p6mm": 49
+     }
+    }
+   }
+  },
+  "ISL_choke3.step": {
+   "all_pass": true,
+   "checks": {
+    "bodies_and_names": {
+     "ok": true,
+     "names": [
+      "AIR",
+      "DIODE_SHEET",
+      "METAL_PEC",
+      "SUBSTRATE",
+      "SUBSTRATE_FR4"
+     ]
+    },
+    "metal_parts": {
+     "ok": true,
+     "parts": 3,
+     "note": "disc patch + via(+choke), floating island + via(+choke), ground with two anti-pads"
+    },
+    "top_layer_vs_nominal_geometry": {
+     "ok": true,
+     "points": 13225,
+     "mismatches": 0
+    },
+    "vias_through_substrate": {
+     "ok": true,
+     "overlap_mm3": 0.44885505038164153,
+     "expected_two_barrels_mm3": 0.4488550503816417
+    },
+    "vias_through_fr4": {
+     "ok": true,
+     "overlap_mm3": 0.1130973355292325,
+     "expected_mm3": 0.11309733552923257
+    },
+    "vias_clear_of_ground": {
+     "ok": true,
+     "copper_to_ground_mm": 0.34999999999999987,
+     "expected_radial_clearance_mm": 0.35
+    },
+    "no_intersections": {
+     "ok": true,
+     "patch_x_ground": 0.0,
+     "island_x_ground": 0.0,
+     "island_x_patch": 0.0
+    },
+    "bottom_layer_gaps": {
+     "ok": true,
+     "between_chokes_mm": 1.9179147864604718,
+     "to_periodic_images_mm": 2.063197784365718,
+     "inside_cell": true,
+     "layout_gaps_polygon_model": {
+      "between": 1.9109999999999996,
+      "images": 2.0031490873627114,
+      "self": 0.426,
+      "outside_cell": 0.0,
+      "inter_choke_min": 1.9109999999999996
+     },
+     "note": "nothing crosses the cell boundary; trace / gap >= 0.15 mm"
+    },
+    "air_box_single_face_walls": {
+     "ok": true,
+     "faces": 6,
+     "z": [
+      -34.045,
+      150.0
+     ],
+     "below_bottom_copper_mm": 30.0,
+     "contains_all_solids": true
+    },
+    "stack": {
+     "ok": true,
+     "substrate_mm": 3.175,
+     "fr4_mm": 0.8,
+     "bottom_copper_z": [
+      -4.045,
+      -4.01
+     ]
+    },
+    "sheet_size_position": {
+     "ok": true,
+     "across_x_mm": [
+      -1.45,
+      -0.44999999999999996
+     ],
+     "along_y_mm": [
+      -0.175,
+      0.175
+     ],
+     "z_mm": 0.0175,
+     "current_line": [
+      [
+       -0.45,
+       0.0,
+       0.0175
+      ],
+      [
+       -1.45,
+       0.0,
+       0.0175
+      ]
+     ]
+    },
+    "sheet_edges_on_metal_edges": {
+     "ok": true,
+     "corner_to_metal_mm": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "EXACT_DIMS": {
+     "ok": true,
+     "inexact_literals_audit": 0,
+     "inexact_vs_design_table": 0,
+     "n_snapped": 308,
+     "exactify": {
+      "n_literals": 5170,
+      "n_snapped": 0,
+      "max_change": 0.0,
+      "n_colours": 5
+     },
+     "grid_mm": 0.001,
+     "verify_snap": {
+      "n_vertices": 148,
+      "n_distinct_snapped_vertices": 140,
+      "merged_groups_from_noise": 0,
+      "max_raw_separation_in_merged_group_mm": 0.0,
+      "distinct_merge_violations": "[]",
+      "collapsed_edges": 0,
+      "min_distinct_vertex_separation_mm": 0.035,
+      "n_vertex_pairs_closer_than_0p6mm": 272
+     }
+    }
+   }
+  }
+ }
+}

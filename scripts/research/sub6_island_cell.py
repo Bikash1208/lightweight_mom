@@ -45,17 +45,18 @@ from src.periodic_bc import RectangularLattice
 from src.solver import solve
 
 ROOT = G.ROOT
-OUT = ROOT / "results" / "sub6_island_cell"
+OUT = ROOT / "results" / os.environ.get("ISL_OUT", "sub6_island_cell")  # env overrides: mesh-check runs (defaults = the original mesh-64 scan)
 MM = 1e-3
 SUB = ("rt5880", 2.2, 0.0009, 3.175)
 P, R_ANCHOR = 11.6, 5.435
-N_MESH, FORDER = 64, 128
+N_MESH = int(os.environ.get("ISL_MESH", "64"))
+FORDER = 2 * N_MESH
 DX = P / N_MESH  # mm
 WS = (2.9, 3.6, 4.4)
 RATIOS = (0.7, 0.8, 0.9)
 LI_OVER_L = (0.3, 0.5, 0.7)
 CLEAR = (0.3, 0.6)
-GAP_CELLS = 5
+GAP_CELLS = int(os.environ.get("ISL_GAP_CELLS", "5"))  # 5 cells = 0.906 mm at mesh 64; mesh 96: 8 cells = 0.967 mm
 CORNER_MIN, RIM_MIN = 0.2, 0.35
 ISL_STATES = ["OFF_BAR50", "ON_BAR50"]
 
@@ -188,6 +189,9 @@ def ckpt_path(key):
 def run(workers):
     OUT.mkdir(parents=True, exist_ok=True)
     rs, refs, skipped = rows()
+    if os.environ.get("ISL_ROWS"):  # mesh-check subset: only these row ids, no reference geometries
+        keep = set(os.environ["ISL_ROWS"].split(","))
+        rs, refs = [r for r in rs if r["id"] in keep], []
     jobs = {r["id"]: dict(kind="ISL", r=R_ANCHOR, cells=r["cells"], states=ISL_STATES) for r in rs}
     for W, q in refs:
         jobs[f"REF_W{W:g}_q{q:g}"] = dict(kind="REF", r=R_ANCHOR, cells=ref_cells(W, q), states=["NOCUT"])

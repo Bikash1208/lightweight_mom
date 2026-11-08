@@ -188,6 +188,20 @@ def ckpt_path(key):
     return OUT / "ckpt" / f"{key}.json"
 
 
+def next_nodes_fix(nodes, states, tol=0.004, cap=9):
+    """New nodes at each state's own self-consistent beta when it is farther than tol from every existing node (max `cap` nodes)."""
+    out = []
+    for st in states:
+        try:
+            r = S.state_summary(nodes, st, SUB, guess=1.06)
+        except Exception:
+            continue
+        b = r["beta_over_k0"]
+        if r["nearest_node_dist"] > tol and not any(abs(b - k) < 3e-4 for k in list(nodes) + out) and len(nodes) + len(out) < cap:
+            out.append(float(b))
+    return out
+
+
 def run(workers):
     OUT.mkdir(parents=True, exist_ok=True)
     rs, refs, skipped = rows()
@@ -200,11 +214,15 @@ def run(workers):
     nodes = {k: G.load_nodes(ckpt_path(k)) for k in jobs}
     t0 = time.time()
     with Pool(workers) as pool:
-        for rnd in range(5):
+        for rnd in range(8 if os.environ.get("ISL_NODEFIX") else 5):
             todo = []
             for k, j in jobs.items():
-                kt = 1.06 if not nodes[k] else S.next_node(nodes[k], j["states"], SUB)
-                if kt is not None:
+                if os.environ.get("ISL_NODEFIX"):  # one node at EACH state's own beta (the median rule of S.next_node lands between OFF and ON betas -> extrapolation)
+                    kts = next_nodes_fix(nodes[k], j["states"]) if nodes[k] else [float(x) for x in os.environ.get("ISL_KT", "1.06").split(",")]
+                else:
+                    kt = 1.06 if not nodes[k] else S.next_node(nodes[k], j["states"], SUB)
+                    kts = [] if kt is None else [kt]
+                for kt in kts:
                     for d in "xy":
                         todo.append((k, (j["kind"], j["r"], j["cells"], d, kt, S.F)))
             if not todo:

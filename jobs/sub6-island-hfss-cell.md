@@ -1,0 +1,5 @@
+# sub6-island-hfss-cell (MODEL_ONLY; branch compute/sub6-island-hfss-cell from compute/sub6-step-fix)
+Build an HFSS eigenmode package (conventions of sub6_slotdisc_hfss_package.py) for the island cell row used by the best boards; prefer a 0.6 mm clearance row (W2.9_q0.8_Li0.7_c0.6) unless the boards depend on c0.3 - state which.
+Variants: (1) no vias; (2) with bias vias: island via + disc via, drill 0.3 mm, pad 0.6 mm, through RT5880 3.175, ground with anti-pads 1.0 mm diameter, FR4 0.5 mm bias laminate below the ground, short bias stubs 2 mm on the bottom (not connected to each other).
+States OFF/ON (parallel RLC equivalents at 5.8 GHz, recompute), across and along the slot, tier-1 phases from the MoM for variant 1 (MoM has no vias; for variant 2 use the same phases and report the predicted no-via frequency).
+Deliverables as the slotdisc package (STEP, HFSS_SETUP.md, results_template.csv, predictions.json, geometry checks). Uses the fixed (exactified) STEP export. Commit, push github, RESULT format with the list of HFSS runs (crucial ones first), STOP.

@@ -1,0 +1,32 @@
+run_id,priority,variant,state,step_file,direction,ph_x_deg,ph_y_deg,tier,f_MoM_noVia_GHz,f_MoM_other_branch_GHz,f_HFSS_GHz,Q,Ez_decays_from_patch_YN,mode_no,note
+S1,1,bare,none,(ground + substrate only),across_y,0,90,1,6.291,,,,,,sanity: bare substrate
+I01,1,novia,OFF,ISL_novia.step,across_y,0,95,1,5.818,,,,,,
+I02,1,novia,ON,ISL_novia.step,across_y,0,80,1,5.716,5.189,,,,,"ON across y: two MoM branches, the lower one is the island resonance: record modes 1-3"
+I03,1,novia,ABSENT,ISL_absent.step,across_y,0,90,1,5.764,,,,,,
+I04,2,vias,OFF,ISL_vias.step,across_y,0,95,1,5.818,,,,,,
+I05,2,vias,ON,ISL_vias.step,across_y,0,80,1,5.716,5.189,,,,,"ON across y: two MoM branches, the lower one is the island resonance: record modes 1-3"
+I06,3,novia,OFF,ISL_novia.step,along_x,85,0,1,5.784,,,,,,
+I07,3,novia,ON,ISL_novia.step,along_x,85,0,1,5.773,,,,,,
+I08,3,novia,ABSENT,ISL_absent.step,along_x,85,0,1,5.786,,,,,,
+I09,4,vias,OFF,ISL_vias.step,along_x,85,0,1,5.784,,,,,,
+I10,4,vias,ON,ISL_vias.step,along_x,85,0,1,5.773,,,,,,
+I11,5,novia,OFF,ISL_novia.step,across_y,0,90,2,5.671,,,,,,
+I12,5,novia,OFF,ISL_novia.step,across_y,0,100,2,5.950,,,,,,
+I13,5,novia,OFF,ISL_novia.step,along_x,80,0,2,5.495,,,,,,
+I14,5,novia,OFF,ISL_novia.step,along_x,90,0,2,6.060,,,,,,
+I15,5,novia,ON,ISL_novia.step,across_y,0,85,2,6.050,5.284,,,,,"ON across y: two MoM branches, the lower one is the island resonance: record modes 1-3"
+I16,5,novia,ON,ISL_novia.step,across_y,0,90,2,6.339,5.369,,,,,"ON across y: two MoM branches, the lower one is the island resonance: record modes 1-3"
+I17,5,novia,ON,ISL_novia.step,along_x,80,0,2,5.486,,,,,,
+I18,5,novia,ON,ISL_novia.step,along_x,90,0,2,6.055,,,,,,
+I19,5,novia,ABSENT,ISL_absent.step,across_y,0,85,2,5.572,,,,,,
+I20,5,novia,ABSENT,ISL_absent.step,across_y,0,95,2,5.937,,,,,,
+I21,5,novia,ABSENT,ISL_absent.step,along_x,80,0,2,5.497,,,,,,
+I22,5,novia,ABSENT,ISL_absent.step,along_x,90,0,2,6.062,,,,,,
+I23,5,vias,OFF,ISL_vias.step,across_y,0,90,2,5.671,,,,,,
+I24,5,vias,OFF,ISL_vias.step,across_y,0,100,2,5.950,,,,,,
+I25,5,vias,OFF,ISL_vias.step,along_x,80,0,2,5.495,,,,,,
+I26,5,vias,OFF,ISL_vias.step,along_x,90,0,2,6.060,,,,,,
+I27,5,vias,ON,ISL_vias.step,across_y,0,85,2,6.050,5.284,,,,,"ON across y: two MoM branches, the lower one is the island resonance: record modes 1-3"
+I28,5,vias,ON,ISL_vias.step,across_y,0,90,2,6.339,5.369,,,,,"ON across y: two MoM branches, the lower one is the island resonance: record modes 1-3"
+I29,5,vias,ON,ISL_vias.step,along_x,80,0,2,5.486,,,,,,
+I30,5,vias,ON,ISL_vias.step,along_x,90,0,2,6.055,,,,,,

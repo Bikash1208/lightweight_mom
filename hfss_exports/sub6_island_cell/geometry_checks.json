@@ -1,0 +1,397 @@
+{
+ "label": "MODEL_ONLY geometry checks on the re-imported STEP files",
+ "all_pass": true,
+ "parameters": {
+  "P_mm": 11.6,
+  "substrate_mm": 3.175,
+  "patch_t_mm": 0.035,
+  "ground_t_mm": 0.035,
+  "lid_mm": 150.0,
+  "disc_r_mm": 5.435,
+  "slot_mm": [
+   8.696,
+   2.9
+  ],
+  "island_x_halfwidth_mm": 2.174,
+  "island_y_mm": [
+   -0.85,
+   0.45
+  ],
+  "sheet_across_mm": 1.0,
+  "sheet_along_mm": 0.35,
+  "via": {
+   "drill_mm": 0.3,
+   "pad_mm": 0.6,
+   "antipad_mm": 1.0,
+   "y_island_via": -0.2,
+   "y_disc_via": 2.35,
+   "stub": [
+    2.0,
+    0.3
+   ]
+  },
+  "fr4": {
+   "t_mm": 0.5,
+   "eps_r": 4.4,
+   "tan_d": 0.02,
+   "assumed": true
+  },
+  "z_levels": {
+   "ground": [
+    -3.21,
+    -3.175
+   ],
+   "fr4": [
+    -3.71,
+    -3.21
+   ],
+   "bottom_copper": [
+    -3.745,
+    -3.71
+   ],
+   "air_bottom_variant2": -4.745
+  },
+  "mom_vs_nominal": {
+   "mesh_cell_mm": 0.18125,
+   "mom_clearance_mm": 0.54375,
+   "nominal_clearance_mm": 0.6,
+   "mom_gap_mm": 0.90625,
+   "nominal_gap_mm": 1.0,
+   "mom_island_width_mm": 1.45,
+   "nominal_island_width_mm": 1.3,
+   "mom_island_length_mm": 4.35,
+   "nominal_island_length_mm": 4.348
+  }
+ },
+ "files": {
+  "ISL_novia.step": {
+   "all_pass": true,
+   "checks": {
+    "bodies_and_names": {
+     "ok": true,
+     "names": [
+      "AIR",
+      "DIODE_SHEET",
+      "METAL_PEC",
+      "SUBSTRATE"
+     ]
+    },
+    "metal_parts": {
+     "ok": true,
+     "parts": 3,
+     "expected": 3,
+     "note": "disc patch, [island], ground; the island is a separate floating solid"
+    },
+    "patch_volume_vs_analytic": {
+     "ok": true,
+     "volume_mm3": 2.3653634288458725,
+     "analytic_mm3": 2.3653634288457583,
+     "rel_err": 4.8183679268731794e-14
+    },
+    "island_volume_vs_analytic": {
+     "ok": true,
+     "volume_mm3": 0.197834,
+     "analytic_mm3": 0.197834,
+     "island_mm": [
+      4.348,
+      1.3
+     ]
+    },
+    "top_layer_vs_nominal_geometry": {
+     "ok": true,
+     "points": 13297,
+     "mismatches": 0
+    },
+    "mirror_symmetry_x": {
+     "ok": true,
+     "asymmetric_points": 0,
+     "note": ""
+    },
+    "no_intersections": {
+     "ok": true,
+     "patch_x_ground": 0.0,
+     "island0_x_patch": 0.0,
+     "island0_x_ground": 0.0
+    },
+    "air_box_single_face_walls": {
+     "ok": true,
+     "faces": 6,
+     "z": [
+      -3.21,
+      150.0
+     ],
+     "contains_all_solids": true
+    },
+    "substrate_stack": {
+     "ok": true,
+     "substrate_mm": 3.175,
+     "patch_t_mm": 0.035,
+     "ground_t_mm": 0.035
+    },
+    "rims": {
+     "ok": true,
+     "slot_end_rim_mm": 1.0869999999999997,
+     "slot_corner_rim_mm": 0.8515947157162715
+    },
+    "sheet_size_position": {
+     "ok": true,
+     "across_y_mm": 1.0,
+     "along_x_mm": 0.35,
+     "x_mm": 0.0,
+     "y_from_to_mm": [
+      0.45,
+      1.45
+     ],
+     "z_mm": 0.0175,
+     "current_line": [
+      [
+       0.0,
+       0.45,
+       0.0175
+      ],
+      [
+       0.0,
+       1.45,
+       0.0175
+      ]
+     ]
+    },
+    "sheet_edges_on_metal_edges": {
+     "ok": true,
+     "corner_to_metal_mm": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "note": "short ends at y = 0.45 on the island +y edge and y = 1.45 on the slot +y edge"
+    },
+    "sheet_clearances": {
+     "ok": true,
+     "sheet_end_to_island_end_mm": 1.9989999999999999,
+     "island_edge_to_slot_end_mm": 2.174,
+     "minus_y_clearance_mm": 0.6,
+     "note": "informational: the sheet sides face open slot gap (+-0.175 mm of slot either side)"
+    },
+    "EXACT_DIMS": {
+     "ok": true,
+     "inexact_literals": 0,
+     "n_snapped": 4,
+     "exactify": {
+      "n_literals": 1613,
+      "n_snapped": 0,
+      "max_change": 0.0,
+      "n_colours": 4
+     },
+     "grid_mm": 0.001
+    }
+   }
+  },
+  "ISL_absent.step": {
+   "all_pass": true,
+   "checks": {
+    "bodies_and_names": {
+     "ok": true,
+     "names": [
+      "AIR",
+      "METAL_PEC",
+      "SUBSTRATE"
+     ]
+    },
+    "metal_parts": {
+     "ok": true,
+     "parts": 2,
+     "expected": 2,
+     "note": "disc patch, [island], ground; the island is a separate floating solid"
+    },
+    "patch_volume_vs_analytic": {
+     "ok": true,
+     "volume_mm3": 2.3653634288458725,
+     "analytic_mm3": 2.3653634288457583,
+     "rel_err": 4.8183679268731794e-14
+    },
+    "top_layer_vs_nominal_geometry": {
+     "ok": true,
+     "points": 13297,
+     "mismatches": 0
+    },
+    "mirror_symmetry_x": {
+     "ok": true,
+     "asymmetric_points": 0,
+     "note": ""
+    },
+    "no_intersections": {
+     "ok": true,
+     "patch_x_ground": 0.0
+    },
+    "air_box_single_face_walls": {
+     "ok": true,
+     "faces": 6,
+     "z": [
+      -3.21,
+      150.0
+     ],
+     "contains_all_solids": true
+    },
+    "substrate_stack": {
+     "ok": true,
+     "substrate_mm": 3.175,
+     "patch_t_mm": 0.035,
+     "ground_t_mm": 0.035
+    },
+    "rims": {
+     "ok": true,
+     "slot_end_rim_mm": 1.0869999999999997,
+     "slot_corner_rim_mm": 0.8515947157162715
+    },
+    "EXACT_DIMS": {
+     "ok": true,
+     "inexact_literals": 0,
+     "n_snapped": 4,
+     "exactify": {
+      "n_literals": 1253,
+      "n_snapped": 0,
+      "max_change": 0.0,
+      "n_colours": 3
+     },
+     "grid_mm": 0.001
+    }
+   }
+  },
+  "ISL_vias.step": {
+   "all_pass": true,
+   "checks": {
+    "bodies_and_names": {
+     "ok": true,
+     "names": [
+      "AIR",
+      "DIODE_SHEET",
+      "METAL_PEC",
+      "SUBSTRATE",
+      "SUBSTRATE_FR4"
+     ]
+    },
+    "metal_parts": {
+     "ok": true,
+     "parts": 3,
+     "expected": 3,
+     "note": "disc patch, [island], ground; the island is a separate floating solid"
+    },
+    "top_layer_vs_nominal_geometry": {
+     "ok": true,
+     "points": 13217,
+     "mismatches": 0
+    },
+    "mirror_symmetry_x": {
+     "ok": true,
+     "asymmetric_points": 0,
+     "note": "vias/stubs excluded"
+    },
+    "vias_through_substrate": {
+     "ok": true,
+     "overlap_mm3": 0.4488550503816416,
+     "expected_two_barrels_mm3": 0.4488550503816417,
+     "note": "the barrels overlap SUBSTRATE on purpose (nothing subtracted)"
+    },
+    "vias_through_fr4": {
+     "ok": true,
+     "overlap_mm3": 0.07068583470577035,
+     "expected_mm3": 0.07068583470577035
+    },
+    "vias_clear_of_ground": {
+     "ok": true,
+     "island_to_ground_mm": 0.35,
+     "antipad_radial_clearance_mm": 0.35,
+     "note": "barrels are 0.35 mm from the anti-pad wall; only the plated barrel passes the ground"
+    },
+    "stubs_not_connected": {
+     "ok": true,
+     "bottom_copper_stub_to_stub_mm": 1.9500000000000002,
+     "note": "island stub +x, disc stub -x; bottom-layer copper of the two vias is 2.55 mm apart in y; the two copper solids (island+via, disc+via) are separate"
+    },
+    "stub_clear_of_ground": {
+     "ok": true,
+     "fr4_mm": 0.5
+    },
+    "no_intersections": {
+     "ok": true,
+     "patch_x_ground": 0.0,
+     "island0_x_patch": 0.0,
+     "island0_x_ground": 0.0
+    },
+    "air_box_single_face_walls": {
+     "ok": true,
+     "faces": 6,
+     "z": [
+      -4.745,
+      150.0
+     ],
+     "contains_all_solids": true
+    },
+    "substrate_stack": {
+     "ok": true,
+     "substrate_mm": 3.175,
+     "patch_t_mm": 0.035,
+     "ground_t_mm": 0.035
+    },
+    "rims": {
+     "ok": true,
+     "slot_end_rim_mm": 1.0869999999999997,
+     "slot_corner_rim_mm": 0.8515947157162715
+    },
+    "sheet_size_position": {
+     "ok": true,
+     "across_y_mm": 1.0,
+     "along_x_mm": 0.35,
+     "x_mm": 0.0,
+     "y_from_to_mm": [
+      0.45,
+      1.45
+     ],
+     "z_mm": 0.0175,
+     "current_line": [
+      [
+       0.0,
+       0.45,
+       0.0175
+      ],
+      [
+       0.0,
+       1.45,
+       0.0175
+      ]
+     ]
+    },
+    "sheet_edges_on_metal_edges": {
+     "ok": true,
+     "corner_to_metal_mm": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "note": "short ends at y = 0.45 on the island +y edge and y = 1.45 on the slot +y edge"
+    },
+    "sheet_clearances": {
+     "ok": true,
+     "sheet_end_to_island_end_mm": 1.9989999999999999,
+     "island_edge_to_slot_end_mm": 2.174,
+     "minus_y_clearance_mm": 0.6,
+     "note": "informational: the sheet sides face open slot gap (+-0.175 mm of slot either side)"
+    },
+    "EXACT_DIMS": {
+     "ok": true,
+     "inexact_literals": 0,
+     "n_snapped": 26,
+     "exactify": {
+      "n_literals": 2958,
+      "n_snapped": 24,
+      "max_change": 5.999999999964367e-07,
+      "n_colours": 5
+     },
+     "grid_mm": 0.001
+    }
+   }
+  }
+ }
+}

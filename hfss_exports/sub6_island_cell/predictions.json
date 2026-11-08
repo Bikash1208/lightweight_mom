@@ -1,0 +1,1142 @@
+{
+ "labels": [
+  "MODEL_ONLY",
+  "NOT_HFSS_VALIDATED",
+  "PREDICTED_BEFORE_HFSS_RUN"
+ ],
+ "mesh_phase_vs_f": 64,
+ "floquet_order": 128,
+ "p_mm": 11.6,
+ "series_models": {
+  "OFF": "(0.15 pF || 5 kohm) + 0.6 nH",
+  "ON": "3.0 ohm + 0.6 nH"
+ },
+ "parallel_equivalents_5p8GHz": {
+  "OFF": {
+   "R_ohm": 3876.27800586662,
+   "Z_series": [
+    6.6842207036368055,
+    -160.82667345142323
+   ],
+   "C_pF": 0.1703274007041134,
+   "L_nH": null
+  },
+  "ON": {
+   "R_ohm": 162.36647618527007,
+   "Z_series": [
+    3.0,
+    21.86548486898496
+   ],
+   "C_pF": null,
+   "L_nH": 0.6112947217199395
+  }
+ },
+ "parallel_equivalents_vs_f": {
+  "5.2": {
+   "OFF": {
+    "R_ohm": 4085.481806804041,
+    "Z_series": [
+     8.313011736077533,
+     -184.10201531588152
+    ],
+    "C_pF": 0.16591041748360386,
+    "L_nH": null
+   },
+   "ON": {
+    "R_ohm": 131.09956944261899,
+    "Z_series": [
+     3.0,
+     19.60353815840031
+    ],
+    "C_pF": null,
+    "L_nH": 0.6140515694770254
+   }
+  },
+  "5.5": {
+   "OFF": {
+    "R_ohm": 3983.045808038979,
+    "Z_series": [
+     7.432181902578872,
+     -171.89381502490693
+    ],
+    "C_pF": 0.16802970347549492,
+    "L_nH": null
+   },
+   "ON": {
+    "R_ohm": 146.30665590381747,
+    "Z_series": [
+     3.0,
+     20.734511513692635
+    ],
+    "C_pF": null,
+    "L_nH": 0.6125604773110336
+   }
+  },
+  "5.8": {
+   "OFF": {
+    "R_ohm": 3876.27800586662,
+    "Z_series": [
+     6.6842207036368055,
+     -160.82667345142323
+    ],
+    "C_pF": 0.1703274007041134,
+    "L_nH": null
+   },
+   "ON": {
+    "R_ohm": 162.36647618527007,
+    "Z_series": [
+     3.0,
+     21.86548486898496
+    ],
+    "C_pF": null,
+    "L_nH": 0.6112947217199395
+   }
+  },
+  "6.1": {
+   "OFF": {
+    "R_ohm": 3765.4094992252985,
+    "Z_series": [
+     6.043698689204468,
+     -150.73312230873512
+    ],
+    "C_pF": 0.17281600994459068,
+    "L_nH": null
+   },
+   "ON": {
+    "R_ohm": 179.27903028697682,
+    "Z_series": [
+     3.0,
+     22.996458224277287
+    ],
+    "C_pF": null,
+    "L_nH": 0.6102110840811279
+   }
+  },
+  "6.4": {
+   "OFF": {
+    "R_ohm": 3650.6836577934378,
+    "Z_series": [
+     5.490989200158005,
+     -141.47690120914027
+    ],
+    "C_pF": 0.17550961164209594,
+    "L_nH": null
+   },
+   "ON": {
+    "R_ohm": 197.04431820893763,
+    "Z_series": [
+     3.0,
+     24.12743157956961
+    ],
+    "C_pF": null,
+    "L_nH": 0.6092762314125676
+   }
+  }
+ },
+ "cell": {
+  "row_id": "ISL_W2.9_q0.8_Li0.5_c0.6",
+  "real_mesh_dims_mm": {
+   "slot_L_mm": 8.7,
+   "slot_W_mm": 2.9,
+   "island_Li_mm": 4.35,
+   "island_Wi_mm": 1.45,
+   "clear_minus_y_mm": 0.54375,
+   "gap_plus_y_mm": 0.90625,
+   "clear_short_ends_mm": 2.175,
+   "mesh_cell_mm": 0.18125
+  },
+  "mean_sheet_5p8GHz_mesh64": {
+   "OFF_BAR50": {
+    "beta_over_k0": 1.104136378696593,
+    "alpha_np_per_m": 2.4945530313214066
+   },
+   "ON_BAR50": {
+    "beta_over_k0": 1.004836077299309,
+    "alpha_np_per_m": 0.0532068223397121
+   }
+  },
+  "gate": "OK",
+  "leakage": "OK_OFF_ONLY",
+  "rho": [
+   -5.637392466331794,
+   -2.922864225580708
+  ],
+  "resonance_flip": []
+ },
+ "board_use": "ISL_W2.9_q0.8_Li0.5_c0.6 is the island row used by 4 of the 6 best board designs of the follow-up (200 mm N 135 b; 220 mm N 120 a, N 135 a, N 240 a; 200 mm N 120 a uses Li0.7_c0.6, 200 mm N 240 a with no ring exclusion uses Li0.5_c0.3)",
+ "states": {
+  "OFF|x": {
+   "beta_over_k0_5p8GHz": 1.055582096201039,
+   "phase_deg_5p8GHz": 85.28247510371365,
+   "n_branches": 1,
+   "branches": [
+    {
+     "f_range_GHz": [
+      5.2,
+      6.4
+     ],
+     "phase_range_deg": [
+      75.10011001939526,
+      96.53679153472605
+     ],
+     "contains_5p8GHz": true
+    }
+   ],
+   "phase_vs_f": [
+    {
+     "f_GHz": 5.2,
+     "beta_over_k0": 1.0368058585131583,
+     "phase_deg": 75.10011001939526
+    },
+    {
+     "f_GHz": 5.5,
+     "beta_over_k0": 1.0452714160896819,
+     "phase_deg": 80.08138044869632
+    },
+    {
+     "f_GHz": 5.6,
+     "beta_over_k0": 1.048488454468434,
+     "phase_deg": 81.78835373109023
+    },
+    {
+     "f_GHz": 5.7,
+     "beta_over_k0": 1.0519217169924315,
+     "phase_deg": 83.52145741409628
+    },
+    {
+     "f_GHz": 5.8,
+     "beta_over_k0": 1.055582096201039,
+     "phase_deg": 85.28247510371365
+    },
+    {
+     "f_GHz": 6.1,
+     "beta_over_k0": 1.0680278273311268,
+     "phase_deg": 90.75116113261993
+    },
+    {
+     "f_GHz": 6.4,
+     "beta_over_k0": 1.0828619650094706,
+     "phase_deg": 96.53679153472605
+    }
+   ],
+   "f_at_phase_GHz": {
+    "60": {},
+    "65": {},
+    "70": {},
+    "75": {
+     "main": 5.193706437944475
+    },
+    "80": {
+     "main": 5.495380977015819
+    },
+    "85": {
+     "main": 5.783994870058285
+    },
+    "90": {
+     "main": 6.059548117071871
+    },
+    "95": {
+     "main": 6.322040718056578
+    },
+    "100": {},
+    "105": {},
+    "110": {}
+   },
+   "recommended_phases_deg": [
+    80,
+    85,
+    90
+   ],
+   "tier1_phase_deg": 85,
+   "max_nearest_node_dist": 0.00012106347349871704,
+   "dropped_unconverged_f_GHz": [],
+   "note": ""
+  },
+  "OFF|y": {
+   "beta_over_k0_5p8GHz": 1.1670730645084122,
+   "phase_deg_5p8GHz": 94.29004141540263,
+   "n_branches": 1,
+   "branches": [
+    {
+     "f_range_GHz": [
+      5.2,
+      6.4
+     ],
+     "phase_range_deg": [
+      77.12474669758633,
+      126.14101120032639
+     ],
+     "contains_5p8GHz": true
+    }
+   ],
+   "phase_vs_f": [
+    {
+     "f_GHz": 5.2,
+     "beta_over_k0": 1.0647572845332665,
+     "phase_deg": 77.12474669758633
+    },
+    {
+     "f_GHz": 5.5,
+     "beta_over_k0": 1.1019854765004329,
+     "phase_deg": 84.42641483750049
+    },
+    {
+     "f_GHz": 5.6,
+     "beta_over_k0": 1.1200259761444813,
+     "phase_deg": 87.36870714647657
+    },
+    {
+     "f_GHz": 5.7,
+     "beta_over_k0": 1.1416253111483108,
+     "phase_deg": 90.64382669134882
+    },
+    {
+     "f_GHz": 5.8,
+     "beta_over_k0": 1.1670730645084122,
+     "phase_deg": 94.29004141540263
+    },
+    {
+     "f_GHz": 6.1,
+     "beta_over_k0": 1.268651286829296,
+     "phase_deg": 107.7982936454484
+    },
+    {
+     "f_GHz": 6.4,
+     "beta_over_k0": 1.4149351877675775,
+     "phase_deg": 126.14101120032639
+    }
+   ],
+   "f_at_phase_GHz": {
+    "60": {},
+    "65": {},
+    "70": {},
+    "75": {
+     "main": 5.135169407535483
+    },
+    "80": {
+     "main": 5.329000379376269
+    },
+    "85": {
+     "main": 5.507445692320929
+    },
+    "90": {
+     "main": 5.670505346369464
+    },
+    "95": {
+     "main": 5.8181793415218745
+    },
+    "100": {
+     "main": 5.950467677778158
+    },
+    "105": {
+     "main": 6.067370355138318
+    },
+    "110": {
+     "main": 6.168887373602351
+    }
+   },
+   "recommended_phases_deg": [
+    90,
+    95,
+    100
+   ],
+   "tier1_phase_deg": 95,
+   "max_nearest_node_dist": 0.007303959925902381,
+   "dropped_unconverged_f_GHz": [],
+   "note": ""
+  },
+  "ON|x": {
+   "beta_over_k0_5p8GHz": 1.0614264465239642,
+   "phase_deg_5p8GHz": 85.75465122597458,
+   "n_branches": 1,
+   "branches": [
+    {
+     "f_range_GHz": [
+      5.2,
+      6.4
+     ],
+     "phase_range_deg": [
+      75.12597052279469,
+      96.35908710279558
+     ],
+     "contains_5p8GHz": true
+    }
+   ],
+   "phase_vs_f": [
+    {
+     "f_GHz": 5.2,
+     "beta_over_k0": 1.0371628795803935,
+     "phase_deg": 75.12597052279469
+    },
+    {
+     "f_GHz": 5.5,
+     "beta_over_k0": 1.0462882179371464,
+     "phase_deg": 80.15928069004451
+    },
+    {
+     "f_GHz": 5.6,
+     "beta_over_k0": 1.0501196893256675,
+     "phase_deg": 81.91559978034648
+    },
+    {
+     "f_GHz": 5.7,
+     "beta_over_k0": 1.0549550083270267,
+     "phase_deg": 83.76229749652302
+    },
+    {
+     "f_GHz": 5.8,
+     "beta_over_k0": 1.0614264465239642,
+     "phase_deg": 85.75465122597458
+    },
+    {
+     "f_GHz": 6.1,
+     "beta_over_k0": 1.065244795670659,
+     "phase_deg": 90.51468475232988
+    },
+    {
+     "f_GHz": 6.4,
+     "beta_over_k0": 1.0808686382447015,
+     "phase_deg": 96.35908710279558
+    }
+   ],
+   "f_at_phase_GHz": {
+    "60": {},
+    "65": {},
+    "70": {},
+    "75": {
+     "main": 5.192842807909002
+    },
+    "80": {
+     "main": 5.48608995245637
+    },
+    "85": {
+     "main": 5.773477774876318
+    },
+    "90": {
+     "main": 6.055006275168847
+    },
+    "95": {
+     "main": 6.3306754533339555
+    },
+    "100": {},
+    "105": {},
+    "110": {}
+   },
+   "recommended_phases_deg": [
+    80,
+    85,
+    90
+   ],
+   "tier1_phase_deg": 85,
+   "max_nearest_node_dist": 0.0005953252150072696,
+   "dropped_unconverged_f_GHz": [],
+   "note": ""
+  },
+  "ON|y": {
+   "beta_over_k0_5p8GHz": 1.0015425070129418,
+   "phase_deg_5p8GHz": 80.91651443032319,
+   "n_branches": 2,
+   "branches": [
+    {
+     "f_range_GHz": [
+      5.2,
+      5.6
+     ],
+     "phase_range_deg": [
+      80.53581778721032,
+      108.67952276456475
+     ],
+     "contains_5p8GHz": false
+    },
+    {
+     "f_range_GHz": [
+      5.7,
+      6.4
+     ],
+     "phase_range_deg": [
+      79.97682125374904,
+      91.15046201505649
+     ],
+     "contains_5p8GHz": true
+    }
+   ],
+   "phase_vs_f": [
+    {
+     "f_GHz": 5.2,
+     "beta_over_k0": 1.1118493392401592,
+     "phase_deg": 80.53581778721032
+    },
+    {
+     "f_GHz": 5.5,
+     "beta_over_k0": 1.295133153830433,
+     "phase_deg": 99.22403810831487
+    },
+    {
+     "f_GHz": 5.6,
+     "beta_over_k0": 1.3932206684393738,
+     "phase_deg": 108.67952276456475
+    },
+    {
+     "f_GHz": 5.7,
+     "beta_over_k0": 1.0072783418484936,
+     "phase_deg": 79.97682125374904
+    },
+    {
+     "f_GHz": 5.8,
+     "beta_over_k0": 1.0015425070129418,
+     "phase_deg": 80.91651443032319
+    },
+    {
+     "f_GHz": 6.1,
+     "beta_over_k0": 1.0109862258708127,
+     "phase_deg": 85.90429157274775
+    },
+    {
+     "f_GHz": 6.4,
+     "beta_over_k0": 1.0224430172162888,
+     "phase_deg": 91.15046201505649
+    }
+   ],
+   "f_at_phase_GHz": {
+    "60": {},
+    "65": {},
+    "70": {},
+    "75": {},
+    "80": {
+     "other": 5.189393987756599,
+     "main": 5.716318142845071
+    },
+    "85": {
+     "other": 5.2840204621151,
+     "main": 6.050357430706787
+    },
+    "90": {
+     "other": 5.3689164826164895,
+     "main": 6.338627254957708
+    },
+    "95": {
+     "other": 5.4440820492607696
+    },
+    "100": {
+     "other": 5.509517162047938
+    },
+    "105": {
+     "other": 5.565221820977997
+    },
+    "110": {
+     "other": 5.611196026050946
+    }
+   },
+   "recommended_phases_deg": [
+    80,
+    85,
+    90
+   ],
+   "tier1_phase_deg": 80,
+   "max_nearest_node_dist": 0.0016205069312720255,
+   "dropped_unconverged_f_GHz": [],
+   "note": "RESONANCE: two branches; the 5.8 GHz branch is the upper one; the lower branch (island resonance, beta/k0 up to 1.39) gives a LOWER mode at the same phase: record modes 1-3"
+  },
+  "ABSENT|x": {
+   "beta_over_k0_5p8GHz": 1.0552035560878026,
+   "phase_deg_5p8GHz": 85.25189213162744,
+   "n_branches": 1,
+   "branches": [
+    {
+     "f_range_GHz": [
+      5.2,
+      6.4
+     ],
+     "phase_range_deg": [
+      75.08701481134663,
+      96.4618969824288
+     ],
+     "contains_5p8GHz": true
+    }
+   ],
+   "phase_vs_f": [
+    {
+     "f_GHz": 5.2,
+     "beta_over_k0": 1.036625070649868,
+     "phase_deg": 75.08701481134663
+    },
+    {
+     "f_GHz": 5.5,
+     "beta_over_k0": 1.0450099065100174,
+     "phase_deg": 80.06134541490727
+    },
+    {
+     "f_GHz": 5.6,
+     "beta_over_k0": 1.0481927335447885,
+     "phase_deg": 81.76528573505676
+    },
+    {
+     "f_GHz": 5.7,
+     "beta_over_k0": 1.0515872277339975,
+     "phase_deg": 83.4948993253122
+    },
+    {
+     "f_GHz": 5.8,
+     "beta_over_k0": 1.0552035560878026,
+     "phase_deg": 85.25189213162744
+    },
+    {
+     "f_GHz": 6.1,
+     "beta_over_k0": 1.0674745762791322,
+     "phase_deg": 90.7041509573403
+    },
+    {
+     "f_GHz": 6.4,
+     "beta_over_k0": 1.0820218660090815,
+     "phase_deg": 96.4618969824288
+    }
+   ],
+   "f_at_phase_GHz": {
+    "60": {},
+    "65": {},
+    "70": {},
+    "75": {
+     "main": 5.194535021958466
+    },
+    "80": {
+     "main": 5.496532160571418
+    },
+    "85": {
+     "main": 5.785685875668763
+    },
+    "90": {
+     "main": 6.061996167250504
+    },
+    "95": {
+     "main": 6.3254630353166394
+    },
+    "100": {},
+    "105": {},
+    "110": {}
+   },
+   "recommended_phases_deg": [
+    80,
+    85,
+    90
+   ],
+   "tier1_phase_deg": 85,
+   "max_nearest_node_dist": 9.325257976855461e-05,
+   "dropped_unconverged_f_GHz": [],
+   "note": ""
+  },
+  "ABSENT|y": {
+   "beta_over_k0_5p8GHz": 1.126207631092871,
+   "phase_deg_5p8GHz": 90.98844571725087,
+   "n_branches": 1,
+   "branches": [
+    {
+     "f_range_GHz": [
+      5.2,
+      6.4
+     ],
+     "phase_range_deg": [
+      76.64209571354435,
+      112.88305207832849
+     ],
+     "contains_5p8GHz": true
+    }
+   ],
+   "phase_vs_f": [
+    {
+     "f_GHz": 5.2,
+     "beta_over_k0": 1.0580939738171753,
+     "phase_deg": 76.64209571354435
+    },
+    {
+     "f_GHz": 5.5,
+     "beta_over_k0": 1.0846456257630288,
+     "phase_deg": 83.09795682893812
+    },
+    {
+     "f_GHz": 5.6,
+     "beta_over_k0": 1.096646248220048,
+     "phase_deg": 85.54494890720284
+    },
+    {
+     "f_GHz": 5.7,
+     "beta_over_k0": 1.1103838820444287,
+     "phase_deg": 88.1632906891872
+    },
+    {
+     "f_GHz": 5.8,
+     "beta_over_k0": 1.126207631092871,
+     "phase_deg": 90.98844571725087
+    },
+    {
+     "f_GHz": 6.1,
+     "beta_over_k0": 1.1865407595472066,
+     "phase_deg": 100.82129782064672
+    },
+    {
+     "f_GHz": 6.4,
+     "beta_over_k0": 1.2662194552616182,
+     "phase_deg": 112.88305207832849
+    }
+   ],
+   "f_at_phase_GHz": {
+    "60": {},
+    "65": {},
+    "70": {},
+    "75": {
+     "main": 5.130032850515312
+    },
+    "80": {
+     "main": 5.36079871795359
+    },
+    "85": {
+     "main": 5.572165239199871
+    },
+    "90": {
+     "main": 5.764132414254153
+    },
+    "95": {
+     "main": 5.936700243116436
+    },
+    "100": {
+     "main": 6.08986872578672
+    },
+    "105": {
+     "main": 6.223637862265006
+    },
+    "110": {
+     "main": 6.338007652551291
+    }
+   },
+   "recommended_phases_deg": [
+    85,
+    90,
+    95
+   ],
+   "tier1_phase_deg": 90,
+   "max_nearest_node_dist": 0.003353751779952008,
+   "dropped_unconverged_f_GHz": [],
+   "note": ""
+  }
+ },
+ "runs": [
+  {
+   "variant": "novia",
+   "state": "OFF",
+   "file": "ISL_novia.step",
+   "direction": "across_y",
+   "ph_x_deg": 0,
+   "ph_y_deg": 95,
+   "tier": 1,
+   "priority": 1,
+   "f_MoM_GHz": 5.8181793415218745,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I01"
+  },
+  {
+   "variant": "novia",
+   "state": "ON",
+   "file": "ISL_novia.step",
+   "direction": "across_y",
+   "ph_x_deg": 0,
+   "ph_y_deg": 80,
+   "tier": 1,
+   "priority": 1,
+   "f_MoM_GHz": 5.716318142845071,
+   "f_MoM_other_branch_GHz": 5.189393987756599,
+   "run_id": "I02"
+  },
+  {
+   "variant": "novia",
+   "state": "ABSENT",
+   "file": "ISL_absent.step",
+   "direction": "across_y",
+   "ph_x_deg": 0,
+   "ph_y_deg": 90,
+   "tier": 1,
+   "priority": 1,
+   "f_MoM_GHz": 5.764132414254153,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I03"
+  },
+  {
+   "variant": "vias",
+   "state": "OFF",
+   "file": "ISL_vias.step",
+   "direction": "across_y",
+   "ph_x_deg": 0,
+   "ph_y_deg": 95,
+   "tier": 1,
+   "priority": 2,
+   "f_MoM_GHz": 5.8181793415218745,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I04"
+  },
+  {
+   "variant": "vias",
+   "state": "ON",
+   "file": "ISL_vias.step",
+   "direction": "across_y",
+   "ph_x_deg": 0,
+   "ph_y_deg": 80,
+   "tier": 1,
+   "priority": 2,
+   "f_MoM_GHz": 5.716318142845071,
+   "f_MoM_other_branch_GHz": 5.189393987756599,
+   "run_id": "I05"
+  },
+  {
+   "variant": "novia",
+   "state": "OFF",
+   "file": "ISL_novia.step",
+   "direction": "along_x",
+   "ph_x_deg": 85,
+   "ph_y_deg": 0,
+   "tier": 1,
+   "priority": 3,
+   "f_MoM_GHz": 5.783994870058285,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I06"
+  },
+  {
+   "variant": "novia",
+   "state": "ON",
+   "file": "ISL_novia.step",
+   "direction": "along_x",
+   "ph_x_deg": 85,
+   "ph_y_deg": 0,
+   "tier": 1,
+   "priority": 3,
+   "f_MoM_GHz": 5.773477774876318,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I07"
+  },
+  {
+   "variant": "novia",
+   "state": "ABSENT",
+   "file": "ISL_absent.step",
+   "direction": "along_x",
+   "ph_x_deg": 85,
+   "ph_y_deg": 0,
+   "tier": 1,
+   "priority": 3,
+   "f_MoM_GHz": 5.785685875668763,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I08"
+  },
+  {
+   "variant": "vias",
+   "state": "OFF",
+   "file": "ISL_vias.step",
+   "direction": "along_x",
+   "ph_x_deg": 85,
+   "ph_y_deg": 0,
+   "tier": 1,
+   "priority": 4,
+   "f_MoM_GHz": 5.783994870058285,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I09"
+  },
+  {
+   "variant": "vias",
+   "state": "ON",
+   "file": "ISL_vias.step",
+   "direction": "along_x",
+   "ph_x_deg": 85,
+   "ph_y_deg": 0,
+   "tier": 1,
+   "priority": 4,
+   "f_MoM_GHz": 5.773477774876318,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I10"
+  },
+  {
+   "variant": "novia",
+   "state": "OFF",
+   "file": "ISL_novia.step",
+   "direction": "across_y",
+   "ph_x_deg": 0,
+   "ph_y_deg": 90,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 5.670505346369464,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I11"
+  },
+  {
+   "variant": "novia",
+   "state": "OFF",
+   "file": "ISL_novia.step",
+   "direction": "across_y",
+   "ph_x_deg": 0,
+   "ph_y_deg": 100,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 5.950467677778158,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I12"
+  },
+  {
+   "variant": "novia",
+   "state": "OFF",
+   "file": "ISL_novia.step",
+   "direction": "along_x",
+   "ph_x_deg": 80,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 5.495380977015819,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I13"
+  },
+  {
+   "variant": "novia",
+   "state": "OFF",
+   "file": "ISL_novia.step",
+   "direction": "along_x",
+   "ph_x_deg": 90,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 6.059548117071871,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I14"
+  },
+  {
+   "variant": "novia",
+   "state": "ON",
+   "file": "ISL_novia.step",
+   "direction": "across_y",
+   "ph_x_deg": 0,
+   "ph_y_deg": 85,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 6.050357430706787,
+   "f_MoM_other_branch_GHz": 5.2840204621151,
+   "run_id": "I15"
+  },
+  {
+   "variant": "novia",
+   "state": "ON",
+   "file": "ISL_novia.step",
+   "direction": "across_y",
+   "ph_x_deg": 0,
+   "ph_y_deg": 90,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 6.338627254957708,
+   "f_MoM_other_branch_GHz": 5.3689164826164895,
+   "run_id": "I16"
+  },
+  {
+   "variant": "novia",
+   "state": "ON",
+   "file": "ISL_novia.step",
+   "direction": "along_x",
+   "ph_x_deg": 80,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 5.48608995245637,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I17"
+  },
+  {
+   "variant": "novia",
+   "state": "ON",
+   "file": "ISL_novia.step",
+   "direction": "along_x",
+   "ph_x_deg": 90,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 6.055006275168847,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I18"
+  },
+  {
+   "variant": "novia",
+   "state": "ABSENT",
+   "file": "ISL_absent.step",
+   "direction": "across_y",
+   "ph_x_deg": 0,
+   "ph_y_deg": 85,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 5.572165239199871,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I19"
+  },
+  {
+   "variant": "novia",
+   "state": "ABSENT",
+   "file": "ISL_absent.step",
+   "direction": "across_y",
+   "ph_x_deg": 0,
+   "ph_y_deg": 95,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 5.936700243116436,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I20"
+  },
+  {
+   "variant": "novia",
+   "state": "ABSENT",
+   "file": "ISL_absent.step",
+   "direction": "along_x",
+   "ph_x_deg": 80,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 5.496532160571418,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I21"
+  },
+  {
+   "variant": "novia",
+   "state": "ABSENT",
+   "file": "ISL_absent.step",
+   "direction": "along_x",
+   "ph_x_deg": 90,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 6.061996167250504,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I22"
+  },
+  {
+   "variant": "vias",
+   "state": "OFF",
+   "file": "ISL_vias.step",
+   "direction": "across_y",
+   "ph_x_deg": 0,
+   "ph_y_deg": 90,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 5.670505346369464,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I23"
+  },
+  {
+   "variant": "vias",
+   "state": "OFF",
+   "file": "ISL_vias.step",
+   "direction": "across_y",
+   "ph_x_deg": 0,
+   "ph_y_deg": 100,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 5.950467677778158,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I24"
+  },
+  {
+   "variant": "vias",
+   "state": "OFF",
+   "file": "ISL_vias.step",
+   "direction": "along_x",
+   "ph_x_deg": 80,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 5.495380977015819,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I25"
+  },
+  {
+   "variant": "vias",
+   "state": "OFF",
+   "file": "ISL_vias.step",
+   "direction": "along_x",
+   "ph_x_deg": 90,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 6.059548117071871,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I26"
+  },
+  {
+   "variant": "vias",
+   "state": "ON",
+   "file": "ISL_vias.step",
+   "direction": "across_y",
+   "ph_x_deg": 0,
+   "ph_y_deg": 85,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 6.050357430706787,
+   "f_MoM_other_branch_GHz": 5.2840204621151,
+   "run_id": "I27"
+  },
+  {
+   "variant": "vias",
+   "state": "ON",
+   "file": "ISL_vias.step",
+   "direction": "across_y",
+   "ph_x_deg": 0,
+   "ph_y_deg": 90,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 6.338627254957708,
+   "f_MoM_other_branch_GHz": 5.3689164826164895,
+   "run_id": "I28"
+  },
+  {
+   "variant": "vias",
+   "state": "ON",
+   "file": "ISL_vias.step",
+   "direction": "along_x",
+   "ph_x_deg": 80,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 5.48608995245637,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I29"
+  },
+  {
+   "variant": "vias",
+   "state": "ON",
+   "file": "ISL_vias.step",
+   "direction": "along_x",
+   "ph_x_deg": 90,
+   "ph_y_deg": 0,
+   "tier": 2,
+   "priority": 5,
+   "f_MoM_GHz": 6.055006275168847,
+   "f_MoM_other_branch_GHz": null,
+   "run_id": "I30"
+  }
+ ],
+ "method": "directional bound-mode condition: beta_d from the TM sheet admittance Y_dd(kt = beta_d) alone (d = x along the slot, y across), linear in kt between adaptive nodes; phase = beta_d * p; open air, no lid; f(phase) quadratic fit of 5 frequencies 5.2-6.4 GHz",
+ "model_vs_hfss_geometry": "the MoM geometry is the mesh-64 mask of the island scan (clearance 0.544, +y gap 0.906, island width 1.450, length 4.350, slot 8.700 x 2.900 mm); the HFSS geometry uses the nominal dimensions (0.600, 1.000, 1.300, 4.348, 8.696 x 2.900). Differences of up to 0.15 mm in the island width and the gaps are expected to shift the HFSS frequencies from the predictions; the variant-2 predictions are the NO-VIA values (the MoM has no vias).",
+ "variant2_note": "variant 2 runs use the same phases as variant 1; f_MoM is the predicted NO-VIA frequency; the difference HFSS(vias) - HFSS(no vias) is the via/anti-pad/stub effect",
+ "sanity_bare_substrate_GHz": {
+  "80": {
+   "open_air": 5.622721931569563,
+   "lid_150mm": 5.622458974347271,
+   "lid_100mm": 5.619792246171418
+  },
+  "90": {
+   "open_air": 6.291368789188153,
+   "lid_150mm": 6.291314850743297,
+   "lid_100mm": 6.290211127756758
+  },
+  "100": {
+   "open_air": 6.949004127768361,
+   "lid_150mm": 6.948995414436245,
+   "lid_100mm": 6.948625319186551
+  }
+ },
+ "sanity_runs": [
+  {
+   "run_id": "S1",
+   "what": "bare substrate (ground + substrate only, no metal on top), $ph_y = 90, $ph_x = 0",
+   "f_model_GHz": 6.291368789188153,
+   "priority": 1,
+   "note": "model 6.291 GHz open air / 6.291 GHz with the 150 mm lid; run once; a different value means a setup error (units, lid, periodic pairs)"
+  }
+ ]
+}

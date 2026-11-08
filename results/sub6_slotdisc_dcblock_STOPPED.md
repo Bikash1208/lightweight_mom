@@ -1,0 +1,3 @@
+# sub6-slotdisc-dcblock: STOPPED (decision 2026-11-08), NO RESULTS
+MODEL_ONLY / NOT_HFSS_VALIDATED. Stopped before any assembly finished (40 assemblies planned: g2 = 0.12 mm and single-notch reference, 5 rows, mesh 97 odd, F194).
+Reason: the 2-gap grid run on AEM-LAB1 answers the same question. Script `scripts/research/sub6_slotdisc_dcblock.py` (second open notch through the -u rim, mesh-realisable g2 0.12/0.36/0.60/1.08 mm = 1/3/5/9 rows; g2 0.24 not symmetric on an odd mesh) is kept for reference; its selftest passes (g2=0 equals the single notch; g2>0 splits the disc into 2 components without the diode).

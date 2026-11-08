@@ -1,0 +1,4 @@
+# sub6-lit-review (literature only, no compute; branch compute/sub6-lit-review from compute/sub6-board-model)
+Constraints: 5.8 GHz, surface-wave-fed holographic/leaky-wave CP metasurface, centre probe, grounded substrate (RT5880 3.175 or RO3006), ONE PIN diode per cell, 1-bit: OFF = 2 CP beams, ON = 1 CP beam. MoM models zero-thickness pattern + lumped loads; vias HFSS-only.
+Q1 reconfigurable holographic/modulated/leaky-wave antennas with PIN or varactor diodes. Q2 single-diode anisotropic/CP cells. Q3 bias networks that do not spoil the surface wave. Q4 diodes: low C_off at 5.8 GHz, < USD 0.8, in stock DigiKey/Mouser India.
+Deliverable results/sub6_lit/LIT_REVIEW.md: T1 (<=25 papers), T2 (3-5 cell concepts), T3 (bias options for a two-half cell), T4 (diode table). Mark non-measured as SIMULATED_IN_PAPER. Never commit PDFs. Commit, push github, RESULT format, STOP.

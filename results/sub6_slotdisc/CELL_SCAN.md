@@ -56,3 +56,17 @@
 - α uses only Im(Y) (as Phase 26), mean-sheet β self-consistent with the Bloch tensor at kt = β, linear Y(kt) between 2 nodes per row (kt/k0 1.06 and a second near 1.07-1.11).
 - LEAKAGE gate as corrected by the user: OK_BOTH | OK_ON_ONLY | OK_OFF_ONLY | LOW at 1 Np/m, 25°.
 - Not HFSS-validated; the 10.5 GHz cell scan HFSS comparison problem (single-diode switching) applies here too.
+
+## MESH_64_96 (MODEL_ONLY / NOT_HFSS_VALIDATED)
+3 best rows by max(alpha_ON, alpha_OFF); mesh 64/F128 vs mesh 96/F192; data `mesh_check_RT5880.json`. The job text gives no numeric threshold; the gate state below is my reading (flagged).
+
+| row | state | alpha 64 | alpha 96 | d% | beta/k0 64 | beta/k0 96 | d% | abs(Delta) mS 64 | 96 | d% |
+|---|---|---|---|---|---|---|---|---|---|---|
+| g1_q0.9_W2.9 | ON | 4.05 | 4.05 | 0.0 | 1.1401 | 1.1360 | -0.36 | 13.5 | 12.9 | -4.1 |
+| g1_q0.9_W2.9 | OFF | 0.0138 | 0.00306 | -77.9 | 1.0502 | 1.0490 | -0.11 | 0.629 | 0.333 | -47.0 |
+| g1_q0.9_W2.4 | ON | 4.05 | 3.88 | -4.1 | 1.1184 | 1.1103 | -0.73 | 10.8 | 9.73 | -9.9 |
+| g1_q0.9_W2.4 | OFF | 0.00207 | 0.000619 | -70.1 | 1.0488 | 1.0474 | -0.13 | 0.285 | 0.195 | -31.5 |
+| g0.8_q0.8_W3.6 | ON | 3.24 | 3.17 | -2.3 | 1.1185 | 1.1139 | -0.41 | 9.67 | 9.12 | -5.7 |
+| g0.8_q0.8_W3.6 | OFF | 0.00309 | 0.00325 | +5.2 | 1.0541 | 1.0541 | 0.00 | 0.297 | 0.301 | +1.5 |
+
+MESH_64_96 = CONVERGED_ON_STATE (alpha_ON within 4.1%, beta within 0.73%, |Delta_ON| within 9.9%); OFF_NOT_RESOLVED (alpha_OFF ~0.001-0.014 Np/m, |Delta_OFF| < 0.7 mS, relative change up to 78% but absolute change < 0.011 Np/m). Conclusion unchanged: beam carried by ON, OFF nearly isotropic. Mesh 96 lowers |Delta_ON| 4-10%, so rho values carry that uncertainty. Notch quantisation (5.5 cells at 64) not separately isolated.

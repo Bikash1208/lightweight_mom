@@ -57,14 +57,21 @@ CK = OUT / "ckpt"
 LABELS = ["MODEL_ONLY", "IDEAL_BIAS", "NOT_HFSS_VALIDATED"]
 
 # ---------------------------------------------------------------- diode states (footprint family, gap g [mm], sheet along-gap width [mm])
-FOOT_W = {"MA": 0.35, "SC79": 0.35}
-GAP = {"MA": 0.33, "SC79": 0.65}
+FOOT_W = {"MA": 0.35, "SC79": 0.35, "SC79G": 0.35}
+GAP = {"MA": 0.33, "SC79": 0.65, "SC79G": 1.00}  # SC79: g065 reference (pads 0.35 + 0.65 gap, ESTIMATE); SC79G: BAR50-02V data sheet, pads 0.35 x 0.35 at 1.35 mm c-c -> g = 1.00, sheet 1.00 x 0.35
 # name -> (family, kind, params). kind: "open" (no load, empty gap), "C" (series C only), "R" (series R only), "RLC"
 STATES = {
     "OFF_OPEN_MA": ("MA", "open", {}),
     "OFF_MA": ("MA", "C", {"C": 28.16e-15}),
     "ON_MA": ("MA", "R", {"R": 2.44}),
     "OFF_OPEN": ("SC79", "open", {}),
+    "STRAP": ("SC79", "strap", {}),
+    # g = 1.00 mm family (data-sheet correction 2026-11-08): OFF = (0.15 pF || 5 kohm) + 0.6 nH, ON = 3.0 ohm + 0.6 nH
+    "OFF_OPEN_G100": ("SC79G", "open", {}),
+    "OFF_BAR50_G100": ("SC79G", "RLC", {"C": 0.15e-12, "Rp": 5.0e3, "L": 0.6e-9}),
+    "ON_BAR50_G100": ("SC79G", "RLC", {"R": 3.0, "L": 0.6e-9}),
+    "STRAP_G100": ("SC79G", "strap", {}),
+      # PEC bridge over the diode footprint (g x 0.35 mm), no load: the R -> 0 limit of the ON state
     "OFF_SMP": ("SC79", "RLC", {"C": 0.19e-12, "L": 0.7e-9}),
     "OFF_SMP_0V": ("SC79", "RLC", {"C": 0.25e-12, "L": 0.7e-9}),  # ESTIMATE
     "ON_SMP": ("SC79", "RLC", {"R": 1.5, "L": 0.7e-9}),
@@ -81,7 +88,7 @@ STATES_BAR50 = ["OFF_BAR50", "OFF_BAR50_HI", "ON_BAR50", "ON_BAR50_MAX"]
 def state_load(name, psi_deg=0.0, g_mm=None):
     """`LumpedLoad` of a state at the cell centre, conduction across the gap (psi + 90 deg); None for an open gap."""
     fam, kind, p = STATES[name]
-    if kind == "open":
+    if kind in ("open", "strap"):
         return None
     g = (GAP[fam] if g_mm is None else g_mm) * MM
     d = "y" if psi_deg % 180.0 == 0.0 else float((psi_deg + 90.0) % 180.0)
@@ -90,7 +97,7 @@ def state_load(name, psi_deg=0.0, g_mm=None):
         return LumpedLoad(C=p["C"], **kw)
     if kind == "R":
         return LumpedLoad(R=p["R"], **kw)
-    m = DiodeModel(name, R_s=p.get("R", 0.0), L_s=p.get("L", 0.0), C_T=p.get("C"))
+    m = DiodeModel(name, R_s=p.get("R", 0.0), L_s=p.get("L", 0.0), C_T=p.get("C"), R_p=p.get("Rp"))
     return diode_load(m, 0.0, 0.0, g, FOOT_W[fam] * MM, d)
 
 
@@ -122,7 +129,7 @@ def cell_for_state(variant, r1_mm, q, h_mm, state, psi_deg=0.0, g_mm=None):
     fam = STATES[state][0]
     g = GAP[fam] if g_mm is None else g_mm
     ld = state_load(state, psi_deg, g)
-    return build_cell(variant, r1_mm, q, h_mm, g, FOOT_W[fam], psi_deg, ld, bridge=ld is not None)
+    return build_cell(variant, r1_mm, q, h_mm, g, FOOT_W[fam], psi_deg, ld, bridge=STATES[state][1] != "open")
 
 
 # ---------------------------------------------------------------- tensor
@@ -535,6 +542,179 @@ def run_prio(workers=61, frac_ram=0.7):
     print("PRIO_DONE", flush=True)
 
 
+# ---------------------------------------------------------------- un-held subset (2026-11-07): S, h = 3.175 mm, r = 4.2 / 4.4 / 4.6: resonance scan + supercell leakage, states OFF_BAR50 / ON_BAR50 / STRAP
+UN_R = (4.2, 4.4, 4.6)
+UN_STATES = ("OFF_BAR50", "ON_BAR50", "STRAP")
+RES_DIR = OUT / "resonance"
+RES_F = tuple(round(5.0 + 0.2 * i, 1) for i in range(9))  # 5.0 .. 6.6 GHz
+
+
+def res_task(a):
+    """Bloch tensor at frequency f with kt = (beta/k0 of the state at 5.8 GHz, grid) * k0(f) along the gap ('par') or across it ('perp'): the same wave index at every frequency."""
+    r, h, st, d, fg = a
+    RES_DIR.mkdir(parents=True, exist_ok=True)
+    fn = RES_DIR / f"S_{r}_{h}_{st}_{d}_{fg}.json"
+    if fn.exists():
+        return json.loads(fn.read_text(encoding="utf-8"))
+    ratio = _grid_beta0("S", r, 1.0, h, st, d)
+    f = fg * 1e9
+    kt = ratio * free_space_wavenumber(f)
+    phi = math.radians(0.0 if d == "par" else 90.0)
+    y = bloch_loaded_f2n(cell_for_state("S", r, 1.0, h, st), f, 64, kt * math.cos(phi), kt * math.sin(phi))
+    out = {"r1_mm": r, "h_mm": h, "state": st, "direction": d, "f_ghz": fg, "beta_over_k0_used": ratio, "mesh": 64, "Y_mS": [[complex(v).real * 1e3, complex(v).imag * 1e3] for v in y.ravel()], "labels": LABELS}
+    fn.write_text(json.dumps(out), encoding="utf-8", newline="\n")
+    return out
+
+
+def units_res(radii=None, states=None):
+    return [(r, 3.175, st, d, fg) for r in (UN_R if radii is None else radii) for st in (UN_STATES if states is None else states) for d in ("par", "perp") for fg in RES_F]
+
+
+def _extremum(fs, v):
+    """Interior local extrema of v(f) (parabolic refinement) and sign changes of v: [(kind, f_ghz)]."""
+    out = []
+    for i in range(1, len(fs) - 1):
+        if (v[i] - v[i - 1]) * (v[i + 1] - v[i]) < 0:
+            a, b, c = v[i - 1], v[i], v[i + 1]
+            den = a - 2 * b + c
+            off = 0.5 * (a - c) / den if den != 0 else 0.0
+            out.append(("max" if b > a else "min", float(fs[i] + off * (fs[1] - fs[0]))))
+    for i in range(len(fs) - 1):
+        if v[i] * v[i + 1] < 0:
+            out.append(("zero", float(fs[i] + (fs[i + 1] - fs[i]) * v[i] / (v[i] - v[i + 1]))))
+    return out
+
+
+def resonance_analysis(radii=None, states=None):
+    res = []
+    for r in (UN_R if radii is None else radii):
+        for st in (UN_STATES if states is None else states):
+            rec = {"r1_mm": r, "h_mm": 3.175, "state": st, "quantities": {}}
+            ser = {}
+            for d in ("par", "perp"):
+                pts = []
+                for fg in RES_F:
+                    fn = RES_DIR / f"S_{r}_3.175_{st}_{d}_{fg}.json"
+                    if fn.exists():
+                        o = json.loads(fn.read_text(encoding="utf-8"))
+                        pts.append((fg, np.array([_cx(v) for v in o["Y_mS"]]).reshape(2, 2)))
+                ser[d] = pts
+            if any(len(ser[d]) < len(RES_F) for d in ser):
+                rec["status"] = "NOT_COMPLETE"
+                res.append(rec)
+                continue
+            fs = np.array(RES_F)
+            ypar = np.array([m[0, 0] for _, m in ser["par"]])
+            yperp = np.array([m[1, 1] for _, m in ser["perp"]])
+            qs = {"|Y_par|": np.abs(ypar), "|Y_perp|": np.abs(yperp), "ImY_par": ypar.imag, "ImY_perp": yperp.imag, "|Delta|": np.abs(ypar - yperp)}
+            near = []
+            for name, v in qs.items():
+                ex = _extremum(fs, v)
+                rec["quantities"][name] = {"values_5.0_to_6.6_step0.2": v.tolist(), "extrema": ex}
+                near += [(abs(f - 5.8), name, k, f) for k, f in ex]
+            near.sort()
+            rec["nearest_to_5.8"] = None if not near else {"quantity": near[0][1], "kind": near[0][2], "f_ghz": near[0][3], "distance_ghz": near[0][0]}
+            rec["flag"] = "NEAR_RESONANT" if near and near[0][0] <= 0.5 else "NO_EXTREMUM_WITHIN_0.5GHZ_OF_5.8"
+            rec["status"] = "COMPUTED"
+            res.append(rec)
+    return res
+
+
+def _run_tasks(tasks, workers=61, frac_ram=0.7, tag=""):
+    """tasks = [(est GB, fn, arg)] in submission order; memory-aware, BELOW_NORMAL workers, fresh process per task."""
+    from concurrent.futures import FIRST_COMPLETED, wait
+
+    budget = frac_ram * avail_ram_gb()
+    print(f"{tag}: {len(tasks)} tasks, RAM budget {budget:.0f} GB, heaviest {max((t[0] for t in tasks), default=0):.1f} GB", flush=True)
+    t0, running, done = time.time(), {}, 0
+    tasks = list(tasks)
+    with ProcessPoolExecutor(workers, max_tasks_per_child=1, initializer=_low_priority) as ex:
+        while tasks or running:
+            used = sum(m for m, _ in running.values())
+            for t in list(tasks):
+                if len(running) >= workers:
+                    break
+                if used + t[0] <= budget:
+                    running[ex.submit(t[1], t[2])] = (t[0], t)
+                    used += t[0]
+                    tasks.remove(t)
+            if not running:
+                raise RuntimeError("a single task exceeds the RAM budget")
+            fin, _ = wait(list(running), return_when=FIRST_COMPLETED)
+            for fu in fin:
+                fu.result()
+                running.pop(fu)
+                done += 1
+                print(f"[{time.time() - t0:8.0f}s] {tag} done {done}, running {len(running)}, queued {len(tasks)}", flush=True)
+
+
+def run_unhold(radii=None, states=None):
+    """Phase A: STRAP grid rows (beta guesses for the leakage windows) + resonance scan. Phase B: supercell leakage (row + uniform cell, 9 real-beta points each)."""
+    a = [(est_mem_gb(64, u["r1"]), run_unit, u) for u in [dict(tag="grid", variant="S", r1=r, q=1.0, h=3.175, psi=0.0, f=F0, n=64, direction=d, states=["STRAP" if states is None else [x for x in states if x.startswith("STRAP")][0]], beta0=1.03) for r in (UN_R if radii is None else radii) for d in ("par", "perp")]]
+    a += [(est_mem_gb(64, x[0]), res_task, x) for x in units_res(radii, states)]
+    _run_tasks(a, tag="unhold-A")
+    b = sorted(((est_mem_leak(x), leak_task, x) for x in units_leak(radii=radii or UN_R, states=states or UN_STATES, hs=(3.175,))), key=lambda t: -t[0])
+    _run_tasks(b, tag="unhold-B")
+    print("UNHOLD_DONE", flush=True)
+
+
+# ---------------------------------------------------------------- g = 1.00 mm cells (data-sheet correction 2026-11-08)
+G100_R = (3.8, 4.0, 4.2, 4.4, 4.6)
+G100_STATES = ("OFF_OPEN_G100", "OFF_BAR50_G100", "ON_BAR50_G100", "STRAP_G100")
+
+
+def units_g100():
+    return [dict(tag="grid", variant="S", r1=r, q=1.0, h=3.175, psi=0.0, f=F0, n=64, direction=d, states=[st], beta0=1.03) for r in reversed(G100_R) for st in G100_STATES for d in ("par", "perp")]
+
+
+def closed_form_g100():
+    """First-order closed-form alpha (25 deg) of the g = 1.00 rows: leakage_alpha_first_order_tensor with the mean sheet (lossless, Im only) and its beta."""
+    from src.dispersion import sheet_model as sm
+    from src.dispersion.leakage_model import leakage_alpha_first_order_tensor
+
+    k0 = free_space_wavenumber(F0)
+    sub = Substrate("rt5880", 2.2, 0.0009, 3.175 * MM)
+    out = []
+    for r in G100_R:
+        for st in G100_STATES:
+            rows = {}
+            for d in ("par", "perp"):
+                fn = CK / f"{key_of({'tag': 'grid', 'variant': 'S', 'r1': r, 'q': 1.0, 'h': 3.175, 'psi': 0.0, 'f': F0, 'n': 64, 'direction': d, 'state': st, 'g_mm': None})}.json"
+                if fn.exists():
+                    rows[d] = json.loads(fn.read_text(encoding="utf-8"))
+            if len(rows) < 2:
+                continue
+            yp, yq = _mat(rows["par"])[0, 0], _mat(rows["perp"])[1, 1]
+            mean, delta = 0.5 * (yp + yq), 0.5 * (yp - yq)
+            rec = {"r1_mm": r, "state": st, "meanIm_mS": mean.imag * 1e3, "meanRe_mS": mean.real * 1e3, "absDelta_mS": 2 * abs(delta) * 1e3, "beta_par_over_k0": rows["par"]["beta_over_k0"], "beta_perp_over_k0": rows["perp"]["beta_over_k0"],
+                   "Y_off_over_Delta": max(abs(_mat(rows["par"])[0, 1]), abs(_mat(rows["perp"])[1, 0])) / (2 * abs(delta))}
+            try:
+                b = sm.find_beta_from_sheet_admittance(1j * mean.imag, sub, F0).beta_rad_per_m
+                rec["beta_mean_over_k0"] = b / k0
+                rec["alpha_closed_form_np_per_m"] = leakage_alpha_first_order_tensor(b, 1j * mean.imag, abs(delta), math.radians(25.0), sub, F0)
+            except Exception as e:  # noqa: BLE001
+                rec["alpha_closed_form_np_per_m"] = None
+                rec["note"] = f"NO_BETA_ROOT ({e.__class__.__name__})"
+            out.append(rec)
+    return out
+
+
+def run_g100(lo=1.0, hi=5.0):
+    """Step 2: the g = 1.00 rows; closed-form alpha; step 3: resonance + supercell leakage at the radii whose ON alpha lies in [lo, hi] Np/m (OFF / ON / STRAP)."""
+    _run_tasks([(est_mem_gb(64, u["r1"]), run_unit, u) for u in units_g100()], tag="g100-rows")
+    cf = closed_form_g100()
+    (OUT / "g100_closed_form.json").write_text(json.dumps({"labels": LABELS + ["G100"], "rows": cf}, indent=1, default=float), encoding="utf-8", newline="\n")
+    for x in cf:
+        print("CF", x["r1_mm"], x["state"], f"mean={x['meanIm_mS']:.3f} absD={x['absDelta_mS']:.3f} beta={x.get('beta_mean_over_k0', float('nan')):.4f} alpha={x['alpha_closed_form_np_per_m']}", flush=True)
+    sel = sorted(x["r1_mm"] for x in cf if x["state"] == "ON_BAR50_G100" and x["alpha_closed_form_np_per_m"] is not None and lo <= x["alpha_closed_form_np_per_m"] <= hi)
+    print("SELECTED_RADII", sel, flush=True)
+    if not sel:
+        print("NEEDS_DECISION: no radius with ON alpha in range", flush=True)
+        return
+    run_unhold(tuple(sel), ("OFF_BAR50_G100", "ON_BAR50_G100", "STRAP_G100"))
+    print("G100_DONE", flush=True)
+
+
 def provenance(extra):
     def sh(*a):
         try:
@@ -668,11 +848,11 @@ def leak_task(a):
     return out
 
 
-def units_leak(m=LEAK_M):
+def units_leak(m=LEAK_M, radii=None, states=None, hs=None):
     out = []
-    for h in SUB_H:
-        for r in LEAK_R:
-            for st in LEAK_STATES:
+    for h in (SUB_H if hs is None else hs):
+        for r in (LEAK_R if radii is None else radii):
+            for st in (LEAK_STATES if states is None else states):
                 for k in range(LEAK_NPTS):
                     out.append(("row", r, h, st, k, m))
                     out.append(("uni", r, h, st, k, m))
@@ -704,15 +884,15 @@ def _complex_root(betas, fv):
     return root, abs(res[0] - res[1]) * hh, real_root
 
 
-def leak_analysis():
+def leak_analysis(radii=None, states=None, hs=None):
     """Per (h, r, state): row and uniform complex roots, alpha_leak = alpha_row - alpha_uniform, beta, realised beam angle, validity flags; plus the first-order closed form."""
     from src.dispersion.leakage_model import leakage_alpha_first_order_tensor
 
     k0 = free_space_wavenumber(F0)
     out = []
-    for h in SUB_H:
-        for r in LEAK_R:
-            for st in LEAK_STATES:
+    for h in (SUB_H if hs is None else hs):
+        for r in (LEAK_R if radii is None else radii):
+            for st in (LEAK_STATES if states is None else states):
                 rec = {"h_mm": h, "r1_mm": r, "state": st}
                 try:
                     bg, n, pts = leak_points(r, h, st)
@@ -991,6 +1171,8 @@ def collect():
     g["RESONANCE"] = resonance(grp)
     g["T_CROSSTERM"] = t_crossterm(rows)
     g["LEAKAGE"] = {"state": "COMPUTED" if LEAK_DIR.exists() else "NOT_RUN", "method": "see header of the leakage block; supercell analytic continuation (phase26_supercell_table method) + first-order closed form", "rows": leak_analysis()}
+    g["RESONANCE_UNHELD"] = {"scope": "S h=3.175 r=4.2/4.4/4.6, kt = (beta/k0 at 5.8 GHz) k0(f), 5.0-6.6 GHz step 0.2", "rows": resonance_analysis() if RES_DIR.exists() else []}
+    g["LEAKAGE_UNHELD"] = {"rows": leak_analysis(UN_R, UN_STATES, (3.175,)) if LEAK_DIR.exists() else []}
     g["T_ANGLE"] = {"state": "NOT_RUN" if not ANGLE_DIR.exists() else "COMPUTED", "beta_rule": "|kt| = along-gap beta/k0 of the state (grid), angle from the gap axis", "geometries": angle_analysis()}
     out = {"labels": LABELS, "n_rows": len(rows), "geometries": geoms, "gates": g, "provenance": provenance({"job": "sub6-splitdisc-cell-scan", "n_rows": len(rows)})}
     (OUT / "cell_scan.json").write_text(json.dumps(out, indent=1, default=float), encoding="utf-8", newline="\n")
@@ -1025,6 +1207,10 @@ if __name__ == "__main__":
         us = units_grid()
         print(len(us), "units", sum(len(u["states"]) for u in us), "rows", flush=True)
         run_units(us, w)
+    elif cmd == "g100":
+        run_g100()
+    elif cmd == "unhold":
+        run_unhold()
     elif cmd == "prio":
         run_prio()
     elif cmd == "subsets":

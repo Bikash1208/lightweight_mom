@@ -27,6 +27,23 @@ ROWS = [r for r in E.rows() if r["id"] in IDS]
 STATES = E.ALL_STATES
 
 
+def _blas():
+    import numpy
+    try:
+        c = numpy.show_config(mode="dicts")
+        return c.get("Build Dependencies", {}).get("blas", {})
+    except Exception as exc:  # pragma: no cover
+        return f"NOT_AVAILABLE ({exc})"
+
+
+def _t_range():
+    import datetime
+    fs = [p for p in OUT.rglob("*.json")] + [OUT / "run.log"]
+    ts = [p.stat().st_mtime for p in fs if p.exists()]
+    f = lambda t: datetime.datetime.fromtimestamp(t).isoformat(timespec="seconds")
+    return (f(min(ts)), f(max(ts))) if ts else (None, None)
+
+
 def ck96(rid):
     return OUT / "ckpt96" / f"{rid}.json"
 
@@ -96,7 +113,7 @@ def collect():
                 rec[f"mesh{n}"]["resonance_flip"] = [f"{s}:{'uv'[i]}" for s, d in fl.items() if "5e+09" in d and "6.6e+09" in d for i in (0, 1) if np.sign(d["5e+09"][i]) != np.sign(d["6.6e+09"][i])]
         out.append(rec)
     OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "edge_diode_check.json").write_text(json.dumps(G.jc(dict(provenance=G.provenance(dict(stage="edge_diode_check", r_mm=E.R)), results=out)), indent=1, default=str))
+    (OUT / "edge_diode_check.json").write_text(json.dumps(G.jc(dict(provenance=G.provenance(dict(stage="edge_diode_check", r_mm=E.R, workers=WORKERS, blas=_blas(), run_start=_t_range()[0], run_end=_t_range()[1], meshes=[64, 96], states=["OFF_BAR50", "ON_BAR50", "NO_DIODE"], resonance_freqs_hz=[5.0e9, 5.8e9, 6.6e9])), results=out)), indent=1, default=str))
     for rec in out:
         print(rec["id"])
         for n in (64, 96):

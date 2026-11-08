@@ -37,6 +37,19 @@ P_MM = 11.6
 LAUNCH = R4.LAUNCH
 MODE = "base"
 CAL = None
+MESH = os.environ.get("SUB6_MESH", "64")  # "96": the switched-cell row ROW_ID takes its OFF/ON states (alpha, beta, Delta, J) from the mesh-96 table (AEM-LAB1, compute/sub6-island-meshcheck d789d9a)
+OUTD = RES / "mesh96" if MESH == "96" else RES
+if MESH == "96":
+    OUTD.mkdir(parents=True, exist_ok=True)
+    _j64 = json.load(open(R4.ISL_JSON))
+    _j96 = json.load(open(OUTD / "input_island_rows_n96_d789d9a.json"))
+    _new = {r["row"]["id"]: r for r in _j96["rows"]}[ROW_ID]
+    for _r in _j64["rows"]:
+        if _r["row"]["id"] == ROW_ID:
+            _r["states"] = _new["states"]
+            _r["row"]["mesh96_real_dims"] = _new["row"]["real"]
+    (OUTD / "input_island_rows_merged_m96.json").write_text(json.dumps(_j64), encoding="utf-8")
+    R4.ISL_JSON = OUTD / "input_island_rows_merged_m96.json"
 _orig = dict(tables=R4.tables, site_arrays=R4.site_arrays, physics=R4.physics)
 
 
@@ -202,7 +215,7 @@ def task(a):
 
 
 def run(workers):
-    RES.mkdir(parents=True, exist_ok=True)
+    OUTD.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
     cal = get_cal()
     tasks = [(mode, 0.2, n, pl, t, ex, LAUNCH) for mode in ("base", "cal") for n in (240, 135) for pl in ("a", "b") for t in (0.5, 0.8, 1.0) for ex in (0, 1)]
@@ -211,9 +224,9 @@ def run(workers):
         for rows in pool.imap_unordered(task, tasks, chunksize=1):
             allrows += rows
     allrows.sort(key=lambda r: (r["mode"], r["N_sw"], r["placement"], r["taper"], r["excl"], r["variant"]))
-    B.write_csv(RES / "points_final.csv", allrows)
-    (RES / "calibration.json").write_text(json.dumps(cal, indent=1, default=float), encoding="utf-8", newline="\n")
-    (RES / "provenance_final.json").write_text(json.dumps(B.provenance(dict(stage="final_cal_synthesis", workers=min(workers, len(tasks)), n_tasks=len(tasks), seconds=time.time() - t0, launch_fraction=LAUNCH, row=ROW_ID)), indent=1, default=str), encoding="utf-8", newline="\n")
+    B.write_csv(OUTD / "points_final.csv", allrows)
+    (OUTD / "calibration.json").write_text(json.dumps(cal, indent=1, default=float), encoding="utf-8", newline="\n")
+    (OUTD / "provenance_final.json").write_text(json.dumps(B.provenance(dict(stage="final_cal_synthesis", workers=min(workers, len(tasks)), n_tasks=len(tasks), seconds=time.time() - t0, launch_fraction=LAUNCH, row=ROW_ID)), indent=1, default=str), encoding="utf-8", newline="\n")
     print(f"done {time.time() - t0:.0f}s, {len(allrows)} rows", flush=True)
 
 

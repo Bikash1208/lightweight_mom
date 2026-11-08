@@ -10,6 +10,7 @@ board outline = hexagon + 10 mm margin, connector: 24 pads (1.0 x 1.0 mm, pitch 
 """
 import json
 import math
+import os
 import sys
 import time
 from pathlib import Path
@@ -31,7 +32,9 @@ R_ISL_CELL = 5.435
 V_DIODE, I_DIODE = 0.95, 10e-3
 W_TR, GAP_TR = 0.15, 0.15
 PAD_R, ANTIPAD_R = 0.30, 0.50
-KEEP_VIA = PAD_R + GAP_TR + W_TR / 2  # 0.525
+KEEP_VIA = PAD_R + GAP_TR + W_TR / 2  # 0.525 (router keep-out radius is KEEP_VIA + 0.1 = 0.625)
+ANTIPAD_CLEAR = ANTIPAD_R + W_TR / 2  # 0.575: trace centre line must stay this far from a foreign via centre, else the trace body overlaps the anti-pad void
+NEAR_R = float(os.environ.get("FINAL_NEAR_R", "0.05"))  # only vias within NEAR_R of a net end point (its own via) are lifted while that net is routed
 MARGIN = 10.0  # outline offset beyond the hexagon (mm)
 GRID = 0.15
 N_STR, N_PER = 12, 20
@@ -398,7 +401,7 @@ def build():
     inflate = W_TR + GAP_TR + 0.06  # centre-line to centre-line keep-out of a routed trace (0.36 mm)
     order = sorted([n for n in nets if n["kind"] == "link"], key=lambda n: np.linalg.norm(n["p0"] - n["p1"])) + sorted([n for n in nets if n["kind"] == "lead"], key=lambda n: np.linalg.norm(n["p0"] - n["p1"]))
     def try_route(n):
-        near = [q for q in router.vlist if min(np.linalg.norm(q - n["p0"]), np.linalg.norm(q - n["p1"])) < 1.4]
+        near = [q for q in router.vlist if min(np.linalg.norm(q - n["p0"]), np.linalg.norm(q - n["p1"])) < NEAR_R]
         for q in near:
             router.remove_via(q)
         poly, msg = router.route(n["p0"], n["p1"], inflate)
@@ -431,6 +434,49 @@ def build():
     failed = [(n["kind"], n["string"], n["pos"]) for n in order if n["poly"] is None]
     print(f"routed {len(nets) - len(failed)}/{len(nets)}  failed {failed}  {time.time() - t0:.0f}s", flush=True)
     return dict(fd=fd, cells=cells, strings=strings, vias=vias, nets=nets, pads=pads, outline=outline, failed=failed, conn=conn, apothem=apothem, r_out=r_out)
+
+
+def antipad_check(res):
+    """ANTI-PAD CROSSING CHECK.  (1) every routed trace (sampled every 0.03 mm) against every FOREIGN via: centre-line distance must be >= ANTIPAD_CLEAR (0.575 mm = anti-pad radius 0.5 + half trace);
+    a hit means the trace body overlaps that via's anti-pad void in the ground plane.  A net's own end vias are excluded.  (2) via-via: two anti-pad voids (r 0.5) must not merge (centre distance >= 1.0 mm).
+    (3) trace vs board outline margin is the router's 0.9 mm keep-in (not re-checked here).  Returns counts, the worst distances and the list of hits."""
+    nets = [n for n in res["nets"] if n["poly"] is not None]
+    vc = [(ci, k, v) for ci, (vi, vd) in res["vias"].items() for k, v in (("I", vi), ("D", vd))]
+    vpts = np.array([v for _, _, v in vc])
+    vtree = cKDTree(vpts)
+    hits, dmin = [], 9.0
+    for n in nets:
+        own = {j for p in ([n["p0"], n["p1"]] if n["kind"] == "link" else [n["p0"]]) for j in vtree.query_ball_point(p, 0.05)}
+        sp = np.array(resample(n["poly"], 0.03))
+        d, j = vtree.query(sp, k=2)
+        for kk in range(2):
+            for i in np.nonzero(d[:, kk] < ANTIPAD_CLEAR - 1e-6)[0]:
+                if int(j[i, kk]) in own:
+                    continue
+                hits.append(dict(kind=n["kind"], string=n["string"], pos=n["pos"], via=f"{vc[j[i, kk]][0]}{vc[j[i, kk]][1]}", distance_mm=float(d[i, kk])))
+        mask = np.ones(len(vpts), bool)
+        mask[list(own)] = False
+        if mask.any():
+            dd = cKDTree(vpts[mask]).query(sp)[0]
+            dmin = min(dmin, float(dd.min()))
+    pairs = vtree.query_pairs(2 * ANTIPAD_R - 1e-6, output_type="ndarray")
+    vv = [dict(a=f"{vc[a][0]}{vc[a][1]}", b=f"{vc[b][0]}{vc[b][1]}", distance_mm=float(np.linalg.norm(vpts[a] - vpts[b]))) for a, b in pairs]
+    uniq = sorted({(h["kind"], h["string"], h["pos"], h["via"]) for h in hits})
+    return dict(antipad_clear_mm=ANTIPAD_CLEAR, trace_antipad_hits=len(uniq), trace_antipad_hit_samples=len(hits), min_trace_to_foreign_via_mm=dmin, worst_hits=sorted(hits, key=lambda h: h["distance_mm"])[:10],
+                nets_with_hits=sorted({(h[0], h[1], h[2]) for h in uniq}), via_via_antipad_merges=len(vv), via_via_merge_pairs=vv[:10])
+
+
+def save_result(res):
+    """routing.json: everything the fab step needs (cells, strings, vias, routed polylines, pads, outline)."""
+    f = lambda a: [round(float(x), 4) for x in a]
+    d = dict(cells=[{k: (float(v) if isinstance(v, (float, np.floating)) else v) for k, v in c.items()} for c in res["cells"]],
+             strings=[dict(id=s["id"], cells=[int(c) for c in s["cells"]], s=[int(x) for x in s["s"]]) for s in res["strings"]],
+             vias={str(ci): dict(island=f(vi), disc=f(vd)) for ci, (vi, vd) in res["vias"].items()},
+             nets=[dict(kind=n["kind"], string=n["string"], pos=n["pos"], a=n["a"], b=n["b"], pad=n.get("pad"), p0=f(n["p0"]), p1=f(n["p1"]), poly=[f(q) for q in n["poly"]] if n["poly"] else None) for n in res["nets"]],
+             pads=[f(p) for p in res["pads"]], outline=[f(p) for p in res["outline"]], conn=f(res["conn"]), apothem=float(res["apothem"]), r_out=float(res["r_out"]), failed=res["failed"],
+             params=dict(P=P, W_TR=W_TR, GAP_TR=GAP_TR, PAD_R=PAD_R, ANTIPAD_R=ANTIPAD_R, VI_L=f(VI_L), VD_L=f(VD_L), V_DIODE=V_DIODE, I_DIODE=I_DIODE, N_STR=N_STR, N_PER=N_PER, PAD_W=PAD_W, MARGIN=MARGIN, GRID=GRID, KEEP_VIA=KEEP_VIA, NEAR_R=NEAR_R))
+    OUT.mkdir(parents=True, exist_ok=True)
+    (OUT / "routing.json").write_text(json.dumps(d), encoding="utf-8", newline="\n")
 
 
 def verify(res):
@@ -490,3 +536,9 @@ if __name__ == "__main__":
         r = build()
         v = verify(r)
         print(v)
+        a = antipad_check(r)
+        print("ANTIPAD", json.dumps({k: v for k, v in a.items() if k != "worst_hits"}, default=str))
+        for h in a["worst_hits"][:5]:
+            print("  hit", h)
+        save_result(r)
+        (OUT / "antipad_check.json").write_text(json.dumps(dict(verify=v, antipad=a), indent=1, default=str), encoding="utf-8", newline="\n")

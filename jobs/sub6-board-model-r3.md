@@ -1,0 +1,2 @@
+# sub6-board-model round 3 (branch compute/sub6-board-model, MODEL_ONLY)
+Diode cap = 150 available -> at most 135 switched cells. Re-run round-2 synthesis (polarisation-aware rotation, taper, ring exclusion, placements a/b) for N_switched = 110, 120, 135 and sides 180, 200, 220 mm. Report per point OFF G_A/G_B/balance/AR (3 dB beam), ON G_A/B suppression/AR, SLL both states, eta_off/eta_on, gate. Diode-C tolerance (0.12/0.20 pF) at the best point. Commit, push github, RESULT format. Then continue with sub6-launcher.

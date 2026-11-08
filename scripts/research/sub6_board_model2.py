@@ -41,6 +41,8 @@ RES = M.RES / "round2"
 N_SW = (180, 200, 220, 240, 260)
 SIDES = (0.2, 0.22)
 TAPERS = (0.5, 0.8, 1.0)
+if os.environ.get("SUB6_ROUND") == "3":  # round 3: diode cap 150 -> at most 135 switched cells
+    N_SW, SIDES, RES = (110, 120, 135), (0.18, 0.2, 0.22), M.RES / "round3"
 LS_ROWS = ["RT5880_p11.6_g0.73_q0.8_W2.9", "RT5880_p11.6_g1_q0.9_W2.9", "RT5880_p11.6_g1_q0.9_W2.4", "RT5880_p11.6_g0.8_q0.8_W3.6", "RT5880_p11.6_g0.73_q0.8_W3.6"]
 XPD_DB, FLOOR_A_DB, FLOOR_B_DB, MU_B, MAX_FLIPS, SUPP_DB = 20.0, 0.5, 1.0, 1.0, 200, 17.0
 

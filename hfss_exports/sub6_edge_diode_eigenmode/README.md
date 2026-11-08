@@ -2,7 +2,7 @@
 
 **MODEL_ONLY, IDEAL_BIAS, NOT_HFSS_VALIDATED. Predictions were written before any HFSS run.**
 
-> **GATED / PROVISIONAL.** This package was generated before the resonance + mesh 64/96 check (`results/sub6_edge_diode_check/`) finished. It must not be used until that check passes; the row and phases may change.
+> **WITHDRAWN: rule-3 gate FAILED.** The mesh 64 vs 96 check moved the chosen row by more than 10 % (OFF alpha 2.96 -> 3.73 Np/m, OFF beta/k0 1.196 -> 1.129, OFF |Delta| 20.2 -> 11.6). The tier-1 phases in this package come from mesh 64 and are NOT converged. Do not run these scripts. See `results/sub6_edge_diode_check/`.
 
 Row: `EDGE_th90_q0.7_W2.4` (best 90 deg row on mesh 64: alpha_OFF 2.96 Np/m, alpha_ON 0.21 Np/m, ratio 14, class OK_OFF_ONLY).
 RT5880 (eps_r 2.2, tan d 0.0009) 3.175 mm on a PEC ground, p = 11.6 mm, disc r = 5.30 mm, slot 7.42 x 2.4 mm along y (rim intact), 5.8 GHz.

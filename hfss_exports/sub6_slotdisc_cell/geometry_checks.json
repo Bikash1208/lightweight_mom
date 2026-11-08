@@ -1,0 +1,376 @@
+{
+ "label": "MODEL_ONLY geometry checks on the re-imported STEP files",
+ "all_pass": true,
+ "parameters": {
+  "P_mm": 11.6,
+  "substrate_mm": 3.175,
+  "patch_t_mm": 0.035,
+  "ground_t_mm": 0.035,
+  "lid_mm": 150.0,
+  "notch_mm": 1.0,
+  "sheet_across_mm": 1.0,
+  "sheet_along_mm": 0.35,
+  "cells": {
+   "CELL1": {
+    "gap": 0.73,
+    "ratio": 0.8,
+    "W": 2.9,
+    "r": 5.435,
+    "L": 8.696,
+    "diode_x": 4.891
+   },
+   "CELL2": {
+    "gap": 1.0,
+    "ratio": 0.9,
+    "W": 2.9,
+    "r": 5.3,
+    "L": 9.54,
+    "diode_x": 5.035
+   }
+  }
+ },
+ "files": {
+  "CELL1_notch": {
+   "all_pass": true,
+   "checks": {
+    "bodies_and_names": {
+     "ok": true,
+     "names": [
+      "AIR",
+      "DIODE_SHEET",
+      "METAL_PEC",
+      "SUBSTRATE"
+     ]
+    },
+    "metal_two_parts_patch_ground": {
+     "ok": true,
+     "parts": 2
+    },
+    "patch_volume_vs_analytic": {
+     "ok": true,
+     "volume_mm3": 2.327587093115141,
+     "analytic_mm3": 2.327587093115512,
+     "rel_err": -1.59539048638635e-13
+    },
+    "patch_vs_MoM_mask": {
+     "ok": true,
+     "points": 13495,
+     "mismatches": 0
+    },
+    "mirror_symmetry_y": {
+     "ok": true,
+     "asymmetric_points": 0,
+     "note": "mirror x is broken on purpose by the notch"
+    },
+    "no_intersections": {
+     "ok": true,
+     "patch_x_ground": 0.0,
+     "metal_x_substrate": 0.0
+    },
+    "air_box_ground_to_lid_single_face_walls": {
+     "ok": true,
+     "faces": 6,
+     "z": [
+      -3.21,
+      150.0
+     ],
+     "contains_all_solids": true
+    },
+    "substrate_stack": {
+     "ok": true,
+     "substrate_mm": 3.175,
+     "patch_t_mm": 0.035,
+     "ground_t_mm": 0.035
+    },
+    "rims": {
+     "ok": true,
+     "slot_end_rim_mm": 1.0869999999999997,
+     "slot_corner_rim_mm": 0.8515947157162715,
+     "note": "grid rules: rim >= 0.35 (r - L/2), corner rim >= 0.2"
+    },
+    "sheet_size_position": {
+     "ok": true,
+     "across_y_mm": 1.0,
+     "along_x_mm": 0.35,
+     "centre_x_mm": 4.891,
+     "z_mm": 0.0175,
+     "note": "centred in the rim between slot end and disc edge; CELL1 dx rounded 4.8915 -> 4.891 (0.5 um)"
+    },
+    "sheet_edges_on_notch_walls": {
+     "ok": true,
+     "corner_to_metal_mm": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "long_edge_mid_to_metal_mm": [
+      0.0,
+      0.0
+     ],
+     "centre_in_metal": false
+    },
+    "sheet_inside_notch_clearances": {
+     "ok": true,
+     "to_slot_end_mm": 0.3680000000000003,
+     "to_disc_edge_at_y_half_gc_mm": 0.34595205078537195,
+     "to_disc_edge_at_y0_mm": 0.3689999999999998,
+     "note": "informational: the sheet ends face the open slot / open air, not metal; metal touches only the long edges (notch walls). Under 0.1 mm when the rim is narrow (CELL2)"
+    },
+    "notch_width": {
+     "ok": true,
+     "notch_width_mm": 1.0,
+     "notch_x_from_to_mm": [
+      4.348,
+      5.411952050785372
+     ],
+     "bar_each_side_of_notch_mm": 0.95
+    },
+    "EXACT_DIMS": {
+     "ok": true,
+     "inexact_literals": 0,
+     "n_snapped": 4,
+     "max_snap_mm": 2.973374198491e-17,
+     "grid_mm": 0.001
+    }
+   }
+  },
+  "CELL1_nocut": {
+   "all_pass": true,
+   "checks": {
+    "bodies_and_names": {
+     "ok": true,
+     "names": [
+      "AIR",
+      "METAL_PEC",
+      "SUBSTRATE"
+     ]
+    },
+    "metal_two_parts_patch_ground": {
+     "ok": true,
+     "parts": 2
+    },
+    "patch_volume_vs_analytic": {
+     "ok": true,
+     "volume_mm3": 2.3653634288458725,
+     "analytic_mm3": 2.3653634288457583,
+     "rel_err": 4.8183679268731794e-14
+    },
+    "patch_vs_MoM_mask": {
+     "ok": true,
+     "points": 13521,
+     "mismatches": 0
+    },
+    "mirror_symmetry_y": {
+     "ok": true,
+     "asymmetric_points": 0,
+     "note": ""
+    },
+    "no_intersections": {
+     "ok": true,
+     "patch_x_ground": 0.0,
+     "metal_x_substrate": 0.0
+    },
+    "air_box_ground_to_lid_single_face_walls": {
+     "ok": true,
+     "faces": 6,
+     "z": [
+      -3.21,
+      150.0
+     ],
+     "contains_all_solids": true
+    },
+    "substrate_stack": {
+     "ok": true,
+     "substrate_mm": 3.175,
+     "patch_t_mm": 0.035,
+     "ground_t_mm": 0.035
+    },
+    "rims": {
+     "ok": true,
+     "slot_end_rim_mm": 1.0869999999999997,
+     "slot_corner_rim_mm": 0.8515947157162715,
+     "note": "grid rules: rim >= 0.35 (r - L/2), corner rim >= 0.2"
+    },
+    "EXACT_DIMS": {
+     "ok": true,
+     "inexact_literals": 0,
+     "n_snapped": 4,
+     "max_snap_mm": 2.973374198491e-17,
+     "grid_mm": 0.001
+    }
+   }
+  },
+  "CELL2_notch": {
+   "all_pass": true,
+   "checks": {
+    "bodies_and_names": {
+     "ok": true,
+     "names": [
+      "AIR",
+      "DIODE_SHEET",
+      "METAL_PEC",
+      "SUBSTRATE"
+     ]
+    },
+    "metal_two_parts_patch_ground": {
+     "ok": true,
+     "parts": 2
+    },
+    "patch_volume_vs_analytic": {
+     "ok": true,
+     "volume_mm3": 2.1020723431155823,
+     "analytic_mm3": 2.1020723431159594,
+     "rel_err": -1.794120407794253e-13
+    },
+    "patch_vs_MoM_mask": {
+     "ok": true,
+     "points": 12626,
+     "mismatches": 0
+    },
+    "mirror_symmetry_y": {
+     "ok": true,
+     "asymmetric_points": 0,
+     "note": "mirror x is broken on purpose by the notch"
+    },
+    "no_intersections": {
+     "ok": true,
+     "patch_x_ground": 0.0,
+     "metal_x_substrate": 0.0
+    },
+    "air_box_ground_to_lid_single_face_walls": {
+     "ok": true,
+     "faces": 6,
+     "z": [
+      -3.21,
+      150.0
+     ],
+     "contains_all_solids": true
+    },
+    "substrate_stack": {
+     "ok": true,
+     "substrate_mm": 3.175,
+     "patch_t_mm": 0.035,
+     "ground_t_mm": 0.035
+    },
+    "rims": {
+     "ok": true,
+     "slot_end_rim_mm": 0.5300000000000002,
+     "slot_corner_rim_mm": 0.31448096984877605,
+     "note": "grid rules: rim >= 0.35 (r - L/2), corner rim >= 0.2"
+    },
+    "sheet_size_position": {
+     "ok": true,
+     "across_y_mm": 1.0,
+     "along_x_mm": 0.35,
+     "centre_x_mm": 5.035,
+     "z_mm": 0.0175,
+     "note": "centred in the rim between slot end and disc edge; CELL1 dx rounded 4.8915 -> 4.891 (0.5 um)"
+    },
+    "sheet_edges_on_notch_walls": {
+     "ok": true,
+     "corner_to_metal_mm": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "long_edge_mid_to_metal_mm": [
+      0.0,
+      0.0
+     ],
+     "centre_in_metal": false
+    },
+    "sheet_inside_notch_clearances": {
+     "ok": true,
+     "to_slot_end_mm": 0.09000000000000075,
+     "to_disc_edge_at_y_half_gc_mm": 0.06636238330916733,
+     "to_disc_edge_at_y0_mm": 0.08999999999999986,
+     "note": "informational: the sheet ends face the open slot / open air, not metal; metal touches only the long edges (notch walls). Under 0.1 mm when the rim is narrow (CELL2)"
+    },
+    "notch_width": {
+     "ok": true,
+     "notch_width_mm": 1.0,
+     "notch_x_from_to_mm": [
+      4.77,
+      5.276362383309167
+     ],
+     "bar_each_side_of_notch_mm": 0.95
+    },
+    "EXACT_DIMS": {
+     "ok": true,
+     "inexact_literals": 0,
+     "n_snapped": 8,
+     "max_snap_mm": 5.160151443545e-16,
+     "grid_mm": 0.001
+    }
+   }
+  },
+  "CELL2_nocut": {
+   "all_pass": true,
+   "checks": {
+    "bodies_and_names": {
+     "ok": true,
+     "names": [
+      "AIR",
+      "METAL_PEC",
+      "SUBSTRATE"
+     ]
+    },
+    "metal_two_parts_patch_ground": {
+     "ok": true,
+     "parts": 2
+    },
+    "patch_volume_vs_analytic": {
+     "ok": true,
+     "volume_mm3": 2.1203468173769138,
+     "analytic_mm3": 2.120346817376805,
+     "rel_err": 5.129230373768223e-14
+    },
+    "patch_vs_MoM_mask": {
+     "ok": true,
+     "points": 12642,
+     "mismatches": 0
+    },
+    "mirror_symmetry_y": {
+     "ok": true,
+     "asymmetric_points": 0,
+     "note": ""
+    },
+    "no_intersections": {
+     "ok": true,
+     "patch_x_ground": 0.0,
+     "metal_x_substrate": 0.0
+    },
+    "air_box_ground_to_lid_single_face_walls": {
+     "ok": true,
+     "faces": 6,
+     "z": [
+      -3.21,
+      150.0
+     ],
+     "contains_all_solids": true
+    },
+    "substrate_stack": {
+     "ok": true,
+     "substrate_mm": 3.175,
+     "patch_t_mm": 0.035,
+     "ground_t_mm": 0.035
+    },
+    "rims": {
+     "ok": true,
+     "slot_end_rim_mm": 0.5300000000000002,
+     "slot_corner_rim_mm": 0.31448096984877605,
+     "note": "grid rules: rim >= 0.35 (r - L/2), corner rim >= 0.2"
+    },
+    "EXACT_DIMS": {
+     "ok": true,
+     "inexact_literals": 0,
+     "n_snapped": 8,
+     "max_snap_mm": 5.160151443545e-16,
+     "grid_mm": 0.001
+    }
+   }
+  }
+ }
+}

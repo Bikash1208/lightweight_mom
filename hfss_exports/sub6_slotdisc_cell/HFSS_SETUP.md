@@ -1,0 +1,19 @@
+# HFSS eigenmode: SUB6 slot-disc cells CELL1 / CELL2 (RT5880 3.175 mm, p 11.6, 5.8 GHz). EXPORT STANDARD (2026-11-05). Predictions MODEL_ONLY (`predictions.json`), NOT_HFSS_VALIDATED.
+
+**1. Assign material `pec` to `METAL_PEC` (patch + ground). STEP imports as vacuum; without this nothing works.** (If HFSS splits it into two parts, assign both.)
+**2. Air box: `AIR` = one vacuum box z = -3.210 ... +150 mm, ONE face per side wall.** It overlaps `SUBSTRATE` and `METAL_PEC` on purpose (nothing subtracted); keep `AIR` first in the tree. **Periodic pairs go on the four side faces of `AIR` only** (x = -5.8 / +5.8 and y = -5.8 / +5.8).
+**3.** `SUBSTRATE`: RT5880, eps_r 2.2, tan d 0.0009 (z -3.175 ... 0). **4. PEC lid:** Perfect E on the top face of `AIR` (z = +150). The bound mode decays as exp(-kappa z), kappa = k0 sqrt((beta/k0)^2 - 1) = 39-56 /m for beta/k0 1.05-1.21, so a 150 mm lid leaves exp(-kappa z) of about 3e-3 (1.05) ... 2e-4 (1.21) (the 10 GHz packages used 30 mm). Lid effect on the BARE substrate (MoM transverse resonance, 90 deg): open air 6.291 GHz, lid 150 mm 6.291 GHz, lid 100 mm 6.290 GHz; the MoM predictions below are open air.
+**5.** Project Variables `$ph_x`, `$ph_y` (deg). Lattice Pair 1: x faces of `AIR`, Phase Delay `$ph_x`; Pair 2: y faces, `$ph_y`. **Two run types: ALONG the slot (x): `$ph_x = phi`, `$ph_y = 0`; ACROSS the slot (y): `$ph_x = 0`, `$ph_y = phi`.**
+**6. Files / states** (`states.csv`; the geometry differs only NOCUT vs notch):
+| state | file | `DIODE_SHEET` (Lumped RLC, PARALLEL) |
+|---|---|---|
+| NOCUT | `CELL1_nocut.step` / `CELL2_nocut.step` | none (closed slot, no notch, no sheet) |
+| OFF | `CELL1_notch.step` / `CELL2_notch.step` | **R = 3.876 kohm, C = 0.1703 pF, L unticked** |
+| ON | same notch file | **R = 162.4 ohm, L = 0.6113 nH, C unticked** |
+
+Parallel equivalents are exact at 5.8 GHz only (OFF series model (0.15 pF || 5 kohm) + 0.6 nH = 6.68 -160.83j ohm; ON 3.0 ohm + 0.6 nH = 3.00 +21.87j ohm). If an eigenfrequency lands more than 0.15 GHz from 5.8, the equivalents at that frequency are in `predictions.json` (`parallel_equivalents_vs_f`).
+**Sheet `DIODE_SHEET`: 1.00 (across, y) x 0.35 (along, x) mm at z = +0.0175, centred in the rim between the slot end and the disc edge, long edges on the notch walls y = -0.5 / +0.5.** Current line across the notch: CELL1 (4.891, -0.5, 0.0175) -> (4.891, +0.5, 0.0175); CELL2 (5.035, -0.5, 0.0175) -> (5.035, +0.5, 0.0175).
+**7.** Eigenmode: min frequency 4.5 GHz, 6 modes, delta f 0.1 %, max 15 passes; initial mesh 1 mm on `SUBSTRATE`, 0.5 mm on the patch faces, 0.1 mm on `DIODE_SHEET` and the notch. **Clean Up Solutions before each run.** Patch 35 um (z 0 ... 0.035), ground 35 um (z -3.210 ... -3.175).
+**Mode: mode 1 (lowest, TM-like bound mode below the light line; the light line at 90 deg is 6.461 GHz).** Record f and Q; check Ez is large over the patch and decays upward (a higher mode with Ez ~ 0 circulating around the patch is TE-like: do not use). Runs are in `results_template.csv` (also `predictions.json` `runs`): tier 1 = the phase where the model puts the mode at 5.8 GHz (rounded to 5 deg); tier 2 = +-5 deg, to bracket 5.8 GHz if tier 1 is more than about 0.15 GHz off.
+**Sanity.** Bare substrate (ground only, no metal on top): model 6.291 GHz open air / 6.291 GHz with the 150 mm lid at 90 deg. With `METAL_PEC` assigned the NOCUT run must be clearly lower than the bare substrate. **Expected null result:** ALONG x the model puts NOCUT, OFF and ON within 0.03 GHz of each other at the same phase (the notch/diode does not load the x-directed current); ACROSS y they differ by 0.1-0.7 GHz at the same phase (`predictions.json`). If HFSS shows OFF = ON across y, the sheet or the RLC is not active.
+Geometry: disc r 5.435 / 5.300 mm, slot L 8.696 / 9.540 x W 2.900 mm along x, notch 1.00 mm from the slot end to the disc edge at the +x end (CELL1 / CELL2). Not run in AEDT by the author.

@@ -1,0 +1,24 @@
+{
+ "source": "user messages 2026-11-09 (HFSS runs of ISL_vias2: plain vias at (-1.78,-0.53)/(-3.63,-3.63), no chokes, bias stubs, FR4 0.8 mm, 30 mm air + radiation bottom; frame across = $ph_x, along = $ph_y); NOT a pushed commit",
+ "cell": "ISL_W2.9_q0.8_Li0.5_c0.6",
+ "all_modes_as_listed": {
+  "OFF across 85": [[4.699, 132], [5.566, 189], [6.023, null]], "OFF across 95": [[4.815, null], [5.861, null], [6.729, null]],
+  "OFF along 85": [[4.541, 123], [5.963, 250], [6.023, null]], "OFF along 95": [[4.654, null], [6.337, null], [6.729, null]],
+  "ON across 80": [[4.782, 166], [5.669, 5310], [5.759, 3723]], "ON across 95": [[5.032, 125], [6.593, 174], [6.730, 4171]],
+  "ON along 80": [[4.885, 104], [5.669, 5405], [5.758, 4843]], "ON along 95": [[5.107, 90], [6.640, 608], [6.730, 4675]]
+ },
+ "identification": {
+  "low_Q_4.5_5.1_GHz": "via / island resonance, NOT the surface wave, not used",
+  "isotropic_beta_over_k0_1.013": "FR4 underside slab wave (6.023@85, 6.729/6.730@95, 5.669@80): not used",
+  "ambiguous": "ON across 80 and ON along 80: top wave not separable from the 5.669/5.758 isotropic modes -> MoM ON branch used there, anchored to the HFSS 95 deg points",
+  "q_rule": "Q of OFF at 95 deg not recorded -> the 85 deg Q (189 across, 250 along) is used for OFF"
+ },
+ "points": [
+  {"state": "OFF_BAR50", "direction": "across", "phase_deg": 85, "f_GHz": 5.566, "Q": 189},
+  {"state": "OFF_BAR50", "direction": "across", "phase_deg": 95, "f_GHz": 5.861, "Q": null},
+  {"state": "OFF_BAR50", "direction": "along", "phase_deg": 85, "f_GHz": 5.963, "Q": 250},
+  {"state": "OFF_BAR50", "direction": "along", "phase_deg": 95, "f_GHz": 6.337, "Q": null},
+  {"state": "ON_BAR50", "direction": "across", "phase_deg": 95, "f_GHz": 6.593, "Q": 174},
+  {"state": "ON_BAR50", "direction": "along", "phase_deg": 95, "f_GHz": 6.640, "Q": 608}
+ ]
+}

@@ -182,6 +182,7 @@ def checks(path, name, notch):
 def geometry():
     import cadquery as cq
     from src.transmitarray.export import inexact_literals, snap_step_text, verify_snap
+    from sub6_step_exact import audit_step_text, exactify_step_text
 
     OUT.mkdir(parents=True, exist_ok=True)
     allres, allok = {}, True
@@ -197,11 +198,13 @@ def geometry():
             raw = path.read_text(encoding="utf-8")
             it = intended(name)
             snapped, stats = snap_step_text(raw, it, description=f"sub6 slot-disc {name} {tag}, RT5880 3.175, mm, 0.001 mm grid")
+            snapped, ex_stats = exactify_step_text(snapped)  # package-layer fix (sub6_step_exact.py): pcurve B-spline points, mirrored values, colours
             path.write_text(snapped, encoding="utf-8", newline="\n")
             badl = inexact_literals(path.read_text(encoding="utf-8"), it)
+            badl = list(badl) + audit_step_text(path.read_text(encoding="utf-8"))
             vs = verify_snap(raw, snapped)
             res, ok = checks(path, name, notch)
-            exact = {"ok": len(badl) == 0 and vs.get("collapsed_edges", 1) == 0 and not vs.get("distinct_merge_violations"), "inexact_literals": len(badl), "n_snapped": stats["n_snapped"], "max_snap_mm": stats["max_snap_mm"], "grid_mm": 0.001}
+            exact = {"ok": len(badl) == 0 and vs.get("collapsed_edges", 1) == 0 and not vs.get("distinct_merge_violations"), "inexact_literals": len(badl), "n_snapped": stats["n_snapped"], "max_snap_mm": stats["max_snap_mm"], "grid_mm": 0.001, "exactify": ex_stats}
             res["EXACT_DIMS"] = exact
             ok &= exact["ok"]
             allres[f"{name}_{tag}"] = {"all_pass": bool(ok), "checks": res}

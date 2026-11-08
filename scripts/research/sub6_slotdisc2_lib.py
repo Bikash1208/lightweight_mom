@@ -1,6 +1,8 @@
 """SUB6 slot-disc 2-GAP cell (MODEL_ONLY): SlotDiscNotch (+u notch, BAR50 bridge) PLUS a second, OPEN notch g2 through the opposite rim (-u slot end).
 The disc is then two DC-isolated halves.  Nothing under src/ and nothing in sub6_slotdisc_lib.py is touched (this module wraps it).
 
+OPTIONS: g2 = 0.12 and 0.36 mm, both at odd n = 97 (1 and 3 cell rows; 2 rows are not symmetric about y = 0 on an odd mesh).
+RUN (user 2026-11-08, latest): g2 = 0.20 at n = 59 = ONE 0.197 mm cell (modelled width 0.197 mm); the 0.12/0.36 (n 97) and 0.10 (n 117) entries were not run.
 Mesh resolution of g2 (cell-centre sampling of the metal mask, src/basis_functions.RooftopBasis): with ODD n the centre row y = 0 is in the gap, so the gap
 is ONE cell wide (= dy = p/n) as long as dy > g2/2.  g2 = 0.10 mm -> n = 117 (dy 0.0991, 1 cell);  g2 = 0.20 mm -> n = 59 (dy 0.1966, 1 cell).
 Even n would drop a gap narrower than dy altogether.  (Mesh 96 would give 0.12 mm for BOTH g2 values, so it cannot separate them.)
@@ -28,7 +30,7 @@ from src.solver import solve
 
 MM, F = B.MM, B.F
 state_summary, next_node, interp_y, make_sub = B.state_summary, B.next_node, B.interp_y, B.make_sub
-MESH_FOR_G2 = {0.10: 117, 0.20: 59}
+MESH_FOR_G2 = {0.20: 59, 0.12: 97, 0.36: 97, 0.10: 117}  # odd n = 97: dy = 0.1196 mm; g2 0.12 -> 1 mesh row (0.1196 mm), g2 0.36 -> 3 mesh rows (0.3588 mm)
 CLASS_STATES = {"OPEN2": ["NOCUT2"], "BRIDGE2": ["OFF_BAR50", "ON_BAR50"]}
 
 

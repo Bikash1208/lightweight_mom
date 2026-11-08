@@ -1,10 +1,10 @@
 """SUB6 slot-disc 2-GAP grid (MODEL_ONLY), job sub6-slotdisc-2gap-grid.  RT5880 3.175 mm, p 11.6, 5.8 GHz, F = 2n.
 Cell = SlotDiscNotch (+u notch 1.00 mm, BAR50 sheet) + OPEN second notch g2 at the -u rim (sub6_slotdisc2_lib).  States NOCUT2 (both open), OFF_BAR50, ON_BAR50.
-Mesh per g2 (odd n, 1-cell gap): g2 0.10 -> n 117, g2 0.20 -> n 59.
+Mesh per g2 (odd n, 1-cell gap): g2 0.12 and 0.36 -> n 97 (1 and 3 cell rows).
 
-    python sub6_slotdisc2_grid.py list  [--g2 0.2,0.1]
-    python sub6_slotdisc2_grid.py pilot [--g2 0.2]          anchor-nearest row
-    python sub6_slotdisc2_grid.py run   [--g2 0.2,0.1] [--workers N]    resumable; rows -> results/sub6_slotdisc2gap/rows_g2_<g2>.jsonl
+    python sub6_slotdisc2_grid.py list  [--g2 0.12,0.36]
+    python sub6_slotdisc2_grid.py pilot [--g2 0.12]          anchor-nearest row
+    python sub6_slotdisc2_grid.py run   [--g2 0.12,0.36] [--workers N]    resumable; rows -> results/sub6_slotdisc2gap/rows_g2_<g2>.jsonl
 """
 import argparse
 import json
@@ -43,7 +43,7 @@ def rows(g2s):
                 for w in G.WS:
                     if math.hypot(L / 2, w / 2) >= r - 1e-9:
                         continue
-                    out.append(dict(id=f"RT5880_p{P:g}_g2_{g2:g}_g{gap:g}_q{q:g}_W{w:g}", sub_name="RT5880", sub=SUB, p=P, gap=gap, ratio=q, r=r, L=L, W=w, g2=g2, mesh=T.MESH_FOR_G2[g2]))
+                    out.append(dict(id=f"RT5880_p{P:g}_g2_{g2:g}_g{gap:g}_q{q:g}_W{w:g}", sub_name="RT5880", sub=SUB, p=P, gap=gap, ratio=q, r=r, L=L, W=w, g2=g2, mesh=T.MESH_FOR_G2[g2], g2_modelled_mm=T.gap_cells(P, r, L, w, g2, T.MESH_FOR_G2[g2])[1]))
     out.sort(key=lambda d: (abs(d["gap"] - 0.73) / 0.3) ** 2 + (abs(d["ratio"] - 0.8) / 0.1) ** 2 + (abs(d["W"] - 2.9) / 0.8) ** 2)
     return out
 
@@ -91,7 +91,7 @@ def worker(row):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("stage", choices=["list", "pilot", "run"])
-    ap.add_argument("--g2", default="0.2,0.1")
+    ap.add_argument("--g2", default="0.2")
     ap.add_argument("--workers", type=int, default=0)
     a = ap.parse_args()
     g2s = [float(x) for x in a.g2.split(",")]

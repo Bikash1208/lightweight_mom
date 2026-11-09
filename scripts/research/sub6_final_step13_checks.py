@@ -109,8 +109,11 @@ for r in rows:
     nmx = r["name"]
     sh = names[nmx]
     s, p = int(r["string"]), int(r["pos_in_string"])
-    isl = f"METAL_PEC_S{s:02d}" if p == 1 else f"METAL_PEC_N{s:02d}_{p - 1:02d}"
-    dsc = "METAL_PEC_RETURN" if p == 20 else f"METAL_PEC_N{s:02d}_{p:02d}"
+    if len(sys.argv) > 5 and sys.argv[5] == "rf":   # RF-only STEP: one body per disc / island
+        isl, dsc = "METAL_PEC_ISL_" + r["site"], "METAL_PEC_DISC_" + r["site"]
+    else:
+        isl = f"METAL_PEC_S{s:02d}" if p == 1 else f"METAL_PEC_N{s:02d}_{p - 1:02d}"
+        dsc = "METAL_PEC_RETURN" if p == 20 else f"METAL_PEC_N{s:02d}_{p:02d}"
     ok = True
     for tgt in (isl, dsc):
         d = BRepExtrema_DistShapeShape(W(sh), W(names[tgt]))

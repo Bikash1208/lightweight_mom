@@ -1,0 +1,18 @@
+# HFSS_SETUP_RF: SUB6 board, RF only, 5.8 GHz (MODEL_ONLY / NOT_HFSS_VALIDATED). One page, manual steps, no scripts.
+Files (mm): `BOARD_N240_RF_9cell.step` (2.0 MB: the 9 switched cells nearest the feed + 43 static neighbours, 52 cells, same stack and feed, hexagon R 80.25) and `BOARD_N240_RF_full.step` (38.9 MB: 758 cells, 240 switched). Run the 9-cell file first. Both follow `hfss_exports/EXPORT_STANDARD.md`. Bodies: `METAL_PEC`, `SUBSTRATE`, `SUBSTRATE_FR4`, `AIR`, `PORT`, `D<string>_<pos>` (240 / 9). Nothing else, no other sheets.
+
+**1. Material `pec` on `METAL_PEC` (STEP imports as vacuum).** ONE part: all copper as 35 um solids (discs, islands, 480 vias with their pads, ground, pin), 1000 (full) / 63 (9 cells) DC-isolated lumps. `SUBSTRATE` = RT5880 (eps_r 2.2, tan d 0.0009), `SUBSTRATE_FR4` = FR4 (4.4 / 0.02, assumed). `AIR` = vacuum, first in the tree (one box overlapping everything on purpose; 6 faces).
+**Stack (z, mm):** top Cu 0 ... 0.035; RT5880 -3.175 ... 0; ground Cu -3.210 ... -3.175 (opening r 2.05); FR4 -4.010 ... -3.175 (the ground band outside the plate is FR4; solid under the port); via pads r 0.30 at -4.045 ... -4.010; via barrels r 0.15 from -4.010 to 0 (holes in both dielectrics); pin r 0.635, z -3.175 ... +8.925.
+**2. Radiation** on all 6 faces of `AIR`: full x +-198.205, y +-226.547, z -19.045 ... 40.035; 9-cell x +-84.5, y +-95.252, z -19.045 ... 40.035.
+**3. Port:** `PORT` (annulus r 0.635 ... 2.05 at z -3.175, in the ground opening) -> Lumped Port 50 ohm, integration line (0.635, 0, -3.175) -> (2.05, 0, -3.175), renormalise 50, no de-embedding.
+**4. Diode sheets:** `D<string>_<pos>` are 1.00 x 0.35 mm at z 0.0175 (copper mid-thickness), in the gap between the island edge and the slot edge; the sheet edges lie exactly on the island / disc side faces (shared vertices, no overlap, no gap); current line from the island edge (anode) to the disc edge (cathode) is along cell-local +y, i.e. across the narrow slot dimension (coordinates in `diode_sheets_rf_full.csv` / `_9cell.csv`). **ONE Impedance boundary** (HFSS > Boundaries > Assign > Impedance) on ALL `D*` sheets with the project variables `Rs` (resistance) and `Xs` (reactance), ohm/sq (BAR50 at 5.8 GHz, Z x W/L with W 0.35, L 1.00):
+| state | Rs | Xs |
+|---|---|---|
+| OFF (default) | 2.34 | -56.30 |
+| ON | 1.05 | +7.65 |
+(OFF: R 3876 ohm parallel C 0.1703 pF; ON: R 162.4 ohm parallel L 0.6113 nH.) States differ only in these two variables: same mesh, one project.
+**5. Solution:** ONE frequency 5.8 GHz, Driven Modal, first-order basis, max passes 10, max delta S 0.02, no sweep. Initial mesh suggestion: substrate max length 3 mm, copper faces 1 mm, `D*` sheets 0.15 mm, probe and port 0.3 mm, lambda refinement on; Clean Up Solutions before each run. Mesh reuse OFF -> ON allowed (check S11 against a fresh ON).
+**6. Export per state:** far field infinite sphere theta 0 ... 90 (or 180), phi 0 ... 360, step 1 to 2 deg, complex rETheta / rEPhi, complex S11 at 5.8 GHz, realized gain RHCP / LHCP, radiation efficiency, accepted power, passes, delta S, tets, peak RAM, solve time.
+**Sanity first:** the 9-cell project must import with exactly 5 + 9 products (METAL_PEC 1, D* 9, PORT 1), 0 intersect errors in the validation check, and OFF clearly different from ON.
+
+Gates (re-imported written STEP): names and counts survive (full: METAL_PEC 1, D* 240, PORT 1, 245 products; 9-cell: METAL_PEC 1, D* 9, PORT 1, 14 products), NO_OVERLAP (METAL_PEC vs SUBSTRATE / FR4 common volume 0, lump pairs 0), SHEETS_OK (touch the copper, zero overlap area, z 0.0175, area 0.35), PORT_OK (touches the pin and the ground only), AIR one box 6 faces, 0 inexact literals, all lumps BRepCheck VALID. Not opened in AEDT by the author.

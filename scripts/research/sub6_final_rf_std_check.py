@@ -121,6 +121,18 @@ for k, l in enumerate(lumps):
             mt.append((round(bbox(l)[5] - bbox(l)[2], 3), round(max(abs(bbox(l)[0]), abs(bbox(l)[3])), 2)))
 res["PORT"] = dict(touching_bodies=sorted(touch), metal_lumps_touched=mt, area=area(port), expected=math.pi * (2.05 ** 2 - 0.635 ** 2), z=pbb[2])
 res["PORT_OK"] = bool("METAL_PEC" in touch and len(mt) == 2 and abs(res["PORT"]["area"] - res["PORT"]["expected"]) < 1e-3)
+if len(sys.argv) > 4 and sys.argv[4] == "win":
+    # window gate: no FR4 inside the 12 x 12 mm window; list every metal lump and via / pad whose footprint reaches into the window
+    box = cq.Workplane("XY").workplane(offset=-5.0).rect(12.0, 12.0).extrude(5.0 - 3.175).val()
+    c = BRepAlgoAPI_Common(W(names["SUBSTRATE_FR4"]), box.wrapped)
+    res["window_FR4_common_volume_mm3"] = vol(cq.Shape.cast(c.Shape())) if c.IsDone() else float("nan")
+    inw = []
+    for k, l in enumerate(lumps):
+        b = bbs[k]
+        if min(6.0, b[3]) - max(-6.0, b[0]) > 1e-6 and min(6.0, b[4]) - max(-6.0, b[1]) > 1e-6:
+            inw.append((round(b[2], 3), round(b[5], 3), round(b[3] - b[0], 2)))
+    res["window_metal_lumps_reaching_in_xy(zmin,zmax,width)"] = inw
+    res["WINDOW"] = "WINDOW_OK" if res["window_FR4_common_volume_mm3"] <= 1e-9 else "WINDOW_FAIL"
 res["elapsed_s"] = round(time.time() - t0)
 json.dump(res, open(outp, "w"), indent=1, default=str)
 print(json.dumps({k: v for k, v in res.items() if k not in ("all_bodies_valid",)}, default=str)[:1800])

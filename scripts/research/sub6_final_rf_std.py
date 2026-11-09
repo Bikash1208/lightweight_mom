@@ -1,5 +1,5 @@
 """SUB6 FINAL BOARD, RF-only board STEP exactly to the 10.5 GHz export standard (hfss_exports/EXPORT_STANDARD.md, sidequest_board_CP_LP_hybrid/HFSS_SETUP.md).  MODEL_ONLY / NOT_HFSS_VALIDATED.
-    python sub6_final_rf_std.py full|test9
+    python sub6_final_rf_std.py full|full_win|test9   (full_win: 12 x 12 mm window removed from SUBSTRATE_FR4)
 Writes hfss_exports/sub6_final_board_m96_13pad/BOARD_N240_RF_full.step / BOARD_N240_RF_9cell.step, rf_std_<variant>.json (re-import gate), diode_sheets_rf_<variant>.csv
 Bodies (names that must survive the re-import): METAL_PEC (ONE part: one compound of disjoint solids, all copper 35 um SOLIDS), SUBSTRATE (RT5880), SUBSTRATE_FR4, AIR (one box overlapping everything, nothing subtracted, 6 faces),
   PORT (annulus r 0.635 ... 2.05 at z -3.175, in the ground opening), D<string>_<pos> (diode sheets).  No other sheets.
@@ -113,6 +113,12 @@ def main():
     sub = cq.Workplane("XY").workplane(offset=-H).polyline(hexpts).close().extrude(H).val().cut(*([b for b in barrels] + [pin])).clean()
     fr4 = cq.Workplane("XY").workplane(offset=Z_FR4_LO).polyline(hexpts).close().extrude((-H) - Z_FR4_LO).val()
     fr4 = fr4.cut(*(barrels + [ground])).clean()
+    window = None
+    if variant == "full_win":   # USER DECISION: 12 x 12 mm window milled out of the FR4 at the board centre (centred on the pin); the SMA sits on the ground underside
+        window = cq.Workplane("XY").workplane(offset=Z_FR4_LO - 1.0).rect(12.0, 12.0).extrude((-H + 0.5) - (Z_FR4_LO - 1.0)).val()
+        fr4 = fr4.cut(window).clean()
+        inside = [(vx, vy) for vx, vy in via_xy if abs(vx) <= 6.0 + R_PAD and abs(vy) <= 6.0 + R_PAD]
+        print("vias / pads inside the window:", inside, flush=True)
     ax, ay = rout * math.cos(math.radians(30)) + AIR_XY, rout + AIR_XY
     z0, z1 = round(Z_PAD_LO - AIR_BOT, 3), round(T + AIR_TOP, 3)
     air = cq.Workplane("XY").workplane(offset=z0).rect(2 * R3(ax), 2 * R3(ay)).extrude(z1 - z0).val()
@@ -126,7 +132,7 @@ def main():
     asm.add(port, name="PORT", color=cq.Color(0.1, 0.1, 0.9, 1))
     for nm, f in sheets.items():
         asm.add(f, name=nm, color=cq.Color(0.9, 0.1, 0.1, 1))
-    path = OUT / ("BOARD_N240_RF_full.step" if variant == "full" else "BOARD_N240_RF_9cell.step")
+    path = OUT / {"full": "BOARD_N240_RF_full.step", "full_win": "BOARD_N240_RF_full_win.step"}.get(variant, "BOARD_N240_RF_9cell.step")
     asm.export(str(path), exportType="STEP")
     raw = path.read_text(encoding="utf-8")
     snapped, ex = exactify_step_text(raw)

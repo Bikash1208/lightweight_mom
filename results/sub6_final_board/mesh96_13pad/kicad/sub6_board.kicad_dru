@@ -1,0 +1,4 @@
+(version 1)
+(rule "gnd_antipad_0p2" (condition "A.Type == 'Via' && B.Type == 'Zone'") (constraint clearance (min 0.2)))
+(rule "gnd_antipad_0p2b" (condition "A.Type == 'Zone' && B.Type == 'Via'") (constraint clearance (min 0.2)))
+(rule "trace_to_foreign_via_antipad_0p172" (condition "A.Type == 'Track' && B.Type == 'Via'") (constraint clearance (min 0.372)))

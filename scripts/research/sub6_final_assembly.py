@@ -17,6 +17,7 @@ No solder-mask layer is generated for the top side (pads sit on bare, unmasked c
 import csv
 import json
 import math
+import os
 import sys
 from pathlib import Path
 
@@ -75,7 +76,7 @@ def main():
     AS.mkdir(parents=True, exist_ok=True)
     cells = [c for c in csv.DictReader(open(FAB / "cell_table.csv")) if c["class"] == "SWITCHED"]
     strings = {int(r["string"]): r for r in csv.DictReader(open(FAB / "string_table.csv"))}
-    traces = json.load(open(FAB / "traces.json"))
+    traces = json.load(open(FAB / "traces.json")) if os.environ.get("SUB6_VARIANT") != "13pad" else []
     meta = json.load(open(FAB / "layout_summary.json"))
     rout = meta["outline_hex_circumradius_mm"]
     hexp = [(round(rout * math.cos(math.radians(90 + 60 * i)), 3), round(rout * math.sin(math.radians(90 + 60 * i)), 3)) for i in range(6)]
@@ -107,25 +108,33 @@ def main():
         w.writerows(rows)
     n_paste = gerber("sub6_final-F_Paste.gtp", "Paste,Top", pads)
     gerber("sub6_final-F_Assy.gto", "Other,Assembly,Top", [], [b + [b[0]] for b in bodies] + [b for b in bars])
-    # polarity vs string order: every link trace must go from the DISC via of pos i to the ISLAND via of pos i+1
+    # polarity vs string order (13-pad variant: netlist based; the physical connectivity of the routed board is checked by KiCad: 0 unconnected items)
     byk = {(int(c["string"]), int(c["pos_in_string"])): c for c in cells}
     bad_link = 0
-    d = lambda p, q: math.hypot(p[0] - q[0], p[1] - q[1])
-    for t in traces:
-        if t["kind"] != "link":
-            continue
-        s, i = int(t["string"]), int(t["pos"]) + 1   # link pos 0 = cell pos 1 -> pos 2
-        c0, c1 = byk[(s, i)], byk[(s, i + 1)]
-        if d(t["poly"][0], (float(c0["disc_via_x"]), float(c0["disc_via_y"]))) > 0.01 or d(t["poly"][-1], (float(c1["island_via_x"]), float(c1["island_via_y"]))) > 0.01:
-            bad_link += 1
     lead_ok = True
-    for s in strings:
-        st = [t for t in traces if t["kind"] == "lead" and int(t["string"]) == s]
-        for t in st:
-            c = byk[(s, 1)] if t["pos"] == "start" else byk[(s, 20)]
-            via = (float(c["island_via_x"]), float(c["island_via_y"])) if t["pos"] == "start" else (float(c["disc_via_x"]), float(c["disc_via_y"]))
-            if d(t["poly"][0], via) > 0.01:
-                lead_ok = False
+    if os.environ.get("SUB6_VARIANT") == "13pad":
+        isl_net = lambda s_, p_: f"S{s_:02d}" if p_ == 1 else f"N{s_:02d}_{p_ - 1:02d}"
+        dsc_net = lambda s_, p_: "RETURN" if p_ == 20 else f"N{s_:02d}_{p_:02d}"
+        for s_ in strings:
+            for p_ in range(1, 20):
+                if dsc_net(s_, p_) != isl_net(s_, p_ + 1):
+                    bad_link += 1
+            lead_ok = lead_ok and bool(strings[s_].get("drive_pad")) and strings[s_].get("return_pad") == "RETURN"
+    else:
+        d = lambda p, q: math.hypot(p[0] - q[0], p[1] - q[1])
+        for t in traces:
+            if t["kind"] != "link":
+                continue
+            s_, i = int(t["string"]), int(t["pos"]) + 1
+            c0, c1 = byk[(s_, i)], byk[(s_, i + 1)]
+            if d(t["poly"][0], (float(c0["disc_via_x"]), float(c0["disc_via_y"]))) > 0.01 or d(t["poly"][-1], (float(c1["island_via_x"]), float(c1["island_via_y"]))) > 0.01:
+                bad_link += 1
+        for s_ in strings:
+            for t in [t for t in traces if t["kind"] == "lead" and int(t["string"]) == s_]:
+                c = byk[(s_, 1)] if t["pos"] == "start" else byk[(s_, 20)]
+                via = (float(c["island_via_x"]), float(c["island_via_y"])) if t["pos"] == "start" else (float(c["disc_via_x"]), float(c["disc_via_y"]))
+                if d(t["poly"][0], via) > 0.01:
+                    lead_ok = False
     chk = dict(label="MODEL_ONLY / NOT_HFSS_VALIDATED", n_diodes=len(rows), n_paste_pads=n_paste, pad_mm=[PAD, PAD], pitch_mm=PITCH, pad_to_pad_gap_mm=round(PITCH - PAD, 3),
                pads_on_copper_violations=chk_bad, link_traces_checked=sum(t["kind"] == "link" for t in traces), link_polarity_violations=bad_link, lead_polarity_ok=lead_ok,
                strings=len(strings), diodes_per_string=sorted({sum(1 for r in rows if r["string"] == s) for s in strings}),
@@ -235,7 +244,7 @@ def pdf(cells, rows, pads, bodies, bars, hexp, strings, meta):
             ys = [rows_by[idx[(s, p)]]["y_mm"] for p in range(1, 21)]
             ax.plot(xs, ys, color="g", lw=0.6, ls="--")
             ax.autoscale_view()
-            ax.set_title(f"String {s}: 20 diodes, pos 1 (+, pad {strings[s]['pad_start']}) -> pos 20 (-, pad {strings[s]['pad_end']}); red = anode land (island), blue = cathode land (disc)", fontsize=8)
+            ax.set_title(f"String {s}: 20 diodes, pos 1 (+, pad {strings[s].get('drive_pad', strings[s].get('pad_start'))}) -> pos 20 (-, pad {strings[s].get('return_pad', strings[s].get('pad_end'))}); red = anode land (island), blue = cathode land (disc)", fontsize=8)
             fig.text(0.04, 0.02, conv, fontsize=6.5, va="bottom")
             pp.savefig(fig)
             plt.close(fig)

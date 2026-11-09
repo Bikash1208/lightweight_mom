@@ -24,7 +24,7 @@ import sub6_final_design as FD
 
 ROOT = Path(__file__).resolve().parents[2]
 import os
-OUT = ROOT / "results" / "sub6_final_board" / ("mesh96" if os.environ.get("SUB6_MESH") == "96" else "")
+OUT = ROOT / "results" / "sub6_final_board" / (("mesh96" if os.environ.get("SUB6_MESH") == "96" else "") + ("_13pad" if os.environ.get("SUB6_VARIANT") == "13pad" else ""))
 P = 11.6
 VI_L, VD_L = np.array([-1.78, -0.53]), np.array([-3.63, -3.63])  # local (island frame) via positions
 ISL = dict(x0=-2.174, x1=2.174, y0=-0.85, y1=0.45)

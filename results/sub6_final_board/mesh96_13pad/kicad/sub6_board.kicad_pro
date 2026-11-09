@@ -1,0 +1,144 @@
+{
+  "meta": {
+    "filename": "sub6_board.kicad_pro",
+    "version": 3
+  },
+  "board": {
+    "design_settings": {
+      "rules": {
+        "min_clearance": 0.15,
+        "min_copper_edge_clearance": 0.9,
+        "min_track_width": 0.15,
+        "min_via_diameter": 0.5,
+        "min_through_hole_diameter": 0.3,
+        "min_hole_clearance": 0.25,
+        "min_hole_to_hole": 0.25,
+        "min_connection": 0.15,
+        "min_via_annular_width": 0.1
+      },
+      "defaults": {
+        "copper_line_width": 0.25,
+        "board_outline_line_width": 0.1
+      },
+      "rule_severities": {
+        "silk_over_copper": "ignore",
+        "silk_overlap": "ignore",
+        "silk_edge_clearance": "ignore",
+        "solder_mask_bridge": "ignore",
+        "via_dangling": "ignore",
+        "track_dangling": "warning",
+        "lib_footprint_issues": "ignore",
+        "lib_footprint_mismatch": "ignore",
+        "footprint_symbol_mismatch": "ignore",
+        "footprint_type_mismatch": "ignore",
+        "courtyards_overlap": "ignore",
+        "missing_courtyard": "ignore",
+        "footprint": "ignore",
+        "extra_footprint": "ignore",
+        "missing_footprint": "ignore",
+        "duplicate_footprints": "ignore",
+        "isolated_copper": "warning",
+        "starved_thermal": "ignore",
+        "copper_sliver": "ignore",
+        "solder_mask_bridge_": ""
+      }
+    }
+  },
+  "net_settings": {
+    "classes": [
+      {
+        "name": "Default",
+        "clearance": 0.15,
+        "track_width": 0.25,
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "bus_width": 12,
+        "wire_width": 6,
+        "line_style": 0,
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 0
+      },
+      {
+        "name": "BIAS",
+        "clearance": 0.15,
+        "track_width": 0.25,
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "bus_width": 12,
+        "wire_width": 6,
+        "line_style": 0,
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 0
+      },
+      {
+        "name": "RETURN",
+        "clearance": 0.15,
+        "track_width": 0.5,
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "bus_width": 12,
+        "wire_width": 6,
+        "line_style": 0,
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 0
+      },
+      {
+        "name": "GND",
+        "clearance": 0.2,
+        "track_width": 0.25,
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "bus_width": 12,
+        "wire_width": 6,
+        "line_style": 0,
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 0
+      }
+    ],
+    "netclass_patterns": [
+      {
+        "netclass": "BIAS",
+        "pattern": "S*"
+      },
+      {
+        "netclass": "BIAS",
+        "pattern": "N*"
+      },
+      {
+        "netclass": "RETURN",
+        "pattern": "RETURN"
+      },
+      {
+        "netclass": "GND",
+        "pattern": "GND"
+      }
+    ],
+    "meta": {
+      "version": 3
+    }
+  }
+}

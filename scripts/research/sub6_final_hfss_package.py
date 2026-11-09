@@ -22,7 +22,7 @@ import sub6_final_layout as L
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 FAB = L.OUT / "fab"
-OUT = ROOT / "hfss_exports" / ("sub6_final_board_m96" if os.environ.get("SUB6_MESH") == "96" else "sub6_final_board")
+OUT = ROOT / "hfss_exports" / (("sub6_final_board_m96" if os.environ.get("SUB6_MESH") == "96" else "sub6_final_board") + ("_13pad" if os.environ.get("SUB6_VARIANT") == "13pad" else ""))
 H, T, GT = 3.175, 0.035, 0.035
 Z_GB, Z_FR4B, Z_BOT = -H - GT, -H - GT - 0.8, -H - GT - 0.8 - 0.035
 R_PIN, R_OUT, H_PIN = 0.635, 2.05, 12.1

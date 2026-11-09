@@ -112,16 +112,17 @@ def main():
         gnd.flash("C", (1.0,), vx, vy)
     gnd.flash("C", (4.1,), 0.0, 0.0)
     r2 = gnd.save()
-    # ---- L3 bottom copper
-    bot = G("sub6_final-B_Cu.gbl", "Copper,L3,Bot")
-    for t in traces:
-        bot.draw(L.W_TR, [tuple(p) for p in t["poly"]])
-    for vx, vy in vias:
-        bot.flash("C", (0.6,), vx, vy)
-    for k in range(24):
-        bot.flash("R", (1.0, 1.0), meta["connector_x_mm"], round((11.5 - k) * L.PAD_PITCH, 3))
-    bot.flash("C", (2.0,), 0.0, 0.0)
-    r3 = bot.save()
+    if os.environ.get("GERBER_RF_ONLY") != "1":
+        # ---- L3 bottom copper
+        bot = G("sub6_final-B_Cu.gbl", "Copper,L3,Bot")
+        for t in traces:
+            bot.draw(L.W_TR, [tuple(p) for p in t["poly"]])
+        for vx, vy in vias:
+            bot.flash("C", (0.6,), vx, vy)
+        for k in range(24):
+            bot.flash("R", (1.0, 1.0), meta["connector_x_mm"], round((11.5 - k) * L.PAD_PITCH, 3))
+        bot.flash("C", (2.0,), 0.0, 0.0)
+        r3 = bot.save()
     # ---- outline
     out = G("sub6_final-Edge_Cuts.gm1", "Profile,NP")
     out.draw(0.1, hexp, close=True)
@@ -131,6 +132,9 @@ def main():
     ex += [f"X{vx:.3f}Y{vy:.3f}" for vx, vy in vias]
     ex += ["T2", "X0.000Y0.000", "M30"]
     (GB / "sub6_final-PTH.drl").write_text("\n".join(ex) + "\n", encoding="ascii", newline="\n")
+    if os.environ.get("GERBER_RF_ONLY") == "1":
+        print("RF-only Gerbers written (F_Cu, In1_Cu, Edge_Cuts, PTH)")
+        return
     # ---- self-check: re-parse flash/region counts
     chk = {}
     for fn in ("sub6_final-F_Cu.gtl", "sub6_final-In1_Cu.g2", "sub6_final-B_Cu.gbl", "sub6_final-Edge_Cuts.gm1"):

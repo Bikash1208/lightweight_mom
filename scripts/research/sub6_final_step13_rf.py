@@ -3,7 +3,7 @@
 Writes hfss_exports/sub6_final_board_m96_13pad/BOARD_N240_RF_thin.step, body_check_rf_thin.json, geometry_build_rf_thin.json
 KEEP : top copper (every disc with its slot, every island) as sheets at z 0, 240 diode sheets D<string>_<pos> (z 0), RT5880 (z -3.175 ... 0), ground sheet (z -3.175) with 480 anti-pads r 0.5 and the probe opening r 2.05,
        FR4 slab (z -3.975 ... -3.175, contiguous stack), the 480 vias: each via = its own sheet body (barrel tube r 0.15 from the top plane z 0 to the FR4 bottom plane z -3.975 + its own via pad r 0.30 at z -3.975, one shell),
-       probe pin (solid, r 0.635, z -3.975 ... +8.925), PORT_ANNULUS (r 0.635 ... 2.05 at z -3.975), AIR box.
+       probe pin (solid, r 0.635, z -3.175 ... +8.925; FR4 has no pin hole), PORT_ANNULUS (r 0.635 ... 2.05 at z -3.175, in the ground plane, filling the ground opening), AIR box.
 DROP : all B.Cu bias traces, RETURN, connector pads, SMA pad / body / ground vias.  Nothing is fused between vias or nets.
 Names (all unique, nothing unnamed, root assembly named): METAL_PEC_DISC_<site>, METAL_PEC_ISL_<site>, METAL_PEC_VIA_<string>_<pos><I|D>, METAL_PEC_GROUND, METAL_PEC_PIN, SUBSTRATE, SUBSTRATE_FR4, AIR, D<string>_<pos>, PORT_ANNULUS.
 Every body goes through BRepCheck_Analyzer (+ ShapeFix_Shape / UnifySameDomain if needed); the written STEP is re-read and every body is checked again.
@@ -32,7 +32,7 @@ def main():
     from sidequest_board_k2_lp_package import read_names
     from OCP.BRepCheck import BRepCheck_Analyzer
     z = V.levels(True)
-    z["pin_lo"] = z["bot_lo"]                      # no SMA: the pin starts at the FR4 bottom plane
+    z["pin_lo"] = z["gnd_lo"]                      # RF-only: no B.Cu / SMA; the pin starts at the ground plane (z -3.175) where the port annulus is
     z["air_lo"] = round(z["bot_lo"] - V.PAD_BOT, 3)
     cells = list(csv.DictReader(open(V.SRC / "fab" / "cell_table.csv")))
     rt = json.load(open(V.SRC / "routing.json"))
@@ -81,7 +81,7 @@ def main():
     pin = cq.Workplane("XY").workplane(offset=z["pin_lo"]).circle(V.R_PIN).extrude(z["pin_top"] - z["pin_lo"]).val()
     put("METAL_PEC_PIN", pin, "solid")
     sub = cq.Workplane("XY").workplane(offset=-H).polyline(hexpts).close().extrude(H).val().cut(pin).clean()
-    fr4 = cq.Workplane("XY").workplane(offset=z["fr4_lo"]).polyline(hexpts).close().extrude(z["fr4_hi"] - z["fr4_lo"]).val().cut(pin).clean()
+    fr4 = cq.Workplane("XY").workplane(offset=z["fr4_lo"]).polyline(hexpts).close().extrude(z["fr4_hi"] - z["fr4_lo"]).val()   # solid under the port: no pin hole
     ax, ay = rout * math.cos(math.radians(30)) + V.PAD_XY, rout + V.PAD_XY
     air = cq.Workplane("XY").workplane(offset=z["air_lo"]).rect(2 * R3(ax), 2 * R3(ay)).extrude(z["air_hi"] - z["air_lo"]).val().cut(sub, fr4, pin).clean()
     put("SUBSTRATE", sub, "solid")
@@ -101,7 +101,7 @@ def main():
         parts[f"D{s}_{p}"] = cq.Face.makeFromWires(cq.Wire.makePolygon(q, close=True))
         checks[f"D{s}_{p}"] = dict(type="sheet", status="VALID", single_lump=True)
         rows.append(c["site"])
-    zp = z["bot_lo"]
+    zp = z["gnd_lo"]   # PORT_ANNULUS in the ground plane: r 0.635 (pin) ... 2.05 (edge of the ground opening)
     parts["PORT_ANNULUS"] = cq.Face.makeFromWires(cq.Wire.makeCircle(V.R_OUT, cq.Vector(0, 0, zp), cq.Vector(0, 0, 1)), [cq.Wire.makeCircle(V.R_PIN, cq.Vector(0, 0, zp), cq.Vector(0, 0, 1))])
     checks["PORT_ANNULUS"] = dict(type="sheet", status="VALID", single_lump=True)
     asm = cq.Assembly(None, name="BOARD_N240_RF")

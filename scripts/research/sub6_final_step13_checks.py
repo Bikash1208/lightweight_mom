@@ -139,9 +139,29 @@ for r in rows:
                     slivers.append((nmx, n, a))
                     continue
                 sh_fail.append((nmx, n, "overlap_area", a))
+# PORT_OK: PORT_ANNULUS touches the pin (inner edge) and the ground (outer edge, the ground opening) and nothing else except the two dielectric slabs whose faces it lies on
+port_res = None
+if "PORT_ANNULUS" in names:
+    pa = names["PORT_ANNULUS"]
+    pbb = bbox(pa)
+    touching = []
+    allb = {n: names[n] for n in names if n != "PORT_ANNULUS"}
+    for n, shp in allb.items():
+        try:
+            b2 = bbox(shp)
+        except Exception:
+            continue
+        if min(pbb[3], b2[3]) - max(pbb[0], b2[0]) >= -EPS and min(pbb[4], b2[4]) - max(pbb[1], b2[1]) >= -EPS and min(pbb[5], b2[5]) - max(pbb[2], b2[2]) >= -EPS:
+            d = BRepExtrema_DistShapeShape(W(pa), W(shp))
+            d.Perform()
+            if d.IsDone() and d.Value() <= 1e-6:
+                touching.append(n)
+    allowed = {"METAL_PEC_PIN", "METAL_PEC_GROUND", "SUBSTRATE", "SUBSTRATE_FR4", "AIR"}
+    extra = [n for n in touching if n not in allowed]
+    port_res = dict(PORT="PORT_OK" if ("METAL_PEC_PIN" in touching and "METAL_PEC_GROUND" in touching and not extra) else "PORT_FAIL", touching=sorted(touching), unexpected_touching=extra, annulus_area_mm2=area(pa), expected_area_mm2=3.141592653589793 * (2.05 ** 2 - 0.635 ** 2))
 res = dict(label="MODEL_ONLY / NOT_HFSS_VALIDATED", step=str(step), n_bodies=len(names), n_solids=len(solid_names), n_sheets=len(sheet_names), duplicate_names="n/a (names dict keys)",
            NO_OVERLAP="NO_OVERLAP" if overlap_ok else "OVERLAP", pairs_checked=len(pairs), pair_overlaps=[(a, b, v) for a, b, v in fails][:50], worst_common_volume_mm3=worst,
            AIR_balance_mm3=balance, AIR_box_volume_mm3=vbox, AIR_pairs_checked=len(nm), AIR_worst_common_volume_mm3=air_worst, AIR_pair_overlaps=air_pair_fail[:50],
-           SHEETS="SHEETS_OK" if not sh_fail else "SHEETS_FAIL", sheet_failures=sh_fail[:50], sheet_rounding_slivers=len(slivers), sheet_max_sliver_mm2=max([a for _, _, a in slivers], default=0.0), elapsed_s=round(time.time() - t0))
+           SHEETS="SHEETS_OK" if not sh_fail else "SHEETS_FAIL", sheet_failures=sh_fail[:50], sheet_rounding_slivers=len(slivers), sheet_max_sliver_mm2=max([a for _, _, a in slivers], default=0.0), elapsed_s=round(time.time() - t0), port=port_res)
 json.dump(res, open(outp, "w"), indent=1, default=str)
 print(json.dumps({k: res[k] for k in ("NO_OVERLAP", "SHEETS", "pairs_checked", "AIR_balance_mm3", "worst_common_volume_mm3", "AIR_worst_common_volume_mm3", "elapsed_s")}), flush=True)

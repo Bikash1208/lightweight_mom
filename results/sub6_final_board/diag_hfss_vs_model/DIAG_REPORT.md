@@ -1,3 +1,5 @@
+> **SUPERSEDED IN PART by `DIAG_FOLLOWUP.md` (identity convention validated on the hex150 board; the 'rot180 + switched swap' reading of section 2 is not supported by the complex fits).**
+
 # DIAGNOSTIC: HFSS full board (BOARD_N240_RF_full_win.step) vs board model. MODEL_ONLY / NOT_HFSS_VALIDATED. No design change.
 Inputs: `2_34_ -56_3.ffd` (OFF, Rs 2.34 / Xs -56.3) and `s1.ffd` (ON, 1.05 / +7.65), both found in `C:\Users\Bikash\Desktop\` (NOT in `...\sub6_board_hfss\hfss_results\`, which does not exist; the OFF file name has a space, not a double underscore). Grid theta 0..180 step 2 (91), phi -180..180 step 2 (181), e^{+jwt}, RHCP = (Etheta + j Ephi)/sqrt2 = the project's own `copol_component(.., 'rhcp')`.
 Scripts: `diag_step_geometry.py` (item 1), `diag_hfss_vs_model.py` (items 2, 3). Model = the design engine (`final_design('cal')`, mesh-96 cells, `currents` OFF/ON, layered-medium dyad) on the HFSS grid, theta <= 90.

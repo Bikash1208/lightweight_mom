@@ -234,3 +234,17 @@ Measured 2026-10-13 on `phase24-cleanup` (ruff 0.16.9, Python 3.14, macOS):
 - (The Phase 20 RIS roadmap was re-activated 2026-10-16; R1-R4 are finished and archived; R5 waits for its brief and for the HFSS result of the CP-2 package.)
 - Also parked, no brief written yet: transmitarray support in the app (Phase 19 Part E), tensor
   (anisotropic) unit cells in the app (done in research code, Phase 26; app wiring is Phase 27), 2-bit multi-port.
+
+## SUB6 S2 compute record (2026-11-10, compute/sub6-iter1-island-retune)
+
+MODEL_ONLY / NOT_HFSS_VALIDATED. Base 1ea2d13; isolated C:/lwmom_retune.
+BAR50-02V island retune: 21 single-variable plus 24 combined evaluations,
+top-three mesh96/128 and C/Rp corners completed. HARD_STOP_MESH_NOT_CONVERGED:
+nominal suppression 19.25/13.96/13.57 dB at 96 becomes 15.20/6.72/1.35 dB
+at 128; ON alpha changes exceed 5%. No cell qualified; resonance clearance
+NOT_ESTABLISHED because frequency screening was not launched after the stop.
+Far-extrapolated ON beta values flagged. See results/sub6_iter1_island_retune/REPORT.md.
+HFSS_SETUP corrected to OFF 5.424-j79.320 ohm/sq including series 0.6 nH.
+Previous S2 env; no worker cap, one BLAS thread per worker. Solver unchanged.
+Full fast suite: 2954 passed/129 skipped, six accepted platform-hash failures;
+one app timeout passed isolated rerun. Original regression fixtures unchanged.

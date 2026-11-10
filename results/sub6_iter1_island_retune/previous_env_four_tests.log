@@ -1,0 +1,49 @@
+.FFF                                                                     [100%]
+================================== FAILURES ===================================
+_____ test_preexisting_case_is_bit_identical_to_main[cp2_ideal_0100_s11] ______
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'cp2_ideal_0100_s11'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('d191da7f2bc4...8bbcfa30b411e' == '3e093e89a5d8...387259ecbbee5'
+E
+E         - 3e093e89a5d8e1e4b2b9eea3f2edfd6ba4e4f09807a50830d2b387259ecbbee5
+E         + d191da7f2bc462f3223deec1d8d1f8297b5339c0b6b4bf52c0f8bbcfa30b411e)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+______ test_preexisting_case_is_bit_identical_to_main[cp2_madp_1100_s11] ______
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'cp2_madp_1100_s11'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('6d9f6c200db9...dae89e363eaa9' == '4bbc9582dc90...f78d1bfd5fc93'
+E
+E         - 4bbc9582dc90713d6fbae6fcc5bbe4337e5d1e5c499843ea46cf78d1bfd5fc93
+E         + 6d9f6c200db9482a196150483e1d08569ff91b32e96c2e91805dae89e363eaa9)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+_____ test_preexisting_case_is_bit_identical_to_main[cp2_ideal_0000_s11] ______
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'cp2_ideal_0000_s11'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('97fdc1b97553...61930115fa639' == '220f02c87eed...506972b1a7d2f'
+E
+E         - 220f02c87eed7987430bcfb5f2b0f886b68eefae248b98ed9e4506972b1a7d2f
+E         + 97fdc1b975535c5669cdd0c26eb82aad4b1e9c02ae915bed56361930115fa639)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[cp2_ideal_0100_s11]
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[cp2_madp_1100_s11]
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[cp2_ideal_0000_s11]
+3 failed, 1 passed in 22.00s

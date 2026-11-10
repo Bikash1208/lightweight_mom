@@ -1,0 +1,79 @@
+{
+  "label": "MODEL_ONLY / NOT_HFSS_VALIDATED",
+  "recorded_utc": "2026-11-10T08:32:38.426749+00:00",
+  "machine": "WIN-D4BKN5G2BK3",
+  "os": "Windows-2025Server-10.0.26100-SP0",
+  "python": "3.13.17 (tags/v3.13.17:64e080d, Oct 21 2026, 14:08:53) [MSC v.1944 64 bit (AMD64)]",
+  "executable": "C:\\lightweight_mom\\.venv313\\Scripts\\python.exe",
+  "numpy": "2.5.3",
+  "scipy": "1.18.1",
+  "pytest": "9.1.1",
+  "blas_config": "Build Dependencies:\n  blas:\n    detection method: pkgconfig\n    found: true\n    include directory: C:/Users/runneradmin/AppData/Local/Temp/cibw-run-hg727bee/cp313-win_amd64/build/venv/Lib/site-packages/scipy_openblas64/include\n    lib directory: C:/Users/runneradmin/AppData/Local/Temp/cibw-run-hg727bee/cp313-win_amd64/build/venv/Lib/site-packages/scipy_openblas64/lib\n    name: scipy-openblas\n    openblas configuration: OpenBLAS 0.3.34.106.0  USE64BITINT DYNAMIC_ARCH NO_AFFINITY\n      Haswell MAX_THREADS=24\n    pc file directory: D:/a/numpy-release/numpy-release/.openblas\n    version: 0.3.34.106.0\n  lapack:\n    detection method: pkgconfig\n    found: true\n    include directory: C:/Users/runneradmin/AppData/Local/Temp/cibw-run-hg727bee/cp313-win_amd64/build/venv/Lib/site-packages/scipy_openblas64/include\n    lib directory: C:/Users/runneradmin/AppData/Local/Temp/cibw-run-hg727bee/cp313-win_amd64/build/venv/Lib/site-packages/scipy_openblas64/lib\n    name: scipy-openblas\n    openblas configuration: OpenBLAS 0.3.34.106.0  USE64BITINT DYNAMIC_ARCH NO_AFFINITY\n      Haswell MAX_THREADS=24\n    pc file directory: D:/a/numpy-release/numpy-release/.openblas\n    version: 0.3.34.106.0\nCompilers:\n  c:\n    commands: cl\n    linker: link\n    name: msvc\n    version: 19.44.35228\n  c++:\n    commands: cl\n    linker: link\n    name: msvc\n    version: 19.44.35228\n  cython:\n    commands: cython\n    linker: cython\n    name: cython\n    version: 3.3.0\nMachine Information:\n  build:\n    cpu: x86_64\n    endian: little\n    family: x86_64\n    system: windows\n  host:\n    cpu: x86_64\n    endian: little\n    family: x86_64\n    system: windows\nPython Information:\n  path: C:\\Users\\runneradmin\\AppData\\Local\\Temp\\build-env-xf1j587o\\Scripts\\python.exe\n  version: '3.13'\nSIMD Extensions:\n  baseline:\n  - X86_V2\n  found:\n  - X86_V3\n\n",
+  "workers": 64,
+  "threads": {
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  },
+  "git_commit": "1ea2d13fe196556fef20a1ca42aed1037db0f12c",
+  "git_status": " M hfss_exports/sub6_jobs1_variants/HFSS_SETUP.md\n M hfss_exports/sub6_jobs1_variants/PACKAGE_9CELL_PLAN.md\n?? jobs/sub6-iter1-island-retune.md\n?? results/retune_initial_fast_suite.log\n?? results/sub6_iter1_island_retune/\n?? scripts/research/sub6_iter1_island_retune.py\n?? scripts/research/sub6_retune_env_diagnosis.py\n?? tests/test_sub6_iter1_island_retune.py\n",
+  "driver_sha256": "e0a93a29c17005cb935eea9993c6597260d3c82e0d591957f1fceda750c1c73e",
+  "parameters": {
+    "period_mm": 11.6,
+    "radius_mm": 5.435,
+    "substrate": [
+      "rt5880",
+      2.2,
+      0.0009,
+      3.175
+    ],
+    "physical_gap_mm": 1.0,
+    "mesh_gap_cells": {
+      "96": 8,
+      "128": 11
+    },
+    "floquet_order": "baseline128; search/refine2n",
+    "C_pF": 0.11,
+    "Rp_ohm": 4000,
+    "L_nH": 0.6,
+    "Ron_ohm": 3,
+    "C_corners_pF": [
+      0.105,
+      0.12
+    ],
+    "Rp_corners_ohm": [
+      3000,
+      5000
+    ]
+  },
+  "end_recorded_utc": "2026-11-10T09:23:06.760317+00:00",
+  "git_status_at_end": "M  docs/STATUS.md\nM  hfss_exports/sub6_jobs1_variants/HFSS_SETUP.md\nM  hfss_exports/sub6_jobs1_variants/PACKAGE_9CELL_PLAN.md\nA  jobs/sub6-iter1-island-retune.md\nA  results/retune_initial_fast_suite.log\nA  results/sub6_iter1_island_retune/CIRCUIT_DISCREPANCY.md\nA  results/sub6_iter1_island_retune/ENV_DIAGNOSIS.md\nA  results/sub6_iter1_island_retune/REPORT.md\nA  results/sub6_iter1_island_retune/STATUS.md\nA  results/sub6_iter1_island_retune/app_timeout_rerun.log\nA  results/sub6_iter1_island_retune/baseline.json\nA  results/sub6_iter1_island_retune/baseline.log\nA  results/sub6_iter1_island_retune/baseline_analysis.json\nA  results/sub6_iter1_island_retune/baseline_comparison.json\nA  results/sub6_iter1_island_retune/baseline_fft.log\nA  results/sub6_iter1_island_retune/baseline_nodes.jsonl\nA  results/sub6_iter1_island_retune/baseline_transpose.json\nA  results/sub6_iter1_island_retune/baseline_transpose.log\nA  results/sub6_iter1_island_retune/baseline_transpose_nodes.jsonl\nA  results/sub6_iter1_island_retune/baseline_wb.json\nA  results/sub6_iter1_island_retune/baseline_wb.log\nA  results/sub6_iter1_island_retune/baseline_wb_nodes.jsonl\nAM results/sub6_iter1_island_retune/candidate_summary.csv\nA  results/sub6_iter1_island_retune/circuit_discrepancy.json\nA  results/sub6_iter1_island_retune/diode_series_resonance.json\nA  results/sub6_iter1_island_retune/env_comparison.json\nA  results/sub6_iter1_island_retune/env_new.json\nA  results/sub6_iter1_island_retune/env_new_capture.log\nA  results/sub6_iter1_island_retune/env_previous.json\nA  results/sub6_iter1_island_retune/env_previous_capture.log\nA  results/sub6_iter1_island_retune/fft_assembly_audit.json\nA  results/sub6_iter1_island_retune/fft_audit.log\nA  results/sub6_iter1_island_retune/final_fast_suite.log\nA  results/sub6_iter1_island_retune/final_targeted_checks.log\nA  results/sub6_iter1_island_retune/geometry_checks.log\nA  results/sub6_iter1_island_retune/manifest.json\nA  results/sub6_iter1_island_retune/mesh_report.json\nA  results/sub6_iter1_island_retune/previous_env_four_tests.log\nA  results/sub6_iter1_island_retune/provenance_end.json\nA  results/sub6_iter1_island_retune/provenance_start.json\nA  results/sub6_iter1_island_retune/refine.json\nA  results/sub6_iter1_island_retune/refine.log\nA  results/sub6_iter1_island_retune/refine_nodes.jsonl\nA  results/sub6_iter1_island_retune/report_generation.log\nA  results/sub6_iter1_island_retune/search.json\nA  results/sub6_iter1_island_retune/search.log\nA  results/sub6_iter1_island_retune/search2.json\nA  results/sub6_iter1_island_retune/search2.log\nA  results/sub6_iter1_island_retune/search2_analysis.json\nA  results/sub6_iter1_island_retune/search2_nodes.jsonl\nA  results/sub6_iter1_island_retune/search_analysis.json\nA  results/sub6_iter1_island_retune/search_fft.log\nA  results/sub6_iter1_island_retune/search_nodes.jsonl\nA  results/sub6_iter1_island_retune/selected.json\nA  results/sub6_iter1_island_retune/sheet_iteration_audit.json\nA  results/sub6_iter1_island_retune/transpose_lu_audit.json\nA  results/sub6_iter1_island_retune/woodbury_audit.json\nA  scripts/research/sub6_iter1_island_retune.py\nA  scripts/research/sub6_retune_analyze.py\nA  scripts/research/sub6_retune_env_diagnosis.py\nA  scripts/research/sub6_retune_fft_audit.py\nAM scripts/research/sub6_retune_finalize.py\nA  scripts/research/sub6_retune_mesh_report.py\nA  scripts/research/sub6_retune_sheet_audit.py\nA  tests/test_sub6_iter1_island_retune.py\n",
+  "source_sha256_at_end": {
+    "scripts/research/sub6_iter1_island_retune.py": "cf836d559f84e85f688272ca2eaa1ce4a19a9f492835a291d4c3998e55dc1a3a",
+    "scripts/research/sub6_retune_analyze.py": "3755bf2af78016cc2fd8c392d0e00bbade8b6741ae9cd1b38ff13b50d6ba9036",
+    "scripts/research/sub6_retune_env_diagnosis.py": "2110c4db3e56f5c4a1b7e744c7ed219f831c548bae762558caa73b788bbd41a5",
+    "scripts/research/sub6_retune_fft_audit.py": "26f6b6997e6d0a543213c81c7ffbe4d451491ce3119a2103653d75882e078d97",
+    "scripts/research/sub6_retune_finalize.py": "f7ef449aa20f09bb8418dd27cc15d22491ef9aa6575f5de90be6a8b16a3645d4",
+    "scripts/research/sub6_retune_mesh_report.py": "654e72f96828771ad9b2f531579df7cba4938f90db55ba33ffb64a7a8e3ece09",
+    "scripts/research/sub6_retune_sheet_audit.py": "58d9ead2a4c967c73b1595b90ac70e5b8791aa49fb7a0d02c0926352a9b7e7d1"
+  },
+  "geometry_evaluations": [
+    21,
+    24
+  ],
+  "unique_geometry_count": 40,
+  "node_counts": {
+    "baseline": 4,
+    "baseline_wb": 4,
+    "baseline_transpose": 4,
+    "search": 84,
+    "search2": 96,
+    "refine": 24
+  },
+  "final_status": "HARD_STOP_MESH_NOT_CONVERGED",
+  "actual_assembly": "existing src.dispersion.leaky_supercell_mom.assemble_z_complex",
+  "actual_load_solver": "exact low-rank update; transpose LU avoids a dense copy",
+  "worker_cap": null,
+  "src_solver_changes": false,
+  "frequency_screening": "NOT_RUN_AFTER_MANDATED_HARD_STOP"
+}

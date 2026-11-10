@@ -1,6 +1,6 @@
 # 9-cell HFSS package for the iteration-1 best design: PREPARED, NOT EXPORTED (waiting for the user's V0 / V2 / V5 / V1 small-board results). MODEL_ONLY / NOT_HFSS_VALIDATED.
 
-Export rule (user 2026-11-10): EXPORT_STANDARD (ONE METAL_PEC body of disjoint solids, SUBSTRATE, SUBSTRATE_FR4, AIR overlapping box, PORT annulus, diode sheets D*), real FR4 (FR4_epoxy eps 4.4, tan d 0.02) with the 0.2/0.8 mm thickness and anti-pad diameter taken from the V-run decision, vias with 0.6 mm anti-pads by default, diode Rs/Xs from `HFSS_SETUP.md` (BAR50-02V: OFF C 0.11 pF || Rp 4 k + 0.6 nH -> Rs 5.42 / Xs -86.97 ohm/sq; ON 3 ohm + 0.6 nH -> 1.05 / +7.65; 02L: Ls 0.4 nH -> recompute with the same formula).
+Export rule (user 2026-11-10): EXPORT_STANDARD (ONE METAL_PEC body of disjoint solids, SUBSTRATE, SUBSTRATE_FR4, AIR overlapping box, PORT annulus, diode sheets D*), real FR4 (FR4_epoxy eps 4.4, tan d 0.02) with the 0.2/0.8 mm thickness and anti-pad diameter taken from the V-run decision, vias with 0.6 mm anti-pads by default, diode Rs/Xs from `HFSS_SETUP.md` (BAR50-02V: OFF (C 0.11 pF || Rp 4 k) + 0.6 nH -> Rs 5.424 / Xs -79.320 ohm/sq; ON 3 ohm + 0.6 nH -> 1.05 / +7.65). Corrected series-L arithmetic 2026-11-10. 02L is excluded from iteration 1 by user decision.
 
 Builder status: `scripts/research/sub6_final_rf_std.py test9` already takes the switches (RF_FR4_T, RF_R_ANTI, RF_VIA_MODE = base | moved | shield | none, RF_OUT_DIR, RF_OUT_NAME); the gates (`sub6_final_rf_std_check.py`: names, BRepCheck, NO_OVERLAP, SHEETS_OK, PORT_OK) are the same as for V0-V5.
 

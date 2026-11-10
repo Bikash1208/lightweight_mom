@@ -14,9 +14,9 @@ Six STEPs, same RF-only EXPORT_STANDARD as `BOARD_N240_RF_9cell.step` (9 switche
 1. Import each STEP, units mm. Materials: METAL_PEC = pec; SUBSTRATE = RT5880 (eps 2.2, tan 0.0009); SUBSTRATE_FR4 = FR4 (eps 4.4, tan 0.02; use the value of the full-board run); AIR = vacuum (radiation boundary on the 6 faces of AIR, lambda/4 = 12.9 mm from the board is inside the 15 mm box).
 2. PORT: wave port or lumped port on the PORT annulus (coax, inner = pin r 0.635, outer r 2.05), 50 ohm, same as the full-board run.
 3. ONE Impedance boundary on all 9 D* sheets, variables Rs, Xs (ohm/square, sheet 1.00 x 0.35 mm: ohm/sq = Z x 0.35/1.00). New diode rules, 5.8 GHz:
-   - OFF: C 0.11 pF (0.105-0.12), Rp 4 k (3-5 k): Z = 15.5 - j248.5 -> **Rs 5.42, Xs -86.97** (Rp 3 k: 7.21 / -86.71; Rp 5 k: 4.35 / -87.09; C 0.105: 5.95 / -91.08; C 0.12: 4.56 / -79.77). Formula: Z = 1/(1/Rp + j 2 pi f C).
+   - OFF: C 0.11 pF (0.105-0.12), Rp 4 k (3-5 k), series L 0.6 nH: Z = 15.497 - j226.627 ohm -> **Rs 5.424, Xs -79.320 ohm/sq**. Formula: Z = 1/(1/Rp + j 2 pi f C) + j 2 pi f L; sheet impedance = Z x 0.35/1.00. Corrected 2026-11-10 by decision session: former Xs -86.97 omitted the series inductance (+j7.653 ohm/sq). Recompute sensitivity values from the full formula. Prior HFSS runs retain their actual settings; this correction does not relabel them.
    - ON: 3 ohm + 0.6 nH: Z = 3 + j21.87 -> **Rs 1.05, Xs +7.65**.
-   For a frequency sweep make Xs = -0.35/(2 pi f C) style expressions of f (OFF) and 0.35 (3 + j 2 pi f 0.6e-9) (ON), or run the solution at 5.8 GHz only.
+   For a frequency sweep use the full complex expressions above: OFF Zs(f) = 0.35 [1/(1/Rp + j 2 pi f C) + j 2 pi f 0.6e-9], ON Zs(f) = 0.35 [3 + j 2 pi f 0.6e-9]. Separate real/imaginary parts for Rs/Xs; do not hold the 5.8 GHz numbers constant over a sweep.
 4. Setup: 5.8 GHz, max delta S 0.02, then discrete sweep 5.0-6.6 GHz (resonance check, step 0.1), infinite sphere theta 0-180 step 2, phi -180..180 step 2 (Global CS). Run OFF and ON for each of the 6 files.
 
 ## What to send back (per file, OFF and ON)

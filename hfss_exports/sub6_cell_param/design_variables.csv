@@ -1,0 +1,33 @@
+name,unit,nominal,min,max,meaning
+period,mm,11.6,11.6,11.6,Square periodic cell
+disc_r,mm,5.435,5.434,5.725,Disc radius; disc-via rim clearance must pass
+slot_l,mm,8.696,7.8,9.2,Slot length along y
+slot_w,mm,2.900,2.6,3.2,Slot width across x
+island_l,mm,4.348,4.16,5.2,Island length along y
+island_w,mm,1.300,0.8,1.45,Island width across x; left edge tied to fixed diode gap
+island_offset,mm,0,-0.08,0.08,Longitudinal island centre y; x centre derived from slot width and fixed gap
+diode_pos,mm,0,-1.2,1.2,Diode centre y relative to island centre
+diode_gap,mm,1.00,1.00,1.00,Physical SC79 sheet length across x FIXED
+diode_w,mm,0.35,0.35,0.35,Sheet width along y FIXED
+island_via_x,mm,0.530,0.52,0.55,Global x of island via
+island_via_y,mm,-1.780,-1.85,-1.5,Global y of island via
+disc_via_x,mm,3.630,3.3,3.63,Global x of disc via
+disc_via_y,mm,-3.630,-3.63,-3.3,Global y of disc via
+via_drill,mm,0.300,0.2,0.3,Solid PEC via diameter matching calibration; no separate plating model
+pad_dia,mm,0.600,0.6,0.8,Bottom pad diameter; radial annular ring at least 0.15
+antipad_dia,mm,0.600,0.6,1.0,Ground anti-pad diameter; radial clearance at least 0.15
+fr4_t,mm,0.800,0.4,1.2,FR4 thickness below ground
+stub_l,mm,2.000,0.8,2.0,Two bottom bias stubs directed positive y
+stub_w,mm,0.300,0.3,0.5,Bottom stub width across x
+rt_t,mm,3.175,3.175,3.175,RT5880 thickness FIXED
+cu_t,mm,0.035,0.035,0.035,PEC solid thickness FIXED
+air_top,mm,150,150,150,PEC lid global z FIXED
+air_below,mm,30,30,30,Radiation boundary distance below lowest metal FIXED
+mesh_rt,mm,1,1,1,Initial RT maximum element length
+mesh_metal,mm,0.5,0.5,0.5,Initial top-metal maximum element length
+mesh_fine,mm,0.1,0.1,0.1,Diode via and anti-pad maximum element length
+mesh_fr4,mm,0.5,0.5,0.5,Initial FR4 maximum element length
+$ph_x,deg,90,0,180,Across x phase
+$ph_y,deg,0,0,180,Along y phase
+Rs,ohm,5.424,1.05,5.424,Impedance sheet resistance; OFF nominal
+Xs,ohm,-79.320,-79.320,7.65,Impedance sheet reactance; OFF nominal; series L included

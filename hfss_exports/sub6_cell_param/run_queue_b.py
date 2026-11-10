@@ -61,16 +61,21 @@ def launch_env():
 
 def step_env():
     import importlib.metadata as md
+    WORK.mkdir(parents=True, exist_ok=True)
     info = {"python": sys.version.split()[0], "platform": platform.platform(), "logical_cpus": os.cpu_count(),
             "pyaedt": md.version("pyaedt"), "numpy": md.version("numpy")}
-    root = os.environ.get("ANSYSEM_ROOT251")
+    version = os.environ.get("SUB6_AEDT_VERSION", "2025.1")
+    release = "v" + version[2:4] + version[-1]
+    root = os.environ.get("ANSYSEM_ROOT" + release[1:])
     cands = [Path(root)] if root else []
-    cands += [Path(r"C:\Program Files\ANSYS Inc\v251\AnsysEM"), Path(r"C:\Program Files\AnsysEM\v251\Win64")]
-    info["aedt_v251_found"] = any((c / "ansysedt.exe").exists() for c in cands)
+    cands += [Path(r"C:\Program Files\ANSYS Inc") / release / "AnsysEM",
+              Path(r"C:\Program Files\AnsysEM") / release / "Win64"]
+    info["aedt_requested_version"] = version
+    info["aedt_requested_found"] = any((c / "ansysedt.exe").exists() for c in cands)
     (WORK / "lab_B_machine.json").write_text(json.dumps(info, indent=2))
     say(f"ENV {info}")
-    if not info["aedt_v251_found"]:
-        say("WARNING: AEDT 2025 R1 (v251) not found at the default locations; set ANSYSEM_ROOT251 or report the installed version (do NOT proceed silently)")
+    if not info["aedt_requested_found"]:
+        say(f"WARNING: AEDT {version} ({release}) not found; set ANSYSEM_ROOT{release[1:]} or report the installed version (do NOT proceed silently)")
     return info
 
 
@@ -126,16 +131,53 @@ def step_benchmark():
     return win
 
 
-def step_queue(cores_each, max_proc):
+def push_results():
+    repo = HERE.parents[1]
+    branch = subprocess.run(["git", "branch", "--show-current"], cwd=repo, capture_output=True, text=True, check=True).stdout.strip()
+    if branch != "compute/sub6-cell-param-lab-b":
+        raise RuntimeError(f"Refusing to push from unexpected branch {branch!r}")
+    rel = RESULTS.relative_to(repo).as_posix()
+    if run(["git", "add", rel], cwd=repo):
+        raise RuntimeError("git add results failed")
+    staged = subprocess.run(["git", "diff", "--cached", "--name-only"], cwd=repo, capture_output=True, text=True, check=True).stdout.splitlines()
+    if any(not p.startswith(rel + "/") for p in staged):
+        raise RuntimeError("Refusing to commit staged files outside lab_B results")
+    if staged:
+        if run(["git", "commit", "-m", "SUB6 QUEUE_B lab_B batch results"], cwd=repo):
+            raise RuntimeError("git commit results failed")
+        if run(["git", "push", "gh", branch], cwd=repo):
+            raise RuntimeError("git push results failed")
+
+
+def step_queue(cores_each, max_proc, batch_size, headroom):
     if not GATE.exists() or json.loads(GATE.read_text()).get("status") != "PASS":
         say("VERIFY gate missing or not PASS -> STOP"); return False
     chk = WORK / "verify" / "verify_vs_reference.json"
     if not chk.exists() or json.loads(chk.read_text()).get("status") != "PASS":
         say("VERIFY vs reference not PASS -> STOP"); return False
-    flags = ["--cores-each", str(cores_each), "--fixed-cores", "--max-proc", str(max_proc), "--stagger", "40"]
+    flags = ["--cores-each", str(cores_each), "--fixed-cores", "--max-proc", str(max_proc),
+             "--headroom", str(headroom), "--stagger", "40"]
     for j in JOBS:     # SCREEN_2 first (stub 0.3/1/2 for the stub-spread result), then the short islands
-        say(f"QUEUE_B {j['name']}: {', '.join(j['csv'])}")
-        run(rp_cmd(j, j["csv"], *flags), env_extra=launch_env())   # never stops for failed rows; FAILED lists are written
+        for name in j["csv"]:
+            rows = list(csv.DictReader((HERE / name).open(newline="", encoding="utf-8")))
+            for start in range(0, len(rows), batch_size):
+                batch = rows[start:start + batch_size]
+                path = WORK / "batches" / f"{Path(name).stem}_{start // batch_size:03d}" / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                with path.open("w", newline="", encoding="utf-8") as f:
+                    w = csv.DictWriter(f, fieldnames=list(rows[0])); w.writeheader(); w.writerows(batch)
+                say(f"QUEUE_B {j['name']} {name}: rows {start + 1}-{start + len(batch)} of {len(rows)}")
+                rc = run(rp_cmd(j, [path], *flags), env_extra=launch_env())
+                if rc:
+                    say(f"QUEUE_B batch exit {rc} -> STOP")
+                    return False
+                step_collect()
+                push_results()
+                failed_report = RESULTS / "failed_report" / "FAILED_ROWS_REPORT.json"
+                flags_found = json.loads(failed_report.read_text())["summary"]["flags"]
+                if flags_found:
+                    say(f"QUEUE_B failure flags {flags_found} -> STOP for review")
+                    return False
     return True
 
 
@@ -145,6 +187,9 @@ def step_collect():
     rows_dir = RESULTS / "rows"; rows_dir.mkdir(exist_ok=True)
     n = 0
     for j in JOBS:
+        bs = j["build"] / "build_summary.json"
+        if bs.exists():
+            shutil.copy(bs, RESULTS / f"build_summary_{j['name']}.json")
         if not j["out"].exists():
             continue
         for js in j["out"].glob("*.json"):
@@ -158,13 +203,16 @@ def step_collect():
                         shutil.copy(js, rows_dir / js.name); n += 1
                 except Exception:
                     pass
-        bs = j["build"] / "build_summary.json"
-        if bs.exists():
-            shutil.copy(bs, RESULTS / f"build_summary_{j['name']}.json")
     v = RESULTS / "verify"; v.mkdir(exist_ok=True)
     for name in ("verify.json", "VERIFY_modes.csv", "verify_vs_reference.json", "environment.json"):
         if (WORK / "verify" / name).exists():
-            shutil.copy(WORK / "verify" / name, v / name)
+            shutil.copy2(WORK / "verify" / name, v / name)
+    for source in (WORK / "verify").glob("VERIFY_*.json"):
+        shutil.copy2(source, v / source.name)
+    for source in (WORK / "verify").glob("VERIFY_*.prof"):
+        shutil.copy2(source, v / source.name)
+    if (WORK / "boundary_readback.json").exists():
+        shutil.copy2(WORK / "boundary_readback.json", RESULTS / "boundary_readback.json")
     for name in ("lab_B_machine.json", "layout_benchmark.json", "run_queue_b.log"):
         if (WORK / name).exists():
             shutil.copy(WORK / name, RESULTS / name)
@@ -182,6 +230,8 @@ def main():
     ap.add_argument("--step", default="all", choices=["all", "env", "verify", "build", "benchmark", "queue", "collect"])
     ap.add_argument("--cores-each", type=int, default=8, help="cores per solver process (size to the CPU free on THIS machine)")
     ap.add_argument("--max-proc", type=int, default=16)
+    ap.add_argument("--batch-size", type=int, default=20)
+    ap.add_argument("--headroom", type=int, default=8)
     a = ap.parse_args()
     if a.step in ("all", "env"):
         step_env()
@@ -194,7 +244,7 @@ def main():
     if a.step == "benchmark":
         step_benchmark()
     if a.step in ("all", "queue"):
-        if not step_queue(a.cores_each, a.max_proc):
+        if not step_queue(a.cores_each, a.max_proc, a.batch_size, a.headroom):
             sys.exit(1)
     if a.step in ("all", "collect"):
         step_collect()

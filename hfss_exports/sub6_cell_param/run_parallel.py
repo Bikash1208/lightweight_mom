@@ -55,11 +55,11 @@ def licence_counts(since):
     return out
 
 
-def plan(rows, cores_each, max_proc, fixed=False):
+def plan(rows, cores_each, max_proc, fixed=False, headroom=0):
     free = LOGICAL - busy_cpus()
-    n = max(1, min(rows, max_proc, int(free // cores_each)))
-    # Use ALL free cores: spread the remainder over the processes (never below the requested cores each).
-    return n, (cores_each if fixed else max(cores_each, int(free // n))), free
+    available = max(0, free - headroom)
+    n = min(rows, max_proc, int(available // cores_each))
+    return n, (cores_each if fixed or not n else max(cores_each, int(available // n))), free
 
 
 def split(csv_path, n, dest):
@@ -108,7 +108,8 @@ def launch_parts(a, csv_path, rows_csv, n, cores, work, tag):
 
 def run_job(a):
     a.out.mkdir(parents=True, exist_ok=True)
-    report = []
+    report_file = a.out / "parallel_report.json"
+    report = json.loads(report_file.read_text()) if report_file.exists() else []
     sys.path.insert(0, str(HERE))
     import cell_param_pyaedt as cp
     cp.set_profile(a.diode)
@@ -130,7 +131,11 @@ def run_job(a):
         if a.layout:
             n, cores = (int(x) for x in a.layout.lower().split("x")); n = min(n, len(todo)); free = LOGICAL - busy_cpus()
         else:
-            n, cores, free = plan(len(todo), a.cores_each, a.max_proc, a.fixed_cores)
+            n, cores, free = plan(len(todo), a.cores_each, a.max_proc, a.fixed_cores, a.headroom)
+            while n == 0:
+                print(f"[{time.strftime('%H:%M:%S')}] free CPUs {free:.1f}; waiting for {a.cores_each} cores plus {a.headroom} headroom", flush=True)
+                time.sleep(60)
+                n, cores, free = plan(len(todo), a.cores_each, a.max_proc, a.fixed_cores, a.headroom)
         print(f"[{time.strftime('%H:%M:%S')}] layout {n} processes x {cores} cores (free CPUs {free:.1f})", flush=True)
         t0 = time.time()
         codes, pdirs = launch_parts(a, csv_path, todo_csv, n, cores, work, "")
@@ -159,7 +164,12 @@ def run_job(a):
             rcsv = work / f"{csv_path.stem}_retry.csv"
             with rcsv.open("w", newline="", encoding="utf-8") as f:
                 w = csv.DictWriter(f, fieldnames=list(all_rows[0])); w.writeheader(); w.writerows(missing)
-            codes2, pdirs2 = launch_parts(a, csv_path, rcsv, 1, max(cores, 13), work, "retry_")
+            retry_n, retry_cores, retry_free = plan(1, a.cores_each, 1, True, a.headroom)
+            while retry_n == 0:
+                print(f"  retry waiting for {a.cores_each} cores plus {a.headroom} headroom (free {retry_free:.1f})", flush=True)
+                time.sleep(60)
+                retry_n, retry_cores, retry_free = plan(1, a.cores_each, 1, True, a.headroom)
+            codes2, pdirs2 = launch_parts(a, csv_path, rcsv, 1, retry_cores, work, "retry_")
             m2, f2 = collect(pdirs2); merged += m2; failed += f2
             done_ids = {r["run_id"] for r in merged} | {x["run_id"] for x in failed}
             for r in todo:
@@ -190,6 +200,7 @@ def main():
     ap.add_argument("--diode", default="bar90")
     ap.add_argument("--cores-each", type=int, default=16)
     ap.add_argument("--max-proc", type=int, default=8)
+    ap.add_argument("--headroom", type=int, default=0, help="logical CPUs to leave free for other users")
     ap.add_argument("--row-timeout-min", type=float, default=30)
     ap.add_argument("--layout", default=None, help="force NxC (processes x cores), e.g. 8x6; default = measured from free CPU")
     ap.add_argument("--stagger", type=float, default=75, help="seconds between process launches")

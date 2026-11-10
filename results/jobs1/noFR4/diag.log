@@ -1,0 +1,161 @@
+{
+ "hfss": {
+  "off": {
+   "peaks": {
+    "A_side": [
+     28,
+     0
+    ],
+    "B_side": [
+     24,
+     -178
+    ]
+   },
+   "D_RHCP_peak_dBi": 16.224569776984012,
+   "D_total_peak_dBi": 16.472756765725855,
+   "A_side_D_RHCP_dBi": 12.234143258936015,
+   "A_side_D_LHCP_dBi": 2.2234020854140617,
+   "B_side_D_RHCP_dBi": 16.224569776984012,
+   "B_side_D_LHCP_dBi": 3.9192012059736294,
+   "at_25_0": {
+    "RHCP": 10.567166059608066,
+    "LHCP": -0.8248124505021739
+   },
+   "at_25_180": {
+    "RHCP": 16.049487692626077,
+    "LHCP": 3.608204459159566
+   },
+   "frac_power_within_10deg_of_main_beam": 0.12119728618268905,
+   "main_beam": [
+    24,
+    -178
+   ],
+   "hpbw_theta_deg": 14.0,
+   "SLL_dB": -3.7435141088373314
+  },
+  "on": {
+   "peaks": {
+    "A_side": [
+     32,
+     10
+    ],
+    "B_side": [
+     24,
+     -178
+    ]
+   },
+   "D_RHCP_peak_dBi": 17.209279173346385,
+   "D_total_peak_dBi": 17.319463272696154,
+   "A_side_D_RHCP_dBi": 7.3642112517223435,
+   "A_side_D_LHCP_dBi": 0.5530363256712412,
+   "B_side_D_RHCP_dBi": 17.209279173346385,
+   "B_side_D_LHCP_dBi": 1.3078338476444127,
+   "at_25_0": {
+    "RHCP": 2.586687468761795,
+    "LHCP": 1.853353929859383
+   },
+   "at_25_180": {
+    "RHCP": 17.145248779274844,
+    "LHCP": 1.456479728769688
+   },
+   "frac_power_within_10deg_of_main_beam": 0.1513573823305433,
+   "main_beam": [
+    24,
+    -178
+   ],
+   "hpbw_theta_deg": 14.0,
+   "SLL_dB": -6.443296899357231
+  }
+ },
+ "model": {
+  "off": {
+   "peaks": {
+    "A_side": [
+     24,
+     0
+    ],
+    "B_side": [
+     24,
+     -180
+    ]
+   },
+   "D_RHCP_peak_dBi": 22.76833261902912,
+   "D_total_peak_dBi": 22.78702285692065,
+   "A_side_D_RHCP_dBi": 22.76833261902912,
+   "A_side_D_LHCP_dBi": -0.8840137319215324,
+   "B_side_D_RHCP_dBi": 21.759806757858577,
+   "B_side_D_LHCP_dBi": -2.965622772540879,
+   "at_25_0": {
+    "RHCP": 22.549601061763376,
+    "LHCP": -0.7257001660844414
+   },
+   "at_25_180": {
+    "RHCP": 21.660077422510756,
+    "LHCP": -2.3440042178875227
+   },
+   "frac_power_within_10deg_of_main_beam": 0.4330952964841199,
+   "main_beam": [
+    24,
+    0
+   ],
+   "hpbw_theta_deg": 12.0,
+   "SLL_dB": -1.0126107854116997
+  },
+  "on": {
+   "peaks": {
+    "A_side": [
+     24,
+     0
+    ],
+    "B_side": [
+     6,
+     90
+    ]
+   },
+   "D_RHCP_peak_dBi": 25.15052282412192,
+   "D_total_peak_dBi": 25.18534776996443,
+   "A_side_D_RHCP_dBi": 25.15052282412192,
+   "A_side_D_LHCP_dBi": 4.209008316639457,
+   "B_side_D_RHCP_dBi": 4.831363139638853,
+   "B_side_D_LHCP_dBi": 2.0439103000281813,
+   "at_25_0": {
+    "RHCP": 25.061860787883393,
+    "LHCP": 4.177619297250351
+   },
+   "at_25_180": {
+    "RHCP": -11.621008569016881,
+    "LHCP": -1.749966433970265
+   },
+   "frac_power_within_10deg_of_main_beam": 0.7460969984371401,
+   "main_beam": [
+    24,
+    0
+   ],
+   "hpbw_theta_deg": 12.0,
+   "SLL_dB": -10.560296331537204
+  }
+ }
+}
+--- top 12 by score
+J swap(jx<->jy) | rot180 + conj(E)                                             corr OFF 0.804 ON 0.940 | ccorr OFF 0.396 ON 0.444 sum 0.416 delta 0.315 | A@25/B@25 OFF 21.6/22.5 ON -14.1/25.0 | pk OFF {'A_side': (24, 0), 'B_side': (24, -180)} ON {'A_side': (6, -88), 'B_side': (24, -180)}
+J swap(jx<->jy) | id + conj(cell phase)                                        corr OFF 0.804 ON 0.940 | ccorr OFF 0.395 ON 0.444 sum 0.417 delta 0.312 | A@25/B@25 OFF 21.6/22.5 ON -15.1/25.0 | pk OFF {'A_side': (24, 0), 'B_side': (24, -180)} ON {'A_side': (6, -88), 'B_side': (24, -180)}
+J mirror(jy->-jy) | id + conj(cell phase)                                      corr OFF 0.804 ON 0.940 | ccorr OFF 0.396 ON 0.436 sum 0.413 delta 0.307 | A@25/B@25 OFF 21.6/22.5 ON -11.2/25.0 | pk OFF {'A_side': (24, 0), 'B_side': (24, -180)} ON {'A_side': (6, -88), 'B_side': (24, -180)}
+J mirror(jx->-jx) | id + conj(cell phase)                                      corr OFF 0.804 ON 0.940 | ccorr OFF 0.396 ON 0.436 sum 0.413 delta 0.307 | A@25/B@25 OFF 21.6/22.5 ON -11.2/25.0 | pk OFF {'A_side': (24, 0), 'B_side': (24, -180)} ON {'A_side': (6, -88), 'B_side': (24, -180)}
+J mirror(jy->-jy) | rot180 + conj(E)                                           corr OFF 0.804 ON 0.940 | ccorr OFF 0.393 ON 0.436 sum 0.410 delta 0.308 | A@25/B@25 OFF 21.6/22.5 ON -11.7/25.0 | pk OFF {'A_side': (24, 0), 'B_side': (24, -180)} ON {'A_side': (6, -88), 'B_side': (24, -180)}
+J mirror(jx->-jx) | rot180 + conj(E)                                           corr OFF 0.804 ON 0.940 | ccorr OFF 0.393 ON 0.436 sum 0.410 delta 0.308 | A@25/B@25 OFF 21.6/22.5 ON -11.7/25.0 | pk OFF {'A_side': (24, 0), 'B_side': (24, -180)} ON {'A_side': (6, -88), 'B_side': (24, -180)}
+J swap(jx<->jy) | mirror x->-x                                                 corr OFF 0.811 ON 0.936 | ccorr OFF 0.417 ON 0.351 sum 0.404 delta 0.296 | A@25/B@25 OFF 21.6/22.5 ON -14.1/25.0 | pk OFF {'A_side': (24, 0), 'B_side': (24, -180)} ON {'A_side': (6, 88), 'B_side': (24, -180)}
+J swap(jx<->jy) | mirror y->-y + conj(E) + conj(cell phase)                    corr OFF 0.812 ON 0.936 | ccorr OFF 0.414 ON 0.350 sum 0.401 delta 0.291 | A@25/B@25 OFF 21.6/22.5 ON -15.1/25.0 | pk OFF {'A_side': (24, 0), 'B_side': (24, -180)} ON {'A_side': (6, 88), 'B_side': (24, -180)}
+J rot90 | mirror x->-x + conj(E)                                               corr OFF 0.812 ON 0.937 | ccorr OFF 0.392 ON 0.408 sum 0.411 delta 0.269 | A@25/B@25 OFF 21.6/22.5 ON -14.1/24.9 | pk OFF {'A_side': (24, 0), 'B_side': (24, -180)} ON {'A_side': (6, 88), 'B_side': (24, -180)}
+J rot90 | mirror y->-y + conj(cell phase)                                      corr OFF 0.812 ON 0.937 | ccorr OFF 0.392 ON 0.410 sum 0.413 delta 0.267 | A@25/B@25 OFF 21.6/22.5 ON -15.2/24.9 | pk OFF {'A_side': (24, 0), 'B_side': (24, -180)} ON {'A_side': (6, 88), 'B_side': (24, 180)}
+J mirror(jy->-jy) | mirror y->-y + conj(E) + conj(cell phase)                  corr OFF 0.810 ON 0.937 | ccorr OFF 0.402 ON 0.355 sum 0.392 delta 0.281 | A@25/B@25 OFF 21.6/22.5 ON -11.2/25.0 | pk OFF {'A_side': (24, 0), 'B_side': (24, 180)} ON {'A_side': (6, 88), 'B_side': (24, -180)}
+J mirror(jx->-jx) | mirror y->-y + conj(E) + conj(cell phase)                  corr OFF 0.810 ON 0.937 | ccorr OFF 0.402 ON 0.355 sum 0.392 delta 0.281 | A@25/B@25 OFF 21.6/22.5 ON -11.2/25.0 | pk OFF {'A_side': (24, 0), 'B_side': (24, 180)} ON {'A_side': (6, 88), 'B_side': (24, -180)}
+--- requested single variants
+rot180                                                                         corr OFF 0.804 ON 0.940 | ccorr OFF 0.399 ON 0.376 sum 0.391 delta 0.263 | A@25/B@25 OFF 21.7/22.5 ON -11.6/25.1 | pk OFF {'A_side': (24, 0), 'B_side': (24, -180)} ON {'A_side': (6, -88), 'B_side': (24, -180)}
+id + both states swapped                                                       corr OFF 0.206 ON 0.597 | ccorr OFF 0.152 ON 0.364 sum 0.214 delta 0.522 | A@25/B@25 OFF 25.1/-11.6 ON 22.5/21.7 | pk OFF {'A_side': (24, 0), 'B_side': (6, 90)} ON {'A_side': (24, 0), 'B_side': (24, -180)}
+id + switched-cell OFF/ON swapped                                              corr OFF 0.207 ON 0.577 | ccorr OFF 0.192 ON 0.357 sum 0.214 delta 0.472 | A@25/B@25 OFF 25.0/0.4 ON 22.7/21.5 | pk OFF {'A_side': (24, 0), 'B_side': (6, -90)} ON {'A_side': (24, 0), 'B_side': (24, -180)}
+id                                                                             corr OFF 0.710 ON -0.021 | ccorr OFF 0.393 ON 0.198 sum 0.214 delta 0.522 | A@25/B@25 OFF 22.5/21.7 ON 25.1/-11.6 | pk OFF {'A_side': (24, 0), 'B_side': (24, -180)} ON {'A_side': (24, 0), 'B_side': (6, 90)}
+id + conj(cell phase)                                                          corr OFF 0.112 ON 0.307 | ccorr OFF 0.272 ON 0.255 sum 0.336 delta 0.150 | A@25/B@25 OFF -2.3/-1.0 ON -1.8/5.2 | pk OFF {'A_side': (16, -68), 'B_side': (26, 136)} ON {'A_side': (18, 88), 'B_side': (18, 90)}
+swap x<->y                                                                     corr OFF 0.061 ON 0.368 | ccorr OFF 0.164 ON 0.108 sum 0.065 delta 0.167 | A@25/B@25 OFF -3.3/-8.2 ON -0.2/-0.2 | pk OFF {'A_side': (16, -22), 'B_side': (26, 134)} ON {'A_side': (24, 88), 'B_side': (18, -178)}
+mirror x->-x                                                                   corr OFF 0.047 ON 0.258 | ccorr OFF 0.193 ON 0.105 sum 0.099 delta 0.069 | A@25/B@25 OFF -2.3/-0.7 ON -1.7/4.2 | pk OFF {'A_side': (16, 68), 'B_side': (26, -136)} ON {'A_side': (18, -88), 'B_side': (18, -90)}
+id + conj(E)                                                                   corr OFF 0.073 ON 0.056 | ccorr OFF 0.249 ON 0.139 sum 0.128 delta 0.203 | A@25/B@25 OFF -0.7/-2.3 ON 4.2/-1.7 | pk OFF {'A_side': (26, -44), 'B_side': (16, 112)} ON {'A_side': (18, -88), 'B_side': (18, -92)}
+mirror y->-y                                                                   corr OFF 0.052 ON 0.063 | ccorr OFF 0.180 ON 0.114 sum 0.155 delta 0.141 | A@25/B@25 OFF -0.7/-2.3 ON 4.2/-1.7 | pk OFF {'A_side': (26, 44), 'B_side': (16, -112)} ON {'A_side': (18, 88), 'B_side': (18, 92)}

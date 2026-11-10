@@ -1,0 +1,4 @@
+# ITERATION 1 (BAR50-02V, N = 40 / 50 diodes) design study + convention audit. MODEL_ONLY / NOT_HFSS_VALIDATED. Relative trends.
+Data: iter1_study_bar50.json (all combinations), iter1_top_bar50.json (top 3 per N with full-pattern gains), diode_mom_bar50.json (cell MoM), noFR4/diag_results.json (HFSS no-FR4 vs model), nine_cell_sanity.json.
+Cell (island, mesh 96, 8-cell gap, MoM, BAR50-02V): alpha_OFF 2.01 / alpha_ON 0.226 Np/m (C 0.11 pF, Rp 4 k, 0.6 nH; scan model C 0.15 reproduced: 2.16 / 0.226 = 9.80 dB) -> ON suppression of the CELL 9.5 dB (9.45-9.57 over C 0.105-0.12, Rp 3-5 k): below the 12 dB target (needs alpha_ON <= 0.127).
+Study assumptions: per-cell strength and ON ratio of a gathered element = those of the single cell (NOT verified: needs the HFSS cell / 9-cell check); element = k cells along its own slot axis with one common axis; r_on = 0.335 amplitude.

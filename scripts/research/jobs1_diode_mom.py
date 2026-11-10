@@ -36,6 +36,13 @@ DIODES = {
     "BAR50-02V C0.12 Rp3k (worst OFF)": (0.12e-12, 3e3, 0.6e-9, 3.0),
     "BAR50-02V C0.105 Rp5k (best OFF)": (0.105e-12, 5e3, 0.6e-9, 3.0),
 }
+if os.environ.get("DIODE_SET") == "02L":   # BAR50-02L (leadless, Ls 0.4 nH per user 2026-11-10): same C / Rp / Ron model as the 02V, only the package inductance differs
+    DIODES = {
+        "BAR50-02V C0.11 Rp4k Ls0.6 (reference)": (0.11e-12, 4e3, 0.6e-9, 3.0),
+        "BAR50-02L C0.11 Rp4k Ls0.4": (0.11e-12, 4e3, 0.4e-9, 3.0),
+        "BAR50-02L C0.12 Rp3k Ls0.4 (worst OFF)": (0.12e-12, 3e3, 0.4e-9, 3.0),
+        "BAR50-02L C0.105 Rp5k Ls0.4 (best OFF)": (0.105e-12, 5e3, 0.4e-9, 3.0),
+    }
 
 
 def zload(name, state):

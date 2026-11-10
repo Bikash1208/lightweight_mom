@@ -27,6 +27,8 @@ from src.pattern.vector_aperture_pattern import _vector_far_field, copol_compone
 B = M.B
 K0, PITCH = B.K0, B.PITCH
 BEAM_A, BEAM_B = B.BEAM_A, B.BEAM_B
+if os.environ.get("ROT180") == "1":   # rot180 frame consistent with the HFSS no-FR4 results: design A at phi 180 and B at phi 0 in the model
+    BEAM_A, BEAM_B = (BEAM_A[0], 180.0), (BEAM_B[0], 0.0)
 R_EXCL = 0.025
 ALPHA_CELL = 2.01
 R_ON = math.sqrt(0.226 / 2.01)
@@ -196,10 +198,13 @@ class Board:
         raise ValueError(place)
 
     # ------------------------------------------------------------------ evaluation
-    def evaluate(self, place, n, k, alpha, r_on, cap, need_fields=False):
+    def evaluate(self, place, n, k, alpha, r_on, cap, need_fields=False, static_scale=1.0, elements=None):
         d = self.d[cap]
-        cen = self.centres(place, n, cap, k)
-        els = self.elements(cen, k, cap)[:n]
+        if elements is None:
+            cen = self.centres(place, n, cap, k)
+            els = self.elements(cen, k, cap)[:n]
+        else:
+            els = elements
         if len(els) < n:
             return None
         sw = np.concatenate([e[1] for e in els])
@@ -213,19 +218,20 @@ class Board:
             stat = np.where(mask, 0.0, np.sqrt(dep))
             a = np.sqrt(2.0 * alpha * np.maximum(d["W"], 0.0) * dep / np.maximum(self.rho, 1e-9)) * amp_ratio * mask   # B amplitude (OFF: alpha; ON: amplitude x r_on, depletion with alpha_on)
             jxB, jyB = a * ux, a * uy
-            jxA, jyA = d["jxA"] * stat, d["jyA"] * stat
+            jxA, jyA = d["jxA"] * stat * math.sqrt(static_scale), d["jyA"] * stat * math.sqrt(static_scale)
             FA = abs(beam_field(self.green, self.x, self.y, BEAM_A, jxA, jyA).sum())
             FB = abs(beam_field(self.green, self.x, self.y, BEAM_B, jxB, jyB).sum())
             # B-direction leakage of A currents and A-direction of B (negligible) is included in the sums below via the full currents
             Fa_full = abs(beam_field(self.green, self.x, self.y, BEAM_A, jxA + jxB, jyA + jyB).sum())
             Fb_full = abs(beam_field(self.green, self.x, self.y, BEAM_B, jxA + jxB, jyA + jyB).sum())
-            p_conv = float((np.sum(d["ampA"] ** 2 * stat**2 * (~mask)) + np.sum(a**2)) * PITCH**2 / (2 * math.pi))
+            p_conv = float((static_scale * np.sum(d["ampA"] ** 2 * stat**2 * (~mask)) + np.sum(a**2)) * PITCH**2 / (2 * math.pi))
             res[state] = dict(A=20 * math.log10(Fa_full / self.FA_ref), B=20 * math.log10(max(Fb_full, 1e-30) / self.FA_ref), p_conv=p_conv, jx=jxA + jxB, jy=jyA + jyB)
-        out = dict(place=place, N=n, k=k, cap=cap, alpha_cell=alpha, A_off=res["off"]["A"], B_off=res["off"]["B"], A_on=res["on"]["A"], B_on=res["on"]["B"],
+        out = dict(place=place, N=n, k=k, cap=cap, static_scale=static_scale, alpha_cell=alpha, A_off=res["off"]["A"], B_off=res["off"]["B"], A_on=res["on"]["A"], B_on=res["on"]["B"],
                    balance_A_minus_B=res["off"]["A"] - res["off"]["B"], suppression_dB=res["off"]["B"] - res["on"]["B"], dA_off_to_on=res["on"]["A"] - res["off"]["A"],
                    p_conv_off=res["off"]["p_conv"], p_conv_on=res["on"]["p_conv"], n_switched_cells=int(mask.sum()), vias=2 * n, diodes=n)
         if need_fields:
             out["_cur"] = {s: (res[s]["jx"], res[s]["jy"]) for s in res}
+        out["_els"] = els
         return out
 
 

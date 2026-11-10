@@ -28,7 +28,7 @@ F = S.F
 SUB = ("rt5880", 2.2, 0.0009, 3.175)
 P = 11.6
 FORDER = 128
-GAP_CELLS = 5
+GAP_CELLS = int(os.environ.get("ISL_GAP_CELLS", "8"))  # mesh 96 board row: 8 cells = 0.967 mm. NOTE: the 2026-11-10 full-tensor test (tensors.json) was run with 5 (WRONG for mesh 96) -> its island numbers are superseded
 
 
 class SlotDiscIsland:

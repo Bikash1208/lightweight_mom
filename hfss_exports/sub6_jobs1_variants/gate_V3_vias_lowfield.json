@@ -1,0 +1,60 @@
+{
+ "label": "MODEL_ONLY re-import gate",
+ "step": "BOARD_V3_vias_lowfield.step",
+ "names_found": {
+  "METAL_PEC": 1,
+  "SUBSTRATE": 1,
+  "SUBSTRATE_FR4": 1,
+  "AIR": 1,
+  "PORT": 1,
+  "D_sheets": 9,
+  "total_products": 14
+ },
+ "names_ok": true,
+ "METAL_PEC_lumps": 63,
+ "METAL_PEC_all_solids_valid": true,
+ "all_bodies_valid": {
+  "METAL_PEC": true,
+  "SUBSTRATE": true,
+  "SUBSTRATE_FR4": true,
+  "AIR": true,
+  "PORT": true
+ },
+ "overlap_METAL_vs_dielectrics_mm3": {
+  "SUBSTRATE": 0.0,
+  "SUBSTRATE_FR4": 0.0
+ },
+ "overlap_lump_pairs_checked": 28,
+ "overlap_lump_worst_mm3": 0.0,
+ "NO_OVERLAP": "NO_OVERLAP",
+ "AIR_faces": 6,
+ "AIR_solids": 1,
+ "sheet_z_values": [
+  0.0175
+ ],
+ "SHEETS": "SHEETS_OK",
+ "sheet_failures": [],
+ "PORT": {
+  "touching_bodies": [
+   "AIR",
+   "METAL_PEC",
+   "SUBSTRATE",
+   "SUBSTRATE_FR4"
+  ],
+  "metal_lumps_touched": [
+   [
+    0.035,
+    69.5
+   ],
+   [
+    12.1,
+    0.64
+   ]
+  ],
+  "area": 11.935774428967354,
+  "expected": 11.93577442896736,
+  "z": -3.1750000999999997
+ },
+ "PORT_OK": true,
+ "elapsed_s": 2
+}

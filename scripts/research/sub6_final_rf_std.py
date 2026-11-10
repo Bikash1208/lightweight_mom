@@ -27,11 +27,19 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 SRC = ROOT / "results" / "sub6_final_board" / "mesh96"
 OUT = ROOT / "hfss_exports" / "sub6_final_board_m96_13pad"
+if os.environ.get("RF_OUT_DIR"):
+    OUT = Path(os.environ["RF_OUT_DIR"])
+    OUT.mkdir(parents=True, exist_ok=True)
 R3 = lambda v: round(float(v) + 0.0, 3)
 H, T = 3.175, 0.035
-Z_GND_LO, Z_FR4_LO, Z_PAD_LO = -H - T, -H - T - 0.8, -H - T - 0.8 - T
+FR4_T = float(os.environ.get("RF_FR4_T", "0.8"))      # JOB 1 variants (defaults = the delivered standard)
+VIA_MODE = os.environ.get("RF_VIA_MODE", "base")      # base | moved | shield | none
+OUT_NAME = os.environ.get("RF_OUT_NAME", "")
+OUT_DIR = os.environ.get("RF_OUT_DIR", "")
+Z_GND_LO, Z_FR4_LO, Z_PAD_LO = -H - T, -H - T - FR4_T, -H - T - FR4_T - T
 Z_FR4_BOT = Z_FR4_LO            # -4.010 (top of the via pads)
-R_PIN, R_OUT, R_BAR, R_PAD, R_ANTI = 0.635, 2.05, 0.15, 0.30, 0.50
+R_PIN, R_OUT, R_BAR, R_PAD, R_ANTI = 0.635, 2.05, 0.15, 0.30, float(os.environ.get("RF_R_ANTI", "0.50"))
+R_RING, N_RING = 0.8, 6
 PIN_TOP = round(-H + 12.1, 3)
 ISL = (2.174, 0.65, 0.0, -0.20)
 SH_W, GAP0, GAP1, Z_SHEET = 0.35, 0.45, 1.45, T / 2
@@ -51,6 +59,8 @@ def lp(x, y, th, u, v):
 
 def main():
     variant = sys.argv[1] if len(sys.argv) > 1 else "full"
+    global MOVED
+    MOVED = json.loads(os.environ.get("RF_MOVED", "{}"))
     import cadquery as cq
     from sub6_step_exact import audit_step_text, exactify_step_text
     from sidequest_board_k2_lp_package import read_names
@@ -90,7 +100,13 @@ def main():
         ipts = [lp(x, y, th, ISL[2] - ISL[0], ISL[3] - ISL[1]), lp(x, y, th, ISL[2] + ISL[0], ISL[3] - ISL[1]), lp(x, y, th, ISL[2] + ISL[0], ISL[3] + ISL[1]), a2, a1, lp(x, y, th, ISL[2] - ISL[0], ISL[3] + ISL[1])]
         isl = cq.Workplane("XY").polyline(ipts).close().extrude(T).val()
         for key, body in (("disc", disc), ("island", isl)):
+            if VIA_MODE == "none":
+                lumps.append(body)
+                continue
             vx, vy = R3(float(c[key + "_via_x"])), R3(float(c[key + "_via_y"]))
+            if VIA_MODE == "moved":   # best low-field spot from JOB 1 A (cell-local u, v)
+                lu, lv = MOVED[key]
+                vx, vy = lp(x, y, th, lu, lv)
             via_xy.append((vx, vy))
             barrel = cq.Workplane("XY").workplane(offset=Z_FR4_BOT).center(vx, vy).circle(R_BAR).extrude(0.0 - Z_FR4_BOT).val()
             pad = cq.Workplane("XY").workplane(offset=Z_PAD_LO).center(vx, vy).circle(R_PAD).extrude(Z_FR4_BOT - Z_PAD_LO).val()
@@ -106,6 +122,13 @@ def main():
         gw = gw.moveTo(vx, vy).circle(R_ANTI)
     gw = gw.moveTo(0, 0).circle(R_OUT)
     ground = gw.extrude(T).val()
+    rings = []
+    if VIA_MODE == "shield":   # ring of 6 ground vias (r 0.15) at R_RING around each bias via, FR4 only, blind to the ground plate (no pads)
+        for vx, vy in via_xy:
+            for k in range(N_RING):
+                a = 2 * math.pi * k / N_RING
+                rings.append(cq.Workplane("XY").workplane(offset=Z_FR4_BOT).center(R3(vx + R_RING * math.cos(a)), R3(vy + R_RING * math.sin(a))).circle(R_BAR).extrude(Z_GND_LO - Z_FR4_BOT).val())
+        ground = ground.fuse(*rings).clean()
     lumps.append(ground)
     pin = cq.Workplane("XY").workplane(offset=-H).circle(R_PIN).extrude(PIN_TOP + H).val()
     lumps.append(pin)
@@ -113,6 +136,8 @@ def main():
     sub = cq.Workplane("XY").workplane(offset=-H).polyline(hexpts).close().extrude(H).val().cut(*([b for b in barrels] + [pin])).clean()
     fr4 = cq.Workplane("XY").workplane(offset=Z_FR4_LO).polyline(hexpts).close().extrude((-H) - Z_FR4_LO).val()
     fr4 = fr4.cut(*(barrels + [ground])).clean()
+    if not barrels:
+        fr4 = cq.Workplane("XY").workplane(offset=Z_FR4_LO).polyline(hexpts).close().extrude((-H) - Z_FR4_LO).val().cut(ground).clean()
     window = None
     if variant == "full_win":   # USER DECISION: 12 x 12 mm window milled out of the FR4 at the board centre (centred on the pin); the SMA sits on the ground underside
         window = cq.Workplane("XY").workplane(offset=Z_FR4_LO - 1.0).rect(12.0, 12.0).extrude((-H + 0.5) - (Z_FR4_LO - 1.0)).val()
@@ -132,18 +157,18 @@ def main():
     asm.add(port, name="PORT", color=cq.Color(0.1, 0.1, 0.9, 1))
     for nm, f in sheets.items():
         asm.add(f, name=nm, color=cq.Color(0.9, 0.1, 0.1, 1))
-    path = OUT / {"full": "BOARD_N240_RF_full.step", "full_win": "BOARD_N240_RF_full_win.step"}.get(variant, "BOARD_N240_RF_9cell.step")
+    path = OUT / OUT_NAME if OUT_NAME else OUT / {"full": "BOARD_N240_RF_full.step", "full_win": "BOARD_N240_RF_full_win.step"}.get(variant, "BOARD_N240_RF_9cell.step")
     asm.export(str(path), exportType="STEP")
     raw = path.read_text(encoding="utf-8")
     snapped, ex = exactify_step_text(raw)
     path.write_text(snapped, encoding="utf-8", newline="\n")
     bad = audit_step_text(path.read_text(encoding="utf-8"))
-    with open(OUT / f"diode_sheets_rf_{variant}.csv", "w", newline="") as f:
+    with open(OUT / f"diode_sheets_rf_{(OUT_NAME[:-5] if OUT_NAME else variant)}.csv", "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["name", "site", "anode_edge_x1", "anode_edge_y1", "anode_edge_x2", "anode_edge_y2", "cathode_edge_x1", "cathode_edge_y1", "cathode_edge_x2", "cathode_edge_y2", "current_dir_x", "current_dir_y", "string", "pos_in_string"])
         w.writerows(rows)
     print(f"exported {path.name} {path.stat().st_size / 1e6:.1f} MB, inexact literals {len(bad)}, {time.time() - t0:.0f}s", flush=True)
-    json.dump(dict(variant=variant, path=str(path), n_cells=len(cells), n_switched=len(sheets), hex_circumradius=rout, audit_inexact_literals=len(bad), n_lumps=len(lumps)), open(OUT / f"rf_std_build_{variant}.json", "w"), indent=1)
+    json.dump(dict(variant=variant, path=str(path), n_cells=len(cells), n_switched=len(sheets), hex_circumradius=rout, audit_inexact_literals=len(bad), n_lumps=len(lumps)), open(OUT / f"rf_std_build_{(OUT_NAME[:-5] if OUT_NAME else variant)}.json", "w"), indent=1)
 
 
 if __name__ == "__main__":

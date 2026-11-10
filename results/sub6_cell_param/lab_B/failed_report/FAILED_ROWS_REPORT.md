@@ -1,4 +1,4 @@
-# FAILED rows: 0 of 0 attempted (0.0 %)
+# FAILED rows: 0 of 144 attempted (0.0 %)
 
 **FLAGS:** none (rate <= 5 % and no clustering)
 

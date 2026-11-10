@@ -1,0 +1,52 @@
+{
+  "label": "MODEL_ONLY / NOT_HFSS_VALIDATED",
+  "HFSS_solutions_run": false,
+  "geometry_packages": {
+    "BASELINE_novia": true,
+    "BASELINE_vias_fr4_stubs": true,
+    "G1_novia": true,
+    "G1_vias_fr4_stubs": true
+  },
+  "CAD_to_MoM_mapping_all_pass": true,
+  "full_fast_suite": {
+    "passed": 2953,
+    "skipped": 129,
+    "failed": 8,
+    "seconds": 945.08,
+    "accepted_ENV_ONLY_hash_failures": 6,
+    "poll_timeout_failures": 2,
+    "timeout_rerun_passed": 2,
+    "timeout_rerun_seconds": 41.42,
+    "exception_authority": "user revised ENV_ONLY norm/hash criterion, parent job; runtime timeouts rerun without changing tests"
+  },
+  "targeted_checks": {
+    "passed": 5,
+    "seconds": 4.06
+  },
+  "src_changes": false,
+  "existing_tests_or_fixtures_changed": false,
+  "optional_mesh192": {
+    "label": "MODEL_ONLY / NOT_HFSS_VALIDATED",
+    "status": "ATTEMPTED_ALLOCATION_FAILED_NOT_A_MODEL_RESULT",
+    "optional_mesh": 192,
+    "requested_cells": [
+      "BASELINE",
+      "G1"
+    ],
+    "requested_bloch_nodes": 8,
+    "completed_mesh192_nodes": 0,
+    "exception": "numpy._core._exceptions._ArrayMemoryError",
+    "reported_failed_matrix_shape": [
+      39220,
+      39220
+    ],
+    "reported_dtype": "complex128",
+    "reported_allocation_GiB": 22.9,
+    "worker_count": 64,
+    "worker_cap": null,
+    "BLAS_threads_per_worker": 1,
+    "parameters_changed_after_failure": false,
+    "action": "Optional mesh192 is unavailable in this run; mandatory mesh160 data and HFSS packages retained. No worker cap or model tuning introduced.",
+    "evidence": "mesh192.err"
+  }
+}

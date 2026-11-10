@@ -248,3 +248,20 @@ HFSS_SETUP corrected to OFF 5.424-j79.320 ohm/sq including series 0.6 nH.
 Previous S2 env; no worker cap, one BLAS thread per worker. Solver unchanged.
 Full fast suite: 2954 passed/129 skipped, six accepted platform-hash failures;
 one app timeout passed isolated rerun. Original regression fixtures unchanged.
+
+## SUB6 S2 fixed mesh trend and HFSS cell packages (2026-11-10)
+
+Branch compute/sub6-island-meshtrend-hfss, parent c3178fe; MODEL_ONLY / NOT_HFSS_VALIDATED.
+No further MoM tuning: fixed BASELINE/G1 meshes 96/128/160 completed.
+BASELINE suppression 9.51/0.76/11.76 dB; G1 19.25/15.20/6.34 dB.
+All ON beta values extrapolated from kt/k0 nodes 1.017/1.097.
+Optional 192 attempted: failed allocating a 22.9 GiB complex 39220-square matrix;
+no 192 result, no worker cap. See results/sub6_island_meshtrend/REPORT.md.
+Four HFSS STEP + one-page setup packages in hfss_exports/sub6_island_baseline_g1/.
+BASELINE/G1 x no-via/vias+0.8 FR4+retained calibration stubs; anti-pads 0.6 mm.
+Geometry re-import gates and CAD/MoM quantization mapping passed; no HFSS solves.
+Method found in sub6_final_cal.py and hfss_data.json: periodic eigenmode dispersion/Q,
+alpha_x=omega/(2Qvg), distinct from holographic leakage alpha. Historical data used ISL_vias2.
+Previous S2 env, 64 worker pool, single-threaded BLAS. Solver src unchanged.
+Full fast suite: 2953 passed/129 skipped, six accepted ENV_ONLY hashes and two app
+poll timeouts which passed isolated rerun (2 passed). Targeted checks: 5 passed.

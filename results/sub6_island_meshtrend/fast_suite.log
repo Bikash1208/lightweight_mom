@@ -1,0 +1,325 @@
+bringing up nodes...
+bringing up nodes...
+
+................ss..ss.................s................................ [  2%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  9%]
+........................................................................ [ 11%]
+........................................................................ [ 13%]
+............s...........................s............................... [ 16%]
+........................................................................ [ 18%]
+........................................................................ [ 20%]
+........................................................................ [ 23%]
+........................................................................ [ 25%]
+........................................................................ [ 27%]
+........................................................................ [ 30%]
+........................................................................ [ 32%]
+........................................................................ [ 34%]
+........................................................................ [ 37%]
+........................................................................ [ 39%]
+........................................................................ [ 41%]
+........................................................................ [ 44%]
+...................................................ssssss............... [ 46%]
+...........ss........................................................... [ 48%]
+....................................sss.s....................s.......... [ 51%]
+.................................s.ssss............................ss... [ 53%]
+.....s.........s.sss.s..ss....s.........s.ss..ssssssss.........s.ssss.s. [ 55%]
+.s..sss.sssssssssssss...sss.sss.s.......s....ss.ss.....s...s.sssssssssss [ 58%]
+.s....s.........s.............ss..s..............s.sss........s....s.... [ 60%]
+.s....s.....s..................sss.s.................................... [ 62%]
+........................................................................ [ 65%]
+........................................................................ [ 67%]
+........................................................................ [ 69%]
+........................................................................ [ 72%]
+................................s....................................... [ 74%]
+........................................................................ [ 76%]
+........................................................................ [ 79%]
+........................................................................ [ 81%]
+..................................F..................................... [ 83%]
+......................................................................F. [ 86%]
+...................................s.s.s.s.s...ss....................... [ 88%]
+.......................................................................s [ 90%]
+.......ss............................................................... [ 93%]
+........................................................................ [ 95%]
+.........................................................F..F.F.F....... [ 97%]
+...............ssss.................F.F...........................       [100%]
+================================== FAILURES ===================================
+__________________ test_synthesize_coded_one_bit_square_only __________________
+[gw5] win32 -- Python 3.13.17 C:\lightweight_mom\.venv313\Scripts\python.exe
+
+client = <starlette.testclient.TestClient object at 0x000002660A417380>
+grounded_library = 'test-phase15-ports-08d56ad1'
+
+    def test_synthesize_coded_one_bit_square_only(client, grounded_library):
+>       job = _synthesize_coded_one_bit_square_only(client, grounded_library)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_app_phase15_ports_and_coded.py:168:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_app_phase15_ports_and_coded.py:164: in _synthesize_coded_one_bit_square_only
+    return _wait_for_job(client, resp.json()["id"], timeout=60.0)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+client = <starlette.testclient.TestClient object at 0x000002660A417380>
+job_id = '1040ef76-3fc6-4ba7-9d76-62297c961bbd', timeout = 60.0
+
+    def _wait_for_job(client, job_id, timeout=60.0):
+        deadline = time.monotonic() + timeout
+        while True:
+            resp = client.get(f"/api/jobs/{job_id}")
+            job = resp.json()
+            if job["status"] in ("done", "failed", "cancelled"):
+                return job
+            if time.monotonic() > deadline:
+>               raise TimeoutError(f"job {job_id} did not finish in {timeout}s: {job}")
+E               TimeoutError: job 1040ef76-3fc6-4ba7-9d76-62297c961bbd did not finish in 60.0s: {'id': '1040ef76-3fc6-4ba7-9d76-62297c961bbd', 'kind': 'hmsa_synthesize_coded', 'status': 'running', 'progress': 0.0, 'progress_message': '', 'error': None, 'created_at': 1794304364.5332537, 'started_at': 1794304364.533444, 'finished_at': None}
+
+tests\test_app_phase15_ports_and_coded.py:35: TimeoutError
+_ test_solve_richardson_mode_record_shows_the_extrapolated_value_not_the_finest_mesh _
+[gw10] win32 -- Python 3.13.17 C:\lightweight_mom\.venv313\Scripts\python.exe
+
+client = <starlette.testclient.TestClient object at 0x000002893A813BD0>
+
+    def test_solve_richardson_mode_record_shows_the_extrapolated_value_not_the_finest_mesh(client):
+        """PHASE13B A1: at resonance (L=W=6mm, grounded, 12.5 GHz) the finest FAST_CELL_COUNTS mesh
+        (48 cells) and the dx->0 extrapolation differ by several degrees -- the displayed/recorded
+        S11_xx_phase_deg must be the extrapolated value, not silently the raw finest-mesh solve."""
+        resp = client.post(
+            "/api/unit_cell/solve",
+            json={
+                "config": _config(
+                    period_x=8.0e-3,
+                    period_y=8.0e-3,
+                    substrate={**_SUBSTRATE, "backing": "pec"},
+                    geometry={"type": "rectangle", "length": 6.0e-3, "width": 6.0e-3},
+                    reference_planes={"top_air_thickness": 5.0e-3},
+                ),
+                "mesh_mode": "richardson",
+            },
+        )
+>       job = _wait_for_job(client, resp.json()["id"], timeout=60.0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_app_unit_cell.py:93:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+client = <starlette.testclient.TestClient object at 0x000002893A813BD0>
+job_id = '68c1305b-0a6b-41c7-ad44-7772d0fede56', timeout = 60.0
+
+    def _wait_for_job(client, job_id, timeout=30.0):
+        deadline = time.monotonic() + timeout
+        while True:
+            resp = client.get(f"/api/jobs/{job_id}")
+            job = resp.json()
+            if job["status"] in ("done", "failed", "cancelled"):
+                return job
+            if time.monotonic() > deadline:
+>               raise TimeoutError(f"job {job_id} did not finish in {timeout}s: {job}")
+E               TimeoutError: job 68c1305b-0a6b-41c7-ad44-7772d0fede56 did not finish in 60.0s: {'id': '68c1305b-0a6b-41c7-ad44-7772d0fede56', 'kind': 'unit_cell_solve', 'status': 'running', 'progress': 0.0, 'progress_message': 'solving 1/1 (12.500 GHz)', 'error': None, 'created_at': 1794304387.6508818, 'started_at': 1794304387.6554883, 'finished_at': None}
+
+tests\test_app_unit_cell.py:46: TimeoutError
+_____ test_preexisting_case_is_bit_identical_to_main[cp2_ideal_1100_s11] ______
+[gw21] win32 -- Python 3.13.17 C:\lightweight_mom\.venv313\Scripts\python.exe
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'cp2_ideal_1100_s11'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('845cf49bac68...ab4017dd2a6c4' == '586d01997329...354d82df589ed'
+E
+E         - 586d0199732990992b6aac94afcf755d5a39e2dddb0479577d5354d82df589ed
+E         + 845cf49bac68f4d0ed96da7bd49ebc61f68417321bad1e6ce13ab4017dd2a6c4)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+______ test_preexisting_case_is_bit_identical_to_main[cp2_madp_0000_s11] ______
+[gw21] win32 -- Python 3.13.17 C:\lightweight_mom\.venv313\Scripts\python.exe
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'cp2_madp_0000_s11'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('69efd7b16ca8...2a9199a266492' == '0b06b7ba8ccb...145d4e73022a9'
+E
+E         - 0b06b7ba8ccbe0d4b630ea3a2703b75d33eb872029699c14777145d4e73022a9
+E         + 69efd7b16ca88e9bdefb6a6ab3f6670b6169c3f77deed8555182a9199a266492)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+______ test_preexisting_case_is_bit_identical_to_main[cp2_madp_0100_s11] ______
+[gw21] win32 -- Python 3.13.17 C:\lightweight_mom\.venv313\Scripts\python.exe
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'cp2_madp_0100_s11'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('a36232463e2c...d4783d2d39d4c' == '46531b5dff46...928bea7fc2bce'
+E
+E         - 46531b5dff46f76895dfec0cc6e0c82f23d512d7cd3ec41ac6f928bea7fc2bce
+E         + a36232463e2c7475a934dc09ab91fae0bd07c3a5d203c4d5ad8d4783d2d39d4c)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+______ test_preexisting_case_is_bit_identical_to_main[cp2_madp_1100_s11] ______
+[gw21] win32 -- Python 3.13.17 C:\lightweight_mom\.venv313\Scripts\python.exe
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'cp2_madp_1100_s11'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('6d9f6c200db9...dae89e363eaa9' == '4bbc9582dc90...f78d1bfd5fc93'
+E
+E         - 4bbc9582dc90713d6fbae6fcc5bbe4337e5d1e5c499843ea46cf78d1bfd5fc93
+E         + 6d9f6c200db9482a196150483e1d08569ff91b32e96c2e91805dae89e363eaa9)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+_____ test_preexisting_case_is_bit_identical_to_main[cp2_ideal_0000_s11] ______
+[gw28] win32 -- Python 3.13.17 C:\lightweight_mom\.venv313\Scripts\python.exe
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'cp2_ideal_0000_s11'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('97fdc1b97553...61930115fa639' == '220f02c87eed...506972b1a7d2f'
+E
+E         - 220f02c87eed7987430bcfb5f2b0f886b68eefae248b98ed9e4506972b1a7d2f
+E         + 97fdc1b975535c5669cdd0c26eb82aad4b1e9c02ae915bed56361930115fa639)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+_____ test_preexisting_case_is_bit_identical_to_main[cp2_ideal_0100_s11] ______
+[gw28] win32 -- Python 3.13.17 C:\lightweight_mom\.venv313\Scripts\python.exe
+
+now = {'load_matrix_x': {'shape': [1004, 1004], 'sha256': '162d90dba56faa93a2e60d62375f55805308dca95b1ea0053e75060c9a17239f'... 1004], 'sha256': 'e2ea159aaafffc47f3e7832e596bed409db6db680a924d6a496c066918c22471', 'norm': 131738.12022150823}, ...}
+key = 'cp2_ideal_0100_s11'
+
+    @pytest.mark.parametrize("key", sorted(set(REF) - CHANGED))
+    def test_preexisting_case_is_bit_identical_to_main(now, key):
+>       assert now[key]["sha256"] == REF[key]["sha256"] and now[key]["shape"] == REF[key]["shape"]
+E       AssertionError: assert ('d191da7f2bc4...8bbcfa30b411e' == '3e093e89a5d8...387259ecbbee5'
+E
+E         - 3e093e89a5d8e1e4b2b9eea3f2edfd6ba4e4f09807a50830d2b387259ecbbee5
+E         + d191da7f2bc462f3223deec1d8d1f8297b5339c0b6b4bf52c0f8bbcfa30b411e)
+
+tests\test_loads_rotated_regression.py:32: AssertionError
+============================== warnings summary ===============================
+..\lightweight_mom\.venv313\Lib\site-packages\fastapi\testclient.py:1: 64 warnings
+  C:\lightweight_mom\.venv313\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_export_exact_board.py: 5 warnings
+tests/test_app_phase23_hex4.py: 2 warnings
+tests/test_transmitarray_export.py: 18 warnings
+tests/test_phase30_refine.py: 1 warning
+tests/test_app_phase21_multiport.py: 2 warnings
+  C:\lightweight_mom\.venv313\Lib\site-packages\cadquery\utils.py:82: FutureWarning: save will be removed in the next release.
+    warn(f"{f.__name__} will be removed in the next release.", FutureWarning)
+
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+  C:\lwmom_retune\src\dispersion\sheet_model.py:75: RuntimeWarning: overflow encountered in tan
+    return -1j * (omega * EPS0 * eps_c / kz) / np.tan(kz * thickness_m)
+
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+  C:\lwmom_retune\scripts\research\sidequest_gate_cell.py:69: RuntimeWarning: overflow encountered in scalar power
+    beta = np.sqrt(K0**2 + gam**2 + 0j)
+
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+  C:\lwmom_retune\scripts\research\sidequest_gate_cell.py:69: RuntimeWarning: invalid value encountered in scalar power
+    beta = np.sqrt(K0**2 + gam**2 + 0j)
+
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+  C:\lwmom_retune\src\dispersion\sheet_model.py:79: RuntimeWarning: invalid value encountered in scalar power
+    alpha = np.sqrt(beta**2 - k0**2 + 0j)
+
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+  C:\lwmom_retune\src\dispersion\sheet_model.py:80: RuntimeWarning: invalid value encountered in scalar divide
+    return 1j * omega * EPS0 / alpha
+
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+  C:\lwmom_retune\src\dispersion\sheet_model.py:74: RuntimeWarning: invalid value encountered in scalar power
+    kz = np.sqrt(eps_c * k0**2 - beta**2)
+
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+  C:\lwmom_retune\src\dispersion\sheet_model.py:75: RuntimeWarning: invalid value encountered in scalar divide
+    return -1j * (omega * EPS0 * eps_c / kz) / np.tan(kz * thickness_m)
+
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+  C:\lwmom_retune\src\dispersion\sheet_model.py:75: RuntimeWarning: invalid value encountered in scalar multiply
+    return -1j * (omega * EPS0 * eps_c / kz) / np.tan(kz * thickness_m)
+
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+  C:\lwmom_retune\src\dispersion\sheet_model.py:79: RuntimeWarning: invalid value encountered in sqrt
+    alpha = np.sqrt(beta**2 - k0**2 + 0j)
+
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+  C:\lwmom_retune\src\dispersion\sheet_model.py:74: RuntimeWarning: invalid value encountered in sqrt
+    kz = np.sqrt(eps_c * k0**2 - beta**2)
+
+tests/test_sidequest_gate_line.py::test_lossless_gate_conserves_power
+tests/test_sidequest_gate_line.py::test_more_inductive_sheet_blocks_more
+tests/test_sidequest_gate_line.py::test_beta_matches_sheet_model_for_reactive_sheet
+tests/test_sidequest_gate_line.py::test_identical_region_is_transparent
+  C:\lwmom_retune\scripts\research\sidequest_gate_cell.py:85: RuntimeWarning: invalid value encountered in scalar divide
+    step = _fg(g, y)[0] / d
+
+tests/test_sparameters_oblique.py::test_grating_order_warning_and_record_at_an_angle_that_makes_a_higher_order_propagate
+  C:\lwmom_retune\tests\test_sparameters_oblique.py:170: UserWarning: a Floquet harmonic is inside the grounded slab's TM0 surface-wave interval (k0=209.585, Re(k_substrate)=310.864 rad/m; margin 0.199 x k0): S-parameters near a surface-wave resonance may be numerically sensitive
+    s = compute_s_parameters_oblique(uc, F, MeshSettings(16, 16, 10), _planes("pec"), math.radians(20.0), 0.0)
+
+tests/test_sweep_definition.py::test_cell_ids_are_deterministic_unique_and_sensitive_to_everything_that_matters
+  C:\lwmom_retune\tests\test_sweep_definition.py:251: UserWarning: 1 group(s) of mesh-identical geometries on this mesh (cells_x=8, cells_y=16): 1 of 3 OK cell(s) discretize to the exact same metal mask as another cell in this sweep, and will solve to bit-identical S-parameters despite differing continuous geometry (discretization.py)
+    other = [c.cell_id for c in plan_sweep(sweep_config(**change), d).cells]
+
+tests/test_sweep_definition.py::test_cell_ids_are_deterministic_unique_and_sensitive_to_everything_that_matters
+  C:\lwmom_retune\tests\test_sweep_definition.py:251: UserWarning: 1 group(s) of mesh-identical geometries on this mesh (cells_x=16, cells_y=16): 1 of 3 OK cell(s) discretize to the exact same metal mask as another cell in this sweep, and will solve to bit-identical S-parameters despite differing continuous geometry (discretization.py)
+    other = [c.cell_id for c in plan_sweep(sweep_config(**change), d).cells]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_app_phase15_ports_and_coded.py::test_synthesize_coded_one_bit_square_only
+FAILED tests/test_app_unit_cell.py::test_solve_richardson_mode_record_shows_the_extrapolated_value_not_the_finest_mesh
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[cp2_ideal_1100_s11]
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[cp2_madp_0000_s11]
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[cp2_madp_0100_s11]
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[cp2_madp_1100_s11]
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[cp2_ideal_0000_s11]
+FAILED tests/test_loads_rotated_regression.py::test_preexisting_case_is_bit_identical_to_main[cp2_ideal_0100_s11]
+8 failed, 2953 passed, 129 skipped, 139 warnings in 945.08s (0:15:45)

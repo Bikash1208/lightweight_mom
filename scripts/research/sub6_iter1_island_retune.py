@@ -56,7 +56,7 @@ class Island:
         self.sw = round(spec["slot_w"]/2/d)*d
         self.il = round(spec["island_l"]/2/d)*d
         self.cb = round(spec["clear"]/d)*d
-        self.gap = (8 if n == 96 else 11)*d
+        self.gap = round(1.0/d)*d  # nearest cells to physical 1.00 mm; unchanged at 96/128
         self.x = round(spec["diode_x"]/d)*d
         self.y = self.sw-self.gap/2
         self.bot = -self.sw+self.cb
@@ -143,7 +143,7 @@ def node(task):
     k0 = free_space_wavenumber(f)
     kx, ky = (kt*k0,0) if direction == "x" else (0,kt*k0)
     fast = os.environ.get("RETUNE_FFT", "0") == "1"
-    z0 = (assemble_z_complex(basis,cell.substrate,f,kx,ky,order,order) if fast
+    z0 = (assemble_z_complex(basis,cell.substrate,f,kx,ky,order,order,chunk=int(os.environ.get("RETUNE_FFT_CHUNK","2048"))) if fast
           else assemble_impedance_matrix(basis, green, kx, ky, order))
     v = np.stack([assemble_excitation_vector(basis,e,kx,ky) for e in np.eye(2)],axis=1)
     g00 = np.asarray(green.spectral_dyad(kx,ky), complex)

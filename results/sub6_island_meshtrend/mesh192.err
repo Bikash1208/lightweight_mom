@@ -1,0 +1,26 @@
+multiprocessing.pool.RemoteTraceback:
+"""
+Traceback (most recent call last):
+  File "C:\Users\Bikash\AppData\Local\Python\pythoncore-3.13-64\Lib\multiprocessing\pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ~~~~^^^^^^^^^^^^^^^
+  File "C:\lwmom_retune\scripts\research\sub6_iter1_island_retune.py", line 146, in node
+    z0 = (assemble_z_complex(basis,cell.substrate,f,kx,ky,order,order,chunk=int(os.environ.get("RETUNE_FFT_CHUNK","2048"))) if fast
+          ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\lwmom_retune\src\dispersion\leaky_supercell_mom.py", line 201, in assemble_z_complex
+    z = np.empty((n, n), dtype=complex)
+numpy._core._exceptions._ArrayMemoryError: Unable to allocate 22.9 GiB for an array with shape (39220, 39220) and data type complex128
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\lwmom_retune\scripts\research\sub6_island_meshtrend.py", line 95, in <module>
+    main()
+    ~~~~^^
+  File "C:\lwmom_retune\scripts\research\sub6_island_meshtrend.py", line 87, in main
+    for row in pool.imap_unordered(R.node,tasks):
+               ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\Bikash\AppData\Local\Python\pythoncore-3.13-64\Lib\multiprocessing\pool.py", line 873, in next
+    raise value
+numpy._core._exceptions._ArrayMemoryError: Unable to allocate 22.9 GiB for an array with shape (39220, 39220) and data type complex128

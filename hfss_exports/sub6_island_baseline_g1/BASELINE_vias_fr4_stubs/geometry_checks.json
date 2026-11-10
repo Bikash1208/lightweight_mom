@@ -1,0 +1,247 @@
+{
+  "label": "MODEL_ONLY / NOT_HFSS_VALIDATED",
+  "cell": "BASELINE",
+  "variant": "vias_fr4_stubs",
+  "physical_dimensions_mm": {
+    "sl": 4.348,
+    "sw": 1.45,
+    "il": 2.174,
+    "bot": -0.85,
+    "top": 0.45
+  },
+  "frame": "+90deg; ACROSS=x; ALONG=y",
+  "air_bottom_mm": -34.045,
+  "pre": {
+    "all_pass": true,
+    "checks": {
+      "NAMES": {
+        "ok": true,
+        "names": [
+          "AIR",
+          "DIODE_SHEET",
+          "METAL_PEC",
+          "SUBSTRATE",
+          "SUBSTRATE_FR4"
+        ]
+      },
+      "BREP_VALID": {
+        "ok": true
+      },
+      "ONE_METAL_OBJECT_THREE_SOLIDS": {
+        "ok": true,
+        "count": 3
+      },
+      "NO_SOLID_OVERLAP": {
+        "ok": true,
+        "intersection_mm3": {
+          "METAL_PEC/SUBSTRATE": 0.0,
+          "METAL_PEC/SUBSTRATE_FR4": 0.0,
+          "SUBSTRATE/SUBSTRATE_FR4": 0.0,
+          "metal0/metal1": 0.0,
+          "metal0/metal2": 0.0,
+          "metal1/metal2": 0.0
+        }
+      },
+      "AIR_SINGLE_BOX": {
+        "ok": true,
+        "faces": 6,
+        "z": [
+          -34.045,
+          150.0
+        ]
+      },
+      "AIR_CONTAINS_ALL": {
+        "ok": true
+      },
+      "ONE_SHEET_1_BY_0P35": {
+        "ok": true,
+        "area_mm2": 0.35,
+        "bbox": [
+          -1.45,
+          -0.44999999999999996,
+          -0.17499999999999993,
+          0.17500000000000016,
+          0.0175,
+          0.0175
+        ]
+      },
+      "SHEET_EDGE_COINCIDENCE": {
+        "ok": true,
+        "distances_mm": [
+          [
+            5.551115123125783e-17,
+            1.0,
+            3.1925000000000003
+          ],
+          [
+            0.0,
+            0.9999999999999998,
+            3.1925000000000003
+          ]
+        ]
+      },
+      "SHEET_NO_INTERIOR_METAL": {
+        "ok": true
+      },
+      "PHYSICAL_TOP_MASK": {
+        "ok": true,
+        "mismatches": 0,
+        "points": 2793
+      },
+      "TOP_MIRROR_SYMMETRY": {
+        "ok": true,
+        "mismatches": 0
+      },
+      "TOP_VOLUME": {
+        "ok": true,
+        "actual_mm3": 2.5631974288457577,
+        "expected_mm3": 2.563197428845758
+      },
+      "GROUND_AND_ANTI_PAD_VOLUME": {
+        "ok": true,
+        "expected_mm3": 4.689807966282385,
+        "actual_mm3": 4.689807966282403,
+        "anti_pad_diameter_mm": 0.6
+      },
+      "SUBSTRATE_BARREL_HOLES": {
+        "ok": true
+      },
+      "FR4_THICKNESS_AND_HOLES": {
+        "ok": true
+      },
+      "VIA_PAD_STUB_VOLUME": {
+        "ok": true,
+        "expected_mm3": 7.8756711708778475,
+        "actual_mm3": 7.875671170877836
+      },
+      "ISLAND_BARREL_FITS": {
+        "ok": true,
+        "minimum_x_clearance_mm": 0.2439999999999999
+      }
+    }
+  },
+  "post": {
+    "all_pass": true,
+    "checks": {
+      "NAMES": {
+        "ok": true,
+        "names": [
+          "AIR",
+          "DIODE_SHEET",
+          "METAL_PEC",
+          "SUBSTRATE",
+          "SUBSTRATE_FR4"
+        ]
+      },
+      "BREP_VALID": {
+        "ok": true
+      },
+      "ONE_METAL_OBJECT_THREE_SOLIDS": {
+        "ok": true,
+        "count": 3
+      },
+      "NO_SOLID_OVERLAP": {
+        "ok": true,
+        "intersection_mm3": {
+          "METAL_PEC/SUBSTRATE": 0.0,
+          "METAL_PEC/SUBSTRATE_FR4": 0.0,
+          "SUBSTRATE/SUBSTRATE_FR4": 0.0,
+          "metal0/metal1": 0.0,
+          "metal0/metal2": 0.0,
+          "metal1/metal2": 0.0
+        }
+      },
+      "AIR_SINGLE_BOX": {
+        "ok": true,
+        "faces": 6,
+        "z": [
+          -34.045,
+          150.0
+        ]
+      },
+      "AIR_CONTAINS_ALL": {
+        "ok": true
+      },
+      "ONE_SHEET_1_BY_0P35": {
+        "ok": true,
+        "area_mm2": 0.35,
+        "bbox": [
+          -1.45,
+          -0.44999999999999996,
+          -0.175,
+          0.175,
+          0.0175,
+          0.0175
+        ]
+      },
+      "SHEET_EDGE_COINCIDENCE": {
+        "ok": true,
+        "distances_mm": [
+          [
+            0.0,
+            1.0,
+            3.1925
+          ],
+          [
+            0.0,
+            1.0,
+            3.1925
+          ]
+        ]
+      },
+      "SHEET_NO_INTERIOR_METAL": {
+        "ok": true
+      },
+      "PHYSICAL_TOP_MASK": {
+        "ok": true,
+        "mismatches": 0,
+        "points": 2793
+      },
+      "TOP_MIRROR_SYMMETRY": {
+        "ok": true,
+        "mismatches": 0
+      },
+      "TOP_VOLUME": {
+        "ok": true,
+        "actual_mm3": 2.56319742884589,
+        "expected_mm3": 2.563197428845758
+      },
+      "GROUND_AND_ANTI_PAD_VOLUME": {
+        "ok": true,
+        "expected_mm3": 4.689807966282385,
+        "actual_mm3": 4.689807966282407,
+        "anti_pad_diameter_mm": 0.6
+      },
+      "SUBSTRATE_BARREL_HOLES": {
+        "ok": true
+      },
+      "FR4_THICKNESS_AND_HOLES": {
+        "ok": true
+      },
+      "VIA_PAD_STUB_VOLUME": {
+        "ok": true,
+        "expected_mm3": 7.8756711708778475,
+        "actual_mm3": 7.875671170877727
+      },
+      "ISLAND_BARREL_FITS": {
+        "ok": true,
+        "minimum_x_clearance_mm": 0.2439999999999999
+      },
+      "EXACT_DIMS": {
+        "ok": true,
+        "inexact_literals": 0,
+        "snap": {
+          "n_literals": 3314,
+          "n_snapped": 201,
+          "max_change": 2.0001361678012586e-15,
+          "n_colours": 0
+        },
+        "grid_mm": 0.001,
+        "mid_copper_z_mm": 0.0175,
+        "collapsed_edges": 0,
+        "distinct_merge_violations": "[]"
+      }
+    }
+  },
+  "step_sha256": "9dbc032da84b3c44c84d6403d4f3d09ea926061621dc96df7e6c29c2da6e4f8b"
+}

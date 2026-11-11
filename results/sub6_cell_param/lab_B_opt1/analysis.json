@@ -1,0 +1,1624 @@
+{
+  "rule": {
+    "q_excluded": "Q <= 60 or Q >= 1000",
+    "res_slope_abs_lt": 0.005,
+    "sw_slope_abs_gt": 0.02,
+    "hybrid": "between thresholds",
+    "vg_over_c": "signed slope / 0.0718",
+    "target_ghz": 5.8,
+    "res_hybrid_distance_pass_ghz": 1.0,
+    "beta_branch": "nearest tracked low-Q branch at 5.8 GHz, with RES/HYBRID/SW class; bracketed or EXTRAPOLATED"
+  },
+  "geometries": [
+    {
+      "geometry": "REF_L4.348",
+      "route": "REF",
+      "island_l_mm": 4.348,
+      "line_w_mm": 0,
+      "channel_w_mm": 0,
+      "groups": {
+        "OFF_along": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 6.021417624554941,
+              "q90": 952.9832405014946,
+              "distance_to_5p8_ghz": 0.22141762455494085,
+              "ambiguous_track": false,
+              "classification": "UNTRACKED",
+              "beta_over_k0": null,
+              "beta_status": "UNTRACKED"
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        },
+        "OFF_across": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "ON_along": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 5.8913042010189605,
+              "q90": 690.3390649199873,
+              "distance_to_5p8_ghz": 0.09130420101896064,
+              "ambiguous_track": false,
+              "classification": "UNTRACKED",
+              "beta_over_k0": null,
+              "beta_status": "UNTRACKED"
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        },
+        "ON_across": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 5.65762874268131,
+              "q90": 869.404958120395,
+              "distance_to_5p8_ghz": 0.14237125731868971,
+              "ambiguous_track": false,
+              "classification": "UNTRACKED",
+              "beta_over_k0": null,
+              "beta_status": "UNTRACKED"
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        }
+      },
+      "raw_mode1_90": {
+        "OFF_along": {
+          "f_ghz": 6.021417624554941,
+          "q": 952.9832405014946,
+          "eligible": true
+        },
+        "OFF_across": {
+          "f_ghz": 5.73545176525478,
+          "q": 1017.174647522682,
+          "eligible": false
+        },
+        "ON_along": {
+          "f_ghz": 5.8913042010189605,
+          "q": 690.3390649199873,
+          "eligible": true
+        },
+        "ON_across": {
+          "f_ghz": 5.65762874268131,
+          "q": 869.404958120395,
+          "eligible": true
+        }
+      },
+      "res_hybrid_distance": {
+        "OFF": {
+          "nearest_ghz": null,
+          "status": "NO_RES_OR_HYBRID_MODE"
+        },
+        "ON": {
+          "nearest_ghz": null,
+          "status": "NO_RES_OR_HYBRID_MODE"
+        }
+      },
+      "beta_at_5p8": {
+        "OFF": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          }
+        },
+        "ON": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          }
+        }
+      },
+      "anisotropy": {
+        "OFF": null,
+        "ON": null
+      },
+      "on_over_off_anisotropy_ratio": null
+    },
+    {
+      "geometry": "REF_L2.500",
+      "route": "REF",
+      "island_l_mm": 2.5,
+      "line_w_mm": 0,
+      "channel_w_mm": 0,
+      "groups": {
+        "OFF_along": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "OFF_across": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "ON_along": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "ON_across": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        }
+      },
+      "raw_mode1_90": {
+        "OFF_along": {
+          "f_ghz": 6.02448527151096,
+          "q": 1124.6865104725703,
+          "eligible": false
+        },
+        "OFF_across": {
+          "f_ghz": 5.7469755739779504,
+          "q": 1134.840752216418,
+          "eligible": false
+        },
+        "ON_along": {
+          "f_ghz": 5.96755197362515,
+          "q": 1189.904268066141,
+          "eligible": false
+        },
+        "ON_across": {
+          "f_ghz": 5.707006709494561,
+          "q": 1298.5784634750357,
+          "eligible": false
+        }
+      },
+      "res_hybrid_distance": {
+        "OFF": {
+          "nearest_ghz": null,
+          "status": "NO_RES_OR_HYBRID_MODE"
+        },
+        "ON": {
+          "nearest_ghz": null,
+          "status": "NO_RES_OR_HYBRID_MODE"
+        }
+      },
+      "beta_at_5p8": {
+        "OFF": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          }
+        },
+        "ON": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          }
+        }
+      },
+      "anisotropy": {
+        "OFF": null,
+        "ON": null
+      },
+      "on_over_off_anisotropy_ratio": null
+    },
+    {
+      "geometry": "Y_w0.10_L4.348",
+      "route": "Y",
+      "island_l_mm": 4.348,
+      "line_w_mm": 0.1,
+      "channel_w_mm": 0.4,
+      "groups": {
+        "OFF_along": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "OFF_across": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "ON_along": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 6.2275060975034,
+              "q90": 980.1467115557042,
+              "distance_to_5p8_ghz": 0.4275060975034002,
+              "ambiguous_track": false,
+              "classification": "UNTRACKED",
+              "beta_over_k0": null,
+              "beta_status": "UNTRACKED"
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        },
+        "ON_across": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        }
+      },
+      "raw_mode1_90": {
+        "OFF_along": {
+          "f_ghz": 6.36664254965786,
+          "q": 1654.671683204408,
+          "eligible": false
+        },
+        "OFF_across": {
+          "f_ghz": 6.255804956689451,
+          "q": 3393.1069687354875,
+          "eligible": false
+        },
+        "ON_along": {
+          "f_ghz": 6.2275060975034,
+          "q": 980.1467115557042,
+          "eligible": true
+        },
+        "ON_across": {
+          "f_ghz": 6.21912758786872,
+          "q": 2282.775207044722,
+          "eligible": false
+        }
+      },
+      "res_hybrid_distance": {
+        "OFF": {
+          "nearest_ghz": null,
+          "status": "NO_RES_OR_HYBRID_MODE"
+        },
+        "ON": {
+          "nearest_ghz": null,
+          "status": "NO_RES_OR_HYBRID_MODE"
+        }
+      },
+      "beta_at_5p8": {
+        "OFF": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          }
+        },
+        "ON": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          }
+        }
+      },
+      "anisotropy": {
+        "OFF": null,
+        "ON": null
+      },
+      "on_over_off_anisotropy_ratio": null,
+      "vs_ref": {
+        "reference_geometry": "REF_L4.348",
+        "line_and_channel_both_changed_for_w0p20": false,
+        "distance_change_ghz": {
+          "OFF": null,
+          "ON": null
+        },
+        "anisotropy_change": {
+          "OFF": null,
+          "ON": null
+        },
+        "beta_change_by_direction": {
+          "OFF": {
+            "along": null,
+            "across": null
+          },
+          "ON": {
+            "along": null,
+            "across": null
+          }
+        },
+        "nearest_mode90_shift_ghz": {
+          "OFF": {
+            "along": null,
+            "across": null
+          },
+          "ON": {
+            "along": 0.33620189648443954,
+            "across": null
+          }
+        },
+        "raw_mode1_90_shift_ghz": {
+          "OFF": {
+            "along": 0.3452249251029196,
+            "across": 0.5203531914346708
+          },
+          "ON": {
+            "along": 0.33620189648443954,
+            "across": 0.5614988451874101
+          }
+        },
+        "raw_mode1_90_comparison_excluded": {
+          "OFF": {
+            "along": true,
+            "across": true
+          },
+          "ON": {
+            "along": false,
+            "across": true
+          }
+        }
+      }
+    },
+    {
+      "geometry": "Y_w0.20_L4.348",
+      "route": "Y",
+      "island_l_mm": 4.348,
+      "line_w_mm": 0.2,
+      "channel_w_mm": 0.5,
+      "groups": {
+        "OFF_along": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "OFF_across": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "ON_along": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 6.23541458610281,
+              "q90": 874.8572238444772,
+              "distance_to_5p8_ghz": 0.4354145861028105,
+              "ambiguous_track": false,
+              "classification": "UNTRACKED",
+              "beta_over_k0": null,
+              "beta_status": "UNTRACKED"
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        },
+        "ON_across": {
+          "modes": [
+            {
+              "mode90": 8,
+              "f90_ghz": 7.35315690461398,
+              "q90": 995.3823581616045,
+              "distance_to_5p8_ghz": 1.5531569046139806,
+              "ambiguous_track": false,
+              "classification": "UNTRACKED",
+              "beta_over_k0": null,
+              "beta_status": "UNTRACKED"
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        }
+      },
+      "raw_mode1_90": {
+        "OFF_along": {
+          "f_ghz": 6.38597292506612,
+          "q": 1732.4637001531776,
+          "eligible": false
+        },
+        "OFF_across": {
+          "f_ghz": 6.2548306674666705,
+          "q": 3254.1651687334947,
+          "eligible": false
+        },
+        "ON_along": {
+          "f_ghz": 6.23541458610281,
+          "q": 874.8572238444772,
+          "eligible": true
+        },
+        "ON_across": {
+          "f_ghz": 6.22060526909186,
+          "q": 2195.5852060260477,
+          "eligible": false
+        }
+      },
+      "res_hybrid_distance": {
+        "OFF": {
+          "nearest_ghz": null,
+          "status": "NO_RES_OR_HYBRID_MODE"
+        },
+        "ON": {
+          "nearest_ghz": null,
+          "status": "NO_RES_OR_HYBRID_MODE"
+        }
+      },
+      "beta_at_5p8": {
+        "OFF": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          }
+        },
+        "ON": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          }
+        }
+      },
+      "anisotropy": {
+        "OFF": null,
+        "ON": null
+      },
+      "on_over_off_anisotropy_ratio": null,
+      "vs_ref": {
+        "reference_geometry": "REF_L4.348",
+        "line_and_channel_both_changed_for_w0p20": true,
+        "distance_change_ghz": {
+          "OFF": null,
+          "ON": null
+        },
+        "anisotropy_change": {
+          "OFF": null,
+          "ON": null
+        },
+        "beta_change_by_direction": {
+          "OFF": {
+            "along": null,
+            "across": null
+          },
+          "ON": {
+            "along": null,
+            "across": null
+          }
+        },
+        "nearest_mode90_shift_ghz": {
+          "OFF": {
+            "along": null,
+            "across": null
+          },
+          "ON": {
+            "along": 0.34411038508384983,
+            "across": 1.6955281619326703
+          }
+        },
+        "raw_mode1_90_shift_ghz": {
+          "OFF": {
+            "along": 0.3645553005111797,
+            "across": 0.5193789022118906
+          },
+          "ON": {
+            "along": 0.34411038508384983,
+            "across": 0.5629765264105497
+          }
+        },
+        "raw_mode1_90_comparison_excluded": {
+          "OFF": {
+            "along": true,
+            "across": true
+          },
+          "ON": {
+            "along": false,
+            "across": true
+          }
+        }
+      }
+    },
+    {
+      "geometry": "Y_w0.10_L2.500",
+      "route": "Y",
+      "island_l_mm": 2.5,
+      "line_w_mm": 0.1,
+      "channel_w_mm": 0.4,
+      "groups": {
+        "OFF_along": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "OFF_across": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "ON_along": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "ON_across": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        }
+      },
+      "raw_mode1_90": {
+        "OFF_along": {
+          "f_ghz": 6.36562838583663,
+          "q": 1024.5154456189234,
+          "eligible": false
+        },
+        "OFF_across": {
+          "f_ghz": 6.255902092563651,
+          "q": 3138.4484597738174,
+          "eligible": false
+        },
+        "ON_along": {
+          "f_ghz": 6.20586681982499,
+          "q": 1158.551225352317,
+          "eligible": false
+        },
+        "ON_across": {
+          "f_ghz": 6.227058417015761,
+          "q": 2980.943294120695,
+          "eligible": false
+        }
+      },
+      "res_hybrid_distance": {
+        "OFF": {
+          "nearest_ghz": null,
+          "status": "NO_RES_OR_HYBRID_MODE"
+        },
+        "ON": {
+          "nearest_ghz": null,
+          "status": "NO_RES_OR_HYBRID_MODE"
+        }
+      },
+      "beta_at_5p8": {
+        "OFF": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          }
+        },
+        "ON": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          }
+        }
+      },
+      "anisotropy": {
+        "OFF": null,
+        "ON": null
+      },
+      "on_over_off_anisotropy_ratio": null,
+      "vs_ref": {
+        "reference_geometry": "REF_L2.500",
+        "line_and_channel_both_changed_for_w0p20": false,
+        "distance_change_ghz": {
+          "OFF": null,
+          "ON": null
+        },
+        "anisotropy_change": {
+          "OFF": null,
+          "ON": null
+        },
+        "beta_change_by_direction": {
+          "OFF": {
+            "along": null,
+            "across": null
+          },
+          "ON": {
+            "along": null,
+            "across": null
+          }
+        },
+        "nearest_mode90_shift_ghz": {
+          "OFF": {
+            "along": null,
+            "across": null
+          },
+          "ON": {
+            "along": null,
+            "across": null
+          }
+        },
+        "raw_mode1_90_shift_ghz": {
+          "OFF": {
+            "along": 0.34114311432567046,
+            "across": 0.5089265185857004
+          },
+          "ON": {
+            "along": 0.23831484619984078,
+            "across": 0.5200517075212003
+          }
+        },
+        "raw_mode1_90_comparison_excluded": {
+          "OFF": {
+            "along": true,
+            "across": true
+          },
+          "ON": {
+            "along": true,
+            "across": true
+          }
+        }
+      }
+    },
+    {
+      "geometry": "Y_w0.20_L2.500",
+      "route": "Y",
+      "island_l_mm": 2.5,
+      "line_w_mm": 0.2,
+      "channel_w_mm": 0.5,
+      "groups": {
+        "OFF_along": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "OFF_across": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "ON_along": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "ON_across": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        }
+      },
+      "raw_mode1_90": {
+        "OFF_along": {
+          "f_ghz": 6.393817627681861,
+          "q": 1106.0937094382102,
+          "eligible": false
+        },
+        "OFF_across": {
+          "f_ghz": 6.25792453865675,
+          "q": 3041.9044538694957,
+          "eligible": false
+        },
+        "ON_along": {
+          "f_ghz": 6.22063796912832,
+          "q": 1057.82683145348,
+          "eligible": false
+        },
+        "ON_across": {
+          "f_ghz": 6.22823751209046,
+          "q": 2824.529699656061,
+          "eligible": false
+        }
+      },
+      "res_hybrid_distance": {
+        "OFF": {
+          "nearest_ghz": null,
+          "status": "NO_RES_OR_HYBRID_MODE"
+        },
+        "ON": {
+          "nearest_ghz": null,
+          "status": "NO_RES_OR_HYBRID_MODE"
+        }
+      },
+      "beta_at_5p8": {
+        "OFF": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          }
+        },
+        "ON": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          }
+        }
+      },
+      "anisotropy": {
+        "OFF": null,
+        "ON": null
+      },
+      "on_over_off_anisotropy_ratio": null,
+      "vs_ref": {
+        "reference_geometry": "REF_L2.500",
+        "line_and_channel_both_changed_for_w0p20": true,
+        "distance_change_ghz": {
+          "OFF": null,
+          "ON": null
+        },
+        "anisotropy_change": {
+          "OFF": null,
+          "ON": null
+        },
+        "beta_change_by_direction": {
+          "OFF": {
+            "along": null,
+            "across": null
+          },
+          "ON": {
+            "along": null,
+            "across": null
+          }
+        },
+        "nearest_mode90_shift_ghz": {
+          "OFF": {
+            "along": null,
+            "across": null
+          },
+          "ON": {
+            "along": null,
+            "across": null
+          }
+        },
+        "raw_mode1_90_shift_ghz": {
+          "OFF": {
+            "along": 0.36933235617090077,
+            "across": 0.5109489646787999
+          },
+          "ON": {
+            "along": 0.2530859955031701,
+            "across": 0.5212308025958992
+          }
+        },
+        "raw_mode1_90_comparison_excluded": {
+          "OFF": {
+            "along": true,
+            "across": true
+          },
+          "ON": {
+            "along": true,
+            "across": true
+          }
+        }
+      }
+    },
+    {
+      "geometry": "X_w0.10_L4.348",
+      "route": "X",
+      "island_l_mm": 4.348,
+      "line_w_mm": 0.1,
+      "channel_w_mm": 0.4,
+      "groups": {
+        "OFF_along": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 5.91208604239878,
+              "q90": 86.45258722172599,
+              "distance_to_5p8_ghz": 0.045057069722060916,
+              "ambiguous_track": true,
+              "f80_ghz": 5.845057069722061,
+              "q80": 130.67984169961508,
+              "f100_ghz": 5.996124744101761,
+              "q100": 85.84264314319255,
+              "slope_ghz_per_deg": 0.007553383718984996,
+              "vg_over_c": 0.10520033034798044,
+              "classification": "HYBRID",
+              "beta_over_k0": 0.9069965916733913,
+              "beta_status": "EXTRAPOLATED",
+              "nearest_phase_deg": 80
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        },
+        "OFF_across": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 5.87039761927596,
+              "q90": 138.83481568545147,
+              "distance_to_5p8_ghz": 0.07039761927596011,
+              "ambiguous_track": false,
+              "f80_ghz": 5.9161669275075,
+              "q80": 479.02091917729376,
+              "f100_ghz": 6.12064711312661,
+              "q100": 146.60394453179555,
+              "slope_ghz_per_deg": 0.010224009280955525,
+              "vg_over_c": 0.14239567243670648,
+              "classification": "HYBRID",
+              "beta_over_k0": 1.3043507624872097,
+              "beta_status": "EXTRAPOLATED",
+              "nearest_phase_deg": 90
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        },
+        "ON_along": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "ON_across": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 5.1963616251073,
+              "q90": 387.93557798870506,
+              "distance_to_5p8_ghz": 0.3341956760978402,
+              "ambiguous_track": false,
+              "f80_ghz": 4.9292482770586,
+              "q80": 395.0450131073105,
+              "f100_ghz": 5.46580432390216,
+              "q100": 404.12287288287274,
+              "slope_ghz_per_deg": 0.026827802342177964,
+              "vg_over_c": 0.37364627217518054,
+              "classification": "SW",
+              "beta_over_k0": 1.3912685487877094,
+              "beta_status": "EXTRAPOLATED",
+              "nearest_phase_deg": 100
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        }
+      },
+      "raw_mode1_90": {
+        "OFF_along": {
+          "f_ghz": 5.91208604239878,
+          "q": 86.45258722172599,
+          "eligible": true
+        },
+        "OFF_across": {
+          "f_ghz": 5.87039761927596,
+          "q": 138.83481568545147,
+          "eligible": true
+        },
+        "ON_along": {
+          "f_ghz": 6.17431030030281,
+          "q": 4714.829311955645,
+          "eligible": false
+        },
+        "ON_across": {
+          "f_ghz": 5.1963616251073,
+          "q": 387.93557798870506,
+          "eligible": true
+        }
+      },
+      "res_hybrid_distance": {
+        "OFF": {
+          "nearest_ghz": 0.045057069722060916,
+          "status": "FAIL",
+          "direction": "along",
+          "mode90": 1,
+          "nearest_phase_deg": 80,
+          "classification": "HYBRID"
+        },
+        "ON": {
+          "nearest_ghz": null,
+          "status": "NO_RES_OR_HYBRID_MODE"
+        }
+      },
+      "beta_at_5p8": {
+        "OFF": {
+          "along": {
+            "beta_over_k0": 0.9069965916733913,
+            "status": "EXTRAPOLATED",
+            "classification": "HYBRID",
+            "mode90": 1,
+            "ambiguous_track": true
+          },
+          "across": {
+            "beta_over_k0": 1.3043507624872097,
+            "status": "EXTRAPOLATED",
+            "classification": "HYBRID",
+            "mode90": 1,
+            "ambiguous_track": false
+          }
+        },
+        "ON": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": 1.3912685487877094,
+            "status": "EXTRAPOLATED",
+            "classification": "SW",
+            "mode90": 1,
+            "ambiguous_track": false
+          }
+        }
+      },
+      "anisotropy": {
+        "OFF": 0.3973541708138184,
+        "ON": null
+      },
+      "on_over_off_anisotropy_ratio": null,
+      "vs_ref": {
+        "reference_geometry": "REF_L4.348",
+        "line_and_channel_both_changed_for_w0p20": false,
+        "distance_change_ghz": {
+          "OFF": null,
+          "ON": null
+        },
+        "anisotropy_change": {
+          "OFF": null,
+          "ON": null
+        },
+        "beta_change_by_direction": {
+          "OFF": {
+            "along": null,
+            "across": null
+          },
+          "ON": {
+            "along": null,
+            "across": null
+          }
+        },
+        "nearest_mode90_shift_ghz": {
+          "OFF": {
+            "along": -0.10933158215616068,
+            "across": null
+          },
+          "ON": {
+            "along": null,
+            "across": -0.4612671175740104
+          }
+        },
+        "raw_mode1_90_shift_ghz": {
+          "OFF": {
+            "along": -0.10933158215616068,
+            "across": 0.1349458540211801
+          },
+          "ON": {
+            "along": 0.2830060992838499,
+            "across": -0.4612671175740104
+          }
+        },
+        "raw_mode1_90_comparison_excluded": {
+          "OFF": {
+            "along": false,
+            "across": true
+          },
+          "ON": {
+            "along": true,
+            "across": false
+          }
+        }
+      }
+    },
+    {
+      "geometry": "X_w0.20_L4.348",
+      "route": "X",
+      "island_l_mm": 4.348,
+      "line_w_mm": 0.2,
+      "channel_w_mm": 0.5,
+      "groups": {
+        "OFF_along": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 5.943899714785241,
+              "q90": 74.75788633906821,
+              "distance_to_5p8_ghz": 0.09019258302196054,
+              "ambiguous_track": false,
+              "f80_ghz": 5.89019258302196,
+              "q80": 82.30026100745513,
+              "f100_ghz": 5.992518923170841,
+              "q100": 74.99879524768869,
+              "slope_ghz_per_deg": 0.0051163170074440155,
+              "vg_over_c": 0.07125789703961025,
+              "classification": "HYBRID",
+              "beta_over_k0": 0.78233829089069,
+              "beta_status": "EXTRAPOLATED",
+              "nearest_phase_deg": 80
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        },
+        "OFF_across": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 5.904790657333761,
+              "q90": 117.5755588633912,
+              "distance_to_5p8_ghz": 0.10479065733376114,
+              "ambiguous_track": false,
+              "f80_ghz": 5.933360612535281,
+              "q80": 414.2152041103173,
+              "f100_ghz": 6.15507152812326,
+              "q100": 125.76986452564826,
+              "slope_ghz_per_deg": 0.011085545779398975,
+              "vg_over_c": 0.1543947880139133,
+              "classification": "HYBRID",
+              "beta_over_k0": 1.5679620540172414,
+              "beta_status": "EXTRAPOLATED",
+              "nearest_phase_deg": 90
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        },
+        "ON_along": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 4.70512991161641,
+              "q90": 262.7571248989079,
+              "distance_to_5p8_ghz": 1.0948700883835896,
+              "ambiguous_track": false,
+              "classification": "UNTRACKED",
+              "beta_over_k0": null,
+              "beta_status": "UNTRACKED"
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        },
+        "ON_across": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 5.12308846337,
+              "q90": 382.96852668195754,
+              "distance_to_5p8_ghz": 0.3650956347802392,
+              "ambiguous_track": false,
+              "f80_ghz": 4.850551943091291,
+              "q80": 371.6177738932062,
+              "f100_ghz": 5.434904365219761,
+              "q100": 407.80020332281384,
+              "slope_ghz_per_deg": 0.029217621106423498,
+              "vg_over_c": 0.4069306560783217,
+              "classification": "SW",
+              "beta_over_k0": 1.3826720565498072,
+              "beta_status": "EXTRAPOLATED",
+              "nearest_phase_deg": 100
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        }
+      },
+      "raw_mode1_90": {
+        "OFF_along": {
+          "f_ghz": 5.943899714785241,
+          "q": 74.75788633906821,
+          "eligible": true
+        },
+        "OFF_across": {
+          "f_ghz": 5.904790657333761,
+          "q": 117.5755588633912,
+          "eligible": true
+        },
+        "ON_along": {
+          "f_ghz": 4.70512991161641,
+          "q": 262.7571248989079,
+          "eligible": true
+        },
+        "ON_across": {
+          "f_ghz": 5.12308846337,
+          "q": 382.96852668195754,
+          "eligible": true
+        }
+      },
+      "res_hybrid_distance": {
+        "OFF": {
+          "nearest_ghz": 0.09019258302196054,
+          "status": "FAIL",
+          "direction": "along",
+          "mode90": 1,
+          "nearest_phase_deg": 80,
+          "classification": "HYBRID"
+        },
+        "ON": {
+          "nearest_ghz": null,
+          "status": "NO_RES_OR_HYBRID_MODE"
+        }
+      },
+      "beta_at_5p8": {
+        "OFF": {
+          "along": {
+            "beta_over_k0": 0.78233829089069,
+            "status": "EXTRAPOLATED",
+            "classification": "HYBRID",
+            "mode90": 1,
+            "ambiguous_track": false
+          },
+          "across": {
+            "beta_over_k0": 1.5679620540172414,
+            "status": "EXTRAPOLATED",
+            "classification": "HYBRID",
+            "mode90": 1,
+            "ambiguous_track": false
+          }
+        },
+        "ON": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": 1.3826720565498072,
+            "status": "EXTRAPOLATED",
+            "classification": "SW",
+            "mode90": 1,
+            "ambiguous_track": false
+          }
+        }
+      },
+      "anisotropy": {
+        "OFF": 0.7856237631265515,
+        "ON": null
+      },
+      "on_over_off_anisotropy_ratio": null,
+      "vs_ref": {
+        "reference_geometry": "REF_L4.348",
+        "line_and_channel_both_changed_for_w0p20": true,
+        "distance_change_ghz": {
+          "OFF": null,
+          "ON": null
+        },
+        "anisotropy_change": {
+          "OFF": null,
+          "ON": null
+        },
+        "beta_change_by_direction": {
+          "OFF": {
+            "along": null,
+            "across": null
+          },
+          "ON": {
+            "along": null,
+            "across": null
+          }
+        },
+        "nearest_mode90_shift_ghz": {
+          "OFF": {
+            "along": -0.07751790976969986,
+            "across": null
+          },
+          "ON": {
+            "along": -1.1861742894025502,
+            "across": -0.5345402793113099
+          }
+        },
+        "raw_mode1_90_shift_ghz": {
+          "OFF": {
+            "along": -0.07751790976969986,
+            "across": 0.16933889207898112
+          },
+          "ON": {
+            "along": -1.1861742894025502,
+            "across": -0.5345402793113099
+          }
+        },
+        "raw_mode1_90_comparison_excluded": {
+          "OFF": {
+            "along": false,
+            "across": true
+          },
+          "ON": {
+            "along": false,
+            "across": false
+          }
+        }
+      }
+    },
+    {
+      "geometry": "X_w0.10_L2.500",
+      "route": "X",
+      "island_l_mm": 2.5,
+      "line_w_mm": 0.1,
+      "channel_w_mm": 0.4,
+      "groups": {
+        "OFF_along": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "OFF_across": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 5.923381026937701,
+              "q90": 105.92772074494356,
+              "distance_to_5p8_ghz": 0.12338102693770114,
+              "ambiguous_track": false,
+              "f80_ghz": 5.94645266357825,
+              "q80": 377.03506976047623,
+              "f100_ghz": 6.15491337553607,
+              "q100": 109.8847896566534,
+              "slope_ghz_per_deg": 0.010423035597891017,
+              "vg_over_c": 0.14516762671157404,
+              "classification": "HYBRID",
+              "beta_over_k0": 1.7758881244194913,
+              "beta_status": "EXTRAPOLATED",
+              "nearest_phase_deg": 90
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        },
+        "ON_along": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "ON_across": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 5.28332566747318,
+              "q90": 511.9012158261951,
+              "distance_to_5p8_ghz": 0.23533645927385916,
+              "ambiguous_track": false,
+              "f80_ghz": 4.9928089587879105,
+              "q80": 513.4940557771146,
+              "f100_ghz": 5.564663540726141,
+              "q100": 522.5985349532007,
+              "slope_ghz_per_deg": 0.028592729096911507,
+              "vg_over_c": 0.3982274247480711,
+              "classification": "SW",
+              "beta_over_k0": 1.3412844019034442,
+              "beta_status": "EXTRAPOLATED",
+              "nearest_phase_deg": 100
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        }
+      },
+      "raw_mode1_90": {
+        "OFF_along": {
+          "f_ghz": 5.86398504961174,
+          "q": 54.954059983347385,
+          "eligible": false
+        },
+        "OFF_across": {
+          "f_ghz": 5.923381026937701,
+          "q": 105.92772074494356,
+          "eligible": true
+        },
+        "ON_along": {
+          "f_ghz": 6.17110083942644,
+          "q": 4676.402789436302,
+          "eligible": false
+        },
+        "ON_across": {
+          "f_ghz": 5.28332566747318,
+          "q": 511.9012158261951,
+          "eligible": true
+        }
+      },
+      "res_hybrid_distance": {
+        "OFF": {
+          "nearest_ghz": 0.12338102693770114,
+          "status": "FAIL",
+          "direction": "across",
+          "mode90": 1,
+          "nearest_phase_deg": 90,
+          "classification": "HYBRID"
+        },
+        "ON": {
+          "nearest_ghz": null,
+          "status": "NO_RES_OR_HYBRID_MODE"
+        }
+      },
+      "beta_at_5p8": {
+        "OFF": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": 1.7758881244194913,
+            "status": "EXTRAPOLATED",
+            "classification": "HYBRID",
+            "mode90": 1,
+            "ambiguous_track": false
+          }
+        },
+        "ON": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": 1.3412844019034442,
+            "status": "EXTRAPOLATED",
+            "classification": "SW",
+            "mode90": 1,
+            "ambiguous_track": false
+          }
+        }
+      },
+      "anisotropy": {
+        "OFF": null,
+        "ON": null
+      },
+      "on_over_off_anisotropy_ratio": null,
+      "vs_ref": {
+        "reference_geometry": "REF_L2.500",
+        "line_and_channel_both_changed_for_w0p20": false,
+        "distance_change_ghz": {
+          "OFF": null,
+          "ON": null
+        },
+        "anisotropy_change": {
+          "OFF": null,
+          "ON": null
+        },
+        "beta_change_by_direction": {
+          "OFF": {
+            "along": null,
+            "across": null
+          },
+          "ON": {
+            "along": null,
+            "across": null
+          }
+        },
+        "nearest_mode90_shift_ghz": {
+          "OFF": {
+            "along": null,
+            "across": null
+          },
+          "ON": {
+            "along": null,
+            "across": null
+          }
+        },
+        "raw_mode1_90_shift_ghz": {
+          "OFF": {
+            "along": -0.16050022189921975,
+            "across": 0.17640545295975052
+          },
+          "ON": {
+            "along": 0.20354886580129072,
+            "across": -0.42368104202138035
+          }
+        },
+        "raw_mode1_90_comparison_excluded": {
+          "OFF": {
+            "along": true,
+            "across": true
+          },
+          "ON": {
+            "along": true,
+            "across": true
+          }
+        }
+      }
+    },
+    {
+      "geometry": "X_w0.20_L2.500",
+      "route": "X",
+      "island_l_mm": 2.5,
+      "line_w_mm": 0.2,
+      "channel_w_mm": 0.5,
+      "groups": {
+        "OFF_along": {
+          "modes": [],
+          "eligible_mode90_count": 0,
+          "excluded_mode90_count": 8
+        },
+        "OFF_across": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 5.896512555164381,
+              "q90": 79.19295822246909,
+              "distance_to_5p8_ghz": 0.09651255516438084,
+              "ambiguous_track": false,
+              "f80_ghz": 5.95783404194146,
+              "q80": 313.3745056300389,
+              "f100_ghz": 6.20314434907848,
+              "q100": 95.25037819405246,
+              "slope_ghz_per_deg": 0.012265515356850987,
+              "vg_over_c": 0.17082890469151793,
+              "classification": "HYBRID",
+              "beta_over_k0": 1.30877962553058,
+              "beta_status": "EXTRAPOLATED",
+              "nearest_phase_deg": 90
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        },
+        "ON_along": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 4.76428472593407,
+              "q90": 332.7578674462932,
+              "distance_to_5p8_ghz": 1.0357152740659297,
+              "ambiguous_track": false,
+              "classification": "UNTRACKED",
+              "beta_over_k0": null,
+              "beta_status": "UNTRACKED"
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        },
+        "ON_across": {
+          "modes": [
+            {
+              "mode90": 1,
+              "f90_ghz": 5.19671215597375,
+              "q90": 483.2136717819694,
+              "distance_to_5p8_ghz": 0.29470673137339887,
+              "ambiguous_track": false,
+              "f80_ghz": 4.92818363130312,
+              "q80": 480.43546470982386,
+              "f100_ghz": 5.505293268626601,
+              "q100": 515.9787868204305,
+              "slope_ghz_per_deg": 0.02885548186617406,
+              "vg_over_c": 0.40188693406927656,
+              "classification": "SW",
+              "beta_over_k0": 1.3559576112245255,
+              "beta_status": "EXTRAPOLATED",
+              "nearest_phase_deg": 100
+            }
+          ],
+          "eligible_mode90_count": 1,
+          "excluded_mode90_count": 7
+        }
+      },
+      "raw_mode1_90": {
+        "OFF_along": {
+          "f_ghz": 5.9939798547389005,
+          "q": 57.961392187687366,
+          "eligible": false
+        },
+        "OFF_across": {
+          "f_ghz": 5.896512555164381,
+          "q": 79.19295822246909,
+          "eligible": true
+        },
+        "ON_along": {
+          "f_ghz": 4.76428472593407,
+          "q": 332.7578674462932,
+          "eligible": true
+        },
+        "ON_across": {
+          "f_ghz": 5.19671215597375,
+          "q": 483.2136717819694,
+          "eligible": true
+        }
+      },
+      "res_hybrid_distance": {
+        "OFF": {
+          "nearest_ghz": 0.09651255516438084,
+          "status": "FAIL",
+          "direction": "across",
+          "mode90": 1,
+          "nearest_phase_deg": 90,
+          "classification": "HYBRID"
+        },
+        "ON": {
+          "nearest_ghz": null,
+          "status": "NO_RES_OR_HYBRID_MODE"
+        }
+      },
+      "beta_at_5p8": {
+        "OFF": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": 1.30877962553058,
+            "status": "EXTRAPOLATED",
+            "classification": "HYBRID",
+            "mode90": 1,
+            "ambiguous_track": false
+          }
+        },
+        "ON": {
+          "along": {
+            "beta_over_k0": null,
+            "status": "NO_TRACKED_LOW_Q_BRANCH"
+          },
+          "across": {
+            "beta_over_k0": 1.3559576112245255,
+            "status": "EXTRAPOLATED",
+            "classification": "SW",
+            "mode90": 1,
+            "ambiguous_track": false
+          }
+        }
+      },
+      "anisotropy": {
+        "OFF": null,
+        "ON": null
+      },
+      "on_over_off_anisotropy_ratio": null,
+      "vs_ref": {
+        "reference_geometry": "REF_L2.500",
+        "line_and_channel_both_changed_for_w0p20": true,
+        "distance_change_ghz": {
+          "OFF": null,
+          "ON": null
+        },
+        "anisotropy_change": {
+          "OFF": null,
+          "ON": null
+        },
+        "beta_change_by_direction": {
+          "OFF": {
+            "along": null,
+            "across": null
+          },
+          "ON": {
+            "along": null,
+            "across": null
+          }
+        },
+        "nearest_mode90_shift_ghz": {
+          "OFF": {
+            "along": null,
+            "across": null
+          },
+          "ON": {
+            "along": null,
+            "across": null
+          }
+        },
+        "raw_mode1_90_shift_ghz": {
+          "OFF": {
+            "along": -0.030505416772059313,
+            "across": 0.14953698118643022
+          },
+          "ON": {
+            "along": -1.2032672476910795,
+            "across": -0.5102945535208105
+          }
+        },
+        "raw_mode1_90_comparison_excluded": {
+          "OFF": {
+            "along": true,
+            "across": true
+          },
+          "ON": {
+            "along": true,
+            "across": true
+          }
+        }
+      }
+    }
+  ]
+}

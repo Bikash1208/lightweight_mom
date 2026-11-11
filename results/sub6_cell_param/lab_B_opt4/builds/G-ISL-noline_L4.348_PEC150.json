@@ -1,0 +1,78 @@
+{
+  "status": "BUILT",
+  "aedt": "2025.2",
+  "geometry": {
+    "name": "G-ISL-noline_L4.348",
+    "geometry": {
+      "route": "G-ISL-noline",
+      "island_l": 4.348
+    },
+    "status": "PASS",
+    "conflicts": [],
+    "via_xy_mm": [
+      -0.4999999999999999,
+      0.0
+    ],
+    "via_drill_mm": 0.3,
+    "via_pad_mm": 0.6,
+    "disc_via_slot_clearance_mm": null,
+    "disc_via_rim_clearance_mm": null,
+    "island_pad_clearance_x_mm": 0.35000000000000003,
+    "island_pad_clearance_y_mm": 1.8739999999999999,
+    "line_to_disc_overlap_mm": null,
+    "line_channel_clearance_each_side_mm": null,
+    "dc_graph_without_diode": {
+      "disc": [],
+      "island": [
+        "ground"
+      ],
+      "ground": []
+    },
+    "anode": "disc",
+    "cathode": "island",
+    "anode_reaches_ground_only_through_diode": true
+  },
+  "objects": [
+    "DISC",
+    "ISLAND",
+    "RT5880",
+    "AIR",
+    "DIODE_SHEET"
+  ],
+  "boundaries": [
+    "BAR90_02LRH",
+    "Lattice_X",
+    "Lattice_Y",
+    "PEC_LID",
+    "PEC_GROUND_BOTTOM"
+  ],
+  "stack": {
+    "top_cu": true,
+    "rt5880_mm": 3.175,
+    "solid_ground": true,
+    "fr4": false,
+    "vias": true,
+    "via_drill_mm": 0.3,
+    "via_pad_mm": 0.6,
+    "antipads": false,
+    "stubs": false,
+    "air_below_ground": false
+  },
+  "floor_boundary": "SOLID_PEC_GROUND",
+  "mesh_operations": [],
+  "validation": [
+    "Desktop messages:",
+    "Design validation check PASSED.",
+    "Design validation messages:",
+    "** End of design validation messages. **",
+    "Excitations check:",
+    "Eigen model is detected. No excitatons are defined.",
+    "Analysis setup messages:",
+    "Detected setup and sweep: ",
+    "EigenCell"
+  ],
+  "top_boundary": {
+    "type": "PEC",
+    "height_mm": 150.0
+  }
+}

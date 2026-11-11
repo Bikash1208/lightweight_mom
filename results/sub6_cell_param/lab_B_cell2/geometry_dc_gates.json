@@ -137,23 +137,33 @@
     "status": "PASS",
     "conflicts": [],
     "clearances_mm": {
-      "disc_to_cell_face_mm": 0.3650000000000002,
-      "right_tab_to_cell_face_mm": 0.2999999999999998,
+      "disc_left_rim_to_cell_face_mm": 0.16500000000000004,
+      "disc_right_rim_to_cell_face_mm": 0.5650000000000004,
+      "diode_to_x_face_mm": 0.20000000000000018,
+      "landing_to_disc_rim_mm": 0.3650000000000002,
       "right_tab_disc_overlap_min_mm": 0.12671401494495527,
       "left_tab_disc_overlap_min_mm": 0.12671401494495527,
       "diode_span_mm": 0.3,
-      "line_disc_overlap_mm": null
+      "line_rim_overlap_min_mm": null,
+      "line_x_mm": null
     },
     "wrapped_graph_without_diode": {
       "DISC(n)": [],
       "DISC(n+y)": [],
-      "DISC(n+x)": []
+      "LANDING(n)": [
+        "DISC(n+x)"
+      ],
+      "DISC(n+x)": [
+        "LANDING(n)"
+      ]
     },
     "diode_edge": [
       "DISC(n)",
-      "DISC(n+x)"
+      "LANDING(n)"
     ],
-    "periodic_wrap_connections": [],
+    "periodic_wrap_connections": [
+      "LANDING(n)\u2194DISC(n+x)"
+    ],
     "only_diode_connects_target_nets": true
   },
   {
@@ -164,12 +174,15 @@
     "status": "PASS",
     "conflicts": [],
     "clearances_mm": {
-      "disc_to_cell_face_mm": 0.3650000000000002,
-      "right_tab_to_cell_face_mm": 0.2999999999999998,
+      "disc_left_rim_to_cell_face_mm": 0.16500000000000004,
+      "disc_right_rim_to_cell_face_mm": 0.5650000000000004,
+      "diode_to_x_face_mm": 0.20000000000000018,
+      "landing_to_disc_rim_mm": 0.3650000000000002,
       "right_tab_disc_overlap_min_mm": 0.12671401494495527,
       "left_tab_disc_overlap_min_mm": 0.12671401494495527,
       "diode_span_mm": 0.3,
-      "line_disc_overlap_mm": 0.4349999999999996
+      "line_rim_overlap_min_mm": 0.15,
+      "line_x_mm": -0.2
     },
     "wrapped_graph_without_diode": {
       "DISC(n)": [
@@ -178,13 +191,19 @@
       "DISC(n+y)": [
         "DISC(n)"
       ],
-      "DISC(n+x)": []
+      "LANDING(n)": [
+        "DISC(n+x)"
+      ],
+      "DISC(n+x)": [
+        "LANDING(n)"
+      ]
     },
     "diode_edge": [
       "DISC(n)",
-      "DISC(n+x)"
+      "LANDING(n)"
     ],
     "periodic_wrap_connections": [
+      "LANDING(n)\u2194DISC(n+x)",
       "DISC(n)\u2194DISC(n+y)"
     ],
     "only_diode_connects_target_nets": true

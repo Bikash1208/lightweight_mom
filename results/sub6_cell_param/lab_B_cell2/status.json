@@ -1,10 +1,10 @@
 {
-  "status": "SD_BUILT_ID_REDESIGN_PENDING",
+  "status": "SD_DONE_ID_PROBE_PASSED",
   "planned_SD_rows": 112,
-  "accepted_SD_rows": 0,
+  "accepted_SD_rows": 112,
   "current_failed_rows": 0,
   "SD_builds_passed_native_validation": 4,
-  "ID_redesign": "disc centre -0.20 mm; pending after SD",
+  "ID_redesign": "disc centre -0.20 mm, diode [5.30,5.60], separate landing [5.60,5.80]",
   "prior_ID_probe": {
     "run_id": "CELL2_ID_noline_PEC150_OFF_along_70",
     "attempts": 2,
@@ -14,5 +14,8 @@
     ],
     "evidence": "evidence/ID_original_failed_rows.json and evidence/ID_noline_probe.asol"
   },
-  "worker_capacity": "fresh CPU-free sample per geometry; four workers maximum; distribute all free logical cores without an 8-core cap"
+  "worker_capacity": "fresh CPU-free sample per geometry; four workers maximum; distribute all free logical cores without an 8-core cap",
+  "accepted_ID_rows": 1,
+  "ID_probe_readback": "PASS",
+  "ID_probe_modes": 8
 }

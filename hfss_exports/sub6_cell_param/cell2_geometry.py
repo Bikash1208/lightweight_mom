@@ -71,29 +71,39 @@ def check(g: Geometry):
             clearances["line_x_from_centre_mm"] = x
             clearances["line_start_y_mm"] = rim_at_outer - 0.15
     elif g.family == "ID":
-        clearances.update({"right_tab_to_cell_face_mm": p - 5.5,
-                           "right_tab_disc_overlap_min_mm": math.sqrt(DISC_R**2 - 0.3**2) - 5.3,
-                           "left_tab_disc_overlap_min_mm": math.sqrt(DISC_R**2 - 0.3**2) - 5.3,
+        clearances.pop("disc_to_cell_face_mm")
+        disc_x = -0.2
+        right_rim = disc_x + DISC_R
+        left_rim = disc_x - DISC_R
+        clearances.update({"disc_left_rim_to_cell_face_mm": left_rim + p,
+                           "disc_right_rim_to_cell_face_mm": p - right_rim,
+                           "diode_to_x_face_mm": p - 5.60,
+                           "landing_to_disc_rim_mm": 5.60 - right_rim,
+                           "right_tab_disc_overlap_min_mm": disc_x + math.sqrt(DISC_R**2 - 0.3**2) - 5.10,
+                           "left_tab_disc_overlap_min_mm": -5.50 - (disc_x - math.sqrt(DISC_R**2 - 0.3**2)),
                            "diode_span_mm": 0.3,
-                           "line_disc_overlap_mm": DISC_R - 5.0 if g.lines else None})
-        if clearances["right_tab_disc_overlap_min_mm"] <= 0:
-            conflicts.append("right tab misses disc")
-        if g.lines and clearances["line_disc_overlap_mm"] <= 0:
-            conflicts.append("yline misses disc")
+                           "line_rim_overlap_min_mm": 0.15 if g.lines else None,
+                           "line_x_mm": disc_x if g.lines else None})
+        if clearances["right_tab_disc_overlap_min_mm"] <= 0 or clearances["left_tab_disc_overlap_min_mm"] <= 0:
+            conflicts.append("tab misses shifted disc")
         graph = {"DISC(n)": ["DISC(n+y)"] if g.lines else [],
                  "DISC(n+y)": ["DISC(n)"] if g.lines else [],
-                 "DISC(n+x)": []}
-        diode = ["DISC(n)", "DISC(n+x)"]
-        wrap = ["DISC(n)↔DISC(n+y)"] if g.lines else []
-        if connected(graph, *diode):
+                 "LANDING(n)": ["DISC(n+x)"],
+                 "DISC(n+x)": ["LANDING(n)"]}
+        diode = ["DISC(n)", "LANDING(n)"]
+        wrap = ["LANDING(n)↔DISC(n+x)"] + (["DISC(n)↔DISC(n+y)"] if g.lines else [])
+        if connected(graph, "DISC(n)", "DISC(n+x)"):
             conflicts.append("adjacent x discs short without diode")
-        if not math.isclose(p, 5.8):
-            conflicts.append("diode does not terminate exactly on x lattice face")
+        if connected(graph, *diode):
+            conflicts.append("disc shorts to landing without diode")
+        if not math.isclose(p - 5.60, 0.20):
+            conflicts.append("diode face clearance is not 0.20 mm")
     else:
         raise ValueError(g.family)
     for key, value in clearances.items():
         if value is not None and ("overlap" not in key and "span" not in key and
                                   "start_y" not in key and "from_centre" not in key and
+                                  key != "line_x_mm" and
                                   value < 0.15 - 1e-9):
             conflicts.append(f"clearance {key} below 0.15 mm")
     return {"geometry": g.name, "family": g.family, "split_w_mm": g.split_w,

@@ -44,7 +44,7 @@ def build_one(g):
         raise RuntimeError(f"BUILD {name} failed; inspect own build.log")
     if summary["mesh_operations"] or summary["floor_boundary"] != "SOLID_PEC_GROUND":
         raise RuntimeError(f"BUILD {name} wrong mesh/floor")
-    required = {"LEFT", "RIGHT"} if g.family == "SD" else {"DISC"}
+    required = {"LEFT", "RIGHT"} if g.family == "SD" else {"DISC", "LANDING"}
     if not required.issubset(summary["objects"]):
         raise RuntimeError(f"BUILD {name} required copper components missing")
     if summary["top_boundary"]["type"] != "PEC" or summary["top_boundary"]["height_mm"] != 150:

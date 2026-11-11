@@ -87,23 +87,27 @@ def build(h, g: Geometry, out: Path, lid_height_mm: float = 150,
                 cp.require(m.unite([target.name, upper.name, lower.name]), tag + " yline union")
         sheet_origin = ["-diode_gap/2", "-diode_w/2", "cu_t/2"]
     else:
-        disc = cp.require(m.create_cylinder("Z", [0, 0, 0], "disc_r", "cu_t",
+        disc = cp.require(m.create_cylinder("Z", ["-0.20mm", 0, 0], "disc_r", "cu_t",
                                             name="DISC", material="pec"), "disc")
-        slot = box("SLOT_CUT", ["-slot_w/2", "-slot_l/2", "-cu_t"],
+        slot = box("SLOT_CUT", ["-0.20mm-slot_w/2", "-slot_l/2", "-cu_t"],
                    ["slot_w", "slot_l", "3*cu_t"], "vacuum")
         cp.require(m.subtract(disc.name, slot.name, keep_originals=False), "slot subtraction")
-        right_tab = box("RIGHT_TAB", ["5.30mm", "-diode_w/2", 0],
+        right_tab = box("RIGHT_TAB", ["5.10mm", "-diode_w/2", 0],
                         ["0.20mm", "diode_w", "cu_t"])
         left_tab = box("LEFT_TAB", ["-period/2", "-diode_w/2", 0],
-                       ["0.50mm", "diode_w", "cu_t"])
+                       ["0.30mm", "diode_w", "cu_t"])
         cp.require(m.unite([disc.name, right_tab.name, left_tab.name]), "ID disc tabs union")
+        box("LANDING", ["5.60mm", "-diode_w/2", 0],
+            ["0.20mm", "diode_w", "cu_t"])
         if g.lines:
-            upper = box("YLINE", ["-line_w/2", "5mm", 0],
-                        ["line_w", "period/2-5mm", "cu_t"])
-            lower = box("RECEIVER", ["-line_w/2", "-period/2", 0],
-                        ["line_w", "period/2-5mm", "cu_t"])
+            import math
+            y0 = math.sqrt(DISC_R**2 - (LINE_W / 2)**2) - 0.15
+            upper = box("YLINE", ["-0.20mm-line_w/2", f"{y0:.9g}mm", 0],
+                        ["line_w", f"{5.8-y0:.9g}mm", "cu_t"])
+            lower = box("RECEIVER", ["-0.20mm-line_w/2", "-period/2", 0],
+                        ["line_w", f"{5.8-y0:.9g}mm", "cu_t"])
             cp.require(m.unite([disc.name, upper.name, lower.name]), "ID yline union")
-        sheet_origin = ["5.50mm", "-diode_w/2", "cu_t/2"]
+        sheet_origin = ["5.30mm", "-diode_w/2", "cu_t/2"]
     ground = box("SOLID_GROUND", ["-period/2", "-period/2", "ground_bottom"],
                  ["period", "period", "cu_t"])
     box("RT5880", ["-period/2", "-period/2", "-rt_t"],

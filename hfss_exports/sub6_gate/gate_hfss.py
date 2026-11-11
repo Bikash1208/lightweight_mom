@@ -99,6 +99,7 @@ def build(h, row, out: Path):
         require(m.subtract(disc.name, slot.name, keep_originals=False), f"slot subtraction {i}")
     substrate = box("RT5880", [f"{x0:.9f}mm", "-period/2", "-rt_t"], [f"{total:.9f}mm", "period", "rt_t"], "RT5880_gate")
     ground = box("GROUND", [f"{x0:.9f}mm", "-period/2", "ground_bottom"], [f"{total:.9f}mm", "period", "cu_t"])
+    air = box("AIR", [f"{x0:.9f}mm", "-period/2", "0mm"], [f"{total:.9f}mm", "period", "cu_t+lid_h"], "vacuum")
     glue = []
     for c in gate_cells:
         i, xc = c["index"], f"{c['xc']:.9f}mm"
@@ -107,6 +108,8 @@ def build(h, row, out: Path):
         via = cyl(f"VIA_{i}", vx, "0mm", "-rt_t", "via_r", "rt_t+cu_t")
         pad = cyl(f"PAD_{i}", vx, "0mm", "0mm", "pad_r", "cu_t")
         require(m.subtract(substrate.name, via.name, keep_originals=True), f"drill via {i}")
+        # validation rejects the united ground+island body overlapping AIR: cut the island/pad/via-top volume out of AIR
+        require(m.subtract(air.name, isl.name, keep_originals=True), f"cut island volume from AIR {i}")
         glue += [isl.name, via.name, pad.name]
     if glue:
         require(m.unite([ground.name] + glue), "island + via + pad + solid ground united")
@@ -119,18 +122,22 @@ def build(h, row, out: Path):
     if sheets:
         require(h.assign_impedance_to_sheet(sheets, name="BAR90_02LRH", resistance="Rs", reactance="Xs"),
                 "diode impedance")
-    air = box("AIR", [f"{x0:.9f}mm", "-period/2", "0mm"], [f"{total:.9f}mm", "period", "cu_t+lid_h"], "vacuum")
     lid_top = S.CU_T + row["lid_mm"]
     face = lambda pos, obj: require(m.get_faceid_from_position(pos, assignment=obj), f"{obj} face {pos}")
     P2 = S.PERIOD / 2
     require(h.assign_perfect_e([face([0, 0, lid_top], "AIR")], name="PEC_LID"), "PEC lid")
     require(h.assign_perfect_e([face([0, 0, -S.RT_T - S.CU_T], "GROUND")], name="PEC_GROUND_BOTTOM"), "PEC ground bottom")
-    require(h.assign_lattice_pair([face([0, -P2, lid_top / 2], "AIR"), face([0, P2, lid_top / 2], "AIR")],
-                                  phase_delay="InputPhaseDelay", phase_delay_param1="0deg", name="LatticeY_air"),
-            "y lattice air")
-    require(h.assign_lattice_pair([face([0, -P2, -S.RT_T / 2], "RT5880"), face([0, P2, -S.RT_T / 2], "RT5880")],
-                                  phase_delay="InputPhaseDelay", phase_delay_param1="0deg", name="LatticeY_sub"),
-            "y lattice substrate")
+    # Mirror symmetry about y = 0 (decision 1): y faces are even-symmetry planes -> Perfect H, full height.
+    # STOP if any copper (disc, island, pad, via) reaches a y face.
+    for n in (c["index"] for c in cells):
+        bb = m[f"DISC_{n}"].bounding_box          # xmin, ymin, zmin, xmax, ymax, zmax (mm)
+        if bb[1] <= -P2 + 1e-6 or bb[4] >= P2 - 1e-6:
+            raise RuntimeError(f"STOP: DISC_{n} touches a y face, bbox {bb}")
+    if gate_cells and S.ISLAND_LENGTHS and row["island_l"] / 2 >= P2 - 1e-6:
+        raise RuntimeError("STOP: island touches a y face")
+    yfaces = [face([0, -P2, lid_top / 2], "AIR"), face([0, P2, lid_top / 2], "AIR")]
+    yfaces += [face([0, -P2, -S.RT_T / 2], "RT5880"), face([0, P2, -S.RT_T / 2], "RT5880")]
+    require(h.assign_perfect_h(yfaces, name="PMC_Y"), "perfect H y faces")
     ports = {}
     for n, x in ((1, -total / 2), (2, total / 2)):
         sheet = require(m.create_rectangle("YZ", [f"{x:.9f}mm", "-period/2", "-rt_t"], ["period", "rt_t+cu_t+lid_h"],
@@ -177,6 +184,14 @@ def parse_profile(text):
     return passes
 
 
+def _re(sd, e):
+    return [float(v) for v in sd.get_expression_data(e, formula="real")[1]]
+
+
+def _im(sd, e):
+    return [float(v) for v in sd.get_expression_data(e, formula="imag")[1]]
+
+
 def extract(h, row, out: Path, rb, cores, seconds):
     post = h.post
     sweep = f"{SETUP} : {SWEEP}"
@@ -192,15 +207,22 @@ def extract(h, row, out: Path, rb, cores, seconds):
     freqs = [float(f) for f in sd.primary_sweep_values]
     if len(freqs) != S.N_FREQ or any(abs(a - b) > 1e-6 for a, b in zip(freqs, S.FREQS_GHZ)):
         raise RuntimeError(f"unexpected frequency list {freqs}")
-    s = {e: [complex(a, b) for a, b in zip(sd.data_real(e), sd.data_imag(e))] for e in expr}
+    s = {e: [complex(a, b) for a, b in zip(_re(sd, e), _im(sd, e))] for e in expr}
     # port gamma
     gamma, gerr = {}, None
-    for gname in ("Gamma(P1:1)", "Gamma(1:1)", "Gamma(P1,1)", "Gamma(1,1)"):
+    found = []
+    for c in (cats.get("Modal Solution Data") or []):
+        try:
+            found += [q for q in post.available_report_quantities(report_category="Modal Solution Data",
+                                                                   quantities_category=c) if "amma" in q]
+        except Exception:
+            pass
+    for gname in found + ["Gamma(P1:1)", "Gamma(1:1)", "Gamma(P1,1)", "Gamma(1,1)"]:
         try:
             gd = post.get_solution_data(expressions=[gname], setup_sweep_name=sweep, report_category="Modal Solution Data")
-            if gd and len(gd.data_real(gname)):
-                gamma = {"expression": gname, "re": list(map(float, gd.data_real(gname))),
-                         "im": list(map(float, gd.data_imag(gname)))}
+            if gd and len(_re(gd, gname)):
+                gamma = {"expression": gname, "re": list(map(float, _re(gd, gname))),
+                         "im": list(map(float, _im(gd, gname)))}
                 break
         except Exception as exc:
             gerr = f"{gname}: {exc}"
@@ -229,7 +251,7 @@ def extract(h, row, out: Path, rb, cores, seconds):
             d["port_gamma_1_per_m"] = [gamma["re"][k], gamma["im"][k]]
         per_f.append(d)
     return {"per_frequency": per_f, "gamma_expression": gamma.get("expression"), "gamma_error": gerr,
-            "report_categories": cats, "gamma_quantities": quantities, "mesh_raw": mesh_raw}
+            "report_categories": cats, "gamma_quantities": quantities, "gamma_candidates": found, "mesh_raw": mesh_raw}
 
 
 def solve_once(row, port, cores, attempt, out_dir):

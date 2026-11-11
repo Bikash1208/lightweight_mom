@@ -65,18 +65,24 @@ def build(h, g: Geometry, out: Path, lid_height_mm: float = 150,
                ["slot_w", "slot_l", "3*cu_t"], "vacuum")
     cp.require(m.subtract(disc.name, slot.name, keep_originals=False), "slot subtraction")
     if g.route == "G-DISC":
-        channel = box("CHANNEL_CUT", ["island_cx-channel_w/2", "slot_l/2", "-cu_t"],
+        channel = box("CHANNEL_CUT_TOP", ["island_cx-channel_w/2", "slot_l/2", "-cu_t"],
                       ["channel_w", "period/2-slot_l/2+0.1mm", "3*cu_t"], "vacuum")
+        bottom_channel = box("CHANNEL_CUT_BOTTOM",
+                             ["island_cx-channel_w/2", "-period/2-0.1mm", "-cu_t"],
+                             ["channel_w", "period/2-slot_l/2+0.1mm", "3*cu_t"], "vacuum")
     else:
         channel = None
     if channel:
         cp.require(m.subtract(disc.name, channel.name, keep_originals=False), "channel subtraction")
+        if g.route == "G-DISC":
+            cp.require(m.subtract(disc.name, bottom_channel.name, keep_originals=False),
+                       "bottom channel subtraction")
     island = box("ISLAND", ["island_left", "-island_l/2", 0], ["island_w", "island_l", "cu_t"])
     if g.route == "G-DISC":
         line = box("OUTBOUND_LINE", ["island_cx-line_w/2", "island_l/2", 0],
                    ["line_w", "period/2-island_l/2", "cu_t"])
-        receiver = box("RECEIVER_TAB", ["island_cx-line_w/2", "-period/2", 0],
-                       ["line_w", "period/2-5mm", "cu_t"])
+        receiver = box("RETURN_LINE", ["island_cx-line_w/2", "-period/2", 0],
+                       ["line_w", "period/2-island_l/2", "cu_t"])
     elif g.route == "G-ISL-a":
         line = box("OUTBOUND_LINE", ["-line_w/2", "5mm", 0],
                    ["line_w", "period/2-5mm", "cu_t"])
@@ -91,8 +97,8 @@ def build(h, g: Geometry, out: Path, lid_height_mm: float = 150,
         line = receiver = None
     if line:
         if g.route == "G-DISC":
-            cp.require(m.unite([island.name, line.name]), "island outbound line union")
-            cp.require(m.unite([disc.name, receiver.name]), "neighbour receiver union")
+            cp.require(m.unite([island.name, line.name, receiver.name]),
+                       "continuous island bias bus union")
         else:
             cp.require(m.unite([disc.name, line.name, receiver.name]), "disc periodic line union")
     ground = box("SOLID_GROUND", ["-period/2", "-period/2", "ground_bottom"],

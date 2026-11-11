@@ -21,16 +21,29 @@
     "island_pad_clearance_y_mm": null,
     "line_to_disc_overlap_mm": null,
     "line_channel_clearance_each_side_mm": 0.15000000000000002,
-    "dc_graph_without_diode": {
-      "disc": [
+    "wrapped_dc_graph_without_diode": {
+      "island_n": [
+        "island_n+1",
+        "island_n-1"
+      ],
+      "island_n+1": [
+        "island_n"
+      ],
+      "island_n-1": [
+        "island_n"
+      ],
+      "disc_n": [
         "ground"
       ],
-      "island": [],
-      "ground": []
+      "ground": [
+        "disc_n"
+      ]
     },
-    "anode": "island",
-    "cathode": "disc",
-    "anode_reaches_ground_only_through_diode": true
+    "anode": "island_n",
+    "cathode": "disc_n",
+    "anode_reaches_ground_only_through_diode": true,
+    "disc_reaches_ground_only_through_via": true,
+    "line_touches_disc_nowhere": true
   },
   "objects": [
     "DISC",

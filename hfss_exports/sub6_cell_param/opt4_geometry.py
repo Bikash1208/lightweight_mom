@@ -57,13 +57,29 @@ def check(g: Geometry):
             conflicts.append("island via pad outside island")
         if g.route in ("G-ISL-a", "G-ISL-b") and line_disc_overlap <= 0:
             conflicts.append("disc line does not overlap disc rim")
-    # Copper graph: D=disc, I=island, G=ground. The sheet is the sole D-I edge.
-    # Every variant has exactly one direct via edge, either I-G or D-G.
-    graph = {"disc": ["ground"] if is_disc else [],
-             "island": [] if is_disc else ["ground"], "ground": []}
-    anode, cathode = ("island", "disc") if is_disc else ("disc", "island")
-    if graph[anode]:
-        conflicts.append("anode has a direct copper path to ground")
+    # Include the y/x lattice wrap explicitly. The corrected G-DISC top and bottom
+    # line pieces both join ISLAND and meet their periodic counterparts on the face.
+    graph = ({"island_n": ["island_n+1", "island_n-1"],
+              "island_n+1": ["island_n"], "island_n-1": ["island_n"],
+              "disc_n": ["ground"], "ground": ["disc_n"]} if is_disc else
+             {"disc_n": (["disc_n+1", "disc_n-1"] if g.route != "G-ISL-noline" else []),
+              "disc_n+1": ["disc_n"], "disc_n-1": ["disc_n"],
+              "island_n": ["ground"], "ground": ["island_n"]})
+    anode, cathode = ("island_n", "disc_n") if is_disc else ("disc_n", "island_n")
+    def reaches(start, goal):
+        seen, pending = set(), [start]
+        while pending:
+            node = pending.pop()
+            if node == goal:
+                return True
+            if node not in seen:
+                seen.add(node)
+                pending.extend(graph[node])
+        return False
+    if reaches(anode, "ground"):
+        conflicts.append("anode reaches ground without diode through lattice wrap")
+    if is_disc and (not reaches("disc_n", "ground") or reaches("island_n", "disc_n")):
+        conflicts.append("G-DISC cathode/anode DC topology invalid")
     return {"name": g.name, "geometry": asdict(g), "status": "PASS" if not conflicts else "CONFLICT",
             "conflicts": conflicts, "via_xy_mm": via_xy, "via_drill_mm": VIA_DRILL,
             "via_pad_mm": VIA_PAD, "disc_via_slot_clearance_mm": disc_slot_clearance,
@@ -72,5 +88,7 @@ def check(g: Geometry):
             "island_pad_clearance_y_mm": island_pad_clearance_y,
             "line_to_disc_overlap_mm": line_disc_overlap,
             "line_channel_clearance_each_side_mm": channel_clearance,
-            "dc_graph_without_diode": graph, "anode": anode, "cathode": cathode,
-            "anode_reaches_ground_only_through_diode": not graph[anode] and not conflicts}
+            "wrapped_dc_graph_without_diode": graph, "anode": anode, "cathode": cathode,
+            "anode_reaches_ground_only_through_diode": not reaches(anode, "ground") and not conflicts,
+            "disc_reaches_ground_only_through_via": reaches("disc_n", "ground") if is_disc else None,
+            "line_touches_disc_nowhere": is_disc and channel_clearance >= 0.15 - 1e-9}

@@ -1,0 +1,72 @@
+{
+  "status": "BUILT",
+  "aedt": "2025.2",
+  "geometry": {
+    "geometry": "ID_noline",
+    "family": "ID",
+    "split_w_mm": 0.0,
+    "lines": false,
+    "status": "PASS",
+    "conflicts": [],
+    "clearances_mm": {
+      "disc_to_cell_face_mm": 0.3650000000000002,
+      "right_tab_to_cell_face_mm": 0.2999999999999998,
+      "right_tab_disc_overlap_min_mm": 0.12671401494495527,
+      "left_tab_disc_overlap_min_mm": 0.12671401494495527,
+      "diode_span_mm": 0.3,
+      "line_disc_overlap_mm": null
+    },
+    "wrapped_graph_without_diode": {
+      "DISC(n)": [],
+      "DISC(n+y)": [],
+      "DISC(n+x)": []
+    },
+    "diode_edge": [
+      "DISC(n)",
+      "DISC(n+x)"
+    ],
+    "periodic_wrap_connections": [],
+    "only_diode_connects_target_nets": true
+  },
+  "objects": [
+    "DISC",
+    "SOLID_GROUND",
+    "RT5880",
+    "AIR",
+    "DIODE_SHEET"
+  ],
+  "boundaries": [
+    "BAR90_02LRH",
+    "Lattice_X",
+    "Lattice_Y",
+    "PEC_LID",
+    "PEC_GROUND_BOTTOM"
+  ],
+  "stack": {
+    "top_cu": true,
+    "rt5880_mm": 3.175,
+    "solid_ground": true,
+    "fr4": false,
+    "vias": false,
+    "antipads": false,
+    "stubs": false,
+    "air_below_ground": false
+  },
+  "floor_boundary": "SOLID_PEC_GROUND",
+  "mesh_operations": [],
+  "validation": [
+    "Desktop messages:",
+    "Design validation check PASSED.",
+    "Design validation messages:",
+    "** End of design validation messages. **",
+    "Excitations check:",
+    "Eigen model is detected. No excitatons are defined.",
+    "Analysis setup messages:",
+    "Detected setup and sweep: ",
+    "EigenCell"
+  ],
+  "top_boundary": {
+    "type": "PEC",
+    "height_mm": 150.0
+  }
+}

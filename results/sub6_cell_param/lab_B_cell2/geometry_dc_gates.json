@@ -1,0 +1,192 @@
+[
+  {
+    "geometry": "SD_w1p0_noline",
+    "family": "SD",
+    "split_w_mm": 1.0,
+    "lines": false,
+    "status": "PASS",
+    "conflicts": [],
+    "clearances_mm": {
+      "disc_to_cell_face_mm": 0.3650000000000002,
+      "tab_to_opposite_tab_mm": 0.3,
+      "cut_to_yline_edge_mm": null,
+      "line_rim_overlap_min_mm": null
+    },
+    "wrapped_graph_without_diode": {
+      "LEFT(n)": [],
+      "LEFT(n+y)": [],
+      "RIGHT(n)": [],
+      "RIGHT(n+y)": []
+    },
+    "diode_edge": [
+      "LEFT(n)",
+      "RIGHT(n)"
+    ],
+    "periodic_wrap_connections": [],
+    "only_diode_connects_target_nets": true
+  },
+  {
+    "geometry": "SD_w1p0_ylines",
+    "family": "SD",
+    "split_w_mm": 1.0,
+    "lines": true,
+    "status": "PASS",
+    "conflicts": [],
+    "clearances_mm": {
+      "disc_to_cell_face_mm": 0.3650000000000002,
+      "tab_to_opposite_tab_mm": 0.3,
+      "cut_to_yline_edge_mm": 1.45,
+      "line_rim_overlap_min_mm": 0.15,
+      "line_x_from_centre_mm": 2.0,
+      "line_start_y_mm": 4.883559873489139
+    },
+    "wrapped_graph_without_diode": {
+      "LEFT(n)": [
+        "LEFT(n+y)"
+      ],
+      "LEFT(n+y)": [
+        "LEFT(n)"
+      ],
+      "RIGHT(n)": [
+        "RIGHT(n+y)"
+      ],
+      "RIGHT(n+y)": [
+        "RIGHT(n)"
+      ]
+    },
+    "diode_edge": [
+      "LEFT(n)",
+      "RIGHT(n)"
+    ],
+    "periodic_wrap_connections": [
+      "LEFT(n)\u2194LEFT(n+y)",
+      "RIGHT(n)\u2194RIGHT(n+y)"
+    ],
+    "only_diode_connects_target_nets": true
+  },
+  {
+    "geometry": "SD_w2p9_noline",
+    "family": "SD",
+    "split_w_mm": 2.9,
+    "lines": false,
+    "status": "PASS",
+    "conflicts": [],
+    "clearances_mm": {
+      "disc_to_cell_face_mm": 0.3650000000000002,
+      "tab_to_opposite_tab_mm": 0.3,
+      "cut_to_yline_edge_mm": null,
+      "line_rim_overlap_min_mm": null
+    },
+    "wrapped_graph_without_diode": {
+      "LEFT(n)": [],
+      "LEFT(n+y)": [],
+      "RIGHT(n)": [],
+      "RIGHT(n+y)": []
+    },
+    "diode_edge": [
+      "LEFT(n)",
+      "RIGHT(n)"
+    ],
+    "periodic_wrap_connections": [],
+    "only_diode_connects_target_nets": true
+  },
+  {
+    "geometry": "SD_w2p9_ylines",
+    "family": "SD",
+    "split_w_mm": 2.9,
+    "lines": true,
+    "status": "PASS",
+    "conflicts": [],
+    "clearances_mm": {
+      "disc_to_cell_face_mm": 0.3650000000000002,
+      "tab_to_opposite_tab_mm": 0.3,
+      "cut_to_yline_edge_mm": 1.45,
+      "line_rim_overlap_min_mm": 0.15,
+      "line_x_from_centre_mm": 2.95,
+      "line_start_y_mm": 4.3820221755856394
+    },
+    "wrapped_graph_without_diode": {
+      "LEFT(n)": [
+        "LEFT(n+y)"
+      ],
+      "LEFT(n+y)": [
+        "LEFT(n)"
+      ],
+      "RIGHT(n)": [
+        "RIGHT(n+y)"
+      ],
+      "RIGHT(n+y)": [
+        "RIGHT(n)"
+      ]
+    },
+    "diode_edge": [
+      "LEFT(n)",
+      "RIGHT(n)"
+    ],
+    "periodic_wrap_connections": [
+      "LEFT(n)\u2194LEFT(n+y)",
+      "RIGHT(n)\u2194RIGHT(n+y)"
+    ],
+    "only_diode_connects_target_nets": true
+  },
+  {
+    "geometry": "ID_noline",
+    "family": "ID",
+    "split_w_mm": 0.0,
+    "lines": false,
+    "status": "PASS",
+    "conflicts": [],
+    "clearances_mm": {
+      "disc_to_cell_face_mm": 0.3650000000000002,
+      "right_tab_to_cell_face_mm": 0.2999999999999998,
+      "right_tab_disc_overlap_min_mm": 0.12671401494495527,
+      "left_tab_disc_overlap_min_mm": 0.12671401494495527,
+      "diode_span_mm": 0.3,
+      "line_disc_overlap_mm": null
+    },
+    "wrapped_graph_without_diode": {
+      "DISC(n)": [],
+      "DISC(n+y)": [],
+      "DISC(n+x)": []
+    },
+    "diode_edge": [
+      "DISC(n)",
+      "DISC(n+x)"
+    ],
+    "periodic_wrap_connections": [],
+    "only_diode_connects_target_nets": true
+  },
+  {
+    "geometry": "ID_yline",
+    "family": "ID",
+    "split_w_mm": 0.0,
+    "lines": true,
+    "status": "PASS",
+    "conflicts": [],
+    "clearances_mm": {
+      "disc_to_cell_face_mm": 0.3650000000000002,
+      "right_tab_to_cell_face_mm": 0.2999999999999998,
+      "right_tab_disc_overlap_min_mm": 0.12671401494495527,
+      "left_tab_disc_overlap_min_mm": 0.12671401494495527,
+      "diode_span_mm": 0.3,
+      "line_disc_overlap_mm": 0.4349999999999996
+    },
+    "wrapped_graph_without_diode": {
+      "DISC(n)": [
+        "DISC(n+y)"
+      ],
+      "DISC(n+y)": [
+        "DISC(n)"
+      ],
+      "DISC(n+x)": []
+    },
+    "diode_edge": [
+      "DISC(n)",
+      "DISC(n+x)"
+    ],
+    "periodic_wrap_connections": [
+      "DISC(n)\u2194DISC(n+y)"
+    ],
+    "only_diode_connects_target_nets": true
+  }
+]

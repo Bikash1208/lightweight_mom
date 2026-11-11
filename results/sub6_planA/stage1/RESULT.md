@@ -36,4 +36,4 @@ The furthest partial solve, T5/OFF, reached Adaptive Pass 3. Its initial meshing
 - `partial_profiles/`: ten incomplete HFSS profiles, retained for audit only.
 - `../STAGE2_PLAN.md`: requested diode-count ladder source review and inputs needed.
 
-The private `.aedt` projects and `.aedtresults` remain under `C:\lwmom_labB\stage1_work` and are not committed.
+The ten private row projects and partial `.aedtresults` remain under `C:\lwmom_labB\stage1_work`; the preflight trial projects remain beside their JSON reports. These project files are not committed.

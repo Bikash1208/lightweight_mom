@@ -1,0 +1,364 @@
+{
+  "status": "PASS",
+  "geometry_count": 10,
+  "rule": "0.10 line / 0.40 channel and 0.20 line / 0.50 channel; both leave 0.15 mm per side",
+  "local_dc_rule": "island and local disc copper remain disjoint; only the diode sheet bridges their 0.30 mm gap",
+  "periodic_receiver": "opposite-edge top-copper tab connects the outbound line across the periodic seam to the next disc rim",
+  "disc_rim_to_cell_boundary_mm": 0.3650000000000002,
+  "geometries": [
+    {
+      "name": "REF_L4.348",
+      "geometry": {
+        "route": "REF",
+        "island_l": 4.348,
+        "line_w": 0,
+        "channel_w": 0
+      },
+      "outbound_line": null,
+      "channel": null,
+      "opposite_edge_receiver": null,
+      "checks": {
+        "diode_gap_mm": 0.3,
+        "island_to_slot_y_clearance_mm": 2.174,
+        "island_to_slot_right_clearance_mm": 1.2999999999999998,
+        "line_channel_clearance_each_side_mm": null,
+        "outbound_line_separated_from_local_disc": true,
+        "island_to_opposite_receiver_gap_mm": null,
+        "island_local_disc_copper_dc_contact": false,
+        "connection_to_neighbor_disc_requires_opposite_edge_receiver": false,
+        "receiver_overlaps_local_disc": true
+      },
+      "status": "PASS",
+      "conflicts": []
+    },
+    {
+      "name": "REF_L2.500",
+      "geometry": {
+        "route": "REF",
+        "island_l": 2.5,
+        "line_w": 0,
+        "channel_w": 0
+      },
+      "outbound_line": null,
+      "channel": null,
+      "opposite_edge_receiver": null,
+      "checks": {
+        "diode_gap_mm": 0.3,
+        "island_to_slot_y_clearance_mm": 3.098,
+        "island_to_slot_right_clearance_mm": 1.2999999999999998,
+        "line_channel_clearance_each_side_mm": null,
+        "outbound_line_separated_from_local_disc": true,
+        "island_to_opposite_receiver_gap_mm": null,
+        "island_local_disc_copper_dc_contact": false,
+        "connection_to_neighbor_disc_requires_opposite_edge_receiver": false,
+        "receiver_overlaps_local_disc": true
+      },
+      "status": "PASS",
+      "conflicts": []
+    },
+    {
+      "name": "Y_w0.10_L4.348",
+      "geometry": {
+        "route": "Y",
+        "island_l": 4.348,
+        "line_w": 0.1,
+        "channel_w": 0.4
+      },
+      "outbound_line": {
+        "center_x": -0.4999999999999999,
+        "from_y": 2.174,
+        "to_y": 5.8
+      },
+      "channel": {
+        "center_x": -0.4999999999999999,
+        "from_y": 4.348,
+        "to_y": 5.8
+      },
+      "opposite_edge_receiver": {
+        "center_x": -0.4999999999999999,
+        "from_y": -5.8,
+        "to_y": -5.0,
+        "overlap_into_disc_mm": 0.4119520507853718
+      },
+      "checks": {
+        "diode_gap_mm": 0.3,
+        "island_to_slot_y_clearance_mm": 2.174,
+        "island_to_slot_right_clearance_mm": 1.2999999999999998,
+        "line_channel_clearance_each_side_mm": 0.15000000000000002,
+        "outbound_line_separated_from_local_disc": true,
+        "island_to_opposite_receiver_gap_mm": 2.826,
+        "island_local_disc_copper_dc_contact": false,
+        "connection_to_neighbor_disc_requires_opposite_edge_receiver": true,
+        "receiver_overlaps_local_disc": true
+      },
+      "status": "PASS",
+      "conflicts": []
+    },
+    {
+      "name": "Y_w0.20_L4.348",
+      "geometry": {
+        "route": "Y",
+        "island_l": 4.348,
+        "line_w": 0.2,
+        "channel_w": 0.5
+      },
+      "outbound_line": {
+        "center_x": -0.4999999999999999,
+        "from_y": 2.174,
+        "to_y": 5.8
+      },
+      "channel": {
+        "center_x": -0.4999999999999999,
+        "from_y": 4.348,
+        "to_y": 5.8
+      },
+      "opposite_edge_receiver": {
+        "center_x": -0.4999999999999999,
+        "from_y": -5.8,
+        "to_y": -5.0,
+        "overlap_into_disc_mm": 0.4119520507853718
+      },
+      "checks": {
+        "diode_gap_mm": 0.3,
+        "island_to_slot_y_clearance_mm": 2.174,
+        "island_to_slot_right_clearance_mm": 1.2999999999999998,
+        "line_channel_clearance_each_side_mm": 0.15,
+        "outbound_line_separated_from_local_disc": true,
+        "island_to_opposite_receiver_gap_mm": 2.826,
+        "island_local_disc_copper_dc_contact": false,
+        "connection_to_neighbor_disc_requires_opposite_edge_receiver": true,
+        "receiver_overlaps_local_disc": true
+      },
+      "status": "PASS",
+      "conflicts": []
+    },
+    {
+      "name": "Y_w0.10_L2.500",
+      "geometry": {
+        "route": "Y",
+        "island_l": 2.5,
+        "line_w": 0.1,
+        "channel_w": 0.4
+      },
+      "outbound_line": {
+        "center_x": -0.4999999999999999,
+        "from_y": 1.25,
+        "to_y": 5.8
+      },
+      "channel": {
+        "center_x": -0.4999999999999999,
+        "from_y": 4.348,
+        "to_y": 5.8
+      },
+      "opposite_edge_receiver": {
+        "center_x": -0.4999999999999999,
+        "from_y": -5.8,
+        "to_y": -5.0,
+        "overlap_into_disc_mm": 0.4119520507853718
+      },
+      "checks": {
+        "diode_gap_mm": 0.3,
+        "island_to_slot_y_clearance_mm": 3.098,
+        "island_to_slot_right_clearance_mm": 1.2999999999999998,
+        "line_channel_clearance_each_side_mm": 0.15000000000000002,
+        "outbound_line_separated_from_local_disc": true,
+        "island_to_opposite_receiver_gap_mm": 3.75,
+        "island_local_disc_copper_dc_contact": false,
+        "connection_to_neighbor_disc_requires_opposite_edge_receiver": true,
+        "receiver_overlaps_local_disc": true
+      },
+      "status": "PASS",
+      "conflicts": []
+    },
+    {
+      "name": "Y_w0.20_L2.500",
+      "geometry": {
+        "route": "Y",
+        "island_l": 2.5,
+        "line_w": 0.2,
+        "channel_w": 0.5
+      },
+      "outbound_line": {
+        "center_x": -0.4999999999999999,
+        "from_y": 1.25,
+        "to_y": 5.8
+      },
+      "channel": {
+        "center_x": -0.4999999999999999,
+        "from_y": 4.348,
+        "to_y": 5.8
+      },
+      "opposite_edge_receiver": {
+        "center_x": -0.4999999999999999,
+        "from_y": -5.8,
+        "to_y": -5.0,
+        "overlap_into_disc_mm": 0.4119520507853718
+      },
+      "checks": {
+        "diode_gap_mm": 0.3,
+        "island_to_slot_y_clearance_mm": 3.098,
+        "island_to_slot_right_clearance_mm": 1.2999999999999998,
+        "line_channel_clearance_each_side_mm": 0.15,
+        "outbound_line_separated_from_local_disc": true,
+        "island_to_opposite_receiver_gap_mm": 3.75,
+        "island_local_disc_copper_dc_contact": false,
+        "connection_to_neighbor_disc_requires_opposite_edge_receiver": true,
+        "receiver_overlaps_local_disc": true
+      },
+      "status": "PASS",
+      "conflicts": []
+    },
+    {
+      "name": "X_w0.10_L4.348",
+      "geometry": {
+        "route": "X",
+        "island_l": 4.348,
+        "line_w": 0.1,
+        "channel_w": 0.4
+      },
+      "outbound_line": {
+        "center_y": 0,
+        "from_x": 0.15000000000000013,
+        "to_x": 5.8
+      },
+      "channel": {
+        "center_y": 0,
+        "from_x": 1.45,
+        "to_x": 5.8
+      },
+      "opposite_edge_receiver": {
+        "center_y": 0,
+        "from_x": -5.8,
+        "to_x": -5.0,
+        "overlap_into_disc_mm": 0.4349999999999996
+      },
+      "checks": {
+        "diode_gap_mm": 0.3,
+        "island_to_slot_y_clearance_mm": 2.174,
+        "island_to_slot_right_clearance_mm": 1.2999999999999998,
+        "line_channel_clearance_each_side_mm": 0.15000000000000002,
+        "outbound_line_separated_from_local_disc": true,
+        "island_to_opposite_receiver_gap_mm": 3.85,
+        "island_local_disc_copper_dc_contact": false,
+        "connection_to_neighbor_disc_requires_opposite_edge_receiver": true,
+        "receiver_overlaps_local_disc": true
+      },
+      "status": "PASS",
+      "conflicts": []
+    },
+    {
+      "name": "X_w0.20_L4.348",
+      "geometry": {
+        "route": "X",
+        "island_l": 4.348,
+        "line_w": 0.2,
+        "channel_w": 0.5
+      },
+      "outbound_line": {
+        "center_y": 0,
+        "from_x": 0.15000000000000013,
+        "to_x": 5.8
+      },
+      "channel": {
+        "center_y": 0,
+        "from_x": 1.45,
+        "to_x": 5.8
+      },
+      "opposite_edge_receiver": {
+        "center_y": 0,
+        "from_x": -5.8,
+        "to_x": -5.0,
+        "overlap_into_disc_mm": 0.4349999999999996
+      },
+      "checks": {
+        "diode_gap_mm": 0.3,
+        "island_to_slot_y_clearance_mm": 2.174,
+        "island_to_slot_right_clearance_mm": 1.2999999999999998,
+        "line_channel_clearance_each_side_mm": 0.15,
+        "outbound_line_separated_from_local_disc": true,
+        "island_to_opposite_receiver_gap_mm": 3.85,
+        "island_local_disc_copper_dc_contact": false,
+        "connection_to_neighbor_disc_requires_opposite_edge_receiver": true,
+        "receiver_overlaps_local_disc": true
+      },
+      "status": "PASS",
+      "conflicts": []
+    },
+    {
+      "name": "X_w0.10_L2.500",
+      "geometry": {
+        "route": "X",
+        "island_l": 2.5,
+        "line_w": 0.1,
+        "channel_w": 0.4
+      },
+      "outbound_line": {
+        "center_y": 0,
+        "from_x": 0.15000000000000013,
+        "to_x": 5.8
+      },
+      "channel": {
+        "center_y": 0,
+        "from_x": 1.45,
+        "to_x": 5.8
+      },
+      "opposite_edge_receiver": {
+        "center_y": 0,
+        "from_x": -5.8,
+        "to_x": -5.0,
+        "overlap_into_disc_mm": 0.4349999999999996
+      },
+      "checks": {
+        "diode_gap_mm": 0.3,
+        "island_to_slot_y_clearance_mm": 3.098,
+        "island_to_slot_right_clearance_mm": 1.2999999999999998,
+        "line_channel_clearance_each_side_mm": 0.15000000000000002,
+        "outbound_line_separated_from_local_disc": true,
+        "island_to_opposite_receiver_gap_mm": 3.85,
+        "island_local_disc_copper_dc_contact": false,
+        "connection_to_neighbor_disc_requires_opposite_edge_receiver": true,
+        "receiver_overlaps_local_disc": true
+      },
+      "status": "PASS",
+      "conflicts": []
+    },
+    {
+      "name": "X_w0.20_L2.500",
+      "geometry": {
+        "route": "X",
+        "island_l": 2.5,
+        "line_w": 0.2,
+        "channel_w": 0.5
+      },
+      "outbound_line": {
+        "center_y": 0,
+        "from_x": 0.15000000000000013,
+        "to_x": 5.8
+      },
+      "channel": {
+        "center_y": 0,
+        "from_x": 1.45,
+        "to_x": 5.8
+      },
+      "opposite_edge_receiver": {
+        "center_y": 0,
+        "from_x": -5.8,
+        "to_x": -5.0,
+        "overlap_into_disc_mm": 0.4349999999999996
+      },
+      "checks": {
+        "diode_gap_mm": 0.3,
+        "island_to_slot_y_clearance_mm": 3.098,
+        "island_to_slot_right_clearance_mm": 1.2999999999999998,
+        "line_channel_clearance_each_side_mm": 0.15,
+        "outbound_line_separated_from_local_disc": true,
+        "island_to_opposite_receiver_gap_mm": 3.85,
+        "island_local_disc_copper_dc_contact": false,
+        "connection_to_neighbor_disc_requires_opposite_edge_receiver": true,
+        "receiver_overlaps_local_disc": true
+      },
+      "status": "PASS",
+      "conflicts": []
+    }
+  ]
+}

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 from pathlib import Path
 import shutil
@@ -12,7 +13,7 @@ import time
 
 import cell_param_pyaedt as cp
 from cell2_cell import configure, values
-from opt1_queue import layout, write_csv, write_json
+from opt1_queue import free_cpus, write_csv, write_json
 from cell2_spec import GEOMETRIES, cases as cell2_cases, variant as cell2_variant
 
 configure()
@@ -20,7 +21,7 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 WORK = HERE / "lab_B_cell2_work"
 RESULTS = REPO / "results" / "sub6_cell_param" / "lab_B_cell2"
-CORES_EACH = 8
+MAX_WORKERS = 4
 LIDS = {"PEC150": (150.0, "PEC")}
 
 
@@ -48,34 +49,46 @@ def validate_result(file: Path, expected: dict, g, lid: str, height: float) -> N
         raise RuntimeError(f"Readback refused {file.name}: {reason}")
 
 
-def launch(g, lid: str, height: float, kind: str, rows: list[dict], n: int, tag: str):
+def capacity(rows: int):
+    while True:
+        free = free_cpus()
+        total = math.floor(free)
+        if total >= 4:
+            n = min(rows, MAX_WORKERS, max(1, total // 4))
+            cores = [total // n + (i < total % n) for i in range(n)]
+            return cores, free
+        print(f"CPU free {free:.1f}; waiting for capacity", flush=True)
+        time.sleep(60)
+
+
+def launch(g, lid: str, height: float, kind: str, rows: list[dict], cores: list[int], tag: str):
     name = variant(g, lid)
     root = WORK / "runs" / name / f"{time.strftime('%Y%m%d_%H%M%S')}_{tag}"
     if root.exists():
         raise RuntimeError("Refusing to reuse launch folder")
     base = WORK / "projects" / f"{name}.aedt"
     procs, dirs = [], []
-    for i in range(n):
+    for i in range(len(cores)):
         part = root / f"part{i}"
         part.mkdir(parents=True)
         project = part / f"{name}.aedt"
         shutil.copy2(base, project)
         row_csv = part / "rows.csv"
-        write_csv(row_csv, rows[i::n])
+        write_csv(row_csv, rows[i::len(cores)])
         launch_dir = part / "launch"
         launch_dir.mkdir()
         cmd = [sys.executable, str(HERE / "cell2_cell.py"), "--geometry", g.name,
                "--lid-height-mm", str(height),
                "--top-boundary", kind, "--project-variant", name,
                "--csv", str(row_csv), "--project", str(project),
-               "--output", str(part), "--cores", str(CORES_EACH)]
+               "--output", str(part), "--cores", str(cores[i])]
         log = (part / "worker.log").open("w", encoding="utf-8")
         try:
             procs.append(subprocess.Popen(cmd, cwd=launch_dir, stdout=log, stderr=subprocess.STDOUT))
         finally:
             log.close()
         dirs.append(part)
-        if i < n - 1:
+        if i < len(cores) - 1:
             time.sleep(40)
     return [p.wait() for p in procs], dirs
 
@@ -124,17 +137,17 @@ def run_variant(g, lid: str, height: float, kind: str, failed_global: dict) -> d
     if not todo:
         print(f"SKIP {name}: 28 rows resolved", flush=True)
         return {"variant": name, "rows_to_do": 0}
-    n, free = layout(len(todo))
-    print(f"RUN {name}: {len(todo)} rows, {n} processes x {CORES_EACH} cores; free {free:.1f}", flush=True)
+    cores, free = capacity(len(todo))
+    print(f"RUN {name}: {len(todo)} rows, worker cores {cores}; free {free:.1f}", flush=True)
     start = time.time()
-    codes, dirs = launch(g, lid, height, kind, todo, n, "main")
+    codes, dirs = launch(g, lid, height, kind, todo, cores, "main")
     solved, failed = collect(dirs, by_id, g, lid, height)
     missing = [r for r in todo if r["*"] not in solved and r["*"] not in failed]
     retry_codes = []
     if missing:
-        layout(1)
+        retry_cores, _ = capacity(1)
         print(f"RETRY {name}: {len(missing)} unreached rows", flush=True)
-        retry_codes, retry_dirs = launch(g, lid, height, kind, missing, 1, "retry")
+        retry_codes, retry_dirs = launch(g, lid, height, kind, missing, retry_cores, "retry")
         retried, retry_failed = collect(retry_dirs, by_id, g, lid, height)
         solved.update(retried)
         failed.update(retry_failed)
@@ -154,7 +167,7 @@ def run_variant(g, lid: str, height: float, kind: str, failed_global: dict) -> d
     failed_global.update(failed)
     write_json(RESULTS / "FAILED_ROWS.json", list(failed_global.values()))
     report = {"variant": name, "rows_to_do": len(todo), "solved": len(solved),
-              "failed": len(failed), "processes": n, "cores_each": CORES_EACH,
+              "failed": len(failed), "processes": len(cores), "worker_cores": cores,
               "free_cpus_at_start": round(free, 1), "wall_seconds": round(time.time() - start),
               "exit_codes": codes, "retry_exit_codes": retry_codes}
     write_json(RESULTS / "parallel_reports" / f"{name}.json", report)
@@ -170,10 +183,11 @@ def main() -> None:
     if stop.exists() and json.loads(stop.read_text()).get("status", "").startswith("STOPPED"):
         raise RuntimeError("Cell 2 hard stop recorded; refusing additional AEDT solves")
     ap = argparse.ArgumentParser()
+    ap.add_argument("--family", choices=("SD", "ID"), required=True)
     ap.add_argument("--geometry", choices=[g.name for g in GEOMETRIES])
     args = ap.parse_args()
     height, kind = LIDS["PEC150"]
-    matrix = [(g, "PEC150", height, kind) for g in GEOMETRIES
+    matrix = [(g, "PEC150", height, kind) for g in GEOMETRIES if g.family == args.family
               if args.geometry is None or g.name == args.geometry]
     for g, lid, height, kind in matrix:
         summary = json.loads((RESULTS / "builds" / f"{variant(g,lid)}.json").read_text())

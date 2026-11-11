@@ -1,6 +1,7 @@
 """Resumable seven-phase/lid queue; every AEDT worker is a new local instance."""
 from __future__ import annotations
 
+import argparse
 import json
 import os
 from pathlib import Path
@@ -152,13 +153,19 @@ def run_variant(g, lid: str, height: float, kind: str, failed_global: dict) -> d
 def main() -> None:
     if os.environ.get("SUB6_AEDT_VERSION") != "2025.2":
         raise RuntimeError("Explicit AEDT 2025.2 selection required")
-    matrix = [(g, lid, height, kind) for g in GEOMETRIES for lid, height, kind in LIDS]
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--lid", choices=[x[0] for x in LIDS], default="PEC150")
+    ap.add_argument("--geometry", choices=[g.name for g in GEOMETRIES])
+    args = ap.parse_args()
+    matrix = [(g, lid, height, kind) for g in GEOMETRIES for lid, height, kind in LIDS
+              if lid == args.lid and (args.geometry is None or g.name == args.geometry)]
     for g, lid, height, kind in matrix:
         summary = json.loads((RESULTS / "builds" / f"{variant(g,lid)}.json").read_text())
         if summary["status"] != "BUILT" or summary["top_boundary"]["type"] != kind:
             raise RuntimeError("Build gate failed")
     expected = {r["*"] for g, lid, _, _ in matrix for r in cases(g, lid)}
-    write_json(RESULTS / "row_manifest.json", sorted(expected))
+    solved_before = {p.stem for p in (RESULTS / "rows").glob("*.json")}
+    write_json(RESULTS / "row_manifest.json", sorted(solved_before | expected))
     failure_file = RESULTS / "FAILED_ROWS.json"
     failed = {x["run_id"]: x for x in json.loads(failure_file.read_text())} if failure_file.exists() else {}
     for g, lid, height, kind in matrix:
@@ -169,9 +176,9 @@ def main() -> None:
         if attempted and len(failed) / attempted > 0.05:
             raise RuntimeError("FAILED rate >5%; stop for review")
     solved = {p.stem for p in (RESULTS / "rows").glob("*.json")}
-    if solved | set(failed) != expected:
+    if not expected.issubset(solved | set(failed)):
         raise RuntimeError(f"Incomplete queue: {len(solved)} solved + {len(failed)} FAILED")
-    print(f"QUEUE COMPLETE: {len(solved)} solved, {len(failed)} FAILED", flush=True)
+    print(f"QUEUE COMPLETE: {len(expected)} requested, {len(solved)} total solved, {len(failed)} FAILED", flush=True)
 
 
 if __name__ == "__main__":

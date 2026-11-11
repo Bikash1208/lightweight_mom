@@ -24,3 +24,10 @@ Runner fixes on this lab-b branch:
 2. Batch QUEUE_B in 20-row groups for progress pushes, retaining original CSV stems for resume and read-back checks.
 3. Reserve logical CPU headroom and remeasure before each batch and retry; preserve cumulative parallel reports.
 4. Copy per-row raw VERIFY exports, AEDT profiles, and build summaries into the result package for provenance.
+
+## Final QUEUE_B result (2026-11-11 08:09 IST)
+
+- Completed all 336 planned rows: `SCREEN_2.csv` 144/144, `SCREEN_6_short_nostub.csv` 96/96, and `SCREEN_6_short_trace.csv` 96/96. FAILED: 0; failure flags: none.
+- Independent final audit checked all 336 expected run IDs, eight modes per row, project variants, build floors, and `readback_si` against intended variables. Result: PASS.
+- Result batches were pushed about every 20 rows to `compute/sub6-cell-param-lab-b` under `results/sub6_cell_param/lab_B/`. Actual layouts: full 3x8, 4x8, or 5x8 according to free CPU; no-stub and trace 5x8. CPU was remeasured before each batch.
+- A Codex server restart interrupted the 101–120 batch after five private row results. No queue Python or AEDT process from that batch remained. The five rows passed the same readback check and were recovered into the owned output directory before resume. The remaining 15 rows were solved on resume. No row was counted twice in the final set.

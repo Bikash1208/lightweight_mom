@@ -58,7 +58,7 @@ def main():
               "vg_over_c", "q_min", "q_median", "q_max", "beta_brackets", "PEC300_match",
               "Z377_match", "box_mode", "absorber_only_Q_le_60", "phase_deg", "mode", "f_ghz", "q")
     with (out / "every_mode_track.csv").open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fields)
+        writer = csv.DictWriter(f, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         for (geometry, lid, state, direction), group in tracks.items():
             for t in group:

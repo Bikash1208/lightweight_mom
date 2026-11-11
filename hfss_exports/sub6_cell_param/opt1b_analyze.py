@@ -138,7 +138,7 @@ def main():
     out = ROOT / "analysis"
     out.mkdir(parents=True, exist_ok=True)
     with (out / "every_mode_track.csv").open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fields)
+        writer = csv.DictWriter(f, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         for (geometry, lid, state, direction), group in tracks.items():
             for t in group:

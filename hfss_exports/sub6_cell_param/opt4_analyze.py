@@ -6,13 +6,14 @@ import json
 from pathlib import Path
 
 from opt1b_analyze import make_tracks, match_lids
-from opt4_geometry import GEOMETRIES
+from opt4_geometry import GEOMETRIES as ALL_GEOMETRIES
 from opt4_spec import LIDS, PHASES, cases, variant
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1] / "results" / "sub6_cell_param" / "lab_B_opt4"
 F0 = 5.8
 LID_SHIFT_PCT = 0.5
+GEOMETRIES = [g for g in ALL_GEOMETRIES if g.route == "G-DISC"]
 
 
 def load_tracks(g, lid, state, direction):
@@ -74,7 +75,10 @@ def main():
                                      "absorber_only_Q_le_60": lid == "Z377_150" and t["q_max"] <= 60,
                                      "phase_deg": p["phase_deg"], "mode": p["mode"],
                                      "f_ghz": p["f_ghz"], "q": p["q"]})
-    summary = {"rows_available": len(list((ROOT / "rows").glob("OPT4_*.json"))),
+    summary = {"corrected_g_disc_rows": sum(len(list((ROOT / "rows").glob(
+                   f"OPT4_{variant(g, 'PEC150').replace('.', 'p')}_*.json"))) for g in GEOMETRIES),
+               "closed_g_isl_rows_retained": len(list((ROOT / "rows").glob("OPT4_G-ISL*.json"))),
+               "lid_check": "NOT_REQUESTED_FOR_CORRECTED_G_DISC",
                "q_ge_1000_excluded": False, "absorber_only_q_limit": 60,
                "box_mode_pec_height_shift_limit_pct": LID_SHIFT_PCT,
                "geometries": {}}

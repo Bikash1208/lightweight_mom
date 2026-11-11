@@ -1,5 +1,7 @@
 # Stage 1 anchor — ABORTED
 
+Restart on 2026-11-12 also aborted before meshing; see [RESTART_2026-11-12.md](RESTART_2026-11-12.md). No accepted RF row exists.
+
 ## STATUS
 
 **ABORTED_CONTROLLER_LOST.** No RF row is accepted. All ten own AEDT process trees were stopped by their recorded exact PIDs after all ten Python controllers unexpectedly exited with code 1 while AEDT kept solving. The projects, build reports, and partial solver profiles are retained locally. No FFD, S11, or completed far-field metric exists.

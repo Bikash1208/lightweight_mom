@@ -2,6 +2,8 @@
 
 No Stage 2 model or AEDT solve was run.
 
+Provisional decision-session inputs: placement/cap/taper may be selected by OFF beam balance ≤3 dB and ON B suppression ≥10 dB, testing the minimum diode count first. The bias network is parallel drive with one series resistor per diode added at build, a common return, and an edge connector. Router/exporter work remains paused. Diameter pairing, thickness and cell-response inputs remain pending Stage 1.
+
 ## Sources found
 
 - `gh/compute/sub6-final-board-13pad:scripts/research/sub6_final_design.py` fixes the existing hexagonal N240 island-board design (`side=0.2 m`, `n=240`, placement `a`, taper `0.5`, exclusion enabled). It calls `sub6_board_model4.py`, which uses a layered-medium reference-wave march (`march_rays`/`cell_design`) and calibrated static and switched cell tables. The slot axis follows the desired current angle and radial reference-wave angle; the `flips` array adds 90° where the optimizer selects it.

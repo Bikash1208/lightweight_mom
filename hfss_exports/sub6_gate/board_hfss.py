@@ -36,8 +36,12 @@ def dev_row():
             "r_board": 45.0, "gate_cols": [1, 2], "probe_x": 38.0, "probe_half_y": 20.0, "max_passes": 2}
 
 
+def rows_60():
+    return [dict(r, run_id=r["run_id"] + "_6p0", solve_ghz=6.0) for r in BS.cases()]
+
+
 def all_rows():
-    return {r["run_id"]: r for r in BS.cases()} | {"BOARD_DEV": dev_row()}
+    return ({r["run_id"]: r for r in BS.cases()} | {r["run_id"]: r for r in rows_60()} | {"BOARD_DEV": dev_row()})
 
 
 def nm(prefix, c):
@@ -57,6 +61,72 @@ def set_and_read_back(h, row):
     if bad:
         raise RuntimeError(f"READBACK_MISMATCH {row['run_id']}: {json.dumps(bad)}")
     return rb
+
+
+LINE_DEFS = {   # name: ((x0, y0), (x1, y1), z_above_copper)
+    "PROBE_P3": ((BS.PROBE_X, -BS.PROBE_HALF_Y), (BS.PROBE_X, BS.PROBE_HALF_Y), 3.0),
+    "PROBE_M3": ((-BS.PROBE_X, -BS.PROBE_HALF_Y), (-BS.PROBE_X, BS.PROBE_HALF_Y), 3.0),
+    "PROBE_P1": ((BS.PROBE_X, -BS.PROBE_HALF_Y), (BS.PROBE_X, BS.PROBE_HALF_Y), 1.0),
+    "PROBE_M1": ((-BS.PROBE_X, -BS.PROBE_HALF_Y), (-BS.PROBE_X, BS.PROBE_HALF_Y), 1.0),
+    "RAD_P": ((20.0, 0.0), (95.0, 0.0), 3.0),
+    "RAD_M": ((-20.0, 0.0), (-95.0, 0.0), 3.0),
+}
+
+
+def make_lines(h, row):
+    px, py = row.get("probe_x", BS.PROBE_X), row.get("probe_half_y", BS.PROBE_HALF_Y)
+    existing = set(h.modeler.line_names) if hasattr(h.modeler, "line_names") else set()
+    for name, ((x0, y0), (x1, y1), zc) in LINE_DEFS.items():
+        if name.startswith("PROBE_"):
+            sgn = 1 if name.endswith("P1") or name.endswith("P3") else -1
+            x0, x1, y0, y1 = sgn * px, sgn * px, -py, py
+        if h.modeler.does_object_exist(name) if hasattr(h.modeler, "does_object_exist") else name in h.modeler.object_names:
+            continue
+        GH.require(h.modeler.create_polyline([[x0, y0, G.CU_T + zc], [x1, y1, G.CU_T + zc]], name=name, non_model=True),
+                   "line " + name)
+
+
+def ensure_exprs(h, anchor):
+    fc = h.post.fields_calculator
+    base = {"description": "phasor field magnitude", "design_type": ["HFSS"], "fields_type": ["Fields"], "solution_type": "",
+            "primary_sweep": "Freq", "assignment": "", "assignment_type": ["Line"], "report": ["Data Table", "Rectangular Plot"]}
+    for name, ops in (("CMag_E", ["Fundamental_Quantity('E')", "Operation('Smooth')", "Operation('CmplxMag')", "Operation('Mag')"]),
+                      ("Mag_Ez", ["Fundamental_Quantity('E')", "Operation('Smooth')", "Operation('CmplxMag')", "Operation('ScalarZ')"])):
+        if not fc.is_expression_defined(name):
+            GH.require(fc.add_expression(dict(base, name=name, operations=ops), anchor), "named expression " + name)
+
+
+def line_series(h, line, qty, fs, setup_sol):
+    sd = GH.require(h.post.get_solution_data(expressions=[qty], setup_sweep_name=setup_sol, report_category="Fields",
+                                             context=line, primary_sweep_variable="Distance",
+                                             variations={"Freq": [f"{fs:g}GHz"], "Phase": ["0deg"]}), f"{qty} on {line}")
+    x, y = sd.get_expression_data(sd.expressions[0], formula="real")
+    return [float(v) for v in x], [float(v) for v in y]
+
+
+def field_metrics(h, fs, setup_sol):
+    """Phasor |E| (CMag_E), |Ez| (Mag_Ez) and the phase-0 Mag_E on all lines; radial profiles on a 1 mm grid."""
+    import numpy as np
+    ensure_exprs(h, "PROBE_P3")
+    out = {"lines": {}, "radial": {}}
+    for name in ("PROBE_P3", "PROBE_M3", "PROBE_P1", "PROBE_M1"):
+        rec = {}
+        for q in ("CMag_E", "Mag_E") + (("Mag_Ez",) if name.endswith("1") else ()):
+            x, y = line_series(h, name, q, fs, setup_sol)
+            rec[q] = {"mean": float(np.nanmean(y)), "min": float(np.nanmin(y)), "max": float(np.nanmax(y)), "n": len(y), "n_nan": int(np.isnan(np.array(y)).sum())}
+        out["lines"][name] = rec
+    for name in ("RAD_P", "RAD_M"):
+        d = np.arange(0, 76, 1.0)
+        rec = {"x_mm": [(20.0 + k) * (1 if name == "RAD_P" else -1) for k in d]}
+        for q in ("CMag_E", "Mag_E"):
+            x, y = line_series(h, name, q, fs, setup_sol)
+            rec[q] = [None if v != v else float(v) for v in np.interp(d, np.array(x), np.array(y))]
+        out["radial"][name] = rec
+    L = out["lines"]
+    for z in ("3", "1"):
+        for q in ("CMag_E", "Mag_E"):
+            out[f"behind_over_mirror_dB_{q}_z{z}"] = 20 * math.log10(L[f"PROBE_P{z}"][q]["mean"] / L[f"PROBE_M{z}"][q]["mean"])
+    return out
 
 
 def build(h, row, out: Path):
@@ -155,14 +225,10 @@ def build(h, row, out: Path):
              face([30, 30, zmin]), face([30, 30, zmax])]
     require(h.assign_radiation_boundary_to_faces(faces, name="RAD"), "radiation boundary")
 
-    # --- field probe lines (non-model) at z = 3 mm above copper
-    px, py = row.get("probe_x", BS.PROBE_X), row.get("probe_half_y", BS.PROBE_HALF_Y)
-    pz = G.CU_T + BS.PROBE_Z_ABOVE_CU
-    for nm_, x in (("PROBE_P", px), ("PROBE_M", -px)):
-        require(m.create_polyline([[x, -py, pz], [x, py, pz]], name=nm_, non_model=True), "probe line " + nm_)
-
+    # --- field probe lines (non-model): y-lines at x = +-75 (z = 1 and 3 mm above copper), radial lines y = 0
+    make_lines(h, row)
     sweep_ok = True
-    setup = require(h.create_setup(SETUP, setup_type="HFSSDriven", Frequency=f"{BS.SOLVE_GHZ}GHz",
+    setup = require(h.create_setup(SETUP, setup_type="HFSSDriven", Frequency=f"{row.get('solve_ghz', BS.SOLVE_GHZ):g}GHz",
                                    MaximumPasses=row.get("max_passes", BS.MAX_PASSES), MinimumPasses=1,
                                    MaxDeltaS=BS.MAX_DELTA_S), "driven setup")
     require(h.create_linear_count_sweep(setup=SETUP, unit="GHz", start_frequency=BS.SWEEP[0], stop_frequency=BS.SWEEP[1],
@@ -209,20 +275,10 @@ def extract(h, row, out: Path):
     re_, im_ = _col(sd, "S(1,1)", "real"), _col(sd, "S(1,1)", "imag")
     res["S11"] = [{"f_ghz": a, "S11": [b, c], "abs_S11": math.hypot(b, c),
                    "accepted_fraction": 1 - (b * b + c * c)} for a, b, c in zip(f, re_, im_)]
-    # field lines at 5.8 GHz (adaptive solution)
-    fields = {}
-    for nm_ in ("PROBE_P", "PROBE_M"):
-        gd = GH.require(post.get_solution_data(expressions=["Mag_E"], setup_sweep_name=f"{SETUP} : LastAdaptive",
-                                               report_category="Fields", context=nm_,
-                                               primary_sweep_variable="Distance",
-                                               variations={"Freq": [f"{BS.SOLVE_GHZ}GHz"], "Phase": ["0deg"]}),
-                        "Mag_E on " + nm_)
-        x = [float(v) for v in gd.primary_sweep_values]
-        y = _col(gd, "Mag_E", "real")
-        fields[nm_] = {"n": len(y), "mean_mag_E_V_per_m": float(np.mean(y)), "min": float(np.min(y)), "max": float(np.max(y)),
-                       "dist_first_last_mm": [x[0], x[-1]]}
-    res["field_lines"] = fields
-    res["behind_over_mirror_dB"] = 20 * math.log10(fields["PROBE_P"]["mean_mag_E_V_per_m"] / fields["PROBE_M"]["mean_mag_E_V_per_m"])
+    fs = row.get("solve_ghz", BS.SOLVE_GHZ)
+    res["solve_ghz"] = fs
+    res["field_metrics"] = field_metrics(h, fs, f"{SETUP} : LastAdaptive")
+    res["behind_over_mirror_dB"] = res["field_metrics"]["behind_over_mirror_dB_CMag_E_z3"]
     trap = getattr(np, "trapezoid", None) or np.trapz
     # far field: U = |rETotal|^2 / (2 eta0) for 1 W incident (rETotal reported in mV); one cut per phi
     th = None
@@ -232,7 +288,7 @@ def extract(h, row, out: Path):
     for p_ in phis:
         sd2 = GH.require(post.get_solution_data(expressions=["rETotal"], setup_sweep_name=f"{SETUP} : LastAdaptive",
                                                 report_category="Far Fields", context="FF", primary_sweep_variable="Theta",
-                                                variations={"Freq": [f"{BS.SOLVE_GHZ}GHz"], "Phi": [f"{p_:g}deg"]}),
+                                                variations={"Freq": [f"{fs:g}GHz"], "Phi": [f"{p_:g}deg"]}),
                          f"far field phi {p_}")
         if unit_scale is None:
             unit = sd2.units_data.get("rETotal", "")
@@ -252,7 +308,7 @@ def extract(h, row, out: Path):
     wb = np.where((ph == 90) | (ph == 270), 0.5, np.where((ph > 90) & (ph < 270), 1.0, 0.0))
     p_tot, p_up = float(P_phi.sum()), float(P_phi_up.sum())
     pf, pb = float((P_phi_up * wf).sum()), float((P_phi_up * wb).sum())
-    acc = res["S11"][[abs(r["f_ghz"] - BS.SOLVE_GHZ) < 1e-6 for r in res["S11"]].index(True)]["accepted_fraction"]
+    acc = res["S11"][[abs(r["f_ghz"] - fs) < 1e-6 for r in res["S11"]].index(True)]["accepted_fraction"]
     res["far_field"] = {"n_theta": int(len(th)), "n_phi": len(phis), "radiated_power_W_per_1W_incident": p_tot,
                         "accepted_power_W_per_1W_incident": acc, "radiated_over_accepted": p_tot / acc,
                         "upper_hemisphere_power_W": p_up, "upper_fraction_of_radiated": p_up / p_tot,

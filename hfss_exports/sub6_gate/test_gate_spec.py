@@ -69,6 +69,30 @@ class T(unittest.TestCase):
             self.assertEqual(len(v), 16)
             self.assertEqual(v["lid_h"][0], r["lid_mm"])
 
+    def test_new_rows(self):
+        nr, sd = g.nr_cases(), g.sd_cases()
+        self.assertEqual([r["run_id"] for r in nr], ["NR_D1_slab_H20", "NR_REF_H20", "NR_D2_n2_H20", "NR_D2_n4_H20", "NR_D2_n8_H20"])
+        self.assertEqual(len(sd), 24)
+        self.assertTrue(all(r["renorm"] is False and r["min_passes"] == 4 for r in nr + sd))
+        ids = [r["run_id"] for r in g.all_cases()]
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual(sorted({r["n_gate"] for r in sd}), [1, 2, 3, 4, 5])
+        self.assertEqual({(r["variant"], r["state"]) for r in sd if r["n_gate"] == 3},
+                         {(v, st) for v in ("noline", "ylines") for st in ("OFF", "ON", "OFF_C013", "OFF_C018")})
+        self.assertEqual(g.row_layout(nr[0])[0], [])
+        self.assertAlmostEqual(g.row_layout(nr[0])[1], 2.0)
+        self.assertEqual(len(g.variables_for(sd[0])), 14)
+        self.assertEqual(g.variables_for(sd[-1])["line_w"][0], 0.1)
+
+    def test_sd_dc(self):
+        for v in ("noline", "ylines"):
+            for n in (1, 2, 3, 4, 5):
+                r = g.sd_dc_gate(n, v)
+                self.assertTrue(r["ok"], r)
+                self.assertEqual(len(r["pairs"]), n)
+        self.assertAlmostEqual(g.line_y0(), 4.382022, places=5)
+        self.assertGreater(g.sd_dc_gate(1, "ylines")["clearances_mm"]["cut_to_yline_edge_mm"], 0.15)
+
 
 if __name__ == "__main__":
     unittest.main()

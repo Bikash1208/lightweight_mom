@@ -36,6 +36,11 @@ FREQS_GHZ = [round(FREQ_START + i * FREQ_STEP, 6) for i in range(N_FREQ)]
 MAX_PASSES = 20
 MAX_DELTA_S = 0.01
 MIN_PASSES = 2
+MIN_PASSES_NR = 4          # decision: min 4 passes for the generalised-S (no-renormalisation) rows
+SD_SPLIT_W = 2.9
+LINE_W = 0.1
+LINE_X_OFF = 1.5           # line centre = +-(split_w/2 + 1.5) from the cell centre
+SD_GATE_COUNTS = (1, 2, 3, 4, 5)
 
 
 def bar90_sheet(c_pf=0.15, rp=3000.0, ls_nh=0.4, wl=2.0, f_hz=5.8e9):
@@ -203,14 +208,94 @@ def bench_cases():
     return rows
 
 
+def nr_cases():
+    """Generalised-S re-runs (renormalisation OFF): D1, REF_H20, D2 with 2/4/8 discs. Min 4 passes."""
+    rows = []
+    rs, xs = STATES["OFF"]
+
+    def add(run_id, n_static, kind="BENCH"):
+        rows.append({"run_id": run_id, "kind": kind, "n_gate": 0, "lid_mm": LID_MAIN, "state": None,
+                     "island_l": ISLAND_LENGTHS[0], "Rs": rs, "Xs": xs, "n_static": n_static, "slab_mm": SLAB,
+                     "modes": 1, "renorm": False, "min_passes": MIN_PASSES_NR})
+
+    add("NR_D1_slab_H20", 0)
+    add("NR_REF_H20", 6)
+    for n in (2, 4, 8):
+        add(f"NR_D2_n{n}_H20", n)
+    return rows
+
+
+def sd_cases():
+    """New gate cell SD_w2p9 (no via), variants noline / ylines, H20, generalised S."""
+    rows = []
+    for variant in ("noline", "ylines"):
+        for n in SD_GATE_COUNTS:
+            for st in ("OFF", "ON"):
+                rows.append((variant, n, st))
+        for st in ("OFF_C013", "OFF_C018"):
+            rows.append((variant, 3, st))
+    out = []
+    for variant, n, st in rows:
+        rs, xs = STATES[st]
+        out.append({"run_id": f"SDW2P9_{variant}_N{n}_{st}_H20", "kind": "SDGATE", "variant": variant,
+                    "n_gate": n, "lid_mm": LID_MAIN, "state": st, "island_l": ISLAND_LENGTHS[0], "Rs": rs, "Xs": xs,
+                    "modes": 1, "renorm": False, "min_passes": MIN_PASSES_NR})
+    return out
+
+
+def line_y0():
+    """Start y of a y-line: outer strip edge sits 0.15 mm inside the disc rim (cell2_cell.py)."""
+    x = SD_SPLIT_W / 2 + LINE_X_OFF
+    return math.sqrt(DISC_R ** 2 - (x + LINE_W / 2) ** 2) - 0.15
+
+
+def sd_dc_gate(n_gate: int, variant: str):
+    """Wrapped DC graph for SD gate cells: LEFT/RIGHT halves joined only by the diode; nothing grounded.
+
+    y faces are PMC mirror planes (no wrap connection); neighbouring cells are separated in x by >= 0.365+0.365 mm of
+    air between copper edges, so there are no x edges.  Lines end on the PMC face and join only their own half.
+    """
+    cells, _ = layout(n_gate)
+    plain, diode = {}, []
+    for c in cells:
+        i = c["index"]
+        if c["kind"] == "gate":
+            plain[f"L_{i}"], plain[f"R_{i}"] = set(), set()
+            diode.append((f"L_{i}", f"R_{i}"))
+        else:
+            plain[f"disc_{i}"] = set()
+    with_d = {k: set(v) for k, v in plain.items()}
+    for a, b in diode:
+        with_d[a].add(b)
+        with_d[b].add(a)
+    rep, ok = [], True
+    for a, b in diode:
+        e = {"pair": [a, b], "connected_without_diode": _reach(plain, a, b), "connected_with_diode": _reach(with_d, a, b)}
+        e["ok"] = (not e["connected_without_diode"]) and e["connected_with_diode"]
+        ok &= e["ok"]
+        rep.append(e)
+    # no copper node touches ground (no via): every node is in a component with no 'ground'
+    ok &= "ground" not in plain
+    clear = {"tab_to_opposite_tab_mm": DIODE_GAP, "disc_to_cell_face_mm": PERIOD / 2 - DISC_R,
+             "cut_to_yline_edge_mm": LINE_X_OFF - LINE_W / 2 if variant == "ylines" else None,
+             "line_start_y_mm": line_y0() if variant == "ylines" else None}
+    return {"ok": bool(ok), "pairs": rep, "any_node_grounded": False, "clearances_mm": clear}
+
+
 def all_cases():
-    return cases() + bench_cases()
+    return cases() + bench_cases() + nr_cases() + sd_cases()
 
 
 def variables_for(row):
     """Every AEDT design variable (name -> (value, unit)) that is set and read back for one row."""
-    return {"period": (PERIOD, "mm"), "disc_r": (DISC_R, "mm"), "slot_l": (SLOT_L, "mm"), "slot_w": (SLOT_W, "mm"),
-            "island_l": (row["island_l"], "mm"), "island_w": (ISLAND_W, "mm"), "diode_gap": (DIODE_GAP, "mm"),
-            "diode_w": (DIODE_W, "mm"), "via_r": (VIA_R, "mm"), "pad_r": (PAD_R, "mm"), "rt_t": (RT_T, "mm"),
-            "cu_t": (CU_T, "mm"), "slab": (row.get("slab_mm", SLAB), "mm"), "lid_h": (row["lid_mm"], "mm"),
-            "Rs": (row["Rs"], "ohm"), "Xs": (row["Xs"], "ohm")}
+    v = {"period": (PERIOD, "mm"), "disc_r": (DISC_R, "mm"), "slot_l": (SLOT_L, "mm"), "slot_w": (SLOT_W, "mm"),
+         "diode_gap": (DIODE_GAP, "mm"), "diode_w": (DIODE_W, "mm"), "rt_t": (RT_T, "mm"), "cu_t": (CU_T, "mm"),
+         "slab": (row.get("slab_mm", SLAB), "mm"), "lid_h": (row["lid_mm"], "mm"),
+         "Rs": (row["Rs"], "ohm"), "Xs": (row["Xs"], "ohm")}
+    if row["kind"] == "SDGATE":
+        v["split_w"] = (SD_SPLIT_W, "mm")
+        v["line_w"] = (LINE_W if row["variant"] == "ylines" else 0.0, "mm")
+    else:
+        v.update({"island_l": (row["island_l"], "mm"), "island_w": (ISLAND_W, "mm"), "via_r": (VIA_R, "mm"),
+                  "pad_r": (PAD_R, "mm")})
+    return v

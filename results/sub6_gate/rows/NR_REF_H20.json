@@ -1,0 +1,614 @@
+{
+  "run_id": "NR_REF_H20",
+  "row": {
+    "run_id": "NR_REF_H20",
+    "kind": "BENCH",
+    "n_gate": 0,
+    "lid_mm": 20.0,
+    "state": null,
+    "island_l": 4.348,
+    "Rs": 22.23,
+    "Xs": -335.4,
+    "n_static": 6,
+    "slab_mm": 1.0,
+    "modes": 1,
+    "renorm": false,
+    "min_passes": 4
+  },
+  "variables": {
+    "period": 11.6,
+    "disc_r": 5.435,
+    "slot_l": 8.696,
+    "slot_w": 2.9,
+    "diode_gap": 0.3,
+    "diode_w": 0.6,
+    "rt_t": 3.175,
+    "cu_t": 0.035,
+    "slab": 1.0,
+    "lid_h": 20.0,
+    "Rs": 22.23,
+    "Xs": -335.4,
+    "island_l": 4.348,
+    "island_w": 1.3,
+    "via_r": 0.15,
+    "pad_r": 0.3
+  },
+  "variable_units": {
+    "period": "mm",
+    "disc_r": "mm",
+    "slot_l": "mm",
+    "slot_w": "mm",
+    "diode_gap": "mm",
+    "diode_w": "mm",
+    "rt_t": "mm",
+    "cu_t": "mm",
+    "slab": "mm",
+    "lid_h": "mm",
+    "Rs": "ohm",
+    "Xs": "ohm",
+    "island_l": "mm",
+    "island_w": "mm",
+    "via_r": "mm",
+    "pad_r": "mm"
+  },
+  "readback_si": {
+    "period": 0.0116,
+    "disc_r": 0.005435,
+    "slot_l": 0.008696,
+    "slot_w": 0.0029,
+    "diode_gap": 0.0003,
+    "diode_w": 0.0006,
+    "rt_t": 0.003175,
+    "cu_t": 3.5e-05,
+    "slab": 0.001,
+    "lid_h": 0.02,
+    "Rs": 22.23,
+    "Xs": -335.4,
+    "island_l": 0.004348,
+    "island_w": 0.0013,
+    "via_r": 0.00015,
+    "pad_r": 0.0003,
+    "ground_bottom": -0.00321,
+    "lid_top": 0.020035
+  },
+  "readback_ok": true,
+  "build": {
+    "status": "BUILT",
+    "aedt": "2025.1",
+    "objects": [
+      "DISC_0",
+      "DISC_1",
+      "DISC_2",
+      "DISC_3",
+      "DISC_4",
+      "DISC_5",
+      "RT5880",
+      "GROUND",
+      "AIR",
+      "PORT1_SHEET",
+      "PORT2_SHEET"
+    ],
+    "boundaries": [
+      "PEC_LID",
+      "PEC_GROUND_BOTTOM",
+      "PMC_Y",
+      "P1",
+      "P2"
+    ],
+    "ports": {
+      "P1": true,
+      "P2": true
+    },
+    "n_discs": 6,
+    "n_gate": 0,
+    "total_length_mm": 71.6,
+    "mesh_operations": [],
+    "setup_props": {
+      "Frequency": "5.8GHz",
+      "MaximumPasses": 20,
+      "MinimumPasses": 4,
+      "MaxDeltaS": 0.01,
+      "BasisOrder": 1,
+      "SolveType": "Single",
+      "SaveFields": null
+    },
+    "validation": [
+      "Desktop messages:",
+      "Design validation check PASSED.",
+      "Design validation messages:",
+      "** End of design validation messages. **",
+      "Excitations check:",
+      "Analysis setup messages:",
+      "Detected setup and sweep: ",
+      "Gate",
+      " |__ Sweep"
+    ]
+  },
+  "aedt": "2025.1",
+  "cores": 2,
+  "solve_seconds": 186.6029076576233,
+  "attempt": 1,
+  "dc_gate": null,
+  "label": "HFSS_SIMULATED / NOT_MEASURED",
+  "per_frequency": [
+    {
+      "f_ghz": 5.5,
+      "S11": [
+        0.0689023260584307,
+        -0.353523586137244
+      ],
+      "S21": [
+        -0.908774436188029,
+        -0.185162845758655
+      ],
+      "S12": [
+        -0.908774436188029,
+        -0.185162845758655
+      ],
+      "S22": [
+        0.0688748688929852,
+        -0.353503042009205
+      ],
+      "absorbed_fraction": 0.010117288190086726,
+      "port_zo_ohm": {
+        "Zo(P1)": [
+          640.589220194115,
+          0.149079031139339
+        ],
+        "Zo(P2)": [
+          640.589059620921,
+          0.149079435639214
+        ]
+      },
+      "port_gamma_1_per_m": [
+        0.00557496327373994,
+        120.764825661912
+      ]
+    },
+    {
+      "f_ghz": 5.55,
+      "S11": [
+        -0.00811389291423648,
+        -0.426461140996728
+      ],
+      "S21": [
+        -0.897310263606658,
+        0.00888011958236819
+      ],
+      "S12": [
+        -0.897310263606659,
+        0.00888011958236829
+      ],
+      "S22": [
+        -0.00931763713715839,
+        -0.426412321487932
+      ],
+      "absorbed_fraction": 0.012820494263897975,
+      "port_zo_ohm": {
+        "Zo(P1)": [
+          639.02860097276,
+          0.151476515307804
+        ],
+        "Zo(P2)": [
+          639.028434219229,
+          0.151476935540969
+        ]
+      },
+      "port_gamma_1_per_m": [
+        0.00567102103446608,
+        121.882628011225
+      ]
+    },
+    {
+      "f_ghz": 5.6,
+      "S11": [
+        -0.142631860792542,
+        -0.507857383110075
+      ],
+      "S21": [
+        -0.810631922625673,
+        0.218435469221007
+      ],
+      "S12": [
+        -0.810631922625673,
+        0.218435469221005
+      ],
+      "S22": [
+        -0.145165169963265,
+        -0.507113858527526
+      ],
+      "absorbed_fraction": 0.01689886251384687,
+      "port_zo_ohm": {
+        "Zo(P1)": [
+          637.454048784953,
+          0.153895575203845
+        ],
+        "Zo(P2)": [
+          637.453875665047,
+          0.153896011660481
+        ]
+      },
+      "port_gamma_1_per_m": [
+        0.00576870447750071,
+        123.001079378759
+      ]
+    },
+    {
+      "f_ghz": 5.65,
+      "S11": [
+        -0.377823895190881,
+        -0.55424235035105
+      ],
+      "S21": [
+        -0.605602757165444,
+        0.400799668286754
+      ],
+      "S12": [
+        -0.605602757165446,
+        0.400799668286754
+      ],
+      "S22": [
+        -0.38151937796091,
+        -0.55167479448776
+      ],
+      "absorbed_fraction": 0.022669447714974478,
+      "port_zo_ohm": {
+        "Zo(P1)": [
+          635.865617306908,
+          0.156336025939343
+        ],
+        "Zo(P2)": [
+          635.865437630271,
+          0.156336479122367
+        ]
+      },
+      "port_gamma_1_per_m": [
+        0.00586804860484974,
+        124.120190935977
+      ]
+    },
+    {
+      "f_ghz": 5.7,
+      "S11": [
+        -0.717446877235207,
+        -0.440225785331064
+      ],
+      "S21": [
+        -0.277252042481906,
+        0.430989591508373
+      ],
+      "S12": [
+        -0.277252042481908,
+        0.430989591508377
+      ],
+      "S22": [
+        -0.720925207114307,
+        -0.434458295948475
+      ],
+      "absorbed_fraction": 0.028850513226155172,
+      "port_zo_ohm": {
+        "Zo(P1)": [
+          634.26336318775,
+          0.158797671172161
+        ],
+        "Zo(P2)": [
+          634.263176759622,
+          0.158798141597543
+        ]
+      },
+      "port_gamma_1_per_m": [
+        0.00596908911839081,
+        125.239974024406
+      ]
+    },
+    {
+      "f_ghz": 5.75,
+      "S11": [
+        -0.965909979908691,
+        -0.0414895095328786
+      ],
+      "S21": [
+        -0.0186371896076796,
+        0.185569987860914
+      ],
+      "S12": [
+        -0.0186371896076791,
+        0.185569987860913
+      ],
+      "S22": [
+        -0.966220347889857,
+        -0.0328647138000212
+      ],
+      "absorbed_fraction": 0.030512966080341,
+      "port_zo_ohm": {
+        "Zo(P1)": [
+          632.647346128751,
+          0.161280302780578
+        ],
+        "Zo(P2)": [
+          632.647152749895,
+          0.161280790977697
+        ]
+      },
+      "port_gamma_1_per_m": [
+        0.00607186243095237,
+        126.36044015797
+      ]
+    },
+    {
+      "f_ghz": 5.8,
+      "S11": [
+        -0.8744271961731027,
+        0.4341875620654922
+      ],
+      "S21": [
+        -0.07271475976915946,
+        -0.1270356463128878
+      ],
+      "S12": [
+        -0.07271475976915946,
+        -0.1270356463128879
+      ],
+      "S22": [
+        -0.8702443947802692,
+        0.4424782834794854
+      ],
+      "absorbed_fraction": 0.02543274781805083,
+      "port_zo_ohm": {
+        "Zo(P1)": [
+          631.0176289630168,
+          0.1637837005370207
+        ],
+        "Zo(P2)": [
+          631.0174284296116,
+          0.1637842070490203
+        ]
+      },
+      "port_gamma_1_per_m": [
+        0.006176405677285496,
+        127.4816010252989
+      ]
+    },
+    {
+      "f_ghz": 5.85,
+      "S11": [
+        -0.580648122614594,
+        0.709631508708081
+      ],
+      "S21": [
+        -0.293151711344579,
+        -0.232391075616956
+      ],
+      "S12": [
+        -0.293151711344579,
+        -0.232391075616956
+      ],
+      "S22": [
+        -0.573679134947179,
+        0.715266975652281
+      ],
+      "absorbed_fraction": 0.019327341662179143,
+      "port_zo_ohm": {
+        "Zo(P1)": [
+          629.374277735495,
+          0.166307631781581
+        ],
+        "Zo(P2)": [
+          629.374069839051,
+          0.16630815716573
+        ]
+      },
+      "port_gamma_1_per_m": [
+        0.00628275672490684,
+        128.603468492027
+      ]
+    },
+    {
+      "f_ghz": 5.9,
+      "S11": [
+        -0.285634675318726,
+        0.810190859085994
+      ],
+      "S21": [
+        -0.468943197307834,
+        -0.162201213639282
+      ],
+      "S12": [
+        -0.468943197307833,
+        -0.162201213639283
+      ],
+      "S22": [
+        -0.277737581910241,
+        0.812930289108568
+      ],
+      "absorbed_fraction": 0.0157866481017149,
+      "port_zo_ohm": {
+        "Zo(P1)": [
+          627.717361783273,
+          0.168851851095941
+        ],
+        "Zo(P2)": [
+          627.717146310539,
+          0.168852395924005
+        ]
+      },
+      "port_gamma_1_per_m": [
+        0.00639095418478944,
+        129.726054603052
+      ]
+    },
+    {
+      "f_ghz": 5.95,
+      "S11": [
+        -0.0310706024285656,
+        0.828083514231156
+      ],
+      "S21": [
+        -0.546041711131035,
+        -0.0202369351985954
+      ],
+      "S12": [
+        -0.546041711131034,
+        -0.0202369351985964
+      ],
+      "S22": [
+        -0.0232920208102981,
+        0.828343187562625
+      ],
+      "absorbed_fraction": 0.014741227282164149,
+      "port_zo_ohm": {
+        "Zo(P1)": [
+          626.046953816019,
+          0.171416099978327
+        ],
+        "Zo(P2)": [
+          626.046730548891,
+          0.171416664836961
+        ]
+      },
+      "port_gamma_1_per_m": [
+        0.00650103742187441,
+        130.849371584779
+      ]
+    },
+    {
+      "f_ghz": 6.0,
+      "S11": [
+        0.202545744135945,
+        0.803270792469675
+      ],
+      "S21": [
+        -0.530078183910575,
+        0.131194237462112
+      ],
+      "S12": [
+        -0.530078183910574,
+        0.131194237462113
+      ],
+      "S22": [
+        0.209590647172235,
+        0.801472156289745
+      ],
+      "absorbed_fraction": 0.01553644649635827,
+      "port_zo_ohm": {
+        "Zo(P1)": [
+          624.363129996507,
+          0.174000106520169
+        ],
+        "Zo(P2)": [
+          624.362898711929,
+          0.174000692011308
+        ]
+      },
+      "port_gamma_1_per_m": [
+        0.00661304656537874,
+        131.973431847321
+      ]
+    },
+    {
+      "f_ghz": 6.05,
+      "S11": [
+        0.436345486972411,
+        0.734821372219814
+      ],
+      "S21": [
+        -0.434095023297888,
+        0.251918651889889
+      ],
+      "S12": [
+        -0.43409502329789,
+        0.251918651889891
+      ],
+      "S22": [
+        0.442147897912841,
+        0.731364434720075
+      ],
+      "absorbed_fraction": 0.01773867050578609,
+      "port_zo_ohm": {
+        "Zo(P1)": [
+          622.665970021097,
+          0.176603585085179
+        ],
+        "Zo(P2)": [
+          622.665730490958,
+          0.176604191826455
+        ]
+      },
+      "port_gamma_1_per_m": [
+        0.00672702251887146,
+        133.098247986671
+      ]
+    },
+    {
+      "f_ghz": 6.1,
+      "S11": [
+        0.672979781458612,
+        0.597215384545176
+      ],
+      "S21": [
+        -0.27889679342272,
+        0.302843045956851
+      ],
+      "S12": [
+        -0.278896793422721,
+        0.30284304595685
+      ],
+      "S22": [
+        0.677038850365646,
+        0.592646920490939
+      ],
+      "absorbed_fraction": 0.02093466634457744,
+      "port_zo_ohm": {
+        "Zo(P1)": [
+          620.955557200029,
+          0.179226235991608
+        ],
+        "Zo(P2)": [
+          620.955309191058,
+          0.179226864616743
+        ]
+      },
+      "port_gamma_1_per_m": [
+        0.00684300697008544,
+        134.223832786827
+      ]
+    }
+  ],
+  "gamma_expression": "Gamma(P1)",
+  "gamma_error": null,
+  "report_categories": {
+    "Modal Solution Data": [
+      "S Parameter",
+      "Y Parameter",
+      "Z Parameter",
+      "VSWR",
+      "Gamma",
+      "Port Zo",
+      "Lambda",
+      "Epsilon",
+      "Active S Parameter",
+      "Active Y Parameter",
+      "Active Z Parameter",
+      "Active VSWR",
+      "Passivity",
+      "Design",
+      "Expression Cache",
+      "Expression Converge",
+      "Solution Convergence"
+    ]
+  },
+  "gamma_quantities": {
+    "Gamma": [
+      "Gamma(P1)",
+      "Gamma(P2)"
+    ]
+  },
+  "gamma_candidates": [
+    "Gamma(P1)",
+    "Gamma(P2)"
+  ],
+  "mesh_raw": {
+    "profile_text": "HFSS Profile\n Project: NR_REF_H20\n Design: Gate\n Solution setup: Gate\n Design variation: cu_t='0.035000000000000003mm' diode_gap='0.29999999999999999mm' diode_w='0.59999999999999998mm' disc_r='5.4349999999999996mm' ground_bottom='-3.21mm' island_l='4.3479999999999999mm' island_w='1.3mm' lid_h='20mm' lid_top='20.035mm' pad_r='0.29999999999999999mm' period='11.6mm' Rs='22.23ohm' rt_t='3.1749999999999998mm' slab='1mm' slot_l='8.6959999999999997mm' slot_w='2.8999999999999999mm' via_r='0.14999999999999999mm' Xs='-335.39999999999998ohm'\n\n  Task                 Real Time  CPU Time  Memory  Information\n  ----                 ---------  --------  ------  -----------\n\n  Solution Process                                  Start Time: 11/11/2026 17:12:44, Host: WIN-D4BKN5G2BK3, Processor: 64, OS: NT 10.0, Product: HFSS Version 2025.1.0\n                                                    Executing From: C:\\Program Files\\ANSYS Inc\\v251\\AnsysEM\\HFSSCOMENGINE.exe\n                                                    \n  HPC                                               Type: Auto, MPI Vendor: Intel, MPI Version: 2021\n  Machine                                           Name: WIN-D4BKN5G2BK3, Memory: 256 GB, RAM Limit: 90.000000%, Cores: 2, Free Disk Space: 455 GB\n                                                    \n                                                    Allow off core: True\n                                                    Solution Basis Order: 1\n  Design Validation                                 Elapsed time : 00:00:00 , HFSS ComEngine Memory : 70.5 M\n                                                    Perform full validations with standard port validations\n                                                    \n  Initial Meshing                                   Time: 11/11/2026 17:12:44\n  Mesh                 00:00:00   00:00:00  37.7 M  Type: Phi, Tetrahedra: 1940\n  Post                 00:00:00   00:00:00  42.5 M  Tetrahedra: 2586, Cores: 1\n  Lambda Refine        00:00:00   00:00:00  23.3 M  Tetrahedra: 2945, Cores: 1\n  Simulation Setup     00:00:00   00:00:00  171 M   Disk: 0 Bytes\n  Port Adapt           00:00:01   00:00:01  185 M   Tetrahedra: 2279, Disk: 81.6 KB\n  Port Refine          00:00:00   00:00:00  23.3 M  Tetrahedra: 3248, Cores: 1\n  Initial Meshing                                   Elapsed Time: 00:00:03\n                                                    \n  Adaptive Meshing                                  Time: 11/11/2026 17:12:47\n                                                    \n  Adaptive Pass 1                                   Frequency: 5.8GHz\n  Simulation Setup     00:00:00   00:00:00  174 M   Tetrahedra: 2572, Disk: 3.41 KB\n  Matrix Assembly      00:00:00   00:00:00  189 M   Tetrahedra: 2572, P1 Triangles: 91, P2 Triangles: 92, Disk: 39.7 KB\n  Matrix Solve         00:00:00   00:00:00  222 M   Type: DCS, Cores: 2, Matrix size: 14028, Matrix bandwidth:  17.6, Disk: 58 KB\n  Field Recovery       00:00:00   00:00:00  222 M   Excitations: 2, Disk: 309 KB\n  Data Transfer        00:00:00   00:00:00  73.2 M  Adaptive Pass 1\n                                                    \n  Adaptive Pass 2                                   Frequency: 5.8GHz\n  Adaptive Refine      00:00:00   00:00:00  25.1 M  Tetrahedra: 4025, Cores: 1\n  Simulation Setup     00:00:00   00:00:00  176 M   Tetrahedra: 3241, Disk: 3.41 KB\n  Matrix Assembly      00:00:00   00:00:00  194 M   Tetrahedra: 3241, P1 Triangles: 95, P2 Triangles: 92, Disk: 1.02 KB\n  Matrix Solve         00:00:00   00:00:00  238 M   Type: DCS, Cores: 2, Matrix size: 18122, Matrix bandwidth:  18.2, Disk: 72.4 KB\n  Field Recovery       00:00:00   00:00:00  238 M   Excitations: 2, Disk: 125 KB\n  Data Transfer        00:00:00   00:00:00  73.5 M  Adaptive Pass 2\n                                                    Max Mag. Delta S: 0.32951\n                                                    \n  Adaptive Pass 3                                   Frequency: 5.8GHz\n  Adaptive Refine      00:00:00   00:00:00  26.5 M  Tetrahedra: 4945, Cores: 1\n  Simulation Setup     00:00:00   00:00:00  178 M   Tetrahedra: 4063, Disk: 4.17 KB\n  Matrix Assembly      00:00:00   00:00:00  200 M   Tetrahedra: 4063, P1 Triangles: 97, P2 Triangles: 94, Disk: 1.03 KB\n  Matrix Solve         00:00:00   00:00:01  258 M   Type: DCS, Cores: 2, Matrix size: 23176, Matrix bandwidth:  18.7, Disk: 92.1 KB\n  Field Recovery       00:00:00   00:00:00  258 M   Excitations: 2, Disk: 155 KB\n  Data Transfer        00:00:00   00:00:00  73.8 M  Adaptive Pass 3\n                                                    Max Mag. Delta S: 0.24321\n                                                    \n  Adaptive Pass 4                                   Frequency: 5.8GHz\n  Adaptive Refine      00:00:00   00:00:00  29.5 M  Tetrahedra: 6173, Cores: 1\n  Simulation Setup     00:00:00   00:00:00  181 M   Tetrahedra: 5232, Disk: 3.21 KB\n  Matrix Assembly      00:00:00   00:00:01  208 M   Tetrahedra: 5232, P1 Triangles: 101, P2 Triangles: 96, Disk: 1.54 KB\n  Matrix Solve         00:00:00   00:00:01  295 M   Type: DCS, Cores: 2, Matrix size: 30522, Matrix bandwidth:  19.3, Disk: 121 KB\n  Field Recovery       00:00:00   00:00:00  295 M   Excitations: 2, Disk: 211 KB\n  Data Transfer        00:00:00   00:00:00  73.8 M  Adaptive Pass 4\n                                                    Max Mag. Delta S: 0.04100\n                                                    \n  Adaptive Pass 5                                   Frequency: 5.8GHz\n  Adaptive Refine      00:00:00   00:00:00  31.5 M  Tetrahedra: 7732, Cores: 1\n  Simulation Setup     00:00:00   00:00:00  184 M   Tetrahedra: 6714, Disk: 3.21 KB\n  Matrix Assembly      00:00:00   00:00:01  217 M   Tetrahedra: 6714, P1 Triangles: 101, P2 Triangles: 96, Disk: 0 Bytes\n  Matrix Solve         00:00:00   00:00:01  335 M   Type: DCS, Cores: 2, Matrix size: 39806, Matrix bandwidth:  19.8, Disk: 157 KB\n  Field Recovery       00:00:00   00:00:00  335 M   Excitations: 2, Disk: 270 KB\n  Data Transfer        00:00:00   00:00:00  73.8 M  Adaptive Pass 5\n                                                    Max Mag. Delta S: 0.19132\n                                                    \n  Adaptive Pass 6                                   Frequency: 5.8GHz\n  Adaptive Refine      00:00:00   00:00:00  31.9 M  Tetrahedra: 9756, Cores: 1\n  Simulation Setup     00:00:00   00:00:00  189 M   Tetrahedra: 8609, Disk: 4.55 KB\n  Matrix Assembly      00:00:00   00:00:01  231 M   Tetrahedra: 8609, P1 Triangles: 103, P2 Triangles: 97, Disk: 777 Bytes\n  Matrix Solve         00:00:01   00:00:02  398 M   Type: DCS, Cores: 2, Matrix size: 51670, Matrix bandwidth:  20.2, Disk: 203 KB\n  Field Recovery       00:00:00   00:00:00  398 M   Excitations: 2, Disk: 346 KB\n  Data Transfer        00:00:00   00:00:00  73.8 M  Adaptive Pass 6\n                                                    Max Mag. Delta S: 0.06639\n                                                    \n  Adaptive Pass 7                                   Frequency: 5.8GHz\n  Adaptive Refine      00:00:00   00:00:00  34.8 M  Tetrahedra: 12340, Cores: 1\n  Simulation Setup     00:00:00   00:00:00  194 M   Tetrahedra: 11005, Disk: 4.94 KB\n  Matrix Assembly      00:00:01   00:00:02  248 M   Tetrahedra: 11005, P1 Triangles: 103, P2 Triangles: 99, Disk: 526 Bytes\n  Matrix Solve         00:00:01   00:00:03  470 M   Type: DCS, Cores: 2, Matrix size: 66592, Matrix bandwidth:  20.4, Disk: 262 KB\n  Field Recovery       00:00:00   00:00:00  470 M   Excitations: 2, Disk: 442 KB\n  Data Transfer        00:00:00   00:00:00  73.9 M  Adaptive Pass 7\n                                                    Max Mag. Delta S: 0.11368\n                                                    \n  Adaptive Pass 8                                   Frequency: 5.8GHz\n  Adaptive Refine      00:00:00   00:00:00  37.1 M  Tetrahedra: 15020, Cores: 1\n  Simulation Setup     00:00:00   00:00:00  205 M   Tetrahedra: 13508, Disk: 2.83 KB\n  Matrix Assembly      00:00:01   00:00:02  266 M   Tetrahedra: 13508, P1 Triangles: 103, P2 Triangles: 99, Disk: 2 Bytes\n  Matrix Solve         00:00:02   00:00:04  562 M   Type: DCS, Cores: 2, Matrix size: 82150, Matrix bandwidth:  20.6, Disk: 323 KB\n  Field Recovery       00:00:00   00:00:00  562 M   Excitations: 2, Disk: 497 KB\n  Data Transfer        00:00:00   00:00:00  73.9 M  Adaptive Pass 8\n                                                    Max Mag. Delta S: 0.05048\n                                                    \n  Adaptive Pass 9                                   Frequency: 5.8GHz\n  Adaptive Refine      00:00:01   00:00:01  42.6 M  Tetrahedra: 18982, Cores: 1\n  Simulation Setup     00:00:00   00:00:00  214 M   Tetrahedra: 17177, Disk: 8.43 KB\n  Matrix Assembly      00:00:01   00:00:03  291 M   Tetrahedra: 17177, P1 Triangles: 103, P2 Triangles: 102, Disk: 781 Bytes\n  Matrix Solve         00:00:03   00:00:05  685 M   Type: DCS, Cores: 2, Matrix size: 104924, Matrix bandwidth:  20.7, Disk: 411 KB\n  Field Recovery       00:00:00   00:00:01  685 M   Excitations: 2, Disk: 687 KB\n  Data Transfer        00:00:00   00:00:00  74 M    Adaptive Pass 9\n                                                    Max Mag. Delta S: 0.03101\n                                                    \n  Adaptive Pass 10                                  Frequency: 5.8GHz\n  Adaptive Refine      00:00:01   00:00:01  47.4 M  Tetrahedra: 24143, Cores: 1\n  Simulation Setup     00:00:00   00:00:00  226 M   Tetrahedra: 21940, Disk: 11.5 KB\n  Matrix Assembly      00:00:02   00:00:03  326 M   Tetrahedra: 21940, P1 Triangles: 103, P2 Triangles: 103, Disk: 255 Bytes\n  Matrix Solve         00:00:04   00:00:07  855 M   Type: DCS, Cores: 2, Matrix size: 134422, Matrix bandwidth:  20.9, Disk: 527 KB\n  Field Recovery       00:00:00   00:00:01  855 M   Excitations: 2, Disk: 888 KB\n  Data Transfer        00:00:00   00:00:00  74 M    Adaptive Pass 10\n                                                    Max Mag. Delta S: 0.01764\n                                                    \n  Adaptive Pass 11                                  Frequency: 5.8GHz\n  Adaptive Refine      00:00:02   00:00:02  55.6 M  Tetrahedra: 30735, Cores: 1\n  Simulation Setup     00:00:00   00:00:00  239 M   Tetrahedra: 28014, Disk: 10.6 KB\n  Matrix Assembly      00:00:02   00:00:04  366 M   Tetrahedra: 28014, P1 Triangles: 103, P2 Triangles: 105, Disk: 523 Bytes\n  Matrix Solve         00:00:05   00:00:10  1.05 G  Type: DCS, Cores: 2, Matrix size: 171992, Matrix bandwidth:  20.9, Disk: 673 KB\n  Field Recovery       00:00:00   00:00:01  1.05 G  Excitations: 2, Disk: 1.11 MB\n  Data Transfer        00:00:00   00:00:00  74.2 M  Adaptive Pass 11\n                                                    Max Mag. Delta S: 0.02896\n                                                    \n  Adaptive Pass 12                                  Frequency: 5.8GHz\n  Adaptive Refine      00:00:01   00:00:01  53.3 M  Tetrahedra: 34178, Cores: 1\n  Simulation Setup     00:00:00   00:00:00  247 M   Tetrahedra: 31220, Disk: 14.6 KB\n  Matrix Assembly      00:00:03   00:00:05  388 M   Tetrahedra: 31220, P1 Triangles: 103, P2 Triangles: 105, Disk: 1 Bytes\n  Matrix Solve         00:00:06   00:00:10  1.15 G  Type: DCS, Cores: 2, Matrix size: 191832, Matrix bandwidth:  21.0, Disk: 751 KB\n  Field Recovery       00:00:01   00:00:02  1.15 G  Excitations: 2, Disk: 885 KB\n  Data Transfer        00:00:00   00:00:00  74.2 M  Adaptive Pass 12\n                                                    Max Mag. Delta S: 0.00861\n                                                    \n  Adaptive Meshing                                  Elapsed Time: 00:01:24\n                                                    Adaptive Passes converged\n                                                    \n  Frequency Sweep                                   Time: 11/11/2026 17:14:12\n                                                    HPC: Enabled\n                                                    \n  Solution - Sweep                                  Discrete HFSS Frequency Sweep, Solving Distributed - up to 2 frequencies in parallel, Time: 11/11/2026 17:14:12\n                                                    From 5.5GHz to 6.1GHz, 13 Frequencies\n                                                    Frequency: 5.8GHz has already been solved\n                                                    \n  Frequency - 6.1GHz                                WIN-D4BKN5G2BK3\n  Simulation Setup     00:00:00   00:00:00  241 M   Tetrahedra: 31220, Disk: 0 Bytes\n  Matrix Assembly      00:00:04   00:00:04  326 M   Tetrahedra: 31220, P1 Triangles: 103, P2 Triangles: 105, Disk: 0 Bytes\n  Matrix Solve         00:00:09   00:00:08  525 M   Type: DCS, Cores: 1, Matrix size: 191832, Matrix bandwidth:  21.0, s-matrix only solve, Disk: 751 KB\n  Field Recovery       00:00:00   00:00:00  525 M   Excitations: 2, Disk: 3.5 KB\n                                                    \n  Frequency - 6.05GHz                               WIN-D4BKN5G2BK3\n  Simulation Setup     00:00:00   00:00:00  242 M   Tetrahedra: 31220, Disk: 0 Bytes\n  Matrix Assembly      00:00:04   00:00:04  326 M   Tetrahedra: 31220, P1 Triangles: 103, P2 Triangles: 105, Disk: 0 Bytes\n  Matrix Solve         00:00:09   00:00:08  525 M   Type: DCS, Cores: 1, Matrix size: 191832, Matrix bandwidth:  21.0, s-matrix only solve, Disk: 751 KB\n  Field Recovery       00:00:00   00:00:00  525 M   Excitations: 2, Disk: 3.5 KB\n                                                    \n  Frequency - 6GHz                                  WIN-D4BKN5G2BK3\n  Simulation Setup     00:00:00   00:00:00  242 M   Tetrahedra: 31220, Disk: 0 Bytes\n  Matrix Assembly      00:00:04   00:00:03  326 M   Tetrahedra: 31220, P1 Triangles: 103, P2 Triangles: 105, Disk: 1 Bytes\n  Matrix Solve         00:00:05   00:00:05  525 M   Type: DCS, Cores: 1, Matrix size: 191832, Matrix bandwidth:  21.0, s-matrix only solve, Disk: 1.62 KB\n  Field Recovery       00:00:00   00:00:00  525 M   Excitations: 2, Disk: 3.5 KB\n                                                    \n  Frequency - 5.95GHz                               WIN-D4BKN5G2BK3\n  Simulation Setup     00:00:00   00:00:00  242 M   Tetrahedra: 31220, Disk: 0 Bytes\n  Matrix Assembly      00:00:04   00:00:03  325 M   Tetrahedra: 31220, P1 Triangles: 103, P2 Triangles: 105, Disk: 1 Bytes\n  Matrix Solve         00:00:05   00:00:05  524 M   Type: DCS, Cores: 1, Matrix size: 191832, Matrix bandwidth:  21.0, s-matrix only solve, Disk: 1.62 KB\n  Field Recovery       00:00:00   00:00:00  524 M   Excitations: 2, Disk: 3.51 KB\n                                                    \n  Frequency - 5.9GHz                                WIN-D4BKN5G2BK3\n  Simulation Setup     00:00:00   00:00:00  242 M   Tetrahedra: 31220, Disk: 0 Bytes\n  Matrix Assembly      00:00:04   00:00:04  326 M   Tetrahedra: 31220, P1 Triangles: 103, P2 Triangles: 105, Disk: 0 Bytes\n  Matrix Solve         00:00:05   00:00:05  525 M   Type: DCS, Cores: 1, Matrix size: 191832, Matrix bandwidth:  21.0, s-matrix only solve, Disk: 1.62 KB\n  Field Recovery       00:00:00   00:00:00  525 M   Excitations: 2, Disk: 3.51 KB\n                                                    \n  Frequency - 5.85GHz                               WIN-D4BKN5G2BK3\n  Simulation Setup     00:00:00   00:00:00  242 M   Tetrahedra: 31220, Disk: 0 Bytes\n  Matrix Assembly      00:00:04   00:00:04  326 M   Tetrahedra: 31220, P1 Triangles: 103, P2 Triangles: 105, Disk: 38 Bytes\n  Matrix Solve         00:00:05   00:00:05  524 M   Type: DCS, Cores: 1, Matrix size: 191832, Matrix bandwidth:  21.0, s-matrix only solve, Disk: 1.62 KB\n  Field Recovery       00:00:00   00:00:00  524 M   Excitations: 2, Disk: 3.51 KB\n                                                    \n  Frequency - 5.75GHz                               WIN-D4BKN5G2BK3\n  Simulation Setup     00:00:00   00:00:00  242 M   Tetrahedra: 31220, Disk: 0 Bytes\n  Matrix Assembly      00:00:04   00:00:04  326 M   Tetrahedra: 31220, P1 Triangles: 103, P2 Triangles: 105, Disk: 42 Bytes\n  Matrix Solve         00:00:04   00:00:04  524 M   Type: DCS, Cores: 1, Matrix size: 191832, Matrix bandwidth:  21.0, s-matrix only solve, Disk: 1.62 KB\n  Field Recovery       00:00:00   00:00:00  524 M   Excitations: 2, Disk: 3.51 KB\n                                                    \n  Frequency - 5.7GHz                                WIN-D4BKN5G2BK3\n  Simulation Setup     00:00:00   00:00:00  242 M   Tetrahedra: 31220, Disk: 0 Bytes\n  Matrix Assembly      00:00:04   00:00:04  327 M   Tetrahedra: 31220, P1 Triangles: 103, P2 Triangles: 105, Disk: 4 Bytes\n  Matrix Solve         00:00:04   00:00:04  525 M   Type: DCS, Cores: 1, Matrix size: 191832, Matrix bandwidth:  21.0, s-matrix only solve, Disk: 1.62 KB\n  Field Recovery       00:00:00   00:00:00  525 M   Excitations: 2, Disk: 3.51 KB\n                                                    \n  Frequency - 5.65GHz                               WIN-D4BKN5G2BK3\n  Simulation Setup     00:00:00   00:00:00  242 M   Tetrahedra: 31220, Disk: 0 Bytes\n  Matrix Assembly      00:00:04   00:00:04  326 M   Tetrahedra: 31220, P1 Triangles: 103, P2 Triangles: 105, Disk: 0 Bytes\n  Matrix Solve         00:00:05   00:00:05  525 M   Type: DCS, Cores: 1, Matrix size: 191832, Matrix bandwidth:  21.0, s-matrix only solve, Disk: 1.62 KB\n  Field Recovery       00:00:00   00:00:00  525 M   Excitations: 2, Disk: 3.51 KB\n                                                    \n  Frequency - 5.6GHz                                WIN-D4BKN5G2BK3\n  Simulation Setup     00:00:00   00:00:00  242 M   Tetrahedra: 31220, Disk: 0 Bytes\n  Matrix Assembly      00:00:04   00:00:03  327 M   Tetrahedra: 31220, P1 Triangles: 103, P2 Triangles: 105, Disk: 0 Bytes\n  Matrix Solve         00:00:04   00:00:04  526 M   Type: DCS, Cores: 1, Matrix size: 191832, Matrix bandwidth:  21.0, s-matrix only solve, Disk: 1.62 KB\n  Field Recovery       00:00:00   00:00:00  526 M   Excitations: 2, Disk: 3.51 KB\n                                                    \n  Frequency - 5.55GHz                               WIN-D4BKN5G2BK3\n  Simulation Setup     00:00:00   00:00:00  242 M   Tetrahedra: 31220, Disk: 0 Bytes\n  Matrix Assembly      00:00:04   00:00:03  327 M   Tetrahedra: 31220, P1 Triangles: 103, P2 Triangles: 105, Disk: 0 Bytes\n  Matrix Solve         00:00:04   00:00:04  526 M   Type: DCS, Cores: 1, Matrix size: 191832, Matrix bandwidth:  21.0, s-matrix only solve, Disk: 1.62 KB\n  Field Recovery       00:00:00   00:00:00  526 M   Excitations: 2, Disk: 3.51 KB\n                                                    \n  Frequency - 5.5GHz                                WIN-D4BKN5G2BK3\n  Simulation Setup     00:00:00   00:00:00  242 M   Tetrahedra: 31220, Disk: 0 Bytes\n  Matrix Assembly      00:00:04   00:00:03  326 M   Tetrahedra: 31220, P1 Triangles: 103, P2 Triangles: 105, Disk: 0 Bytes\n  Matrix Solve         00:00:05   00:00:05  525 M   Type: DCS, Cores: 1, Matrix size: 191832, Matrix bandwidth:  21.0, s-matrix only solve, Disk: 1.62 KB\n  Field Recovery       00:00:00   00:00:00  525 M   Excitations: 2, Disk: 3.51 KB\n                                                    \n  Data Transfer        00:00:00   00:00:00  74.7 M  Discrete frequency sweep\n                                                    \n  Solution - Sweep                                  Elapsed Time: 00:01:18\n                                                    HFSS: Distributed Discrete sweep\n                                                    \n  Frequency Sweep                                   Elapsed Time: 00:01:22\n                                                    \n  Simulation Summary                                \n  Design Validation                                 Elapsed Time: 00:00:00, Total Memory: 70.5 MB\n  Initial Meshing                                   Elapsed Time: 00:00:03, Total Memory: 228 MB\n  Adaptive Meshing                                  Elapsed Time: 00:01:24, Average memory/process: 1.16 GB, Max memory/process: 1.15 GB, Max number of processes/frequency: 1, Total number of cores: 2\n  Frequency Sweep                                   Elapsed Time: 00:01:22, Average memory/process: 526 MB, Max memory/process: 526 MB, Max number of processes/frequency: 1, Total number of cores: 2\n                                                    Max solved tets: 31220, Max matrix size: 191832, Matrix bandwidth: 21.0\n                                                    \n  Solution Process                                  Elapsed Time: 00:02:50, ComEngine Memory: 76.4 M\n                                                    Stop Time: 11/11/2026 17:15:34, Status: Normal Completion\n                                                    \n",
+    "convergence_text": "DesignVariation : cu_t='0.035000000000000003mm' diode_gap='0.29999999999999999mm' diode_w='0.59999999999999998mm' disc_r='5.4349999999999996mm' ground_bottom='-3.2099999999999995mm' island_l='4.3479999999999999mm' island_w='1.3mm' lid_h='20mm' lid_top='20.035mm' pad_r='0.29999999999999999mm' period='11.6mm' Rs='22.23ohm' rt_t='3.1749999999999998mm' slab='1mm' slot_l='8.6959999999999997mm' slot_w='2.8999999999999999mm' via_r='0.14999999999999999mm' Xs='-335.39999999999998ohm'\nSetup : Gate\n\n==================\nNumber of Passes\nCompleted : 12\nMaximum   : 20\nMinimum   : 4\n==================\nCriterion : Max Mag. Delta S\nTarget    : 0.01\nCurrent   : 0.0086144\nTarget Consecutive Passes  : 1\nCurrent Consecutive Passes : 1\nConverged : Yes\n==================\nPass Number|Solved Elements|Max Mag. Delta S|\n          1|           2572|             N/A|\n          2|           3241|         0.32951|\n          3|           4063|         0.24321|\n          4|           5232|        0.041002|\n          5|           6714|         0.19132|\n          6|           8609|        0.066395|\n          7|          11005|         0.11368|\n          8|          13508|        0.050484|\n          9|          17177|        0.031006|\n         10|          21940|        0.017635|\n         11|          28014|        0.028961|\n         12|          31220|       0.0086144|\n\n"
+  }
+}

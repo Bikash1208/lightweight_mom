@@ -70,6 +70,34 @@ def set_and_read_back(h, row):
     return rb
 
 
+def build_sd_cell(m, box, cyl, i, xc, lines, xc_num):
+    """SD_w2p9 gate cell (cell2_cell.py family SD): disc split along y by a full-length split_w cut, tabs +-0.30 in y
+    reaching a 0.30 mm gap at the centre, no via. Optional y-lines at x = +-(split_w/2 + 1.5)."""
+    half = {}
+    for tag, sign in (("L", -1), ("R", 1)):
+        d = cyl(f"SD{tag}_{i}", xc, "0mm", "0mm", "disc_r", "cu_t")
+        if sign < 0:
+            origin = [f"{xc}-split_w/2", "-period/2-0.1mm", "-cu_t"]
+        else:
+            origin = [f"{xc}-period/2-0.1mm", "-period/2-0.1mm", "-cu_t"]
+        cut = box(f"SD{tag}_CUT_{i}", origin, ["period/2+split_w/2+0.1mm", "period+0.2mm", "3*cu_t"], "vacuum")
+        require(m.subtract(d.name, cut.name, keep_originals=False), f"SD{tag} split {i}")
+        tab_x = f"{xc}-split_w/2" if sign < 0 else f"{xc}+diode_gap/2"
+        tab = box(f"SD{tag}_TAB_{i}", [tab_x, "-diode_w/2", "0mm"], ["split_w/2-diode_gap/2", "diode_w", "cu_t"])
+        parts = [d.name, tab.name]
+        if lines:
+            x = sign * (S.SD_SPLIT_W / 2 + S.LINE_X_OFF)
+            y0 = S.line_y0()
+            ylen = S.PERIOD / 2 - y0
+            up = box(f"SD{tag}_YLINE_{i}", [f"{xc_num + x - S.LINE_W / 2:.9f}mm", f"{y0:.9g}mm", "0mm"],
+                     ["line_w", f"{ylen:.9g}mm", "cu_t"])
+            lo = box(f"SD{tag}_RECV_{i}", [f"{xc_num + x - S.LINE_W / 2:.9f}mm", "-period/2", "0mm"],
+                     ["line_w", f"{ylen:.9g}mm", "cu_t"])
+            parts += [up.name, lo.name]
+        require(m.unite(parts), f"SD{tag} union {i}")
+        half[tag] = parts[0]
+
+
 def build(h, row, out: Path):
     """Build the strip. Copper/via/ground follow opt4_cell.py (G-ISL-noline) exactly; see FLAGS in the report."""
     cells, total = S.row_layout(row)
@@ -92,8 +120,13 @@ def build(h, row, out: Path):
     def cyl(name, x, y, z, r, hgt, material="pec"):
         return require(m.create_cylinder("Z", [x, y, z], r, hgt, name=name, material=material), "create " + name)
 
+    sd = row["kind"] == "SDGATE"
+    lines = sd and row["variant"] == "ylines"
     for c in cells:
         i, xc = c["index"], f"{c['xc']:.9f}mm"
+        if sd and c["kind"] == "gate":
+            build_sd_cell(m, box, cyl, i, xc, lines, c["xc"])
+            continue
         disc = cyl(f"DISC_{i}", xc, "0mm", "0mm", "disc_r", "cu_t")
         slot = box(f"SLOT_{i}", [f"{xc}-slot_w/2", "-slot_l/2", "-cu_t"], ["slot_w", "slot_l", "3*cu_t"], "vacuum")
         require(m.subtract(disc.name, slot.name, keep_originals=False), f"slot subtraction {i}")
@@ -101,7 +134,7 @@ def build(h, row, out: Path):
     ground = box("GROUND", [f"{x0:.9f}mm", "-period/2", "ground_bottom"], [f"{total:.9f}mm", "period", "cu_t"])
     air = box("AIR", [f"{x0:.9f}mm", "-period/2", "0mm"], [f"{total:.9f}mm", "period", "cu_t+lid_h"], "vacuum")
     glue = []
-    for c in gate_cells:
+    for c in ([] if sd else gate_cells):
         i, xc = c["index"], f"{c['xc']:.9f}mm"
         vx = f"{xc}-slot_w/2+diode_gap+island_w/2"           # island centroid x = via x
         isl = box(f"ISLAND_{i}", [f"{xc}-slot_w/2+diode_gap", "-island_l/2", "0mm"], ["island_w", "island_l", "cu_t"])
@@ -115,7 +148,8 @@ def build(h, row, out: Path):
         require(m.unite([ground.name] + glue), "island + via + pad + solid ground united")
     sheets = []
     for c in gate_cells:
-        sh = require(m.create_rectangle("XY", [f"{c['xc']:.9f}mm-slot_w/2", "-diode_w/2", "cu_t/2"],
+        x_sheet = f"{c['xc']:.9f}mm-diode_gap/2" if sd else f"{c['xc']:.9f}mm-slot_w/2"
+        sh = require(m.create_rectangle("XY", [x_sheet, "-diode_w/2", "cu_t/2"],
                                        ["diode_gap", "diode_w"], name=f"DIODE_{c['index']}", material="vacuum"),
                      "diode sheet")
         sheets.append(sh.name)
@@ -129,11 +163,15 @@ def build(h, row, out: Path):
     require(h.assign_perfect_e([face([0, 0, -S.RT_T - S.CU_T], "GROUND")], name="PEC_GROUND_BOTTOM"), "PEC ground bottom")
     # Mirror symmetry about y = 0 (decision 1): y faces are even-symmetry planes -> Perfect H, full height.
     # STOP if any copper (disc, island, pad, via) reaches a y face.
-    for n in (c["index"] for c in cells):
-        bb = m[f"DISC_{n}"].bounding_box          # xmin, ymin, zmin, xmax, ymax, zmax (mm)
-        if bb[1] <= -P2 + 1e-6 or bb[4] >= P2 - 1e-6:
-            raise RuntimeError(f"STOP: DISC_{n} touches a y face, bbox {bb}")
-    if gate_cells and S.ISLAND_LENGTHS and row["island_l"] / 2 >= P2 - 1e-6:
+    for c in cells:
+        n = c["index"]
+        names = [f"SDL_{n}", f"SDR_{n}"] if (sd and c["kind"] == "gate") else [f"DISC_{n}"]
+        for nm in names:
+            bb = m[nm].bounding_box          # xmin, ymin, zmin, xmax, ymax, zmax (mm)
+            touches = bb[1] <= -P2 + 1e-6 or bb[4] >= P2 - 1e-6
+            if touches and not (lines and nm.startswith("SD")):      # y-lines may end on the PMC face (decision)
+                raise RuntimeError(f"STOP: {nm} touches a y face, bbox {bb}")
+    if gate_cells and not sd and row["island_l"] / 2 >= P2 - 1e-6:
         raise RuntimeError("STOP: island touches a y face")
     yfaces = [face([0, -P2, lid_top / 2], "AIR"), face([0, P2, lid_top / 2], "AIR")]
     yfaces += [face([0, -P2, -S.RT_T / 2], "RT5880"), face([0, P2, -S.RT_T / 2], "RT5880")]
@@ -144,11 +182,11 @@ def build(h, row, out: Path):
                                            name=f"PORT{n}_SHEET", material="vacuum"), "port sheet")
         port = h.wave_port(sheet.name, integration_line=[[f"{x:.9f}mm", "0mm", f"{-S.RT_T:.9f}mm"],
                                           [f"{x:.9f}mm", "0mm", f"{S.CU_T + row['lid_mm']:.9f}mm"]],
-                           modes=row.get("modes", 1), impedance=50, name=f"P{n}", renormalize=True, deembed=0)
+                           modes=row.get("modes", 1), impedance=50, name=f"P{n}", renormalize=row.get("renorm", True), deembed=0)
         ports[f"P{n}"] = bool(port)
         require(port, f"wave port {n} rejected")
     setup = require(h.create_setup(SETUP, setup_type="HFSSDriven", Frequency=f"{S.SOLVE_FREQ_GHZ}GHz",
-                                   MaximumPasses=S.MAX_PASSES, MinimumPasses=S.MIN_PASSES,
+                                   MaximumPasses=S.MAX_PASSES, MinimumPasses=row.get("min_passes", S.MIN_PASSES),
                                    MaxDeltaS=S.MAX_DELTA_S), "driven setup")
     require(h.create_linear_count_sweep(setup=SETUP, unit="GHz", start_frequency=S.FREQ_START,
                                         stop_frequency=S.FREQ_STOP, num_of_freq_points=S.N_FREQ, name=SWEEP,
@@ -166,8 +204,12 @@ def build(h, row, out: Path):
     write_json(out / "build_summary.json", summary)
     require(ok, "native design validation failed")
     # HFSS-side DC check: one united ground body, every disc a separate body, one diode sheet per gate cell.
-    require(len(disc_names) == len(cells), f"disc bodies {len(disc_names)} != {len(cells)}")
+    n_static = len(cells) - len(gate_cells) if sd else len(cells)
+    require(len(disc_names) == n_static, f"disc bodies {len(disc_names)} != {n_static}")
     require("GROUND" in objects and all(f"DIODE_{c['index']}" in objects for c in gate_cells), "ground/diode objects")
+    if sd:
+        require(all(f"SDL_{c['index']}" in objects and f"SDR_{c['index']}" in objects for c in gate_cells),
+                "SD halves missing")
     require(all(f"ISLAND_{c['index']}" not in objects for c in gate_cells), "island not united with ground")
     require(h.save_project(), "save project")
     return summary
@@ -251,6 +293,14 @@ def extract(h, row, out: Path, rb, cores, seconds):
         for g in found:
             gd2 = post.get_solution_data(expressions=[g], setup_sweep_name=sweep, report_category="Modal Solution Data")
             gall[g] = ([float(v) for v in _re(gd2, g)], [float(v) for v in _im(gd2, g)])
+    zo = {}
+    try:
+        zq = post.available_report_quantities(report_category="Modal Solution Data", quantities_category="Port Zo")
+        for q in zq:
+            zd = post.get_solution_data(expressions=[q], setup_sweep_name=sweep, report_category="Modal Solution Data")
+            zo[q] = ([float(v) for v in _re(zd, q)], [float(v) for v in _im(zd, q)])
+    except Exception as exc:
+        zo = {"ERR": ([], [str(exc)])}
     quantities = {}
     try:
         quantities = {c: post.available_report_quantities(report_category="Modal Solution Data", quantities_category=c)
@@ -279,6 +329,7 @@ def extract(h, row, out: Path, rb, cores, seconds):
             d["S_all"] = {q: [s[q][k].real, s[q][k].imag] for q in snames}
             d["gamma_all_1_per_m"] = {g: [gall[g][0][k], gall[g][1][k]] for g in gall}
         d["absorbed_fraction"] = absorbed
+        d["port_zo_ohm"] = {q: [v[0][k], v[1][k]] for q, v in zo.items() if len(v[0]) > k}
         if gamma:
             d["port_gamma_1_per_m"] = [gamma["re"][k], gamma["im"][k]]
         per_f.append(d)
@@ -318,7 +369,7 @@ def solve_once(row, port, cores, attempt, out_dir):
         result = {"run_id": run_id, "row": row, "variables": {k: v[0] for k, v in S.variables_for(row).items()},
                   "variable_units": {k: v[1] for k, v in S.variables_for(row).items()}, "readback_si": rb,
                   "readback_ok": True, "build": bsum, "aedt": h.desktop_class.aedt_version_id, "cores": cores,
-                  "solve_seconds": seconds, "attempt": attempt, "dc_gate": S.dc_gate(row["n_gate"]) if row["n_gate"] else None,
+                  "solve_seconds": seconds, "attempt": attempt, "dc_gate": (S.sd_dc_gate(row["n_gate"], row["variant"]) if row["kind"] == "SDGATE" else (S.dc_gate(row["n_gate"]) if row["n_gate"] else None)),
                   "label": "HFSS_SIMULATED / NOT_MEASURED", **data}
         return result
     finally:

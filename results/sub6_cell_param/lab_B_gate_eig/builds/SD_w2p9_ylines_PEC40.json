@@ -1,0 +1,85 @@
+{
+  "status": "BUILT",
+  "aedt": "2025.2",
+  "geometry": {
+    "geometry": "SD_w2p9_ylines",
+    "family": "SD",
+    "split_w_mm": 2.9,
+    "lines": true,
+    "status": "PASS",
+    "conflicts": [],
+    "clearances_mm": {
+      "disc_to_cell_face_mm": 0.3650000000000002,
+      "tab_to_opposite_tab_mm": 0.3,
+      "cut_to_yline_edge_mm": 1.45,
+      "line_rim_overlap_min_mm": 0.15,
+      "line_x_from_centre_mm": 2.95,
+      "line_start_y_mm": 4.3820221755856394
+    },
+    "wrapped_graph_without_diode": {
+      "LEFT(n)": [
+        "LEFT(n+y)"
+      ],
+      "LEFT(n+y)": [
+        "LEFT(n)"
+      ],
+      "RIGHT(n)": [
+        "RIGHT(n+y)"
+      ],
+      "RIGHT(n+y)": [
+        "RIGHT(n)"
+      ]
+    },
+    "diode_edge": [
+      "LEFT(n)",
+      "RIGHT(n)"
+    ],
+    "periodic_wrap_connections": [
+      "LEFT(n)\u2194LEFT(n+y)",
+      "RIGHT(n)\u2194RIGHT(n+y)"
+    ],
+    "only_diode_connects_target_nets": true
+  },
+  "objects": [
+    "LEFT",
+    "RIGHT",
+    "SOLID_GROUND",
+    "RT5880",
+    "AIR",
+    "DIODE_SHEET"
+  ],
+  "boundaries": [
+    "BAR90_02LRH",
+    "Lattice_X",
+    "Lattice_Y",
+    "PEC_LID",
+    "PEC_GROUND_BOTTOM"
+  ],
+  "stack": {
+    "top_cu": true,
+    "rt5880_mm": 3.175,
+    "solid_ground": true,
+    "fr4": false,
+    "vias": false,
+    "antipads": false,
+    "stubs": false,
+    "air_below_ground": false
+  },
+  "floor_boundary": "SOLID_PEC_GROUND",
+  "mesh_operations": [],
+  "validation": [
+    "Desktop messages:",
+    "Design validation check PASSED.",
+    "Design validation messages:",
+    "** End of design validation messages. **",
+    "Excitations check:",
+    "Eigen model is detected. No excitatons are defined.",
+    "Analysis setup messages:",
+    "Detected setup and sweep: ",
+    "EigenCell"
+  ],
+  "top_boundary": {
+    "type": "PEC",
+    "height_mm": 40.0
+  }
+}

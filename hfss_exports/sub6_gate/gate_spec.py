@@ -172,10 +172,45 @@ def cases():
     return rows
 
 
+def row_layout(row):
+    """(cells, total_length) for any row: REF/GATE use the gate layout; BENCH rows are n_static static discs."""
+    if row["kind"] != "BENCH":
+        return layout(row["n_gate"])
+    n, slab = row["n_static"], row["slab_mm"]
+    cells_len = n * PERIOD
+    x0 = -cells_len / 2
+    return ([{"index": i, "kind": "static", "xc": x0 + (i + 0.5) * PERIOD} for i in range(n)],
+            cells_len + 2 * slab)
+
+
+def bench_cases():
+    """Bench diagnosis D1-D4 (no gate cells). REF_H20 (6 discs, 1 mm slab, H20, 1 mode) and REF_H15 are reused."""
+    rows = []
+
+    def add(run_id, n_static, slab, lid, modes):
+        rs, xs = STATES["OFF"]
+        rows.append({"run_id": run_id, "kind": "BENCH", "n_gate": 0, "lid_mm": float(lid), "state": None,
+                     "island_l": ISLAND_LENGTHS[0], "Rs": rs, "Xs": xs, "n_static": n_static, "slab_mm": float(slab),
+                     "modes": modes})
+
+    add("BENCH_D1_slab_H20", 0, SLAB, 20, 1)
+    for n in (2, 4, 8):
+        add(f"BENCH_D2_n{n}_H20", n, SLAB, 20, 1)
+    for h in (10, 30, 40):
+        add(f"BENCH_D3_n6_H{h}", 6, SLAB, h, 3 if h >= 30 else 1)
+    for sl in (5, 15):
+        add(f"BENCH_D4_n6_slab{sl}_H20", 6, sl, 20, 1)
+    return rows
+
+
+def all_cases():
+    return cases() + bench_cases()
+
+
 def variables_for(row):
     """Every AEDT design variable (name -> (value, unit)) that is set and read back for one row."""
     return {"period": (PERIOD, "mm"), "disc_r": (DISC_R, "mm"), "slot_l": (SLOT_L, "mm"), "slot_w": (SLOT_W, "mm"),
             "island_l": (row["island_l"], "mm"), "island_w": (ISLAND_W, "mm"), "diode_gap": (DIODE_GAP, "mm"),
             "diode_w": (DIODE_W, "mm"), "via_r": (VIA_R, "mm"), "pad_r": (PAD_R, "mm"), "rt_t": (RT_T, "mm"),
-            "cu_t": (CU_T, "mm"), "slab": (SLAB, "mm"), "lid_h": (row["lid_mm"], "mm"),
+            "cu_t": (CU_T, "mm"), "slab": (row.get("slab_mm", SLAB), "mm"), "lid_h": (row["lid_mm"], "mm"),
             "Rs": (row["Rs"], "ohm"), "Xs": (row["Xs"], "ohm")}

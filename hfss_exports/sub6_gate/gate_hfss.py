@@ -72,7 +72,7 @@ def set_and_read_back(h, row):
 
 def build(h, row, out: Path):
     """Build the strip. Copper/via/ground follow opt4_cell.py (G-ISL-noline) exactly; see FLAGS in the report."""
-    cells, total = S.layout(row["n_gate"])
+    cells, total = S.row_layout(row)
     gate_cells = [c for c in cells if c["kind"] == "gate"]
     spec = S.variables_for(row)
     for k, (val, unit) in spec.items():
@@ -144,7 +144,7 @@ def build(h, row, out: Path):
                                            name=f"PORT{n}_SHEET", material="vacuum"), "port sheet")
         port = h.wave_port(sheet.name, integration_line=[[f"{x:.9f}mm", "0mm", f"{-S.RT_T:.9f}mm"],
                                           [f"{x:.9f}mm", "0mm", f"{S.CU_T + row['lid_mm']:.9f}mm"]],
-                           modes=1, impedance=50, name=f"P{n}", renormalize=True, deembed=0)
+                           modes=row.get("modes", 1), impedance=50, name=f"P{n}", renormalize=True, deembed=0)
         ports[f"P{n}"] = bool(port)
         require(port, f"wave port {n} rejected")
     setup = require(h.create_setup(SETUP, setup_type="HFSSDriven", Frequency=f"{S.SOLVE_FREQ_GHZ}GHz",
@@ -201,7 +201,27 @@ def extract(h, row, out: Path, rb, cores, seconds):
             cats[cat] = post.available_quantities_categories(report_category=cat)
         except Exception as exc:
             cats[cat] = f"ERR {exc}"
-    expr = ["S(1,1)", "S(2,1)", "S(1,2)", "S(2,2)"]
+    multi = row.get("modes", 1) > 1
+    smap = {"S11": "S(1,1)", "S21": "S(2,1)", "S12": "S(1,2)", "S22": "S(2,2)"}
+    snames = []
+    if multi:
+        for c in (cats.get("Modal Solution Data") or []):
+            try:
+                snames += [q for q in post.available_report_quantities(report_category="Modal Solution Data",
+                                                                        quantities_category=c) if q.startswith("S(")]
+            except Exception:
+                pass
+        snames = sorted(set(snames))
+        def find(a, b):
+            for q in snames:
+                if re.fullmatch(rf"S\(\s*{a}\s*,\s*{b}\s*\)", q):
+                    return q
+            raise RuntimeError(f"no S expression for {a},{b} in {snames[:6]}")
+        smap = {"S11": find("P1:1", "P1:1"), "S21": find("P2:1", "P1:1"), "S12": find("P1:1", "P2:1"),
+                "S22": find("P2:1", "P2:1")}
+        expr = snames
+    else:
+        expr = list(smap.values())
     sd = require(post.get_solution_data(expressions=expr, setup_sweep_name=sweep, report_category="Modal Solution Data"),
                  "S-parameter solution data")
     freqs = [float(f) for f in sd.primary_sweep_values]
@@ -226,6 +246,11 @@ def extract(h, row, out: Path, rb, cores, seconds):
                 break
         except Exception as exc:
             gerr = f"{gname}: {exc}"
+    gall = {}
+    if multi:
+        for g in found:
+            gd2 = post.get_solution_data(expressions=[g], setup_sweep_name=sweep, report_category="Modal Solution Data")
+            gall[g] = ([float(v) for v in _re(gd2, g)], [float(v) for v in _im(gd2, g)])
     quantities = {}
     try:
         quantities = {c: post.available_report_quantities(report_category="Modal Solution Data", quantities_category=c)
@@ -243,10 +268,17 @@ def extract(h, row, out: Path, rb, cores, seconds):
                 "convergence_text": conv.read_text(errors="replace") if conv and conv.exists() else None}
     per_f = []
     for k, f in enumerate(freqs):
-        s11, s21 = s["S(1,1)"][k], s["S(2,1)"][k]
+        s11, s21 = s[smap["S11"]][k], s[smap["S21"]][k]
+        absorbed = 1 - abs(s11) ** 2 - abs(s21) ** 2
         d = {"f_ghz": f, "S11": [s11.real, s11.imag], "S21": [s21.real, s21.imag],
-             "S12": [s["S(1,2)"][k].real, s["S(1,2)"][k].imag], "S22": [s["S(2,2)"][k].real, s["S(2,2)"][k].imag],
-             "absorbed_fraction": 1 - abs(s11) ** 2 - abs(s21) ** 2}
+             "S12": [s[smap["S12"]][k].real, s[smap["S12"]][k].imag],
+             "S22": [s[smap["S22"]][k].real, s[smap["S22"]][k].imag]}
+        if multi:      # power into every mode of every port for an incident P1:1 wave
+            into = [q for q in snames if re.fullmatch(r"S\(\s*P\d:\d\s*,\s*P1:1\s*\)", q)]
+            absorbed = 1 - sum(abs(s[q][k]) ** 2 for q in into)
+            d["S_all"] = {q: [s[q][k].real, s[q][k].imag] for q in snames}
+            d["gamma_all_1_per_m"] = {g: [gall[g][0][k], gall[g][1][k]] for g in gall}
+        d["absorbed_fraction"] = absorbed
         if gamma:
             d["port_gamma_1_per_m"] = [gamma["re"][k], gamma["im"][k]]
         per_f.append(d)
@@ -302,7 +334,7 @@ def solve_once(row, port, cores, attempt, out_dir):
 
 
 def worker(run_id, port, cores):
-    row = next(r for r in S.cases() if r["run_id"] == run_id)
+    row = next(r for r in S.all_cases() if r["run_id"] == run_id)
     final = ROWS / f"{run_id}.json"
     if final.exists():
         print("already done", run_id)

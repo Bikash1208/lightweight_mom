@@ -17,6 +17,8 @@ def main():
     out = []
     for rid, r in rows.items():
         row = r["row"]
+        if row["kind"] == "BENCH":
+            continue
         ref = rows.get(f"REF_H{int(row['lid_mm'])}")
         d = at(r)
         s21, s11 = complex(*d["S21"]), complex(*d["S11"])

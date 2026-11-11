@@ -40,8 +40,23 @@ def rows_60():
     return [dict(r, run_id=r["run_id"] + "_6p0", solve_ghz=6.0) for r in BS.cases()]
 
 
+def rows_ctrl():
+    base = {"kind": "BOARD", "lid_mm": 0.0, "island_l": 0.0, "n_gate": 0, "modes": 1, "renorm": True, "gate": False, "state": "CTRL"}
+    rs0, xs0 = G.STATES["OFF"]
+    return [dict(base, run_id="BOARD_C1", control="C1", Rs=rs0, Xs=xs0), dict(base, run_id="BOARD_C2", control="C2", Rs=rs0, Xs=xs0),
+            dict(base, run_id="BOARD_C3", control="C3", Rs=377.0, Xs=0.0)]
+
+
+def dev_ctrl_rows():
+    out = []
+    for r in rows_ctrl():
+        out.append(dict(r, run_id=r["run_id"].replace("BOARD_", "BOARD_DEV") , r_board=45.0, gate_cols=[1, 2], wall_x=17.4,
+                        probe_x=38.0, probe_half_y=20.0, max_passes=2, flux_xs=[38.0, 25.0]))
+    return out
+
+
 def all_rows():
-    return ({r["run_id"]: r for r in BS.cases()} | {r["run_id"]: r for r in rows_60()} | {"BOARD_DEV": dev_row()})
+    return ({r["run_id"]: r for r in BS.cases()} | {r["run_id"]: r for r in rows_60()} | {r["run_id"]: r for r in rows_ctrl()} | {r["run_id"]: r for r in dev_ctrl_rows()} | {"BOARD_DEV": dev_row()})
 
 
 def nm(prefix, c):
@@ -63,6 +78,7 @@ def set_and_read_back(h, row):
     return rb
 
 
+WALL_T = 0.5
 LINE_DEFS = {   # name: ((x0, y0), (x1, y1), z_above_copper)
     "PROBE_P3": ((BS.PROBE_X, -BS.PROBE_HALF_Y), (BS.PROBE_X, BS.PROBE_HALF_Y), 3.0),
     "PROBE_M3": ((-BS.PROBE_X, -BS.PROBE_HALF_Y), (-BS.PROBE_X, BS.PROBE_HALF_Y), 3.0),
@@ -129,13 +145,72 @@ def field_metrics(h, fs, setup_sol):
     return out
 
 
+FLUX_TMP = GH.WORK / "flux_tmp"
+FLUX_BANDS = {"lo": (0.0, 15.0), "hi": (15.0, 39.8)}      # mm above the copper top (hi stops 0.2 mm short of the radiation boundary)
+
+
+def create_nonmodel_yz(h, name, x, y0, z0, w, hgt):
+    """Non-model rectangle in a YZ plane (flag NonModel# at creation so the solution is not invalidated)."""
+    args = ["NAME:RectangleParameters", "IsCovered:=", True, "XStart:=", f"{x:.9f}mm", "YStart:=", f"{y0:.9f}mm",
+            "ZStart:=", f"{z0:.9f}mm", "Width:=", f"{w:.9f}mm", "Height:=", f"{hgt:.9f}mm", "WhichAxis:=", "X"]
+    att = ["NAME:Attributes", "Name:=", name, "Flags:=", "NonModel#", "Color:=", "(143 175 143)", "Transparency:=", 0,
+           "PartCoordinateSystem:=", "Global", "UDMId:=", "", "MaterialValue:=", '""', "SurfaceMaterialValue:=", '""',
+           "SolveInside:=", False, "ShellElement:=", False, "ShellElementThickness:=", "0mm", "IsMaterialEditable:=", True,
+           "UseMaterialAppearance:=", False, "IsLightweight:=", False]
+    h.modeler.oeditor.CreateRectangle(args, att)
+
+
+def surface_flux(h, sheet, sgn, fs, setup_sol):
+    """Integral over `sheet` of Real(Poynting) . (sgn*x_hat) in W (field calculator; sheet is a non-model rectangle)."""
+    f = h.post.ofieldsreporter
+    f.CalcStack("clear")
+    f.EnterQty("Poynting")
+    f.CalcOp("Real")
+    f.EnterVector([str(sgn), "0", "0"])
+    f.CalcOp("Dot")
+    f.EnterSurf(sheet)
+    f.CalcOp("Integrate")
+    FLUX_TMP.mkdir(parents=True, exist_ok=True)
+    tmp = FLUX_TMP / f"flux_{sheet}_{os.getpid()}.fld"
+    f.CalculatorWrite(str(tmp), ["Solution:=", setup_sol], ["Freq:=", f"{fs:g}GHz", "Phase:=", "0deg"])
+    val = float(tmp.read_text().strip().splitlines()[-1])
+    tmp.unlink()
+    f.CalcStack("clear")
+    return val
+
+
+def flux_metrics(h, fs, setup_sol, xs=(75.0, 45.0, 25.0), half_y=40.0):
+    """Real Poynting flux (W, 1 W incident) through non-model YZ rectangles: +x flux at x=+X, -x flux at x=-X."""
+    fc = h.post.fields_calculator
+    existing = set(h.modeler.oeditor.GetObjectsInGroup("Sheets")) | set(h.modeler.oeditor.GetObjectsInGroup("Non Model"))
+    out = {"planes": {}, "note": "Real(Poynting) . (+-x) integrated over y +-%g mm; lo = 0..15 mm, hi = 15..39.8 mm above copper" % half_y}
+    for x in xs:
+        for side, sgn in (("P", 1), ("M", -1)):
+            for band, (za, zb) in FLUX_BANDS.items():
+                obj_name, ex_name = f"FLXS_{side}{x:g}_{band}", f"Flux_{side}{x:g}_{band}"
+                if obj_name not in existing:
+                    create_nonmodel_yz(h, obj_name, sgn * x, -half_y, G.CU_T + za, 2 * half_y, zb - za)
+                    existing.add(obj_name)
+                y_ = [surface_flux(h, obj_name, sgn, fs, setup_sol)]
+                out["planes"][f"{side}{x:g}_{band}"] = float(y_[0])
+    for x in xs:
+        for band in FLUX_BANDS:
+            p_, m_ = out["planes"][f"P{x:g}_{band}"], out["planes"][f"M{x:g}_{band}"]
+            out[f"ratio_dB_P_over_M_{x:g}_{band}"] = (10 * math.log10(p_ / m_) if p_ > 0 and m_ > 0 else None)
+    return out
+
+
 def build(h, row, out: Path):
     require = GH.require
     r_board = row.get("r_board", BS.R_BOARD)
     gate_cols = tuple(row.get("gate_cols", BS.GATE_COLS))
+    ctrl = row.get("control")
     cs = BS.cells(r_board, gate_cols, gate=row["gate"])
+    if ctrl:                                   # positive controls: discs of the gate band removed
+        cs = [c for c in cs if c["i"] not in gate_cols]
     cols = BS.columns(cs)
-    exp = BS.expected(r_board, gate_cols)["gate" if row["gate"] else "ref"]
+    exp = (BS.expected(r_board, gate_cols)["gate" if row["gate"] else "ref"] if not ctrl else
+           {"discs": len(cs), "gate_cells": 0, "diode_sheets": 0, "column_nets": 0})
     dcg = BS.dc_gate(cs) if row["gate"] else None
     if row["gate"]:
         require(dcg["ok"], f"STOP: analytic DC gate failed {dcg}")
@@ -163,6 +238,21 @@ def build(h, row, out: Path):
     pin_top = -G.RT_T + BS.PIN_ABOVE_GROUND_TOP
     pin = cyl("PIN", "0mm", "0mm", "ground_bottom", "pin_r", f"{pin_top - BS.GROUND_BOTTOM:.9f}mm")
     require(m.subtract(sub.name, pin.name, keep_originals=True), "pin hole in substrate")
+    wall = None
+    if ctrl:
+        wx, wt = row.get("wall_x", 46.4), WALL_T
+        half_w = math.sqrt(r_board ** 2 - (wx + wt / 2) ** 2) - 0.1         # chord, 0.1 mm short of the rim
+        top = (0.0 if ctrl == "C1" else G.CU_T + 15.0)                        # z of the wall top (substrate top, or 15 mm above copper)
+        if ctrl in ("C1", "C2"):
+            wall = box("WALL", [f"{wx - wt / 2:.9f}mm", f"{-half_w:.9f}mm", f"{-G.RT_T:.9f}mm"],
+                       [f"{wt:.9f}mm", f"{2 * half_w:.9f}mm", f"{top + G.RT_T:.9f}mm"])
+            require(m.subtract(sub.name, wall.name, keep_originals=True), "wall slot in substrate")
+        else:
+            wall = require(m.create_rectangle("YZ", [f"{wx:.9f}mm", f"{-half_w:.9f}mm", f"{-G.RT_T:.9f}mm"],
+                                              [f"{2 * half_w:.9f}mm", f"{top + G.RT_T:.9f}mm"], name="WALL_SHEET",
+                                              material="vacuum"), "wall sheet")
+            require(h.assign_impedance_to_sheet(wall.name, name="WALL_R377", resistance="Rs", reactance="Xs"),
+                    "wall resistive sheet")
 
     # --- copper: static discs, and gate cells
     for c in cs:
@@ -219,7 +309,8 @@ def build(h, row, out: Path):
     zmin, zmax = zg - BS.PAD_BOT, G.CU_T + BS.PAD_TOP
     air = box("AIR", [f"{-half:.9f}mm", f"{-half:.9f}mm", f"{zmin:.9f}mm"],
               [f"{2 * half:.9f}mm", f"{2 * half:.9f}mm", f"{zmax - zmin:.9f}mm"], "vacuum")
-    require(m.subtract(air.name, [sub.name, gnd.name], keep_originals=True), "cut board solids from AIR")
+    cut = [sub.name, gnd.name] + ([wall.name] if (ctrl == "C2") else [])
+    require(m.subtract(air.name, cut, keep_originals=True), "cut board solids from AIR")
     face = lambda pos: require(m.get_faceid_from_position(pos, assignment="AIR"), f"AIR face {pos}")
     faces = [face([half, 0, 0]), face([-half, 0, 0]), face([0, half, 0]), face([0, -half, 0]),
              face([30, 30, zmin]), face([30, 30, zmax])]
@@ -254,6 +345,8 @@ def build(h, row, out: Path):
     require(ok, "native design validation failed")
     for k in exp:
         require(counts[k] == exp[k], f"STOP: object count {k}: built {counts[k]} != spec {exp[k]}")
+    if ctrl:
+        require(("WALL" in objects) if ctrl in ("C1", "C2") else ("WALL_SHEET" in objects), "STOP: control wall object missing")
     if row["gate"]:
         require(all(f"COL{i}_{t}" in objects for i in cols for t in "LR"), "STOP: column net object missing/merged")
     require(h.save_project(), "save project")
@@ -279,6 +372,7 @@ def extract(h, row, out: Path):
     res["solve_ghz"] = fs
     res["field_metrics"] = field_metrics(h, fs, f"{SETUP} : LastAdaptive")
     res["behind_over_mirror_dB"] = res["field_metrics"]["behind_over_mirror_dB_CMag_E_z3"]
+    res["flux"] = flux_metrics(h, fs, f"{SETUP} : LastAdaptive", xs=tuple(row.get("flux_xs", (75.0, 45.0, 25.0))))
     trap = getattr(np, "trapezoid", None) or np.trapz
     # far field: U = |rETotal|^2 / (2 eta0) for 1 W incident (rETotal reported in mV); one cut per phi
     th = None
@@ -368,7 +462,7 @@ def solve_once(row, port, cores, attempt, out_dir, root):
 
 def worker(run_id, port, cores):
     row = all_rows()[run_id]
-    root = DEV if run_id == "BOARD_DEV" else OUT
+    root = DEV if run_id.startswith("BOARD_DEV") else OUT
     final = (root / "rows" / f"{run_id}.json")
     if final.exists():
         print("already done", run_id)

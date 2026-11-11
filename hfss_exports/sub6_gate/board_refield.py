@@ -12,10 +12,15 @@ proj = Path(d) / f"{run}.aedt"
 row = BH.all_rows()[run]
 h = GH.connect(proj, port)
 try:
-    BH.make_lines(h, row)
-    res = BH.field_metrics(h, fs, f"{BH.SETUP} : LastAdaptive")
-    res.update(run_id=run, solve_ghz=fs, project=str(proj.relative_to(GH.WORK)))
-    GH.write_json(BH.OUT / "refield" / f"{run}_{fs:g}GHz.json", res)
+    if len(sys.argv) > 4 and sys.argv[4] == "flux":
+        res = BH.flux_metrics(h, fs, f"{BH.SETUP} : LastAdaptive")
+        res.update(run_id=run, solve_ghz=fs, project=str(proj.relative_to(GH.WORK)))
+        GH.write_json(BH.OUT / "refield" / f"{run}_{fs:g}GHz_flux.json", res)
+    else:
+        BH.make_lines(h, row)
+        res = BH.field_metrics(h, fs, f"{BH.SETUP} : LastAdaptive")
+        res.update(run_id=run, solve_ghz=fs, project=str(proj.relative_to(GH.WORK)))
+        GH.write_json(BH.OUT / "refield" / f"{run}_{fs:g}GHz.json", res)
     print("REFIELD_DONE", run, flush=True)
 finally:
     try:

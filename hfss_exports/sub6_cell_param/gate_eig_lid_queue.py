@@ -181,8 +181,8 @@ def main() -> None:
     if os.environ.get("SUB6_AEDT_VERSION") != "2025.2":
         raise RuntimeError("Explicit AEDT 2025.2 selection required")
     stop = RESULTS / "status.json"
-    if stop.exists() and json.loads(stop.read_text()).get("status", "").startswith("STOPPED"):
-        raise RuntimeError("Gate hard stop recorded; refusing additional AEDT solves")
+    if stop.exists() and json.loads(stop.read_text()).get("status") in ("STOPPED", "ABORTED_BY_USER"):
+        raise RuntimeError("Gate is closed; refusing additional AEDT solves")
     matrix = [(GEOMETRY, f"PEC{height}", float(height), "PEC") for height in (150, 40, 300)]
     for g, lid, height, kind in matrix:
         summary = json.loads((RESULTS / "builds" / f"{variant(g,lid)}.json").read_text())

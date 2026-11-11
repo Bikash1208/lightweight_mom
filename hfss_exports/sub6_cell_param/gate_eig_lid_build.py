@@ -52,6 +52,9 @@ def build(lid):
 if __name__ == "__main__":
     if os.environ.get("SUB6_AEDT_VERSION") != "2025.2":
         raise RuntimeError("Explicit AEDT 2025.2 selection required")
+    status = RESULTS / "status.json"
+    if status.exists() and json.loads(status.read_text()).get("status") == "ABORTED_BY_USER":
+        raise RuntimeError("Gate is closed; refusing additional AEDT builds")
     if check(GEOMETRY)["status"] != "PASS":
         raise RuntimeError("SD geometry gate failed")
     for height in (40, 300):

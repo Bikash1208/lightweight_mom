@@ -181,8 +181,8 @@ def main() -> None:
     if os.environ.get("SUB6_AEDT_VERSION") != "2025.2":
         raise RuntimeError("Explicit AEDT 2025.2 selection required")
     stop = RESULTS / "status.json"
-    if stop.exists() and json.loads(stop.read_text()).get("status", "").startswith("STOPPED"):
-        raise RuntimeError("Gate hard stop recorded; refusing additional AEDT solves")
+    if stop.exists() and json.loads(stop.read_text()).get("status") in ("STOPPED", "ABORTED_BY_USER"):
+        raise RuntimeError("Gate is closed; refusing additional AEDT solves")
     ap = argparse.ArgumentParser()
     ap.add_argument("--geometry", choices=[g.name for g in GEOMETRIES])
     args = ap.parse_args()

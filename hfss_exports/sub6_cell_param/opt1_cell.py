@@ -20,9 +20,10 @@ def configure() -> None:
     cp.ROW_TIMEOUT_S = 30 * 60
 
 
-def values(g: Geometry, state: str = "OFF", direction: str = "across", phase: int = 90) -> dict:
+def values(g: Geometry, state: str = "OFF", direction: str = "across", phase: int = 90,
+           lid_height_mm: float = 150) -> dict:
     v = cp.nominal()
-    v.update(island_l=g.island_l, line_w=g.line_w, channel_w=g.channel_w)
+    v.update(island_l=g.island_l, line_w=g.line_w, channel_w=g.channel_w, air_top=lid_height_mm)
     v["Rs"], v["Xs"] = cp.state_values(state, v)
     v["$ph_x"], v["$ph_y"] = ((phase, 0) if direction == "across" else (0, phase))
     return v
@@ -35,11 +36,12 @@ def geometry_named(name: str, wide_channel: float) -> Geometry:
     raise ValueError(f"Unknown geometry {name!r}")
 
 
-def build(h, g: Geometry, out: Path) -> dict:
+def build(h, g: Geometry, out: Path, lid_height_mm: float = 150,
+          top_boundary: str = "PEC") -> dict:
     dc = check(g)
     if dc["status"] != "PASS":
         raise RuntimeError(f"Geometry conflict: {dc['conflicts']}")
-    v = values(g)
+    v = values(g, lid_height_mm=lid_height_mm)
     cp.set_vars(h, v)
     for key, expression in {
         "island_left": "-slot_w/2+diode_gap",
@@ -100,7 +102,14 @@ def build(h, g: Geometry, out: Path) -> dict:
                                      phase_delay="InputPhaseDelay", phase_delay_param1="$ph_x", name="Lattice_X"), "x lattice")
     cp.require(h.assign_lattice_pair([face([0, -v["period"]/2, zmid]), face([0, v["period"]/2, zmid])],
                                      phase_delay="InputPhaseDelay", phase_delay_param1="$ph_y", name="Lattice_Y"), "y lattice")
-    cp.require(h.assign_perfect_e([face([0, 0, v["air_top"]])], name="PEC_LID"), "PEC lid")
+    top_face = face([0, 0, v["air_top"]])
+    if top_boundary == "PEC":
+        cp.require(h.assign_perfect_e([top_face], name="PEC_LID"), "PEC lid")
+    elif top_boundary == "IMPEDANCE_377":
+        cp.require(h.assign_impedance_to_sheet([top_face], name="TOP_IMPEDANCE_377",
+                                               resistance="377ohm", reactance="0ohm"), "377-ohm top")
+    else:
+        raise ValueError(f"Unknown top boundary {top_boundary!r}")
     cp.require(h.assign_perfect_e([face([0, 0, -v["rt_t"]-v["cu_t"]])], name="PEC_GROUND_BOTTOM"), "PEC ground bottom")
     setup = cp.require(h.create_setup(cp.SETUP), "eigenmode setup")
     setup.props["MinimumFrequency"] = "4.5GHz"
@@ -116,21 +125,29 @@ def build(h, g: Geometry, out: Path) -> dict:
                "stack": {"top_cu": True, "rt5880_mm": v["rt_t"], "solid_ground": True,
                          "fr4": False, "vias": False, "antipads": False, "stubs": False, "air_below_ground": False},
                "floor_boundary": "SOLID_PEC_GROUND", "mesh_operations": [], "validation": validation}
+    summary["top_boundary"] = {"type": top_boundary, "height_mm": lid_height_mm}
+    if top_boundary == "IMPEDANCE_377":
+        boundary = next(b for b in h.boundaries if b.name == "TOP_IMPEDANCE_377")
+        summary["top_boundary"]["Resistance"] = boundary.props["Resistance"]
+        summary["top_boundary"]["Reactance"] = boundary.props["Reactance"]
+        cp.require(boundary.props["Resistance"] == "377ohm" and
+                   boundary.props["Reactance"] == "0ohm", "top impedance readback")
     cp.write_json(out / "build_summary.json", summary)
     cp.require(ok, "native design validation")
     cp.require(h.save_project(), "save project")
     return summary
 
 
-def solve_csv(h, g: Geometry, csv_path: Path, out: Path, cores: int, project: Path) -> None:
-    cp.PROJECT_VARIANT = g.name
+def solve_csv(h, g: Geometry, csv_path: Path, out: Path, cores: int, project: Path,
+              lid_height_mm: float = 150, project_variant: str | None = None) -> None:
+    cp.PROJECT_VARIANT = project_variant or g.name
     with csv_path.open(newline="", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
     failed = []
     try:
         for row in rows:
             run_id = row["*"]
-            v = values(g, row["state"], row["direction"], int(row["phase_deg"]))
+            v = values(g, row["state"], row["direction"], int(row["phase_deg"]), lid_height_mm)
             if (out / f"{run_id}.json").exists():
                 continue
             errors = []
@@ -162,6 +179,9 @@ def main() -> None:
     ap.add_argument("--build", action="store_true")
     ap.add_argument("--csv", type=Path)
     ap.add_argument("--cores", type=int, default=8)
+    ap.add_argument("--lid-height-mm", type=float, choices=(150, 300), default=150)
+    ap.add_argument("--top-boundary", choices=("PEC", "IMPEDANCE_377"), default="PEC")
+    ap.add_argument("--project-variant", default=None)
     args = ap.parse_args()
     configure()
     g = geometry_named(args.geometry, args.wide_channel)
@@ -176,11 +196,12 @@ def main() -> None:
     h = cp.connect(args.project)
     if args.build:
         try:
-            print(json.dumps(build(h, g, args.output), indent=2), flush=True)
+            print(json.dumps(build(h, g, args.output, args.lid_height_mm, args.top_boundary), indent=2), flush=True)
         finally:
             h.release_desktop()
     elif args.csv:
-        solve_csv(h, g, args.csv, args.output, args.cores, args.project)
+        solve_csv(h, g, args.csv, args.output, args.cores, args.project,
+                  args.lid_height_mm, args.project_variant)
     else:
         h.release_desktop()
         raise RuntimeError("Choose --build or --csv")

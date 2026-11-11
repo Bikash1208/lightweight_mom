@@ -1,0 +1,84 @@
+{
+  "status": "BUILT",
+  "aedt": "2025.2",
+  "geometry": {
+    "name": "Y_w0.10_L2.500",
+    "geometry": {
+      "route": "Y",
+      "island_l": 2.5,
+      "line_w": 0.1,
+      "channel_w": 0.4
+    },
+    "outbound_line": {
+      "center_x": -0.4999999999999999,
+      "from_y": 1.25,
+      "to_y": 5.8
+    },
+    "channel": {
+      "center_x": -0.4999999999999999,
+      "from_y": 4.348,
+      "to_y": 5.8
+    },
+    "opposite_edge_receiver": {
+      "center_x": -0.4999999999999999,
+      "from_y": -5.8,
+      "to_y": -5.0,
+      "overlap_into_disc_mm": 0.4119520507853718
+    },
+    "checks": {
+      "diode_gap_mm": 0.3,
+      "island_to_slot_y_clearance_mm": 3.098,
+      "island_to_slot_right_clearance_mm": 1.2999999999999998,
+      "line_channel_clearance_each_side_mm": 0.15000000000000002,
+      "outbound_line_separated_from_local_disc": true,
+      "island_to_opposite_receiver_gap_mm": 3.75,
+      "island_local_disc_copper_dc_contact": false,
+      "connection_to_neighbor_disc_requires_opposite_edge_receiver": true,
+      "receiver_overlaps_local_disc": true
+    },
+    "status": "PASS",
+    "conflicts": []
+  },
+  "objects": [
+    "DISC",
+    "ISLAND",
+    "SOLID_GROUND",
+    "RT5880",
+    "AIR",
+    "DIODE_SHEET"
+  ],
+  "boundaries": [
+    "BAR90_02LRH",
+    "Lattice_X",
+    "Lattice_Y",
+    "PEC_LID",
+    "PEC_GROUND_BOTTOM"
+  ],
+  "stack": {
+    "top_cu": true,
+    "rt5880_mm": 3.175,
+    "solid_ground": true,
+    "fr4": false,
+    "vias": false,
+    "antipads": false,
+    "stubs": false,
+    "air_below_ground": false
+  },
+  "floor_boundary": "SOLID_PEC_GROUND",
+  "mesh_operations": [],
+  "validation": [
+    "Desktop messages:",
+    "Design validation check PASSED.",
+    "Design validation messages:",
+    "** End of design validation messages. **",
+    "Excitations check:",
+    "Eigen model is detected. No excitatons are defined.",
+    "Analysis setup messages:",
+    "Detected setup and sweep: ",
+    "EigenCell"
+  ],
+  "top_boundary": {
+    "type": "PEC",
+    "height_mm": 300.0
+  }
+}

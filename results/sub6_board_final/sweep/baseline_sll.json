@@ -1,0 +1,194 @@
+{
+ "definition": "SLL_S3b: highest RHCP-or-LHCP directivity outside cones max(1.5*HPBW,10deg) around the actual RHCP peaks of A (and B in OFF); vs strongest RHCP beam of the state",
+ "frame": "A at (25,0), B at (25,180): HFSS far fields rotated by 180 deg (fields_hfss_rot180.npz) and the model identity prediction (fields.npz) share this frame",
+ "HFSS_OFF": {
+  "D_peak_dBi": 17.052466804755078,
+  "beams": {
+   "A": {
+    "peak_theta": 24.0,
+    "peak_phi": 2.0,
+    "D_peak_dBi": 17.05,
+    "D_LHCP_at_peak_dBi": 4.75,
+    "XPD_dB": 12.31,
+    "AR_dB": 4.3,
+    "HPBW_deg": 10.7,
+    "cone_deg": 16.04,
+    "design": [
+     25.0,
+     0.0
+    ]
+   },
+   "B": {
+    "peak_theta": 28.0,
+    "peak_phi": -180.0,
+    "D_peak_dBi": 13.06,
+    "D_LHCP_at_peak_dBi": 3.05,
+    "XPD_dB": 10.01,
+    "AR_dB": 5.68,
+    "HPBW_deg": 10.81,
+    "cone_deg": 16.22,
+    "design": [
+     25.0,
+     180.0
+    ]
+   }
+  },
+  "SLL": {
+   "SLL_dB": -6.33,
+   "sidelobe_D_dBi": 10.72,
+   "ref_D_dBi": 17.05,
+   "theta_deg": 28.0,
+   "phi_deg": -36.0,
+   "sidelobe_pol": "RHCP",
+   "cones": {
+    "A": 16.0,
+    "B": 16.2
+   }
+  }
+ },
+ "HFSS_ON": {
+  "D_peak_dBi": 17.97601167921069,
+  "beams": {
+   "A": {
+    "peak_theta": 24.0,
+    "peak_phi": 2.0,
+    "D_peak_dBi": 17.98,
+    "D_LHCP_at_peak_dBi": 2.07,
+    "XPD_dB": 15.9,
+    "AR_dB": 2.81,
+    "HPBW_deg": 10.78,
+    "cone_deg": 16.17,
+    "design": [
+     25.0,
+     0.0
+    ]
+   },
+   "B": {
+    "peak_theta": 32.0,
+    "peak_phi": -170.0,
+    "D_peak_dBi": 8.13,
+    "D_LHCP_at_peak_dBi": 1.32,
+    "XPD_dB": 6.81,
+    "AR_dB": 8.56,
+    "HPBW_deg": 10.29,
+    "cone_deg": 15.43,
+    "design": [
+     25.0,
+     180.0
+    ]
+   }
+  },
+  "SLL": {
+   "SLL_dB": -7.49,
+   "sidelobe_D_dBi": 10.49,
+   "ref_D_dBi": 17.98,
+   "theta_deg": 22.0,
+   "phi_deg": -40.0,
+   "sidelobe_pol": "RHCP",
+   "cones": {
+    "A": 16.2
+   }
+  }
+ },
+ "MODEL_OFF": {
+  "D_peak_dBi": 22.768332619029117,
+  "beams": {
+   "A": {
+    "peak_theta": 24.0,
+    "peak_phi": 0.0,
+    "D_peak_dBi": 22.77,
+    "D_LHCP_at_peak_dBi": -0.88,
+    "XPD_dB": 23.65,
+    "AR_dB": 1.14,
+    "HPBW_deg": 9.51,
+    "cone_deg": 14.27,
+    "design": [
+     25.0,
+     0.0
+    ]
+   },
+   "B": {
+    "peak_theta": 24.0,
+    "peak_phi": -180.0,
+    "D_peak_dBi": 21.76,
+    "D_LHCP_at_peak_dBi": -2.97,
+    "XPD_dB": 24.73,
+    "AR_dB": 1.01,
+    "HPBW_deg": 10.11,
+    "cone_deg": 15.17,
+    "design": [
+     25.0,
+     180.0
+    ]
+   }
+  },
+  "SLL": {
+   "SLL_dB": -16.54,
+   "sidelobe_D_dBi": 6.22,
+   "ref_D_dBi": 22.77,
+   "theta_deg": 10.0,
+   "phi_deg": -150.0,
+   "sidelobe_pol": "RHCP",
+   "cones": {
+    "A": 14.3,
+    "B": 15.2
+   }
+  }
+ },
+ "MODEL_ON": {
+  "D_peak_dBi": 25.150522824121918,
+  "beams": {
+   "A": {
+    "peak_theta": 24.0,
+    "peak_phi": 0.0,
+    "D_peak_dBi": 25.15,
+    "D_LHCP_at_peak_dBi": 4.21,
+    "XPD_dB": 20.94,
+    "AR_dB": 1.56,
+    "HPBW_deg": 9.37,
+    "cone_deg": 14.05,
+    "design": [
+     25.0,
+     0.0
+    ]
+   },
+   "B": {
+    "peak_theta": 14.0,
+    "peak_phi": -166.0,
+    "D_peak_dBi": 2.05,
+    "D_LHCP_at_peak_dBi": -8.46,
+    "XPD_dB": 10.5,
+    "AR_dB": 5.35,
+    "HPBW_deg": 50.78,
+    "cone_deg": 76.17,
+    "design": [
+     25.0,
+     180.0
+    ]
+   }
+  },
+  "SLL": {
+   "SLL_dB": -15.43,
+   "sidelobe_D_dBi": 9.72,
+   "ref_D_dBi": 25.15,
+   "theta_deg": 2.0,
+   "phi_deg": 10.0,
+   "sidelobe_pol": "RHCP",
+   "cones": {
+    "A": 14.1
+   }
+  }
+ },
+ "offset_OFF": {
+  "SLL_dB_HFSS_minus_model": 10.209999999999999,
+  "D_peak_model_minus_HFSS_dB": 5.715865814274039,
+  "D_A_model_minus_HFSS": 5.719999999999999,
+  "D_B_model_minus_HFSS": 8.700000000000001
+ },
+ "offset_ON": {
+  "SLL_dB_HFSS_minus_model": 7.9399999999999995,
+  "D_peak_model_minus_HFSS_dB": 7.174511144911229,
+  "D_A_model_minus_HFSS": 7.169999999999998,
+  "D_B_model_minus_HFSS": -6.080000000000001
+ }
+}

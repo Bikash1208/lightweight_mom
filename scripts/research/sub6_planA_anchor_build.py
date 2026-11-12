@@ -49,6 +49,10 @@ def main():
         h = Hfss(project=str(dst), design="AnchorPreflight", solution_type="Modal",
                  version="2025.2", non_graphical=True, new_desktop=True,
                  close_on_exit=False)
+        if os.environ.get("AEDT_PRIVATE_TEMP"):
+            h.desktop_class.temp_directory = os.environ["AEDT_PRIVATE_TEMP"]
+            require(Path(h.desktop_class.temp_directory).resolve() == Path(os.environ["AEDT_PRIVATE_TEMP"]).resolve(),
+                    "PRIVATE_TEMP_READBACK")
         d["aedt_version"] = str(h.desktop_class.aedt_version_id)
         d["own_aedt_pid"] = h.desktop_class.aedt_process_id
         report.write_text(json.dumps(d, indent=2))

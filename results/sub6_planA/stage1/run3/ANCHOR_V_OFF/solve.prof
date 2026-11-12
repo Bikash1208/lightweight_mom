@@ -1,0 +1,77 @@
+HFSS Profile
+ Project: ANCHOR_V_OFF
+ Design: AnchorPreflight
+ Solution setup: Setup1
+
+  Task                Real Time  CPU Time  Memory  Information
+  ----                ---------  --------  ------  -----------
+
+  Solution Process                                 Start Time: 11/12/2026 07:11:15, Host: AEM-LAB1, Processor: 48, OS: NT 10.0, Product: HFSS Version 2025.2.0
+                                                   Executing From: C:\Program Files\ANSYS Inc\v252\AnsysEM\HFSSCOMENGINE.exe
+                                                   
+  HPC                                              Type: Manual, Distribution Types: Variations, Frequencies, Domain Solver, Transient Excitations, Direct Solver, Iterative Solver, Solver, Mesh Assembly, Mesher, MPI Vendor: Intel, MPI Version: 2021
+  Two Level                                        Disabled
+  Machine                                          Name: AEM-LAB1, Memory: 256 GB, RAM Limit: 90.000000%, Tasks: 1, Cores: 48, Free Disk Space: 288 GB
+                                                   
+                                                   Allow off core: True
+                                                   Solution Basis Order: 1
+  Design Validation                                Elapsed time : 00:00:00 , HFSS ComEngine Memory : 194 M
+                                                   Perform full validations with standard port validations
+                                                   
+  Initial Meshing                                  Time: 11/12/2026 07:11:18
+  Mesh                00:09:33   01:34:24  5.22 G  Tetrahedra: 4254476, Type: TAU, Cores: 48
+  Coarsen             00:04:45   00:04:45  5.22 G  Tetrahedra: 1178785
+  Lambda Refine       00:00:24   00:00:28  1.09 G  Tetrahedra: 1200262
+  Simulation Setup    00:00:20   00:00:20  2.68 G  Tetrahedra: 788278, Disk: 0 Bytes
+  Port Adapt          00:00:13   00:00:12  2.7 G   Tetrahedra: 788278, Disk: 76.1 KB
+  Port Refine         00:00:50   00:00:54  1.46 G  Tetrahedra: 1196263
+  Initial Meshing                                  Elapsed Time: 00:16:16
+                                                   
+  Adaptive Meshing                                 Time: 11/12/2026 07:27:34
+                                                   
+  Adaptive Pass 1                                  Frequency: 5.8GHz
+  Simulation Setup    00:00:18   00:00:26  2.68 G  Tetrahedra: 789019, Disk: 185 KB
+  Matrix Assembly     00:01:18   00:02:48  7.24 G  Tetrahedra: 789019, Lumped ports: 1, Disk (output): 305 MB
+  Matrix Solve        00:01:47   00:32:48  17.2 G  Type: MCS, Cores: 48, Matrix size: 4114809, Matrix bandwidth:  17.5, Disk: 15.7 MB
+  Field Recovery      00:00:13   00:01:25  17.2 G  Excitations: 1, Disk: 99.4 MB
+  Data Transfer       00:00:02   00:00:02  188 M   Adaptive Pass 1
+                                                   
+  Adaptive Pass 2                                  Frequency: 5.8GHz
+  Adaptive Refine     00:01:17   00:01:23  1.75 G  Tetrahedra: 1432974
+  Simulation Setup    00:00:21   00:00:28  3.21 G  Tetrahedra: 1014800, Disk: 0 Bytes
+  Matrix Assembly     00:01:44   00:03:47  9.82 G  Tetrahedra: 1014800, Lumped ports: 1, Disk (output): 430 MB
+  Matrix Solve        00:03:09   00:59:43  27.3 G  Type: MCS, Cores: 48, Matrix size: 5519949, Matrix bandwidth:  18.4, Disk: 21.1 MB
+  Field Recovery      00:00:18   00:01:44  27.3 G  Excitations: 1, Disk: 45 MB
+  Data Transfer       00:00:04   00:00:04  188 M   Adaptive Pass 2
+                                                   Max Mag. Delta S: 0.14694
+                                                   
+  Adaptive Pass 3                                  Frequency: 5.8GHz
+  Adaptive Refine     00:01:31   00:01:39  2.01 G  Tetrahedra: 1737417
+  Simulation Setup    00:00:27   00:00:34  3.86 G  Tetrahedra: 1305244, Disk: 0 Bytes
+  Matrix Assembly     00:03:15   00:05:39  13 G    Tetrahedra: 1305244, Lumped ports: 1, Disk (output): 593 MB
+  Matrix Solve        00:04:50   01:37:04  38.8 G  Type: MCS, Cores: 48, Matrix size: 7325891, Matrix bandwidth:  19.2, Disk: 27.9 MB
+  Field Recovery      00:00:25   00:01:56  38.8 G  Excitations: 1, Disk: 58 MB
+  Data Transfer       00:00:25   00:00:07  189 M   Adaptive Pass 3
+                                                   Max Mag. Delta S: 0.04084
+                                                   
+  Adaptive Pass 4                                  Frequency: 5.8GHz
+  Adaptive Refine     00:01:55   00:02:04  2.4 G   Tetrahedra: 2128996
+  Simulation Setup    00:00:31   00:00:39  4.63 G  Tetrahedra: 1677410, Disk: 0 Bytes
+  Matrix Assembly     00:07:52   00:10:41  17 G    Tetrahedra: 1677410, Lumped ports: 1, Disk (output): 801 MB
+  Matrix Solve        00:06:48   02:16:45  53.9 G  Type: MCS, Cores: 48, Matrix size: 9636045, Matrix bandwidth:  19.8, Disk: 36.8 MB
+  Field Recovery      00:00:33   00:02:28  53.9 G  Excitations: 1, Disk: 74.5 MB
+  Data Transfer       00:00:35   00:00:10  189 M   Adaptive Pass 4
+                                                   Max Mag. Delta S: 0.08347
+                                                   
+  Adaptive Meshing                                 Elapsed Time: 00:40:25
+                                                   Adaptive Passes did not converge
+                                                   
+  Simulation Summary                               
+  Design Validation                                Elapsed Time: 00:00:00, Total Memory: 194 MB
+  Initial Meshing                                  Elapsed Time: 00:16:16, Total Memory: 7.92 GB
+  Adaptive Meshing                                 Elapsed Time: 00:40:25, Average memory/process: 53.9 GB, Max memory/process: 53.9 GB, Max number of processes/frequency: 1, Total number of cores: 48
+                                                   Max solved tets: 1677410, Max matrix size: 9636045, Matrix bandwidth: 19.8
+                                                   
+  Solution Process                                 Elapsed Time: 00:56:43, ComEngine Memory: 231 M
+                                                   Stop Time: 11/12/2026 08:07:59, Status: Normal Completion
+                                                   

@@ -89,17 +89,25 @@ def rebuild_from_step(run, variant, state, folder, temp):
 
 def profile_metrics(path):
     data = path.read_text(errors="replace")
-    blocks = re.split(r"Name='Adaptive Pass (\d+)'", data)
+    blocks = re.split(r"^\s*Adaptive Pass (\d+)\s+Frequency:", data, flags=re.M)
     passes = []
     for i in range(1, len(blocks), 2):
         n, part = int(blocks[i]), blocks[i + 1]
-        tet = re.search(r"ProfileItem\('Matrix Assembly'.*?Tetrahedra\\', (\d+)", part)
-        ds = re.findall(r"Max Mag\. Delta S\\', ([\d.]+)", part)
+        tet = re.search(r"^\s*Matrix Assembly\s+.*?Tetrahedra: (\d+)", part, flags=re.M)
+        ds = re.findall(r"^\s*Max Mag\. Delta S: ([\d.]+)", part, flags=re.M)
         passes.append({"pass": n, "tetrahedra": int(tet.group(1)) if tet else None,
                        "delta_s": float(ds[-1]) if ds else None})
     assert passes and passes[-1]["tetrahedra"] is not None, "PROFILE_METRICS_MISSING"
+    ram = re.search(r"Max memory/process: ([\d.]+) GB", data)
+    convergence_file = path.with_name("solve.conv")
+    convergence = convergence_file.read_text(errors="replace") if convergence_file.exists() else ""
+    exact_delta = re.search(r"^Current\s*:\s*([\d.]+)", convergence, flags=re.M)
+    if exact_delta:
+        passes[-1]["delta_s"] = float(exact_delta.group(1))
     return {"adaptive_passes": len(passes), "final_tetrahedra": passes[-1]["tetrahedra"],
-            "final_delta_s": passes[-1]["delta_s"], "pass_metrics": passes}
+            "final_delta_s": passes[-1]["delta_s"], "pass_metrics": passes,
+            "aedt_profile_peak_ram_gb": float(ram.group(1)) if ram else None,
+            "converged": "Adaptive Passes did not converge" not in data}
 
 
 def extract(h, run, out, report):
@@ -113,19 +121,32 @@ def extract(h, run, out, report):
     far = out / "farfield"
     far.mkdir(exist_ok=True)
     assert h.export_antenna_metadata(frequencies=[5.8e9], setup="Setup1 : LastAdaptive",
-                                     sphere="Global", output_dir=str(far), export_element_pattern=True,
+                                     sphere="Global", variations={}, output_dir=str(far), export_element_pattern=True,
                                      export_objects=False, export_touchstone=True, export_power=True), "FFD_EXPORT_FAILED"
-    ffd = list(far.rglob("*.ffd"))
-    assert len(ffd) == 1, f"FFD_COUNT_{len(ffd)}"
-    report["ffd_file"] = str(ffd[0])
+    ffd = list(far.rglob("exportfield_0.ffd"))
+    assert len(ffd) == 1, f"METADATA_FFD_COUNT_{len(ffd)}"
+    selected_ffd = ffd[0]
     report["s11_db"] = point(h, "dB(S(Port1,Port1))")
     for theta, phi in ((25, 0), (25, 180), (24, 180)):
         report[f"th{theta}_ph{phi}"] = {
             "gain_rhcp_db": point(h, "dB(GainRHCP)", theta, phi),
             "gain_lhcp_db": point(h, "dB(GainLHCP)", theta, phi)}
-    th, ph, et, ep = ffd_data(ffd[0])
+    th, ph, et, ep = ffd_data(selected_ffd)
     assert th[0] == 0 and th[-1] == 180 and ph[0] == -180 and ph[-1] == 180
     intensity = np.abs(et)**2 + np.abs(ep)**2
+    if not np.any(intensity):
+        direct_dir = far / "direct"
+        direct_dir.mkdir(exist_ok=True)
+        assert h.export_element_pattern(frequencies=[5.8e9], setup="Setup1 : LastAdaptive",
+                                        sphere="Global", variations={}, element_name="direct",
+                                        output_dir=str(direct_dir)), "DIRECT_FFD_EXPORT_FAILED"
+        direct_ffd = list(direct_dir.glob("*.ffd"))
+        assert len(direct_ffd) == 1, f"DIRECT_FFD_COUNT_{len(direct_ffd)}"
+        selected_ffd = direct_ffd[0]
+        th, ph, et, ep = ffd_data(selected_ffd)
+        intensity = np.abs(et)**2 + np.abs(ep)**2
+        report["ffd_export_fallback"] = "direct_element_pattern_after_zero_metadata_ffd"
+    report["ffd_file"] = str(selected_ffd)
     weights = np.sin(np.deg2rad(th))[:, None]
     total = float(np.sum(intensity[:, :-1] * weights))
     below = float(np.sum(intensity[th > 90, :-1] * weights[th > 90]))
@@ -161,6 +182,7 @@ def push_pair(index, run_names):
     paths += [str((OUT / run / "solve.conv").relative_to(ROOT)) for run in run_names]
     if index == 1:
         paths += ["scripts/research/sub6_planA_run3.py", "scripts/research/sub6_planA_run3_watchdog.py",
+                  "scripts/research/sub6_planA_run3_monitor.py", "scripts/research/sub6_planA_run3_recover.py",
                   "scripts/research/sub6_planA_anchor_preflight.py", "scripts/research/sub6_planA_anchor_build.py"]
     git("add", "--", *paths)
     git("commit", "-m", f"Stage 1 Run 3 pair {index}")
@@ -190,12 +212,21 @@ def main():
                           str(parent.pid), str(parent.create_time()), str(STATUS), str(LOG)],
                          cwd=ROOT, stdout=wlog, stderr=subprocess.STDOUT,
                          creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NO_WINDOW)
+    with (WORK / "monitor_stdout.log").open("w", encoding="utf-8") as mlog:
+        subprocess.Popen([str(PY), str(Path(__file__).with_name("sub6_planA_run3_monitor.py")),
+                          str(parent.pid), str(parent.create_time()), str(STATUS),
+                          str(WORK / "controller_monitor.json")],
+                         cwd=ROOT, stdout=mlog, stderr=subprocess.STDOUT,
+                         creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NO_WINDOW)
     h = None
     try:
         from ansys.aedt.core import Hfss
         assert STEP.is_file()
         assert len(psutil.Process().cpu_affinity()) == 48, "EXPECTED_48_LOGICAL_CPUS"
-        for k, (variant, state_name) in enumerate(ORDER, 1):
+        start_index = int(os.environ.get("RUN3_START_INDEX", "1"))
+        assert 1 <= start_index <= len(ORDER)
+        state["start_index"] = start_index
+        for k, (variant, state_name) in enumerate(ORDER[start_index - 1:], start_index):
             run = f"ANCHOR_{variant}_{state_name}"
             folder = WORK / run
             folder.mkdir(exist_ok=True)
@@ -297,11 +328,30 @@ def main():
             state["status"] = "SOLVED_EXTRACTING"
             write(STATUS, state)
             extract(h, run, OUT / run, row)
+            try:
+                sampled = json.loads((WORK / "controller_monitor.json").read_text())
+                row["independent_monitor_peak_ram_gb"] = sampled["peak_ram_gb_by_run"].get(run)
+            except (OSError, ValueError, KeyError):
+                row["independent_monitor_peak_ram_gb"] = None
+            row["peak_ram_gb"] = row["aedt_profile_peak_ram_gb"]
             row["status"] = "COMPLETE"
             row["ended_utc"] = utc()
             write(OUT / f"{run}.json", row)
+            own_pid, own_created = state["own_aedt_pid"], state["own_aedt_created"]
             h.release_desktop(close_projects=True, close_desktop=True)
             h = None
+            try:
+                proc = psutil.Process(own_pid)
+                if abs(proc.create_time() - own_created) < 1:
+                    try:
+                        proc.wait(timeout=30)
+                    except psutil.TimeoutExpired:
+                        for child in proc.children(recursive=True):
+                            child.terminate()
+                        proc.terminate()
+                        row["exact_pid_cleanup_after_release"] = True
+            except psutil.Error:
+                pass
             state["own_aedt_pid"] = None
             state["own_aedt_created"] = None
             state["status"] = "ROW_COMPLETE"

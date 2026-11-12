@@ -1,0 +1,128 @@
+{
+ "tag": "base4",
+ "pin_top_mm": 8.925,
+ "aedt_pid": 62208,
+ "geometry_readback": {
+  "AIR": {
+   "bbox_mm": [
+    -45.0,
+    -45.0,
+    -18.464,
+    45.0,
+    45.0,
+    23.925
+   ],
+   "material": "vacuum"
+  },
+  "SUBSTRATE": {
+   "bbox_mm": [
+    -30.0,
+    -30.0,
+    -3.175,
+    30.0,
+    30.0,
+    0.0
+   ],
+   "material": "RT5880_FEED"
+  },
+  "BIAS_RT5880": {
+   "bbox_mm": [
+    -30.0,
+    -30.0,
+    -3.464,
+    30.0,
+    30.0,
+    -3.21
+   ],
+   "material": "RT5880_FEED"
+  },
+  "GROUND": {
+   "bbox_mm": [
+    -30.0,
+    -30.0,
+    -3.21,
+    30.0,
+    30.0,
+    -3.175
+   ],
+   "material": "pec"
+  },
+  "PIN": {
+   "bbox_mm": [
+    -0.635,
+    -0.635,
+    -3.175,
+    0.635,
+    0.635,
+    8.925
+   ],
+   "material": "pec"
+  },
+  "PORT": {
+   "bbox_mm": [
+    -2.05,
+    -2.05,
+    -3.175,
+    2.05,
+    2.05,
+    -3.175
+   ],
+   "material": ""
+  }
+ },
+ "clearance_mm": {
+  "pin_to_ground_opening_radial": 1.4149999999999998,
+  "pin_bottom_z": -3.175,
+  "ground_top_z": -3.175,
+  "pin_radius": 0.635,
+  "opening_radius": 2.05,
+  "annulus": [
+   0.635,
+   2.05
+  ],
+  "port_plane_z": -3.175,
+  "pin_z_extent": [
+   -3.175,
+   8.925
+  ],
+  "disc_diameter": 60.0
+ },
+ "port_readback": {
+  "Objects": "['PORT']",
+  "DoDeembed": "False",
+  "RenormalizeAllTerminals": "True",
+  "Modes": "{'Mode1': {'ModeNum': 1, 'UseIntLine': True, 'IntLine': {'Start': ['0.635mm', '0mm', '-3.175mm'], 'End': ['2.05mm', '0mm', '-3.175mm']}, 'AlignmentGroup': 0, 'CharImp': 'Zpi', 'RenormImp': '50ohm'}}",
+  "ShowReporterFilter": "False",
+  "ReporterFilter": "[True]",
+  "Impedance": "50ohm"
+ },
+ "F1_pin_ground_min_distance_mm": 1.4149999999999998,
+ "F1_pass": true,
+ "setup_readback": {
+  "Frequency": "5.8GHz",
+  "MaximumPasses": "10",
+  "MaxDeltaS": "0.02",
+  "MinimumPasses": "1"
+ },
+ "validation_ok": true,
+ "validation_text": [],
+ "solve_seconds": 81.6,
+ "sweep_axis_units": "{'Freq': 'GHz'}",
+ "at_5p8": {
+  "f_ghz": 5.8,
+  "S11_dB": -15.925765601035549,
+  "S11_re": -0.1286052456591007,
+  "S11_im": -0.09493474050046359,
+  "Zin_re": 37.98240740724171,
+  "Zin_im": -7.40080470823497,
+  "accepted_power_fraction": 0.974448085835072
+ },
+ "F2": {
+  "Zin_abs_ohm": 38.69670764779767,
+  "accepted_power_5p8": 0.974448085835072,
+  "not_near_short": true,
+  "not_near_open": true,
+  "accepted_ge_50pct": true,
+  "pass": true
+ }
+}

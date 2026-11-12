@@ -1,0 +1,68 @@
+{
+ "name": "centre_probe_feed_v1",
+ "units": "mm",
+ "source": "results/sub6_planA/stage1/feed_diag (readback of the saved V_OFF project) + EXPORT_STANDARD; verified in feed_only_result.json",
+ "pin": {
+  "radius": 0.635,
+  "z_min": -3.175,
+  "z_max": 8.925,
+  "material": "pec",
+  "axis": "z",
+  "xy": [
+   0,
+   0
+  ]
+ },
+ "ground": {
+  "z_min": -3.21,
+  "z_max": -3.175,
+  "opening_radius": 2.05,
+  "material": "pec"
+ },
+ "port": {
+  "type": "lumped",
+  "impedance_ohm": 50,
+  "annulus_inner_radius": 0.635,
+  "annulus_outer_radius": 2.05,
+  "plane_z": -3.175,
+  "integration_line": [
+   [
+    0.635,
+    0,
+    -3.175
+   ],
+   [
+    2.05,
+    0,
+    -3.175
+   ]
+  ],
+  "renormalize": true,
+  "deembed": false
+ },
+ "substrate": {
+  "material": "RT5880",
+  "eps_r": 2.2,
+  "tan_d": 0.0009,
+  "z_min": -3.175,
+  "z_max": 0.0,
+  "note": "must have a pin-shaped hole: validation reports 'Parts PIN and SUBSTRATE intersect' otherwise"
+ },
+ "bias_layer": {
+  "material": "RT5880",
+  "thickness_param": "t_bias",
+  "default": 0.254,
+  "z_max": -3.21
+ },
+ "sma_window": {
+  "size_xy": [
+   12,
+   12
+  ],
+  "note": "12 x 12 mm window centred on the pin, through the bias layer (requested for the board)"
+ },
+ "clearances_mm": {
+  "pin_to_ground_opening_radial": 1.415,
+  "nearest_other_conductor_on_board_step": "6.0 mm radius (top-layer cell edge); 5.365 mm from the pin surface"
+ }
+}

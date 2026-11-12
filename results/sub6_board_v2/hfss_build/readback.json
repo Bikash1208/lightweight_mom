@@ -349,12 +349,19 @@
    ],
    "setup": {
     "Frequency": "5.8GHz",
-    "MaximumPasses": "20",
-    "MinimumPasses": "6",
     "MaxDeltaS": "0.02",
+    "MinimumPasses": "6",
+    "MaximumPasses": "20",
     "MinimumConvergedPasses": "1",
     "BasisOrder": "1",
-    "UseIterativeSolver": "None"
+    "DrivenSolverType": "Direct Solver",
+    "DoLambdaRefine": "True",
+    "DoMaterialLambda": "True",
+    "SetLambdaTarget": "False",
+    "Target": "0.3333",
+    "UseMaxTetIncrease": "False",
+    "PercentRefinement": "30",
+    "PortAccuracy": "2"
    },
    "sweeps": {
     "Sweep": {
@@ -389,12 +396,7 @@
      }
     }
    ],
-   "mesh_ops": [
-    "mesh_substrate",
-    "mesh_diodes",
-    "mesh_cu_faces",
-    "mesh_pin_port"
-   ],
+   "mesh_ops": [],
    "materials": {
     "SUBSTRATE": "RT5880_V2",
     "BIAS_RT5880": "RT5880_V2",
@@ -404,7 +406,16 @@
    },
    "n_objects": 326,
    "validate_simple": 1,
-   "validate_text": []
+   "validate_text": [],
+   "far_field_spheres": [
+    [
+     "Sphere1",
+     "0deg",
+     "180deg",
+     "360deg",
+     "2deg"
+    ]
+   ]
   },
   "ON_ELS": {
    "purpose": "10 mA forward; run second",
@@ -747,12 +758,19 @@
    ],
    "setup": {
     "Frequency": "5.8GHz",
-    "MaximumPasses": "20",
-    "MinimumPasses": "6",
     "MaxDeltaS": "0.02",
+    "MinimumPasses": "6",
+    "MaximumPasses": "20",
     "MinimumConvergedPasses": "1",
     "BasisOrder": "1",
-    "UseIterativeSolver": "None"
+    "DrivenSolverType": "Direct Solver",
+    "DoLambdaRefine": "True",
+    "DoMaterialLambda": "True",
+    "SetLambdaTarget": "False",
+    "Target": "0.3333",
+    "UseMaxTetIncrease": "False",
+    "PercentRefinement": "30",
+    "PortAccuracy": "2"
    },
    "sweeps": {
     "Sweep": {
@@ -787,12 +805,7 @@
      }
     }
    ],
-   "mesh_ops": [
-    "mesh_substrate",
-    "mesh_diodes",
-    "mesh_cu_faces",
-    "mesh_pin_port"
-   ],
+   "mesh_ops": [],
    "materials": {
     "SUBSTRATE": "RT5880_V2",
     "BIAS_RT5880": "RT5880_V2",
@@ -802,7 +815,16 @@
    },
    "n_objects": 326,
    "validate_simple": 1,
-   "validate_text": []
+   "validate_text": [],
+   "far_field_spheres": [
+    [
+     "Sphere1",
+     "0deg",
+     "180deg",
+     "360deg",
+     "2deg"
+    ]
+   ]
   },
   "OFF_ELS0": {
    "purpose": "0 V; optional sensitivity",
@@ -1145,12 +1167,19 @@
    ],
    "setup": {
     "Frequency": "5.8GHz",
-    "MaximumPasses": "20",
-    "MinimumPasses": "6",
     "MaxDeltaS": "0.02",
+    "MinimumPasses": "6",
+    "MaximumPasses": "20",
     "MinimumConvergedPasses": "1",
     "BasisOrder": "1",
-    "UseIterativeSolver": "None"
+    "DrivenSolverType": "Direct Solver",
+    "DoLambdaRefine": "True",
+    "DoMaterialLambda": "True",
+    "SetLambdaTarget": "False",
+    "Target": "0.3333",
+    "UseMaxTetIncrease": "False",
+    "PercentRefinement": "30",
+    "PortAccuracy": "2"
    },
    "sweeps": {
     "Sweep": {
@@ -1185,12 +1214,7 @@
      }
     }
    ],
-   "mesh_ops": [
-    "mesh_substrate",
-    "mesh_diodes",
-    "mesh_cu_faces",
-    "mesh_pin_port"
-   ],
+   "mesh_ops": [],
    "materials": {
     "SUBSTRATE": "RT5880_V2",
     "BIAS_RT5880": "RT5880_V2",
@@ -1200,7 +1224,16 @@
    },
    "n_objects": 326,
    "validate_simple": 1,
-   "validate_text": []
+   "validate_text": [],
+   "far_field_spheres": [
+    [
+     "Sphere1",
+     "0deg",
+     "180deg",
+     "360deg",
+     "2deg"
+    ]
+   ]
   }
  },
  "design_list": [
@@ -1210,5 +1243,179 @@
  ],
  "solved_designs_check": "not solved (no analyze call was made)",
  "sheet_name_mapping": "sheet names D1..D60 read back from AEDT object IDs (sheet_names.json); all 60 sheets carry the design Rs/Xs through one impedance boundary BAR90_ELS (Resistance=Rs, Reactance=Xs)",
- "unsolved": true
+ "unsolved": true,
+ "mesh_rule": "S3 mesh rule: NO custom mesh operations; HFSS automatic meshing (mesh method Auto, default initial mesh, lambda refinement on, adaptive passes refine). The 4 operations of the first build (mesh_substrate 3 mm, mesh_cu_faces 1 mm, mesh_diodes 0.15 mm, mesh_pin_port 0.3 mm) were deleted in all three designs; the project with them is kept as BOARD_V2_ELS_meshops_old.aedt.",
+ "mesh_cleanup_readback": {
+  "project": "C:/Users/Bikash/Desktop/sub6_board_hfss/BOARD_V2_ELS/BOARD_V2_ELS.aedt",
+  "time": "2026-11-12 18:46:53",
+  "phase1": {
+   "OFF_ELS10": {
+    "ops_before": [
+     "mesh_substrate",
+     "mesh_diodes",
+     "mesh_cu_faces",
+     "mesh_pin_port"
+    ],
+    "ops_after": [],
+    "iterative_requested": false,
+    "update_ok": null,
+    "DrivenSolverType_now": "Direct Solver",
+    "validate_simple": 1
+   },
+   "ON_ELS": {
+    "ops_before": [
+     "mesh_substrate",
+     "mesh_diodes",
+     "mesh_cu_faces",
+     "mesh_pin_port"
+    ],
+    "ops_after": [],
+    "iterative_requested": false,
+    "update_ok": null,
+    "DrivenSolverType_now": "Direct Solver",
+    "validate_simple": 1
+   },
+   "OFF_ELS0": {
+    "ops_before": [
+     "mesh_substrate",
+     "mesh_diodes",
+     "mesh_cu_faces",
+     "mesh_pin_port"
+    ],
+    "ops_after": [],
+    "iterative_requested": false,
+    "update_ok": null,
+    "DrivenSolverType_now": "Direct Solver",
+    "validate_simple": 1
+   }
+  },
+  "phase2_reopen": {
+   "OFF_ELS10": {
+    "mesh_operations": [],
+    "Rs": 21.6,
+    "Xs": -297.5,
+    "setup": {
+     "Frequency": "5.8GHz",
+     "MaxDeltaS": "0.02",
+     "MinimumPasses": "6",
+     "MaximumPasses": "20",
+     "MinimumConvergedPasses": "1",
+     "BasisOrder": "1",
+     "DrivenSolverType": "Direct Solver",
+     "DoLambdaRefine": "True",
+     "DoMaterialLambda": "True",
+     "SetLambdaTarget": "False",
+     "Target": "0.3333",
+     "UseMaxTetIncrease": "False",
+     "PercentRefinement": "30",
+     "PortAccuracy": "2"
+    },
+    "sweeps": [
+     {
+      "name": "Sweep",
+      "Type": "Interpolating",
+      "start": "5GHz",
+      "end": "6.5GHz",
+      "step": "0.05GHz"
+     }
+    ],
+    "spheres": [
+     [
+      "Sphere1",
+      "0deg",
+      "180deg",
+      "360deg",
+      "2deg"
+     ]
+    ],
+    "n_objects": 326,
+    "has_solutions": true
+   },
+   "ON_ELS": {
+    "mesh_operations": [],
+    "Rs": 2.8,
+    "Xs": 14.6,
+    "setup": {
+     "Frequency": "5.8GHz",
+     "MaxDeltaS": "0.02",
+     "MinimumPasses": "6",
+     "MaximumPasses": "20",
+     "MinimumConvergedPasses": "1",
+     "BasisOrder": "1",
+     "DrivenSolverType": "Direct Solver",
+     "DoLambdaRefine": "True",
+     "DoMaterialLambda": "True",
+     "SetLambdaTarget": "False",
+     "Target": "0.3333",
+     "UseMaxTetIncrease": "False",
+     "PercentRefinement": "30",
+     "PortAccuracy": "2"
+    },
+    "sweeps": [
+     {
+      "name": "Sweep",
+      "Type": "Interpolating",
+      "start": "5GHz",
+      "end": "6.5GHz",
+      "step": "0.05GHz"
+     }
+    ],
+    "spheres": [
+     [
+      "Sphere1",
+      "0deg",
+      "180deg",
+      "360deg",
+      "2deg"
+     ]
+    ],
+    "n_objects": 326,
+    "has_solutions": true
+   },
+   "OFF_ELS0": {
+    "mesh_operations": [],
+    "Rs": 41.8,
+    "Xs": -284.4,
+    "setup": {
+     "Frequency": "5.8GHz",
+     "MaxDeltaS": "0.02",
+     "MinimumPasses": "6",
+     "MaximumPasses": "20",
+     "MinimumConvergedPasses": "1",
+     "BasisOrder": "1",
+     "DrivenSolverType": "Direct Solver",
+     "DoLambdaRefine": "True",
+     "DoMaterialLambda": "True",
+     "SetLambdaTarget": "False",
+     "Target": "0.3333",
+     "UseMaxTetIncrease": "False",
+     "PercentRefinement": "30",
+     "PortAccuracy": "2"
+    },
+    "sweeps": [
+     {
+      "name": "Sweep",
+      "Type": "Interpolating",
+      "start": "5GHz",
+      "end": "6.5GHz",
+      "step": "0.05GHz"
+     }
+    ],
+    "spheres": [
+     [
+      "Sphere1",
+      "0deg",
+      "180deg",
+      "360deg",
+      "2deg"
+     ]
+    ],
+    "n_objects": 326,
+    "has_solutions": true
+   }
+  },
+  "aedt_pid_1": 49148,
+  "saved": true,
+  "aedt_pid_2": 56252
+ }
 }

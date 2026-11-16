@@ -10,3 +10,7 @@ Contrast 7.4 dB (default pairing), Q OFF 1562 / 804, ON 346 / 168. T1 0.055, T2 
 Alternative pairings: ON along branch b (beta/k0 1.0096, near the light line) with ON across a gives Delta_ON +0.313 and 15.0 dB, but that pairs two different branches and is not credible as one mode; ON across b is an extrapolated, near-vertical branch (Q ~ 8e5), not used.
 
 Versus the screen (C40B): Delta_OFF +0.040 -> +0.055, contrast 10.6 -> 7.4 dB. Ls 6.0 is worse at full settings. Full-settings Ls 5.5 (cell gate): Delta_OFF +0.0273, Delta_ON +0.1040, 11.6 dB. No Ls reaches 15 dB or Delta_OFF ~ 0.
+
+## Amendment: the 7.4 dB depends on one row
+OFF across frequencies at 88/95/100/110 deg are 5.523 / 5.756 / 5.823 / 6.150 GHz, segment slopes 0.033, 0.013, 0.033 GHz/deg. The 88, 95 and 110 deg points agree with the C40B screen to about 25 MHz. The 100 deg row (single mode in the window, Q 776, NOCONV False, 15 passes) sits about 70 MHz below the screen interpolation, and alone sets the 5.8 GHz crossing. Cause not identified (no second mode in the window to mis-pick).
+Without the 100 deg row (linear 95 -> 110 deg), the crossing is at 96.7 deg, beta/k0 = 1.1964, so Delta_OFF = +0.036, and with Delta_ON +0.130 the contrast is about 11 dB, level with Ls 5.5 (11.6 dB). The 15 dB target is not reached either way. Retracted: the earlier remark that the screen under-reads contrast by about 3 dB came from one point.

@@ -1,0 +1,311 @@
+{
+ "step": "C:\\Users\\Bikash\\Desktop\\sub6_board_hfss\\board_v2\\out_FINAL2\\BOARD_FINAL.step",
+ "step_sha256": "f8a7da95603f9f38a682c799ad178208f94dcd70e31214ecd34325e1431e0dec",
+ "step_bytes": 35411172,
+ "project": "C:\\Users\\Bikash\\Desktop\\sub6_board_hfss\\board_v2\\hfss_final2\\BOARD_FINAL_SPREAD_ELS.aedt",
+ "started": "2026-11-16 10:38:39",
+ "errors": {},
+ "absorber": {
+  "inner_radius_mm": 198.0,
+  "outer_radius_mm": 228.0,
+  "height_mm": 30.0,
+  "z_from_mm": 0.0,
+  "z_to_mm": 30.035,
+  "er": "1.5 - j1.0",
+  "ur": "1.5 - j1.0",
+  "idealised": true
+ },
+ "aedt_pid": 25664,
+ "designs": {
+  "OFF_ELS10_ABS": {
+   "purpose": "-10 V reverse bias, idealised edge absorber; run first",
+   "absorber": true,
+   "Rs_expected": 21.6,
+   "Xs_expected": -297.5,
+   "Rs_read": 21.6,
+   "Xs_read": -297.5,
+   "impedance_boundary": {
+    "name": "BAR90_ELS",
+    "Resistance": "Rs",
+    "Reactance": "Xs",
+    "n_sheets": 200
+   },
+   "port": {
+    "Port1": {
+     "Objects": "[54614]",
+     "DoDeembed": "False",
+     "Impedance": "50ohm"
+    }
+   },
+   "radiation_boundary": [
+    "Rad__M8ZO8P"
+   ],
+   "setup": {
+    "Frequency": "5.8GHz",
+    "MaximumPasses": "20",
+    "MinimumPasses": "6",
+    "MaxDeltaS": "0.02",
+    "MinimumConvergedPasses": "1",
+    "BasisOrder": "1",
+    "DrivenSolverType": "Direct Solver",
+    "DoLambdaRefine": "True",
+    "DoMaterialLambda": "True"
+   },
+   "sweeps": {
+    "Sweep": {
+     "Type": "Interpolating",
+     "RangeStart": "5GHz",
+     "RangeEnd": "6.5GHz",
+     "RangeStep": "0.05GHz"
+    }
+   },
+   "spheres": [
+    [
+     "Sphere1",
+     "0deg",
+     "180deg",
+     "360deg",
+     "2deg"
+    ],
+    [
+     "Lower",
+     "90deg",
+     "180deg",
+     "360deg",
+     "2deg"
+    ]
+   ],
+   "mesh_ops": [],
+   "n_objects": 1263,
+   "absorber_object": {
+    "material": "ABSORBER_15_10",
+    "bbox_mm": [
+     -228.0,
+     -228.0,
+     0.0,
+     228.0,
+     228.0,
+     30.035
+    ],
+    "volume_mm3": 1205891.8577802784
+   },
+   "validate_simple": 1,
+   "validate_text": []
+  },
+  "ON_ELS_ABS": {
+   "purpose": "10 mA forward, idealised edge absorber; run second",
+   "absorber": true,
+   "Rs_expected": 2.8,
+   "Xs_expected": 14.6,
+   "Rs_read": 2.8,
+   "Xs_read": 14.6,
+   "impedance_boundary": {
+    "name": "BAR90_ELS",
+    "Resistance": "Rs",
+    "Reactance": "Xs",
+    "n_sheets": 200
+   },
+   "port": {
+    "Port1": {
+     "Objects": "[54614]",
+     "DoDeembed": "False",
+     "Impedance": "50ohm"
+    }
+   },
+   "radiation_boundary": [
+    "Rad__M8ZO8P"
+   ],
+   "setup": {
+    "Frequency": "5.8GHz",
+    "MaximumPasses": "20",
+    "MinimumPasses": "6",
+    "MaxDeltaS": "0.02",
+    "MinimumConvergedPasses": "1",
+    "BasisOrder": "1",
+    "DrivenSolverType": "Direct Solver",
+    "DoLambdaRefine": "True",
+    "DoMaterialLambda": "True"
+   },
+   "sweeps": {
+    "Sweep": {
+     "Type": "Interpolating",
+     "RangeStart": "5GHz",
+     "RangeEnd": "6.5GHz",
+     "RangeStep": "0.05GHz"
+    }
+   },
+   "spheres": [
+    [
+     "Sphere1",
+     "0deg",
+     "180deg",
+     "360deg",
+     "2deg"
+    ],
+    [
+     "Lower",
+     "90deg",
+     "180deg",
+     "360deg",
+     "2deg"
+    ]
+   ],
+   "mesh_ops": [],
+   "n_objects": 1263,
+   "absorber_object": {
+    "material": "ABSORBER_15_10",
+    "bbox_mm": [
+     -228.0,
+     -228.0,
+     0.0,
+     228.0,
+     228.0,
+     30.035
+    ],
+    "volume_mm3": 1205891.8577802784
+   },
+   "validate_simple": 1,
+   "validate_text": []
+  },
+  "OFF_ELS10": {
+   "purpose": "-10 V, no absorber (reference)",
+   "absorber": false,
+   "Rs_expected": 21.6,
+   "Xs_expected": -297.5,
+   "Rs_read": 21.6,
+   "Xs_read": -297.5,
+   "impedance_boundary": {
+    "name": "BAR90_ELS",
+    "Resistance": "Rs",
+    "Reactance": "Xs",
+    "n_sheets": 200
+   },
+   "port": {
+    "Port1": {
+     "Objects": "[54614]",
+     "DoDeembed": "False",
+     "Impedance": "50ohm"
+    }
+   },
+   "radiation_boundary": [
+    "Rad__M8ZO8P"
+   ],
+   "setup": {
+    "Frequency": "5.8GHz",
+    "MaximumPasses": "20",
+    "MinimumPasses": "6",
+    "MaxDeltaS": "0.02",
+    "MinimumConvergedPasses": "1",
+    "BasisOrder": "1",
+    "DrivenSolverType": "Direct Solver",
+    "DoLambdaRefine": "True",
+    "DoMaterialLambda": "True"
+   },
+   "sweeps": {
+    "Sweep": {
+     "Type": "Interpolating",
+     "RangeStart": "5GHz",
+     "RangeEnd": "6.5GHz",
+     "RangeStep": "0.05GHz"
+    }
+   },
+   "spheres": [
+    [
+     "Sphere1",
+     "0deg",
+     "180deg",
+     "360deg",
+     "2deg"
+    ],
+    [
+     "Lower",
+     "90deg",
+     "180deg",
+     "360deg",
+     "2deg"
+    ]
+   ],
+   "mesh_ops": [],
+   "n_objects": 1262,
+   "absorber_object": null,
+   "validate_simple": 1,
+   "validate_text": []
+  },
+  "ON_ELS": {
+   "purpose": "10 mA, no absorber (reference)",
+   "absorber": false,
+   "Rs_expected": 2.8,
+   "Xs_expected": 14.6,
+   "Rs_read": 2.8,
+   "Xs_read": 14.6,
+   "impedance_boundary": {
+    "name": "BAR90_ELS",
+    "Resistance": "Rs",
+    "Reactance": "Xs",
+    "n_sheets": 200
+   },
+   "port": {
+    "Port1": {
+     "Objects": "[54614]",
+     "DoDeembed": "False",
+     "Impedance": "50ohm"
+    }
+   },
+   "radiation_boundary": [
+    "Rad__M8ZO8P"
+   ],
+   "setup": {
+    "Frequency": "5.8GHz",
+    "MaximumPasses": "20",
+    "MinimumPasses": "6",
+    "MaxDeltaS": "0.02",
+    "MinimumConvergedPasses": "1",
+    "BasisOrder": "1",
+    "DrivenSolverType": "Direct Solver",
+    "DoLambdaRefine": "True",
+    "DoMaterialLambda": "True"
+   },
+   "sweeps": {
+    "Sweep": {
+     "Type": "Interpolating",
+     "RangeStart": "5GHz",
+     "RangeEnd": "6.5GHz",
+     "RangeStep": "0.05GHz"
+    }
+   },
+   "spheres": [
+    [
+     "Sphere1",
+     "0deg",
+     "180deg",
+     "360deg",
+     "2deg"
+    ],
+    [
+     "Lower",
+     "90deg",
+     "180deg",
+     "360deg",
+     "2deg"
+    ]
+   ],
+   "mesh_ops": [],
+   "n_objects": 1262,
+   "absorber_object": null,
+   "validate_simple": 1,
+   "validate_text": []
+  }
+ },
+ "design_list": [
+  "OFF_ELS10",
+  "OFF_ELS10_ABS",
+  "ON_ELS_ABS",
+  "ON_ELS"
+ ],
+ "absorber_material_readback": {
+  "permittivity": "Class: ansys.aedt.core.modules.material.MatProperty",
+  "dielectric_loss_tangent": "Class: ansys.aedt.core.modules.material.MatProperty",
+  "permeability": "Class: ansys.aedt.core.modules.material.MatProperty",
+  "magnetic_loss_tangent": "Class: ansys.aedt.core.modules.material.MatProperty"
+ }
+}

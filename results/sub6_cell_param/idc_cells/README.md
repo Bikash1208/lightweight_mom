@@ -20,3 +20,12 @@ Stored beta_over_k0, below_light_line and side fields in these four rows use the
 | m2 | along | 5.49 -> 5.93 | 0.044 (expected) | ~1.059 |
 | m2 | across | 5.83 -> 6.02 | 0.019 (hybridised) | ~1.02 |
 Gate failed: flat branch 5.2-5.6 GHz in band, mean beta/k0 ~1.04 (<1.05). The along-vs-across difference is not reported as contrast (two points, hybridised mode). Q>1e5 modes are box/lid modes. Hypothesis (unverified): the split-half resonance moves into band as the disc grows (1/r from r 5.6: ~6.8 GHz -> 5.4 GHz at r 7.1); radius ceiling ~5.9 mm, pitch <= ~12.1 mm. Physical modes at 6.1-7.4 GHz exist in the 11.6 mm N2_E rows but are not identified, so no numeric ceiling is claimed.
+
+## Rounded-rectangle outline + 2-tooth edge-to-edge split (MN_R5p6_W0p4_N2_T1p2_D3p0_E_O0p75; x semi-axis 5.6, y 4.2, n=8; copper 81.6 mm2, RT5880 eps 2.2): PROVISIONAL
+Per-mode numbers are beta/k0 at each mode's own frequency; beta at 5.8 GHz comes only from interpolating an identified branch.
+| Direction | Branch through 5.8 GHz | slope GHz/deg | beta/k0 at 5.8 (interpolated) |
+|---|---|---|---|
+| along y (phase on y) | 5.537 GHz @80 (Q 8.7e3) -> 6.053 @88 (Q 6.8e3) | 0.065 clean | ~1.041 |
+| across x (phase on x) | 5.628 @88 (Q 1.8e3) -> 6.026 @100 (Q 1.55e3) | 0.033, hybridised | ~1.153 |
+If the x branch holds: difference ~0.11, mean ~1.10 (round N2_E: x 1.083, y 1.0675). Gate clause "no flat branch below 6.5 GHz" FAILS as written: low-Q/flat modes along y 5.19-5.33 and 6.33-6.35 GHz, across x 6.22-6.43 GHz (second bound branch just above the x branch). Round N2_E 11.6 mm rows have no Q~1.9e3 mode at 5.2-5.3 GHz (lowest physical modes 5.48 and 5.82), so these low-Q modes are new with the outline (also seen at 14.5 mm/r7.1); the 1/r hypothesis in the 14.5 mm section is NOT refuted. Pending: across 65/90/95 solves to confirm the x branch.
+Other agent (MODEL_ONLY, inversion of HFSS beta, theta 30): N2_E round alpha 0.0997 Np/m (conversion 2.95 % at R150), static ST 0.138 Np/m (4.06 %); 50 % needs 2.31 Np/m. alpha does not scale as dBeta^2 (ratio 0.72, not 0.46); earlier "9/4/12 %" estimates withdrawn.

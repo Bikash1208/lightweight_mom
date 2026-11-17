@@ -56,3 +56,10 @@ Per 1 W incident; "ring" = m = 0 Etheta radiated power.
 - Dummy lattice outside-ring radiation: 0.058-0.059 W (OFF/ON), 0.078 W (zero) vs 0.008 W for the all-static crop; below-horizon 9 %, LHCP share about 50 %. Flagged only.
 - S11 / accepted: dummy OFF -18.9 dB / 98.7 %, dummy ON -19.9 dB / 99.0 %, zero board -17.5 dB / 98.2 %. Peak memory of the dummy boards about 95 GB (the static-host crop needs about 17 GB).
 - The eigenmode-Delta proxy (r = |Delta_OFF|/|Delta_ON| = 0.26) has no support from any HFSS board test.
+
+## Addendum 4: orientation test, step 1 (HFSS, static-host crop, 21 B cells turned 90 deg, direct solver; MODEL_ONLY plan from the advisor)
+- Runs: `OPEN_IDEAL` (O90) and `ON_ELS` (ON90) on `layout_crop_sw90.json`; both 6 passes, Normal Completion (target dS 0.02 met, value not read). ON90 S11 -15.0 dB, accepted 0.968. ON90 took 1:43 on 64 free cores (O90 8:38 on shared cores), same solver. Fields: `or90/O90_1.ffd`, `or90/ON90_1.ffd`; scoring `or90/or90.py`, output `or90/or90_out.txt`.
+- Oriented part = half the difference of the 0 and 90 deg far fields (open: OPEN_IDEAL 0 deg vs O90; ON: sw_on 0 deg vs ON90). The 0 deg and 90 deg states come from different projects/meshes (noise floor 0.0001-0.0002 W for this pairing).
+- RHCP oriented power in a 10 deg cone around design B (theta 25, phi 0): open 0.00102 W, ON 0.00169 W, so quiet/radiating r = open/ON = 0.78 (15 deg cone 0.81). Around the argmax (20, 22) r = 0.95. The centre matters: the number is 0.78-0.95 depending on it. Around design A (phi 180) the oriented powers are 0.00002-0.00009 W, i.e. below the noise floor.
+- Raw RHCP in the design-B 10 deg cone: open 0 deg 0.00833 W, open 90 deg 0.00125 W, ON 0 deg 0.01085 W, ON 90 deg 0.00077 W.
+- Reading: the calibration gives about 0.8 at the designed B direction, consistent with the earlier switched-minus-static r. Step 2 (bridging bounds) decides whether the copper can be fixed by loading.

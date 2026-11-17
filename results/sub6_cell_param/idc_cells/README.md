@@ -1,0 +1,10 @@
+# Split-disc / interdigital (IDC) cell probes (HFSS eigenmode, periodic cell, C40B floor, RT5880 3.175 mm + same-material bias layer, pitch 11.6 mm, disc r 5.6, slot 0.4 mm)
+Tool: `bar90_tune_work/tune_idc.py` (local-only). Rows named `MN_R5p6_W0p4_N<teeth>_T1p2_D<depth>_E_OFF_<direction>_<phase>.json`; "across" = propagation along x, "along" = along y; beta/k0 = (phase/80.8)*(5.8/f) for the 11.6 mm pitch. Minimum-frequency floor was 4.5 GHz for the first six rows (lower modes hidden); 3.0 GHz from the straight-split rows onward.
+## Edge-to-edge 2-tooth IDC (N2, D3.0, slot rim to rim, two equal halves 44.1 mm2): FAIL
+Lowest branch is flat: across 4.646 / 4.760 / 4.812 GHz at 65 / 88 / 100 deg (Q about 520), along 4.549 GHz at 88 deg. Along y no bound mode near 5.8 GHz (80 deg: only the box artefact at beta 1.003 and 5.818 GHz at 0.987). Gate (no flat branch below 6.5 GHz, mean beta/k0 1.05-1.15, delta beta >= 0.04) failed. The beta/k0 of 1.33/1.39 at 88 deg are points on the flat resonance, not a usable wave and no evidence for cell-count reduction. The earlier hypothesis (rim-to-rim gap = series capacitor without a low resonance) was wrong.
+## Gap centreline length (one convention: sum of leg and horizontal centrelines plus end runs to the rim)
+straight split 11.2 mm; edge-to-edge N1 D2.4 18.1 mm; edge-to-edge N2 D3.0 25.8 mm; closed 2-tooth about 21.8 mm (in band); closed N3 D2.2 25.4 mm (flat near 5.9 GHz); closed N2 D4.0 26.8 mm (flat near 5.8 GHz); closed N3 D3.0 31 mm (flat near 5.3 GHz). Hypothesis: resonance frequency falls as total gap length grows, open rim exits adding length.
+## Fabrication check (0.3 mm minimum feature)
+All cells pass: halves at least 0.4 mm apart, 0.3 mm morphological opening keeps >= 99.9 % of each half, cell-to-cell gap 0.4 mm.
+## Notes
+The rounded-rectangle RT5880 reference (rr_cells) has one valid row; its along rows were killed by a 600 s fault-handler timer while the solver was still running (not a hang), so use the static cell `ST_R5p6_L6p72_W3p6` as the non-IDC reference. Straight-split and N1 D2.4 probe rows follow.

@@ -73,6 +73,10 @@ def analyze(folder):
         for (f0, b0), (f1, b1) in zip(track, track[1:]):
             if f1 - f0 > .55:
                 continue
+            if b1 < .9 * b0:
+                slopes[axis].append({"f_interval_ghz": [f0, f1], "branch_discontinuity": True,
+                                     "reason": "beta dropped >10%; do not calculate group speed across a likely branch change"})
+                continue
             db_df = (b1 - b0) / ((f1 - f0) * 1e9)
             vg_c = (2 * math.pi / 299792458.0) / db_df if db_df != 0 else None
             slopes[axis].append({"f_mid_ghz": .5 * (f0 + f1), "f_interval_ghz": [f0, f1],

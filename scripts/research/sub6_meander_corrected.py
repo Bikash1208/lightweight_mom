@@ -102,6 +102,8 @@ def main(mode, outdir):
         jobs = [(name, 5.8e9, 88) for name in SPECS]
     elif mode == "dispersion":
         jobs = [("baseline_7leg_w0p4", f * 1e9, 88) for f in (5.8, 5.3, 5.6, 6.0, 6.3, 4.5, 5.0, 6.6, 7.0)]
+    elif mode == "edge":
+        jobs = [("baseline_7leg_w0p4", f * 1e9, 88) for f in (6.02, 6.04, 6.06, 6.08, 6.10)]
     else:
         jobs = [("baseline_7leg_w0p4", 5.8e9, 176)]
     state = {"status": "STARTING", "mode": mode, "total": len(jobs), "complete": 0, "active": None}
@@ -148,7 +150,7 @@ def main(mode, outdir):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=("screen", "dispersion", "mesh"))
+    parser.add_argument("mode", choices=("screen", "dispersion", "edge", "mesh"))
     parser.add_argument("outdir", type=Path)
     args = parser.parse_args()
     main(args.mode, args.outdir)

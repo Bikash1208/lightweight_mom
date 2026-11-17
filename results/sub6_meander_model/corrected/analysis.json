@@ -260,6 +260,19 @@
       "te_y": [
         127.57397660236444
       ]
+    },
+    {
+      "f_ghz": 6.3,
+      "tm_x": [
+        144.29305153347192
+      ],
+      "te_x": [],
+      "tm_y": [
+        132.61550877138072
+      ],
+      "te_y": [
+        142.18386085011525
+      ]
     }
   ],
   "tm_group_velocity_intervals": {
@@ -290,6 +303,15 @@
         ],
         "vg_over_c": 0.7166539809474571,
         "flattening": false
+      },
+      {
+        "f_mid_ghz": 6.15,
+        "f_interval_ghz": [
+          6.0,
+          6.3
+        ],
+        "vg_over_c": 0.7157254998353616,
+        "flattening": false
       }
     ],
     "y": [
@@ -319,6 +341,14 @@
         ],
         "vg_over_c": 0.17912443371175468,
         "flattening": false
+      },
+      {
+        "f_interval_ghz": [
+          6.0,
+          6.3
+        ],
+        "branch_discontinuity": true,
+        "reason": "beta dropped >10%; do not calculate group speed across a likely branch change"
       }
     ]
   }

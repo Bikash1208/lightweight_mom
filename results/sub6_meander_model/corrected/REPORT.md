@@ -15,6 +15,17 @@ Converted fraction uses 1-exp(-2 α R) with R=0.150 m and the first-order *rotat
 
 The R150 two-sector ideal array-factor worst local maximum is RHCP at θ≈2°, φ=180° and its symmetric LHCP partner at φ=0°, -13.62 dB. With ρ^-1/2 exp(-αρ) illumination, α from the corrected baseline, a 5.8 mm feed-floor radius and a 10 mm tanh sector transition, the worst local maximum is -13.32 dB near boresight; directivity is 18.84 dBi per beam, AR≈0.90 dB and XPD≈25.7 dB. The soft boundary is one explicit modeling choice, not a fabricated feed design. Full array-factor data are in `aperture_r150_rerun.json`.
 
+## TM/TE dispersion
+
+| Frequency (GHz) | TM β x (rad/m) | TM β y (rad/m) | TE β x (rad/m) | TE β y (rad/m) |
+|---:|---:|---:|---:|---:|
+| 5.30 | 116.21 | 122.44 | 163.75 | — |
+| 5.60 | 124.13 | 140.03 | — | — |
+| 5.80 | 129.66 | 157.42 | — | — |
+| 6.00 | 135.51 | 180.82 | — | 127.57 |
+
+Finite-difference v_g/c by frequency interval is recorded in `analysis.json`. A flattening claim requires a continuous tracked TM branch and small positive v_g/c; missing or multiple roots are flagged, not interpolated through.
+
 ## HANDOFF
 
 - STATUS: Corrected geometry and 5.8 GHz screen complete; dispersion/mesh status in result files.

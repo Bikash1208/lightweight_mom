@@ -47,3 +47,12 @@ Per 1 W incident; "ring" = m = 0 Etheta radiated power.
 - WITHDRAWN: the earlier statement "it is not direct pin radiation".
 - The static-crop m = 0 profile is a single smooth hump (peak theta 22 deg, no nulls, smooth phase), so a rim source is unlikely on the crop.
 - NOT CHECKED: static-cell leakage in watts against the model's converted fraction (HFSS static crop has 0.008 W outside the ring).
+
+## Addendum 3: noise floor, baselines, matched-dummy test (HFSS, 6-8 passes, direct solver)
+- Noise floor: the all-discs-at-the-21-sites reference solved at dS 0.02 and again at dS 0.005 (8 passes) differs by 0.000018 W in the phi 0 cone and 0.000005 W in the phi 180 cone (radiated power 0.191 vs 0.186 W).
+- Baseline dependence of r (switched-cell contribution, OFF relative to ON, phi 0 cone, projection): zero = all-static crop 0.77-0.79; zero = unslotted 5.435 mm discs at the 21 sites 0.39-0.45. The two zeros disagree, so r is only stated as 0.4-0.8 from the crop; the full board (reference-free) shows under 1 dB.
+- MATCHED-DUMMY TEST (84 sites all carry switched-cell copper; 63 host sites on their A axes with open sheets; 21 B sites with real sheets OFF / ON; zero = same board with the 21 B sites turned to their A axis, all sheets open): r(OFF/ON) = 0.81-0.86 against the matched zero (raw 0.86, ring removed 0.81); raw B-cone power OFF/ON = -0.75 dB. Cone watts of differences: ON-zero B 0.00345 W, OFF-zero B 0.00257 W, ON-OFF B 0.00020 W, A 0.00024 W. An r of 0.3 would need OFF-zero of about 0.0003 W. The neighbour-mismatch hypothesis is REFUTED: with all cells the same copper, the B cell still radiates about 0.8-0.9 of its ON level when OFF. r should be quoted as about 0.8; the ON-OFF effect sits near this board's noise level.
+- Full board with the ring removed: phi 0 cone 0.0244 W ON, 0.0238 W OFF (phi 180: 0.0228 / 0.0251 W): the B beam does not respond to the diode state on the full board either.
+- Dummy lattice outside-ring radiation: 0.058-0.059 W (OFF/ON), 0.078 W (zero) vs 0.008 W for the all-static crop; below-horizon 9 %, LHCP share about 50 %. Flagged only.
+- S11 / accepted: dummy OFF -18.9 dB / 98.7 %, dummy ON -19.9 dB / 99.0 %, zero board -17.5 dB / 98.2 %. Peak memory of the dummy boards about 95 GB (the static-host crop needs about 17 GB).
+- The eigenmode-Delta proxy (r = |Delta_OFF|/|Delta_ON| = 0.26) has no support from any HFSS board test.

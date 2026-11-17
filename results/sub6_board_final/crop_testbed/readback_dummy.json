@@ -1,0 +1,77 @@
+{
+ "step": "C:\\Users\\Bikash\\Desktop\\sub6_board_hfss\\board_v2\\crop\\out_dummy\\BOARD_CROP_dummy.step",
+ "step_sha256": "6081c6ce707e1b14f100cdf856ac4d3c15abbdf48a1fd657e831be62c512fbc0",
+ "step_bytes": 8827628,
+ "project": "C:\\Users\\Bikash\\Desktop\\sub6_board_hfss\\board_v2\\crop\\hfss_dummy\\CROP_DUMMY.aedt",
+ "started": "2026-11-17 10:10:10",
+ "errors": {},
+ "absorber": {
+  "inner_radius_mm": 70.0,
+  "outer_radius_mm": 100.0,
+  "height_mm": 30.0,
+  "z_from_mm": 0.0,
+  "z_to_mm": 30.035,
+  "er": "1.5 - j1.0",
+  "ur": "1.5 - j1.0",
+  "idealised": true
+ },
+ "aedt_pid": 51704,
+ "designs": {
+  "OFF_ELS10": {
+   "mesh_ops": [],
+   "n_objects": 259,
+   "Rs_read": 21.6,
+   "Xs_read": -297.5,
+   "boundaries": {
+    "BAR90_B": 21,
+    "BAR90_DUM": 63
+   },
+   "setup": {
+    "Frequency": "5.8GHz",
+    "MaximumPasses": "20",
+    "MinimumPasses": "6",
+    "MaxDeltaS": "0.02",
+    "BasisOrder": "1",
+    "DrivenSolverType": "Direct Solver"
+   },
+   "spheres": [
+    "Sphere1",
+    "Lower"
+   ],
+   "validate_simple": 1
+  },
+  "ON_ELS": {
+   "mesh_ops": [],
+   "n_objects": 259,
+   "Rs_read": 2.8,
+   "Xs_read": 14.6,
+   "boundaries": {
+    "BAR90_B": 21,
+    "BAR90_DUM": 63
+   },
+   "setup": {
+    "Frequency": "5.8GHz",
+    "MaximumPasses": "20",
+    "MinimumPasses": "6",
+    "MaxDeltaS": "0.02",
+    "BasisOrder": "1",
+    "DrivenSolverType": "Direct Solver"
+   },
+   "spheres": [
+    "Sphere1",
+    "Lower"
+   ],
+   "validate_simple": 1
+  }
+ },
+ "design_list": [
+  "OFF_ELS10",
+  "ON_ELS"
+ ],
+ "absorber_material_readback": {
+  "permittivity": "Class: ansys.aedt.core.modules.material.MatProperty",
+  "dielectric_loss_tangent": "Class: ansys.aedt.core.modules.material.MatProperty",
+  "permeability": "Class: ansys.aedt.core.modules.material.MatProperty",
+  "magnetic_loss_tangent": "Class: ansys.aedt.core.modules.material.MatProperty"
+ }
+}

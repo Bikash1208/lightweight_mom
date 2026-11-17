@@ -9,3 +9,6 @@ Branch 1 is the TM-like wave: it hugs the light line at low phase (beta/k0 1.03-
 
 ## ADDENDUM: 2-tooth cell `MN_R5p6_W0p4_N2_T1p2_D3p0` (same pitch, disc r, slot width, tooth width, depth; 5 legs)
 TM branch (lowest mode) keeps rising through 5.8 GHz in both directions: across (propagation along the meander axis, x) f = 4.49 / 5.852 / 6.371 GHz at 65 / 88 / 100 deg; along (perpendicular) f = 5.373 / 5.762 GHz at 80 / 88 deg. Interpolated to 5.8 GHz: beta/k0 about 1.074 along the meander axis, about 1.099 across it (HFSS, OFF-state config name only). Delta (perpendicular minus axis) = 0.025, the same size and sign as the static slot-in-disc cell (0.022, ST_R5p6_L6p72_W3p6: 1.0776 along y, 1.099 along x). So the 2-tooth cell has in-band TM but no extra contrast; the 3-tooth cell has more contrast but its TM branch flattens at about 5.3 GHz. Trade-off along the slot path length.
+
+## GATE CLOSED (option A probe, both cells FAIL)
+N3 D2.2 (path about 25.4 mm): lowest branch across 5.715 -> 5.881 GHz at 88 -> 100 deg, flat near 5.9 GHz. N2 D4.0 (path about 26.8 mm): 5.718 -> 5.828 GHz, flat near 5.8 GHz. Gate required the TM branch still rising with flattening at 6.5 GHz or higher AND delta beta >= 0.04; neither passes (1/path scaling overstated the gain). Meander dropped for the static stage; existing straight-slot cell stays. Rows in this folder.

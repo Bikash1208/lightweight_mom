@@ -1,0 +1,107 @@
+{
+  "label": "MODEL_ONLY / NOT_HFSS_VALIDATED",
+  "geometry": "baseline_7leg_w0p4",
+  "parameters_si": {
+    "diameter": 0.0112,
+    "leg_count": 7,
+    "leg_pitch": 0.0012,
+    "leg_depth": 0.003,
+    "slot_width": 0.0004
+  },
+  "frequency_hz": 5800000000.0,
+  "pitch_m": 0.0116,
+  "substrate": {
+    "name": "rt5880",
+    "eps_r": 2.2,
+    "tan_delta": 0.0009,
+    "thickness_m": 0.003175
+  },
+  "mesh": {
+    "nx": 88,
+    "ny": 88,
+    "floquet_order": 88,
+    "cells_across_slot": 3.03448275862069,
+    "unknowns": 9782
+  },
+  "sheet_y_siemens": [
+    [
+      [
+        4.671020135722974e-06,
+        0.006331325482153937
+      ],
+      [
+        4.794395043265517e-06,
+        0.0005694368407996881
+      ]
+    ],
+    [
+      [
+        4.794395043192313e-06,
+        0.0005694368407997213
+      ],
+      [
+        0.00016346472805784962,
+        0.0249498811011604
+      ]
+    ]
+  ],
+  "seconds_extraction": 249.79751014709473,
+  "along_x": {
+    "TM_projection": {
+      "polarization": "TM",
+      "phi_deg": 0.0,
+      "coupling_ratio": 0.01820413297889217,
+      "roots_beta_over_k0": [
+        1.066636157408659
+      ],
+      "roots_beta_rad_per_m": [
+        129.65923668283926
+      ]
+    },
+    "TE_projection": {
+      "polarization": "TE",
+      "phi_deg": 0.0,
+      "coupling_ratio": 0.01820413297889217,
+      "roots_beta_over_k0": [],
+      "roots_beta_rad_per_m": []
+    },
+    "hybrid_TM_like": {
+      "beta_over_k0": 1.066415389875357,
+      "te_over_tm_field": 0.032621530152752674
+    }
+  },
+  "across_y": {
+    "TM_projection": {
+      "polarization": "TM",
+      "phi_deg": 90.0,
+      "coupling_ratio": 0.018204132978893176,
+      "roots_beta_over_k0": [
+        1.2949953537696992
+      ],
+      "roots_beta_rad_per_m": [
+        157.4183548076293
+      ]
+    },
+    "TE_projection": {
+      "polarization": "TE",
+      "phi_deg": 90.0,
+      "coupling_ratio": 0.018204132978893176,
+      "roots_beta_over_k0": [],
+      "roots_beta_rad_per_m": []
+    },
+    "hybrid_TM_like": {
+      "beta_over_k0": 1.2958407324008896,
+      "te_over_tm_field": 0.22286734137684444
+    }
+  },
+  "anisotropy": {
+    "delta_mS": 9.326677417503474,
+    "principal_axis_deg": 88.24982518896235,
+    "reciprocity_error": 2.5692641825189203e-15,
+    "offdiag_asym_siemens": 4.018553194125112e-17,
+    "M_t_principal": 3.887094572881974
+  },
+  "alpha_radiating_potential_np_per_m": 2.368319675555133,
+  "alpha_note": "First-order rotating-axis modulation potential at theta=30, not uniform-cell leakage",
+  "status": "COMPLETE"
+}

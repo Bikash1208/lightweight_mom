@@ -389,6 +389,39 @@ def directional_cell_betas(unit_cell, frequency_hz, mesh, axes=(0.0, np.pi / 2))
     return y, rows
 
 
+def polarized_surface_wave_roots(y_sheet, phi_rad, substrate, frequency_hz, polarization, n_scan=3000):
+    """All bound roots of the projected TM or TE transverse-resonance equation.
+
+    These are *separate projections*. When the rotated sheet has off-diagonal
+    admittance, the physical eigenmodes are hybrid; callers must report that
+    coupling and must not present the projected roots as exact eigenmodes.
+    """
+    if polarization not in ("TM", "TE"):
+        raise ValueError("polarization must be TM or TE")
+    k0 = free_space_wavenumber(frequency_hz)
+    omega = angular_frequency(frequency_hz)
+    green = LayeredGreenFunction(substrate, frequency_hz, backing="pec")
+    lo, hi = surface_wave_interval(green)
+    y = rotation(phi_rad).T @ np.asarray(y_sheet, dtype=complex) @ rotation(phi_rad)
+    diagonal = y[0, 0] if polarization == "TM" else y[1, 1]
+
+    def residual(beta):
+        bg = (_y_air(beta, omega, k0) + _y_slab(beta, omega, substrate.eps_complex, k0, substrate.thickness)) if polarization == "TM" else _b_te(beta, omega, substrate.eps_complex, k0, substrate.thickness)
+        return float((diagonal + bg).imag)
+
+    grid = np.linspace(lo * (1 + 1e-4), hi * (1 - 1e-4), n_scan)
+    vals = np.array([residual(beta) for beta in grid])
+    roots = []
+    for i in np.flatnonzero(np.diff(np.sign(vals)) != 0):
+        beta = float(brentq(residual, grid[i], grid[i + 1]))
+        if abs(residual(beta)) < 1e-3 * max(abs(vals[i]), abs(vals[i + 1]), 1e-300):
+            roots.append(beta)
+    return {"polarization": polarization, "phi_deg": float(np.degrees(phi_rad)),
+            "coupling_ratio": float(abs(y[0, 1]) / max(abs(y[0, 0]) + abs(y[1, 1]), 1e-300)),
+            "roots_beta_over_k0": [float(beta / k0) for beta in roots],
+            "roots_beta_rad_per_m": roots}
+
+
 __all__ = [
     "TENSOR_SHEET_LABELS",
     "assemble_impedance_matrix_orders",
@@ -399,6 +432,7 @@ __all__ = [
     "bloch_sheet_tensor",
     "decompose",
     "directional_cell_betas",
+    "polarized_surface_wave_roots",
     "find_beta_tensor",
     "reciprocity_error",
     "reflection_matrix",

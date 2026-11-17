@@ -180,3 +180,71 @@ class MeanderSlotPatch:
             island = (np.abs(u) <= self.island_length / 2) & (np.abs(v - mid) <= (self.tooth_width - 2 * self.island_clearance) / 2)
             metal |= island
         return metal
+
+
+@dataclass(frozen=True)
+class VerticalLegMeanderSlotPatch:
+    """Continuous square-wave slot: vertical legs pitched along local x.
+
+    ``leg_depth`` is the full vertical run. Adjacent legs join alternately at
+    their top and bottom ends. The mask removes the whole slot strip, leaving
+    no metal inside it. Local x rotates by ``orientation`` from global +x.
+    """
+
+    diameter: float
+    leg_count: int
+    leg_pitch: float
+    leg_depth: float
+    slot_width: float
+    orientation: float = 0.0
+    center_x: float = 0.0
+    center_y: float = 0.0
+
+    kind = "patch_circle_vertical_leg_meander_slot"
+
+    def __post_init__(self):
+        for name in ("diameter", "leg_pitch", "leg_depth", "slot_width", "orientation", "center_x", "center_y"):
+            object.__setattr__(self, name, finite_real(name, getattr(self, name)))
+        if isinstance(self.leg_count, bool) or not isinstance(self.leg_count, int) or self.leg_count < 2:
+            raise ValueError("leg_count must be an integer >= 2")
+        if self.slot_width < 0.2e-3 or self.leg_pitch - self.slot_width < 0.2e-3:
+            raise ValueError("slot width and copper finger gap must each be >= 0.2 mm")
+        if self.leg_depth <= self.slot_width or self.diameter <= 0:
+            raise ValueError("leg depth and disc diameter must be positive; depth must exceed slot width")
+        half_x = (self.leg_count - 1) * self.leg_pitch / 2 + self.slot_width / 2
+        half_y = self.leg_depth / 2 + self.slot_width / 2
+        if math.hypot(half_x, half_y) + 0.2e-3 > self.diameter / 2:
+            raise ValueError("slot must clear disc rim by at least 0.2 mm")
+
+    @property
+    def polarity(self):
+        return "metal"
+
+    @property
+    def rotation(self):
+        return self.orientation
+
+    @property
+    def feature_area(self):
+        n = self.leg_count
+        w = self.slot_width
+        return math.pi * self.diameter**2 / 4 - n * self.leg_depth * w - (n - 1) * w * (self.leg_pitch - w)
+
+    def corners(self):
+        r = self.diameter / 2
+        return np.array([[r, r], [-r, r], [-r, -r], [r, -r]]) + np.array([self.center_x, self.center_y])
+
+    def in_feature(self, x, y):
+        dx = np.asarray(x, dtype=float) - self.center_x
+        dy = np.asarray(y, dtype=float) - self.center_y
+        c, s = math.cos(self.orientation), math.sin(self.orientation)
+        u, v = dx * c + dy * s, -dx * s + dy * c
+        slot = np.zeros(np.broadcast_shapes(np.shape(u), np.shape(v)), dtype=bool)
+        first = -(self.leg_count - 1) * self.leg_pitch / 2
+        for i in range(self.leg_count):
+            slot |= (np.abs(u - (first + i * self.leg_pitch)) <= self.slot_width / 2) & (np.abs(v) <= self.leg_depth / 2)
+        for i in range(self.leg_count - 1):
+            mid = first + (i + 0.5) * self.leg_pitch
+            end = (1 if i % 2 == 0 else -1) * (self.leg_depth / 2 - self.slot_width / 2)
+            slot |= (np.abs(u - mid) <= self.leg_pitch / 2) & (np.abs(v - end) <= self.slot_width / 2)
+        return (np.hypot(u, v) <= self.diameter / 2) & ~slot

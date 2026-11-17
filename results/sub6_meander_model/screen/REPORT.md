@@ -1,5 +1,7 @@
 # 5.8 GHz meander cell screen (MODEL_ONLY)
 
+**SUPERSEDED, 2026-11-17:** This screen used horizontal slot runs. The specified geometry has seven vertical legs on a 1.2 mm pitch along x and 3.0 mm depth in y. These rows and finalists are retained as provenance and must not be used as the seven-leg design. Corrected results are in `../corrected/`.
+
 RT5880 εr 2.2, tanδ 0.0009, 3.175 mm over PEC; period 11.6 mm, disc radius 5.6 mm. The straight slot has a 3.0 × 0.4 mm cut. The proposed baseline has 3 turns, a 1.2 mm copper finger, 0.4 mm slot, and 3.0 mm full horizontal run along x. This full run is how `tooth_depth` was interpreted. MoM uses a uniform rooftop mesh with at least three cells across the narrowest gap (88 cells/axis for 0.4 mm; 0.2 mm would require at least 174 and was not solved). The β values use the normal-incidence tensor-sheet approximation, not a Bloch eigenmode. No HFSS cell solve has checked these rankings.
 
 | Cell | β/k₀ x | β/k₀ y | Δβ vs straight x/y | M_t | α rad potential (Np/m) | α diel mean (Np/m) | rad/diel | Mesh |

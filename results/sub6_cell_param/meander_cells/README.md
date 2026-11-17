@@ -3,3 +3,6 @@ Cell `MN_R5p6_W0p4_N3_T1p2_D3p0`: disc r 5.6, slot width 0.4, N = 3 (7 legs), to
 Mode ID: branch 2 (steep, 0.049-0.058 GHz/deg like the static surface wave); branch 1 is a flat meander resonance at 5.0-5.3 GHz (Q about 1600), below the band.
 Interpolated to 5.8 GHz (branch 2): beta/k0 = 1.0776 along the meander axis (phase about 87.1 deg), 1.0239 across it (phase about 82.7 deg). Static ST_R5p6_L6p72_W3p6 reference (slot along y): 1.0776 parallel (interpolated 80/88), 1.099 perpendicular (single point, extrapolated).
 Anisotropy (parallel minus perpendicular): meander +0.054, static -0.022. Proxy M_t from kappa = sqrt(beta^2/k0^2 - 1): meander 0.29, static 0.06 (rough, not the sheet-reactance M_t). HFSS, OFF-state config name only (no diode), no loss/leakage computed.
+
+## CORRECTION (low-phase rows 50 and 65 deg added)
+Branch 1 is the TM-like wave: it hugs the light line at low phase (beta/k0 1.03-1.05 at 50-65 deg; f 3.49 / 4.49 GHz across, 3.48 / 4.45 along) and then bends flat at about 5.2-5.3 GHz (88-100 deg). So the baseline's TM wave saturates BELOW 5.8 GHz, and branch 2 (the 1.078 / 1.024 values above) lies above that resonance; it is probably TE-like/hybrid, not shown by fields, and may not be launched by the centre pin. Treat those beta values as provisional. Shorter total slot path is the lever to push the resonance above the band.

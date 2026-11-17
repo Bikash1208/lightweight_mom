@@ -312,6 +312,39 @@
       ]
     },
     {
+      "f_ghz": 6.06,
+      "tm_x": [
+        136.1510704597015
+      ],
+      "te_x": [],
+      "tm_y": [],
+      "te_y": []
+    },
+    {
+      "f_ghz": 6.08,
+      "tm_x": [
+        137.39353545189982
+      ],
+      "te_x": [],
+      "tm_y": [],
+      "te_y": [
+        128.8534316612889
+      ]
+    },
+    {
+      "f_ghz": 6.1,
+      "tm_x": [
+        138.10789237618303
+      ],
+      "te_x": [],
+      "tm_y": [
+        127.87874825554611
+      ],
+      "te_y": [
+        130.22837407385637
+      ]
+    },
+    {
       "f_ghz": 6.3,
       "tm_x": [
         144.29305153347192
@@ -417,12 +450,39 @@
         "flattening": false
       },
       {
-        "f_mid_ghz": 6.17,
+        "f_mid_ghz": 6.05,
         "f_interval_ghz": [
           6.04,
+          6.06
+        ],
+        "vg_over_c": -0.38756722345058087,
+        "flattening": false
+      },
+      {
+        "f_mid_ghz": 6.07,
+        "f_interval_ghz": [
+          6.06,
+          6.08
+        ],
+        "vg_over_c": 0.3373688651369532,
+        "flattening": false
+      },
+      {
+        "f_mid_ghz": 6.09,
+        "f_interval_ghz": [
+          6.08,
+          6.1
+        ],
+        "vg_over_c": 0.5867781078918286,
+        "flattening": false
+      },
+      {
+        "f_mid_ghz": 6.199999999999999,
+        "f_interval_ghz": [
+          6.1,
           6.3
         ],
-        "vg_over_c": 0.7717925980972316,
+        "vg_over_c": 0.6777012421683077,
         "flattening": false
       },
       {
@@ -511,10 +571,19 @@
       {
         "f_interval_ghz": [
           6.04,
-          6.3
+          6.1
         ],
         "branch_discontinuity": true,
         "reason": "beta dropped >10%; do not calculate group speed across a likely branch change"
+      },
+      {
+        "f_mid_ghz": 6.199999999999999,
+        "f_interval_ghz": [
+          6.1,
+          6.3
+        ],
+        "vg_over_c": 0.8849275849794157,
+        "flattening": false
       },
       {
         "f_mid_ghz": 6.449999999999999,

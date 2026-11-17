@@ -1,5 +1,7 @@
 # Corrected seven-vertical-leg meander study (MODEL_ONLY)
 
+**Edge-sweep update:** The high-β across-y TM projection exists through 6.04 GHz (β/k₀ = 1.4723), has no bound root at 6.06 or 6.08 GHz, and is replaced by a low-β root by 6.10 GHz. Its last measured v_g/c is 0.149 over 6.02–6.04 GHz. Thus the data locate branch termination in 6.04–6.06 GHz; they do not resolve a flat interval. This model conclusion is awaiting mesh/HFSS verification.
+
 The user's baseline is seven slot legs at x = -3.6, -2.4, -1.2, 0, 1.2, 2.4, 3.6 mm, each spanning y = -1.5 to +1.5 mm, 0.4 mm wide, with alternating end bridges. The disc radius is 5.6 mm; period 11.6 mm. The continuous cut clears the rim and its interior contains no copper. The substrate is grounded RT5880, 3.175 mm. `along_x` means propagation along global +x (across the leg pitch); `across_y` is global +y (parallel to the legs). The old horizontal-run screen is superseded.
 
 The earlier β used a TM-like hybrid tensor root, not a pure TM mode. Below are separate projected TM and TE roots of the bound-mode transverse-resonance equations. Off-diagonal tensor terms couple them in the physical mode; see each row's coupling ratio and hybrid character. A blank TE entry means no bound TE root in the searched interval.
@@ -27,6 +29,9 @@ The R150 two-sector ideal array-factor worst local maximum is RHCP at θ≈2°, 
 | 6.00 | 135.51 | 180.82 | — | 127.57 |
 | 6.02 | 136.20 | 183.56 | — | 128.93 |
 | 6.04 | 137.23 | 186.38 | — | 132.74 |
+| 6.06 | 136.15 | — | — | — |
+| 6.08 | 137.39 | — | — | 128.85 |
+| 6.10 | 138.11 | 127.88 | — | 130.23 |
 | 6.30 | 144.29 | 132.62 | — | 142.18 |
 | 6.60 | 153.78 | 140.24 | — | 164.94 |
 | 7.00 | 167.10 | 150.91 | — | 202.44 |

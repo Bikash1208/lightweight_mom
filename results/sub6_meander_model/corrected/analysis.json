@@ -214,6 +214,30 @@
   ],
   "dispersion": [
     {
+      "f_ghz": 4.5,
+      "tm_x": [
+        96.69904249799215
+      ],
+      "te_x": [],
+      "tm_y": [
+        97.28110148689001
+      ],
+      "te_y": []
+    },
+    {
+      "f_ghz": 5.0,
+      "tm_x": [
+        108.66135622571132
+      ],
+      "te_x": [
+        106.54440100816454
+      ],
+      "tm_y": [
+        111.09747798770587
+      ],
+      "te_y": []
+    },
+    {
       "f_ghz": 5.3,
       "tm_x": [
         116.2133256731417
@@ -273,10 +297,41 @@
       "te_y": [
         142.18386085011525
       ]
+    },
+    {
+      "f_ghz": 6.6,
+      "tm_x": [
+        153.7816159306714
+      ],
+      "te_x": [],
+      "tm_y": [
+        140.24054914750255
+      ],
+      "te_y": [
+        164.93699044354227
+      ]
     }
   ],
   "tm_group_velocity_intervals": {
     "x": [
+      {
+        "f_mid_ghz": 4.75,
+        "f_interval_ghz": [
+          4.5,
+          5.0
+        ],
+        "vg_over_c": 0.876019919580931,
+        "flattening": false
+      },
+      {
+        "f_mid_ghz": 5.15,
+        "f_interval_ghz": [
+          5.0,
+          5.3
+        ],
+        "vg_over_c": 0.8325689225337672,
+        "flattening": false
+      },
       {
         "f_mid_ghz": 5.449999999999999,
         "f_interval_ghz": [
@@ -312,9 +367,36 @@
         ],
         "vg_over_c": 0.7157254998353616,
         "flattening": false
+      },
+      {
+        "f_mid_ghz": 6.449999999999999,
+        "f_interval_ghz": [
+          6.3,
+          6.6
+        ],
+        "vg_over_c": 0.6626434519125775,
+        "flattening": false
       }
     ],
     "y": [
+      {
+        "f_mid_ghz": 4.75,
+        "f_interval_ghz": [
+          4.5,
+          5.0
+        ],
+        "vg_over_c": 0.7584640668368877,
+        "flattening": false
+      },
+      {
+        "f_mid_ghz": 5.15,
+        "f_interval_ghz": [
+          5.0,
+          5.3
+        ],
+        "vg_over_c": 0.5543769358080287,
+        "flattening": false
+      },
       {
         "f_mid_ghz": 5.449999999999999,
         "f_interval_ghz": [
@@ -349,6 +431,15 @@
         ],
         "branch_discontinuity": true,
         "reason": "beta dropped >10%; do not calculate group speed across a likely branch change"
+      },
+      {
+        "f_mid_ghz": 6.449999999999999,
+        "f_interval_ghz": [
+          6.3,
+          6.6
+        ],
+        "vg_over_c": 0.8245903963400312,
+        "flattening": false
       }
     ]
   }

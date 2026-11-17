@@ -82,3 +82,101 @@ class EllipticalPatch:
             if self.cross:
                 inside &= ~_in_slot(u, v, self.slot_angle + math.pi / 2.0, self.slot_length, self.slot_width)
         return inside
+
+
+@dataclass(frozen=True)
+class MeanderSlotPatch:
+    """Circular metal disc with one continuous square-wave cut.
+
+    ``tooth_count`` is the number of turns, giving ``tooth_count + 1``
+    horizontal slot runs. ``tooth_width`` is the copper finger between runs.
+    An optional removed tooth is replaced by an electrically isolated island;
+    this is geometry only and has no diode or switching model.
+    All dimensions are metres and ``orientation`` is radians.
+    """
+
+    diameter: float
+    slot_span: float
+    tooth_count: int
+    tooth_width: float
+    slot_width: float
+    orientation: float = 0.0
+    removed_tooth: int | None = None
+    island_length: float = 0.0
+    island_clearance: float = 0.2e-3
+    center_x: float = 0.0
+    center_y: float = 0.0
+
+    kind = "patch_circle_meander_slot"
+
+    def __post_init__(self):
+        for name in ("diameter", "slot_span", "tooth_width", "slot_width", "orientation",
+                     "island_length", "island_clearance", "center_x", "center_y"):
+            object.__setattr__(self, name, finite_real(name, getattr(self, name)))
+        if isinstance(self.tooth_count, bool) or not isinstance(self.tooth_count, int) or self.tooth_count < 1:
+            raise ValueError("tooth_count must be a positive integer")
+        if self.slot_width < 0.2e-3 or self.tooth_width < 0.2e-3:
+            raise ValueError("slot width and copper finger gap must each be >= 0.2 mm")
+        if self.slot_span <= 2 * self.slot_width:
+            raise ValueError("slot_span must exceed twice the slot width")
+        if self.diameter <= 0:
+            raise ValueError("diameter must be positive")
+        half_y = (self.tooth_count * (self.tooth_width + self.slot_width) + self.slot_width) / 2
+        if math.hypot(self.slot_span / 2, half_y) + 0.2e-3 > self.diameter / 2:
+            raise ValueError("meander cut must clear the disc rim by at least 0.2 mm")
+        if self.removed_tooth is not None:
+            if isinstance(self.removed_tooth, bool) or not isinstance(self.removed_tooth, int) or not (0 <= self.removed_tooth < self.tooth_count):
+                raise ValueError("removed_tooth must index a copper finger between slot runs")
+            if self.island_clearance < 0.2e-3 or self.tooth_width <= 2 * self.island_clearance:
+                raise ValueError("island needs >= 0.2 mm clearance on both sides")
+            if not (0 < self.island_length < self.slot_span - 2 * self.slot_width - 2 * self.island_clearance):
+                raise ValueError("island_length must fit within the removed tooth")
+        elif self.island_length != 0:
+            raise ValueError("island_length requires removed_tooth")
+
+    @property
+    def polarity(self):
+        return "metal"
+
+    @property
+    def rotation(self):
+        return self.orientation
+
+    @property
+    def feature_area(self):
+        pitch = self.tooth_width + self.slot_width
+        n = self.tooth_count + 1
+        cut = n * self.slot_span * self.slot_width + (n - 1) * self.slot_width * (pitch - self.slot_width)
+        if self.removed_tooth is not None:
+            opening = self.island_length + 2 * self.island_clearance
+            cut += opening * self.tooth_width - self.island_length * (self.tooth_width - 2 * self.island_clearance)
+        return math.pi * (self.diameter / 2) ** 2 - cut
+
+    def corners(self):
+        r = self.diameter / 2
+        return np.array([[r, r], [-r, r], [-r, -r], [r, -r]]) + np.array([self.center_x, self.center_y])
+
+    def in_feature(self, x, y):
+        dx = np.asarray(x, dtype=float) - self.center_x
+        dy = np.asarray(y, dtype=float) - self.center_y
+        c, s = math.cos(self.orientation), math.sin(self.orientation)
+        u, v = dx * c + dy * s, -dx * s + dy * c
+        metal = np.hypot(u, v) <= self.diameter / 2
+        pitch = self.tooth_width + self.slot_width
+        first = -self.tooth_count * pitch / 2
+        slot = np.zeros(np.broadcast_shapes(np.shape(u), np.shape(v)), dtype=bool)
+        for i in range(self.tooth_count + 1):
+            slot |= (np.abs(u) <= self.slot_span / 2) & (np.abs(v - (first + i * pitch)) <= self.slot_width / 2)
+        for i in range(self.tooth_count):
+            end = self.slot_span / 2 - self.slot_width / 2
+            ux = end if i % 2 == 0 else -end
+            mid = first + (i + 0.5) * pitch
+            slot |= (np.abs(u - ux) <= self.slot_width / 2) & (np.abs(v - mid) <= pitch / 2)
+        metal &= ~slot
+        if self.removed_tooth is not None:
+            mid = first + (self.removed_tooth + 0.5) * pitch
+            opening = self.island_length + 2 * self.island_clearance
+            metal &= ~((np.abs(u) <= opening / 2) & (np.abs(v - mid) <= self.tooth_width / 2))
+            island = (np.abs(u) <= self.island_length / 2) & (np.abs(v - mid) <= (self.tooth_width - 2 * self.island_clearance) / 2)
+            metal |= island
+        return metal

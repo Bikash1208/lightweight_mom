@@ -373,6 +373,22 @@ def beta_azimuth_table(y_sheet, substrate, frequency_hz, n_phi=36):
     return out
 
 
+def directional_cell_betas(unit_cell, frequency_hz, mesh, axes=(0.0, np.pi / 2)):
+    """Normal-incidence tensor-sheet estimate of directional beta/k0.
+
+    One MoM extraction is shared by both directions. This is a local,
+    homogenised MODEL_ONLY estimate; it is not a Bloch eigenmode or HFSS result.
+    """
+    y = sheet_admittance_tensor_for_cell(unit_cell, frequency_hz, mesh)
+    k0 = free_space_wavenumber(frequency_hz)
+    rows = []
+    for phi in axes:
+        beta, te_character = find_beta_tensor(y, phi, unit_cell.substrate, frequency_hz)
+        rows.append({"phi_deg": float(np.degrees(phi)), "beta_over_k0": float(beta / k0),
+                     "beta_rad_per_m": float(beta), "te_character": float(te_character)})
+    return y, rows
+
+
 __all__ = [
     "TENSOR_SHEET_LABELS",
     "assemble_impedance_matrix_orders",
@@ -382,6 +398,7 @@ __all__ = [
     "bloch_frequency",
     "bloch_sheet_tensor",
     "decompose",
+    "directional_cell_betas",
     "find_beta_tensor",
     "reciprocity_error",
     "reflection_matrix",

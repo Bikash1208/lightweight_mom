@@ -92,7 +92,7 @@ def main(out_dir):
     (out / "aperture.json").write_text(json.dumps({"label": "MODEL_ONLY / IDEAL_APERTURE", "frequency_hz": F,
         "assumptions": "uniform amplitude; perfect circular polarization per sector; independent coherent sectors; cos(theta) field factor; upper hemisphere only; no feed, loss, coupling or physical cell", "cases": rows}, indent=2) + "\n")
     with (out / "aperture.csv").open("w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["aperture", "partition", "target_theta_deg", "target_phi_deg", "hand", "peak_theta_deg",
+        writer = csv.DictWriter(f, lineterminator="\n", fieldnames=["aperture", "partition", "target_theta_deg", "target_phi_deg", "hand", "peak_theta_deg",
             "peak_phi_deg", "directivity_dbi", "sll_db", "ar_db", "xpd_db", "targets_met"])
         writer.writeheader()
         for row in rows:

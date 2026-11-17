@@ -14,7 +14,9 @@ taper bound 1/(1 + alpha R).  Conductor loss: NOT estimated (PEC model).
 import json
 import os
 import sys
+import threading
 import time
+from datetime import datetime, timezone
 from multiprocessing import Pool
 from pathlib import Path
 
@@ -201,17 +203,18 @@ def evaluate_sub6(spec, mesh_n=88, pitch=11.6e-3):
         omega, k0 = angular_frequency(f), free_space_wavenumber(f)
         ys = _y_slab(beta_mean, omega, sub.eps_complex, k0, sub.thickness)
         xs = [float(np.imag(1 / (1j * v.imag + ys))) for v in y_diag]
-        alpha_rad = leakage_alpha_first_order_tensor(beta_mean, y_bar, delta, np.radians(25.0), sub, f)
+        alpha_rad = leakage_alpha_first_order_tensor(beta_mean, y_bar, delta, np.radians(30.0), sub, f)
         loss = [_dielectric_alpha(1j * v.imag, sub, d["beta_rad_per_m"], f)[0] for v, d in zip(y_diag, directions)]
         out.update({"ok": True, "directions": directions, "beta_over_k0_along": directions[0]["beta_over_k0"],
                     "beta_over_k0_across": directions[1]["beta_over_k0"],
                     "anisotropy_beta": directions[1]["beta_over_k0"] - directions[0]["beta_over_k0"],
                     "M_t": abs(xs[0] - xs[1]) / max(abs(xs[0] + xs[1]), 1e-30),
+                    "y_bar_mS": y_bar.imag * 1e3, "delta_mS": delta * 1e3,
                     "x_along_ohm": xs[0], "x_across_ohm": xs[1],
                     "alpha_radiating_potential_np_per_m": alpha_rad,
                     "alpha_dielectric_along_np_per_m": loss[0], "alpha_dielectric_across_np_per_m": loss[1],
                     "radiating_potential_to_dielectric_ratio": alpha_rad / max(0.5 * sum(loss), 1e-30),
-                    "alpha_note": "First-order 25-degree rotating-axis modulation potential, not leakage of an isolated or uniform static cell; conductor loss omitted (PEC)."})
+                    "alpha_note": "First-order 30-degree rotating-axis modulation potential, not leakage of an isolated or uniform static cell; conductor loss omitted (PEC)."})
     except Exception as e:  # record model failures without invented values
         out.update({"ok": False, "error": f"{type(e).__name__}: {e}"})
     return out
@@ -222,16 +225,54 @@ def main_sub6(out_dir, mesh_n=88, pitch=11.6e-3, limit=None):
     out.mkdir(parents=True, exist_ok=True)
     specs = sub6_specs()[:limit]
     rows = []
-    for i, spec in enumerate(specs):
-        t0 = time.time()
-        minimum = min(spec["slot_width"], spec.get("tooth_width", 1.0), spec.get("island_clearance", 1.0))
-        resolved_mesh = max(mesh_n, int(np.ceil(3 * pitch / minimum)))
-        row = evaluate_sub6(spec, resolved_mesh, pitch)
-        row["seconds"] = time.time() - t0
-        rows.append(row)
-        (out / f"{spec['name']}.json").write_text(json.dumps(row, indent=2) + "\n")
-        print(f"{i+1}/{len(specs)} {spec['name']} ok={row['ok']} {row['seconds']:.1f}s", flush=True)
-    valid = sorted((r for r in rows if r.get("ok") and r["geometry"]["kind"] != "straight"),
+    active = {"status": "STARTING", "heartbeat_utc": None, "name": None, "completed": 0, "total": len(specs)}
+    lock, done = threading.Lock(), threading.Event()
+
+    def write_status():
+        with lock:
+            active["heartbeat_utc"] = datetime.now(timezone.utc).isoformat()
+            payload = json.dumps(active, indent=2) + "\n"
+        temp = out / "status.tmp"
+        temp.write_text(payload)
+        temp.replace(out / "status.json")
+
+    def heartbeat():
+        while not done.is_set():
+            write_status()
+            done.wait(60)
+
+    watcher = threading.Thread(target=heartbeat, daemon=True)
+    watcher.start()
+    try:
+        for i, spec in enumerate(specs):
+            t0 = time.time()
+            minimum = min(spec["slot_width"], spec.get("tooth_width", 1.0), spec.get("island_clearance", 1.0))
+            resolved_mesh = max(mesh_n, int(np.ceil(3 * pitch / minimum)))
+            with lock:
+                active.update(status="SOLVING", name=spec["name"], completed=i)
+            path = out / f"{spec['name']}.json"
+            row = None
+            if path.exists():
+                old = json.loads(path.read_text())
+                if old.get("geometry") == spec and old.get("mesh", {}).get("nx") == resolved_mesh and old.get("frequency_hz") == 5.8e9 and "30-degree" in old.get("alpha_note", ""):
+                    row = old
+            if row is None:
+                row = evaluate_sub6(spec, resolved_mesh, pitch)
+                row["seconds"] = time.time() - t0
+                path.write_text(json.dumps(row, indent=2) + "\n")
+            rows.append(row)
+            print(f"{i+1}/{len(specs)} {spec['name']} ok={row['ok']} {row.get('seconds', 0):.1f}s", flush=True)
+        with lock:
+            active.update(status="COMPLETE", name=None, completed=len(specs))
+    except BaseException as e:
+        with lock:
+            active.update(status="FAILED", error=f"{type(e).__name__}: {e}")
+        raise
+    finally:
+        done.set()
+        watcher.join(timeout=3)
+        write_status()
+    valid = sorted((r for r in rows if r.get("ok") and r["geometry"]["kind"] == "meander"),
                    key=lambda r: (-r["M_t"], -r["radiating_potential_to_dielectric_ratio"]))
     (out / "finalists.json").write_text(json.dumps({"label": "MODEL_ONLY / NOT_HFSS_VALIDATED",
         "selection": "rank by M_t then radiating-potential/dielectric-loss ratio; HFSS check required",

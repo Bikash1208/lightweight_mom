@@ -27,6 +27,7 @@ The R150 two-sector ideal array-factor worst local maximum is RHCP at θ≈2°, 
 | 6.00 | 135.51 | 180.82 | — | 127.57 |
 | 6.30 | 144.29 | 132.62 | — | 142.18 |
 | 6.60 | 153.78 | 140.24 | — | 164.94 |
+| 7.00 | 167.10 | 150.91 | — | 202.44 |
 
 Finite-difference v_g/c by frequency interval is recorded in `analysis.json`. A flattening claim requires a continuous tracked TM branch and small positive v_g/c; missing or multiple roots are flagged, not interpolated through.
 

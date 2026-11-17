@@ -1,0 +1,109 @@
+{
+  "label": "MODEL_ONLY / NOT_HFSS_VALIDATED",
+  "geometry": "baseline_7leg_w0p4",
+  "parameters_si": {
+    "diameter": 0.0112,
+    "leg_count": 7,
+    "leg_pitch": 0.0012,
+    "leg_depth": 0.003,
+    "slot_width": 0.0004
+  },
+  "frequency_hz": 7000000000.0,
+  "pitch_m": 0.0116,
+  "substrate": {
+    "name": "rt5880",
+    "eps_r": 2.2,
+    "tan_delta": 0.0009,
+    "thickness_m": 0.003175
+  },
+  "mesh": {
+    "nx": 88,
+    "ny": 88,
+    "floquet_order": 88,
+    "cells_across_slot": 3.03448275862069,
+    "unknowns": 9782
+  },
+  "sheet_y_siemens": [
+    [
+      [
+        6.271152367568857e-06,
+        0.008100123714555844
+      ],
+      [
+        2.7665985986087983e-07,
+        -0.0002538934481597429
+      ]
+    ],
+    [
+      [
+        2.766598598623435e-07,
+        -0.000253893448159764
+      ],
+      [
+        1.4564022283116565e-05,
+        -0.0009510506768260658
+      ]
+    ]
+  ],
+  "seconds_extraction": 245.74930834770203,
+  "along_x": {
+    "TM_projection": {
+      "polarization": "TM",
+      "phi_deg": 0.0,
+      "coupling_ratio": 0.028050548136351047,
+      "roots_beta_over_k0": [
+        1.1389708284329274
+      ],
+      "roots_beta_rad_per_m": [
+        167.09744386435338
+      ]
+    },
+    "TE_projection": {
+      "polarization": "TE",
+      "phi_deg": 0.0,
+      "coupling_ratio": 0.028050548136351047,
+      "roots_beta_over_k0": [],
+      "roots_beta_rad_per_m": []
+    },
+    "hybrid_TM_like": {
+      "beta_over_k0": 1.1391262191217812,
+      "te_over_tm_field": 0.032883995030543865
+    }
+  },
+  "across_y": {
+    "TM_projection": {
+      "polarization": "TM",
+      "phi_deg": 90.0,
+      "coupling_ratio": 0.02805054813635332,
+      "roots_beta_over_k0": [
+        1.0286603631781819
+      ],
+      "roots_beta_rad_per_m": [
+        150.91388910122012
+      ]
+    },
+    "TE_projection": {
+      "polarization": "TE",
+      "phi_deg": 90.0,
+      "coupling_ratio": 0.02805054813635332,
+      "roots_beta_over_k0": [
+        1.379904495895142
+      ],
+      "roots_beta_rad_per_m": [
+        202.4446177943405
+      ]
+    },
+    "hybrid_TM_like": {
+      "beta_over_k0": 1.0285267693361002,
+      "te_over_tm_field": 0.11326031964219942
+    }
+  },
+  "anisotropy": {
+    "delta_mS": 4.532703536391981,
+    "principal_axis_deg": 178.3944856937153,
+    "reciprocity_error": 2.335409757016931e-15,
+    "offdiag_asym_siemens": 1.056923353543579e-17,
+    "M_t_principal": 0.5861972418859641
+  },
+  "status": "COMPLETE"
+}

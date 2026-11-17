@@ -1,0 +1,84 @@
+{
+  "label": "MODEL_ONLY / NOT_HFSS_VALIDATED_LEAKAGE",
+  "input_source": "user-supplied HFSS beta/k0 pairs",
+  "frequency_hz": 5800000000.0,
+  "k0_rad_per_m": 121.55901127319754,
+  "theta_deg": 30,
+  "substrate": {
+    "eps_r": 2.2,
+    "tan_delta": 0.0009,
+    "thickness_m": 0.003175,
+    "backing": "PEC"
+  },
+  "method": "For each real HFSS beta, B_sheet=-Im[Y_air_TM(beta)+Y_grounded_slab_TM(beta)]; mean B and half-difference delta; solve TM beta of mean jB, then leakage_alpha_first_order_tensor(beta_mean,jB,delta,theta=30).",
+  "rows": {
+    "MN_R5p6_W0p4_N2_T1p2_D3p0_E": {
+      "input_beta_over_k0": [
+        1.083,
+        1.0675
+      ],
+      "input_rounding_half_step": [
+        0.0005,
+        5e-05
+      ],
+      "sheet_admittance_x_mS": 7.5884134803723216,
+      "sheet_admittance_y_mS": 6.40350414294933,
+      "mean_sheet_susceptance_mS": 6.995958811660826,
+      "delta_sheet_susceptance_mS": 0.592454668711496,
+      "beta_mean_over_k0": 1.0749472858939357,
+      "beta_forward_over_k0": [
+        1.0830000000000002,
+        1.0675000000000001
+      ],
+      "surface_reactance_x_ohm": 162.90062022507732,
+      "surface_reactance_y_ohm": 136.5445822948349,
+      "M_t": 0.08801623037687446,
+      "alpha_np_per_m": 0.09973559990465039,
+      "alpha_over_k0": 0.0008204706410493898,
+      "ideal_conversion_R150": 0.029477487631070498,
+      "target_alpha_np_per_m": 2.3104906018664844,
+      "alpha_fraction_of_50pct_target": 0.043166416614757466,
+      "alpha_rounding_range_np_per_m": [
+        0.09317279247490586,
+        0.10649002985742115
+      ]
+    },
+    "ST_R5p6_L6p72_W3p6": {
+      "input_beta_over_k0": [
+        1.099,
+        1.0776
+      ],
+      "input_rounding_half_step": [
+        0.0005,
+        5e-05
+      ],
+      "sheet_admittance_x_mS": 8.667934447170525,
+      "sheet_admittance_y_mS": 7.195907221857965,
+      "mean_sheet_susceptance_mS": 7.931920834514244,
+      "delta_sheet_susceptance_mS": 0.7360136126562801,
+      "beta_mean_over_k0": 1.0879217486272694,
+      "beta_forward_over_k0": [
+        1.099,
+        1.0776
+      ],
+      "surface_reactance_x_ohm": 183.17161802063697,
+      "surface_reactance_y_ohm": 144.2714574318931,
+      "M_t": 0.11879976553171384,
+      "alpha_np_per_m": 0.1380387752803992,
+      "alpha_over_k0": 0.0011355700727950497,
+      "ideal_conversion_R150": 0.040565885691043135,
+      "target_alpha_np_per_m": 2.3104906018664844,
+      "alpha_fraction_of_50pct_target": 0.05974435696422539,
+      "alpha_rounding_range_np_per_m": [
+        0.13173380657780773,
+        0.14445580441591044
+      ]
+    }
+  },
+  "N2_over_ST_alpha_ratio": 0.7225187249166527,
+  "limits": [
+    "Only TM phase constants are supplied; sheet conductance and real cell loss cannot be inferred.",
+    "Alpha is first-order radiating potential for a spatially rotated tensor hologram, not leakage of a uniform IDC cell.",
+    "No beta(f,r) data, so this single-frequency inversion cannot predict a radius-dependent flat resonance."
+  ]
+}

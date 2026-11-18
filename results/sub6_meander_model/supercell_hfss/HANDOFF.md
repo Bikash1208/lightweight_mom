@@ -1,5 +1,7 @@
 # HFSS rotated-supercell restart handoff (2026-11-18)
 
+**Latest status:** B2p2 30° completed; B2p2 45° timed out at the specified 1500 s limit. Work stopped. See `RESUME3_STOP.md` for the current result and model-only angle screen.
+
 ## STATUS
 Paused for user-requested server restart. AEDT 2025.2, fresh local sessions only. B2p2 30° was stopped by exact recorded PIDs; B2p2 45° and D3p6 supercells did not start.
 

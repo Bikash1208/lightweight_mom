@@ -1,0 +1,214 @@
+PyAEDT INFO: Python version 3.12.16 | packaged by Anaconda, Inc. | (main, Oct 26 2026, 20:13:05) [MSC v.1942 64 bit (AMD64)].
+PyAEDT INFO: PyAEDT version 1.9.0.
+PyAEDT INFO: Initializing new Desktop session.
+PyAEDT INFO: AEDT version 2025.2.
+PyAEDT INFO: New AEDT session is starting on gRPC port 63743.
+PyAEDT INFO: Starting new AEDT gRPC session on port 63743.
+PyAEDT INFO: Launching AEDT server with gRPC transport mode: TransportMode.WNUA
+PyAEDT INFO: Electronics Desktop started on gRPC port 63743 after 8.8 seconds.
+PyAEDT INFO: AEDT installation Path C:\Program Files\ANSYS Inc\v252\AnsysEM
+PyAEDT INFO: 2025.2 version started with process ID 18712.
+PyAEDT WARNING: Service Pack is not detected. PyAEDT is currently connecting in Insecure Mode.
+PyAEDT WARNING: Please download and install latest Service Pack to use connect to AEDT in Secure Mode.
+PyAEDT INFO: Non-graphical mode detected. Disabling Desktop logs.
+PyAEDT INFO: Project SUPER_B2p2_D3p0_ph45_PML40 has been created.
+PyAEDT INFO: Added design 'EigenCell' of type HFSS.
+PyAEDT INFO: AEDT objects correctly read
+PyAEDT INFO: Modeler class has been initialized! Elapsed time: 0m 0sec
+PyAEDT INFO: Materials class has been initialized! Elapsed time: 0m 0sec
+PyAEDT INFO: Adding new material to the Project Library: RT5880_SUPERCELL
+PyAEDT INFO: Material has been added in Desktop.
+PyAEDT INFO: Parsing design objects. This operation can take time
+PyAEDT INFO: Refreshing bodies from Object Info
+PyAEDT INFO: Bodies Info Refreshed Elapsed time: 0m 0sec
+PyAEDT INFO: 3D Modeler objects parsed. Elapsed time: 0m 0sec
+PyAEDT INFO: Parsing design objects. This operation can take time
+PyAEDT INFO: Refreshing bodies from Object Info
+PyAEDT INFO: Bodies Info Refreshed Elapsed time: 0m 0sec
+PyAEDT INFO: 3D Modeler objects parsed. Elapsed time: 0m 0sec
+PyAEDT INFO: Parsing design objects. This operation can take time
+PyAEDT INFO: Refreshing bodies from Object Info
+PyAEDT INFO: Bodies Info Refreshed Elapsed time: 0m 0sec
+PyAEDT INFO: 3D Modeler objects parsed. Elapsed time: 0m 0sec
+PyAEDT INFO: Parsing design objects. This operation can take time
+PyAEDT INFO: Refreshing bodies from Object Info
+PyAEDT INFO: Bodies Info Refreshed Elapsed time: 0m 0sec
+PyAEDT INFO: 3D Modeler objects parsed. Elapsed time: 0m 0sec
+PyAEDT INFO: Parsing design objects. This operation can take time
+PyAEDT INFO: Refreshing bodies from Object Info
+PyAEDT INFO: Bodies Info Refreshed Elapsed time: 0m 0sec
+PyAEDT INFO: 3D Modeler objects parsed. Elapsed time: 0m 0sec
+PyAEDT INFO: Parsing design objects. This operation can take time
+PyAEDT INFO: Refreshing bodies from Object Info
+PyAEDT INFO: Bodies Info Refreshed Elapsed time: 0m 0sec
+PyAEDT INFO: 3D Modeler objects parsed. Elapsed time: 0m 0sec
+PyAEDT INFO: Parsing design objects. This operation can take time
+PyAEDT INFO: Refreshing bodies from Object Info
+PyAEDT INFO: Bodies Info Refreshed Elapsed time: 0m 0sec
+PyAEDT INFO: 3D Modeler objects parsed. Elapsed time: 0m 0sec
+PyAEDT INFO: Parsing design objects. This operation can take time
+PyAEDT INFO: Refreshing bodies from Object Info
+PyAEDT INFO: Bodies Info Refreshed Elapsed time: 0m 0sec
+PyAEDT INFO: 3D Modeler objects parsed. Elapsed time: 0m 0sec
+PyAEDT INFO: Boundary Lattice Pair Lattice_X has been created.
+PyAEDT INFO: Boundary Lattice Pair Lattice_Y has been created.
+PyAEDT INFO: Parsing design objects. This operation can take time
+PyAEDT INFO: Refreshing bodies from Object Info
+PyAEDT INFO: Bodies Info Refreshed Elapsed time: 0m 0sec
+PyAEDT INFO: 3D Modeler objects parsed. Elapsed time: 0m 0sec
+PyAEDT INFO: Boundary Perfect E PEC_BOTTOM has been created.
+PyAEDT INFO: Project SUPER_B2p2_D3p0_ph45_PML40 Saved correctly
+PyAEDT INFO: Key Desktop/ActiveDSOConfigurations/HFSS correctly changed.
+PyAEDT INFO: Solving design setup EigenCell
+Exception in thread Thread-22:
+PyAEDT INFO: Design setup EigenCell solved correctly in 0.0h 25.0m 0.0s
+Traceback (most recent call last):
+  File "C:\lwmom_labB\.py312\Lib\threading.py", line 1075, in _bootstrap_inner
+PyAEDT WARNING: Error setting up Key Desktop/ActiveDSOConfigurations/HFSS.
+Traceback (most recent call last):
+  File "C:\lwmom_meander_model\scripts\research\sub6_supercell_phase.py", line 177, in one
+    need(state["status"] != "TIMEOUT", "SOLVE_TIMEOUT")
+  File "C:\lwmom_meander_model\scripts\research\sub6_rotated_supercell_hfss.py", line 55, in need
+    raise RuntimeError(label)
+RuntimeError: SOLVE_TIMEOUT
+PyAEDT ERROR: **************************************************************
+    self.run()
+  File "C:\lwmom_labB\.py312\Lib\threading.py", line 1433, in run
+    self.function(*self.args, **self.kwargs)
+  File "C:\lwmom_meander_model\scripts\research\sub6_supercell_phase.py", line 160, in timeout_own_pid
+    write(status_path, state)
+  File "C:\lwmom_meander_model\scripts\research\sub6_rotated_supercell_hfss.py", line 50, in write
+    os.replace(tmp, path)
+PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\lwmom_meander_model\\results\\sub6_meander_model\\supercell_hfss\\SUPER_B2p2_D3p0_ph45_PML40_status.json.tmp' -> 'C:\\lwmom_meander_model\\results\\sub6_meander_model\\supercell_hfss\\SUPER_B2p2_D3p0_ph45_PML40_status.json'
+PyAEDT ERROR:   File "C:\lwmom_meander_model\scripts\research\sub6_supercell_phase.py", line 216, in <module>
+PyAEDT ERROR:     one(args.cell, args.phase, args.cores, args.tag)
+PyAEDT ERROR:   File "C:\lwmom_meander_model\scripts\research\sub6_supercell_phase.py", line 206, in one
+PyAEDT ERROR:     h.release_desktop(close_projects=True, close_desktop=True)
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\application\design.py", line 3138, in release_desktop
+PyAEDT ERROR:     self.desktop_class.close_desktop()
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\desktop.py", line 2367, in close_desktop
+PyAEDT ERROR:     return self.__release_and_close_desktop(close_projects=True, close_aedt_app=True)
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\desktop.py", line 2294, in __release_and_close_desktop
+PyAEDT ERROR:     projects = self.project_list
+PyAEDT ERROR:                ^^^^^^^^^^^^^^^^^
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\desktop.py", line 1852, in project_list
+PyAEDT ERROR:     return list(self.odesktop.GetProjectList())
+PyAEDT ERROR:                 ^^^^^^^^^^^^^
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\desktop.py", line 1511, in odesktop
+PyAEDT ERROR:     self.grpc_plugin.recreate_application(True)
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\internal\grpc_plugin_dll_class.py", line 386, in recreate_application
+PyAEDT ERROR:     return run()
+PyAEDT ERROR:            ^^^^^
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\internal\grpc_plugin_dll_class.py", line 376, in run
+PyAEDT ERROR:     self.ReleaseAedtObject(self.aedt.objectID)
+PyAEDT ERROR:                            ^^^^^^^^^^^^^^^^^^
+PyAEDT ERROR: 'nonetype' object has no attribute 'objectid' on __release_and_close_desktop
+PyAEDT ERROR: Method arguments: 
+PyAEDT ERROR:     close_projects = True 
+PyAEDT ERROR:     close_aedt_app = True 
+PyAEDT ERROR: **************************************************************
+PyAEDT INFO: Desktop has been released.
+PyAEDT ERROR: **************************************************************
+PyAEDT ERROR:   File "C:\lwmom_meander_model\scripts\research\sub6_supercell_phase.py", line 216, in <module>
+PyAEDT ERROR:     one(args.cell, args.phase, args.cores, args.tag)
+PyAEDT ERROR:   File "C:\lwmom_meander_model\scripts\research\sub6_supercell_phase.py", line 206, in one
+PyAEDT ERROR:     h.release_desktop(close_projects=True, close_desktop=True)
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\application\design.py", line 3138, in release_desktop
+PyAEDT ERROR:     self.desktop_class.close_desktop()
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\desktop.py", line 2367, in close_desktop
+PyAEDT ERROR:     return self.__release_and_close_desktop(close_projects=True, close_aedt_app=True)
+PyAEDT ERROR:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\desktop.py", line 2294, in __release_and_close_desktop
+PyAEDT ERROR:     projects = self.project_list
+PyAEDT ERROR:                ^^^^^^^^^^^^^^^^^
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\desktop.py", line 1852, in project_list
+PyAEDT ERROR:     return list(self.odesktop.GetProjectList())
+PyAEDT ERROR:                 ^^^^^^^^^^^^^
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\desktop.py", line 1511, in odesktop
+PyAEDT ERROR:     self.grpc_plugin.recreate_application(True)
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\internal\grpc_plugin_dll_class.py", line 386, in recreate_application
+PyAEDT ERROR:     return run()
+PyAEDT ERROR:            ^^^^^
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\internal\grpc_plugin_dll_class.py", line 376, in run
+PyAEDT ERROR:     self.ReleaseAedtObject(self.aedt.objectID)
+PyAEDT ERROR:                            ^^^^^^^^^^^^^^^^^^
+PyAEDT ERROR: 'nonetype' object has no attribute 'objectid' on release_desktop
+PyAEDT ERROR: Method arguments: 
+PyAEDT ERROR:     close_projects = True 
+PyAEDT ERROR:     close_desktop = True 
+PyAEDT ERROR: **************************************************************
+Traceback (most recent call last):
+  File "C:\lwmom_meander_model\scripts\research\sub6_supercell_phase.py", line 177, in one
+    need(state["status"] != "TIMEOUT", "SOLVE_TIMEOUT")
+  File "C:\lwmom_meander_model\scripts\research\sub6_rotated_supercell_hfss.py", line 55, in need
+    raise RuntimeError(label)
+RuntimeError: SOLVE_TIMEOUT
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\internal\grpc_plugin_dll_class.py", line 389, in recreate_application
+    odesktop = self.aedt.GetAppDesktop()
+               ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'GetAppDesktop'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\desktop.py", line 1506, in odesktop
+    self.__desktop = self.grpc_plugin.odesktop
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\internal\grpc_plugin_dll_class.py", line 372, in odesktop
+    return self.recreate_application()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\internal\grpc_plugin_dll_class.py", line 393, in recreate_application
+    return run()
+           ^^^^^
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\internal\grpc_plugin_dll_class.py", line 376, in run
+    self.ReleaseAedtObject(self.aedt.objectID)
+                           ^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'objectID'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\lwmom_meander_model\scripts\research\sub6_supercell_phase.py", line 216, in <module>
+    one(args.cell, args.phase, args.cores, args.tag)
+  File "C:\lwmom_meander_model\scripts\research\sub6_supercell_phase.py", line 206, in one
+    h.release_desktop(close_projects=True, close_desktop=True)
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\generic\general_methods.py", line 275, in wrapper
+    return raise_exception_or_return_false(e)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\generic\general_methods.py", line 234, in raise_exception_or_return_false
+    raise e
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\generic\general_methods.py", line 250, in wrapper
+    out = user_function(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\application\design.py", line 3138, in release_desktop
+    self.desktop_class.close_desktop()
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\desktop.py", line 2367, in close_desktop
+    return self.__release_and_close_desktop(close_projects=True, close_aedt_app=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\generic\general_methods.py", line 275, in wrapper
+    return raise_exception_or_return_false(e)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\generic\general_methods.py", line 234, in raise_exception_or_return_false
+    raise e
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\generic\general_methods.py", line 250, in wrapper
+    out = user_function(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\desktop.py", line 2294, in __release_and_close_desktop
+    projects = self.project_list
+               ^^^^^^^^^^^^^^^^^
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\desktop.py", line 1852, in project_list
+    return list(self.odesktop.GetProjectList())
+                ^^^^^^^^^^^^^
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\desktop.py", line 1511, in odesktop
+    self.grpc_plugin.recreate_application(True)
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\internal\grpc_plugin_dll_class.py", line 386, in recreate_application
+    return run()
+           ^^^^^
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\internal\grpc_plugin_dll_class.py", line 376, in run
+    self.ReleaseAedtObject(self.aedt.objectID)
+                           ^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'objectID'

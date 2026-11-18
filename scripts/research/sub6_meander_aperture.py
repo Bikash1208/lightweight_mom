@@ -27,7 +27,7 @@ def angular_distance(theta, phi, target_phi):
 
 
 def estimate(radius_m, quadrants, step_m=0.005, angle_step_deg=2, alpha_np_m=None, soft_boundary_mm=0.0,
-             feed_floor_m=0.0058):
+             feed_floor_m=0.0058, radial_fn=None):
     grid = np.arange(-radius_m + step_m / 2, radius_m, step_m)
     xx, yy = np.meshgrid(grid, grid)
     keep = xx**2 + yy**2 <= radius_m**2
@@ -38,7 +38,11 @@ def estimate(radius_m, quadrants, step_m=0.005, angle_step_deg=2, alpha_np_m=Non
     phis = np.arange(sectors) * 2 * math.pi / sectors
     hands = ["RHCP" if i % 2 == 0 else "LHCP" for i in range(sectors)]
     weights = {"RHCP": np.zeros(len(x), dtype=complex), "LHCP": np.zeros(len(x), dtype=complex)}
-    if alpha_np_m is None:
+    if radial_fn is not None:
+        radial = np.asarray(radial_fn(np.hypot(x, y)), dtype=float)
+        if radial.shape != x.shape or not np.all(np.isfinite(radial)) or np.any(radial < 0):
+            raise ValueError("radial_fn must return a finite nonnegative weight per aperture sample")
+    elif alpha_np_m is None:
         radial = np.ones(len(x))
     else:
         rho = np.hypot(x, y)
@@ -104,7 +108,7 @@ def estimate(radius_m, quadrants, step_m=0.005, angle_step_deg=2, alpha_np_m=Non
                       "targets_met": ar <= 3 and (cross == 0 or co / cross >= 10**1.5) and sll is not None and sll <= -15})
     return {"aperture": "D150" if radius_m == 0.075 else "R150", "radius_mm": radius_m * 1000,
             "partition": f"{sectors}-sector", "sample_count": len(x), "step_mm": step_m * 1000,
-            "illumination": "uniform" if alpha_np_m is None else "rho^-1/2 exp(-alpha rho)",
+            "illumination": "custom radial leakage profile" if radial_fn is not None else ("uniform" if alpha_np_m is None else "rho^-1/2 exp(-alpha rho)"),
             "alpha_np_m": alpha_np_m, "soft_boundary_mm": soft_boundary_mm,
             "feed_floor_mm": feed_floor_m * 1000 if alpha_np_m is not None else None,
             "angle_step_deg": angle_step_deg, "first_null_exclusion_deg": math.degrees(first_null_rad),

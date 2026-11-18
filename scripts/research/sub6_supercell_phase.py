@@ -17,7 +17,7 @@ from sub6_rotated_supercell_hfss import (BIAS, CELLS, CU, P, RESULTS, ROOT,
                                          RT, WORK, launch, modes, need, now, write)
 
 
-def build(h, cell, phase):
+def build(h, cell, phase, min_freq_ghz=5.3, num_modes=20):
     spec = CELLS[cell]
     m = h.modeler
     m.model_units = "mm"
@@ -94,7 +94,7 @@ def build(h, cell, phase):
                            "MinFreq:=", "5.8GHz"])
     need(h.assign_perfect_e([face([0, 0, -43.499])], name="PEC_BOTTOM"), "PEC_BOTTOM")
     setup = need(h.create_setup("EigenCell"), "SETUP")
-    setup.props.update(MinimumFrequency="5.3GHz", NumModes=20, MaxDeltaFreq=.2,
+    setup.props.update(MinimumFrequency=f"{min_freq_ghz}GHz", NumModes=num_modes, MaxDeltaFreq=.2,
                        MinimumPasses=4, MinimumConvergedPasses=2, MaximumPasses=20,
                        ConvergeOnRealFreq=True, SaveFields=True)
     need(setup.update(), "SETUP_UPDATE")
@@ -114,13 +114,16 @@ def build(h, cell, phase):
             "setup": dict(setup.props), "aedt_version": h.desktop_class.aedt_version_id}
 
 
-def one(cell, phase, cores, tag=""):
+def one(cell, phase, cores, tag="", min_freq_ghz=5.3, num_modes=20,
+        timeout_s=1500):
     label = f"SUPER_{cell}_ph{phase:g}_PML40{('_'+tag) if tag else ''}"
     project = WORK / "projects" / f"{label}.aedt"
     need(not project.exists(), f"REFUSE_EXISTING_PROJECT {project}")
     RESULTS.mkdir(parents=True, exist_ok=True)
     start = time.monotonic()
     state = {"status": "STARTING", "cell": cell, "phase_deg": phase,
+             "solve_timeout_s": timeout_s, "minimum_frequency_ghz": min_freq_ghz,
+             "requested_modes": num_modes,
              "controller_pid": os.getpid(), "started_utc": now()}
     status_path = RESULTS / f"{label}_status.json"
     write(status_path, state)
@@ -143,7 +146,7 @@ def one(cell, phase, cores, tag=""):
         h = launch(project)
         state.update(status="BUILDING", aedt_pid=h.desktop_class.aedt_process_id)
         write(status_path, state)
-        built = build(h, cell, phase)
+        built = build(h, cell, phase, min_freq_ghz, num_modes)
         write(RESULTS / f"{label}_build.json", built)
         state.update(status="SOLVING", solve_start_utc=now())
         write(status_path, state)
@@ -156,7 +159,7 @@ def one(cell, phase, cores, tag=""):
 
         def timeout_own_pid():
             import psutil
-            state.update(status="TIMEOUT", error="1500s solve timeout", timeout_utc=now())
+            state.update(status="TIMEOUT", error=f"{timeout_s}s solve timeout", timeout_utc=now())
             write(status_path, state)
             try:
                 p = psutil.Process(int(h.desktop_class.aedt_process_id))
@@ -169,7 +172,7 @@ def one(cell, phase, cores, tag=""):
             except psutil.NoSuchProcess:
                 pass
 
-        watchdog = threading.Timer(1500, timeout_own_pid)
+        watchdog = threading.Timer(timeout_s, timeout_own_pid)
         watchdog.start()
         try:
             need(h.analyze_setup("EigenCell", cores=cores, use_auto_settings=True,
@@ -187,7 +190,9 @@ def one(cell, phase, cores, tag=""):
         except Exception as exc:
             result["profile_export_error"] = f"{type(exc).__name__}: {exc}"
         need(h.save_project(), "POSTSOLVE_SAVE_PROJECT")
-        need(result["modes"][-1]["f_ghz"] >= 6.5, "MODE_SPAN_BELOW_6P5")
+        result["mode_span_reaches_6p5"] = result["modes"][-1]["f_ghz"] >= 6.5
+        if num_modes >= 20:
+            need(result["mode_span_reaches_6p5"], "MODE_SPAN_BELOW_6P5")
         write(RESULTS / f"{label}_modes.json", result)
         state.update(status="COMPLETE", seconds=result["seconds"], solve_end_utc=now())
         write(status_path, state)
@@ -212,5 +217,9 @@ if __name__ == "__main__":
     ap.add_argument("--phase", type=int, choices=(15, 30, 45), required=True)
     ap.add_argument("--cores", type=int, default=48)
     ap.add_argument("--tag", default="")
+    ap.add_argument("--min-freq-ghz", type=float, default=5.3)
+    ap.add_argument("--num-modes", type=int, default=20)
+    ap.add_argument("--timeout-s", type=int, default=1500)
     args = ap.parse_args()
-    one(args.cell, args.phase, args.cores, args.tag)
+    one(args.cell, args.phase, args.cores, args.tag, args.min_freq_ghz,
+        args.num_modes, args.timeout_s)

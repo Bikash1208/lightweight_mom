@@ -24,6 +24,7 @@ def save(path, value):
 def main(status):
     heartbeat = status.with_name(status.stem + "_external_heartbeat.json")
     initial = read(status)
+    timeout_s = int(initial.get("solve_timeout_s", 1500))
     aedt_pid = int(initial["aedt_pid"])
     controller_pid = int(initial["controller_pid"])
     aedt_created = psutil.Process(aedt_pid).create_time()
@@ -45,8 +46,8 @@ def main(status):
         save(heartbeat, record)
         if state["status"] in ("COMPLETE", "FAILED", "TIMEOUT"):
             return
-        if state["status"] == "SOLVING" and (elapsed >= 1500 or not own_controller_alive):
-            reason = "TIMEOUT_1500S" if elapsed >= 1500 else "CONTROLLER_DEATH"
+        if state["status"] == "SOLVING" and (elapsed >= timeout_s or not own_controller_alive):
+            reason = f"TIMEOUT_{timeout_s}S" if elapsed >= timeout_s else "CONTROLLER_DEATH"
             record["reason"] = reason
             if own_aedt_alive:
                 targets = aedt.children(recursive=True) + [aedt]

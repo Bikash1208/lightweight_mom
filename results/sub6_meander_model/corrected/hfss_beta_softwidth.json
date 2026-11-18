@@ -1,0 +1,534 @@
+{
+  "label": "MODEL_ONLY / NOT_HFSS_VALIDATED",
+  "frequency_ghz": 5.8,
+  "period_mm": 11.6,
+  "raw_mode_source": "user-supplied HFSS frequencies and Q",
+  "tracks": {
+    "across_x": {
+      "input_phase_deg_frequency_ghz_Q": [
+        [
+          85,
+          5.553,
+          2038
+        ],
+        [
+          95,
+          5.925,
+          1590
+        ]
+      ],
+      "beta_points_over_k0": [
+        1.098883026278295,
+        1.1510533775482161
+      ],
+      "beta_at_5p8_over_k0": 1.1335230175784845,
+      "bracketed": true,
+      "method": "linear interpolation/extrapolation in (frequency, beta/k0)"
+    },
+    "along_y_bracketed_95_low": {
+      "input_phase_deg_frequency_ghz_Q": [
+        [
+          85,
+          5.743,
+          3694
+        ],
+        [
+          95,
+          6.14,
+          1755
+        ]
+      ],
+      "beta_points_over_k0": [
+        1.0625278504132631,
+        1.1107477625363484
+      ],
+      "beta_at_5p8_over_k0": 1.0694511123553685,
+      "bracketed": true,
+      "method": "linear interpolation/extrapolation in (frequency, beta/k0)"
+    },
+    "along_y_bracketed_95_high": {
+      "input_phase_deg_frequency_ghz_Q": [
+        [
+          85,
+          5.743,
+          3694
+        ],
+        [
+          95,
+          6.287,
+          2586
+        ]
+      ],
+      "beta_points_over_k0": [
+        1.0625278504132631,
+        1.0847767237113377
+      ],
+      "beta_at_5p8_over_k0": 1.064859074269863,
+      "bracketed": true,
+      "method": "linear interpolation/extrapolation in (frequency, beta/k0)"
+    },
+    "along_y_high_95_low_extrapolated": {
+      "input_phase_deg_frequency_ghz_Q": [
+        [
+          85,
+          5.942,
+          1889
+        ],
+        [
+          95,
+          6.14,
+          1755
+        ]
+      ],
+      "beta_points_over_k0": [
+        1.0269433599669087,
+        1.1107477625363484
+      ],
+      "beta_at_5p8_over_k0": 0.9668412126696334,
+      "bracketed": false,
+      "method": "linear interpolation/extrapolation in (frequency, beta/k0)"
+    },
+    "along_y_high_extrapolated": {
+      "input_phase_deg_frequency_ghz_Q": [
+        [
+          85,
+          5.942,
+          1889
+        ],
+        [
+          95,
+          6.287,
+          2586
+        ]
+      ],
+      "beta_points_over_k0": [
+        1.0269433599669087,
+        1.0847767237113377
+      ],
+      "beta_at_5p8_over_k0": 1.0031394827155784,
+      "bracketed": false,
+      "method": "linear interpolation/extrapolation in (frequency, beta/k0)"
+    }
+  },
+  "lid_correction_mm": 40,
+  "inversions": {
+    "bracketed_95_low_pair": {
+      "B_x_mS": 10.746870877357322,
+      "B_y_mS": 6.20383625100191,
+      "B_mean_mS": 8.475353564179615,
+      "delta_mS": 2.271517313177706,
+      "beta_mean_open_over_k0": 1.0960385579033067,
+      "alpha_np_per_m": 1.1582870314444311,
+      "alpha_over_k0": 0.00952859865601606
+    },
+    "bracketed_95_high_pair": {
+      "B_x_mS": 10.746870877357322,
+      "B_y_mS": 5.755099809979433,
+      "B_mean_mS": 8.250985343668377,
+      "delta_mS": 2.495885533688945,
+      "beta_mean_open_over_k0": 1.092641919867265,
+      "alpha_np_per_m": 1.4795146287707739,
+      "alpha_over_k0": 0.01217116372759599
+    },
+    "approx_y_1p065": {
+      "B_x_mS": 10.746870877357322,
+      "B_y_mS": 5.769427855523297,
+      "B_mean_mS": 8.25814936644031,
+      "delta_mS": 2.4887215109170127,
+      "beta_mean_open_over_k0": 1.0927494274588974,
+      "alpha_np_per_m": 1.468505562279602,
+      "alpha_over_k0": 0.012080598113612591
+    },
+    "approx_y_1p070": {
+      "B_x_mS": 10.746870877357322,
+      "B_y_mS": 6.255160995884015,
+      "B_mean_mS": 8.50101593662067,
+      "delta_mS": 2.245854940736654,
+      "beta_mean_open_over_k0": 1.0964308223885062,
+      "alpha_np_per_m": 1.1246375732750629,
+      "alpha_over_k0": 0.009251782829555091
+    },
+    "y_needed_for_1p33": {
+      "beta_y_over_k0": 1.066864744856921,
+      "B_x_mS": 10.746870877357322,
+      "B_y_mS": 5.955561517131698,
+      "B_mean_mS": 8.351216197244511,
+      "delta_mS": 2.3956546801128127,
+      "beta_mean_open_over_k0": 1.0941518131697558,
+      "alpha_np_per_m": 1.3299999999802117,
+      "alpha_over_k0": 0.010941188037397787
+    }
+  },
+  "soft_width_alpha_input_np_per_m": 1.33,
+  "soft_width_alpha_status": "user-requested approximate HFSS-pair map value; bracketed raw track maps to a different alpha",
+  "soft_width_cases": {
+    "10": {
+      "aperture": "R150",
+      "radius_mm": 150.0,
+      "partition": "2-sector",
+      "sample_count": 2828,
+      "step_mm": 5.0,
+      "illumination": "rho^-1/2 exp(-alpha rho)",
+      "alpha_np_m": 1.33,
+      "soft_boundary_mm": 10,
+      "feed_floor_mm": 5.8,
+      "angle_step_deg": 1,
+      "first_null_exclusion_deg": 17.29350939107593,
+      "first_null_method": "local maxima outside 1.22 lambda / equal-area circular-diameter cone; approximate for sectors",
+      "beams": [
+        {
+          "target_theta_deg": 30.0,
+          "target_phi_deg": 0,
+          "hand": "RHCP",
+          "peak_theta_deg": 28.0,
+          "peak_phi_deg": 0.0,
+          "directivity_dbi": 18.974119241598615,
+          "sll_db": -13.485896005633728,
+          "worst_sll_lobe": {
+            "theta_deg": 1.0,
+            "phi_deg": 0.0,
+            "hand": "RHCP",
+            "level_db": -13.485896005633728
+          },
+          "ar_db": 0.8618502481662494,
+          "xpd_db": 26.09537210739191,
+          "targets_met": false
+        },
+        {
+          "target_theta_deg": 30.0,
+          "target_phi_deg": 180,
+          "hand": "LHCP",
+          "peak_theta_deg": 28.0,
+          "peak_phi_deg": 180.0,
+          "directivity_dbi": 18.974119241604832,
+          "sll_db": -13.485896005678747,
+          "worst_sll_lobe": {
+            "theta_deg": 1.0,
+            "phi_deg": 180.0,
+            "hand": "LHCP",
+            "level_db": -13.485896005678747
+          },
+          "ar_db": 0.8618502481583484,
+          "xpd_db": 26.095372107471412,
+          "targets_met": false
+        }
+      ]
+    },
+    "20": {
+      "aperture": "R150",
+      "radius_mm": 150.0,
+      "partition": "2-sector",
+      "sample_count": 2828,
+      "step_mm": 5.0,
+      "illumination": "rho^-1/2 exp(-alpha rho)",
+      "alpha_np_m": 1.33,
+      "soft_boundary_mm": 20,
+      "feed_floor_mm": 5.8,
+      "angle_step_deg": 1,
+      "first_null_exclusion_deg": 17.29350939107593,
+      "first_null_method": "local maxima outside 1.22 lambda / equal-area circular-diameter cone; approximate for sectors",
+      "beams": [
+        {
+          "target_theta_deg": 30.0,
+          "target_phi_deg": 0,
+          "hand": "RHCP",
+          "peak_theta_deg": 29.000000000000004,
+          "peak_phi_deg": 0.0,
+          "directivity_dbi": 19.39973588274378,
+          "sll_db": -16.196160825025284,
+          "worst_sll_lobe": {
+            "theta_deg": 2.0,
+            "phi_deg": 0.0,
+            "hand": "RHCP",
+            "level_db": -16.196160825025284
+          },
+          "ar_db": 0.23445177498690312,
+          "xpd_db": 37.39634289453554,
+          "targets_met": true
+        },
+        {
+          "target_theta_deg": 30.0,
+          "target_phi_deg": 180,
+          "hand": "LHCP",
+          "peak_theta_deg": 29.000000000000004,
+          "peak_phi_deg": 180.0,
+          "directivity_dbi": 19.399735882743776,
+          "sll_db": -16.196160825025313,
+          "worst_sll_lobe": {
+            "theta_deg": 2.0,
+            "phi_deg": 180.0,
+            "hand": "LHCP",
+            "level_db": -16.196160825025313
+          },
+          "ar_db": 0.23445177498689374,
+          "xpd_db": 37.39634289453589,
+          "targets_met": true
+        }
+      ]
+    },
+    "30": {
+      "aperture": "R150",
+      "radius_mm": 150.0,
+      "partition": "2-sector",
+      "sample_count": 2828,
+      "step_mm": 5.0,
+      "illumination": "rho^-1/2 exp(-alpha rho)",
+      "alpha_np_m": 1.33,
+      "soft_boundary_mm": 30,
+      "feed_floor_mm": 5.8,
+      "angle_step_deg": 1,
+      "first_null_exclusion_deg": 17.29350939107593,
+      "first_null_method": "local maxima outside 1.22 lambda / equal-area circular-diameter cone; approximate for sectors",
+      "beams": [
+        {
+          "target_theta_deg": 30.0,
+          "target_phi_deg": 0,
+          "hand": "RHCP",
+          "peak_theta_deg": 29.000000000000004,
+          "peak_phi_deg": 0.0,
+          "directivity_dbi": 19.75840107112986,
+          "sll_db": -18.4722996260615,
+          "worst_sll_lobe": {
+            "theta_deg": 2.0,
+            "phi_deg": 0.0,
+            "hand": "RHCP",
+            "level_db": -18.4722996260615
+          },
+          "ar_db": 0.10861279868529326,
+          "xpd_db": 44.079379139839,
+          "targets_met": true
+        },
+        {
+          "target_theta_deg": 30.0,
+          "target_phi_deg": 180,
+          "hand": "LHCP",
+          "peak_theta_deg": 29.000000000000004,
+          "peak_phi_deg": 180.0,
+          "directivity_dbi": 19.75840107112985,
+          "sll_db": -18.472299626061513,
+          "worst_sll_lobe": {
+            "theta_deg": 2.0,
+            "phi_deg": 180.0,
+            "hand": "LHCP",
+            "level_db": -18.472299626061513
+          },
+          "ar_db": 0.10861279868528756,
+          "xpd_db": 44.079379139839496,
+          "targets_met": true
+        }
+      ]
+    },
+    "40": {
+      "aperture": "R150",
+      "radius_mm": 150.0,
+      "partition": "2-sector",
+      "sample_count": 2828,
+      "step_mm": 5.0,
+      "illumination": "rho^-1/2 exp(-alpha rho)",
+      "alpha_np_m": 1.33,
+      "soft_boundary_mm": 40,
+      "feed_floor_mm": 5.8,
+      "angle_step_deg": 1,
+      "first_null_exclusion_deg": 17.29350939107593,
+      "first_null_method": "local maxima outside 1.22 lambda / equal-area circular-diameter cone; approximate for sectors",
+      "beams": [
+        {
+          "target_theta_deg": 30.0,
+          "target_phi_deg": 0,
+          "hand": "RHCP",
+          "peak_theta_deg": 29.000000000000004,
+          "peak_phi_deg": 0.0,
+          "directivity_dbi": 20.041768953569402,
+          "sll_db": -19.95160945981931,
+          "worst_sll_lobe": {
+            "theta_deg": 2.0,
+            "phi_deg": 0.0,
+            "hand": "RHCP",
+            "level_db": -19.95160945981931
+          },
+          "ar_db": 0.07604258410395831,
+          "xpd_db": 47.17580419436256,
+          "targets_met": true
+        },
+        {
+          "target_theta_deg": 30.0,
+          "target_phi_deg": 180,
+          "hand": "LHCP",
+          "peak_theta_deg": 29.000000000000004,
+          "peak_phi_deg": 180.0,
+          "directivity_dbi": 20.041768953569388,
+          "sll_db": -19.951609459819338,
+          "worst_sll_lobe": {
+            "theta_deg": 2.0,
+            "phi_deg": 180.0,
+            "hand": "LHCP",
+            "level_db": -19.951609459819338
+          },
+          "ar_db": 0.07604258410395066,
+          "xpd_db": 47.175804194363266,
+          "targets_met": true
+        }
+      ]
+    }
+  },
+  "bracketed_track_alpha_np_per_m": 1.1582870314444311,
+  "bracketed_track_width_cases_source": "along_y_bracketed_95_low",
+  "bracketed_track_width_cases": {
+    "20": {
+      "aperture": "R150",
+      "radius_mm": 150.0,
+      "partition": "2-sector",
+      "sample_count": 2828,
+      "step_mm": 5.0,
+      "illumination": "rho^-1/2 exp(-alpha rho)",
+      "alpha_np_m": 1.1582870314444311,
+      "soft_boundary_mm": 20,
+      "feed_floor_mm": 5.8,
+      "angle_step_deg": 1,
+      "first_null_exclusion_deg": 17.29350939107593,
+      "first_null_method": "local maxima outside 1.22 lambda / equal-area circular-diameter cone; approximate for sectors",
+      "beams": [
+        {
+          "target_theta_deg": 30.0,
+          "target_phi_deg": 0,
+          "hand": "RHCP",
+          "peak_theta_deg": 29.000000000000004,
+          "peak_phi_deg": 0.0,
+          "directivity_dbi": 19.420159334569348,
+          "sll_db": -16.23240305989984,
+          "worst_sll_lobe": {
+            "theta_deg": 2.0,
+            "phi_deg": 0.0,
+            "hand": "RHCP",
+            "level_db": -16.23240305989984
+          },
+          "ar_db": 0.23104952427086076,
+          "xpd_db": 37.5232966290475,
+          "targets_met": true
+        },
+        {
+          "target_theta_deg": 30.0,
+          "target_phi_deg": 180,
+          "hand": "LHCP",
+          "peak_theta_deg": 29.000000000000004,
+          "peak_phi_deg": 180.0,
+          "directivity_dbi": 19.42015933456934,
+          "sll_db": -16.23240305989986,
+          "worst_sll_lobe": {
+            "theta_deg": 2.0,
+            "phi_deg": 180.0,
+            "hand": "LHCP",
+            "level_db": -16.23240305989986
+          },
+          "ar_db": 0.23104952427085135,
+          "xpd_db": 37.523296629047856,
+          "targets_met": true
+        }
+      ]
+    },
+    "30": {
+      "aperture": "R150",
+      "radius_mm": 150.0,
+      "partition": "2-sector",
+      "sample_count": 2828,
+      "step_mm": 5.0,
+      "illumination": "rho^-1/2 exp(-alpha rho)",
+      "alpha_np_m": 1.1582870314444311,
+      "soft_boundary_mm": 30,
+      "feed_floor_mm": 5.8,
+      "angle_step_deg": 1,
+      "first_null_exclusion_deg": 17.29350939107593,
+      "first_null_method": "local maxima outside 1.22 lambda / equal-area circular-diameter cone; approximate for sectors",
+      "beams": [
+        {
+          "target_theta_deg": 30.0,
+          "target_phi_deg": 0,
+          "hand": "RHCP",
+          "peak_theta_deg": 29.000000000000004,
+          "peak_phi_deg": 0.0,
+          "directivity_dbi": 19.778969825996885,
+          "sll_db": -18.50745961353328,
+          "worst_sll_lobe": {
+            "theta_deg": 2.0,
+            "phi_deg": 0.0,
+            "hand": "RHCP",
+            "level_db": -18.50745961353328
+          },
+          "ar_db": 0.10778455749191077,
+          "xpd_db": 44.14586664972652,
+          "targets_met": true
+        },
+        {
+          "target_theta_deg": 30.0,
+          "target_phi_deg": 180,
+          "hand": "LHCP",
+          "peak_theta_deg": 29.000000000000004,
+          "peak_phi_deg": 180.0,
+          "directivity_dbi": 19.778969825996878,
+          "sll_db": -18.507459613533296,
+          "worst_sll_lobe": {
+            "theta_deg": 2.0,
+            "phi_deg": 180.0,
+            "hand": "LHCP",
+            "level_db": -18.507459613533296
+          },
+          "ar_db": 0.10778455749190506,
+          "xpd_db": 44.14586664972703,
+          "targets_met": true
+        }
+      ]
+    },
+    "40": {
+      "aperture": "R150",
+      "radius_mm": 150.0,
+      "partition": "2-sector",
+      "sample_count": 2828,
+      "step_mm": 5.0,
+      "illumination": "rho^-1/2 exp(-alpha rho)",
+      "alpha_np_m": 1.1582870314444311,
+      "soft_boundary_mm": 40,
+      "feed_floor_mm": 5.8,
+      "angle_step_deg": 1,
+      "first_null_exclusion_deg": 17.29350939107593,
+      "first_null_method": "local maxima outside 1.22 lambda / equal-area circular-diameter cone; approximate for sectors",
+      "beams": [
+        {
+          "target_theta_deg": 30.0,
+          "target_phi_deg": 0,
+          "hand": "RHCP",
+          "peak_theta_deg": 29.000000000000004,
+          "peak_phi_deg": 0.0,
+          "directivity_dbi": 20.06277102324363,
+          "sll_db": -19.984396853147146,
+          "worst_sll_lobe": {
+            "theta_deg": 2.0,
+            "phi_deg": 0.0,
+            "hand": "RHCP",
+            "level_db": -19.984396853147146
+          },
+          "ar_db": 0.07682135882765252,
+          "xpd_db": 47.087302976869466,
+          "targets_met": true
+        },
+        {
+          "target_theta_deg": 30.0,
+          "target_phi_deg": 180,
+          "hand": "LHCP",
+          "peak_theta_deg": 29.000000000000004,
+          "peak_phi_deg": 180.0,
+          "directivity_dbi": 20.062771023243616,
+          "sll_db": -19.98439685314715,
+          "worst_sll_lobe": {
+            "theta_deg": 2.0,
+            "phi_deg": 180.0,
+            "hand": "LHCP",
+            "level_db": -19.98439685314715
+          },
+          "ar_db": 0.07682135882764679,
+          "xpd_db": 47.08730297687012,
+          "targets_met": true
+        }
+      ]
+    }
+  }
+}

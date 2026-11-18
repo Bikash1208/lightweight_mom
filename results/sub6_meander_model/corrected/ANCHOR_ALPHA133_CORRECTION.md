@@ -1,10 +1,12 @@
 # R150 rerun at user-reported HFSS-pair map alpha = 1.33 Np/m
 
+**Mode-list update:** The user subsequently supplied the raw HFSS modes. [HFSS_ANCHOR_BETA_SOFTWIDTH.md](HFSS_ANCHOR_BETA_SOFTWIDTH.md) inverts both bracketed y continuations and finds alpha 1.158 or 1.480 Np/m. Thus 1.33 remains an intermediate sensitivity case, not a uniquely confirmed inversion.
+
 ## Why the previous alpha differed
 
 The previous aperture run used **2.36832 Np/m** from `baseline_7leg_w0p4_5.80GHz_n88.json`. `sub6_meander_corrected.py` obtains that number from the **MoM extracted sheet tensor**, with delta B = 9.32668 mS and hybrid TM-like beta/k0 = 1.066415 (x), 1.295841 (y), then calls `leakage_alpha_first_order_tensor` at 5.8 GHz. Those are model-derived inputs, not the separate HFSS anchor pair.
 
-As a cross-check, applying the **40 mm PEC-lid beta-pair map** to the stored MoM TM-projection pair (1.066636, 1.294995) gives **2.30952 Np/m**; it differs from the direct MoM-tensor value by only **2.55%**. Therefore the 2.368-versus-1.33 discrepancy is primarily a **different input pair/sheet anisotropy**, not a 10.54-to-5.8 GHz scaling. Both alpha calculations here are explicitly at **5.8 GHz**. The numerical ratio 2.368/1.33 = 1.781 happens to be near 10.54/5.8 = 1.817 but does not establish frequency scaling. The HFSS anchor beta pair that yields 1.33 was not present in this local worktree, so its exact inversion cannot be independently audited here. **1.33 Np/m is used below as the user-specified map value.** Neither calculation is a measured alpha.
+As a cross-check, applying the **40 mm PEC-lid beta-pair map** to the stored MoM TM-projection pair (1.066636, 1.294995) gives **2.30952 Np/m**; it differs from the direct MoM-tensor value by only **2.55%**. Therefore the 2.368-versus-1.33 discrepancy is primarily a **different input pair/sheet anisotropy**, not a 10.54-to-5.8 GHz scaling. Both alpha calculations here are explicitly at **5.8 GHz**. The numerical ratio 2.368/1.33 = 1.781 happens to be near 10.54/5.8 = 1.817 but does not establish frequency scaling. The subsequently supplied HFSS mode lists are audited in the linked update. **1.33 Np/m is used below as the user-specified intermediate map value.** Neither calculation is a measured alpha.
 
 ## R150 two-sector result
 

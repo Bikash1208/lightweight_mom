@@ -10,7 +10,7 @@ R = ROOT / "results" / "sub6_meander_model" / "supercell_hfss"
 
 def load_modes(cell, phase):
     stem = f"SUPER_{cell}_ph{phase}_PML40"
-    for suffix in ("", "_retry1", "_resume1"):
+    for suffix in ("", "_retry1", "_resume1", "_resume4"):
         path = R / f"{stem}{suffix}_modes.json"
         if path.exists():
             return json.loads(path.read_text(encoding="utf-8"))["modes"]

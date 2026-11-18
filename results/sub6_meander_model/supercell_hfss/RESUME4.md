@@ -2,11 +2,11 @@
 
 ## STATUS
 
-D3p6 bridged 15- and 30-degree HFSS rows complete; 45 degrees is the next continuity check. B2p2 45-degree row skipped by decision; no additional anchor HFSS solve.
+D3p6 bridged 15/30/45-degree HFSS rows complete. B2p2 45-degree row skipped by decision; no additional anchor HFSS solve. No OFF-twin solve was started because a common viable f_op has not been established.
 
 ## GATES
 
-The common-frequency ON alpha >= 1.2 Np/m and ON/OFF >= 12 gates are pending D3p6 and, later, the OFF twin. Neither 5.8 GHz nor a particular beam angle is imposed. No operating point is selected yet.
+The D3p6 upper-branch candidate is below the ON alpha >= 1.2 Np/m gate at all measured points, but its 45-degree mode identity is uncertain; the gate is **not certified**. The common-frequency ON/OFF >= 12 gate remains untested because the OFF twin has not been run. Neither 5.8 GHz nor a particular beam angle is imposed. No operating point is selected yet.
 
 ## DATA
 
@@ -38,12 +38,40 @@ The folded unrotated x-branch estimates at phase 15 are 5.7449 GHz (x-low) and 5
 
 D3p6 bridged 30-degree row: 12 modes through 6.228252 GHz, max 100,780 solved tets, 20m32s solution time, normal completion. Candidate surface-wave frequencies/Q are mode 3 5.616420/128.6, mode 4 5.727140/212.3, mode 5 5.793549/94.8, mode 7 5.936188/823.3, and mode 8 6.005657/223.1. The negative-fold x-low/x-high unrotated predictions are 5.6972/5.8306 GHz. Modes crowd both windows, and Q changes sharply between some plausible 15-to-30 continuations. Phase 45 and saved-field matching are needed before assigning the two branches or computing alpha from a slope.
 
+D3p6 bridged 45-degree row: 12 modes through 6.232631 GHz, max 118,236 solved tets, 21m18s solution time, normal completion. All three 12-mode windows stop below 6.5 GHz; this is an explicit spectral-span limit of the requested narrower setup.
+
+The table gives the two negative-fold x-branch **candidates**. v_g uses adjacent phase slopes at 15/45 and the 15-to-45 central slope at 30, with the 92.8 mm supercell period. Q_base is the phase-matched mean of own unrotated PML40 across/along Q. The last angle is the radiated -1 harmonic; beta/k0 is the unfolded bound wave. Every f/Q is raw HFSS 2025.2.
+
+| Track | phi_s | Mode | f GHz | Q | Max tets | beta/k0 | v_g Mm/s | Q_base | alpha Np/m | harmonic angle |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| x-low mean candidate | 15 | 3 | 5.664117 | 102.6 | 102,994 | 1.1169 | 106.2 | 1794.2 | 1.539 | 33.13 deg |
+| x-low mean candidate | 30 | 3 | 5.616420 | 128.6 | 100,780 | 1.1025 | 121.9 | 1835.4 | 1.047 | 31.82 deg |
+| x-low mean candidate | 45 | 2 | 5.554680 | 183.4 | 118,236 | 1.0905 | 137.5 | 1876.6 | 0.624 | 30.59 deg |
+| x-high candidate | 15 | 8 | 6.054786 | 185.1 | 102,994 | 1.0449 | 109.4 | 1524.9 | 0.825 | 30.75 deg |
+| x-high candidate | 30 | 8 | 6.005657 | 223.1 | 100,780 | 1.0310 | 96.1 | 1470.8 | 0.747 | 29.54 deg |
+| x-high candidate | 45 | 7 | 5.968528 | 317.2 | 118,236 | 1.0149 | 82.7 | 1416.6 | 0.555 | 28.27 deg |
+
+Field-magnitude profiles sampled at 16 points across all eight cells have normalized adjacent-phase cosine similarity 0.994/0.995 for x-low modes 3->3->2 and 0.993/0.784 for x-high modes 8->8->7. The 45-degree x-high assignment weakens near another mode: choosing mode 8 there gives alpha 0.205 Np/m, but that mode better continues the positive-fold branch (30 mode 7 -> 45 mode 8, field cosine 0.985). An **alternative x-low candidate** modes 4->4->4 has alpha 3.380/0.953/0.839 Np/m and field cosine 0.948/0.993; it is retained in `d3p6_resume4_tracks.csv`, not silently dropped. The nearly flat modes 5->5->5 are a resonance/hybrid track; dividing by their near-zero slope gives a misleading 27.3 Np/m at phase 15, so they are not used for leakage gates.
+
+For the x-low mean candidate, alpha(f) at 5.555/5.616/5.664 GHz is 0.624/1.047/1.539 Np/m. For x-high, alpha(f) at 5.969/6.006/6.055 GHz is 0.555/0.747/0.825 Np/m. **No sampled frequency interval establishes a single-moded tracked branch with alpha >= 1.2 Np/m**: x-low exceeds 1.2 only at one endpoint, x-high at none, and nearby modes remain. The upper-mode shortfall triggers the specified driven-strip flag; pin-launch coupling is unknown.
+
 ## FLAGS
 
 - D3p6 has two x branches. The model-only 5.8-GHz predictions are 0.262-0.311 Np/m (x-low) and 3.032-3.308 Np/m (x-high) across theta 25-40 degrees. Both require HFSS mode matching.
 - D3p6 phases 15 and 30 used separate fresh local AEDT 2025.2 sessions, 5.4 GHz minimum, 12 requested modes, a 3600 s exact-own-PID watchdog, and 60 s heartbeats. The crowded 30-degree spectrum supports a phase-45 continuation.
+- D3p6 phase 45 used the same setup in a third fresh local AEDT session. The field comparison uses only sampled |E| magnitudes, not a full complex-mode overlap; this limits certainty near the 45-degree upper-mode crossing. No new OFF-twin or driven-strip run was started.
+- The prior unrotated PML40 spurious-alpha check for D3p6 branch 2 was -0.0008 Np/m across and +0.0746 Np/m along, under the 0.1 limit but material beside the extracted 0.555-0.825 Np/m upper-branch range.
 - The OFF twin and its copper-area audit remain last. Modal leakage does not determine which mode a centre pin excites.
 
 ## FILES
 
-`anchor_resume4_diag.csv`, `.json` and `scripts/research/sub6_anchor_resume4_diag.py` reproduce the no-HFSS diagnostic. D3p6 run artifacts will be listed after completion.
+`anchor_resume4_diag.csv`, `.json` and `scripts/research/sub6_anchor_resume4_diag.py` reproduce the no-HFSS diagnostic. `d3p6_resume4_tracks.csv`, `.json` and `scripts/research/sub6_d3p6_resume4_analyze.py` reproduce the modal table and retain alternate assignments. Per-phase `SUPER_B2p2_D3p6_ph{15,30,45}_PML40_resume4_*` files contain builds, raw modes, profiles, field samples, validation, and watchdog records. Private AEDT projects remain outside Git.
+
+## HANDOFF
+
+- STATUS: D3p6 bridged 15/30/45 complete; OFF twin pending common f_op.
+- CELL JSON: source spec at 242f3fb; own geometry/boundary readbacks saved per phase.
+- beta/k0, alpha: both candidate tracks in the table; x-high stays below 1.2 Np/m.
+- M_t, loss ratio: not determined by modal leakage alone.
+- Evidence: HFSS 2025.2 modes and sampled fields; prior beta-to-sheet chain MODEL_ONLY.
+- Next request: driven-strip excitation test for the upper mode or a decision on f_op before OFF twin.

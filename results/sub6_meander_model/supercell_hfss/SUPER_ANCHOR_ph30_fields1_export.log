@@ -1,0 +1,64 @@
+PyAEDT INFO: Parsing C:\lwmom_meander_model\hfss_work\rotated_supercell\projects\SUPER_ANCHOR_ph30_PML40_fields1.aedt.
+PyAEDT INFO: Python version 3.12.16 | packaged by Anaconda, Inc. | (main, Oct 26 2026, 20:13:05) [MSC v.1942 64 bit (AMD64)].
+PyAEDT INFO: PyAEDT version 1.9.0.
+PyAEDT INFO: Initializing new Desktop session.
+PyAEDT INFO: AEDT version 2025.2.
+PyAEDT INFO: File C:\lwmom_meander_model\hfss_work\rotated_supercell\projects\SUPER_ANCHOR_ph30_PML40_fields1.aedt correctly loaded. Elapsed time: 0m 0sec
+PyAEDT INFO: New AEDT session is starting on gRPC port 54579.
+PyAEDT INFO: Starting new AEDT gRPC session on port 54579.
+PyAEDT INFO: Launching AEDT server with gRPC transport mode: TransportMode.WNUA
+PyAEDT INFO: Electronics Desktop started on gRPC port 54579 after 8.0 seconds.
+PyAEDT INFO: AEDT installation Path C:\Program Files\ANSYS Inc\v252\AnsysEM
+PyAEDT INFO: 2025.2 version started with process ID 21484.
+PyAEDT WARNING: Service Pack is not detected. PyAEDT is currently connecting in Insecure Mode.
+PyAEDT WARNING: Please download and install latest Service Pack to use connect to AEDT in Secure Mode.
+PyAEDT INFO: Non-graphical mode detected. Disabling Desktop logs.
+PyAEDT INFO: Project SUPER_ANCHOR_ph30_PML40_fields1 has been opened.
+PyAEDT INFO: Active Design set to EigenCell
+PyAEDT INFO: AEDT objects correctly read
+PyAEDT INFO: PostProcessor class has been initialized! Elapsed time: 0m 0sec
+PyAEDT INFO: PostProcessor class has been initialized! Elapsed time: 0m 0sec
+PyAEDT INFO: Post class has been initialized! Elapsed time: 0m 0sec
+PyAEDT INFO: Exporting 'Mag_E' field. Please be patient.
+PyAEDT ERROR: **************************************************************
+PyAEDT ERROR:   File "C:\lwmom_meander_model\scripts\research\sub6_export_supercell_fields.py", line 92, in <module>
+PyAEDT ERROR:     main(args.cell, args.phase, args.tag, set(args.modes))
+PyAEDT ERROR:   File "C:\lwmom_meander_model\scripts\research\sub6_export_supercell_fields.py", line 50, in main
+PyAEDT ERROR:     record["export_ok"] = bool(h.post.export_field_file(
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\visualization\post\post_common_3d.py", line 941, in export_field_file
+PyAEDT ERROR:     self.ofieldsreporter.ExportToFile(
+PyAEDT ERROR: AEDT API Error on export_field_file
+PyAEDT ERROR: Last Electronics Desktop Message - [error]  script macro error: error in performing operation. (05:53:56 pm  nov 18, 2026)
+PyAEDT ERROR: Method arguments: 
+PyAEDT ERROR:     quantity = Mag_E 
+PyAEDT ERROR:     solution = EigenCell : LastAdaptive 
+PyAEDT ERROR:     output_file = C:\lwmom_meander_model\results\sub6_meander_model\supercell_hfss\SUPER_ANCHOR_ph30_PML40_fields1_mode3_MagE.fld 
+PyAEDT ERROR:     sample_points = [[-44.1, -0.0, 1.0], [-37.1, 0.0, 1.0], [-32.233578363789505, -1.3393920132778143, 1.0], [-25.766421636210495, 1.3393920132778143, 1.0], [-19.874873734152914, -2.4748737341529163, 1.0], [-14.925126265847082, 2.4748737341529163, 1.
+PyAEDT ERROR: 0], [-7.139392013277814, -3.2335783637895035, 1.0], [-4.460607986722185, 3.2335783637895035, 1.0], [5.8, -3.5, 1.0], [5.8, 3.5, 1.0], [18.73939201327781, -3.2335783637895035, 1.0], [16.060607986722186, 3.2335783637895035, 1.0], [31.474873734152915, -
+PyAEDT ERROR: 2.4748737341529163, 1.0], [26.525126265847085, 2.4748737341529163, 1.0], [43.833578363789506, -1.3393920132778145, 1.0], [37.3664216362105, 1.3393920132778145, 1.0]] 
+PyAEDT ERROR: **************************************************************
+PyAEDT INFO: Desktop has been released.
+PyAEDT ERROR: **************************************************************
+PyAEDT ERROR:   File "C:\lwmom_meander_model\scripts\research\sub6_export_supercell_fields.py", line 92, in <module>
+PyAEDT ERROR:     main(args.cell, args.phase, args.tag, set(args.modes))
+PyAEDT ERROR:   File "C:\lwmom_meander_model\scripts\research\sub6_export_supercell_fields.py", line 48, in main
+PyAEDT ERROR:     record["edit_sources_ok"] = bool(h.edit_sources(sources,
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\hfss.py", line 4459, in edit_sources
+PyAEDT ERROR:     self.osolution.EditSources(args)
+PyAEDT ERROR: AEDT API Error on edit_sources
+PyAEDT ERROR: Method arguments: 
+PyAEDT ERROR:     assignment = {'mode_1': '0V/m', 'mode_2': '0V/m', 'mode_3': '0V/m', 'mode_4': '1V/m', 'mode_5': '0V/m', 'mode_6': '0V/m', 'mode_7': '0V/m', 'mode_8': '0V/m', 'mode_9': '0V/m', 'mode_10': '0V/m', 'mode_11': '0V/m', 'mode_12': '0V/m', 'mode_13': '0
+PyAEDT ERROR: V/m', 'mode_14': '0V/m', 'mode_15': '0V/m', 'mode_16': '0V/m', 'mode_17': '0V/m', 'mode_18': '0V/m', 'mode_19': '0V/m', 'mode_20': '0V/m'} 
+PyAEDT ERROR: **************************************************************
+PyAEDT ERROR: **************************************************************
+PyAEDT ERROR:   File "C:\lwmom_meander_model\scripts\research\sub6_export_supercell_fields.py", line 92, in <module>
+PyAEDT ERROR:     main(args.cell, args.phase, args.tag, set(args.modes))
+PyAEDT ERROR:   File "C:\lwmom_meander_model\scripts\research\sub6_export_supercell_fields.py", line 48, in main
+PyAEDT ERROR:     record["edit_sources_ok"] = bool(h.edit_sources(sources,
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\hfss.py", line 4459, in edit_sources
+PyAEDT ERROR:     self.osolution.EditSources(args)
+PyAEDT ERROR: AEDT API Error on edit_sources
+PyAEDT ERROR: Method arguments: 
+PyAEDT ERROR:     assignment = {'mode_1': '0V/m', 'mode_2': '0V/m', 'mode_3': '0V/m', 'mode_4': '0V/m', 'mode_5': '0V/m', 'mode_6': '0V/m', 'mode_7': '1V/m', 'mode_8': '0V/m', 'mode_9': '0V/m', 'mode_10': '0V/m', 'mode_11': '0V/m', 'mode_12': '0V/m', 'mode_13': '0
+PyAEDT ERROR: V/m', 'mode_14': '0V/m', 'mode_15': '0V/m', 'mode_16': '0V/m', 'mode_17': '0V/m', 'mode_18': '0V/m', 'mode_19': '0V/m', 'mode_20': '0V/m'} 
+PyAEDT ERROR: **************************************************************

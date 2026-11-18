@@ -1,0 +1,47 @@
+{
+  "boundaries": {
+    "Lattice_X": {
+      "Faces": [
+        156,
+        158
+      ],
+      "ReverseV": false,
+      "PhaseDelay": "InputPhaseDelay",
+      "Phase": "$ph_x"
+    },
+    "Lattice_Y": {
+      "Faces": [
+        155,
+        157
+      ],
+      "ReverseV": false,
+      "PhaseDelay": "InputPhaseDelay",
+      "Phase": "$ph_y"
+    },
+    "PEC_LID": {
+      "Faces": [
+        153
+      ],
+      "InfGroundPlane": false
+    },
+    "PEC_BOTTOM": {
+      "Faces": [
+        154
+      ],
+      "InfGroundPlane": false
+    }
+  },
+  "objects": [
+    "DISC",
+    "GROUND",
+    "SUBSTRATE",
+    "BIAS_RT5880",
+    "AIR"
+  ],
+  "boundary_names": [
+    "Lattice_X",
+    "Lattice_Y",
+    "PEC_LID",
+    "PEC_BOTTOM"
+  ]
+}

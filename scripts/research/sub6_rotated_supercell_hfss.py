@@ -71,7 +71,7 @@ def launch(project):
     return h
 
 
-def build(h, cell, top, phase=85, direction="across"):
+def build(h, cell, top, phase=85, direction="across", air_mm=20.035):
     spec = CELLS[cell]
     h.modeler.model_units = "mm"
     mat = h.materials.add_material("RT5880_SUPERCELL")
@@ -80,7 +80,7 @@ def build(h, cell, top, phase=85, direction="across"):
     h["$ph_x"] = f"{phase if direction == 'across' else 0}deg"
     h["$ph_y"] = f"{phase if direction == 'along' else 0}deg"
     for key, value in dict(period=P, cu_t=CU, rt_t=RT, bias_t=BIAS,
-                           air_top=40.035 if top == "PEC" else 20.035,
+                           air_top=40.035 if top == "PEC" else air_mm,
                            air_bottom=-43.499).items():
         h[key] = f"{value:.12g}mm"
     m = h.modeler
@@ -112,6 +112,18 @@ def build(h, cell, top, phase=85, direction="across"):
         cut_box("END_LEFT", -end_abs, -depth/2-w/2, end_abs-2.2, w)
         cut_box("END_RIGHT", 2.2, depth/2-w/2, end_abs-2.2, w)
     need(m.subtract(disc.name, [c.name for c in cuts], keep_originals=False), "SLOT_SUBTRACT")
+    if cell == "D3p6_OPEN":
+        audit = {"end_run": {"left_x": [-end_abs, -2.2], "right_x": [2.2, end_abs],
+                             "rim_x": rimx, "width_mm": w},
+                 "objects_after_subtract": [{"name": name,
+                     "material": m[name].material_name, "volume_mm3": float(m[name].volume)}
+                    for name in m.object_names]}
+        audit["separate_result"] = [x.name for x in need(m.separate_bodies(disc.name),
+                                                          "SEPARATE_TWIN_BODIES")]
+        audit["objects_after_separation"] = [{"name": name,
+                     "material": m[name].material_name, "volume_mm3": float(m[name].volume)}
+                    for name in m.object_names]
+        write(RESULTS / "D3p6_OPEN_copper_audit.json", audit)
     # An edge-to-edge cut splits DISC into two AEDT solids; the original handle
     # then reports zero volume. Sum the two read-back PEC solids instead.
     copper_solids = [m[name] for name in m.object_names
@@ -126,7 +138,7 @@ def build(h, cell, top, phase=85, direction="across"):
                ["period", "period", "bias_t"], "RT5880_SUPERCELL")
     air = box("AIR", ["-period/2", "-period/2", "air_bottom"],
               ["period", "period", "air_top-air_bottom"], "vacuum")
-    topz = 40.035 if top == "PEC" else 20.035
+    topz = 40.035 if top == "PEC" else air_mm
     zm = (topz - 43.499) / 2
     face = lambda pos: need(m.get_faceid_from_position(pos, assignment="AIR"), "AIR_FACE")
     need(h.assign_lattice_pair([face([-P/2,0,zm]),face([P/2,0,zm])],
@@ -198,9 +210,9 @@ def modes(h):
     return out
 
 
-def one(cell, top, cores, tag=""):
+def one(cell, top, cores, tag="", phase=85, direction="across", air_mm=20.035):
     RESULTS.mkdir(parents=True, exist_ok=True)
-    label = f"{cell}_{top}{('_'+tag) if tag else ''}"
+    label = f"{cell}_{top}_{direction}_{phase:g}_air{air_mm:g}{('_'+tag) if tag else ''}"
     project = WORK / "projects" / f"{label}.aedt"
     project.parent.mkdir(parents=True, exist_ok=True)
     if project.exists():
@@ -214,13 +226,19 @@ def one(cell, top, cores, tag=""):
     def heartbeat():
         while not finished.wait(60):
             state["heartbeat_utc"] = now()
+            if state.get("aedt_pid"):
+                try:
+                    import psutil
+                    state["own_child_pids"] = [p.pid for p in psutil.Process(int(state["aedt_pid"])).children(recursive=True)]
+                except psutil.NoSuchProcess:
+                    state["own_child_pids"] = []
             write(status_path, state)
     threading.Thread(target=heartbeat, daemon=True).start()
     try:
         h = launch(project)
         state.update(status="BUILDING",aedt_pid=h.desktop_class.aedt_process_id)
         write(status_path,state)
-        built = build(h,cell,top)
+        built = build(h,cell,top,phase=phase,direction=direction,air_mm=air_mm)
         write(RESULTS / f"{label}_build.json", built)
         state.update(status="SOLVING",solve_start_utc=now())
         write(status_path,state)
@@ -232,8 +250,12 @@ def one(cell, top, cores, tag=""):
             pid = int(h.desktop_class.aedt_process_id)
             try:
                 p = psutil.Process(pid)
-                if p.is_running():
-                    p.terminate()
+                targets = p.children(recursive=True) + [p]
+                state["terminated_own_pids"] = [q.pid for q in targets]
+                write(status_path, state)
+                for q in targets:
+                    if q.is_running():
+                        q.terminate()
             except psutil.NoSuchProcess:
                 pass
         watchdog = threading.Timer(1500, timeout_own_aedt)
@@ -244,8 +266,14 @@ def one(cell, top, cores, tag=""):
         finally:
             watchdog.cancel()
         result = {"status":"COMPLETE","cell":cell,"top":top,"aedt_version":VERSION,
+                  "phase_deg":phase,"direction":direction,"air_top_mm":built["air_top_mm"],
                   "aedt_pid":h.desktop_class.aedt_process_id,"modes":modes(h),
                   "seconds":time.monotonic()-start,"solve_end_utc":now(),"project":str(project)}
+        try:
+            result["profile_path"] = h.export_profile("EigenCell", output_file=str(RESULTS / f"{label}_profile.prof"))
+            result["convergence_path"] = h.export_convergence("EigenCell", output_file=str(RESULTS / f"{label}_convergence.conv"))
+        except Exception as exc:
+            result["profile_export_error"] = f"{type(exc).__name__}: {exc}"
         write(RESULTS / f"{label}_modes.json",result)
         state.update(status="COMPLETE",solve_end_utc=now(),seconds=result["seconds"])
         write(status_path,state)
@@ -268,5 +296,8 @@ if __name__ == "__main__":
     ap.add_argument("--top",choices=("PEC","RADIATION","PML","PML2"),required=True)
     ap.add_argument("--cores",type=int,default=8)
     ap.add_argument("--tag",default="")
+    ap.add_argument("--phase",type=float,default=85)
+    ap.add_argument("--direction",choices=("along","across"),default="across")
+    ap.add_argument("--air-mm",type=float,default=20.035)
     args=ap.parse_args()
-    one(args.cell,args.top,args.cores,args.tag)
+    one(args.cell,args.top,args.cores,args.tag,args.phase,args.direction,args.air_mm)

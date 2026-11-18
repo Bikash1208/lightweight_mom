@@ -1,0 +1,66 @@
+PyAEDT INFO: Parsing C:\lwmom_meander_model\hfss_work\rotated_supercell\projects\SUPER_ANCHOR_ph15_PML40_retry1.aedt.
+PyAEDT INFO: Python version 3.12.16 | packaged by Anaconda, Inc. | (main, Oct 26 2026, 20:13:05) [MSC v.1942 64 bit (AMD64)].
+PyAEDT INFO: PyAEDT version 1.9.0.
+PyAEDT INFO: Initializing new Desktop session.
+PyAEDT INFO: File C:\lwmom_meander_model\hfss_work\rotated_supercell\projects\SUPER_ANCHOR_ph15_PML40_retry1.aedt correctly loaded. Elapsed time: 0m 0sec
+PyAEDT INFO: AEDT version 2025.2.
+PyAEDT INFO: New AEDT session is starting on gRPC port 51841.
+PyAEDT INFO: Starting new AEDT gRPC session on port 51841.
+PyAEDT INFO: Launching AEDT server with gRPC transport mode: TransportMode.WNUA
+PyAEDT INFO: Electronics Desktop started on gRPC port 51841 after 8.1 seconds.
+PyAEDT INFO: AEDT installation Path C:\Program Files\ANSYS Inc\v252\AnsysEM
+PyAEDT INFO: 2025.2 version started with process ID 20528.
+PyAEDT WARNING: Service Pack is not detected. PyAEDT is currently connecting in Insecure Mode.
+PyAEDT WARNING: Please download and install latest Service Pack to use connect to AEDT in Secure Mode.
+PyAEDT INFO: Non-graphical mode detected. Disabling Desktop logs.
+PyAEDT ERROR: **************************************************************
+PyAEDT ERROR:   File "C:\lwmom_meander_model\scripts\research\sub6_export_supercell_fields.py", line 75, in <module>
+PyAEDT ERROR:     main(args.cell, args.phase, args.tag, set(args.modes))
+PyAEDT ERROR:   File "C:\lwmom_meander_model\scripts\research\sub6_export_supercell_fields.py", line 25, in main
+PyAEDT ERROR:     h = Hfss(project=str(project), design="EigenCell", solution_type="Eigenmode",
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\hfss.py", line 237, in __init__
+PyAEDT ERROR:     FieldAnalysis3D.__init__(
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\application\analysis_3d.py", line 138, in __init__
+PyAEDT ERROR:     Analysis.__init__(
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\application\analysis.py", line 150, in __init__
+PyAEDT ERROR:     Design.__init__(
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\application\design.py", line 265, in __init__
+PyAEDT ERROR:     self.oproject: str = project_name
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\application\design.py", line 1630, in oproject
+PyAEDT ERROR:     self._oproject = self._open_project(proj_name)
+PyAEDT ERROR:   File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\application\design.py", line 1697, in _open_project
+PyAEDT ERROR:     raise RuntimeError("Project is locked. Close or remove the lock before proceeding.")
+PyAEDT ERROR: Project is locked. close or remove the lock before proceeding. on _open_project
+PyAEDT ERROR: Method arguments: 
+PyAEDT ERROR:     project_path = C:\lwmom_meander_model\hfss_work\rotated_supercell\projects\SUPER_ANCHOR_ph15_PML40_retry1.aedt 
+PyAEDT ERROR: **************************************************************
+PyAEDT INFO: Desktop has been released.
+Traceback (most recent call last):
+  File "C:\lwmom_meander_model\scripts\research\sub6_export_supercell_fields.py", line 75, in <module>
+    main(args.cell, args.phase, args.tag, set(args.modes))
+  File "C:\lwmom_meander_model\scripts\research\sub6_export_supercell_fields.py", line 25, in main
+    h = Hfss(project=str(project), design="EigenCell", solution_type="Eigenmode",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\hfss.py", line 237, in __init__
+    FieldAnalysis3D.__init__(
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\application\analysis_3d.py", line 138, in __init__
+    Analysis.__init__(
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\application\analysis.py", line 150, in __init__
+    Design.__init__(
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\application\design.py", line 265, in __init__
+    self.oproject: str = project_name
+    ^^^^^^^^^^^^^
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\application\design.py", line 1630, in oproject
+    self._oproject = self._open_project(proj_name)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\generic\general_methods.py", line 275, in wrapper
+    return raise_exception_or_return_false(e)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\generic\general_methods.py", line 234, in raise_exception_or_return_false
+    raise e
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\generic\general_methods.py", line 250, in wrapper
+    out = user_function(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\lwmom_labB\.venv_lab\Lib\site-packages\ansys\aedt\core\application\design.py", line 1697, in _open_project
+    raise RuntimeError("Project is locked. Close or remove the lock before proceeding.")
+RuntimeError: Project is locked. Close or remove the lock before proceeding.

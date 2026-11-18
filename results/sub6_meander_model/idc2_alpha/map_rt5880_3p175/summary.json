@@ -1,0 +1,46 @@
+{
+  "label": "MODEL_ONLY / NOT_HFSS_VALIDATED_LEAKAGE",
+  "frequency_hz": 5800000000.0,
+  "substrate": {
+    "eps_r": 2.2,
+    "tan_delta": 0.0009,
+    "thickness_mm": 3.175
+  },
+  "lid_height_mm_for_beta_inversion": 40.0,
+  "theta_deg": 29.999999999999996,
+  "map_axis_min_max_step": [
+    1.005,
+    1.32,
+    0.0009999999999998899
+  ],
+  "contours_alpha_over_k0": [
+    0.01,
+    0.019
+  ],
+  "points": {
+    "N2_E": {
+      "beta_x_over_k0": 1.083,
+      "beta_y_over_k0": 1.0675,
+      "B_x_mS": 7.360528632710322,
+      "B_y_mS": 6.01756437259161,
+      "B_mean_mS": 6.689046502650966,
+      "delta_mS": 0.6714821300593558,
+      "beta_mean_open_over_k0": 1.0710107474397388,
+      "alpha_np_per_m": 0.12704312123772007,
+      "alpha_over_k0": 0.0010451147957447374
+    },
+    "ST": {
+      "beta_x_over_k0": 1.099,
+      "beta_y_over_k0": 1.0776,
+      "B_x_mS": 8.527935922222701,
+      "B_y_mS": 6.924055669066937,
+      "B_mean_mS": 7.7259957956448195,
+      "delta_mS": 0.8019401265778819,
+      "beta_mean_open_over_k0": 1.0849502778535107,
+      "alpha_np_per_m": 0.1702181364524235,
+      "alpha_over_k0": 0.0014002922092700074
+    }
+  },
+  "interpretation": "PEC lid used to infer sheet B from HFSS beta; open air used to evaluate radiating first-order tensor alpha. Actual PEC-lidded cell has zero far-field radiative leakage.",
+  "limitations": "Rotating-axis first-order tensor potential; not uniform-cell leakage or HFSS measured attenuation."
+}

@@ -2,7 +2,7 @@
 
 ## STATUS
 
-D3p6 bridged 15-degree HFSS row complete; 30 degrees is the next continuity check. B2p2 45-degree row skipped by decision; no additional anchor HFSS solve.
+D3p6 bridged 15- and 30-degree HFSS rows complete; 45 degrees is the next continuity check. B2p2 45-degree row skipped by decision; no additional anchor HFSS solve.
 
 ## GATES
 
@@ -36,10 +36,12 @@ D3p6 bridged 15-degree HFSS row: 12 modes returned, highest 6.258287 GHz; 15 ada
 
 The folded unrotated x-branch estimates at phase 15 are 5.7449 GHz (x-low) and 5.9032 GHz (x-high). Both windows contain plausible modes; phase 30 is needed. The 12-mode window ends below 6.5 GHz, so the upper spectral span is incomplete.
 
+D3p6 bridged 30-degree row: 12 modes through 6.228252 GHz, max 100,780 solved tets, 20m32s solution time, normal completion. Candidate surface-wave frequencies/Q are mode 3 5.616420/128.6, mode 4 5.727140/212.3, mode 5 5.793549/94.8, mode 7 5.936188/823.3, and mode 8 6.005657/223.1. The negative-fold x-low/x-high unrotated predictions are 5.6972/5.8306 GHz. Modes crowd both windows, and Q changes sharply between some plausible 15-to-30 continuations. Phase 45 and saved-field matching are needed before assigning the two branches or computing alpha from a slope.
+
 ## FLAGS
 
 - D3p6 has two x branches. The model-only 5.8-GHz predictions are 0.262-0.311 Np/m (x-low) and 3.032-3.308 Np/m (x-high) across theta 25-40 degrees. Both require HFSS mode matching.
-- D3p6 phase 15 used a fresh local AEDT 2025.2 session, 5.4 GHz minimum, 12 requested modes, a 3600 s exact-own-PID watchdog, and 60 s heartbeats. Mode ambiguity supports a phase-30 continuation; phase 45 remains a later decision.
+- D3p6 phases 15 and 30 used separate fresh local AEDT 2025.2 sessions, 5.4 GHz minimum, 12 requested modes, a 3600 s exact-own-PID watchdog, and 60 s heartbeats. The crowded 30-degree spectrum supports a phase-45 continuation.
 - The OFF twin and its copper-area audit remain last. Modal leakage does not determine which mode a centre pin excites.
 
 ## FILES

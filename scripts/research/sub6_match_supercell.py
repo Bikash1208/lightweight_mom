@@ -9,10 +9,12 @@ R = ROOT / "results" / "sub6_meander_model" / "supercell_hfss"
 
 
 def load_modes(cell, phase):
-    base = R / f"SUPER_{cell}_ph{phase}_PML40_modes.json"
-    if not base.exists():
-        base = R / f"SUPER_{cell}_ph{phase}_PML40_retry1_modes.json"
-    return json.loads(base.read_text(encoding="utf-8"))["modes"]
+    stem = f"SUPER_{cell}_ph{phase}_PML40"
+    for suffix in ("", "_retry1", "_resume1"):
+        path = R / f"{stem}{suffix}_modes.json"
+        if path.exists():
+            return json.loads(path.read_text(encoding="utf-8"))["modes"]
+    raise FileNotFoundError(f"No completed mode row for {stem}")
 
 
 def main(cell):

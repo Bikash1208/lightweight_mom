@@ -42,3 +42,11 @@ across x: 5.553 @85 -> 5.925 @95 (0.037 GHz/deg), crossing ~91.6 deg, beta ~1.13
 
 ### Bridged IDC MN_R5p6_W0p4_N2_T1p2_D3p0_E_B0p78 (end runs stopped, bridge ~0.74 mm, one piece 88.9 mm2): FAIL
 across x: low-Q flat branch 5.541 -> 5.645 GHz (Q ~1.7e3, 0.010 GHz/deg); bound mode 5.705 @85 -> 6.195 @95 (0.049 GHz/deg), crossing ~86.9 deg, beta ~1.076. along y: flat branch 5.391 -> 5.598 GHz (Q ~1.6e3); no well-bound mode at 5.8 GHz in 85-95 deg (upper branch 6.052 @85 meets the light line near 80-81 deg, beta_y ~1.00). Mean ~1.04 (<1.07). Resonance sits just BELOW 5.8 GHz (anchor: ~0.15-0.3 GHz above). Do not read alpha off the map at this pair (outside first-order validity). Next: B1p5 and B2p2 (bridge widened to raise the resonance ~8-10 %).
+
+### Bridge sweep summary (N2_E, W0.4, T1.2, D3.0; bridge b = copper beyond slot end) - PROVISIONAL, MODEL_ONLY alpha from the other agent's map
+| b | x surface-wave beta @5.8 | x low-Q branch @85 deg | y beta @5.8 | single-mode in x |
+|---|---|---|---|---|
+| 0.78 | ~1.076 | 5.54 GHz | no bound mode (~1.00) | no |
+| 1.5 | ~1.080 (two modes; other ~1.05) | 5.81 GHz | ~1.159 (3 phases not available) | no |
+| 2.2 | ~1.078 (SW 5.413@80, 5.693@85, 6.197@95; low-Q 5.866@80 -> 6.165@95, stays above 5.8 GHz) | 5.99 GHz | ~1.114 (2 phases 85/95; no third y phase needed: branch curves down and the bracket fails anyway) | yes (margin 0.066 GHz at 80 deg) |
+B2p2: difference ~0.037, mean ~1.095, map alpha/k0 ~0.0035 (0.42 Np/m, ~12 %; bracket 0.0024-0.0049; delta/|B| 0.16, inside first-order validity): FAIL gate 0.010. B1p5 map bracket 0.0026-0.035 depending on which x mode is launched (alpha 1.09 Np/m at x 1.079): candidate, multimode, pending crop-testbed full-wave leakage. Bridge knob spent for single-mode (tops out ~12 %); 1.8 mm interpolation withdrawn. One-off hang: B2p2 across 85 (c125) hung 25 min, rerun completed (no orphan AEDT).

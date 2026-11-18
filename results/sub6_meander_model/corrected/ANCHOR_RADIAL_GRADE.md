@@ -1,5 +1,7 @@
 # R150 two-sector anchor leakage and radial grading (MODEL_ONLY)
 
+**Scope correction (2026-11-18):** The 2.36832 Np/m value below is the MoM-sheet seven-leg calculation, not the user-reported HFSS-pair map value. For the requested rerun at 1.33 Np/m, use [ANCHOR_ALPHA133_CORRECTION.md](ANCHOR_ALPHA133_CORRECTION.md). Do not use this page's conversion numbers for that HFSS-pair scenario.
+
 The anchor is the corrected seven-leg baseline's first-order rotating-axis leakage potential, **alpha = 2.36832 Np/m** at 5.8 GHz. The aperture radius is 150 mm. The two ideal CP sectors use a 10 mm soft boundary and radial surface-wave amplitude proportional to rho^-1/2 exp(-integral alpha dr), floored at rho = 5.8 mm. The radiated field is multiplied by sqrt(2 alpha(r)); this is constant for the ungraded anchor and makes local conversion consistent when alpha is graded. Aperture sampling is 5 mm, upper-hemisphere angular sampling 1 degree, and the beam-plane cut is sampled at 0.25 degree.
 
 ![Anchor and graded beam-plane cuts](anchor_radial_grade_cut.png)

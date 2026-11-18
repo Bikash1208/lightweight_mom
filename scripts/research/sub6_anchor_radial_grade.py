@@ -72,10 +72,19 @@ def cut_metrics(x, y, rho, right, grade, power, family="outer_taper"):
             "separating_minima_deg": minima_between, "angles_deg": ang, "cut_db": db}
 
 
-def main(out_dir="results/sub6_meander_model/corrected"):
+def main(out_dir="results/sub6_meander_model/corrected", alpha_override=None, prefix="anchor_radial_grade"):
+    global ALPHA0
+    if alpha_override is not None:
+        ALPHA0 = float(alpha_override)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    sphere = json.loads((out_dir / "anchor_radial_grade_sphere.json").read_text(encoding="utf-8"))
+    sphere_path = out_dir / f"{prefix}_sphere.json"
+    sphere = json.loads(sphere_path.read_text(encoding="utf-8")) if sphere_path.exists() else None
+    if sphere is None or abs(sphere["baseline"]["alpha_np_m"] - ALPHA0) > 1e-10:
+        sphere = {key: estimate(R, False, angle_step_deg=1, alpha_np_m=ALPHA0, soft_boundary_mm=SOFT * 1e3,
+                                radial_fn=lambda r, g=grade: profile(r, g, 1, "inner_taper")[0])
+                  for key, grade in (("baseline", 0), ("grade_0p92", .92), ("grade_1p00", 1))}
+        sphere_path.write_text(json.dumps(sphere, indent=2) + "\n", encoding="utf-8")
     x, y, rho, right, left = samples()
     cuts = {key: cut_metrics(x, y, rho, right, grade, 1, "inner_taper")
             for key, grade in (("baseline", 0), ("grade_0p92", .92), ("grade_1p00", 1))}
@@ -88,15 +97,20 @@ def main(out_dir="results/sub6_meander_model/corrected"):
         row["alpha_edge_np_per_m"] = ALPHA0
         row["upper_hemisphere_1deg"] = sphere[key]
         rows[key] = row
+    base_cut = cuts["baseline"]
     result = {"label": "MODEL_ONLY / NOT_HFSS_VALIDATED", "anchor_alpha_np_per_m": ALPHA0,
-              "anchor_source": "corrected seven-leg baseline first-order rotating-axis leakage potential",
+              "anchor_source": ("user-specified map value for HFSS anchor pair; beta pair unavailable in local files"
+                                if alpha_override is not None else "corrected seven-leg MoM first-order rotating-axis leakage potential"),
               "aperture_radius_mm": R * 1e3, "sample_step_mm": STEP * 1e3,
               "soft_sector_boundary_mm": SOFT * 1e3, "feed_floor_mm": FEED_FLOOR * 1e3,
               "grade_family": "alpha(r)=alpha_anchor*(1-g+g*r/R), 0<=g<=1; radiated field amplitude proportional to sqrt(2*alpha(r)/rho)*exp(-integral_0^r alpha(s)ds)",
               "ideal_conversion": "1-exp(-2*integral_0^R alpha(r)dr); excludes feed, loss, absorber and finite board effects",
-              "boresight_lobe": "Fine 0.25-degree x-plane cut confirms baseline first inner secondary local maximum at 1.25 degrees toward each beam, separated from main peak at 28.5 degrees by a shallow local minimum at 6.5 degrees, not a true null. The LHCP cut is the mirror image.",
+              "boresight_lobe": (f"Fine 0.25-degree x-plane cut finds the first inner secondary local maximum at "
+                                 f"{base_cut['inner_sidelobe_deg']} degrees toward each beam, separated from the "
+                                 f"main peak at {base_cut['main_deg']} degrees by a shallow local minimum at "
+                                 f"{base_cut['separating_minima_deg']} degrees, not a true null. The LHCP cut is the mirror image."),
               "rows": rows}
-    (out_dir / "anchor_radial_grade_result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    (out_dir / f"{prefix}_result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     fig, ax = plt.subplots(figsize=(8, 5), layout="constrained")
     for key, label in (("baseline", "constant alpha"), ("grade_0p92", "linear grade g=0.92"), ("grade_1p00", "linear grade g=1.00")):
         c = cuts[key]
@@ -107,7 +121,7 @@ def main(out_dir="results/sub6_meander_model/corrected"):
            title="R150 two-sector: boresight inner sidelobe and radial leakage grade")
     ax.grid(alpha=.25)
     ax.legend()
-    fig.savefig(out_dir / "anchor_radial_grade_cut.png", dpi=180)
+    fig.savefig(out_dir / f"{prefix}_cut.png", dpi=180)
     plt.close(fig)
     print(json.dumps({k: {"conversion": v["conversion"], "cost_pp": v["conversion_cost_percentage_points"],
                           "cut_sll_db": v["inner_sidelobe_db"], "sphere_sll_db": v["upper_hemisphere_1deg"]["beams"][0]["sll_db"]}
@@ -115,5 +129,10 @@ def main(out_dir="results/sub6_meander_model/corrected"):
 
 
 if __name__ == "__main__":
-    import sys
-    main(sys.argv[1] if len(sys.argv) > 1 else "results/sub6_meander_model/corrected")
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument("out_dir", nargs="?", default="results/sub6_meander_model/corrected")
+    p.add_argument("--alpha", type=float)
+    p.add_argument("--prefix", default="anchor_radial_grade")
+    a = p.parse_args()
+    main(a.out_dir, a.alpha, a.prefix)

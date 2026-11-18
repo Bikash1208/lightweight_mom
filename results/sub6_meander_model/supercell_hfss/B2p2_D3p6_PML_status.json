@@ -1,0 +1,11 @@
+{
+  "status": "FAILED",
+  "cell": "B2p2_D3p6",
+  "top": "PML",
+  "controller_pid": 12652,
+  "started_utc": "2026-11-18T08:38:41.205209+00:00",
+  "aedt_pid": 18788,
+  "error": "RuntimeError: BOUNDARY_READBACK",
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\lwmom_meander_model\\scripts\\research\\sub6_rotated_supercell_hfss.py\", line 209, in one\n    built = build(h,cell,top)\n            ^^^^^^^^^^^^^^^^^\n  File \"C:\\lwmom_meander_model\\scripts\\research\\sub6_rotated_supercell_hfss.py\", line 158, in build\n    need(all(k in boundaries for k in (\"Lattice_X\",\"Lattice_Y\",\"PEC_BOTTOM\",\n  File \"C:\\lwmom_meander_model\\scripts\\research\\sub6_rotated_supercell_hfss.py\", line 55, in need\n    raise RuntimeError(label)\nRuntimeError: BOUNDARY_READBACK\n",
+  "failed_utc": "2026-11-18T08:39:12.520291+00:00"
+}

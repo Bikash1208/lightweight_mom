@@ -1,0 +1,11 @@
+{
+  "status": "FAILED",
+  "cell": "D3p6_OPEN",
+  "top": "PEC",
+  "controller_pid": 18064,
+  "started_utc": "2026-11-18T08:49:59.381026+00:00",
+  "aedt_pid": 4012,
+  "error": "RuntimeError: COPPER_AREA_READBACK D3p6_OPEN: 0.0000 vs expected 87.08",
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\lwmom_meander_model\\scripts\\research\\sub6_rotated_supercell_hfss.py\", line 223, in one\n    built = build(h,cell,top)\n            ^^^^^^^^^^^^^^^^^\n  File \"C:\\lwmom_meander_model\\scripts\\research\\sub6_rotated_supercell_hfss.py\", line 121, in build\n    raise RuntimeError(f\"COPPER_AREA_READBACK {cell}: {copper_area:.4f} vs expected {spec['area']}\")\nRuntimeError: COPPER_AREA_READBACK D3p6_OPEN: 0.0000 vs expected 87.08\n",
+  "failed_utc": "2026-11-18T08:50:29.251139+00:00"
+}

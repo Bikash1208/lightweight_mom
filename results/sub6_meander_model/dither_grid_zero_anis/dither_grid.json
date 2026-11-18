@@ -1,0 +1,797 @@
+{
+  "label": "MODEL_ONLY / NOT_HFSS_VALIDATED",
+  "frequency_hz": 5800000000.0,
+  "pitch_mm": 11.6,
+  "radius_mm": 150.0,
+  "centre_cell": "reserved for feed",
+  "soft_widths_mm": [
+    30
+  ],
+  "dither_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "alpha_on_range_np_per_m": [
+    1.09
+  ],
+  "alpha_B_off_np_per_m": 0.136,
+  "phase_assumption": "B-OFF coherent LHCP B beam amplitude set to zero; OFF attenuation retained with unspecified destination",
+  "off_anisotropy_coherent_scale": 0,
+  "radial_model": "rho^-1/2 sqrt(2alpha_local) exp(-integral along nearest-cell radial path alpha ds)",
+  "angle_step_deg": 2,
+  "summary": {
+    "w30_alpha1.09": {
+      "two_beam_A_directivity_dbi": {
+        "min": 18.963428267662685,
+        "median": 19.134495438892145,
+        "max": 19.26795425646951
+      },
+      "two_beam_B_directivity_dbi": {
+        "min": 18.909904215670565,
+        "median": 19.130184884335304,
+        "max": 19.31269428927145
+      },
+      "two_beam_worst_sll_db": {
+        "min": -17.32674140289391,
+        "median": -16.92949005948668,
+        "max": -16.101823641934793
+      },
+      "two_beam_B_minus_A_db": {
+        "min": -0.2492119315724597,
+        "median": -0.018681075970192394,
+        "max": 0.1848717683289346
+      },
+      "one_beam_A_change_db": {
+        "min": 0.07597205191879189,
+        "median": 0.11644705824246426,
+        "max": 0.14746858572548477
+      },
+      "one_beam_B_suppression_db": {
+        "min": null,
+        "median": null,
+        "max": null
+      },
+      "one_beam_B_to_A_db": {
+        "min": null,
+        "median": null,
+        "max": null
+      },
+      "two_beam_conversion": {
+        "min": 0.26857175808622114,
+        "median": 0.26857175808622114,
+        "max": 0.26857175808622114
+      },
+      "one_beam_conversion": {
+        "min": 0.15465398244262604,
+        "median": 0.15802737525166874,
+        "max": 0.16131873284645687
+      },
+      "two_beam_A_conversion": {
+        "min": 0.13186966557559707,
+        "median": 0.136107884073411,
+        "max": 0.14129683188951395
+      },
+      "one_beam_A_conversion": {
+        "min": 0.13563619213917327,
+        "median": 0.1396429446130042,
+        "max": 0.14358269852901004
+      },
+      "two_beam_B_conversion": {
+        "min": 0.1272749261967072,
+        "median": 0.13246387401281012,
+        "max": 0.13670209251062404
+      },
+      "one_beam_B_conversion": {
+        "min": 0.017736034317446837,
+        "median": 0.018384430638664538,
+        "max": 0.01901779030345278
+      },
+      "two_beam_A_gain_dbi_ideal": {
+        "min": 13.254031688585524,
+        "median": 13.425098859814982,
+        "max": 13.558557677392347
+      },
+      "one_beam_A_gain_dbi_ideal": {
+        "min": 13.43098585827428,
+        "median": 13.569493436985304,
+        "max": 13.782584435723303
+      }
+    }
+  },
+  "rows": [
+    {
+      "width_mm": 30,
+      "seed": 0,
+      "alpha_on_np_per_m": 1.09,
+      "alpha_b_one_beam_np_per_m": 0.136,
+      "n_cells": 516,
+      "n_A": 258,
+      "n_B": 258,
+      "column_probability_formula": "p_B(x)=(1-tanh(x/w))/2; count-stratified seeded stochastic assignment",
+      "two_beam": {
+        "metrics": {
+          "A_RHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 0.0,
+            "directivity_dbi": 19.129399363421772,
+            "sll_db": -18.316660979281693,
+            "sll_theta_deg": 2.0,
+            "sll_phi_deg": 218.0,
+            "target_intensity": 1060645.1878010335,
+            "target_cross_intensity": 214.85489673072206,
+            "target_xpd_db": 36.934248698056706
+          },
+          "B_LHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 180.0,
+            "directivity_dbi": 19.185430841831483,
+            "sll_db": -17.325264899541978,
+            "sll_theta_deg": 0.0,
+            "sll_phi_deg": 0.0,
+            "target_intensity": 1075499.6617896003,
+            "target_cross_intensity": 477.09315839903235,
+            "target_xpd_db": 33.53007089408451
+          }
+        },
+        "conversion": 0.26857175808622114,
+        "conversion_A": 0.13195125888230816,
+        "conversion_B": 0.13662049920391295,
+        "radiated_conversion": 0.26857175808622114
+      },
+      "one_beam": {
+        "metrics": {
+          "A_RHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 0.0,
+            "directivity_dbi": 22.210143785589757,
+            "sll_db": -18.38636941037412,
+            "sll_theta_deg": 2.0,
+            "sll_phi_deg": 220.0,
+            "target_intensity": 1097278.789835735,
+            "target_cross_intensity": 0.0,
+            "target_xpd_db": Infinity
+          },
+          "B_LHCP": {
+            "peak_theta_deg": null,
+            "peak_phi_deg": null,
+            "directivity_dbi": null,
+            "sll_db": null,
+            "sll_theta_deg": null,
+            "sll_phi_deg": null,
+            "target_intensity": 0.0,
+            "target_cross_intensity": 458.1742780579883,
+            "target_xpd_db": null
+          }
+        },
+        "conversion": 0.15535347868702082,
+        "conversion_A": 0.13644563629231346,
+        "conversion_B": 0.018907842394707358,
+        "radiated_conversion": 0.13644563629231346
+      },
+      "two_beam_A_directivity_dbi": 19.129399363421772,
+      "two_beam_B_directivity_dbi": 19.185430841831483,
+      "two_beam_worst_sll_db": -17.325264899541978,
+      "two_beam_B_minus_A_db": 0.06040152262832703,
+      "one_beam_A_change_db": 0.14746858572548477,
+      "one_beam_B_suppression_db": null,
+      "one_beam_B_to_A_db": null,
+      "one_beam_B_coherent_zero": true,
+      "two_beam_conversion": 0.26857175808622114,
+      "one_beam_conversion": 0.15535347868702082,
+      "two_beam_A_conversion": 0.13195125888230816,
+      "one_beam_A_conversion": 0.13644563629231346,
+      "two_beam_B_conversion": 0.13662049920391295,
+      "one_beam_B_conversion": 0.018907842394707358,
+      "two_beam_A_gain_dbi_ideal": 13.42000278434461,
+      "one_beam_A_gain_dbi_ideal": 13.559740294885042
+    },
+    {
+      "width_mm": 30,
+      "seed": 1,
+      "alpha_on_np_per_m": 1.09,
+      "alpha_b_one_beam_np_per_m": 0.136,
+      "n_cells": 516,
+      "n_A": 254,
+      "n_B": 262,
+      "column_probability_formula": "p_B(x)=(1-tanh(x/w))/2; count-stratified seeded stochastic assignment",
+      "two_beam": {
+        "metrics": {
+          "A_RHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 0.0,
+            "directivity_dbi": 19.175053341771175,
+            "sll_db": -16.980571793600244,
+            "sll_theta_deg": 4.0,
+            "sll_phi_deg": 80.0,
+            "target_intensity": 1070881.0112687338,
+            "target_cross_intensity": 232.2224150548416,
+            "target_xpd_db": 36.63837080477513
+          },
+          "B_LHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 180.0,
+            "directivity_dbi": 19.14993115800738,
+            "sll_db": -18.59056325187391,
+            "sll_theta_deg": 2.0,
+            "sll_phi_deg": 44.0,
+            "target_intensity": 1065241.7358584967,
+            "target_cross_intensity": 314.0172034843109,
+            "target_xpd_db": 35.30494732010708
+          }
+        },
+        "conversion": 0.26857175808622114,
+        "conversion_A": 0.1388996384995658,
+        "conversion_B": 0.12967211958665534,
+        "radiated_conversion": 0.26857175808622114
+      },
+      "one_beam": {
+        "metrics": {
+          "A_RHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 0.0,
+            "directivity_dbi": 22.07656970718858,
+            "sll_db": -17.00129625870407,
+            "sll_theta_deg": 4.0,
+            "sll_phi_deg": 78.0,
+            "target_intensity": 1097763.893837786,
+            "target_cross_intensity": 0.0,
+            "target_xpd_db": Infinity
+          },
+          "B_LHCP": {
+            "peak_theta_deg": null,
+            "peak_phi_deg": null,
+            "directivity_dbi": null,
+            "sll_db": null,
+            "sll_theta_deg": null,
+            "sll_phi_deg": null,
+            "target_intensity": 0.0,
+            "target_cross_intensity": 309.0393796679475,
+            "target_xpd_db": null
+          }
+        },
+        "conversion": 0.16010629928152453,
+        "conversion_A": 0.14216993015135382,
+        "conversion_B": 0.0179363691301707,
+        "radiated_conversion": 0.14216993015135382
+      },
+      "two_beam_A_directivity_dbi": 19.175053341771175,
+      "two_beam_B_directivity_dbi": 19.14993115800738,
+      "two_beam_worst_sll_db": -16.980571793600244,
+      "two_beam_B_minus_A_db": -0.022930441478615858,
+      "one_beam_A_change_db": 0.10767724676579034,
+      "one_beam_B_suppression_db": null,
+      "one_beam_B_to_A_db": null,
+      "one_beam_B_coherent_zero": true,
+      "two_beam_conversion": 0.26857175808622114,
+      "one_beam_conversion": 0.16010629928152453,
+      "two_beam_A_conversion": 0.1388996384995658,
+      "one_beam_A_conversion": 0.14216993015135382,
+      "two_beam_B_conversion": 0.12967211958665534,
+      "one_beam_B_conversion": 0.0179363691301707,
+      "two_beam_A_gain_dbi_ideal": 13.465656762694014,
+      "one_beam_A_gain_dbi_ideal": 13.604647207673857
+    },
+    {
+      "width_mm": 30,
+      "seed": 2,
+      "alpha_on_np_per_m": 1.09,
+      "alpha_b_one_beam_np_per_m": 0.136,
+      "n_cells": 516,
+      "n_A": 255,
+      "n_B": 261,
+      "column_probability_formula": "p_B(x)=(1-tanh(x/w))/2; count-stratified seeded stochastic assignment",
+      "two_beam": {
+        "metrics": {
+          "A_RHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 0.0,
+            "directivity_dbi": 19.137678948287213,
+            "sll_db": -17.32674140289391,
+            "sll_theta_deg": 0.0,
+            "sll_phi_deg": 0.0,
+            "target_intensity": 1070471.4318598425,
+            "target_cross_intensity": 304.26790483799397,
+            "target_xpd_db": 35.46318937589448
+          },
+          "B_LHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 180.0,
+            "directivity_dbi": 19.114974730409806,
+            "sll_db": -18.157910881383028,
+            "sll_theta_deg": 2.0,
+            "sll_phi_deg": 59.99999999999999,
+            "target_intensity": 1065650.3136557837,
+            "target_cross_intensity": 324.29804434870124,
+            "target_xpd_db": 35.166703874014615
+          }
+        },
+        "conversion": 0.26857175808622114,
+        "conversion_A": 0.13817505042142883,
+        "conversion_B": 0.1303967076647923,
+        "radiated_conversion": 0.26857175808622114
+      },
+      "one_beam": {
+        "metrics": {
+          "A_RHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 0.0,
+            "directivity_dbi": 22.06654921781757,
+            "sll_db": -17.313025668342362,
+            "sll_theta_deg": 0.0,
+            "sll_phi_deg": 0.0,
+            "target_intensity": 1094982.6873573156,
+            "target_cross_intensity": 0.0,
+            "target_xpd_db": Infinity
+          },
+          "B_LHCP": {
+            "peak_theta_deg": null,
+            "peak_phi_deg": null,
+            "directivity_dbi": null,
+            "sll_db": null,
+            "sll_theta_deg": null,
+            "sll_phi_deg": null,
+            "target_intensity": 0.0,
+            "target_cross_intensity": 344.0060096995132,
+            "target_xpd_db": null
+          }
+        },
+        "conversion": 0.15928947940243962,
+        "conversion_A": 0.14118329096295773,
+        "conversion_B": 0.018106188439481884,
+        "radiated_conversion": 0.14118329096295773
+      },
+      "two_beam_A_directivity_dbi": 19.137678948287213,
+      "two_beam_B_directivity_dbi": 19.114974730409806,
+      "two_beam_worst_sll_db": -17.32674140289391,
+      "two_beam_B_minus_A_db": -0.0196036447094224,
+      "one_beam_A_change_db": 0.0983217107339168,
+      "one_beam_B_suppression_db": null,
+      "one_beam_B_to_A_db": null,
+      "one_beam_B_coherent_zero": true,
+      "two_beam_conversion": 0.26857175808622114,
+      "one_beam_conversion": 0.15928947940243962,
+      "two_beam_A_conversion": 0.13817505042142883,
+      "one_beam_A_conversion": 0.14118329096295773,
+      "two_beam_B_conversion": 0.1303967076647923,
+      "one_beam_B_conversion": 0.018106188439481884,
+      "two_beam_A_gain_dbi_ideal": 13.428282369210052,
+      "one_beam_A_gain_dbi_ideal": 13.564382228036319
+    },
+    {
+      "width_mm": 30,
+      "seed": 3,
+      "alpha_on_np_per_m": 1.09,
+      "alpha_b_one_beam_np_per_m": 0.136,
+      "n_cells": 516,
+      "n_A": 257,
+      "n_B": 259,
+      "column_probability_formula": "p_B(x)=(1-tanh(x/w))/2; count-stratified seeded stochastic assignment",
+      "two_beam": {
+        "metrics": {
+          "A_RHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 0.0,
+            "directivity_dbi": 18.963428267662685,
+            "sll_db": -16.472427115886596,
+            "sll_theta_deg": 4.0,
+            "sll_phi_deg": 268.0,
+            "target_intensity": 1045448.585696356,
+            "target_cross_intensity": 292.5152264424234,
+            "target_xpd_db": 35.53154201876569
+          },
+          "B_LHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 180.0,
+            "directivity_dbi": 19.1453950382608,
+            "sll_db": -17.404550201951135,
+            "sll_theta_deg": 2.0,
+            "sll_phi_deg": 66.0,
+            "target_intensity": 1090912.3447833827,
+            "target_cross_intensity": 190.91157585925572,
+            "target_xpd_db": 37.569575937734385
+          }
+        },
+        "conversion": 0.26857175808622114,
+        "conversion_A": 0.13186966557559707,
+        "conversion_B": 0.13670209251062404,
+        "radiated_conversion": 0.26857175808622114
+      },
+      "one_beam": {
+        "metrics": {
+          "A_RHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 0.0,
+            "directivity_dbi": 22.107229969667213,
+            "sll_db": -16.40675092171879,
+            "sll_theta_deg": 4.0,
+            "sll_phi_deg": 268.0,
+            "target_intensity": 1077147.0989937147,
+            "target_cross_intensity": 0.0,
+            "target_xpd_db": Infinity
+          },
+          "B_LHCP": {
+            "peak_theta_deg": null,
+            "peak_phi_deg": null,
+            "directivity_dbi": null,
+            "sll_db": null,
+            "sll_theta_deg": null,
+            "sll_phi_deg": null,
+            "target_intensity": 0.0,
+            "target_cross_intensity": 205.34416091679898,
+            "target_xpd_db": null
+          }
+        },
+        "conversion": 0.15465398244262604,
+        "conversion_A": 0.13563619213917327,
+        "conversion_B": 0.01901779030345278,
+        "radiated_conversion": 0.13563619213917327
+      },
+      "two_beam_A_directivity_dbi": 18.963428267662685,
+      "two_beam_B_directivity_dbi": 19.1453950382608,
+      "two_beam_worst_sll_db": -16.472427115886596,
+      "two_beam_B_minus_A_db": 0.1848717683289346,
+      "one_beam_A_change_db": 0.129723366963458,
+      "one_beam_B_suppression_db": null,
+      "one_beam_B_to_A_db": null,
+      "one_beam_B_coherent_zero": true,
+      "two_beam_conversion": 0.26857175808622114,
+      "one_beam_conversion": 0.15465398244262604,
+      "two_beam_A_conversion": 0.13186966557559707,
+      "one_beam_A_conversion": 0.13563619213917327,
+      "two_beam_B_conversion": 0.13670209251062404,
+      "one_beam_B_conversion": 0.01901779030345278,
+      "two_beam_A_gain_dbi_ideal": 13.254031688585524,
+      "one_beam_A_gain_dbi_ideal": 13.43098585827428
+    },
+    {
+      "width_mm": 30,
+      "seed": 4,
+      "alpha_on_np_per_m": 1.09,
+      "alpha_b_one_beam_np_per_m": 0.136,
+      "n_cells": 516,
+      "n_A": 259,
+      "n_B": 257,
+      "column_probability_formula": "p_B(x)=(1-tanh(x/w))/2; count-stratified seeded stochastic assignment",
+      "two_beam": {
+        "metrics": {
+          "A_RHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 0.0,
+            "directivity_dbi": 19.131311929497073,
+            "sll_db": -16.87840832537312,
+            "sll_theta_deg": 0.0,
+            "sll_phi_deg": 0.0,
+            "target_intensity": 1086812.761879681,
+            "target_cross_intensity": 439.3038778949707,
+            "target_xpd_db": 33.93389692513633
+          },
+          "B_LHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 180.0,
+            "directivity_dbi": 18.98327482033241,
+            "sll_db": -17.273515390962856,
+            "sll_theta_deg": 2.0,
+            "sll_phi_deg": 64.0,
+            "target_intensity": 1049469.4707385243,
+            "target_cross_intensity": 641.5695130594117,
+            "target_xpd_db": 32.13726091002873
+          }
+        },
+        "conversion": 0.26857175808622114,
+        "conversion_A": 0.1358545753942932,
+        "conversion_B": 0.13271718269192795,
+        "radiated_conversion": 0.26857175808622114
+      },
+      "one_beam": {
+        "metrics": {
+          "A_RHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 0.0,
+            "directivity_dbi": 22.096664777031787,
+            "sll_db": -16.888795378251903,
+            "sll_theta_deg": 0.0,
+            "sll_phi_deg": 0.0,
+            "target_intensity": 1111386.6744558883,
+            "target_cross_intensity": 0.0,
+            "target_xpd_db": Infinity
+          },
+          "B_LHCP": {
+            "peak_theta_deg": null,
+            "peak_phi_deg": null,
+            "directivity_dbi": null,
+            "sll_db": null,
+            "sll_theta_deg": null,
+            "sll_phi_deg": null,
+            "target_intensity": 0.0,
+            "target_cross_intensity": 637.403287483463,
+            "target_xpd_db": null
+          }
+        },
+        "conversion": 0.157380707917805,
+        "conversion_A": 0.13887860812872602,
+        "conversion_B": 0.018502099789078994,
+        "radiated_conversion": 0.13887860812872602
+      },
+      "two_beam_A_directivity_dbi": 19.131311929497073,
+      "two_beam_B_directivity_dbi": 18.98327482033241,
+      "two_beam_worst_sll_db": -16.87840832537312,
+      "two_beam_B_minus_A_db": -0.1518492007590882,
+      "one_beam_A_change_db": 0.09710455811664379,
+      "one_beam_B_suppression_db": null,
+      "one_beam_B_to_A_db": null,
+      "one_beam_B_coherent_zero": true,
+      "two_beam_conversion": 0.26857175808622114,
+      "one_beam_conversion": 0.157380707917805,
+      "two_beam_A_conversion": 0.1358545753942932,
+      "one_beam_A_conversion": 0.13887860812872602,
+      "two_beam_B_conversion": 0.13271718269192795,
+      "one_beam_B_conversion": 0.018502099789078994,
+      "two_beam_A_gain_dbi_ideal": 13.421915350419912,
+      "one_beam_A_gain_dbi_ideal": 13.523018329647218
+    },
+    {
+      "width_mm": 30,
+      "seed": 5,
+      "alpha_on_np_per_m": 1.09,
+      "alpha_b_one_beam_np_per_m": 0.136,
+      "n_cells": 516,
+      "n_A": 258,
+      "n_B": 258,
+      "column_probability_formula": "p_B(x)=(1-tanh(x/w))/2; count-stratified seeded stochastic assignment",
+      "two_beam": {
+        "metrics": {
+          "A_RHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 0.0,
+            "directivity_dbi": 19.14956487624827,
+            "sll_db": -16.371008994551126,
+            "sll_theta_deg": 4.0,
+            "sll_phi_deg": 260.0,
+            "target_intensity": 1098921.5080936002,
+            "target_cross_intensity": 849.2819848759129,
+            "target_xpd_db": 31.11914761630867
+          },
+          "B_LHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 180.0,
+            "directivity_dbi": 18.909904215670565,
+            "sll_db": -16.60708403427277,
+            "sll_theta_deg": 2.0,
+            "sll_phi_deg": 50.0,
+            "target_intensity": 1037637.0738824147,
+            "target_cross_intensity": 1244.5668205017482,
+            "target_xpd_db": 29.210272615826483
+          }
+        },
+        "conversion": 0.26857175808622114,
+        "conversion_A": 0.14129683188951395,
+        "conversion_B": 0.1272749261967072,
+        "radiated_conversion": 0.26857175808622114
+      },
+      "one_beam": {
+        "metrics": {
+          "A_RHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 0.0,
+            "directivity_dbi": 22.003583532809472,
+            "sll_db": -16.421084928256512,
+            "sll_theta_deg": 4.0,
+            "sll_phi_deg": 260.0,
+            "target_intensity": 1118314.3009511884,
+            "target_cross_intensity": 0.0,
+            "target_xpd_db": Infinity
+          },
+          "B_LHCP": {
+            "peak_theta_deg": null,
+            "peak_phi_deg": null,
+            "directivity_dbi": null,
+            "sll_db": null,
+            "sll_theta_deg": null,
+            "sll_phi_deg": null,
+            "target_intensity": 0.0,
+            "target_cross_intensity": 1197.122069492213,
+            "target_xpd_db": null
+          }
+        },
+        "conversion": 0.16131873284645687,
+        "conversion_A": 0.14358269852901004,
+        "conversion_B": 0.017736034317446837,
+        "radiated_conversion": 0.14358269852901004
+      },
+      "two_beam_A_directivity_dbi": 19.14956487624827,
+      "two_beam_B_directivity_dbi": 18.909904215670565,
+      "two_beam_worst_sll_db": -16.371008994551126,
+      "two_beam_B_minus_A_db": -0.2492119315724597,
+      "one_beam_A_change_db": 0.07597205191879189,
+      "one_beam_B_suppression_db": null,
+      "one_beam_B_to_A_db": null,
+      "one_beam_B_coherent_zero": true,
+      "two_beam_conversion": 0.26857175808622114,
+      "one_beam_conversion": 0.16131873284645687,
+      "two_beam_A_conversion": 0.14129683188951395,
+      "one_beam_A_conversion": 0.14358269852901004,
+      "two_beam_B_conversion": 0.1272749261967072,
+      "one_beam_B_conversion": 0.017736034317446837,
+      "two_beam_A_gain_dbi_ideal": 13.440168297171109,
+      "one_beam_A_gain_dbi_ideal": 13.574604645934288
+    },
+    {
+      "width_mm": 30,
+      "seed": 6,
+      "alpha_on_np_per_m": 1.09,
+      "alpha_b_one_beam_np_per_m": 0.136,
+      "n_cells": 516,
+      "n_A": 259,
+      "n_B": 257,
+      "column_probability_formula": "p_B(x)=(1-tanh(x/w))/2; count-stratified seeded stochastic assignment",
+      "two_beam": {
+        "metrics": {
+          "A_RHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 0.0,
+            "directivity_dbi": 19.12733591475043,
+            "sll_db": -17.24535981688423,
+            "sll_theta_deg": 2.0,
+            "sll_phi_deg": 196.0,
+            "target_intensity": 1070244.3009979497,
+            "target_cross_intensity": 452.78809701212094,
+            "target_xpd_db": 33.73587922407806
+          },
+          "B_LHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 180.0,
+            "directivity_dbi": 19.110235504375556,
+            "sll_db": -16.101823641934793,
+            "sll_theta_deg": 2.0,
+            "sll_phi_deg": 78.0,
+            "target_intensity": 1065876.9565435632,
+            "target_cross_intensity": 179.68764296936945,
+            "target_xpd_db": 37.73188861272683
+          }
+        },
+        "conversion": 0.26857175808622114,
+        "conversion_A": 0.13375397852981238,
+        "conversion_B": 0.13481777955640875,
+        "radiated_conversion": 0.26857175808622114
+      },
+      "one_beam": {
+        "metrics": {
+          "A_RHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 0.0,
+            "directivity_dbi": 22.20444786668625,
+            "sll_db": -17.224432736957354,
+            "sll_theta_deg": 2.0,
+            "sll_phi_deg": 200.0,
+            "target_intensity": 1101551.0045997065,
+            "target_cross_intensity": 0.0,
+            "target_xpd_db": Infinity
+          },
+          "B_LHCP": {
+            "peak_theta_deg": null,
+            "peak_phi_deg": null,
+            "directivity_dbi": null,
+            "sll_db": null,
+            "sll_theta_deg": null,
+            "sll_phi_deg": null,
+            "target_intensity": 0.0,
+            "target_cross_intensity": 179.78830985598094,
+            "target_xpd_db": null
+          }
+        },
+        "conversion": 0.15622407269681388,
+        "conversion_A": 0.13747468299578142,
+        "conversion_B": 0.01874938970103245,
+        "radiated_conversion": 0.13747468299578142
+      },
+      "two_beam_A_directivity_dbi": 19.12733591475043,
+      "two_beam_B_directivity_dbi": 19.110235504375556,
+      "two_beam_worst_sll_db": -16.101823641934793,
+      "two_beam_B_minus_A_db": -0.017758507230962388,
+      "one_beam_A_change_db": 0.12521686971913817,
+      "one_beam_B_suppression_db": null,
+      "one_beam_B_to_A_db": null,
+      "one_beam_B_coherent_zero": true,
+      "two_beam_conversion": 0.26857175808622114,
+      "one_beam_conversion": 0.15622407269681388,
+      "two_beam_A_conversion": 0.13375397852981238,
+      "one_beam_A_conversion": 0.13747468299578142,
+      "two_beam_B_conversion": 0.13481777955640875,
+      "one_beam_B_conversion": 0.01874938970103245,
+      "two_beam_A_gain_dbi_ideal": 13.417939335673267,
+      "one_beam_A_gain_dbi_ideal": 13.586675135797952
+    },
+    {
+      "width_mm": 30,
+      "seed": 7,
+      "alpha_on_np_per_m": 1.09,
+      "alpha_b_one_beam_np_per_m": 0.136,
+      "n_cells": 516,
+      "n_A": 257,
+      "n_B": 259,
+      "column_probability_formula": "p_B(x)=(1-tanh(x/w))/2; count-stratified seeded stochastic assignment",
+      "two_beam": {
+        "metrics": {
+          "A_RHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 0.0,
+            "directivity_dbi": 19.26795425646951,
+            "sll_db": -17.160876563449442,
+            "sll_theta_deg": 2.0,
+            "sll_phi_deg": 256.0,
+            "target_intensity": 1062537.734861564,
+            "target_cross_intensity": 908.2709780306008,
+            "target_xpd_db": 30.681289250833387
+          },
+          "B_LHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 180.0,
+            "directivity_dbi": 19.31269428927145,
+            "sll_db": -17.76199459437261,
+            "sll_theta_deg": 2.0,
+            "sll_phi_deg": 59.99999999999999,
+            "target_intensity": 1073595.6009752334,
+            "target_cross_intensity": 53.18765921262766,
+            "target_xpd_db": 43.05029845867023
+          }
+        },
+        "conversion": 0.26857175808622114,
+        "conversion_A": 0.13636119275252884,
+        "conversion_B": 0.1322105653336923,
+        "radiated_conversion": 0.26857175808622114
+      },
+      "one_beam": {
+        "metrics": {
+          "A_RHCP": {
+            "peak_theta_deg": 28.0,
+            "peak_phi_deg": 0.0,
+            "directivity_dbi": 22.308688139952032,
+            "sll_db": -17.168346716876243,
+            "sll_theta_deg": 2.0,
+            "sll_phi_deg": 256.0,
+            "target_intensity": 1097390.3736337223,
+            "target_cross_intensity": 0.0,
+            "target_xpd_db": Infinity
+          },
+          "B_LHCP": {
+            "peak_theta_deg": null,
+            "peak_phi_deg": null,
+            "directivity_dbi": null,
+            "sll_db": null,
+            "sll_theta_deg": null,
+            "sll_phi_deg": null,
+            "target_intensity": 0.0,
+            "target_cross_intensity": 60.221608784493675,
+            "target_xpd_db": null
+          }
+        },
+        "conversion": 0.15867404258553247,
+        "conversion_A": 0.1404072810972824,
+        "conversion_B": 0.01826676148825008,
+        "radiated_conversion": 0.1404072810972824
+      },
+      "two_beam_A_directivity_dbi": 19.26795425646951,
+      "two_beam_B_directivity_dbi": 19.31269428927145,
+      "two_beam_worst_sll_db": -17.160876563449442,
+      "two_beam_B_minus_A_db": 0.04496360832221575,
+      "one_beam_A_change_db": 0.14016783734517338,
+      "one_beam_B_suppression_db": null,
+      "one_beam_B_to_A_db": null,
+      "one_beam_B_coherent_zero": true,
+      "two_beam_conversion": 0.26857175808622114,
+      "one_beam_conversion": 0.15867404258553247,
+      "two_beam_A_conversion": 0.13636119275252884,
+      "one_beam_A_conversion": 0.1404072810972824,
+      "two_beam_B_conversion": 0.1322105653336923,
+      "one_beam_B_conversion": 0.01826676148825008,
+      "two_beam_A_gain_dbi_ideal": 13.558557677392347,
+      "one_beam_A_gain_dbi_ideal": 13.782584435723303
+    }
+  ]
+}

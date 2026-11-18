@@ -59,7 +59,7 @@ def ray_integrals(ix, iy, x, y, is_b, alpha_a, alpha_b):
 
 
 def conversion(is_b_grid, alpha_a, alpha_b):
-    """Average radial power conversion over 360 launch directions."""
+    """Radial launched-power conversion assigned to A and B cells."""
     nmax = 12
     angles = np.radians(np.arange(360))
     s = np.arange(.0005, R, .001)
@@ -67,9 +67,14 @@ def conversion(is_b_grid, alpha_a, alpha_b):
     sy = np.sin(angles)[:, None] * s
     jj = np.clip(np.rint(sy/P).astype(int) + nmax, 0, 2*nmax)
     ii = np.clip(np.rint(sx/P).astype(int) + nmax, 0, 2*nmax)
-    a = np.where(is_b_grid[jj, ii], alpha_b, alpha_a)
+    is_b = is_b_grid[jj, ii]
+    a = np.where(is_b, alpha_b, alpha_a)
     a[(jj == nmax) & (ii == nmax)] = 0.0
-    return float(np.mean(1 - np.exp(-2 * np.sum(a, axis=1) * .001)))
+    optical_depth_before = np.cumsum(a, axis=1) * .001 - a * .001
+    segment_conversion = np.exp(-2 * optical_depth_before) * (1 - np.exp(-2 * a * .001))
+    out_a = float(np.mean(np.sum(np.where(is_b, 0, segment_conversion), axis=1)))
+    out_b = float(np.mean(np.sum(np.where(is_b, segment_conversion, 0), axis=1)))
+    return {"A": out_a, "B": out_b, "total": out_a + out_b}
 
 
 def directions(step):
@@ -90,8 +95,14 @@ def pattern_metrics(fields_a, fields_b, shape, t, p, step):
     for hand, target_phi, co, cross in (("A_RHCP", 0.0, ia, ib), ("B_LHCP", math.pi, ib, ia)):
         distance = angular_distance(t, p, target_phi)
         in_beam = distance <= math.radians(20)
-        peak = np.flatnonzero(in_beam)[int(np.argmax(co[in_beam]))]
         target = np.argmin(abs(t-math.radians(30))+abs((p-target_phi+math.pi)%(2*math.pi)-math.pi))
+        if not np.any(co):
+            results[hand] = {"peak_theta_deg": None, "peak_phi_deg": None, "directivity_dbi": None,
+                             "sll_db": None, "sll_theta_deg": None, "sll_phi_deg": None,
+                             "target_intensity": 0.0, "target_cross_intensity": float(cross[target]),
+                             "target_xpd_db": None}
+            continue
+        peak = np.flatnonzero(in_beam)[int(np.argmax(co[in_beam]))]
         local_max = co.reshape(shape) >= maximum_filter(co.reshape(shape), size=(3,3), mode=("nearest","wrap"))*(1-1e-12)
         outer = (distance > first_null) & local_max.ravel()
         sidelobe = np.flatnonzero(outer)[int(np.argmax(co[outer]))]
@@ -107,15 +118,17 @@ def pattern_metrics(fields_a, fields_b, shape, t, p, step):
 def summarize(rows):
     keys = ("two_beam_A_directivity_dbi", "two_beam_B_directivity_dbi", "two_beam_worst_sll_db",
             "two_beam_B_minus_A_db", "one_beam_A_change_db", "one_beam_B_suppression_db",
-            "one_beam_B_to_A_db", "two_beam_conversion", "one_beam_conversion")
+            "one_beam_B_to_A_db", "two_beam_conversion", "one_beam_conversion",
+            "two_beam_A_conversion", "one_beam_A_conversion", "two_beam_B_conversion", "one_beam_B_conversion",
+            "two_beam_A_gain_dbi_ideal", "one_beam_A_gain_dbi_ideal")
     out = {}
     for key in keys:
-        a = sorted(float(r[key]) for r in rows)
-        out[key] = {"min": a[0], "median": float(np.median(a)), "max": a[-1]}
+        a = sorted(float(r[key]) for r in rows if r[key] is not None)
+        out[key] = {"min": a[0], "median": float(np.median(a)), "max": a[-1]} if a else {"min": None, "median": None, "max": None}
     return out
 
 
-def run(outdir):
+def run(outdir, off_anisotropy_scale=1.0):
     outdir = Path(outdir)
     outdir.mkdir(parents=True, exist_ok=True)
     ix, iy, x, y = lattice()
@@ -137,9 +150,12 @@ def run(outdir):
                     local_alpha = np.where(is_b,alpha_b,alpha_on)
                     amp = np.sqrt(2*local_alpha/np.maximum(rho,FEED_FLOOR))*np.exp(-integral)
                     fa = phase @ (amp*(~is_b)*launch_a)
-                    fb = phase @ (amp*is_b*launch_b)
+                    b_coherent_scale = 1.0 if state == "two_beam" else off_anisotropy_scale
+                    fb = phase @ (amp*is_b*launch_b*b_coherent_scale)
+                    conv = conversion(grid,alpha_on,alpha_b)
                     states[state] = {"metrics":pattern_metrics(fa,fb,shape,t,phi,ANG_STEP),
-                                     "conversion":conversion(grid,alpha_on,alpha_b)}
+                                     "conversion":conv["total"], "conversion_A":conv["A"], "conversion_B":conv["B"],
+                                     "radiated_conversion":conv["A"]+b_coherent_scale**2*conv["B"]}
                 two, one = states["two_beam"], states["one_beam"]
                 aa2, bb2 = two["metrics"]["A_RHCP"], two["metrics"]["B_LHCP"]
                 aa1, bb1 = one["metrics"]["A_RHCP"], one["metrics"]["B_LHCP"]
@@ -152,9 +168,16 @@ def run(outdir):
                              "two_beam_worst_sll_db":max(aa2["sll_db"],bb2["sll_db"]),
                              "two_beam_B_minus_A_db":10*math.log10(bb2["target_intensity"]/aa2["target_intensity"]),
                              "one_beam_A_change_db":10*math.log10(aa1["target_intensity"]/aa2["target_intensity"]),
-                             "one_beam_B_suppression_db":10*math.log10(bb2["target_intensity"]/bb1["target_intensity"]),
-                             "one_beam_B_to_A_db":10*math.log10(bb1["target_intensity"]/aa1["target_intensity"]),
-                             "two_beam_conversion":two["conversion"],"one_beam_conversion":one["conversion"]})
+                             "one_beam_B_suppression_db":(10*math.log10(bb2["target_intensity"]/bb1["target_intensity"])
+                                                           if bb1["target_intensity"]>0 else None),
+                             "one_beam_B_to_A_db":(10*math.log10(bb1["target_intensity"]/aa1["target_intensity"])
+                                                   if bb1["target_intensity"]>0 else None),
+                             "one_beam_B_coherent_zero":bb1["target_intensity"]==0,
+                             "two_beam_conversion":two["conversion"],"one_beam_conversion":one["conversion"],
+                             "two_beam_A_conversion":two["conversion_A"],"one_beam_A_conversion":one["conversion_A"],
+                             "two_beam_B_conversion":two["conversion_B"],"one_beam_B_conversion":one["conversion_B"],
+                             "two_beam_A_gain_dbi_ideal":aa2["directivity_dbi"]+10*math.log10(two["radiated_conversion"]),
+                             "one_beam_A_gain_dbi_ideal":aa1["directivity_dbi"]+10*math.log10(one["radiated_conversion"])})
             if seed == 0:
                 fig,ax=plt.subplots(figsize=(5,5),layout="constrained")
                 ax.scatter(x[~is_b]*1e3,y[~is_b]*1e3,s=30,c="#d95f02",label="A RHCP")
@@ -167,7 +190,10 @@ def run(outdir):
     result={"label":"MODEL_ONLY / NOT_HFSS_VALIDATED","frequency_hz":F,"pitch_mm":P*1e3,"radius_mm":R*1e3,
             "centre_cell":"reserved for feed","soft_widths_mm":WIDTHS_MM,"dither_seeds":SEEDS,
             "alpha_on_range_np_per_m":ALPHAS_ON,"alpha_B_off_np_per_m":ALPHA_OFF,
-            "phase_assumption":"B-OFF residual radiation retains coherent LHCP B phase ramp (conservative residual beam)",
+            "phase_assumption":("B-OFF coherent LHCP B beam amplitude set to zero; OFF attenuation retained with unspecified destination"
+                                if off_anisotropy_scale == 0 else
+                                "B-OFF residual radiation retains coherent LHCP B phase ramp (conservative residual beam)"),
+            "off_anisotropy_coherent_scale":off_anisotropy_scale,
             "radial_model":"rho^-1/2 sqrt(2alpha_local) exp(-integral along nearest-cell radial path alpha ds)",
             "angle_step_deg":ANG_STEP,"summary":summary,"rows":rows}
     (outdir/"dither_grid.json").write_text(json.dumps(result,indent=2)+"\n",encoding="utf-8")
@@ -176,6 +202,8 @@ def run(outdir):
         ss = [summary[f"w{w}_alpha{alpha_on:.2f}"] for w in WIDTHS_MM]
         for ax, key, label in ((axes[0], "two_beam_worst_sll_db", "Two-beam SLL (dB)"),
                                (axes[1], "one_beam_B_suppression_db", "B suppression (dB)")):
+            if any(s[key]["median"] is None for s in ss):
+                continue
             med = np.array([s[key]["median"] for s in ss])
             lo = np.array([s[key]["min"] for s in ss])
             hi = np.array([s[key]["max"] for s in ss])

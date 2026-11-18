@@ -25,6 +25,7 @@
   ],
   "alpha_B_off_np_per_m": 0.13,
   "phase_assumption": "B-OFF residual radiation retains coherent LHCP B phase ramp (conservative residual beam)",
+  "off_anisotropy_coherent_scale": 1.0,
   "radial_model": "rho^-1/2 sqrt(2alpha_local) exp(-integral along nearest-cell radial path alpha ds)",
   "angle_step_deg": 2,
   "summary": {
@@ -65,14 +66,44 @@
         "max": -8.83820583713624
       },
       "two_beam_conversion": {
-        "min": 0.2831160728663022,
-        "median": 0.2831160728663022,
-        "max": 0.2831160728663022
+        "min": 0.28311607286629803,
+        "median": 0.28311607286629814,
+        "max": 0.28311607286629814
       },
       "one_beam_conversion": {
-        "min": 0.16142650965284872,
-        "median": 0.16505740731134227,
-        "max": 0.16853939342386154
+        "min": 0.16142650965284489,
+        "median": 0.1650574073113385,
+        "max": 0.16853939342385774
+      },
+      "two_beam_A_conversion": {
+        "min": 0.13897630916682566,
+        "median": 0.14348227180558853,
+        "max": 0.14900657669207967
+      },
+      "one_beam_A_conversion": {
+        "min": 0.14326184040596404,
+        "median": 0.14750564857280843,
+        "max": 0.1516078304267613
+      },
+      "two_beam_B_conversion": {
+        "min": 0.13410949617421844,
+        "median": 0.13963380106070955,
+        "max": 0.14413976369947246
+      },
+      "one_beam_B_conversion": {
+        "min": 0.016931562997096434,
+        "median": 0.01755175873853007,
+        "max": 0.01816466924688085
+      },
+      "two_beam_A_gain_dbi_ideal": {
+        "min": 13.476017893989935,
+        "median": 13.64864272862762,
+        "max": 13.78228358374581
+      },
+      "one_beam_A_gain_dbi_ideal": {
+        "min": 13.649683805678443,
+        "median": 13.792263729874012,
+        "max": 13.995566233733035
       }
     },
     "w30_alpha1.33": {
@@ -112,14 +143,44 @@
         "max": -9.35109916347617
       },
       "two_beam_conversion": {
-        "min": 0.317245267412607,
-        "median": 0.317245267412607,
-        "max": 0.317245267412607
+        "min": 0.3172452674126133,
+        "median": 0.31724526741261333,
+        "max": 0.3172452674126134
       },
       "one_beam_conversion": {
-        "min": 0.17932278058072973,
-        "median": 0.1835087498184501,
-        "max": 0.187369826343405
+        "min": 0.1793227805807312,
+        "median": 0.18350874981845178,
+        "max": 0.18736982634340682
+      },
+      "two_beam_A_conversion": {
+        "min": 0.155635392127397,
+        "median": 0.16078885719521552,
+        "max": 0.16712828836223872
+      },
+      "one_beam_A_conversion": {
+        "min": 0.16122283041794647,
+        "median": 0.16603808509098816,
+        "max": 0.17052035970744658
+      },
+      "two_beam_B_conversion": {
+        "min": 0.15011697905037463,
+        "median": 0.1564564102173978,
+        "max": 0.1616098752852163
+      },
+      "one_beam_B_conversion": {
+        "min": 0.01684946663596023,
+        "median": 0.017470664727463607,
+        "max": 0.018099950162784744
+      },
+      "two_beam_A_gain_dbi_ideal": {
+        "min": 13.952941396051141,
+        "median": 14.12935519041428,
+        "max": 14.26344721431813
+      },
+      "one_beam_A_gain_dbi_ideal": {
+        "min": 14.15234187829429,
+        "median": 14.295080944037377,
+        "max": 14.505436390431104
       }
     },
     "w30_alpha1.48": {
@@ -159,14 +220,44 @@
         "max": -9.743907596820424
       },
       "two_beam_conversion": {
-        "min": 0.34600735301575586,
-        "median": 0.34600735301575586,
-        "max": 0.34600735301575586
+        "min": 0.346007353015755,
+        "median": 0.346007353015755,
+        "max": 0.346007353015755
       },
       "one_beam_conversion": {
-        "min": 0.19454599376306464,
-        "median": 0.19921315486185381,
-        "max": 0.20337115592636604
+        "min": 0.19454599376306253,
+        "median": 0.1992131548618517,
+        "max": 0.20337115592636398
+      },
+      "two_beam_A_conversion": {
+        "min": 0.1696549258180233,
+        "median": 0.1753763661013999,
+        "max": 0.18243571941607606
+      },
+      "one_beam_A_conversion": {
+        "min": 0.1765024763658113,
+        "median": 0.18181326436373318,
+        "max": 0.1865933705340604
+      },
+      "two_beam_B_conversion": {
+        "min": 0.163571633599679,
+        "median": 0.17063098691435513,
+        "max": 0.1763524271977317
+      },
+      "one_beam_B_conversion": {
+        "min": 0.016777785392303603,
+        "median": 0.017399890498118537,
+        "max": 0.018043517397251227
+      },
+      "two_beam_A_gain_dbi_ideal": {
+        "min": 14.314214683972986,
+        "median": 14.493978590900111,
+        "max": 14.628479210119272
+      },
+      "one_beam_A_gain_dbi_ideal": {
+        "min": 14.536161897145481,
+        "median": 14.680464438024341,
+        "max": 14.895487846259696
       }
     },
     "w40_alpha1.16": {
@@ -206,14 +297,44 @@
         "max": -9.004904999720745
       },
       "two_beam_conversion": {
-        "min": 0.2831160728663022,
-        "median": 0.2831160728663022,
-        "max": 0.2831160728663022
+        "min": 0.28311607286629803,
+        "median": 0.2831160728662981,
+        "max": 0.28311607286629814
       },
       "one_beam_conversion": {
-        "min": 0.16181347771318563,
-        "median": 0.16661473092520818,
-        "max": 0.17076956647241773
+        "min": 0.16181347771318177,
+        "median": 0.16661473092520435,
+        "max": 0.17076956647241393
+      },
+      "two_beam_A_conversion": {
+        "min": 0.13789060911644635,
+        "median": 0.14400588420749205,
+        "max": 0.15008872734566808
+      },
+      "one_beam_A_conversion": {
+        "min": 0.14365130913752444,
+        "median": 0.14931287418716827,
+        "max": 0.1541757904962224
+      },
+      "two_beam_B_conversion": {
+        "min": 0.13302734552063,
+        "median": 0.139110188658806,
+        "max": 0.14522546374985176
+      },
+      "one_beam_B_conversion": {
+        "min": 0.016593775976191508,
+        "median": 0.017314170164729185,
+        "max": 0.01816216857565734
+      },
+      "two_beam_A_gain_dbi_ideal": {
+        "min": 13.751973595297178,
+        "median": 13.8900620958239,
+        "max": 14.00428916742726
+      },
+      "one_beam_A_gain_dbi_ideal": {
+        "min": 13.969248575084624,
+        "median": 14.033365119815157,
+        "max": 14.210920768688064
       }
     },
     "w40_alpha1.33": {
@@ -253,14 +374,44 @@
         "max": -9.530699843436928
       },
       "two_beam_conversion": {
-        "min": 0.317245267412607,
-        "median": 0.317245267412607,
-        "max": 0.317245267412607
+        "min": 0.3172452674126133,
+        "median": 0.3172452674126134,
+        "max": 0.3172452674126134
       },
       "one_beam_conversion": {
-        "min": 0.17994598087363065,
-        "median": 0.18539476523659137,
-        "max": 0.19016929348505054
+        "min": 0.17994598087363214,
+        "median": 0.1853947652365931,
+        "max": 0.19016929348505243
+      },
+      "two_beam_A_conversion": {
+        "min": 0.15434140709608768,
+        "median": 0.16138693092173273,
+        "max": 0.16835549341027176
+      },
+      "one_beam_A_conversion": {
+        "min": 0.16186317782718634,
+        "median": 0.1681904346522221,
+        "max": 0.17369121885963454
+      },
+      "two_beam_B_conversion": {
+        "min": 0.14888977400234155,
+        "median": 0.1558583364908806,
+        "max": 0.16290386031652562
+      },
+      "one_beam_B_conversion": {
+        "min": 0.016478074625417897,
+        "median": 0.01720528707582636,
+        "max": 0.018082803046445797
+      },
+      "two_beam_A_gain_dbi_ideal": {
+        "min": 14.230228369017617,
+        "median": 14.371811850139872,
+        "max": 14.487628038017004
+      },
+      "one_beam_A_gain_dbi_ideal": {
+        "min": 14.481518638404316,
+        "median": 14.542240788625719,
+        "max": 14.725746698101528
       }
     },
     "w40_alpha1.48": {
@@ -300,14 +451,44 @@
         "max": -9.934866443125397
       },
       "two_beam_conversion": {
-        "min": 0.34600735301575586,
-        "median": 0.34600735301575586,
-        "max": 0.34600735301575586
+        "min": 0.346007353015755,
+        "median": 0.346007353015755,
+        "max": 0.346007353015755
       },
       "one_beam_conversion": {
-        "min": 0.19541114022101397,
-        "median": 0.20140117860236356,
-        "max": 0.20671134194525845
+        "min": 0.1954111402210119,
+        "median": 0.2014011786023615,
+        "max": 0.20671134194525642
+      },
+      "two_beam_A_conversion": {
+        "min": 0.16816750902778613,
+        "median": 0.17604008583971292,
+        "max": 0.18378774617702195
+      },
+      "one_beam_A_conversion": {
+        "min": 0.17739752854632626,
+        "median": 0.18428177775958338,
+        "max": 0.19033437651911295
+      },
+      "two_beam_B_conversion": {
+        "min": 0.16221960683873307,
+        "median": 0.1699672671760421,
+        "max": 0.1778398439879689
+      },
+      "one_beam_B_conversion": {
+        "min": 0.016376965426143482,
+        "median": 0.01711943884223516,
+        "max": 0.018013611674685615
+      },
+      "two_beam_A_gain_dbi_ideal": {
+        "min": 14.592654586131347,
+        "median": 14.737353700873085,
+        "max": 14.854568348432556
+      },
+      "one_beam_A_gain_dbi_ideal": {
+        "min": 14.86831268340823,
+        "median": 14.931827465066153,
+        "max": 15.120097682402957
       }
     }
   },
@@ -346,7 +527,9 @@
             "target_xpd_db": 33.532935009691755
           }
         },
-        "conversion": 0.2831160728663022
+        "conversion": 0.28311607286629814,
+        "conversion_A": 0.13905580038176737,
+        "conversion_B": 0.14406027248453074
       },
       "one_beam": {
         "metrics": {
@@ -373,7 +556,9 @@
             "target_xpd_db": 24.820463172470944
           }
         },
-        "conversion": 0.16222540642982777
+        "conversion": 0.16222540642982397,
+        "conversion_A": 0.1441728844461312,
+        "conversion_B": 0.018052521983692785
       },
       "two_beam_A_directivity_dbi": 19.12358479089633,
       "two_beam_B_directivity_dbi": 19.179958479175397,
@@ -382,8 +567,15 @@
       "one_beam_A_change_db": 0.15920312327367375,
       "one_beam_B_suppression_db": 8.902737666178645,
       "one_beam_B_to_A_db": -9.00122860009531,
-      "two_beam_conversion": 0.2831160728663022,
-      "one_beam_conversion": 0.16222540642982777
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.28311607286629814,
+      "one_beam_conversion": 0.16222540642982397,
+      "two_beam_A_conversion": 0.13905580038176737,
+      "one_beam_A_conversion": 0.1441728844461312,
+      "two_beam_B_conversion": 0.14406027248453074,
+      "one_beam_B_conversion": 0.018052521983692785,
+      "two_beam_A_gain_dbi_ideal": 13.643230046150892,
+      "one_beam_A_gain_dbi_ideal": 13.792782755405787
     },
     {
       "width_mm": 30,
@@ -419,7 +611,9 @@
             "target_xpd_db": 33.53950010110908
           }
         },
-        "conversion": 0.317245267412607
+        "conversion": 0.31724526741261333,
+        "conversion_A": 0.1557054821295854,
+        "conversion_B": 0.16153978528302793
       },
       "one_beam": {
         "metrics": {
@@ -446,7 +640,9 @@
             "target_xpd_db": 24.364140009318596
           }
         },
-        "conversion": 0.18036071132196724
+        "conversion": 0.18036071132196876,
+        "conversion_A": 0.16238837332125367,
+        "conversion_B": 0.017972338000715106
       },
       "two_beam_A_directivity_dbi": 19.10921891229378,
       "two_beam_B_directivity_dbi": 19.166447377537246,
@@ -455,8 +651,15 @@
       "one_beam_A_change_db": 0.18542665148159304,
       "one_beam_B_suppression_db": 9.39840357465741,
       "one_beam_B_to_A_db": -9.522339636937437,
-      "two_beam_conversion": 0.317245267412607,
-      "one_beam_conversion": 0.18036071132196724
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.31724526741261333,
+      "one_beam_conversion": 0.18036071132196876,
+      "two_beam_A_conversion": 0.1557054821295854,
+      "one_beam_A_conversion": 0.16238837332125367,
+      "two_beam_B_conversion": 0.16153978528302793,
+      "one_beam_B_conversion": 0.017972338000715106,
+      "two_beam_A_gain_dbi_ideal": 14.123170433454739,
+      "one_beam_A_gain_dbi_ideal": 14.300069377932607
     },
     {
       "width_mm": 30,
@@ -492,7 +695,9 @@
             "target_xpd_db": 33.544837252038874
           }
         },
-        "conversion": 0.34600735301575586
+        "conversion": 0.346007353015755,
+        "conversion_A": 0.16971151080973104,
+        "conversion_B": 0.17629584220602398
       },
       "one_beam": {
         "metrics": {
@@ -519,7 +724,9 @@
             "target_xpd_db": 24.021033638798478
           }
         },
-        "conversion": 0.19581606614030148
+        "conversion": 0.19581606614029942,
+        "conversion_A": 0.17791383544252765,
+        "conversion_B": 0.01790223069777177
       },
       "two_beam_A_directivity_dbi": 19.096255448735352,
       "two_beam_B_directivity_dbi": 19.154266182691345,
@@ -528,8 +735,15 @@
       "one_beam_A_change_db": 0.2085513777085996,
       "one_beam_B_suppression_db": 9.776069690789441,
       "one_beam_B_to_A_db": -9.922415336355703,
-      "two_beam_conversion": 0.34600735301575586,
-      "one_beam_conversion": 0.19581606614030148
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.346007353015755,
+      "one_beam_conversion": 0.19581606614029942,
+      "two_beam_A_conversion": 0.16971151080973104,
+      "one_beam_A_conversion": 0.17791383544252765,
+      "two_beam_B_conversion": 0.17629584220602398,
+      "one_beam_B_conversion": 0.01790223069777177,
+      "two_beam_A_gain_dbi_ideal": 14.48710872973353,
+      "one_beam_A_gain_dbi_ideal": 14.68820046737077
     },
     {
       "width_mm": 30,
@@ -565,7 +779,9 @@
             "target_xpd_db": 35.33118398124955
           }
         },
-        "conversion": 0.2831160728663022
+        "conversion": 0.2831160728662981,
+        "conversion_A": 0.14647799684785287,
+        "conversion_B": 0.13663807601844521
       },
       "one_beam": {
         "metrics": {
@@ -592,7 +808,9 @@
             "target_xpd_db": 26.481012300843375
           }
         },
-        "conversion": 0.16731294936713254
+        "conversion": 0.16731294936712873,
+        "conversion_A": 0.1502002213832428,
+        "conversion_B": 0.017112727983885936
       },
       "two_beam_A_directivity_dbi": 19.17080900313278,
       "two_beam_B_directivity_dbi": 19.14304737678418,
@@ -601,8 +819,15 @@
       "one_beam_A_change_db": 0.11623432536662201,
       "one_beam_B_suppression_db": 8.924719495547382,
       "one_beam_B_to_A_db": -9.066545490166547,
-      "two_beam_conversion": 0.2831160728663022,
-      "one_beam_conversion": 0.16731294936713254
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.2831160728662981,
+      "one_beam_conversion": 0.16731294936712873,
+      "two_beam_A_conversion": 0.14647799684785287,
+      "one_beam_A_conversion": 0.1502002213832428,
+      "two_beam_B_conversion": 0.13663807601844521,
+      "one_beam_B_conversion": 0.017112727983885936,
+      "two_beam_A_gain_dbi_ideal": 13.69045425838734,
+      "one_beam_A_gain_dbi_ideal": 13.827911176703626
     },
     {
       "width_mm": 30,
@@ -638,7 +863,9 @@
             "target_xpd_db": 35.394961651248465
           }
         },
-        "conversion": 0.317245267412607
+        "conversion": 0.3172452674126133,
+        "conversion_A": 0.16428972248487145,
+        "conversion_B": 0.15295554492774185
       },
       "one_beam": {
         "metrics": {
@@ -665,7 +892,9 @@
             "target_xpd_db": 26.056786863882856
           }
         },
-        "conversion": 0.18615453390960776
+        "conversion": 0.1861545339096095,
+        "conversion_A": 0.16914720565531927,
+        "conversion_B": 0.017007328254290258
       },
       "two_beam_A_directivity_dbi": 19.16027663156281,
       "two_beam_B_directivity_dbi": 19.126087765952157,
@@ -674,8 +903,15 @@
       "one_beam_A_change_db": 0.13534452525020418,
       "one_beam_B_suppression_db": 9.423890931733592,
       "one_beam_B_to_A_db": -9.591306415564205,
-      "two_beam_conversion": 0.317245267412607,
-      "one_beam_conversion": 0.18615453390960776
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.3172452674126133,
+      "one_beam_conversion": 0.1861545339096095,
+      "two_beam_A_conversion": 0.16428972248487145,
+      "one_beam_A_conversion": 0.16914720565531927,
+      "two_beam_B_conversion": 0.15295554492774185,
+      "one_beam_B_conversion": 0.017007328254290258,
+      "two_beam_A_gain_dbi_ideal": 14.174228152723767,
+      "one_beam_A_gain_dbi_ideal": 14.332804479414184
     },
     {
       "width_mm": 30,
@@ -711,7 +947,9 @@
             "target_xpd_db": 35.451307143666234
           }
         },
-        "conversion": 0.34600735301575586
+        "conversion": 0.346007353015755,
+        "conversion_A": 0.1793336650243014,
+        "conversion_B": 0.16667368799145366
       },
       "one_beam": {
         "metrics": {
@@ -738,7 +976,9 @@
             "target_xpd_db": 25.74193094024309
           }
         },
-        "conversion": 0.20220671245565308
+        "conversion": 0.20220671245565103,
+        "conversion_A": 0.18529146712524153,
+        "conversion_B": 0.016915245330409494
       },
       "two_beam_A_directivity_dbi": 19.15071921806836,
       "two_beam_B_directivity_dbi": 19.110839174928092,
@@ -747,8 +987,15 @@
       "one_beam_A_change_db": 0.15218762036167668,
       "one_beam_B_suppression_db": 9.804620980515478,
       "one_beam_B_to_A_db": -9.994615654793911,
-      "two_beam_conversion": 0.34600735301575586,
-      "one_beam_conversion": 0.20220671245565308
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.346007353015755,
+      "one_beam_conversion": 0.20220671245565103,
+      "two_beam_A_conversion": 0.1793336650243014,
+      "one_beam_A_conversion": 0.18529146712524153,
+      "two_beam_B_conversion": 0.16667368799145366,
+      "one_beam_B_conversion": 0.016915245330409494,
+      "two_beam_A_gain_dbi_ideal": 14.541572499066538,
+      "one_beam_A_gain_dbi_ideal": 14.718671878417727
     },
     {
       "width_mm": 30,
@@ -784,7 +1031,9 @@
             "target_xpd_db": 35.14552979167475
           }
         },
-        "conversion": 0.2831160728663022
+        "conversion": 0.28311607286629803,
+        "conversion_A": 0.14569694388081073,
+        "conversion_B": 0.13741912898548733
       },
       "one_beam": {
         "metrics": {
@@ -811,7 +1060,9 @@
             "target_xpd_db": 25.96360135859362
           }
         },
-        "conversion": 0.16640333682302236
+        "conversion": 0.16640333682301856,
+        "conversion_A": 0.14912099186140004,
+        "conversion_B": 0.017282344961618526
       },
       "two_beam_A_directivity_dbi": 19.132759001152888,
       "two_beam_B_directivity_dbi": 19.108093270017868,
@@ -820,8 +1071,15 @@
       "one_beam_A_change_db": 0.10615007900120516,
       "one_beam_B_suppression_db": 8.90482234864708,
       "one_beam_B_to_A_db": -9.032556724762419,
-      "two_beam_conversion": 0.2831160728663022,
-      "one_beam_conversion": 0.16640333682302236
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.28311607286629803,
+      "one_beam_conversion": 0.16640333682301856,
+      "two_beam_A_conversion": 0.14569694388081073,
+      "one_beam_A_conversion": 0.14912099186140004,
+      "two_beam_B_conversion": 0.13741912898548733,
+      "one_beam_B_conversion": 0.017282344961618526,
+      "two_beam_A_gain_dbi_ideal": 13.652404256407447,
+      "one_beam_A_gain_dbi_ideal": 13.78606498123608
     },
     {
       "width_mm": 30,
@@ -857,7 +1115,9 @@
             "target_xpd_db": 35.092033895400576
           }
         },
-        "conversion": 0.317245267412607
+        "conversion": 0.3172452674126134,
+        "conversion_A": 0.16336773258351264,
+        "conversion_B": 0.15387753482910072
       },
       "one_beam": {
         "metrics": {
@@ -884,7 +1144,9 @@
             "target_xpd_db": 25.367483312678804
           }
         },
-        "conversion": 0.1850290615429637
+        "conversion": 0.1850290615429654,
+        "conversion_A": 0.16783581587155538,
+        "conversion_B": 0.017193245671410014
       },
       "two_beam_A_directivity_dbi": 19.12057661805887,
       "two_beam_B_directivity_dbi": 19.0911285663863,
@@ -893,8 +1155,15 @@
       "one_beam_A_change_db": 0.1236353854412031,
       "one_beam_B_suppression_db": 9.400665888406458,
       "one_beam_B_to_A_db": -9.5507138111639,
-      "two_beam_conversion": 0.317245267412607,
-      "one_beam_conversion": 0.1850290615429637
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.3172452674126134,
+      "one_beam_conversion": 0.1850290615429654,
+      "two_beam_A_conversion": 0.16336773258351264,
+      "one_beam_A_conversion": 0.16783581587155538,
+      "two_beam_B_conversion": 0.15387753482910072,
+      "one_beam_B_conversion": 0.017193245671410014,
+      "two_beam_A_gain_dbi_ideal": 14.13452813921983,
+      "one_beam_A_gain_dbi_ideal": 14.288772595300093
     },
     {
       "width_mm": 30,
@@ -930,7 +1199,9 @@
             "target_xpd_db": 35.0424370062107
           }
         },
-        "conversion": 0.34600735301575586
+        "conversion": 0.346007353015755,
+        "conversion_A": 0.17828318907970883,
+        "conversion_B": 0.16772416393604617
       },
       "one_beam": {
         "metrics": {
@@ -957,7 +1228,9 @@
             "target_xpd_db": 24.898834819361795
           }
         },
-        "conversion": 0.20087852763008232
+        "conversion": 0.20087852763008035,
+        "conversion_A": 0.1837630943128496,
+        "conversion_B": 0.01711543331723074
       },
       "two_beam_A_directivity_dbi": 19.10955252330679,
       "two_beam_B_directivity_dbi": 19.07586285515238,
@@ -966,8 +1239,15 @@
       "one_beam_A_change_db": 0.13905402518904786,
       "one_beam_B_suppression_db": 9.77844962769257,
       "one_beam_B_to_A_db": -9.948197663146711,
-      "two_beam_conversion": 0.34600735301575586,
-      "one_beam_conversion": 0.20087852763008232
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.346007353015755,
+      "one_beam_conversion": 0.20087852763008035,
+      "two_beam_A_conversion": 0.17828318907970883,
+      "one_beam_A_conversion": 0.1837630943128496,
+      "two_beam_B_conversion": 0.16772416393604617,
+      "one_beam_B_conversion": 0.01711543331723074,
+      "two_beam_A_gain_dbi_ideal": 14.500405804304966,
+      "one_beam_A_gain_dbi_ideal": 14.67272840867791
     },
     {
       "width_mm": 30,
@@ -1003,7 +1283,9 @@
             "target_xpd_db": 37.59695069089206
           }
         },
-        "conversion": 0.2831160728663022
+        "conversion": 0.28311607286629814,
+        "conversion_A": 0.13897630916682566,
+        "conversion_B": 0.14413976369947246
       },
       "one_beam": {
         "metrics": {
@@ -1030,7 +1312,9 @@
             "target_xpd_db": 28.37030469481855
           }
         },
-        "conversion": 0.16142650965284872
+        "conversion": 0.16142650965284489,
+        "conversion_A": 0.14326184040596404,
+        "conversion_B": 0.01816466924688085
       },
       "two_beam_A_directivity_dbi": 18.956372638735374,
       "two_beam_B_directivity_dbi": 19.13938867563629,
@@ -1039,8 +1323,15 @@
       "one_beam_A_change_db": 0.14003246812820586,
       "one_beam_B_suppression_db": 8.884105526264733,
       "one_beam_B_to_A_db": -8.83820583713624,
-      "two_beam_conversion": 0.2831160728663022,
-      "one_beam_conversion": 0.16142650965284872
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.28311607286629814,
+      "one_beam_conversion": 0.16142650965284489,
+      "two_beam_A_conversion": 0.13897630916682566,
+      "one_beam_A_conversion": 0.14326184040596404,
+      "two_beam_B_conversion": 0.14413976369947246,
+      "one_beam_B_conversion": 0.01816466924688085,
+      "two_beam_A_gain_dbi_ideal": 13.476017893989935,
+      "one_beam_A_gain_dbi_ideal": 13.649683805678443
     },
     {
       "width_mm": 30,
@@ -1076,7 +1367,9 @@
             "target_xpd_db": 37.66281201649156
           }
         },
-        "conversion": 0.317245267412607
+        "conversion": 0.3172452674126133,
+        "conversion_A": 0.155635392127397,
+        "conversion_B": 0.1616098752852163
       },
       "one_beam": {
         "metrics": {
@@ -1103,7 +1396,9 @@
             "target_xpd_db": 27.884926920524556
           }
         },
-        "conversion": 0.17932278058072973
+        "conversion": 0.1793227805807312,
+        "conversion_A": 0.16122283041794647,
+        "conversion_B": 0.018099950162784744
       },
       "two_beam_A_directivity_dbi": 18.938989874890183,
       "two_beam_B_directivity_dbi": 19.12455605955078,
@@ -1112,8 +1407,15 @@
       "one_beam_A_change_db": 0.16305088131280926,
       "one_beam_B_suppression_db": 9.37655717723617,
       "one_beam_B_to_A_db": -9.35109916347617,
-      "two_beam_conversion": 0.317245267412607,
-      "one_beam_conversion": 0.17932278058072973
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.3172452674126133,
+      "one_beam_conversion": 0.1793227805807312,
+      "two_beam_A_conversion": 0.155635392127397,
+      "one_beam_A_conversion": 0.16122283041794647,
+      "two_beam_B_conversion": 0.1616098752852163,
+      "one_beam_B_conversion": 0.018099950162784744,
+      "two_beam_A_gain_dbi_ideal": 13.952941396051141,
+      "one_beam_A_gain_dbi_ideal": 14.15234187829429
     },
     {
       "width_mm": 30,
@@ -1149,7 +1451,9 @@
             "target_xpd_db": 37.72015621547014
           }
         },
-        "conversion": 0.34600735301575586
+        "conversion": 0.346007353015755,
+        "conversion_A": 0.1696549258180233,
+        "conversion_B": 0.1763524271977317
       },
       "one_beam": {
         "metrics": {
@@ -1176,7 +1480,9 @@
             "target_xpd_db": 27.51514854762103
           }
         },
-        "conversion": 0.19454599376306464
+        "conversion": 0.19454599376306253,
+        "conversion_A": 0.1765024763658113,
+        "conversion_B": 0.018043517397251227
       },
       "two_beam_A_directivity_dbi": 18.92336140297481,
       "two_beam_B_directivity_dbi": 19.111179970973385,
@@ -1185,8 +1491,15 @@
       "one_beam_A_change_db": 0.18333758682197338,
       "one_beam_B_suppression_db": 9.75135425496812,
       "one_beam_B_to_A_db": -9.743907596820424,
-      "two_beam_conversion": 0.34600735301575586,
-      "one_beam_conversion": 0.19454599376306464
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.346007353015755,
+      "one_beam_conversion": 0.19454599376306253,
+      "two_beam_A_conversion": 0.1696549258180233,
+      "one_beam_A_conversion": 0.1765024763658113,
+      "two_beam_B_conversion": 0.1763524271977317,
+      "one_beam_B_conversion": 0.018043517397251227,
+      "two_beam_A_gain_dbi_ideal": 14.314214683972986,
+      "one_beam_A_gain_dbi_ideal": 14.536161897145481
     },
     {
       "width_mm": 30,
@@ -1222,7 +1535,9 @@
             "target_xpd_db": 32.13029954516176
           }
         },
-        "conversion": 0.2831160728663022
+        "conversion": 0.2831160728662981,
+        "conversion_A": 0.14320684691187316,
+        "conversion_B": 0.13990922595442493
       },
       "one_beam": {
         "metrics": {
@@ -1249,7 +1564,9 @@
             "target_xpd_db": 23.28740881448233
           }
         },
-        "conversion": 0.1643217516010444
+        "conversion": 0.16432175160104062,
+        "conversion_A": 0.14665042669716313,
+        "conversion_B": 0.017671324903877475
       },
       "two_beam_A_directivity_dbi": 19.125235945593232,
       "two_beam_B_directivity_dbi": 18.976214926499942,
@@ -1258,8 +1575,15 @@
       "one_beam_A_change_db": 0.10486187204326423,
       "one_beam_B_suppression_db": 8.87335069433869,
       "one_beam_B_to_A_db": -9.131048016707297,
-      "two_beam_conversion": 0.2831160728663022,
-      "one_beam_conversion": 0.1643217516010444
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.2831160728662981,
+      "one_beam_conversion": 0.16432175160104062,
+      "two_beam_A_conversion": 0.14320684691187316,
+      "one_beam_A_conversion": 0.14665042669716313,
+      "two_beam_B_conversion": 0.13990922595442493,
+      "one_beam_B_conversion": 0.017671324903877475,
+      "two_beam_A_gain_dbi_ideal": 13.644881200847792,
+      "one_beam_A_gain_dbi_ideal": 13.751450850763565
     },
     {
       "width_mm": 30,
@@ -1295,7 +1619,9 @@
             "target_xpd_db": 32.111524371005814
           }
         },
-        "conversion": 0.317245267412607
+        "conversion": 0.31724526741261333,
+        "conversion_A": 0.16045634411770424,
+        "conversion_B": 0.1567889232949091
       },
       "one_beam": {
         "metrics": {
@@ -1322,7 +1648,9 @@
             "target_xpd_db": 22.782737396275753
           }
         },
-        "conversion": 0.1825607167825038
+        "conversion": 0.18256071678250543,
+        "conversion_A": 0.16495475350610012,
+        "conversion_B": 0.017605963276405328
       },
       "two_beam_A_directivity_dbi": 19.11023072044777,
       "two_beam_B_directivity_dbi": 18.958831610388525,
@@ -1331,8 +1659,15 @@
       "one_beam_A_change_db": 0.12220700176698483,
       "one_beam_B_suppression_db": 9.364026652529976,
       "one_beam_B_to_A_db": -9.64145242244425,
-      "two_beam_conversion": 0.317245267412607,
-      "one_beam_conversion": 0.1825607167825038
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.31724526741261333,
+      "one_beam_conversion": 0.18256071678250543,
+      "two_beam_A_conversion": 0.16045634411770424,
+      "one_beam_A_conversion": 0.16495475350610012,
+      "two_beam_B_conversion": 0.1567889232949091,
+      "one_beam_B_conversion": 0.017605963276405328,
+      "two_beam_A_gain_dbi_ideal": 14.124182241608729,
+      "one_beam_A_gain_dbi_ideal": 14.250949226597063
     },
     {
       "width_mm": 30,
@@ -1368,7 +1703,9 @@
             "target_xpd_db": 32.09276649747017
           }
         },
-        "conversion": 0.34600735301575586
+        "conversion": 0.346007353015755,
+        "conversion_A": 0.17498939375764744,
+        "conversion_B": 0.17101795925810762
       },
       "one_beam": {
         "metrics": {
@@ -1395,7 +1732,9 @@
             "target_xpd_db": 22.394849775871833
           }
         },
-        "conversion": 0.19806071083542637
+        "conversion": 0.1980607108354243,
+        "conversion_A": 0.1805117108631271,
+        "conversion_B": 0.017548999972297193
       },
       "two_beam_A_directivity_dbi": 19.09669809649708,
       "two_beam_B_directivity_dbi": 18.94321425232073,
@@ -1404,8 +1743,15 @@
       "one_beam_A_change_db": 0.1375189611552779,
       "one_beam_B_suppression_db": 9.737257445342095,
       "one_beam_B_to_A_db": -10.032083990118345,
-      "two_beam_conversion": 0.34600735301575586,
-      "one_beam_conversion": 0.19806071083542637
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.346007353015755,
+      "one_beam_conversion": 0.1980607108354243,
+      "two_beam_A_conversion": 0.17498939375764744,
+      "one_beam_A_conversion": 0.1805117108631271,
+      "two_beam_B_conversion": 0.17101795925810762,
+      "one_beam_B_conversion": 0.017548999972297193,
+      "two_beam_A_gain_dbi_ideal": 14.487551377495256,
+      "one_beam_A_gain_dbi_ideal": 14.6322281594407
     },
     {
       "width_mm": 30,
@@ -1441,7 +1787,9 @@
             "target_xpd_db": 29.168835743502996
           }
         },
-        "conversion": 0.2831160728663022
+        "conversion": 0.28311607286629814,
+        "conversion_A": 0.14900657669207967,
+        "conversion_B": 0.13410949617421844
       },
       "one_beam": {
         "metrics": {
@@ -1468,7 +1816,9 @@
             "target_xpd_db": 20.457779645602994
           }
         },
-        "conversion": 0.16853939342386154
+        "conversion": 0.16853939342385774,
+        "conversion_A": 0.1516078304267613,
+        "conversion_B": 0.016931562997096434
       },
       "two_beam_A_directivity_dbi": 19.14382454787943,
       "two_beam_B_directivity_dbi": 18.9020298565001,
@@ -1477,8 +1827,15 @@
       "one_beam_A_change_db": 0.08202647897133263,
       "one_beam_B_suppression_db": 8.893094954541615,
       "one_beam_B_to_A_db": -9.226461466557213,
-      "two_beam_conversion": 0.2831160728663022,
-      "one_beam_conversion": 0.16853939342386154
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.28311607286629814,
+      "one_beam_conversion": 0.16853939342385774,
+      "two_beam_A_conversion": 0.14900657669207967,
+      "one_beam_A_conversion": 0.1516078304267613,
+      "two_beam_B_conversion": 0.13410949617421844,
+      "one_beam_B_conversion": 0.016931562997096434,
+      "two_beam_A_gain_dbi_ideal": 13.66346980313399,
+      "one_beam_A_gain_dbi_ideal": 13.791744704342236
     },
     {
       "width_mm": 30,
@@ -1514,7 +1871,9 @@
             "target_xpd_db": 29.067599254894773
           }
         },
-        "conversion": 0.317245267412607
+        "conversion": 0.3172452674126134,
+        "conversion_A": 0.16712828836223872,
+        "conversion_B": 0.15011697905037463
       },
       "one_beam": {
         "metrics": {
@@ -1541,7 +1900,9 @@
             "target_xpd_db": 19.891987734622617
           }
         },
-        "conversion": 0.187369826343405
+        "conversion": 0.18736982634340682,
+        "conversion_A": 0.17052035970744658,
+        "conversion_B": 0.01684946663596023
       },
       "two_beam_A_directivity_dbi": 19.1296518122198,
       "two_beam_B_directivity_dbi": 18.88264580618605,
@@ -1550,8 +1911,15 @@
       "one_beam_A_change_db": 0.09554491573696222,
       "one_beam_B_suppression_db": 9.386968147174828,
       "one_beam_B_to_A_db": -9.739049588801358,
-      "two_beam_conversion": 0.317245267412607,
-      "one_beam_conversion": 0.187369826343405
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.3172452674126134,
+      "one_beam_conversion": 0.18736982634340682,
+      "two_beam_A_conversion": 0.16712828836223872,
+      "one_beam_A_conversion": 0.17052035970744658,
+      "two_beam_B_conversion": 0.15011697905037463,
+      "one_beam_B_conversion": 0.01684946663596023,
+      "two_beam_A_gain_dbi_ideal": 14.143603333380762,
+      "one_beam_A_gain_dbi_ideal": 14.290092510142149
     },
     {
       "width_mm": 30,
@@ -1587,7 +1955,9 @@
             "target_xpd_db": 28.97761323027103
           }
         },
-        "conversion": 0.34600735301575586
+        "conversion": 0.346007353015755,
+        "conversion_A": 0.18243571941607606,
+        "conversion_B": 0.163571633599679
       },
       "one_beam": {
         "metrics": {
@@ -1614,7 +1984,9 @@
             "target_xpd_db": 19.451565623850055
           }
         },
-        "conversion": 0.20337115592636604
+        "conversion": 0.20337115592636398,
+        "conversion_A": 0.1865933705340604,
+        "conversion_B": 0.016777785392303603
       },
       "two_beam_A_directivity_dbi": 19.1168742164566,
       "two_beam_B_directivity_dbi": 18.86523616636622,
@@ -1623,8 +1995,15 @@
       "one_beam_A_change_db": 0.10746673854057245,
       "one_beam_B_suppression_db": 9.763004913945764,
       "one_beam_B_to_A_db": -10.13162664822353,
-      "two_beam_conversion": 0.34600735301575586,
-      "one_beam_conversion": 0.20337115592636604
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.346007353015755,
+      "one_beam_conversion": 0.20337115592636398,
+      "two_beam_A_conversion": 0.18243571941607606,
+      "one_beam_A_conversion": 0.1865933705340604,
+      "two_beam_B_conversion": 0.163571633599679,
+      "one_beam_B_conversion": 0.016777785392303603,
+      "two_beam_A_gain_dbi_ideal": 14.507727497454779,
+      "one_beam_A_gain_dbi_ideal": 14.670163139513315
     },
     {
       "width_mm": 30,
@@ -1660,7 +2039,9 @@
             "target_xpd_db": 37.72786121666965
           }
         },
-        "conversion": 0.2831160728663022
+        "conversion": 0.28311607286629803,
+        "conversion_A": 0.1409651457590984,
+        "conversion_B": 0.14215092710719965
       },
       "one_beam": {
         "metrics": {
@@ -1687,7 +2068,9 @@
             "target_xpd_db": 28.84455348256696
           }
         },
-        "conversion": 0.16310883813851865
+        "conversion": 0.16310883813851482,
+        "conversion_A": 0.1452014396115538,
+        "conversion_B": 0.017907398526961032
       },
       "two_beam_A_directivity_dbi": 19.120652545502697,
       "two_beam_B_directivity_dbi": 19.10387657720659,
@@ -1696,8 +2079,15 @@
       "one_beam_A_change_db": 0.1352160108747893,
       "one_beam_B_suppression_db": 8.883330423112179,
       "one_beam_B_to_A_db": -9.035992478832307,
-      "two_beam_conversion": 0.2831160728663022,
-      "one_beam_conversion": 0.16310883813851865
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.28311607286629803,
+      "one_beam_conversion": 0.16310883813851482,
+      "two_beam_A_conversion": 0.1409651457590984,
+      "one_beam_A_conversion": 0.1452014396115538,
+      "two_beam_B_conversion": 0.14215092710719965,
+      "one_beam_B_conversion": 0.017907398526961032,
+      "two_beam_A_gain_dbi_ideal": 13.640297800757256,
+      "one_beam_A_gain_dbi_ideal": 13.808072507433092
     },
     {
       "width_mm": 30,
@@ -1733,7 +2123,9 @@
             "target_xpd_db": 37.71480705951194
           }
         },
-        "conversion": 0.317245267412607
+        "conversion": 0.3172452674126134,
+        "conversion_A": 0.15787005931150583,
+        "conversion_B": 0.15937520810110753
       },
       "one_beam": {
         "metrics": {
@@ -1760,7 +2152,9 @@
             "target_xpd_db": 28.346810482962944
           }
         },
-        "conversion": 0.18124349062759232
+        "conversion": 0.1812434906275939,
+        "conversion_A": 0.16340197988895674,
+        "conversion_B": 0.01784151073863716
       },
       "two_beam_A_directivity_dbi": 19.10415302912531,
       "two_beam_B_directivity_dbi": 19.088181814039963,
@@ -1769,8 +2163,15 @@
       "one_beam_A_change_db": 0.1575712878121625,
       "one_beam_B_suppression_db": 9.375715043016644,
       "one_beam_B_to_A_db": -9.549956748813914,
-      "two_beam_conversion": 0.317245267412607,
-      "one_beam_conversion": 0.18124349062759232
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.3172452674126134,
+      "one_beam_conversion": 0.1812434906275939,
+      "two_beam_A_conversion": 0.15787005931150583,
+      "one_beam_A_conversion": 0.16340197988895674,
+      "two_beam_B_conversion": 0.15937520810110753,
+      "one_beam_B_conversion": 0.01784151073863716,
+      "two_beam_A_gain_dbi_ideal": 14.11810455028627,
+      "one_beam_A_gain_dbi_ideal": 14.3120271075504
     },
     {
       "width_mm": 30,
@@ -1806,7 +2207,9 @@
             "target_xpd_db": 37.699456689177914
           }
         },
-        "conversion": 0.34600735301575586
+        "conversion": 0.346007353015755,
+        "conversion_A": 0.17209718099130922,
+        "conversion_B": 0.17391017202444578
       },
       "one_beam": {
         "metrics": {
@@ -1833,7 +2236,9 @@
             "target_xpd_db": 27.965293904794116
           }
         },
-        "conversion": 0.1966701017251863
+        "conversion": 0.19667010172518426,
+        "conversion_A": 0.17888607204836224,
+        "conversion_B": 0.017784029676822025
       },
       "two_beam_A_directivity_dbi": 19.089279272378455,
       "two_beam_B_directivity_dbi": 19.074038109064496,
@@ -1842,8 +2247,15 @@
       "one_beam_A_change_db": 0.17730387771898093,
       "one_beam_B_suppression_db": 9.750467534895304,
       "one_beam_B_to_A_db": -9.943737517360951,
-      "two_beam_conversion": 0.34600735301575586,
-      "one_beam_conversion": 0.1966701017251863
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.346007353015755,
+      "one_beam_conversion": 0.19667010172518426,
+      "two_beam_A_conversion": 0.17209718099130922,
+      "one_beam_A_conversion": 0.17888607204836224,
+      "two_beam_B_conversion": 0.17391017202444578,
+      "one_beam_B_conversion": 0.017784029676822025,
+      "two_beam_A_gain_dbi_ideal": 14.480132553376633,
+      "one_beam_A_gain_dbi_ideal": 14.697071777614648
     },
     {
       "width_mm": 30,
@@ -1879,7 +2291,9 @@
             "target_xpd_db": 42.9661698016762
           }
         },
-        "conversion": 0.2831160728663022
+        "conversion": 0.28311607286629814,
+        "conversion_A": 0.14375769669930394,
+        "conversion_B": 0.13935837616699417
       },
       "one_beam": {
         "metrics": {
@@ -1906,7 +2320,9 @@
             "target_xpd_db": 33.458839199774616
           }
         },
-        "conversion": 0.16579306302164018
+        "conversion": 0.16579306302163638,
+        "conversion_A": 0.14836087044845372,
+        "conversion_B": 0.017432192573182664
       },
       "two_beam_A_directivity_dbi": 19.26263832849125,
       "two_beam_B_directivity_dbi": 19.307372141649314,
@@ -1915,8 +2331,15 @@
       "one_beam_A_change_db": 0.151285157015618,
       "one_beam_B_suppression_db": 8.926625919824666,
       "one_beam_B_to_A_db": -9.03294841576446,
-      "two_beam_conversion": 0.2831160728663022,
-      "one_beam_conversion": 0.16579306302164018
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.28311607286629814,
+      "one_beam_conversion": 0.16579306302163638,
+      "two_beam_A_conversion": 0.14375769669930394,
+      "one_beam_A_conversion": 0.14836087044845372,
+      "two_beam_B_conversion": 0.13935837616699417,
+      "one_beam_B_conversion": 0.017432192573182664,
+      "two_beam_A_gain_dbi_ideal": 13.78228358374581,
+      "one_beam_A_gain_dbi_ideal": 13.995566233733035
     },
     {
       "width_mm": 30,
@@ -1952,7 +2375,9 @@
             "target_xpd_db": 42.75710873647103
           }
         },
-        "conversion": 0.317245267412607
+        "conversion": 0.3172452674126133,
+        "conversion_A": 0.1611213702727268,
+        "conversion_B": 0.1561238971398865
       },
       "one_beam": {
         "metrics": {
@@ -1979,7 +2404,9 @@
             "target_xpd_db": 32.660235619820305
           }
         },
-        "conversion": 0.18445678285439643
+        "conversion": 0.18445678285439812,
+        "conversion_A": 0.16712141667587624,
+        "conversion_B": 0.017335366178521886
       },
       "two_beam_A_directivity_dbi": 19.249495693157172,
       "two_beam_B_directivity_dbi": 19.294198282761712,
@@ -1988,8 +2415,15 @@
       "one_beam_A_change_db": 0.17609084606187733,
       "one_beam_B_suppression_db": 9.426108177216756,
       "one_beam_B_to_A_db": -9.557254837338009,
-      "two_beam_conversion": 0.317245267412607,
-      "one_beam_conversion": 0.18445678285439643
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.3172452674126133,
+      "one_beam_conversion": 0.18445678285439812,
+      "two_beam_A_conversion": 0.1611213702727268,
+      "one_beam_A_conversion": 0.16712141667587624,
+      "two_beam_B_conversion": 0.1561238971398865,
+      "one_beam_B_conversion": 0.017335366178521886,
+      "two_beam_A_gain_dbi_ideal": 14.26344721431813,
+      "one_beam_A_gain_dbi_ideal": 14.505436390431104
     },
     {
       "width_mm": 30,
@@ -2025,7 +2459,9 @@
             "target_xpd_db": 42.5679336019213
           }
         },
-        "conversion": 0.34600735301575586
+        "conversion": 0.346007353015755,
+        "conversion_A": 0.17576333844515238,
+        "conversion_B": 0.17024401457060262
       },
       "one_beam": {
         "metrics": {
@@ -2052,7 +2488,9 @@
             "target_xpd_db": 32.013453116612304
           }
         },
-        "conversion": 0.20036559888828123
+        "conversion": 0.20036559888827915,
+        "conversion_A": 0.18311481786433928,
+        "conversion_B": 0.01725078102393988
       },
       "two_beam_A_directivity_dbi": 19.237625929121094,
       "two_beam_B_directivity_dbi": 19.28228186531564,
@@ -2061,8 +2499,15 @@
       "one_beam_A_change_db": 0.19793763959996505,
       "one_beam_B_suppression_db": 9.807110910726184,
       "one_beam_B_to_A_db": -9.960139831818974,
-      "two_beam_conversion": 0.34600735301575586,
-      "one_beam_conversion": 0.20036559888828123
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.346007353015755,
+      "one_beam_conversion": 0.20036559888827915,
+      "two_beam_A_conversion": 0.17576333844515238,
+      "one_beam_A_conversion": 0.18311481786433928,
+      "two_beam_B_conversion": 0.17024401457060262,
+      "one_beam_B_conversion": 0.01725078102393988,
+      "two_beam_A_gain_dbi_ideal": 14.628479210119272,
+      "one_beam_A_gain_dbi_ideal": 14.895487846259696
     },
     {
       "width_mm": 40,
@@ -2098,7 +2543,9 @@
             "target_xpd_db": 42.559013311440104
           }
         },
-        "conversion": 0.2831160728663022
+        "conversion": 0.28311607286629803,
+        "conversion_A": 0.14314459176986047,
+        "conversion_B": 0.1399714810964376
       },
       "one_beam": {
         "metrics": {
@@ -2125,7 +2572,9 @@
             "target_xpd_db": 33.244002739264054
           }
         },
-        "conversion": 0.16578694355819515
+        "conversion": 0.16578694355819135,
+        "conversion_A": 0.14832865960700978,
+        "conversion_B": 0.017458283951181562
       },
       "two_beam_A_directivity_dbi": 19.35582030652066,
       "two_beam_B_directivity_dbi": 19.258608013593502,
@@ -2134,8 +2583,15 @@
       "one_beam_A_change_db": 0.16510273956191093,
       "one_beam_B_suppression_db": 8.935646910404492,
       "one_beam_B_to_A_db": -9.191377316002725,
-      "two_beam_conversion": 0.2831160728663022,
-      "one_beam_conversion": 0.16578694355819515
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.28311607286629803,
+      "one_beam_conversion": 0.16578694355819135,
+      "two_beam_A_conversion": 0.14314459176986047,
+      "one_beam_A_conversion": 0.14832865960700978,
+      "two_beam_B_conversion": 0.1399714810964376,
+      "one_beam_B_conversion": 0.017458283951181562,
+      "two_beam_A_gain_dbi_ideal": 13.875465561775219,
+      "one_beam_A_gain_dbi_ideal": 14.027051717860209
     },
     {
       "width_mm": 40,
@@ -2171,7 +2627,9 @@
             "target_xpd_db": 42.749465806074134
           }
         },
-        "conversion": 0.317245267412607
+        "conversion": 0.3172452674126134,
+        "conversion_A": 0.16039261336178845,
+        "conversion_B": 0.1568526540508249
       },
       "one_beam": {
         "metrics": {
@@ -2198,7 +2656,9 @@
             "target_xpd_db": 32.866579845943264
           }
         },
-        "conversion": 0.18451338393031907
+        "conversion": 0.1845133839303208,
+        "conversion_A": 0.16715587928582282,
+        "conversion_B": 0.01735750464449797
       },
       "two_beam_A_directivity_dbi": 19.343315641314923,
       "two_beam_B_directivity_dbi": 19.243890852365556,
@@ -2207,8 +2667,15 @@
       "one_beam_A_change_db": 0.19215284540728333,
       "one_beam_B_suppression_db": 9.436529807421573,
       "one_beam_B_to_A_db": -9.721561048800796,
-      "two_beam_conversion": 0.317245267412607,
-      "one_beam_conversion": 0.18451338393031907
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.3172452674126134,
+      "one_beam_conversion": 0.1845133839303208,
+      "two_beam_A_conversion": 0.16039261336178845,
+      "one_beam_A_conversion": 0.16715587928582282,
+      "two_beam_B_conversion": 0.1568526540508249,
+      "one_beam_B_conversion": 0.01735750464449797,
+      "two_beam_A_gain_dbi_ideal": 14.357267162475884,
+      "one_beam_A_gain_dbi_ideal": 14.536242381935407
     },
     {
       "width_mm": 40,
@@ -2244,7 +2711,9 @@
             "target_xpd_db": 42.914385402214094
           }
         },
-        "conversion": 0.34600735301575586
+        "conversion": 0.346007353015755,
+        "conversion_A": 0.1749262727334638,
+        "conversion_B": 0.17108108028229121
       },
       "one_beam": {
         "metrics": {
@@ -2271,7 +2740,9 @@
             "target_xpd_db": 32.589737559685744
           }
         },
-        "conversion": 0.20048914194583864
+        "conversion": 0.2004891419458366,
+        "conversion_A": 0.18321951503589087,
+        "conversion_B": 0.017269626909945743
       },
       "two_beam_A_directivity_dbi": 19.332013834624828,
       "two_beam_B_directivity_dbi": 19.230626814869453,
@@ -2280,8 +2751,15 @@
       "one_beam_A_change_db": 0.21597186773689236,
       "one_beam_B_suppression_db": 9.818748722809936,
       "one_beam_B_to_A_db": -10.129594663162928,
-      "two_beam_conversion": 0.34600735301575586,
-      "one_beam_conversion": 0.20048914194583864
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.346007353015755,
+      "one_beam_conversion": 0.2004891419458366,
+      "two_beam_A_conversion": 0.1749262727334638,
+      "one_beam_A_conversion": 0.18321951503589087,
+      "two_beam_B_conversion": 0.17108108028229121,
+      "one_beam_B_conversion": 0.017269626909945743,
+      "two_beam_A_gain_dbi_ideal": 14.722867115623005,
+      "one_beam_A_gain_dbi_ideal": 14.92600549991861
     },
     {
       "width_mm": 40,
@@ -2317,7 +2795,9 @@
             "target_xpd_db": 35.510458457301446
           }
         },
-        "conversion": 0.2831160728663022
+        "conversion": 0.2831160728662981,
+        "conversion_A": 0.14170764747433845,
+        "conversion_B": 0.14140842539195964
       },
       "one_beam": {
         "metrics": {
@@ -2344,7 +2824,9 @@
             "target_xpd_db": 26.522036877673692
           }
         },
-        "conversion": 0.16473627766574378
+        "conversion": 0.16473627766573998,
+        "conversion_A": 0.14710552762142148,
+        "conversion_B": 0.01763075004431849
       },
       "two_beam_A_directivity_dbi": 19.32610010161184,
       "two_beam_B_directivity_dbi": 19.317998301915253,
@@ -2353,8 +2835,15 @@
       "one_beam_A_change_db": 0.1724653749603467,
       "one_beam_B_suppression_db": 8.936795717586598,
       "one_beam_B_to_A_db": -9.116938774066401,
-      "two_beam_conversion": 0.2831160728663022,
-      "one_beam_conversion": 0.16473627766574378
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.2831160728662981,
+      "one_beam_conversion": 0.16473627766573998,
+      "two_beam_A_conversion": 0.14170764747433845,
+      "one_beam_A_conversion": 0.14710552762142148,
+      "two_beam_B_conversion": 0.14140842539195964,
+      "one_beam_B_conversion": 0.01763075004431849,
+      "two_beam_A_gain_dbi_ideal": 13.845745356866399,
+      "one_beam_A_gain_dbi_ideal": 14.017293781448734
     },
     {
       "width_mm": 40,
@@ -2390,7 +2879,9 @@
             "target_xpd_db": 35.52574977886308
           }
         },
-        "conversion": 0.317245267412607
+        "conversion": 0.3172452674126134,
+        "conversion_A": 0.15875858939866122,
+        "conversion_B": 0.15848667801395214
       },
       "one_beam": {
         "metrics": {
@@ -2417,7 +2908,9 @@
             "target_xpd_db": 26.03198297515714
           }
         },
-        "conversion": 0.18333563778089032
+        "conversion": 0.18333563778089196,
+        "conversion_A": 0.16580539744136796,
+        "conversion_B": 0.01753024033952399
       },
       "two_beam_A_directivity_dbi": 19.31335738415826,
       "two_beam_B_directivity_dbi": 19.302932731235362,
@@ -2426,8 +2919,15 @@
       "one_beam_A_change_db": 0.20082345513888722,
       "one_beam_B_suppression_db": 9.437906726653772,
       "one_beam_B_to_A_db": -9.64873925970256,
-      "two_beam_conversion": 0.317245267412607,
-      "one_beam_conversion": 0.18333563778089032
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.3172452674126134,
+      "one_beam_conversion": 0.18333563778089196,
+      "two_beam_A_conversion": 0.15875858939866122,
+      "one_beam_A_conversion": 0.16580539744136796,
+      "two_beam_B_conversion": 0.15848667801395214,
+      "one_beam_B_conversion": 0.01753024033952399,
+      "two_beam_A_gain_dbi_ideal": 14.327308905319219,
+      "one_beam_A_gain_dbi_ideal": 14.528555702503617
     },
     {
       "width_mm": 40,
@@ -2463,7 +2963,9 @@
             "target_xpd_db": 35.538127243814756
           }
         },
-        "conversion": 0.34600735301575586
+        "conversion": 0.346007353015755,
+        "conversion_A": 0.17312030007562093,
+        "conversion_B": 0.17288705294013407
       },
       "one_beam": {
         "metrics": {
@@ -2490,7 +2992,9 @@
             "target_xpd_db": 25.659224417353535
           }
         },
-        "conversion": 0.19920879039433367
+        "conversion": 0.19920879039433165,
+        "conversion_A": 0.18176616218551161,
+        "conversion_B": 0.017442628208820046
       },
       "two_beam_A_directivity_dbi": 19.301828738232345,
       "two_beam_B_directivity_dbi": 19.289376723626997,
@@ -2499,8 +3003,15 @@
       "one_beam_A_change_db": 0.2258183638024785,
       "one_beam_B_suppression_db": 9.820336205987525,
       "one_beam_B_to_A_db": -10.058198237613729,
-      "two_beam_conversion": 0.34600735301575586,
-      "one_beam_conversion": 0.19920879039433367
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.346007353015755,
+      "one_beam_conversion": 0.19920879039433165,
+      "two_beam_A_conversion": 0.17312030007562093,
+      "one_beam_A_conversion": 0.18176616218551161,
+      "two_beam_B_conversion": 0.17288705294013407,
+      "one_beam_B_conversion": 0.017442628208820046,
+      "two_beam_A_gain_dbi_ideal": 14.692682019230523,
+      "one_beam_A_gain_dbi_ideal": 14.920123845711508
     },
     {
       "width_mm": 40,
@@ -2536,7 +3047,9 @@
             "target_xpd_db": 46.53500986076311
           }
         },
-        "conversion": 0.2831160728663022
+        "conversion": 0.2831160728662981,
+        "conversion_A": 0.14633104718560672,
+        "conversion_B": 0.13678502568069137
       },
       "one_beam": {
         "metrics": {
@@ -2563,7 +3076,9 @@
             "target_xpd_db": 39.26282588599229
           }
         },
-        "conversion": 0.16744251829222118
+        "conversion": 0.16744251829221737,
+        "conversion_A": 0.15029708876732673,
+        "conversion_B": 0.01714542952489066
       },
       "two_beam_A_directivity_dbi": 19.318743716198863,
       "two_beam_B_directivity_dbi": 19.167832563409906,
@@ -2572,8 +3087,15 @@
       "one_beam_A_change_db": 0.1274961570106852,
       "one_beam_B_suppression_db": 8.920024126391,
       "one_beam_B_to_A_db": -9.196123558424556,
-      "two_beam_conversion": 0.2831160728663022,
-      "one_beam_conversion": 0.16744251829222118
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.2831160728662981,
+      "one_beam_conversion": 0.16744251829221737,
+      "two_beam_A_conversion": 0.14633104718560672,
+      "one_beam_A_conversion": 0.15029708876732673,
+      "two_beam_B_conversion": 0.13678502568069137,
+      "one_beam_B_conversion": 0.01714542952489066,
+      "two_beam_A_gain_dbi_ideal": 13.838388971453423,
+      "one_beam_A_gain_dbi_ideal": 13.981142448562451
     },
     {
       "width_mm": 40,
@@ -2609,7 +3131,9 @@
             "target_xpd_db": 45.95561125756329
           }
         },
-        "conversion": 0.317245267412607
+        "conversion": 0.31724526741261333,
+        "conversion_A": 0.16405948373048806,
+        "conversion_B": 0.15318578368212526
       },
       "one_beam": {
         "metrics": {
@@ -2636,7 +3160,9 @@
             "target_xpd_db": 38.42747160042475
           }
         },
-        "conversion": 0.18627614654286365
+        "conversion": 0.1862761465428654,
+        "conversion_A": 0.16922499001862137,
+        "conversion_B": 0.017051156524244035
       },
       "two_beam_A_directivity_dbi": 19.30521760787978,
       "two_beam_B_directivity_dbi": 19.149629068836965,
@@ -2645,8 +3171,15 @@
       "one_beam_A_change_db": 0.14832750734277794,
       "one_beam_B_suppression_db": 9.418145179838103,
       "one_beam_B_to_A_db": -9.719757553496756,
-      "two_beam_conversion": 0.317245267412607,
-      "one_beam_conversion": 0.18627614654286365
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.31724526741261333,
+      "one_beam_conversion": 0.1862761465428654,
+      "two_beam_A_conversion": 0.16405948373048806,
+      "one_beam_A_conversion": 0.16922499001862137,
+      "two_beam_B_conversion": 0.15318578368212526,
+      "one_beam_B_conversion": 0.017051156524244035,
+      "two_beam_A_gain_dbi_ideal": 14.319169129040738,
+      "one_beam_A_gain_dbi_ideal": 14.484150359005014
     },
     {
       "width_mm": 40,
@@ -2682,7 +3215,9 @@
             "target_xpd_db": 45.45085318811306
           }
         },
-        "conversion": 0.34600735301575586
+        "conversion": 0.346007353015755,
+        "conversion_A": 0.17901940720275028,
+        "conversion_B": 0.16698794581300472
       },
       "one_beam": {
         "metrics": {
@@ -2709,7 +3244,9 @@
             "target_xpd_db": 37.7357136694171
           }
         },
-        "conversion": 0.20231321525888848
+        "conversion": 0.20231321525888643,
+        "conversion_A": 0.18534404048327585,
+        "conversion_B": 0.016969174775610572
       },
       "two_beam_A_directivity_dbi": 19.292991721188994,
       "two_beam_B_directivity_dbi": 19.133245798992725,
@@ -2718,8 +3255,15 @@
       "one_beam_A_change_db": 0.16665687493890316,
       "one_beam_B_suppression_db": 9.797884229491999,
       "one_beam_B_to_A_db": -10.12198670187888,
-      "two_beam_conversion": 0.34600735301575586,
-      "one_beam_conversion": 0.20231321525888848
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.346007353015755,
+      "one_beam_conversion": 0.20231321525888643,
+      "two_beam_A_conversion": 0.17901940720275028,
+      "one_beam_A_conversion": 0.18534404048327585,
+      "two_beam_B_conversion": 0.16698794581300472,
+      "one_beam_B_conversion": 0.016969174775610572,
+      "two_beam_A_gain_dbi_ideal": 14.683845002187171,
+      "one_beam_A_gain_dbi_ideal": 14.86831268340823
     },
     {
       "width_mm": 40,
@@ -2755,7 +3299,9 @@
             "target_xpd_db": 36.98070928628378
           }
         },
-        "conversion": 0.2831160728663022
+        "conversion": 0.28311607286629814,
+        "conversion_A": 0.13789060911644635,
+        "conversion_B": 0.14522546374985176
       },
       "one_beam": {
         "metrics": {
@@ -2782,7 +3328,9 @@
             "target_xpd_db": 27.738328093156856
           }
         },
-        "conversion": 0.16181347771318563
+        "conversion": 0.16181347771318177,
+        "conversion_A": 0.14365130913752444,
+        "conversion_B": 0.01816216857565734
       },
       "two_beam_A_directivity_dbi": 19.232328340042617,
       "two_beam_B_directivity_dbi": 19.337542996955133,
@@ -2791,8 +3339,15 @@
       "one_beam_A_change_db": 0.18864328099703043,
       "one_beam_B_suppression_db": 8.917624830406448,
       "one_beam_B_to_A_db": -9.004904999720745,
-      "two_beam_conversion": 0.2831160728663022,
-      "one_beam_conversion": 0.16181347771318563
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.28311607286629814,
+      "one_beam_conversion": 0.16181347771318177,
+      "two_beam_A_conversion": 0.13789060911644635,
+      "one_beam_A_conversion": 0.14365130913752444,
+      "two_beam_B_conversion": 0.14522546374985176,
+      "one_beam_B_conversion": 0.01816216857565734,
+      "two_beam_A_gain_dbi_ideal": 13.751973595297178,
+      "one_beam_A_gain_dbi_ideal": 13.969248575084624
     },
     {
       "width_mm": 40,
@@ -2828,7 +3383,9 @@
             "target_xpd_db": 37.057648051342724
           }
         },
-        "conversion": 0.317245267412607
+        "conversion": 0.3172452674126133,
+        "conversion_A": 0.15434140709608768,
+        "conversion_B": 0.16290386031652562
       },
       "one_beam": {
         "metrics": {
@@ -2855,7 +3412,9 @@
             "target_xpd_db": 27.258062806621396
           }
         },
-        "conversion": 0.17994598087363065
+        "conversion": 0.17994598087363214,
+        "conversion_A": 0.16186317782718634,
+        "conversion_B": 0.018082803046445797
       },
       "two_beam_A_directivity_dbi": 19.21627684785666,
       "two_beam_B_directivity_dbi": 19.324804800258033,
@@ -2864,8 +3423,15 @@
       "one_beam_A_change_db": 0.21971414736685904,
       "one_beam_B_suppression_db": 9.415632655682233,
       "one_beam_B_to_A_db": -9.530699843436928,
-      "two_beam_conversion": 0.317245267412607,
-      "one_beam_conversion": 0.17994598087363065
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.3172452674126133,
+      "one_beam_conversion": 0.17994598087363214,
+      "two_beam_A_conversion": 0.15434140709608768,
+      "one_beam_A_conversion": 0.16186317782718634,
+      "two_beam_B_conversion": 0.16290386031652562,
+      "one_beam_B_conversion": 0.018082803046445797,
+      "two_beam_A_gain_dbi_ideal": 14.230228369017617,
+      "one_beam_A_gain_dbi_ideal": 14.481518638404316
     },
     {
       "width_mm": 40,
@@ -2901,7 +3467,9 @@
             "target_xpd_db": 37.12130889263325
           }
         },
-        "conversion": 0.34600735301575586
+        "conversion": 0.346007353015755,
+        "conversion_A": 0.16816750902778613,
+        "conversion_B": 0.1778398439879689
       },
       "one_beam": {
         "metrics": {
@@ -2928,7 +3496,9 @@
             "target_xpd_db": 26.888674174345695
           }
         },
-        "conversion": 0.19541114022101397
+        "conversion": 0.1954111402210119,
+        "conversion_A": 0.17739752854632626,
+        "conversion_B": 0.018013611674685615
       },
       "two_beam_A_directivity_dbi": 19.20180130513317,
       "two_beam_B_directivity_dbi": 19.31329324910216,
@@ -2937,8 +3507,15 @@
       "one_beam_A_change_db": 0.24711267828353978,
       "one_beam_B_suppression_db": 9.79533848377759,
       "one_beam_B_to_A_db": -9.934866443125397,
-      "two_beam_conversion": 0.34600735301575586,
-      "one_beam_conversion": 0.19541114022101397
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.346007353015755,
+      "one_beam_conversion": 0.1954111402210119,
+      "two_beam_A_conversion": 0.16816750902778613,
+      "one_beam_A_conversion": 0.17739752854632626,
+      "two_beam_B_conversion": 0.1778398439879689,
+      "one_beam_B_conversion": 0.018013611674685615,
+      "two_beam_A_gain_dbi_ideal": 14.592654586131347,
+      "one_beam_A_gain_dbi_ideal": 14.873856024909616
     },
     {
       "width_mm": 40,
@@ -2974,7 +3551,9 @@
             "target_xpd_db": 30.948009077752353
           }
         },
-        "conversion": 0.2831160728663022
+        "conversion": 0.28311607286629814,
+        "conversion_A": 0.14143894889786984,
+        "conversion_B": 0.14167712396842827
       },
       "one_beam": {
         "metrics": {
@@ -3001,7 +3580,9 @@
             "target_xpd_db": 22.0396836778669
           }
         },
-        "conversion": 0.16465411050092246
+        "conversion": 0.16465411050091866,
+        "conversion_A": 0.14696441851328956,
+        "conversion_B": 0.017689691987629097
       },
       "two_beam_A_directivity_dbi": 19.393183666895265,
       "two_beam_B_directivity_dbi": 19.168129067386047,
@@ -3010,8 +3591,15 @@
       "one_beam_A_change_db": 0.17238374809453005,
       "one_beam_B_suppression_db": 8.921806167566942,
       "one_beam_B_to_A_db": -9.327150759770468,
-      "two_beam_conversion": 0.2831160728663022,
-      "one_beam_conversion": 0.16465411050092246
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.28311607286629814,
+      "one_beam_conversion": 0.16465411050091866,
+      "two_beam_A_conversion": 0.14143894889786984,
+      "one_beam_A_conversion": 0.14696441851328956,
+      "two_beam_B_conversion": 0.14167712396842827,
+      "one_beam_B_conversion": 0.017689691987629097,
+      "two_beam_A_gain_dbi_ideal": 13.912828922149826,
+      "one_beam_A_gain_dbi_ideal": 14.039678521770105
     },
     {
       "width_mm": 40,
@@ -3047,7 +3635,9 @@
             "target_xpd_db": 30.92196288613186
           }
         },
-        "conversion": 0.317245267412607
+        "conversion": 0.3172452674126133,
+        "conversion_A": 0.15838147424790372,
+        "conversion_B": 0.15886379316470958
       },
       "one_beam": {
         "metrics": {
@@ -3074,7 +3664,9 @@
             "target_xpd_db": 21.51763224962973
           }
         },
-        "conversion": 0.18320173917624255
+        "conversion": 0.1832017391762442,
+        "conversion_A": 0.16560112729768048,
+        "conversion_B": 0.017600611878563703
       },
       "two_beam_A_directivity_dbi": 19.379050702424067,
       "two_beam_B_directivity_dbi": 19.1522435605526,
@@ -3083,8 +3675,15 @@
       "one_beam_A_change_db": 0.20078825879547257,
       "one_beam_B_suppression_db": 9.420519275284358,
       "one_beam_B_to_A_db": -9.855998919602884,
-      "two_beam_conversion": 0.317245267412607,
-      "one_beam_conversion": 0.18320173917624255
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.3172452674126133,
+      "one_beam_conversion": 0.1832017391762442,
+      "two_beam_A_conversion": 0.15838147424790372,
+      "one_beam_A_conversion": 0.16560112729768048,
+      "two_beam_B_conversion": 0.15886379316470958,
+      "one_beam_B_conversion": 0.017600611878563703,
+      "two_beam_A_gain_dbi_ideal": 14.393002223585025,
+      "one_beam_A_gain_dbi_ideal": 14.548239195316032
     },
     {
       "width_mm": 40,
@@ -3120,7 +3719,9 @@
             "target_xpd_db": 30.898325916728886
           }
         },
-        "conversion": 0.34600735301575586
+        "conversion": 0.346007353015755,
+        "conversion_A": 0.17263445586902057,
+        "conversion_B": 0.17337289714673446
       },
       "one_beam": {
         "metrics": {
@@ -3147,7 +3748,9 @@
             "target_xpd_db": 21.1161516651033
           }
         },
-        "conversion": 0.1990221791278026
+        "conversion": 0.19902217912780054,
+        "conversion_A": 0.18149925651720408,
+        "conversion_B": 0.017522922610596466
       },
       "two_beam_A_directivity_dbi": 19.36626415268672,
       "two_beam_B_directivity_dbi": 19.137942015486104,
@@ -3156,8 +3759,15 @@
       "one_beam_A_change_db": 0.22583850073153977,
       "one_beam_B_suppression_db": 9.800850902971613,
       "one_beam_B_to_A_db": -10.262875916098048,
-      "two_beam_conversion": 0.34600735301575586,
-      "one_beam_conversion": 0.1990221791278026
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.346007353015755,
+      "one_beam_conversion": 0.19902217912780054,
+      "two_beam_A_conversion": 0.17263445586902057,
+      "one_beam_A_conversion": 0.18149925651720408,
+      "two_beam_B_conversion": 0.17337289714673446,
+      "one_beam_B_conversion": 0.017522922610596466,
+      "two_beam_A_gain_dbi_ideal": 14.757117433684899,
+      "one_beam_A_gain_dbi_ideal": 14.937649430213696
     },
     {
       "width_mm": 40,
@@ -3193,7 +3803,9 @@
             "target_xpd_db": 28.0784352200296
           }
         },
-        "conversion": 0.2831160728663022
+        "conversion": 0.2831160728662981,
+        "conversion_A": 0.15008872734566808,
+        "conversion_B": 0.13302734552063
       },
       "one_beam": {
         "metrics": {
@@ -3220,7 +3832,9 @@
             "target_xpd_db": 19.178326515991994
           }
         },
-        "conversion": 0.17076956647241773
+        "conversion": 0.17076956647241393,
+        "conversion_A": 0.1541757904962224,
+        "conversion_B": 0.016593775976191508
       },
       "two_beam_A_directivity_dbi": 19.4846439121727,
       "two_beam_B_directivity_dbi": 19.115000963761418,
@@ -3229,8 +3843,15 @@
       "one_beam_A_change_db": 0.12727728845878858,
       "one_beam_B_suppression_db": 8.947212593208025,
       "one_beam_B_to_A_db": -9.45218872911133,
-      "two_beam_conversion": 0.2831160728663022,
-      "one_beam_conversion": 0.17076956647241773
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.2831160728662981,
+      "one_beam_conversion": 0.17076956647241393,
+      "two_beam_A_conversion": 0.15008872734566808,
+      "one_beam_A_conversion": 0.1541757904962224,
+      "two_beam_B_conversion": 0.13302734552063,
+      "one_beam_B_conversion": 0.016593775976191508,
+      "two_beam_A_gain_dbi_ideal": 14.00428916742726,
+      "one_beam_A_gain_dbi_ideal": 14.150326177023082
     },
     {
       "width_mm": 40,
@@ -3266,7 +3887,9 @@
             "target_xpd_db": 28.018685064715292
           }
         },
-        "conversion": 0.317245267412607
+        "conversion": 0.3172452674126133,
+        "conversion_A": 0.16835549341027176,
+        "conversion_B": 0.14888977400234155
       },
       "one_beam": {
         "metrics": {
@@ -3293,7 +3916,9 @@
             "target_xpd_db": 18.623297556179242
           }
         },
-        "conversion": 0.19016929348505054
+        "conversion": 0.19016929348505243,
+        "conversion_A": 0.17369121885963454,
+        "conversion_B": 0.016478074625417897
       },
       "two_beam_A_directivity_dbi": 19.473676516856045,
       "two_beam_B_directivity_dbi": 19.097332002090287,
@@ -3302,8 +3927,15 @@
       "one_beam_A_change_db": 0.1482554880036504,
       "one_beam_B_suppression_db": 9.450122559203948,
       "one_beam_B_to_A_db": -9.982757845033225,
-      "two_beam_conversion": 0.317245267412607,
-      "one_beam_conversion": 0.19016929348505054
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.3172452674126133,
+      "one_beam_conversion": 0.19016929348505243,
+      "two_beam_A_conversion": 0.16835549341027176,
+      "one_beam_A_conversion": 0.17369121885963454,
+      "two_beam_B_conversion": 0.14888977400234155,
+      "one_beam_B_conversion": 0.016478074625417897,
+      "two_beam_A_gain_dbi_ideal": 14.487628038017004,
+      "one_beam_A_gain_dbi_ideal": 14.658195427123598
     },
     {
       "width_mm": 40,
@@ -3339,7 +3971,9 @@
             "target_xpd_db": 27.965598513266194
           }
         },
-        "conversion": 0.34600735301575586
+        "conversion": 0.346007353015755,
+        "conversion_A": 0.18378774617702195,
+        "conversion_B": 0.16221960683873307
       },
       "one_beam": {
         "metrics": {
@@ -3366,7 +4000,9 @@
             "target_xpd_db": 18.192857467236653
           }
         },
-        "conversion": 0.20671134194525845
+        "conversion": 0.20671134194525642,
+        "conversion_A": 0.19033437651911295,
+        "conversion_B": 0.016376965426143482
       },
       "two_beam_A_directivity_dbi": 19.46371506743438,
       "two_beam_B_directivity_dbi": 19.08142412117795,
@@ -3375,8 +4011,15 @@
       "one_beam_A_change_db": 0.16675677453175042,
       "one_beam_B_suppression_db": 9.83415689021687,
       "one_beam_B_to_A_db": -10.391220966204193,
-      "two_beam_conversion": 0.34600735301575586,
-      "one_beam_conversion": 0.20671134194525845
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.346007353015755,
+      "one_beam_conversion": 0.20671134194525642,
+      "two_beam_A_conversion": 0.18378774617702195,
+      "one_beam_A_conversion": 0.19033437651911295,
+      "two_beam_B_conversion": 0.16221960683873307,
+      "one_beam_B_conversion": 0.016376965426143482,
+      "two_beam_A_gain_dbi_ideal": 14.854568348432556,
+      "one_beam_A_gain_dbi_ideal": 15.046759685074552
     },
     {
       "width_mm": 40,
@@ -3412,7 +4055,9 @@
             "target_xpd_db": 44.80931959743751
           }
         },
-        "conversion": 0.2831160728663022
+        "conversion": 0.28311607286629814,
+        "conversion_A": 0.14604631331631573,
+        "conversion_B": 0.13706975954998238
       },
       "one_beam": {
         "metrics": {
@@ -3439,7 +4084,9 @@
             "target_xpd_db": 36.36547196155354
           }
         },
-        "conversion": 0.1675641063446277
+        "conversion": 0.1675641063446239,
+        "conversion_A": 0.15041472820568405,
+        "conversion_B": 0.017149378138939856
       },
       "two_beam_A_directivity_dbi": 19.385013374618023,
       "two_beam_B_directivity_dbi": 19.15923211416015,
@@ -3448,8 +4095,15 @@
       "one_beam_A_change_db": 0.13895830958818414,
       "one_beam_B_suppression_db": 8.925345992806866,
       "one_beam_B_to_A_db": -9.294811314043512,
-      "two_beam_conversion": 0.2831160728663022,
-      "one_beam_conversion": 0.1675641063446277
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.28311607286629814,
+      "one_beam_conversion": 0.1675641063446239,
+      "two_beam_A_conversion": 0.14604631331631573,
+      "one_beam_A_conversion": 0.15041472820568405,
+      "two_beam_B_conversion": 0.13706975954998238,
+      "one_beam_B_conversion": 0.017149378138939856,
+      "two_beam_A_gain_dbi_ideal": 13.904658629872584,
+      "one_beam_A_gain_dbi_ideal": 14.056034032866943
     },
     {
       "width_mm": 40,
@@ -3485,7 +4139,9 @@
             "target_xpd_db": 44.171492195733606
           }
         },
-        "conversion": 0.317245267412607
+        "conversion": 0.3172452674126134,
+        "conversion_A": 0.1637063112130218,
+        "conversion_B": 0.15353895619959157
       },
       "one_beam": {
         "metrics": {
@@ -3512,7 +4168,9 @@
             "target_xpd_db": 35.32383187235303
           }
         },
-        "conversion": 0.18645479261120176
+        "conversion": 0.1864547926112035,
+        "conversion_A": 0.16940172310404877,
+        "conversion_B": 0.017053069507154746
       },
       "two_beam_A_directivity_dbi": 19.3724050166429,
       "two_beam_B_directivity_dbi": 19.14280923665734,
@@ -3521,8 +4179,15 @@
       "one_beam_A_change_db": 0.1617327092308796,
       "one_beam_B_suppression_db": 9.424443889825632,
       "one_beam_B_to_A_db": -9.820502820674175,
-      "two_beam_conversion": 0.317245267412607,
-      "one_beam_conversion": 0.18645479261120176
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.3172452674126134,
+      "one_beam_conversion": 0.1864547926112035,
+      "two_beam_A_conversion": 0.1637063112130218,
+      "one_beam_A_conversion": 0.16940172310404877,
+      "two_beam_B_conversion": 0.15353895619959157,
+      "one_beam_B_conversion": 0.017053069507154746,
+      "two_beam_A_gain_dbi_ideal": 14.386356537803861,
+      "one_beam_A_gain_dbi_ideal": 14.562395966892037
     },
     {
       "width_mm": 40,
@@ -3558,7 +4223,9 @@
             "target_xpd_db": 43.63169071566085
           }
         },
-        "conversion": 0.34600735301575586
+        "conversion": 0.346007353015755,
+        "conversion_A": 0.17860062662044313,
+        "conversion_B": 0.1674067263953119
       },
       "one_beam": {
         "metrics": {
@@ -3585,7 +4252,9 @@
             "target_xpd_db": 34.48222818242781
           }
         },
-        "conversion": 0.20254960544530323
+        "conversion": 0.2025496054453012,
+        "conversion_A": 0.18558035467077663,
+        "conversion_B": 0.016969250774524578
       },
       "two_beam_A_directivity_dbi": 19.360987005124986,
       "two_beam_B_directivity_dbi": 19.128024777522402,
@@ -3594,8 +4263,15 @@
       "one_beam_A_change_db": 0.18178845383522127,
       "one_beam_B_suppression_db": 9.805068182180339,
       "one_beam_B_to_A_db": -10.22455269368841,
-      "two_beam_conversion": 0.34600735301575586,
-      "one_beam_conversion": 0.20254960544530323
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.346007353015755,
+      "one_beam_conversion": 0.2025496054453012,
+      "two_beam_A_conversion": 0.17860062662044313,
+      "one_beam_A_conversion": 0.18558035467077663,
+      "two_beam_B_conversion": 0.1674067263953119,
+      "one_beam_B_conversion": 0.016969250774524578,
+      "two_beam_A_gain_dbi_ideal": 14.751840286123164,
+      "one_beam_A_gain_dbi_ideal": 14.949571095569539
     },
     {
       "width_mm": 40,
@@ -3631,7 +4307,9 @@
             "target_xpd_db": 46.97444453096087
           }
         },
-        "conversion": 0.2831160728663022
+        "conversion": 0.28311607286629803,
+        "conversion_A": 0.14486717664512364,
+        "conversion_B": 0.13824889622117442
       },
       "one_beam": {
         "metrics": {
@@ -3658,7 +4336,9 @@
             "target_xpd_db": 37.7949352363607
           }
         },
-        "conversion": 0.1675283109727732
+        "conversion": 0.16752831097276943,
+        "conversion_A": 0.15035825459449262,
+        "conversion_B": 0.01717005637827681
       },
       "two_beam_A_directivity_dbi": 19.440127833316513,
       "two_beam_B_directivity_dbi": 19.4145034903153,
@@ -3667,8 +4347,15 @@
       "one_beam_A_change_db": 0.18434224418228976,
       "one_beam_B_suppression_db": 8.96614519695754,
       "one_beam_B_to_A_db": -9.175963965938308,
-      "two_beam_conversion": 0.2831160728663022,
-      "one_beam_conversion": 0.1675283109727732
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.28311607286629803,
+      "one_beam_conversion": 0.16752831097276943,
+      "two_beam_A_conversion": 0.14486717664512364,
+      "one_beam_A_conversion": 0.15035825459449262,
+      "two_beam_B_conversion": 0.13824889622117442,
+      "one_beam_B_conversion": 0.01717005637827681,
+      "two_beam_A_gain_dbi_ideal": 13.959773088571072,
+      "one_beam_A_gain_dbi_ideal": 14.210920768688064
     },
     {
       "width_mm": 40,
@@ -3704,7 +4391,9 @@
             "target_xpd_db": 46.89076873111577
           }
         },
-        "conversion": 0.317245267412607
+        "conversion": 0.3172452674126134,
+        "conversion_A": 0.16238124848167704,
+        "conversion_B": 0.15486401893093632
       },
       "one_beam": {
         "metrics": {
@@ -3731,7 +4420,9 @@
             "target_xpd_db": 37.134957613415885
           }
         },
-        "conversion": 0.18659181808607708
+        "conversion": 0.1865918180860789,
+        "conversion_A": 0.16953914650433458,
+        "conversion_B": 0.01705267158174432
       },
       "two_beam_A_directivity_dbi": 19.427067735210848,
       "two_beam_B_directivity_dbi": 19.40140940531966,
@@ -3740,8 +4431,15 @@
       "one_beam_A_change_db": 0.21453586733597557,
       "one_beam_B_suppression_db": 9.472162714368162,
       "one_beam_B_to_A_db": -9.712191133281628,
-      "two_beam_conversion": 0.317245267412607,
-      "one_beam_conversion": 0.18659181808607708
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.3172452674126134,
+      "one_beam_conversion": 0.1865918180860789,
+      "two_beam_A_conversion": 0.16238124848167704,
+      "one_beam_A_conversion": 0.16953914650433458,
+      "two_beam_B_conversion": 0.15486401893093632,
+      "one_beam_B_conversion": 0.01705267158174432,
+      "two_beam_A_gain_dbi_ideal": 14.441019256371808,
+      "one_beam_A_gain_dbi_ideal": 14.725746698101528
     },
     {
       "width_mm": 40,
@@ -3777,7 +4475,9 @@
             "target_xpd_db": 46.781348043238864
           }
         },
-        "conversion": 0.34600735301575586
+        "conversion": 0.346007353015755,
+        "conversion_A": 0.17715389894596204,
+        "conversion_B": 0.16885345406979302
       },
       "one_beam": {
         "metrics": {
@@ -3804,7 +4504,9 @@
             "target_xpd_db": 36.57036694288953
           }
         },
-        "conversion": 0.20287467747477433
+        "conversion": 0.20287467747477236,
+        "conversion_A": 0.18592456257257695,
+        "conversion_B": 0.01695011490219541
       },
       "two_beam_A_directivity_dbi": 19.41527610085844,
       "two_beam_B_directivity_dbi": 19.389559532582204,
@@ -3813,8 +4515,15 @@
       "one_beam_A_change_db": 0.24112027905421235,
       "one_beam_B_suppression_db": 9.858934812980046,
       "one_beam_B_to_A_db": -10.125590262370348,
-      "two_beam_conversion": 0.34600735301575586,
-      "one_beam_conversion": 0.20287467747477433
+      "one_beam_B_coherent_zero": false,
+      "two_beam_conversion": 0.346007353015755,
+      "one_beam_conversion": 0.20287467747477236,
+      "two_beam_A_conversion": 0.17715389894596204,
+      "one_beam_A_conversion": 0.18592456257257695,
+      "two_beam_B_conversion": 0.16885345406979302,
+      "one_beam_B_conversion": 0.01695011490219541,
+      "two_beam_A_gain_dbi_ideal": 14.806129381856616,
+      "one_beam_A_gain_dbi_ideal": 15.120097682402957
     }
   ]
 }

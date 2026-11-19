@@ -1,0 +1,52 @@
+{
+  "boundaries": {
+    "Lattice_X": {
+      "Faces": [
+        3289,
+        3291
+      ],
+      "ReverseV": false,
+      "PhaseDelay": "InputPhaseDelay",
+      "Phase": "$ph_x"
+    },
+    "Lattice_Y": {
+      "Faces": [
+        3288,
+        3290
+      ],
+      "ReverseV": false,
+      "PhaseDelay": "InputPhaseDelay",
+      "Phase": "$ph_y"
+    },
+    "PEC_LID": {
+      "Faces": [
+        3286
+      ],
+      "InfGroundPlane": false
+    },
+    "PEC_BOTTOM": {
+      "Faces": [
+        3287
+      ],
+      "InfGroundPlane": false
+    }
+  },
+  "objects": [
+    "RING",
+    "ISLAND",
+    "PADDLE_E",
+    "PADDLE_N",
+    "PADDLE_W",
+    "PADDLE_S",
+    "GROUND",
+    "SUBSTRATE",
+    "BIAS_RT5880",
+    "AIR"
+  ],
+  "boundary_names": [
+    "Lattice_X",
+    "Lattice_Y",
+    "PEC_LID",
+    "PEC_BOTTOM"
+  ]
+}

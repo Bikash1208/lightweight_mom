@@ -1,0 +1,11 @@
+{
+  "status": "FAILED",
+  "cell": "MOAT_ON",
+  "top": "PEC",
+  "controller_pid": 13132,
+  "started_utc": "2026-11-19T07:52:08.770163+00:00",
+  "aedt_pid": 12932,
+  "error": "RuntimeError: MOAT_COPPER_AREA 59.891219180253515 expected 57.41103494802667",
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\lwmom_meander_model\\scripts\\research\\sub6_rotated_supercell_hfss.py\", line 286, in one\n    built = build(h,cell,top,phase=phase,direction=direction,air_mm=air_mm)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\lwmom_meander_model\\scripts\\research\\sub6_rotated_supercell_hfss.py\", line 125, in build\n    need(abs(copper_area-expected_area)/expected_area < .01,\n  File \"C:\\lwmom_meander_model\\scripts\\research\\sub6_rotated_supercell_hfss.py\", line 57, in need\n    raise RuntimeError(label)\nRuntimeError: MOAT_COPPER_AREA 59.891219180253515 expected 57.41103494802667\n",
+  "failed_utc": "2026-11-19T07:52:41.529924+00:00"
+}

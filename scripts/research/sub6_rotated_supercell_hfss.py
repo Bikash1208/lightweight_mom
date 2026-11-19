@@ -32,6 +32,8 @@ RT = 3.175
 BIAS = .254
 
 CELLS = {
+    "MOAT_ON": dict(kind="moat", on=True, area=None),
+    "MOAT_OFF": dict(kind="moat", on=False, area=None),
     "B2p2_D3p0": dict(kind="mn", r=5.6, w=.4, depth=3.0, bridge=2.2, area=90.0),
     "B2p2_D3p6": dict(kind="mn", r=5.6, w=.4, depth=3.6, bridge=2.2, area=88.9),
     "D3p6_OPEN": dict(kind="mn", r=5.6, w=.4, depth=3.6, bridge=None, area=87.08),
@@ -88,14 +90,51 @@ def build(h, cell, top, phase=85, direction="across", air_mm=20.035):
     def box(name, pos, size, material="pec"):
         return need(m.create_box(pos, size, name=name, material=material), f"CREATE_{name}")
 
-    disc = need(m.create_cylinder("Z", ["0mm", "0mm", "0mm"],
-                                  f"{spec['r']}mm", "cu_t", name="DISC", material="pec"), "DISC")
+    if spec["kind"] == "moat":
+        def cylinder(name, radius):
+            return need(m.create_cylinder("Z", ["0mm", "0mm", "0mm"],
+                                          f"{radius}mm", "cu_t", name=name,
+                                          material="pec"), name)
+        ring = cylinder("RING", 5.25)
+        core_cut = cylinder("RING_CORE_CUT", 4.20)
+        need(m.subtract(ring.name, core_cut.name, keep_originals=False), "RING_SUBTRACT")
+        island = cylinder("ISLAND", 2.75)
+        def sector(name, ri, ro, deg):
+            angles = [deg-12+24*i/48 for i in range(49)]
+            xy = [(ro*math.cos(math.radians(a)), ro*math.sin(math.radians(a))) for a in angles]
+            xy += [(ri*math.cos(math.radians(a)), ri*math.sin(math.radians(a))) for a in reversed(angles)]
+            points = [[f"{x:.12f}mm", f"{y:.12f}mm", "0mm"] for x,y in xy]
+            poly = need(m.create_polyline(points, name=name, cover_surface=True,
+                                          close_surface=True, material="pec"), name)
+            need(m.thicken_sheet(poly.name, "cu_t", both_sides=False), f"THICKEN_{name}")
+            return poly
+        for label, angle in (("E",0),("N",90),("W",180),("S",270)):
+            paddle = sector(f"PADDLE_{label}", 3.20, 3.85, angle)
+            if spec["on"] and label in ("E","W"):
+                bridge = sector(f"JOIN_{label}", 2.74, 3.21, angle)
+                need(m.unite([island.name,paddle.name,bridge.name]), f"UNITE_{label}")
+        copper_solids = [m[name] for name in m.object_names
+                         if m[name].material_name.lower() == "pec"]
+        expected_count = 4 if spec["on"] else 6
+        need(len(copper_solids) == expected_count,
+             f"MOAT_COPPER_BODY_COUNT {len(copper_solids)} expected {expected_count}")
+        copper_area = sum(float(obj.volume) for obj in copper_solids) / CU
+        expected_area = math.pi*(5.25**2-4.2**2+2.75**2) + 4*math.pi/15*(3.85**2-3.2**2)
+        if spec["on"]:
+            expected_area += 2*math.pi/15*(3.2**2-2.75**2)
+        need(abs(copper_area-expected_area)/expected_area < .01,
+             f"MOAT_COPPER_AREA {copper_area} expected {expected_area}")
+    else:
+        disc = need(m.create_cylinder("Z", ["0mm", "0mm", "0mm"],
+                                      f"{spec['r']}mm", "cu_t", name="DISC", material="pec"), "DISC")
     cuts = []
     def cut_box(name, x0, y0, dx, dy):
         cuts.append(box(name, [f"{x0:.9f}mm", f"{y0:.9f}mm", "-cu_t"],
                         [f"{dx:.9f}mm", f"{dy:.9f}mm", "3*cu_t"], "vacuum"))
 
-    if spec["kind"] == "st":
+    if spec["kind"] == "moat":
+        pass
+    elif spec["kind"] == "st":
         cut_box("SLOT", -spec["slot_w"]/2, -spec["slot_l"]/2, spec["slot_w"], spec["slot_l"])
     else:
         w, depth, bridge = spec["w"], spec["depth"], spec["bridge"]
@@ -113,7 +152,8 @@ def build(h, cell, top, phase=85, direction="across", air_mm=20.035):
             raise RuntimeError("END_RUN_LENGTH_NONPOSITIVE")
         cut_box("END_LEFT", -end_abs, -depth/2-w/2, end_abs-2.2, w)
         cut_box("END_RIGHT", 2.2, depth/2-w/2, end_abs-2.2, w)
-    need(m.subtract(disc.name, [c.name for c in cuts], keep_originals=False), "SLOT_SUBTRACT")
+    if spec["kind"] != "moat":
+        need(m.subtract(disc.name, [c.name for c in cuts], keep_originals=False), "SLOT_SUBTRACT")
     if cell == "D3p6_OPEN":
         audit = {"end_run": {"left_x": [-end_abs, -2.2], "right_x": [2.2, end_abs],
                              "rim_x_outer_y": rimx,
@@ -133,7 +173,7 @@ def build(h, cell, top, phase=85, direction="across", air_mm=20.035):
     copper_solids = [m[name] for name in m.object_names
                      if m[name].material_name.lower() == "pec"]
     copper_area = sum(float(obj.volume) for obj in copper_solids) / CU
-    if not math.isclose(copper_area, spec["area"], rel_tol=.02):
+    if spec["kind"] != "moat" and not math.isclose(copper_area, spec["area"], rel_tol=.02):
         raise RuntimeError(f"COPPER_AREA_READBACK {cell}: {copper_area:.4f} vs expected {spec['area']}")
     ground = box("GROUND", ["-period/2", "-period/2", "-rt_t-cu_t"], ["period", "period", "cu_t"])
     substrate = box("SUBSTRATE", ["-period/2", "-period/2", "-rt_t"],
@@ -189,6 +229,7 @@ def build(h, cell, top, phase=85, direction="across", air_mm=20.035):
     need(substrate.material_name.lower() == "rt5880_supercell", "SUBSTRATE_MATERIAL_READBACK")
     need(h.save_project(), "SAVE_PROJECT")
     return {"cell":cell,"top":top,"copper_area_mm2":copper_area,
+            "copper_body_count":len(copper_solids),
             "copper_solids":[{"name": obj.name,"volume_mm3":float(obj.volume)} for obj in copper_solids],
             "objects":m.object_names,
             "boundaries":boundaries,"setup":dict(setup.props),"validation":validation,
@@ -214,7 +255,7 @@ def modes(h):
     return out
 
 
-def one(cell, top, cores, tag="", phase=85, direction="across", air_mm=20.035):
+def one(cell, top, cores, tag="", phase=85, direction="across", air_mm=20.035, build_only=False, timeout_s=1500):
     RESULTS.mkdir(parents=True, exist_ok=True)
     label = f"{cell}_{top}_{direction}_{phase:g}_air{air_mm:g}{('_'+tag) if tag else ''}"
     project = WORK / "projects" / f"{label}.aedt"
@@ -244,12 +285,16 @@ def one(cell, top, cores, tag="", phase=85, direction="across", air_mm=20.035):
         write(status_path,state)
         built = build(h,cell,top,phase=phase,direction=direction,air_mm=air_mm)
         write(RESULTS / f"{label}_build.json", built)
+        if build_only:
+            state.update(status="BUILT", build_end_utc=now())
+            write(status_path,state)
+            return
         state.update(status="SOLVING",solve_start_utc=now())
         write(status_path,state)
         # The watchdog targets only the AEDT PID launched above.
         def timeout_own_aedt():
             import psutil
-            state.update(status="TIMEOUT", error="1500s solve timeout", timeout_utc=now())
+            state.update(status="TIMEOUT", error=f"{timeout_s}s solve timeout", timeout_utc=now())
             write(status_path, state)
             pid = int(h.desktop_class.aedt_process_id)
             try:
@@ -262,7 +307,7 @@ def one(cell, top, cores, tag="", phase=85, direction="across", air_mm=20.035):
                         q.terminate()
             except psutil.NoSuchProcess:
                 pass
-        watchdog = threading.Timer(1500, timeout_own_aedt)
+        watchdog = threading.Timer(timeout_s, timeout_own_aedt)
         watchdog.start()
         try:
             need(h.analyze_setup("EigenCell",cores=cores,use_auto_settings=True,blocking=True), "SOLVER_FAILURE")
@@ -303,5 +348,7 @@ if __name__ == "__main__":
     ap.add_argument("--phase",type=float,default=85)
     ap.add_argument("--direction",choices=("along","across"),default="across")
     ap.add_argument("--air-mm",type=float,default=20.035)
+    ap.add_argument("--build-only",action="store_true")
+    ap.add_argument("--timeout-s",type=int,default=1500)
     args=ap.parse_args()
-    one(args.cell,args.top,args.cores,args.tag,args.phase,args.direction,args.air_mm)
+    one(args.cell,args.top,args.cores,args.tag,args.phase,args.direction,args.air_mm,args.build_only,args.timeout_s)

@@ -106,7 +106,9 @@ def build(h, cell, top, phase=85, direction="across", air_mm=20.035):
             yc = depth/2 if i%2 == 0 else -depth/2
             cut_box(f"BAR_{i}", x0+i*1.2-w/2, yc-w/2, 1.2+w, w)
         rimx = math.sqrt(spec["r"]**2-(depth/2+w/2)**2)
-        end_abs = rimx if bridge is None else rimx-bridge
+        # For the open twin, the old rimx end stopped 0.136 mm short of the
+        # rim at the inner y edge. Extend past the disc to open the full cut.
+        end_abs = spec["r"] + 0.1 if bridge is None else rimx-bridge
         if end_abs <= 2.2:
             raise RuntimeError("END_RUN_LENGTH_NONPOSITIVE")
         cut_box("END_LEFT", -end_abs, -depth/2-w/2, end_abs-2.2, w)
@@ -114,7 +116,9 @@ def build(h, cell, top, phase=85, direction="across", air_mm=20.035):
     need(m.subtract(disc.name, [c.name for c in cuts], keep_originals=False), "SLOT_SUBTRACT")
     if cell == "D3p6_OPEN":
         audit = {"end_run": {"left_x": [-end_abs, -2.2], "right_x": [2.2, end_abs],
-                             "rim_x": rimx, "width_mm": w},
+                             "rim_x_outer_y": rimx,
+                             "rim_x_inner_y": math.sqrt(spec["r"]**2-(depth/2-w/2)**2),
+                             "width_mm": w},
                  "objects_after_subtract": [{"name": name,
                      "material": m[name].material_name, "volume_mm3": float(m[name].volume)}
                     for name in m.object_names]}

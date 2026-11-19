@@ -1,0 +1,81 @@
+{
+  "method": "HFSS modes; 16-point |E| field-cosine plus frequency Hungarian pairing",
+  "fold_warning": "Both +/- unfolded beta values are kinematic for non-SW modes",
+  "fop_ghz": 5.664116509576931,
+  "on_alpha_np_m": 1.5388207629257713,
+  "off_gate_np_m": 0.12823506357714762,
+  "qbase": {
+    "15": {
+      "1": 1844.7674582539194,
+      "2": 1633.5247903729032
+    },
+    "30": {
+      "1": 1874.156714981068,
+      "2": 1543.0365856959902
+    }
+  },
+  "pairs": {
+    "1": 1,
+    "2": 2,
+    "3": 3,
+    "4": 5,
+    "5": 4,
+    "6": 6,
+    "7": 9,
+    "8": 7,
+    "9": 8,
+    "10": 10,
+    "11": 11,
+    "12": 14,
+    "13": 13,
+    "15": 15,
+    "16": 16
+  },
+  "candidate_alpha_note": "Uses smaller of branch-1/2 PML Q to minimize extracted alpha; not a clean-SW claim",
+  "pml_spur": [
+    {
+      "direction": "across",
+      "branch_index": 1,
+      "f_PEC_ghz": 5.62557207591432,
+      "f_PML_ghz": 5.6175970127745405,
+      "Q_PEC": 2369.349803004559,
+      "Q_PML": 1905.607459398153,
+      "vg_unit_m_s": 133238476.58436249,
+      "alpha_spur_np_m": 0.013604573161112257,
+      "pass_le_0p1": true
+    },
+    {
+      "direction": "across",
+      "branch_index": 2,
+      "f_PEC_ghz": 6.08666684582442,
+      "f_PML_ghz": 6.03592007489419,
+      "Q_PEC": 2806.521649430695,
+      "Q_PML": 1411.1388868743668,
+      "vg_unit_m_s": 145777196.50748444,
+      "alpha_spur_np_m": 0.04583096021217639,
+      "pass_le_0p1": true
+    },
+    {
+      "direction": "along",
+      "branch_index": 1,
+      "f_PEC_ghz": 5.685711688682891,
+      "f_PML_ghz": 5.65396934973124,
+      "Q_PEC": 2256.023341210873,
+      "Q_PML": 1881.891646200181,
+      "vg_unit_m_s": 78155209.25014876,
+      "alpha_spur_np_m": 0.020027728290858294,
+      "pass_le_0p1": true
+    },
+    {
+      "direction": "along",
+      "branch_index": 2,
+      "f_PEC_ghz": 5.864610094626001,
+      "f_PML_ghz": 5.82382725530859,
+      "Q_PEC": 3618.8682838600057,
+      "Q_PML": 1554.2833449483965,
+      "vg_unit_m_s": 233523140.98480183,
+      "alpha_spur_np_m": 0.028757969514260465,
+      "pass_le_0p1": true
+    }
+  ]
+}

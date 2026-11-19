@@ -44,7 +44,14 @@ def build(h, cell, phase, min_freq_ghz=5.3, num_modes=20):
             cuts.append(box(f"{name}_{n}", [f"{x0:.9f}mm", f"{y0:.9f}mm", "-cu_t"],
                             [f"{dx:.9f}mm", f"{dy:.9f}mm", "3*cu_t"], "vacuum"))
 
-        if spec["kind"] == "st":
+        if spec["kind"] == "c4x":
+            cut("SLOT_X", -4.36, -1.455, 8.72, 2.91)
+            if spec["on"]:
+                cut("SLOT_Y_N", -1.455, 1.955, 2.91, 2.405)
+                cut("SLOT_Y_S", -1.455, -4.36, 2.91, 2.405)
+            else:
+                cut("SLOT_Y", -1.455, -4.36, 2.91, 8.72)
+        elif spec["kind"] == "st":
             cut("SLOT", -spec["slot_w"] / 2, -spec["slot_l"] / 2,
                 spec["slot_w"], spec["slot_l"])
         else:
@@ -90,6 +97,9 @@ def build(h, cell, phase, min_freq_ghz=5.3, num_modes=20):
             areas = [float(disc.volume) / CU]
             need(math.isclose(areas[0], spec["area"], rel_tol=.02),
                  f"CELL_COPPER_AREA_{n}: {areas[0]} expected {spec['area']}")
+            if spec["kind"] == "c4x":
+                need(abs(areas[0] - spec["area"]) < .03,
+                     f"C4X_CELL_AREA_{n}: {areas[0]} expected {spec['area']}")
             geometry_audit = None
         for part in parts:
             need(part.rotate("Z", n * 22.5), f"ROTATE_{n}_{part.name}")
@@ -247,7 +257,7 @@ def one(cell, phase, cores, tag="", min_freq_ghz=5.3, num_modes=20,
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--cell", choices=("ANCHOR", "B2p2_D3p0", "B2p2_D3p6",
-                                       "D3p6_OPEN"), required=True)
+                                       "D3p6_OPEN", "C4X_ON", "C4X_OFF"), required=True)
     ap.add_argument("--phase", type=int, choices=(15, 30, 45), required=True)
     ap.add_argument("--cores", type=int, default=48)
     ap.add_argument("--tag", default="")

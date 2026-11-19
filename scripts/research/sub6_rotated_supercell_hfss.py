@@ -32,6 +32,8 @@ RT = 3.175
 BIAS = .254
 
 CELLS = {
+    "C4X_ON": dict(kind="c4x", on=True, r=5.45, area=53.94),
+    "C4X_OFF": dict(kind="c4x", on=False, r=5.45, area=51.03),
     "MOAT_ON": dict(kind="moat", on=True, area=None),
     "MOAT_OFF": dict(kind="moat", on=False, area=None),
     "B2p2_D3p0": dict(kind="mn", r=5.6, w=.4, depth=3.0, bridge=2.2, area=90.0),
@@ -134,6 +136,13 @@ def build(h, cell, top, phase=85, direction="across", air_mm=20.035):
 
     if spec["kind"] == "moat":
         pass
+    elif spec["kind"] == "c4x":
+        cut_box("SLOT_X", -4.36, -1.455, 8.72, 2.91)
+        if spec["on"]:
+            cut_box("SLOT_Y_N", -1.455, 1.955, 2.91, 2.405)
+            cut_box("SLOT_Y_S", -1.455, -4.36, 2.91, 2.405)
+        else:
+            cut_box("SLOT_Y", -1.455, -4.36, 2.91, 8.72)
     elif spec["kind"] == "st":
         cut_box("SLOT", -spec["slot_w"]/2, -spec["slot_l"]/2, spec["slot_w"], spec["slot_l"])
     else:
@@ -175,6 +184,10 @@ def build(h, cell, top, phase=85, direction="across", air_mm=20.035):
     copper_area = sum(float(obj.volume) for obj in copper_solids) / CU
     if spec["kind"] != "moat" and not math.isclose(copper_area, spec["area"], rel_tol=.02):
         raise RuntimeError(f"COPPER_AREA_READBACK {cell}: {copper_area:.4f} vs expected {spec['area']}")
+    if spec["kind"] == "c4x":
+        need(len(copper_solids) == 1, f"C4X_COPPER_BODY_COUNT {len(copper_solids)}")
+        need(abs(copper_area - spec["area"]) < 0.03,
+             f"C4X_COPPER_AREA {copper_area:.6f} expected {spec['area']}")
     ground = box("GROUND", ["-period/2", "-period/2", "-rt_t-cu_t"], ["period", "period", "cu_t"])
     substrate = box("SUBSTRATE", ["-period/2", "-period/2", "-rt_t"],
                     ["period", "period", "rt_t"], "RT5880_SUPERCELL")

@@ -1,0 +1,175 @@
+{
+  "status": "COMPLETE",
+  "chain_pid": 16888,
+  "started_utc": "2026-11-19T09:37:20.229167+00:00",
+  "rows": [
+    {
+      "label": "SUPER_ON_30_c4xauto1",
+      "exit": 0,
+      "status": "COMPLETE",
+      "aedt_pid": 4560,
+      "controller_pid": 2500
+    },
+    {
+      "label": "SUPER_ON_45_c4xauto1",
+      "exit": 0,
+      "status": "COMPLETE",
+      "aedt_pid": 932,
+      "controller_pid": 12976
+    },
+    {
+      "label": "FIELDS_ON_15",
+      "exit": 0,
+      "aedt_pid": 3392
+    },
+    {
+      "label": "FIELDS_ON_30",
+      "exit": 0,
+      "aedt_pid": 11912
+    },
+    {
+      "label": "FIELDS_ON_45",
+      "exit": 0,
+      "aedt_pid": 9036
+    },
+    {
+      "label": "SUPER_OFF_15_c4xauto1",
+      "exit": 0,
+      "status": "COMPLETE",
+      "aedt_pid": 16752,
+      "controller_pid": 3304
+    },
+    {
+      "label": "SUPER_OFF_30_c4xauto1",
+      "exit": 0,
+      "status": "COMPLETE",
+      "aedt_pid": 7436,
+      "controller_pid": 8200
+    },
+    {
+      "label": "FIELDS_OFF_15",
+      "exit": 0,
+      "aedt_pid": 15176
+    },
+    {
+      "label": "FIELDS_OFF_30",
+      "exit": 0,
+      "aedt_pid": 5624
+    }
+  ],
+  "calibration": [
+    {
+      "state": "ON",
+      "direction": "across",
+      "f_ghz": 5.72966946114071,
+      "reference_ghz": 5.73,
+      "error_pct": -0.005768566479763759,
+      "Q": 3475.494321461526
+    },
+    {
+      "state": "ON",
+      "direction": "along",
+      "f_ghz": 5.57765101048919,
+      "reference_ghz": 5.578,
+      "error_pct": -0.006256534794011682,
+      "Q": 2135.7734285355637
+    },
+    {
+      "state": "OFF",
+      "direction": "across",
+      "f_ghz": 5.609287196490791,
+      "reference_ghz": 5.609,
+      "error_pct": 0.005120279743107461,
+      "Q": 2290.0377145209627
+    },
+    {
+      "state": "OFF",
+      "direction": "along",
+      "f_ghz": 5.6102165976335,
+      "reference_ghz": 5.61,
+      "error_pct": 0.0038609203832444786,
+      "Q": 2294.7539937726624
+    }
+  ],
+  "spurious_alpha": [
+    {
+      "state": "ON",
+      "direction": "across",
+      "alpha_spur_np_m": 0.023224805651388403,
+      "Q_PEC": 3475.494321461526,
+      "Q_PML": 1861.473023712288,
+      "vg_m_s": 193051434.10914508
+    },
+    {
+      "state": "ON",
+      "direction": "along",
+      "alpha_spur_np_m": 0.0092862099740889,
+      "Q_PEC": 2135.7734285355637,
+      "Q_PML": 1805.4206721673136,
+      "vg_m_s": 161491827.04236022
+    },
+    {
+      "state": "OFF",
+      "direction": "across",
+      "alpha_spur_np_m": 0.019285976871857007,
+      "Q_PEC": 2290.0377145209627,
+      "Q_PML": 1599.7882932837385,
+      "vg_m_s": 171545056.5274086
+    },
+    {
+      "state": "OFF",
+      "direction": "along",
+      "alpha_spur_np_m": 0.015176805971437217,
+      "Q_PEC": 2294.7539937726624,
+      "Q_PML": 1715.7694320875419,
+      "vg_m_s": 170367828.60144448
+    }
+  ],
+  "current": {
+    "label": "FIELDS_OFF_30",
+    "controller_pid": 5700,
+    "start_utc": "2026-11-19T10:58:21.018040+00:00",
+    "log": "C:\\lwmom_meander_model\\results\\sub6_meander_model\\supercell_hfss\\C4X_queue_FIELDS_OFF_30.log",
+    "exit_code": 0,
+    "end_utc": "2026-11-19T10:59:21.021040+00:00"
+  },
+  "heartbeat_utc": "2026-11-19T10:58:21.019391+00:00",
+  "on_gate_candidates": 1,
+  "off_gate": "PASS",
+  "off_match": {
+    "on": {
+      "cell": "ON",
+      "phase_deg": 30,
+      "mode": 6,
+      "f_ghz": 5.863076038176601,
+      "Q": 99.0902023603275,
+      "max_solved_tets": 67729,
+      "beta_minus_over_k0": 1.0560726369123192,
+      "beta_plus_over_k0": 1.1479050401220863,
+      "harmonic_minus_angle_deg": 30.33654476256205,
+      "harmonic_plus_angle_deg": 36.64895611007568,
+      "nearest_other_mode_ghz": 0.08367574312264914,
+      "track_id": 6,
+      "matched_modes": "6->6->6",
+      "field_cosine": 0.989963017415223,
+      "vg_m_s": 70282026.31845592,
+      "Q_base": 1815.7725777116448,
+      "Q_base_unit_branch": 1,
+      "alpha_np_m": 2.5005117814596476,
+      "gate_candidate": true
+    },
+    "off": {
+      "track": "5",
+      "alpha_np_m": -0.07692922789180859,
+      "field_cosine_to_ON_at_15": 0.9596740198787831
+    },
+    "alternatives": [
+      {
+        "track": "5",
+        "alpha_np_m": -0.07692922789180859,
+        "field_cosine_to_ON_at_15": 0.9596740198787831
+      }
+    ]
+  },
+  "ended_utc": "2026-11-19T10:59:21.579355+00:00"
+}

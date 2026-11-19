@@ -1,0 +1,37 @@
+{
+  "label": "FEASIBILITY_ONLY_NO_HFSS_SOLVE",
+  "status": "STOPPED_STEP1",
+  "requested_board": {
+    "cell_area_radius_mm": 150,
+    "pitch_mm": 11.6,
+    "active_cell_count": 516,
+    "states": ["BOTH", "A_ONLY", "B_ONLY"],
+    "frequency_ghz": 5.68
+  },
+  "measured_reference": {
+    "source_branch": "gh/compute/sub6-cell-param-lab-b",
+    "source_file": "results/sub6_board_final/crop_testbed/RESULT.md",
+    "crop_active_sites": 84,
+    "crop_peak_memory_approx_gb": 17,
+    "crop_static_solve_seconds": 346.0791039466858
+  },
+  "machine": {
+    "physical_ram_gib": 255.62071990966797,
+    "available_ram_gib_at_check": 176.1064453125,
+    "logical_cpus": 48,
+    "aedt_v261_executable_present": true
+  },
+  "extrapolation": {
+    "cell_count_ratio": 6.142857142857143,
+    "linear_memory_gb": 104.42857142857143,
+    "superlinear_memory_gb": 258.82399999567457,
+    "linear_time_minutes": 35.431897619047625,
+    "superlinear_time_minutes": 87.81720695539516,
+    "superlinear_exponent": 1.5,
+    "timeout_minutes": 60,
+    "decision": "No safe memory/time fit established: credible upper scaling exceeds available RAM and timeout."
+  },
+  "export_blocker": "The referenced full-board STEP/layout on gh/compute/sub6-cell-param-lab-b is a different R198, 856-site, theta25, static-plus-island board. The R150 dither model provides A/B labels and ideal array weights but no per-site anchor-slot rotation/physical phase table at 5.68 GHz and theta30. Replacing cells in that STEP cannot represent the requested board.",
+  "aedt_projects_built": 0,
+  "aedt_solves_started": 0
+}

@@ -2,7 +2,7 @@
 
 ## STATUS
 
-Geometry audit and eight-cell dry build passed. OFF-twin phi_s=15 supercell solve is next; no driven-strip test has started.
+Geometry audit and eight-cell dry build passed. OFF-twin phi_s=15 supercell solve completed; phi_s=30 is next. No driven-strip test has started.
 
 ## GATES
 
@@ -13,6 +13,8 @@ Geometry audit and eight-cell dry build passed. OFF-twin phi_s=15 supercell solv
 ## DATA
 
 The old end-run formula stopped at x=5.230679 mm, while the rim at the slot's inner y edge is x=5.366563 mm. It left a 0.135884 mm copper bridge. The corrected cut extends to x=+/-5.700 mm, beyond the 5.6 mm disc. After subtract, AEDT listed one PEC multi-lump object of volume 3.047772 mm3. `separate_bodies` returned two PEC objects, 43.539602 mm2 each. The full eight-cell dry build read back eight such pairs, 16 separate copper halves, lattice X/Y, PML top, PEC bottom, RT5880 substrate, and 20 requested modes from 5.4 GHz. Design validation passed; no solve was run in the dry build.
+
+OFF-twin phi_s=15: HFSS 2025.2 returned 20 modes, highest 6.696874 GHz; 20 adaptive passes, max 91,679 solved tets, 22m27s solution time, normal completion. Near the 5.664 GHz ON x-low point, OFF modes 2/3 are at 5.662908/5.663298 GHz with Q 8.2/3.0. Their low Q makes frequency-only matching unsafe; the phi_s=30 row and saved fields will determine which, if either, follows the ON surface-wave branch. All 20 raw f/Q values are in the per-row modes JSON.
 
 ## FLAGS
 

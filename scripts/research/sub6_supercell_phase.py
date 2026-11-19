@@ -49,7 +49,6 @@ def build(h, cell, phase, min_freq_ghz=5.3, num_modes=20):
                 spec["slot_w"], spec["slot_l"])
         else:
             w, depth, bridge = spec["w"], spec["depth"], spec["bridge"]
-            need(bridge is not None, "OPEN_TWIN_GEOMETRY_NOT_VALIDATED")
             for i in range(5):
                 cut(f"LEG_{i}", -2.4 + i * 1.2 - w / 2,
                     -depth / 2 - w / 2, w, depth + w)
@@ -57,19 +56,49 @@ def build(h, cell, phase, min_freq_ghz=5.3, num_modes=20):
                 yc = depth / 2 if i % 2 == 0 else -depth / 2
                 cut(f"BAR_{i}", -2.4 + i * 1.2 - w / 2, yc - w / 2, 1.2 + w, w)
             rimx = math.sqrt(spec["r"] ** 2 - (depth / 2 + w / 2) ** 2)
-            end_abs = rimx - bridge
+            inner_rimx = math.sqrt(spec["r"] ** 2 - (depth / 2 - w / 2) ** 2)
+            # The open cut must cross the rim over its full 0.4-mm width.
+            # rimx leaves a 0.136-mm bridge at the inner y edge for D3p6.
+            end_abs = spec["r"] + 0.1 if bridge is None else rimx - bridge
             need(end_abs > 2.2, "END_RUN_LENGTH_NONPOSITIVE")
             cut("END_LEFT", -end_abs, -depth / 2 - w / 2, end_abs - 2.2, w)
             cut("END_RIGHT", 2.2, depth / 2 - w / 2, end_abs - 2.2, w)
         need(m.subtract(disc.name, [c.name for c in cuts], keep_originals=False),
              f"SLOT_SUBTRACT_{n}")
-        need(math.isclose(float(disc.volume) / CU, spec["area"], rel_tol=.02),
-             f"CELL_COPPER_AREA_{n}: {float(disc.volume)/CU:.4f} expected {spec['area']}")
-        need(disc.rotate("Z", n * 22.5), f"ROTATE_{n}")
-        need(disc.move([(n - 3.5) * P, 0, 0]), f"MOVE_{n}")
-        cells.append({"name": disc.name, "rotation_deg": n * 22.5,
+        if spec["kind"] == "mn" and bridge is None:
+            pre = [{"name": name, "material": m[name].material_name,
+                    "volume_mm3": float(m[name].volume)}
+                   for name in m.object_names if name.startswith(f"DISC_{n}")]
+            separated = need(m.separate_bodies(disc.name), f"SEPARATE_TWIN_{n}")
+            names = [part.name for part in separated]
+            parts = [m[name] for name in names]
+            need(len(parts) == 2, f"TWIN_PART_COUNT_{n}: {names}")
+            need(all(part.material_name.lower() == "pec" for part in parts),
+                 f"TWIN_MATERIAL_{n}")
+            areas = [float(part.volume) / CU for part in parts]
+            need(all(math.isclose(a, spec["area"] / 2, rel_tol=.02) for a in areas),
+                 f"TWIN_HALF_AREA_{n}: {areas}")
+            need(math.isclose(sum(areas), spec["area"], rel_tol=.02),
+                 f"TWIN_TOTAL_AREA_{n}: {sum(areas)}")
+            geometry_audit = {"objects_after_subtract": pre,
+                              "end_run_original_mm": rimx,
+                              "rim_at_inner_y_mm": inner_rimx,
+                              "end_run_used_mm": end_abs,
+                              "separated_names": names}
+        else:
+            parts = [disc]
+            areas = [float(disc.volume) / CU]
+            need(math.isclose(areas[0], spec["area"], rel_tol=.02),
+                 f"CELL_COPPER_AREA_{n}: {areas[0]} expected {spec['area']}")
+            geometry_audit = None
+        for part in parts:
+            need(part.rotate("Z", n * 22.5), f"ROTATE_{n}_{part.name}")
+            need(part.move([(n - 3.5) * P, 0, 0]), f"MOVE_{n}_{part.name}")
+        cells.append({"names": [part.name for part in parts],
+                      "rotation_deg": n * 22.5,
                       "centre_x_mm": (n - 3.5) * P,
-                      "area_mm2": float(disc.volume) / CU})
+                      "areas_mm2": areas, "area_mm2": sum(areas),
+                      "geometry_audit": geometry_audit})
 
     box("GROUND", ["-4*period", "-period/2", "-rt_t-cu_t"],
         ["8*period", "period", "cu_t"])
@@ -115,7 +144,7 @@ def build(h, cell, phase, min_freq_ghz=5.3, num_modes=20):
 
 
 def one(cell, phase, cores, tag="", min_freq_ghz=5.3, num_modes=20,
-        timeout_s=1500):
+        timeout_s=1500, build_only=False):
     label = f"SUPER_{cell}_ph{phase:g}_PML40{('_'+tag) if tag else ''}"
     project = WORK / "projects" / f"{label}.aedt"
     need(not project.exists(), f"REFUSE_EXISTING_PROJECT {project}")
@@ -148,6 +177,10 @@ def one(cell, phase, cores, tag="", min_freq_ghz=5.3, num_modes=20,
         write(status_path, state)
         built = build(h, cell, phase, min_freq_ghz, num_modes)
         write(RESULTS / f"{label}_build.json", built)
+        if build_only:
+            state.update(status="BUILT", build_end_utc=now())
+            write(status_path, state)
+            return
         state.update(status="SOLVING", solve_start_utc=now())
         write(status_path, state)
         watchdog_log = open(RESULTS / f"{label}_external_watchdog.log", "w", encoding="utf-8")
@@ -213,13 +246,15 @@ def one(cell, phase, cores, tag="", min_freq_ghz=5.3, num_modes=20,
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--cell", choices=("ANCHOR", "B2p2_D3p0", "B2p2_D3p6"), required=True)
+    ap.add_argument("--cell", choices=("ANCHOR", "B2p2_D3p0", "B2p2_D3p6",
+                                       "D3p6_OPEN"), required=True)
     ap.add_argument("--phase", type=int, choices=(15, 30, 45), required=True)
     ap.add_argument("--cores", type=int, default=48)
     ap.add_argument("--tag", default="")
     ap.add_argument("--min-freq-ghz", type=float, default=5.3)
     ap.add_argument("--num-modes", type=int, default=20)
     ap.add_argument("--timeout-s", type=int, default=1500)
+    ap.add_argument("--build-only", action="store_true")
     args = ap.parse_args()
     one(args.cell, args.phase, args.cores, args.tag, args.min_freq_ghz,
-        args.num_modes, args.timeout_s)
+        args.num_modes, args.timeout_s, args.build_only)

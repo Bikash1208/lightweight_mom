@@ -242,7 +242,7 @@ def peak_only(ctx,fa,fb):
 
 def write_csv(path,rows):
     with path.open("w",newline="",encoding="utf-8") as fh:
-        writer=csv.DictWriter(fh,fieldnames=list(rows[0]))
+        writer=csv.DictWriter(fh,fieldnames=list(rows[0]),lineterminator="\n")
         writer.writeheader();writer.writerows(rows)
 
 

@@ -32,7 +32,7 @@ Each row lists modes (f, Q). Q > 1e5 modes are box/lid artefacts; ignore them.
 - 8 cells along x, rotations psi_n = 0, 22.5, ..., 157.5 deg (in-plane, about each disc centre), pitch 11.6 mm: supercell 92.8 x 11.6 mm. y periodic at 0 deg; x Bloch phase phi_s is a parameter.
 - Rotation of the polarisation tensor by psi gives a 2*psi = 45 deg step per cell, so K = 2*pi/92.8 mm, K/k0 = 0.557 (Phase 26: 0.5555). The -1 harmonic (beta - K)/k0 ~ 0.52 radiates at ~31.5 deg (beam design 30 deg).
 - Mode identification: unit-cell branch f(phase) with beta(f) from the rows; in the supercell a branch appears where beta(f)*92.8 mm = phi_s + 360*m. Use the unit-cell tables to predict mode frequencies near 5.8 GHz; match by Q and field pattern.
-- Top boundary: the lidded unit-cell Q includes only dielectric loss (PEC copper). The supercell needs an open top (radiation boundary or PML, air >= lambda/4 ~ 13 mm, preferably ~20 mm), or a driven strip (TM0 wave port, 1-2 rotation periods, absorber far end, alpha from decay).
+- Top boundary: the lidded unit-cell Q includes only dielectric loss (PEC copper). The supercell needs an open top (radiation boundary or PML, air >= lambda/4 ~ 13 mm, bound-wave field decay length 14-29 mm, so use ~40 mm unless a PML spurious-loss check (unrotated lidless unit cell, alpha_spur <= 0.1 Np/m) passes at a lower height), or a driven strip (TM0 wave port, 1-2 rotation periods, absorber far end, alpha from decay).
 - Extraction: alpha = pi*f/(Q_rad*v_g), v_g = d(2*pi*f)/d(beta) = 360*p*(df/dphase) with p = 0.0116 m (unit cell) or from the supercell phase scan; 1/Q_rad = 1/Q - 1/Q_lidded (Q_lidded from the unit-cell row of the matched branch). Dielectric baseline 0.01-0.09 Np/m vs a 1.2 gate.
 
 ## Expectations (MODEL_ONLY maps from the other agent; calibration, not truth)
@@ -42,3 +42,12 @@ Each row lists modes (f, Q). Q > 1e5 modes are box/lid artefacts; ignore them.
 ## Not in this round
 - The diode-sheet cell: replacing a 2.2 mm copper bridge by a ~0.4 mm sheet changes the inductance that sets the resonance, so the sheet position and series L need design first (and a land-pattern check against 0.3 mm). The open-gap twin is the OFF bound for now. Crop-testbed diode OFF (-10 V) sheet: 21.6 - j297.5 ohm; tool OFF sheet 22.23 - j335.4 ohm.
 - Which mode a pin launch excites: the supercell gives each mode's leakage only. If one D3p6 x mode fails, flag it for a driven-strip run.
+
+## Corrections after the first run (other agent, AEDT 2025.2; local edit, not yet pushed)
+- Eigenmode accepts a PML top (finite Q), rejects a radiation top. Calibration passed: anchor 5.56231 vs 5.55317 GHz (0.165 %), B2p2 5.69323 and D3p6 bridged 5.68256 GHz matched. The open twin returned 0 mm2 copper (readback/Boolean issue in their build; 87.08 mm2 in 2025.1): it blocks only the OFF bound.
+- Air height >= lambda/4 was too small; use the PML spurious-loss check and Q_base = mean of unrotated lidless-PML across/along Q at the matched per-cell phase.
+- Supercell Bloch phases 15/30/45 deg (avoid 0 degeneracy): per-cell phases (720 +/- phi_s)/8 = 91.9/88.1, 93.8/86.3, 95.6/84.4 deg.
+
+## Update 2026-11-18
+5.8 GHz is not strict (user). Gates evaluated at one common f_op shared by ON/OFF and both beams; hologram period re-derived at f_op.
+Beam angle theta free in {25,30,35,40} deg, both beams equal, chosen jointly with f_op at the end; alpha(theta) from the first-order chain.

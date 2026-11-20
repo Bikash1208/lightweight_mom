@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "C:\lwmom_meander_model\scripts\research\full_board_gate_v31_diode_v2_build.py", line 222, in <module>
+    if __name__=="__main__": main()
+                             ^^^^^^
+  File "C:\lwmom_meander_model\scripts\research\full_board_gate_v31_diode_v2_build.py", line 126, in main
+    need(abs(delta-.5*.3*.035)<1e-5,f"GAP_VOLUME_{idx}: {delta}")
+  File "C:\lwmom_meander_model\scripts\research\full_board_gate_v31_diode_v2_build.py", line 39, in need
+    if not ok: raise RuntimeError(label)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: GAP_VOLUME_27: 0.0052600692633681945

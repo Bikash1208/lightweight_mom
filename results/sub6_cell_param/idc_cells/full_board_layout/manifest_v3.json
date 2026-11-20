@@ -3,11 +3,11 @@
  "n_sites": 516,
  "n_A": 258,
  "n_B": 258,
- "n_gate_A": 4,
- "n_gate_B": 5,
+ "n_gate_A": 8,
+ "n_gate_B": 8,
  "seed": 0,
  "azimuth_term": true,
- "rules": "lattice 25x25 r<=150, centre (0,0)=feed excluded (model rule); beam per cell by 30 mm tanh dither as in sub6_key_area_board_model.py; gate = first 2 cell-rows (rho<2P) of cells of that beam, half-only (A x>=0, B x<=0); gate cells KEEP the anchor slot geometry replaced by the gate cell (disc r5.45 plain + optional 0.3 mm via) at run time; axis cells x=0 are in the gate of whichever beam they encode",
+ "rules": "lattice 25x25 r<=150, centre (0,0)=feed excluded (model rule); beam per cell by 30 mm tanh dither as in sub6_key_area_board_model.py; gate = first 2 cell-rows (5.8<=rho<5.8+2P, model rule) of cells of that beam, half-only (A x>=0, B x<=0); gate cells KEEP the anchor slot geometry replaced by the gate cell (disc r5.45 plain + optional 0.3 mm via) at run time; axis cells x=0 are in the gate of whichever beam they encode",
  "state_rule": "A-only: BLOCK (via=1) gate_for=B; B-only: BLOCK gate_for=A; BOTH: all PASS",
  "note": "MODEL_ONLY; hand/sign unverified"
 }

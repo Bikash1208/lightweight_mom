@@ -52,7 +52,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("csv_path", type=Path)
     parser.add_argument("output_dir", type=Path)
-    parser.add_argument("--state", choices=("BOTH", "A_ONLY", "B_ONLY"), default="BOTH")
+    parser.add_argument("--state", choices=("BOTH", "A_ONLY", "B_ONLY", "A_ONLY_IDEAL"), default="BOTH")
     parser.add_argument("--rotation-mode", choices=("input", "clean_swap", "scrambled"), default="input")
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -69,11 +69,17 @@ def main():
     metal_parts = []
     via_xy = []
     layout_readback = []
+    ideal_changed = 0
     for index, row in enumerate(rows):
         x, y = float(row["x_mm"]), float(row["y_mm"])
         assert math.hypot(x, y) <= R_APERTURE + 1e-8
         assert math.hypot(x, y) + R_DISC < R_ABS_IN
         gate = bool(int(row["gate"]))
+        ideal_plain = (args.state == "A_ONLY_IDEAL" and row["beam"] == "B"
+                       and x <= 0 and float(row["r_mm"]) >= 29)
+        if ideal_plain:
+            assert not gate
+            ideal_changed += 1
         source_angle = float(row["rot_deg"])
         if args.rotation_mode == "clean_swap":
             angle = (math.degrees(math.atan2(y, x)) - source_angle) % 180
@@ -82,7 +88,7 @@ def main():
         else:
             angle = source_angle
         work = cq.Workplane("XY").center(x, y).circle(R_DISC)
-        if not gate:
+        if not gate and not ideal_plain:
             points = slot_points(x, y, angle)
             work = work.polyline([(px - x, py - y) for px, py in points]).close()
         disc = work.extrude(T).val()
@@ -95,6 +101,7 @@ def main():
         metal_parts.append(disc)
         layout_readback.append({"i": int(row["i"]), "j": int(row["j"]), "xy_mm": [x, y],
                                 "gate": gate, "beam": row["beam"], "gate_for": row["gate_for"], "block": block,
+                                "ideal_plain_replacement": ideal_plain,
                                 "rotation_deg": angle if not gate else None})
         if index % 100 == 99:
             print("DISCS", index + 1, "seconds", round(time.time() - t0, 1), flush=True)
@@ -126,8 +133,11 @@ def main():
     snapped, snap_stats = exactify_step_text(step.read_text(encoding="utf-8"))
     step.write_text(snapped, encoding="utf-8", newline="\n")
     bad = audit_step_text(step.read_text(encoding="utf-8"))
+    if args.state == "A_ONLY_IDEAL":
+        assert ideal_changed == 234 and not via_xy
     manifest = {"state": args.state, "rotation_mode": args.rotation_mode, "sites": len(rows),
                 "gate_sites": 16, "blocked_vias": len(via_xy), "board_radius_mm": R_BOARD,
+                "ideal_plain_replacements": ideal_changed,
                 "aperture_radius_mm": R_APERTURE, "absorber_ring_mm": [R_ABS_IN, R_BOARD],
                 "substrate": {"material": "RT5880", "thickness_mm": H},
                 "bias": {"material": "RT5880", "thickness_mm": T_BIAS},

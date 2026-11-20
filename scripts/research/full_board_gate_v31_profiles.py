@@ -39,7 +39,13 @@ def extract(state, project, out):
         h.desktop_class.temp_directory = temp
         assert Path(str(h.desktop_class.temp_directory)).resolve() == temp.resolve()
         assert "Setup1 : LastAdaptive" in h.existing_analysis_sweeps
-        assert str(h.setups[0].props["Frequency"]) == "5.68GHz"
+        # S4 fix: this AEDT also creates an 'Auto1' setup (5GHz) that sorts first, so select Setup1 by name and compare numerically.
+        setup = [s for s in h.setups if s.name == "Setup1"]
+        assert len(setup) == 1, [s.name for s in h.setups]
+        _f = str(setup[0].props["Frequency"]).strip().lower()
+        _unit = {"ghz": 1e9, "mhz": 1e6, "khz": 1e3, "hz": 1.0}
+        _suffix = next(u for u in ("ghz", "mhz", "khz", "hz") if _f.endswith(u))
+        assert abs(float(_f[:-len(_suffix)]) * _unit[_suffix] - 5.68e9) < 1.0, _f
         assert len([n for n in h.modeler.object_names if n.startswith("METAL_PEC")]) == 518
         points = [[r * math.cos(math.radians(phi)), r * math.sin(math.radians(phi)), Z_MM]
                   for phi in PHIS for r in RADII]

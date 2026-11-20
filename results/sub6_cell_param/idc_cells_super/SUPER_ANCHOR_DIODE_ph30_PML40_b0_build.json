@@ -1,0 +1,197 @@
+{
+  "cell": "ANCHOR_DIODE",
+  "phase_deg": 30,
+  "cells": [
+    {
+      "names": [
+        "DISC_0",
+        "DSHEET_0"
+      ],
+      "rotation_deg": 0.0,
+      "centre_x_mm": -40.6,
+      "areas_mm2": [
+        68.72095579325085
+      ],
+      "area_mm2": 68.72095579325085,
+      "geometry_audit": null
+    },
+    {
+      "names": [
+        "DISC_1",
+        "DSHEET_1"
+      ],
+      "rotation_deg": 22.5,
+      "centre_x_mm": -29.0,
+      "areas_mm2": [
+        68.72095579325085
+      ],
+      "area_mm2": 68.72095579325085,
+      "geometry_audit": null
+    },
+    {
+      "names": [
+        "DISC_2",
+        "DSHEET_2"
+      ],
+      "rotation_deg": 45.0,
+      "centre_x_mm": -17.4,
+      "areas_mm2": [
+        68.72095579325085
+      ],
+      "area_mm2": 68.72095579325085,
+      "geometry_audit": null
+    },
+    {
+      "names": [
+        "DISC_3",
+        "DSHEET_3"
+      ],
+      "rotation_deg": 67.5,
+      "centre_x_mm": -5.8,
+      "areas_mm2": [
+        68.72095579325085
+      ],
+      "area_mm2": 68.72095579325085,
+      "geometry_audit": null
+    },
+    {
+      "names": [
+        "DISC_4",
+        "DSHEET_4"
+      ],
+      "rotation_deg": 90.0,
+      "centre_x_mm": 5.8,
+      "areas_mm2": [
+        68.72095579325085
+      ],
+      "area_mm2": 68.72095579325085,
+      "geometry_audit": null
+    },
+    {
+      "names": [
+        "DISC_5",
+        "DSHEET_5"
+      ],
+      "rotation_deg": 112.5,
+      "centre_x_mm": 17.4,
+      "areas_mm2": [
+        68.72095579325085
+      ],
+      "area_mm2": 68.72095579325085,
+      "geometry_audit": null
+    },
+    {
+      "names": [
+        "DISC_6",
+        "DSHEET_6"
+      ],
+      "rotation_deg": 135.0,
+      "centre_x_mm": 29.0,
+      "areas_mm2": [
+        68.72095579325085
+      ],
+      "area_mm2": 68.72095579325085,
+      "geometry_audit": null
+    },
+    {
+      "names": [
+        "DISC_7",
+        "DSHEET_7"
+      ],
+      "rotation_deg": 157.5,
+      "centre_x_mm": 40.6,
+      "areas_mm2": [
+        68.72095579325085
+      ],
+      "area_mm2": 68.72095579325085,
+      "geometry_audit": null
+    }
+  ],
+  "boundaries": {
+    "DIODE": {
+      "Objects": [
+        "DSHEET_0",
+        "DSHEET_1",
+        "DSHEET_2",
+        "DSHEET_3",
+        "DSHEET_4",
+        "DSHEET_5",
+        "DSHEET_6",
+        "DSHEET_7"
+      ],
+      "Resistance": "Rd",
+      "Reactance": "Xd",
+      "InfGroundPlane": false
+    },
+    "Lattice_X": {
+      "Faces": [
+        1550,
+        1552
+      ],
+      "ReverseV": false,
+      "PhaseDelay": "InputPhaseDelay",
+      "Phase": "$ph_s"
+    },
+    "Lattice_Y": {
+      "Faces": [
+        1549,
+        1551
+      ],
+      "ReverseV": false,
+      "PhaseDelay": "InputPhaseDelay",
+      "Phase": "$ph_y"
+    },
+    "PEC_BOTTOM": {
+      "Faces": [
+        1548
+      ],
+      "InfGroundPlane": false
+    }
+  },
+  "objects": [
+    "DISC_0",
+    "DISC_1",
+    "DISC_2",
+    "DISC_3",
+    "DISC_4",
+    "DISC_5",
+    "DISC_6",
+    "DISC_7",
+    "GROUND",
+    "SUBSTRATE",
+    "BIAS_RT5880",
+    "AIR",
+    "PML_AIR1",
+    "DSHEET_0",
+    "DSHEET_1",
+    "DSHEET_2",
+    "DSHEET_3",
+    "DSHEET_4",
+    "DSHEET_5",
+    "DSHEET_6",
+    "DSHEET_7"
+  ],
+  "setup": {
+    "MinimumFrequency": "5.3GHz",
+    "NumModes": 20,
+    "MaxDeltaFreq": 0.2,
+    "ConvergeOnRealFreq": true,
+    "MaximumPasses": 20,
+    "MinimumPasses": 4,
+    "MinimumConvergedPasses": 2,
+    "PercentRefinement": 30,
+    "IsEnabled": true,
+    "MeshLink": {
+      "ImportMesh": false
+    },
+    "BasisOrder": 1,
+    "DoLambdaRefine": true,
+    "DoMaterialLambda": true,
+    "SetLambdaTarget": false,
+    "Target": 0.2,
+    "UseMaxTetIncrease": false,
+    "Name": "EigenCell",
+    "SaveFields": true
+  },
+  "aedt_version": "2025.1"
+}

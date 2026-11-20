@@ -48,12 +48,23 @@ def slot_points(x, y, rotation_degrees):
     ]
 
 
+def short_slot_points(x, y, rotation_degrees, u_min, u_max):
+    """One closed slot beside a 0.5 mm centre copper strip, in the cell frame."""
+    angle = math.radians(rotation_degrees)
+    ca, sa = math.cos(angle), math.sin(angle)
+    return [
+        (r3(x + ca * u - sa * v), r3(y + sa * u + ca * v))
+        for u, v in ((u_min, -SLOT_W / 2), (u_max, -SLOT_W / 2),
+                     (u_max, SLOT_W / 2), (u_min, SLOT_W / 2))
+    ]
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("csv_path", type=Path)
     parser.add_argument("output_dir", type=Path)
     parser.add_argument("--state", choices=("BOTH", "A_ONLY", "B_ONLY", "A_ONLY_IDEAL",
-                                             "B_ALL_OFF_IDEAL", "ALL_PLAIN"), default="BOTH")
+                                             "B_ALL_OFF_IDEAL", "ALL_PLAIN", "B_ALL_SHORT"), default="BOTH")
     parser.add_argument("--rotation-mode", choices=("input", "clean_swap", "scrambled"), default="input")
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -71,11 +82,13 @@ def main():
     via_xy = []
     layout_readback = []
     ideal_changed = 0
+    shorted_volumes = []
     for index, row in enumerate(rows):
         x, y = float(row["x_mm"]), float(row["y_mm"])
         assert math.hypot(x, y) <= R_APERTURE + 1e-8
         assert math.hypot(x, y) + R_DISC < R_ABS_IN
         gate = bool(int(row["gate"]))
+        shorted = args.state == "B_ALL_SHORT" and row["beam"] == "B" and not gate
         ideal_plain = ((args.state == "A_ONLY_IDEAL" and row["beam"] == "B"
                         and x <= 0 and float(row["r_mm"]) >= 29)
                        or (args.state == "B_ALL_OFF_IDEAL" and row["beam"] == "B")
@@ -90,10 +103,18 @@ def main():
         else:
             angle = source_angle
         work = cq.Workplane("XY").center(x, y).circle(R_DISC)
-        if not gate and not ideal_plain:
+        if shorted:
+            for u_min, u_max in ((-SLOT_L / 2, -0.25), (0.25, SLOT_L / 2)):
+                points = short_slot_points(x, y, angle, u_min, u_max)
+                work = work.polyline([(px - x, py - y) for px, py in points]).close()
+        elif not gate and not ideal_plain:
             points = slot_points(x, y, angle)
             work = work.polyline([(px - x, py - y) for px, py in points]).close()
         disc = work.extrude(T).val()
+        if shorted:
+            expected = (math.pi * R_DISC**2 - 2 * 4.11 * SLOT_W) * T
+            assert abs(disc.Volume() - expected) < 0.002, (index, disc.Volume(), expected)
+            shorted_volumes.append(disc.Volume())
         block = gate and ((args.state == "A_ONLY" and row["gate_for"] == "B") or
                           (args.state == "B_ONLY" and row["gate_for"] == "A"))
         if block:
@@ -105,6 +126,7 @@ def main():
                                 "gate": gate, "beam": row["beam"], "gate_for": row["gate_for"], "block": block,
                                 "ideal_plain_replacement": ideal_plain and not gate,
                                 "plain_target": ideal_plain,
+                                "centre_short_strip": shorted,
                                 "rotation_deg": angle if not gate else None})
         if index % 100 == 99:
             print("DISCS", index + 1, "seconds", round(time.time() - t0, 1), flush=True)
@@ -142,10 +164,16 @@ def main():
         assert ideal_changed == 250 and not via_xy
     elif args.state == "ALL_PLAIN":
         assert ideal_changed == 500 and not via_xy
+    elif args.state == "B_ALL_SHORT":
+        assert len(shorted_volumes) == 250 and ideal_changed == 0 and not via_xy
     manifest = {"state": args.state, "rotation_mode": args.rotation_mode, "sites": len(rows),
                 "gate_sites": 16, "blocked_vias": len(via_xy), "board_radius_mm": R_BOARD,
                 "ideal_plain_replacements": ideal_changed,
                 "plain_target_sites": sum(row["plain_target"] for row in layout_readback),
+                "centre_short_strip_cells": len(shorted_volumes),
+                "centre_short_strip_width_mm": 0.5 if shorted_volumes else None,
+                "resulting_slot_lengths_mm": [4.11, 4.11] if shorted_volumes else None,
+                "shorted_top_copper_volume_mm3_minmax": [min(shorted_volumes), max(shorted_volumes)] if shorted_volumes else None,
                 "aperture_radius_mm": R_APERTURE, "absorber_ring_mm": [R_ABS_IN, R_BOARD],
                 "substrate": {"material": "RT5880", "thickness_mm": H},
                 "bias": {"material": "RT5880", "thickness_mm": T_BIAS},

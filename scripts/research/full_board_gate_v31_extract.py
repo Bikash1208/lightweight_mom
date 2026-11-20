@@ -8,6 +8,7 @@ import traceback
 from pathlib import Path
 
 import numpy as np
+import psutil
 
 os.environ["ANSYSEM_ROOT261"] = r"C:\Program Files\ANSYS Inc\v261\AnsysEM"
 from ansys.aedt.core import Hfss
@@ -53,20 +54,26 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--project", type=Path, required=True)
     parser.add_argument("--state", required=True)
+    parser.add_argument("--design", default=None)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=True)
+    temp = out / "aedt_temp"
+    temp.mkdir(exist_ok=True)
+    os.environ.update(TEMP=str(temp), TMP=str(temp))
     rep = {"state": args.state, "status": "EXTRACTING"}
     report = out / "metrics.json"
     report.write_text(json.dumps(rep, indent=1))
     h = None
     try:
-        h = Hfss(project=str(args.project.resolve()), design=f"GATE_{args.state}", solution_type="Modal",
+        h = Hfss(project=str(args.project.resolve()), design=args.design or f"GATE_{args.state}", solution_type="Modal",
                  version="2026.1", non_graphical=True, new_desktop=True, close_on_exit=False)
         rep["own_aedt_pid"] = h.desktop_class.aedt_process_id
         rep["version"] = str(h.desktop_class.aedt_version_id)
         assert rep["version"] == "2026.1"
+        h.desktop_class.temp_directory = temp
+        assert Path(h.desktop_class.temp_directory).resolve() == temp.resolve()
         assert "Setup1 : LastAdaptive" in h.existing_analysis_sweeps
         target = out / "farfield"
         target.mkdir(exist_ok=True)
@@ -104,7 +111,8 @@ def main():
             rep[hand] = {"peak_gain_db": peak_gain, "peak_theta_deg": peak_th, "peak_phi_deg": peak_ph,
                          "sll_db_10deg_exclusion": sll, "wide_angle_max_gain_db_theta60_to90": wide,
                          "at_30_phi0_db": solution_point(h, f"dB(Gain{hand})", 30, 0),
-                         "at_30_phi180_db": solution_point(h, f"dB(Gain{hand})", 30, 180)}
+                         "at_30_phi180_db": solution_point(h, f"dB(Gain{hand})", 30, 180),
+                         "at_36_phi180_db": solution_point(h, f"dB(Gain{hand})", 36, 180)}
         rep["status"] = "COMPLETE"
         report.write_text(json.dumps(rep, indent=1))
         print("METRICS", rep["RHCP"], rep["LHCP"], flush=True)
@@ -116,7 +124,21 @@ def main():
         raise
     finally:
         if h is not None:
+            own_pid = int(h.desktop_class.aedt_process_id)
+            try:
+                own = psutil.Process(own_pid)
+                created = own.create_time()
+            except psutil.NoSuchProcess:
+                own = None
             h.release_desktop(close_projects=True, close_desktop=True)
+            if own is not None:
+                try:
+                    own.wait(timeout=10)
+                except psutil.TimeoutExpired:
+                    if own.create_time() == created:
+                        own.terminate()
+                except psutil.NoSuchProcess:
+                    pass
 
 
 if __name__ == "__main__":

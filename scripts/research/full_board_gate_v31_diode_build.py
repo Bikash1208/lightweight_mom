@@ -1,0 +1,200 @@
+"""Build only: 250 diode gaps/sheets in a copy of the solved B-ALL-SHORT project."""
+
+import json
+import math
+import os
+from pathlib import Path
+import shutil
+import threading
+import traceback
+from datetime import datetime, timezone
+import zipfile
+
+import psutil
+
+os.environ["ANSYSEM_ROOT261"] = r"C:\Program Files\ANSYS Inc\v261\AnsysEM"
+from ansys.aedt.core import Hfss
+
+ROOT=Path(__file__).resolve().parents[2]
+SOURCE=ROOT/"hfss_work/full_board_gate_v31_short/solve_B_ALL_SHORT_001/BOARD_R150_GATE_V31_B_ALL_SHORT.aedt"
+GEOMETRY=ROOT/"results/sub6_meander_model/full_board_gate/v31_short/geometry.json"
+WORK=ROOT/"hfss_work/full_board_gate_v31_diode"
+PROJECT=WORK/"BOARD_R150_V31_B_ALL_DIODE.aedt"
+ARCHIVE=WORK/"BOARD_R150_V31_B_ALL_DIODE.aedtz"
+OUT=ROOT/"results/sub6_meander_model/full_board_gate/v31_diode_build"
+STATUS=OUT/"build_status.json"
+
+
+def utc(): return datetime.now(timezone.utc).isoformat()
+
+
+def save(path,data):
+    path.parent.mkdir(parents=True,exist_ok=True)
+    tmp=path.with_suffix(path.suffix+".tmp")
+    tmp.write_text(json.dumps(data,indent=2,default=str)+"\n",encoding="utf-8")
+    os.replace(tmp,path)
+
+
+def need(ok,label):
+    if not ok: raise RuntimeError(label)
+    return ok
+
+
+def row_xy(row):
+    return tuple(round(float(v),3) for v in row["xy_mm"])
+
+
+def main():
+    OUT.mkdir(parents=True,exist_ok=True)
+    WORK.mkdir(parents=True,exist_ok=True)
+    need(SOURCE.is_file() and GEOMETRY.is_file(),"SOURCE_MISSING")
+    need(not PROJECT.exists() and not ARCHIVE.exists(),"REFUSE_EXISTING_OUTPUT")
+    temp=WORK/"aedt_temp"
+    temp.mkdir(exist_ok=True)
+    os.environ.update(TEMP=str(temp),TMP=str(temp))
+    status={"phase":"START","controller_pid":os.getpid(),"start_utc":utc(),
+            "source_project":str(SOURCE),"output_project":str(PROJECT)}
+    save(STATUS,status)
+    stop=threading.Event()
+    def beat():
+        while not stop.wait(60):
+            status["heartbeat_utc"]=utc();save(STATUS,status)
+    threading.Thread(target=beat,daemon=True).start()
+    h=None
+    try:
+        # Copy only the project file. Its CAD solids are embedded in the AEDT file.
+        shutil.copy2(SOURCE,PROJECT)
+        h=Hfss(project=str(PROJECT),design="GATE_B_ALL_SHORT",solution_type="Modal",
+               version="2026.1",non_graphical=True,new_desktop=True,close_on_exit=False)
+        status["aedt_pid"]=h.desktop_class.aedt_process_id
+        status["aedt_version"]=str(h.desktop_class.aedt_version_id)
+        need(status["aedt_version"]=="2026.1","AEDT_VERSION")
+        h.desktop_class.temp_directory=temp
+        need(Path(h.desktop_class.temp_directory).resolve()==temp.resolve(),"TEMP_READBACK")
+        m=h.modeler
+        m.model_units="mm"
+        need(h.design_name=="GATE_B_ALL_SHORT","SOURCE_DESIGN_READBACK")
+        setup=h.get_setup("Setup1")
+        setup_before={k:str(setup.props.get(k)) for k in ("Frequency","MaximumPasses","MinimumPasses",
+                     "MaxDeltaS","BasisOrder","DrivenSolverType")}
+        boundary_before={b.name:dict(b.props) for b in h.boundaries}
+        sphere_before=[v.name for v in h.field_setups]
+        geometry=json.loads(GEOMETRY.read_text(encoding="utf-8"))
+        targets=[row for row in geometry["rows"] if row["beam"]=="B" and not row["gate"]]
+        need(len(targets)==250,"TARGET_COUNT")
+        need(sum(bool(row["gate"]) for row in geometry["rows"])==16,"GATE_COUNT")
+        metal_names=[n for n in m.object_names if n.startswith("METAL_PEC")]
+        need(len(metal_names)==518,"SOURCE_METAL_COUNT")
+        by_xy={}
+        for name in metal_names:
+            bb=[float(x) for x in m[name].bounding_box]
+            if abs(bb[5]-bb[2]-0.035)>1e-4 or abs(bb[3]-bb[0]-10.9)>.02 or abs(bb[4]-bb[1]-10.9)>.02:
+                continue
+            xy=(round((bb[0]+bb[3])/2,3),round((bb[1]+bb[4])/2,3))
+            need(xy not in by_xy,f"DUPLICATE_DISC_{xy}")
+            by_xy[xy]=name
+        need(len(by_xy)==516,f"DISC_BODY_COUNT_{len(by_xy)}")
+        need(all(row_xy(row) in by_xy for row in geometry["rows"]),"SITE_BODY_MAP")
+        status.update(phase="CUTTING",mapped_discs=len(by_xy),target_sheets=len(targets))
+        save(STATUS,status)
+        cut_audit=[]
+        sheets=[]
+        for idx,row in enumerate(targets):
+            x,y=row_xy(row)
+            angle=float(row["rotation_deg"])
+            name=by_xy[(x,y)]
+            body=m[name]
+            volume_before=float(body.volume)
+            cutter=need(m.create_box([-.15,-.25,-.035],[.3,.5,.105],
+                                     name=f"DIODE_GAP_CUT_{idx:03d}",material="vacuum"),
+                        f"CREATE_GAP_{idx}")
+            need(cutter.rotate("Z",angle),f"ROTATE_CUT_{idx}")
+            need(cutter.move([x,y,0]),f"MOVE_CUT_{idx}")
+            need(m.subtract(name,cutter.name,keep_originals=False),f"SUBTRACT_{idx}")
+            need(name in m.object_names,f"DISC_NAME_AFTER_CUT_{idx}")
+            volume_after=float(m[name].volume)
+            delta=volume_before-volume_after
+            need(abs(delta-.3*.5*.035)<.00025,f"GAP_VOLUME_{idx}: {delta}")
+            sheet=need(m.create_rectangle("XY",[-.15,-.25,.035],[.3,.5],
+                                          name=f"DIODE_{idx:03d}"),f"CREATE_SHEET_{idx}")
+            need(sheet.rotate("Z",angle),f"ROTATE_SHEET_{idx}")
+            need(sheet.move([x,y,0]),f"MOVE_SHEET_{idx}")
+            area=float(sheet.faces[0].area)
+            need(abs(area-.15)<1e-5,f"SHEET_AREA_{idx}: {area}")
+            sheets.append(sheet.name)
+            cut_audit.append({"i":row["i"],"j":row["j"],"beam":row["beam"],
+                              "copper_object":name,"sheet":sheet.name,"xy_mm":[x,y],
+                              "rotation_deg":angle,"removed_copper_mm3":delta,
+                              "sheet_area_mm2":area,"sheet_z_mm":.035})
+            if (idx+1)%25==0:
+                status.update(cut_count=idx+1,heartbeat_utc=utc());save(STATUS,status)
+        need(len([n for n in m.object_names if n.startswith("METAL_PEC")])==518,
+             "COPPER_OBJECT_COUNT_CHANGED")
+        need(len(set(sheets))==250,"SHEET_COUNT")
+        h["Zr"]="3.333ohm"
+        h["Zx"]="-232.667ohm"
+        diode=need(h.assign_impedance_to_sheet(sheets,name="DIODE",resistance="Zr",
+                                               reactance="Zx"),"DIODE_BOUNDARY_ASSIGN")
+        props=dict(diode.props)
+        need(props.get("Resistance")=="Zr" and props.get("Reactance")=="Zx",
+             "IMPEDANCE_READBACK")
+        need(set(props.get("Objects",[]))==set(sheets),"BOUNDARY_SHEET_MEMBERSHIP")
+        need(len(props.get("Objects",[]))==250,"BOUNDARY_SHEET_COUNT")
+        need(str(h["Zr"]).lower() in ("3.333ohm","3.333 ohm"),"ZR_READBACK")
+        need(str(h["Zx"]).lower() in ("-232.667ohm","-232.667 ohm"),"ZX_READBACK")
+        need(h.rename_design("GATE_B_ALL_DIODE",save=False),"DESIGN_RENAME")
+        setup_after=h.get_setup("Setup1")
+        need({k:str(setup_after.props.get(k)) for k in setup_before}==setup_before,"SETUP_CHANGED")
+        boundary_after={b.name:dict(b.props) for b in h.boundaries if b.name!="DIODE"}
+        need(boundary_after==boundary_before,"OTHER_BOUNDARY_CHANGED")
+        need([v.name for v in h.field_setups]==sphere_before,"SPHERE_CHANGED")
+        valid=h.validate_simple(str(OUT/"validation.log"))
+        need(valid==1 or valid is True,"DESIGN_VALIDATION")
+        need(h.save_project(),"SAVE_PROJECT")
+        status.update(phase="ARCHIVING",validation=valid)
+        save(STATUS,status)
+        need(h.archive_project(ARCHIVE,include_external_files=False,include_results_file=False),
+             "ARCHIVE_FAILED")
+        need(PROJECT.is_file() and ARCHIVE.is_file(),"OUTPUT_FILES_MISSING")
+        # The archive must contain the project model but neither the STEP nor results.
+        with zipfile.ZipFile(ARCHIVE) as z:
+            archive_members=z.namelist()
+        need(any(x.lower().endswith(".aedt") for x in archive_members),"ARCHIVE_NO_PROJECT")
+        need(not any(x.lower().endswith(".step") or "aedtresults" in x.lower()
+                     for x in archive_members),"ARCHIVE_HAS_EXTERNAL_OR_RESULTS")
+        audit={"source_project_bytes":SOURCE.stat().st_size,"project_path":str(PROJECT),
+               "project_bytes":PROJECT.stat().st_size,"archive_path":str(ARCHIVE),
+               "archive_bytes":ARCHIVE.stat().st_size,"archive_members":archive_members,
+               "aedt_version":status["aedt_version"],"design":h.design_name,
+               "source_metal_objects":518,"final_metal_objects":518,
+               "diode_sheet_count":len(sheets),"diode_boundary":props,
+               "variables":{"Zr":str(h["Zr"]),"Zx":str(h["Zx"])},
+               "other_states_ohm_sq":{"ON_B":[37.05,-559.0],"OFF_D":[2.667,48.667]},
+               "setup_before_after":setup_before,"other_boundaries":list(boundary_before),
+               "infinite_spheres":sphere_before,"validation":valid,"cuts":cut_audit}
+        save(OUT/"audit.json",audit)
+        status.update(phase="COMPLETE",end_utc=utc(),archive_bytes=audit["archive_bytes"],
+                      project_bytes=audit["project_bytes"])
+        save(STATUS,status)
+        (OUT/"build.done").write_text("COMPLETE\n",encoding="utf-8")
+    except BaseException:
+        status.update(phase="FAILED",traceback=traceback.format_exc(),end_utc=utc())
+        save(STATUS,status)
+        (OUT/"build.done").write_text("FAILED\n",encoding="utf-8")
+        raise
+    finally:
+        stop.set()
+        if h is not None:
+            own_pid=int(h.desktop_class.aedt_process_id)
+            try:
+                own=psutil.Process(own_pid);created=own.create_time()
+            except psutil.NoSuchProcess: own=None
+            h.release_desktop(close_projects=True,close_desktop=True)
+            if own is not None:
+                try: own.wait(timeout=10)
+                except psutil.TimeoutExpired:
+                    if own.create_time()==created: own.terminate()
+                except psutil.NoSuchProcess: pass
+
+
+if __name__=="__main__": main()

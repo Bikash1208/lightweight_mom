@@ -1,0 +1,128 @@
+HFSS Profile
+ Project: LS6p0_WS2p4_VI_C40B_V251TL8
+ Design: BAR90Tune
+ Solution setup: EigenCell
+ Design variation: $ph_x='98deg' $ph_y='0deg' air_bottom='-43.499000000000002mm' air_top='40.034999999999997mm' bias_bottom='-3.464mm' bias_t='0.254mm' cu_t='0.035000000000000003mm' diode_gap='0.29999999999999999mm' diode_l='0.29999999999999999mm' diode_w='0.59999999999999998mm' disc_r='5.4349999999999996mm' disc_via_x='3.4895719651600001mm' disc_via_y='-3.4895719651600001mm' ground_bottom='-3.21mm' island_l='4mm' island_left='-0.90000000000000002mm' island_via_x='-0.14999999999999999mm' island_via_y='-1.3400000000000001mm' island_w='1.5mm' opposite_clearance='0.59999999999999998mm' pad_bottom='-3.4990000000000001mm' period='11.6mm' Rs='2.7999999999999998ohm' rt_t='3.1749999999999998mm' slot_l='6mm' slot_w='2.3999999999999999mm' Xs='14.6ohm'
+
+  Task                Real Time  CPU Time  Memory  Information
+  ----                ---------  --------  ------  -----------
+
+  Solution Process                                 Start Time: 11/15/2026 22:10:40, Host: WIN-D4BKN5G2BK3, Processor: 64, OS: NT 10.0, Product: HFSS Version 2025.1.0
+                                                   Executing From: C:\Program Files\ANSYS Inc\v251\AnsysEM\HFSSCOMENGINE.exe
+                                                   
+  HPC                                              Type: Auto, MPI Vendor: Intel, MPI Version: 2021
+  Machine                                          Name: WIN-D4BKN5G2BK3, Memory: 256 GB, RAM Limit: 90.000000%, Cores: 4, Free Disk Space: 418 GB
+                                                   
+                                                   Allow off core: True
+                                                   Solution Basis Order: 1
+  Design Validation                                Elapsed time : 00:00:00 , HFSS ComEngine Memory : 70.6 M
+                                                   Perform full validations with standard port validations
+                                                   
+  Initial Meshing                                  Time: 11/15/2026 22:10:40
+  Mesh                00:00:00   00:00:00  34.5 M  Type: Phi, Tetrahedra: 0, Input not suitable for Phi mesher. Using classic mesher
+  Stitch              00:00:01   00:00:00  55.5 M  Triangles: 851
+  Mesh                00:00:01   00:00:00  55.5 M  Type: Classic, Tetrahedra: 2474
+  Post                00:00:00   00:00:00  55.5 M  Tetrahedra: 2655, Cores: 1
+  Lambda Refine       00:00:00   00:00:00  23.8 M  Tetrahedra: 3629, Cores: 1
+  Initial Meshing                                  Elapsed Time: 00:00:03
+                                                   
+  Adaptive Meshing                                 Time: 11/15/2026 22:10:43
+                                                   
+  Adaptive Pass 1                                  Eigenmode Solution
+  Simulation Setup    00:00:00   00:00:00  182 M   Disk: 1.99 KB
+  Matrix Assembly     00:00:00   00:00:01  222 M   Tetrahedra: 2683, Disk: 0 Bytes
+  Matrix Solve        00:00:02   00:00:08  363 M   Type: DCA, Cores: 4, Matrix size: 14926, Matrix bandwidth:  38.2, Eigen iterations: 57, Disk: 2.73 MB
+  Field Recovery      00:00:00   00:00:01  363 M   Computed eigenmodes: 12, Disk: 15.6 MB
+                                                   
+  Adaptive Pass 2                                  Eigenmode Solution
+  Adaptive Refine     00:00:00   00:00:00  27.3 M  Tetrahedra: 4357, Cores: 1
+  Simulation Setup    00:00:00   00:00:00  183 M   Disk: 1.99 KB
+  Matrix Assembly     00:00:00   00:00:01  236 M   Tetrahedra: 3372, Disk: 0 Bytes
+  Matrix Solve        00:00:02   00:00:10  427 M   Type: DCA, Cores: 4, Matrix size: 19190, Matrix bandwidth:  39.3, Eigen iterations: 58, Disk: 800 KB
+  Field Recovery      00:00:00   00:00:01  427 M   Computed eigenmodes: 12, Disk: 4.05 MB
+                                                   Max Delta Freq. %: 5.53569
+                                                   
+  Adaptive Pass 3                                  Eigenmode Solution
+  Adaptive Refine     00:00:00   00:00:00  25.9 M  Tetrahedra: 5371, Cores: 1
+  Simulation Setup    00:00:00   00:00:00  186 M   Disk: 1.99 KB
+  Matrix Assembly     00:00:01   00:00:01  258 M   Tetrahedra: 4365, Disk: 0 Bytes
+  Matrix Solve        00:00:04   00:00:14  522 M   Type: DCA, Cores: 4, Matrix size: 25386, Matrix bandwidth:  40.3, Eigen iterations: 58, Disk: 1.13 MB
+  Field Recovery      00:00:00   00:00:02  522 M   Computed eigenmodes: 12, Disk: 5.82 MB
+                                                   Max Delta Freq. %: 4.50776
+                                                   
+  Adaptive Pass 4                                  Eigenmode Solution
+  Adaptive Refine     00:00:00   00:00:00  27.1 M  Tetrahedra: 6692, Cores: 1
+  Simulation Setup    00:00:00   00:00:00  189 M   Disk: 1.99 KB
+  Matrix Assembly     00:00:01   00:00:01  285 M   Tetrahedra: 5628, Disk: 0 Bytes
+  Matrix Solve        00:00:06   00:00:21  646 M   Type: DCA, Cores: 4, Matrix size: 33220, Matrix bandwidth:  41.0, Eigen iterations: 58, Disk: 1.43 MB
+  Field Recovery      00:00:00   00:00:02  646 M   Computed eigenmodes: 12, Disk: 7.41 MB
+                                                   Max Delta Freq. %: 3.95854
+                                                   
+  Adaptive Pass 5                                  Eigenmode Solution
+  Adaptive Refine     00:00:00   00:00:00  28.6 M  Tetrahedra: 7850, Cores: 1
+  Simulation Setup    00:00:00   00:00:00  192 M   Disk: 4.5 KB
+  Matrix Assembly     00:00:01   00:00:01  309 M   Tetrahedra: 6720, Disk: 0 Bytes
+  Matrix Solve        00:00:07   00:00:24  754 M   Type: DCA, Cores: 4, Matrix size: 40004, Matrix bandwidth:  41.4, Eigen iterations: 59, Disk: 1.24 MB
+  Field Recovery      00:00:00   00:00:03  754 M   Computed eigenmodes: 12, Disk: 6.44 MB
+                                                   Max Delta Freq. %: 2.14451
+                                                   
+  Adaptive Pass 6                                  Eigenmode Solution
+  Adaptive Refine     00:00:00   00:00:00  29.9 M  Tetrahedra: 9345, Cores: 1
+  Simulation Setup    00:00:00   00:00:00  196 M   Disk: 4.12 KB
+  Matrix Assembly     00:00:02   00:00:02  339 M   Tetrahedra: 8157, Disk: 0 Bytes
+  Matrix Solve        00:00:09   00:00:32  895 M   Type: DCA, Cores: 4, Matrix size: 48996, Matrix bandwidth:  41.8, Eigen iterations: 60, Disk: 1.65 MB
+  Field Recovery      00:00:01   00:00:04  895 M   Computed eigenmodes: 12, Disk: 8.46 MB
+                                                   Max Delta Freq. %: 1.01185
+                                                   
+  Adaptive Pass 7                                  Eigenmode Solution
+  Adaptive Refine     00:00:00   00:00:00  32.9 M  Tetrahedra: 11805, Cores: 1
+  Simulation Setup    00:00:00   00:00:00  201 M   Disk: 4.11 KB
+  Matrix Assembly     00:00:02   00:00:02  391 M   Tetrahedra: 10527, Disk: 0 Bytes
+  Matrix Solve        00:00:18   00:00:59  1.13 G  Type: DCA, Cores: 4, Matrix size: 63740, Matrix bandwidth:  42.2, Eigen iterations: 60, Disk: 2.7 MB
+  Field Recovery      00:00:01   00:00:06  1.13 G  Computed eigenmodes: 12, Disk: 13.9 MB
+                                                   Max Delta Freq. %: 0.69320
+                                                   
+  Adaptive Pass 8                                  Eigenmode Solution
+  Adaptive Refine     00:00:00   00:00:00  33.2 M  Tetrahedra: 13313, Cores: 1
+  Simulation Setup    00:00:00   00:00:00  205 M   Disk: 4.5 KB
+  Matrix Assembly     00:00:02   00:00:02  423 M   Tetrahedra: 12019, Disk: 0 Bytes
+  Matrix Solve        00:00:16   00:00:54  1.31 G  Type: DCA, Cores: 4, Matrix size: 73120, Matrix bandwidth:  42.5, Eigen iterations: 59, Disk: 1.72 MB
+  Field Recovery      00:00:01   00:00:05  1.31 G  Computed eigenmodes: 12, Disk: 8.85 MB
+                                                   Max Delta Freq. %: 0.30407
+                                                   
+  Adaptive Pass 9                                  Eigenmode Solution
+  Adaptive Refine     00:00:00   00:00:00  35.8 M  Tetrahedra: 15575, Cores: 1
+  Simulation Setup    00:00:00   00:00:00  210 M   Disk: 8.31 KB
+  Matrix Assembly     00:00:03   00:00:03  470 M   Tetrahedra: 14214, Disk: 0 Bytes
+  Matrix Solve        00:00:18   00:01:00  1.56 G  Type: DCA, Cores: 4, Matrix size: 86872, Matrix bandwidth:  42.7, Eigen iterations: 58, Disk: 2.52 MB
+  Field Recovery      00:00:01   00:00:06  1.56 G  Computed eigenmodes: 12, Disk: 13 MB
+                                                   Max Delta Freq. %: 0.20610
+                                                   
+  Adaptive Pass 10                                 Eigenmode Solution
+  Adaptive Refine     00:00:00   00:00:00  36.5 M  Tetrahedra: 16515, Cores: 1
+  Simulation Setup    00:00:00   00:00:00  212 M   Disk: 8.3 KB
+  Matrix Assembly     00:00:03   00:00:03  488 M   Tetrahedra: 15095, Disk: 0 Bytes
+  Matrix Solve        00:00:19   00:01:05  1.64 G  Type: DCA, Cores: 4, Matrix size: 92302, Matrix bandwidth:  42.7, Eigen iterations: 58, Disk: 1.02e+03 KB
+  Field Recovery      00:00:01   00:00:06  1.64 G  Computed eigenmodes: 12, Disk: 5.36 MB
+                                                   Max Delta Freq. %: 0.15076
+                                                   
+  Adaptive Pass 11                                 Eigenmode Solution
+  Adaptive Refine     00:00:00   00:00:00  41.1 M  Tetrahedra: 17800, Cores: 1
+  Simulation Setup    00:00:00   00:00:00  215 M   Disk: 7.92 KB
+  Matrix Assembly     00:00:03   00:00:03  515 M   Tetrahedra: 16314, Disk: 0 Bytes
+  Matrix Solve        00:00:22   00:01:15  1.76 G  Type: DCA, Cores: 4, Matrix size: 99882, Matrix bandwidth:  42.8, Eigen iterations: 59, Disk: 1.39 MB
+  Field Recovery      00:00:02   00:00:08  1.76 G  Computed eigenmodes: 12, Disk: 7.34 MB
+                                                   Max Delta Freq. %: 0.09870
+                                                   
+  Adaptive Meshing                                 Elapsed Time: 00:02:54
+                                                   Adaptive Passes converged
+                                                   
+  Simulation Summary                               
+  Design Validation                                Elapsed Time: 00:00:00, Total Memory: 70.6 MB
+  Initial Meshing                                  Elapsed Time: 00:00:03, Total Memory: 55.5 MB
+  Adaptive Meshing                                 Elapsed Time: 00:02:54, Total Memory: 10.9 GB, Total number of cores: 4
+                                                   Max solved tets: 16314, Max matrix size: 99882, Matrix bandwidth: 42.8
+                                                   
+  Solution Process                                 Elapsed Time: 00:02:57, ComEngine Memory: 72 M
+                                                   Stop Time: 11/15/2026 22:13:38, Status: Normal Completion
+                                                   

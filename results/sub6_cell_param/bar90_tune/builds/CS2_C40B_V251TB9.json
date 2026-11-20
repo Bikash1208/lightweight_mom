@@ -1,0 +1,150 @@
+{
+  "status": "BUILT",
+  "aedt": "2025.1",
+  "geometry_audit": {
+    "cell": "CS",
+    "slot_l": 8.696,
+    "slot_w": 2.9,
+    "disc_r": 5.0,
+    "pad_w": 0.8,
+    "centre_pad_via_xy": [
+      0.0,
+      0.0
+    ],
+    "centre_pad_via_margin_to_pad_edge": 0.10000000000000003,
+    "disc_via_xy": [
+      3.181980515339464,
+      -3.181980515339464
+    ],
+    "disc_pad_margin_to_edge": 0.20000000000000018,
+    "disc_to_disc_gap": 1.5999999999999996,
+    "gap_each_mm": 1.0499999999999998,
+    "tab_len_each_mm": 0.3749999999999999,
+    "diode_sheet_mm": [
+      0.3,
+      0.6
+    ],
+    "tab_width_mm": 0.6,
+    "diodes": 2,
+    "pad_wall_gap_check": 0.0
+  },
+  "variables": {
+    "period": 11.6,
+    "disc_r": 5.0,
+    "slot_l": 8.696,
+    "slot_w": 2.9,
+    "pad_w": 0.8,
+    "gap_each": 1.0499999999999998,
+    "tab_len": 0.3749999999999999,
+    "diode_l": 0.3,
+    "diode_w": 0.6,
+    "tab_w": 0.6,
+    "pad_via_x": 0.0,
+    "pad_via_y": 0.0,
+    "disc_via_x": 3.181980515339464,
+    "disc_via_y": -3.181980515339464,
+    "cu_t": 0.035,
+    "rt_t": 3.175,
+    "bias_t": 0.254,
+    "ground_bottom": -3.21,
+    "bias_bottom": -3.464,
+    "pad_bottom": -3.499,
+    "air_bottom": -43.499,
+    "air_top": 40.035,
+    "x_margin": 0.1,
+    "y_margin": 0.1
+  },
+  "object_names": [
+    "DISC",
+    "PAD",
+    "GROUND",
+    "SUBSTRATE",
+    "BIAS_RT5880",
+    "AIR",
+    "DIODE_SHEET_L",
+    "DIODE_SHEET_R"
+  ],
+  "boundaries": {
+    "BAR90_02LRH": {
+      "Objects": [
+        "DIODE_SHEET_L",
+        "DIODE_SHEET_R"
+      ],
+      "Resistance": "Rs",
+      "Reactance": "Xs",
+      "InfGroundPlane": false
+    },
+    "Lattice_X": {
+      "Faces": [
+        462,
+        464
+      ],
+      "ReverseV": false,
+      "PhaseDelay": "InputPhaseDelay",
+      "Phase": "$ph_x"
+    },
+    "Lattice_Y": {
+      "Faces": [
+        461,
+        463
+      ],
+      "ReverseV": false,
+      "PhaseDelay": "InputPhaseDelay",
+      "Phase": "$ph_y"
+    },
+    "PEC_LID": {
+      "Faces": [
+        459
+      ],
+      "InfGroundPlane": false
+    },
+    "PEC_BOTTOM_40": {
+      "Faces": [
+        460
+      ],
+      "InfGroundPlane": false
+    }
+  },
+  "field_points_mm": {
+    "FC_U_C": [
+      0,
+      0,
+      1.035
+    ],
+    "FC_D_C": [
+      0,
+      0,
+      -4.464
+    ],
+    "FC_U_X": [
+      2.9,
+      0,
+      1.035
+    ],
+    "FC_D_X": [
+      2.9,
+      0,
+      -4.464
+    ],
+    "FC_U_Y": [
+      0,
+      2.9,
+      1.035
+    ],
+    "FC_D_Y": [
+      0,
+      2.9,
+      -4.464
+    ]
+  },
+  "validation": [
+    "validate_simple return: 1"
+  ],
+  "setup": {
+    "MinimumFrequency": "4.5GHz",
+    "NumModes": 12,
+    "MaxDeltaFreq": 0.2,
+    "MaximumPasses": 20,
+    "MinimumPasses": 4
+  }
+}

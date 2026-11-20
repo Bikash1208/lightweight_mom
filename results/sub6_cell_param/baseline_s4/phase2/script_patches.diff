@@ -1,0 +1,60 @@
+diff --git "a/C:\\work\\lwmom_s4_ref\\scripts\\research\\full_board_gate_v31_export.py" "b/scripts\\research\\full_board_gate_v31_export.py"
+index c57fe35..a11be86 100644
+--- "a/C:\\work\\lwmom_s4_ref\\scripts\\research\\full_board_gate_v31_export.py"
++++ "b/scripts\\research\\full_board_gate_v31_export.py"
+@@ -66,15 +66,21 @@ def main():
+     parser.add_argument("--state", choices=("BOTH", "A_ONLY", "B_ONLY", "A_ONLY_IDEAL",
+                                              "B_ALL_OFF_IDEAL", "ALL_PLAIN", "B_ALL_SHORT"), default="BOTH")
+     parser.add_argument("--rotation-mode", choices=("input", "clean_swap", "scrambled"), default="input")
++    parser.add_argument("--allow-no-gate", action="store_true")  # S4 patch: gate=0 layout (gate discs restored to anchors)
++    parser.add_argument("--pin-top", type=float, default=PIN_TOP)  # S4 patch: diagnostic pin height (default unchanged)
+     args = parser.parse_args()
++    pin_top = args.pin_top
+     args.output_dir.mkdir(parents=True, exist_ok=True)
+     rows = list(csv.DictReader(args.csv_path.open(newline="")))
+     assert len(rows) == 516, len(rows)
+-    assert sum(int(row["gate"]) for row in rows) == 16
++    if args.allow_no_gate:
++        assert sum(int(row["gate"]) for row in rows) == 0
++    else:
++        assert sum(int(row["gate"]) for row in rows) == 16
++        assert sum(row["gate_for"] == "A" for row in rows) == 8
++        assert sum(row["gate_for"] == "B" for row in rows) == 8
+     assert sum(row["beam"] == "A" for row in rows) == 258
+     assert sum(row["beam"] == "B" for row in rows) == 258
+-    assert sum(row["gate_for"] == "A" for row in rows) == 8
+-    assert sum(row["gate_for"] == "B" for row in rows) == 8
+     assert all(r3(float(row["x_mm"])) == r3(int(row["i"]) * PITCH) for row in rows)
+     assert all(r3(float(row["y_mm"])) == r3(int(row["j"]) * PITCH) for row in rows)
+     t0 = time.time()
+@@ -134,7 +140,7 @@ def main():
+     ground_work = cq.Workplane("XY").workplane(offset=Z_GROUND_BOTTOM).circle(R_BOARD)
+     ground_work = ground_work.moveTo(0, 0).circle(PORT_R)
+     ground = ground_work.extrude(T).val()
+-    pin = cq.Workplane("XY").workplane(offset=-H).circle(PIN_R).extrude(PIN_TOP + H).val()
++    pin = cq.Workplane("XY").workplane(offset=-H).circle(PIN_R).extrude(pin_top + H).val()
+     metal_parts += [ground, pin]
+     metal = cq.Compound.makeCompound(metal_parts)
+     sub = cq.Workplane("XY").workplane(offset=-H).circle(R_BOARD).extrude(H).val()
+@@ -178,7 +184,7 @@ def main():
+                 "substrate": {"material": "RT5880", "thickness_mm": H},
+                 "bias": {"material": "RT5880", "thickness_mm": T_BIAS},
+                 "ground": {"material": "PEC", "thickness_mm": T, "feed_opening_radius_mm": PORT_R},
+-                "feed": {"pin_radius_mm": PIN_R, "pin_z_mm": [-H, PIN_TOP], "port_z_mm": -H},
++                "feed": {"pin_radius_mm": PIN_R, "pin_z_mm": [-H, pin_top], "port_z_mm": -H},
+                 "slot": {"length_mm": SLOT_L, "width_mm": SLOT_W, "disc_radius_mm": R_DISC},
+                 "step": {"path": str(step), "bytes": step.stat().st_size, "inexact_literals": len(bad)},
+                 "snap_stats": snap_stats, "rows": layout_readback,
+diff --git "a/C:\\work\\lwmom_s4_ref\\scripts\\research\\full_board_gate_v31_profiles.py" "b/scripts\\research\\full_board_gate_v31_profiles.py"
+index 7890881..4ef2275 100644
+--- "a/C:\\work\\lwmom_s4_ref\\scripts\\research\\full_board_gate_v31_profiles.py"
++++ "b/scripts\\research\\full_board_gate_v31_profiles.py"
+@@ -91,7 +91,7 @@ def extract(state, project, out):
+ 
+ def main():
+     parser = argparse.ArgumentParser()
+-    parser.add_argument("--state", choices=("BOTH", "A_ONLY", "B_ONLY"), required=True)
++    parser.add_argument("--state", required=True)  # S4 patch: any state name (was choices BOTH/A_ONLY/B_ONLY)
+     parser.add_argument("--project", type=Path, required=True)
+     parser.add_argument("--out", type=Path, required=True)
+     args = parser.parse_args()

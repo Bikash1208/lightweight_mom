@@ -52,7 +52,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("csv_path", type=Path)
     parser.add_argument("output_dir", type=Path)
-    parser.add_argument("--state", choices=("BOTH", "A_ONLY", "B_ONLY", "A_ONLY_IDEAL"), default="BOTH")
+    parser.add_argument("--state", choices=("BOTH", "A_ONLY", "B_ONLY", "A_ONLY_IDEAL",
+                                             "B_ALL_OFF_IDEAL", "ALL_PLAIN"), default="BOTH")
     parser.add_argument("--rotation-mode", choices=("input", "clean_swap", "scrambled"), default="input")
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -75,10 +76,11 @@ def main():
         assert math.hypot(x, y) <= R_APERTURE + 1e-8
         assert math.hypot(x, y) + R_DISC < R_ABS_IN
         gate = bool(int(row["gate"]))
-        ideal_plain = (args.state == "A_ONLY_IDEAL" and row["beam"] == "B"
-                       and x <= 0 and float(row["r_mm"]) >= 29)
-        if ideal_plain:
-            assert not gate
+        ideal_plain = ((args.state == "A_ONLY_IDEAL" and row["beam"] == "B"
+                        and x <= 0 and float(row["r_mm"]) >= 29)
+                       or (args.state == "B_ALL_OFF_IDEAL" and row["beam"] == "B")
+                       or args.state == "ALL_PLAIN")
+        if ideal_plain and not gate:
             ideal_changed += 1
         source_angle = float(row["rot_deg"])
         if args.rotation_mode == "clean_swap":
@@ -101,7 +103,8 @@ def main():
         metal_parts.append(disc)
         layout_readback.append({"i": int(row["i"]), "j": int(row["j"]), "xy_mm": [x, y],
                                 "gate": gate, "beam": row["beam"], "gate_for": row["gate_for"], "block": block,
-                                "ideal_plain_replacement": ideal_plain,
+                                "ideal_plain_replacement": ideal_plain and not gate,
+                                "plain_target": ideal_plain,
                                 "rotation_deg": angle if not gate else None})
         if index % 100 == 99:
             print("DISCS", index + 1, "seconds", round(time.time() - t0, 1), flush=True)
@@ -135,9 +138,14 @@ def main():
     bad = audit_step_text(step.read_text(encoding="utf-8"))
     if args.state == "A_ONLY_IDEAL":
         assert ideal_changed == 234 and not via_xy
+    elif args.state == "B_ALL_OFF_IDEAL":
+        assert ideal_changed == 250 and not via_xy
+    elif args.state == "ALL_PLAIN":
+        assert ideal_changed == 500 and not via_xy
     manifest = {"state": args.state, "rotation_mode": args.rotation_mode, "sites": len(rows),
                 "gate_sites": 16, "blocked_vias": len(via_xy), "board_radius_mm": R_BOARD,
                 "ideal_plain_replacements": ideal_changed,
+                "plain_target_sites": sum(row["plain_target"] for row in layout_readback),
                 "aperture_radius_mm": R_APERTURE, "absorber_ring_mm": [R_ABS_IN, R_BOARD],
                 "substrate": {"material": "RT5880", "thickness_mm": H},
                 "bias": {"material": "RT5880", "thickness_mm": T_BIAS},

@@ -18,7 +18,7 @@ REF=ROOT/"results/sub6_meander_model/full_board_gate/v31/metrics_summary.json"
 def main():
     both=json.loads(REF.read_text(encoding="utf-8"))["states"]["BOTH"]
     states={"BOTH":both}
-    for state in ("ON_A","OFF_D"):
+    for state in ("ON_A","OFF_D","OFF_BAR90"):
         path=OUT/f"{state}_extract/metrics.json"
         if not path.exists():continue
         metrics=json.loads(path.read_text(encoding="utf-8"))

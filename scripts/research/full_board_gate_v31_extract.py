@@ -111,6 +111,7 @@ def main():
             rep[hand] = {"peak_gain_db": peak_gain, "peak_theta_deg": peak_th, "peak_phi_deg": peak_ph,
                          "sll_db_10deg_exclusion": sll, "wide_angle_max_gain_db_theta60_to90": wide,
                          "at_30_phi0_db": solution_point(h, f"dB(Gain{hand})", 30, 0),
+                         "at_26_phi180_db": solution_point(h, f"dB(Gain{hand})", 26, 180),
                          "at_30_phi180_db": solution_point(h, f"dB(Gain{hand})", 30, 180),
                          "at_36_phi180_db": solution_point(h, f"dB(Gain{hand})", 36, 180)}
         rep["status"] = "COMPLETE"

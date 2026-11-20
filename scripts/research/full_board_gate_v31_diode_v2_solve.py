@@ -1,6 +1,7 @@
 """One attached HFSS 2026 R1 solve of corrected DIODE V2; own AEDT PID only."""
 
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -11,6 +12,7 @@ import sys
 import threading
 import time
 import traceback
+import zipfile
 from datetime import datetime,timezone
 
 import psutil
@@ -20,9 +22,12 @@ from ansys.aedt.core import Hfss
 
 ROOT=Path(__file__).resolve().parents[2]
 SOURCE=ROOT/"hfss_work/full_board_gate_v31_diode_v2/BOARD_R150_V31_B_ALL_DIODE_V2.aedt"
+ARCHIVE=ROOT/"results/sub6_meander_model/full_board_gate/v31_diode_v2/BOARD_R150_V31_B_ALL_DIODE_V2.aedtz"
+ARCHIVE_SHA256="54203F4835F49CA5F14CE0B799B03A96EC5D5119AA7C35103C6A9CF2E83363C3"
 OUT=ROOT/"results/sub6_meander_model/full_board_gate/v31_diode_v2"
 WORK=ROOT/"hfss_work/full_board_gate_v31_diode_v2"
-VALUES={"ON_A":("3.333ohm","-232.667ohm"),"OFF_D":("2.667ohm","48.667ohm")}
+VALUES={"ON_A":("3.333ohm","-232.667ohm"),"OFF_D":("2.667ohm","48.667ohm"),
+        "OFF_BAR90":("2.5ohm","12ohm")}
 
 
 def utc():return datetime.now(timezone.utc).isoformat()
@@ -71,17 +76,30 @@ def close(h):
 
 def run(state):
     need(state in VALUES,"STATE")
-    need(SOURCE.is_file(),"V2_PROJECT_MISSING")
+    need(ARCHIVE.is_file() if state=="OFF_BAR90" else SOURCE.is_file(),"V2_SOURCE_MISSING")
     solve_dir=WORK/f"solve_{state}_001"
     project=solve_dir/f"BOARD_R150_V31_B_ALL_DIODE_V2_{state}.aedt"
     need(not project.exists(),"REFUSE_EXISTING_SOLVE_PROJECT")
     solve_dir.mkdir(parents=True,exist_ok=True)
-    shutil.copy2(SOURCE,project)
+    archive_sha=None
+    if state=="OFF_BAR90":
+        archive_sha=hashlib.sha256(ARCHIVE.read_bytes()).hexdigest().upper()
+        need(archive_sha==ARCHIVE_SHA256,"ARCHIVE_SHA256_MISMATCH")
+        with zipfile.ZipFile(ARCHIVE) as z:
+            need(z.testzip() is None,"ARCHIVE_CRC")
+            members=[n for n in z.namelist() if n.lower().endswith(".aedt")]
+            need(len(members)==1,"ARCHIVE_PROJECT_COUNT")
+            project.write_bytes(z.read(members[0]))
+        need(project.read_bytes().lower().count(b".step")==0,"ARCHIVED_GEOMETRY_EXTERNAL")
+    else:
+        shutil.copy2(SOURCE,project)
     temp=solve_dir/"aedt_temp";temp.mkdir(exist_ok=True)
     os.environ.update(TEMP=str(temp),TMP=str(temp))
     status_path=OUT/f"{state}_solve_status.json"
     status={"status":"STARTING","state":state,"controller_pid":os.getpid(),
-            "started_utc":utc(),"project":str(project),"solve_timeout_s":14400}
+            "started_utc":utc(),"project":str(project),"solve_timeout_s":14400,
+            "source_archive":str(ARCHIVE) if archive_sha else None,
+            "source_archive_sha256":archive_sha}
     save(status_path,status)
     stop=threading.Event()
     def beat():
@@ -114,7 +132,7 @@ def run(state):
         diode=next((b for b in h.boundaries if b.name=="DIODE"),None)
         need(diode is not None and len(diode.props.get("Objects",[]))==250,"DIODE_BOUNDARY")
         expected=VALUES[state]
-        if state=="OFF_D":
+        if state!="ON_A":
             h["Zr"],h["Zx"]=expected
         need(str(h["Zr"]).lower()==expected[0].lower() and
              str(h["Zx"]).lower()==expected[1].lower(),"DIODE_VARIABLES")

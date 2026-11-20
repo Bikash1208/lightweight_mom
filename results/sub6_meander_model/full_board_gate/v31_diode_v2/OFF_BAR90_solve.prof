@@ -1,0 +1,99 @@
+HFSS Profile
+ Project: BOARD_R150_V31_B_ALL_DIODE_V2_OFF_BAR90
+ Design: GATE_B_ALL_DIODE_V2
+ Solution setup: Setup1
+ Design variation: Zr='2.5ohm' Zx='12ohm'
+
+  Task                       Real Time  CPU Time  Memory  Information
+  ----                       ---------  --------  ------  -----------
+
+  Solution Process                                        Start Time: 11/21/2026 00:44:08, Host: AEM-LAB1, Processor: 48, OS: NT 10.0, Product: HFSS Version 2026.1.0
+                                                          Executing From: C:\Program Files\ANSYS Inc\v261\AnsysEM\HFSSCOMENGINE.exe
+                                                          
+  HPC                                                     Type: Manual, Distribution Types: Variations, Frequencies, Domain Solver, Direct Solver, Iterative Solver, Solver, Mesh Assembly, Mesher, MPI Vendor: Intel, MPI Version: 2021
+  Two Level                                               Disabled
+  Machine                                                 Name: AEM-LAB1, Memory: 256 GB, RAM Limit: 90.000000%, Tasks: 1, Cores: 41, Free Disk Space: 303 GB
+                                                          
+                                                          Allow off core: True
+                                                          Solution Basis Order: 1
+                                                          
+  Design Validation                                       Level: Perform full validations with standard port validations
+                                                          
+  Mesh Fusion Preprocessing                               Elapsed time : 00:00:00
+                                                          
+  Initial Meshing                                         Time: 11/21/2026 00:44:09
+  Mesh                       00:02:39   00:07:00  2.04 G  Tetrahedra: 2004442, Type: TAU, Cores: 41
+  Coarsen                    00:02:20   00:02:20  2.04 G  Tetrahedra: 481155
+  Lambda Refine              00:00:11   00:00:14  552 M   Tetrahedra: 501348
+  Simulation Setup           00:00:08   00:00:08  1.28 G  Tetrahedra: 352367, Disk: 0 Bytes
+  Port Adapt                 00:00:04   00:00:04  1.28 G  Tetrahedra: 352367, Disk: 35.8 KB
+  Port Refine                00:00:23   00:00:25  647 M   Tetrahedra: 497583
+  Initial Meshing                                         Elapsed Time: 00:06:00
+                                                          
+  Adaptive Meshing                                        Time: 11/21/2026 00:50:10
+                                                          
+  Adaptive Pass 1                                         Frequency: 5.68GHz
+  Simulation Setup           00:00:09   00:00:09  1.33 G  Tetrahedra: 351014, Disk: 205 KB
+  Matrix Assembly            00:00:16   00:00:49  3.52 G  Tetrahedra: 351014, Lumped ports: 1, Disk: 0 Bytes
+  Matrix Solve               00:00:33   00:09:06  12.6 G  Type: DCS, Cores: 41, Matrix size: 1877719, Matrix bandwidth:  17.9, Disk: 7.17 MB
+  Field Recovery             00:00:04   00:00:49  12.6 G  Excitations: 1, Disk: 44.5 MB
+  Data Transfer              00:00:00   00:00:00  171 M   Adaptive Pass 1
+                                                          
+  Adaptive Pass 2                                         Frequency: 5.68GHz
+  Adaptive Refine            00:00:29   00:00:31  757 M   Tetrahedra: 578638
+  Simulation Setup           00:00:09   00:00:09  1.54 G  Tetrahedra: 430238, Disk: 247 KB
+  Matrix Assembly            00:00:19   00:00:57  4.34 G  Tetrahedra: 430238, Lumped ports: 1, Disk: 522 Bytes
+  Matrix Solve               00:00:54   00:15:53  18.6 G  Type: DCS, Cores: 41, Matrix size: 2374973, Matrix bandwidth:  18.7, Disk: 9.06 MB
+  Field Recovery             00:00:05   00:00:53  18.6 G  Excitations: 1, Disk: 17.6 MB
+  Data Transfer              00:00:00   00:00:00  171 M   Adaptive Pass 2
+                                                          Max Mag. Delta S: 0.15061
+                                                          
+  Adaptive Pass 3                                         Frequency: 5.68GHz
+  Adaptive Refine            00:00:37   00:00:39  859 M   Tetrahedra: 698873
+  Simulation Setup           00:00:12   00:00:12  1.81 G  Tetrahedra: 546399, Disk: 296 KB
+  Matrix Assembly            00:00:27   00:01:17  5.7 G   Tetrahedra: 546399, Lumped ports: 1, Disk: 1.76 KB
+  Matrix Solve               00:01:22   00:27:01  27.3 G  Type: DCS, Cores: 41, Matrix size: 3101841, Matrix bandwidth:  19.4, Disk: 11.8 MB
+  Field Recovery             00:00:07   00:00:58  27.3 G  Excitations: 1, Disk: 23.9 MB
+  Data Transfer              00:00:00   00:00:00  156 M   Adaptive Pass 3
+                                                          Max Mag. Delta S: 0.02112
+                                                          
+  Adaptive Pass 4                                         Frequency: 5.68GHz
+  Adaptive Refine            00:00:42   00:00:45  973 M   Tetrahedra: 837224
+  Simulation Setup           00:00:16   00:00:16  2.09 G  Tetrahedra: 679357, Disk: 353 KB
+  Matrix Assembly            00:00:37   00:01:41  7.13 G  Tetrahedra: 679357, Lumped ports: 1, Disk: 1.68 KB
+  Matrix Solve               00:02:22   00:50:27  39.5 G  Type: DCS, Cores: 41, Matrix size: 3931059, Matrix bandwidth:  19.9, Disk: 15 MB
+  Field Recovery             00:00:10   00:01:08  39.5 G  Excitations: 1, Disk: 28.4 MB
+  Data Transfer              00:00:00   00:00:00  157 M   Adaptive Pass 4
+                                                          Max Mag. Delta S: 0.00775
+                                                          
+  Adaptive Pass 5                                         Frequency: 5.68GHz
+  Adaptive Refine            00:00:36   00:00:39  971 M   Tetrahedra: 929371
+  Simulation Setup           00:00:16   00:00:16  2.34 G  Tetrahedra: 767197, Disk: 353 KB
+  Matrix Assembly            00:00:40   00:01:48  8.02 G  Tetrahedra: 767197, Lumped ports: 1, Disk: 750 Bytes
+  Matrix Solve               00:02:35   00:57:05  45.3 G  Type: DCS, Cores: 41, Matrix size: 4476589, Matrix bandwidth:  20.1, Disk: 17.1 MB
+  Field Recovery             00:00:11   00:01:12  45.3 G  Excitations: 1, Disk: 25.5 MB
+  Data Transfer              00:00:00   00:00:00  157 M   Adaptive Pass 5
+                                                          Max Mag. Delta S: 0.00322
+                                                          
+  Adaptive Pass 6                                         Frequency: 5.68GHz
+  Adaptive Refine            00:00:44   00:00:47  1.09 G  Tetrahedra: 1058746
+  Simulation Setup           00:00:17   00:00:17  2.58 G  Tetrahedra: 890166, Disk: 354 KB
+  Matrix Assembly            00:00:44   00:01:57  9.36 G  Tetrahedra: 890166, Lumped ports: 1, Disk: 676 Bytes
+  Matrix Solve               00:03:09   01:14:20  56.2 G  Type: DCS, Cores: 41, Matrix size: 5241017, Matrix bandwidth:  20.3, Disk: 20 MB
+  Field Recovery             00:00:11   00:01:16  56.2 G  Excitations: 1, Disk: 31.8 MB
+  Data Transfer              00:00:00   00:00:00  158 M   Adaptive Pass 6
+                                                          Max Mag. Delta S: 0.00253
+                                                          
+  Adaptive Meshing                                        Elapsed Time: 00:20:06
+                                                          Adaptive Passes converged
+                                                          
+  Simulation Summary                                      
+  Design Validation                                       Elapsed Time: 00:00:00, Total Memory: 165 MB
+  Mesh Fusion Preprocessing                               Elapsed Time: 00:00:00, Total Memory: 168 MB
+  Initial Meshing                                         Elapsed Time: 00:06:00, Total Memory: 3.32 GB
+  Adaptive Meshing                                        Elapsed Time: 00:20:06, Average memory/process: 56.2 GB, Max memory/process: 56.2 GB, Max number of processes/frequency: 1, Total number of cores: 41
+                                                          Max solved tets: 890166, Max matrix size: 5241017, Matrix bandwidth: 20.3
+                                                          
+  Solution Process                                        Elapsed Time: 00:26:08, ComEngine Memory: 184 M
+                                                          Stop Time: 11/21/2026 01:10:16, Status: Normal Completion
+                                                          

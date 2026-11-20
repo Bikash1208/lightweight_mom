@@ -62,3 +62,5 @@ User statement: all board cells are the same kind of static cell, no half-static
 
 ## 6. Requirement change 2026-11-20 (supersedes three-state wording in section 5)
 Two states only: both beams on; LHCP off with RHCP unchanged (polarisation same). Diodes only on the LHCP (B) half. See handoff section 36.
+
+**Update 2026-11-21:** diode count is now at most 150 (250 not allowed); see HANDOFF section 59 (plain-disc partition model: 150 diodes give about 5-7 dB suppression, 8.0 dB with perfect diodes; 9 dB needs about 233).

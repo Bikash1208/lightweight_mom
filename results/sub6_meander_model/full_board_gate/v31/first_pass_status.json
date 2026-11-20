@@ -1,0 +1,72 @@
+{
+ "state": "BOTH",
+ "phase": "COMPLETE_FIRST_PASS",
+ "start_utc": "2026-11-20T07:04:06.816843+00:00",
+ "first_pass_only": true,
+ "controller_pid": 35688,
+ "aedt_pid": 32760,
+ "aedt_version": "2026.1",
+ "aedt_temp_readback": "C:/lwmom_meander_model/hfss_work/full_board_gate_v31/first_BOTH_001/aedt_temp",
+ "heartbeat_utc": "2026-11-20T07:12:06.561163+00:00",
+ "own_process_tree_gib": 1.141,
+ "free_memory_gib": 229.747,
+ "object_counts": {
+  "all": 522,
+  "metal": 518
+ },
+ "materials_readback": {
+  "METAL_PEC": "pec",
+  "SUBSTRATE": "RT5880_GATE",
+  "BIAS_RT5880": "RT5880_GATE",
+  "AIR": "vacuum"
+ },
+ "absorber_readback": "ABSORBER_15_10",
+ "iterative_update_accepted": true,
+ "solver_type_readback": "Iterative",
+ "setup_readback": {
+  "Frequency": "5.68GHz",
+  "MaximumPasses": "1",
+  "MinimumPasses": "1",
+  "MaxDeltaS": "0.02",
+  "DrivenSolverType": "Iterative"
+ },
+ "boundaries_readback": [
+  "Port1",
+  "Rad__3MINXK"
+ ],
+ "spheres_readback": [
+  "Global"
+ ],
+ "validation": true,
+ "solve_start_utc": "2026-11-20T07:05:48.599094+00:00",
+ "cores_requested": 46,
+ "wall_s": 377.984,
+ "solve_end_utc": "2026-11-20T07:12:06.581300+00:00",
+ "profile": {
+  "tetrahedra": [
+   1873383,
+   443153,
+   462907,
+   325013,
+   325013,
+   459218,
+   323608,
+   323608
+  ],
+  "hfss_max_memory_gb": 11.7,
+  "delta_s": [],
+  "profile_excerpt": [
+   "Mesh                       00:01:46   00:05:50  1.83 G  Tetrahedra: 1873383, Type: TAU, Cores: 46",
+   "Coarsen                    00:02:05   00:02:05  1.83 G  Tetrahedra: 443153",
+   "Lambda Refine              00:00:12   00:00:13  513 M   Tetrahedra: 462907",
+   "Simulation Setup           00:00:07   00:00:07  1.2 G   Tetrahedra: 325013, Disk: 0 Bytes",
+   "Port Adapt                 00:00:04   00:00:04  1.2 G   Tetrahedra: 325013, Disk: 35.8 KB",
+   "Port Refine                00:00:22   00:00:23  606 M   Tetrahedra: 459218",
+   "Simulation Setup           00:00:07   00:00:07  1.25 G  Tetrahedra: 323608, Disk: 189 KB",
+   "Matrix Assembly            00:00:14   00:00:46  3.27 G  Tetrahedra: 323608, Lumped ports: 1, Disk: 0 Bytes",
+   "Adaptive Meshing                                        Elapsed Time: 00:01:06, Average memory/process: 11.7 GB, Max memory/process: 11.7 GB, Max number of processes/frequency: 1, Total number of cores: 46"
+  ]
+ },
+ "profile_path": "C:\\lwmom_meander_model\\hfss_work\\full_board_gate_v31\\first_BOTH_001\\solve.prof",
+ "free_memory_gib_after": 229.752
+}

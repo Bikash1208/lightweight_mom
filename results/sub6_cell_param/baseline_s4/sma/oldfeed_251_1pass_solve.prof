@@ -1,0 +1,55 @@
+HFSS Profile
+ Project: BOARD_R150_GATE_V31_BOTH
+ Design: GATE_BOTH
+ Solution setup: Setup1
+
+  Task                       Real Time  CPU Time  Memory  Information
+  ----                       ---------  --------  ------  -----------
+
+  Solution Process                                        Start Time: 11/21/2026 12:53:55, Host: BIKS_PC, Processor: 32, OS: NT 10.0, Product: HFSS Version 2026.1.0
+                                                          Executing From: C:\Program Files\ANSYS Inc\v261\AnsysEM\HFSSCOMENGINE.exe
+                                                          
+  HPC                                                     Type: Manual, Distribution Types: Variations, Frequencies, Domain Solver, Direct Solver, Iterative Solver, Solver, Mesh Assembly, Mesher, MPI Vendor: Intel, MPI Version: 2021
+  Two Level                                               Disabled
+  Machine                                                 Name: Biks_PC, Memory: 128 GB, RAM Limit: 90.000000%, Tasks: 1, Cores: 16, Free Disk Space: 1.39 TB
+                                                          
+                                                          Allow off core: True
+                                                          Solution Basis Order: 1
+                                                          
+  Design Validation                                       Level: Perform full validations with standard port validations
+                                                          
+  Mesh Fusion Preprocessing                               Elapsed time : 00:00:00
+                                                          
+  Initial Meshing                                         Time: 11/21/2026 12:53:58
+  Mesh                       00:02:10   00:02:49  2.89 G  Type: TAU, Cores: 16, TAU mesher failed. Using backup method
+  Stitch                     00:02:48   00:03:29  2.96 G  Triangles: 42447
+  Mesh                       00:00:28   00:00:26  2.96 G  Type: Classic, Tetrahedra: 108248
+  Post                       00:00:06   00:00:06  2.96 G  Tetrahedra: 143875
+  Lambda Refine              00:00:02   00:00:02  226 M   Tetrahedra: 163629
+  Simulation Setup           00:00:01   00:00:01  546 M   Tetrahedra: 124144, Disk: 0 Bytes
+  Port Adapt                 00:00:00   00:00:00  558 M   Tetrahedra: 124144, Disk: 34.6 KB
+  Port Refine                00:00:01   00:00:01  178 M   Tetrahedra: 163667
+  Initial Meshing                                         Elapsed Time: 00:03:31
+                                                          
+  Adaptive Meshing                                        Time: 11/21/2026 12:57:29
+                                                          
+  Adaptive Pass 1                                         Frequency: 5.68GHz
+  Simulation Setup           00:00:01   00:00:01  553 M   Tetrahedra: 124192, Disk: 44.6 KB
+  Matrix Assembly            00:00:02   00:00:06  1.37 G  Tetrahedra: 124192, Lumped ports: 1, Disk (output): 52.8 MB
+  Matrix Solve               00:00:06   00:00:54  3.38 G  Type: MCS, Cores: 16, Matrix size: 685923, Matrix bandwidth:  18.2, Disk: 2.62 MB
+  Field Recovery             00:00:00   00:00:01  3.38 G  Excitations: 1, Disk: 16.5 MB
+  Data Transfer              00:00:00   00:00:00  184 M   Adaptive Pass 1
+                                                          
+  Adaptive Meshing                                        Elapsed Time: 00:00:12
+                                                          Adaptive Passes did not converge
+                                                          
+  Simulation Summary                                      
+  Design Validation                                       Elapsed Time: 00:00:02, Total Memory: 177 MB
+  Mesh Fusion Preprocessing                               Elapsed Time: 00:00:00, Total Memory: 180 MB
+  Initial Meshing                                         Elapsed Time: 00:03:31, Total Memory: 3.5 GB
+  Adaptive Meshing                                        Elapsed Time: 00:00:12, Average memory/process: 3.38 GB, Max memory/process: 3.38 GB, Max number of processes/frequency: 1, Total number of cores: 16
+                                                          Max solved tets: 124192, Max matrix size: 685923, Matrix bandwidth: 18.2
+                                                          
+  Solution Process                                        Elapsed Time: 00:03:46, ComEngine Memory: 191 M
+                                                          Stop Time: 11/21/2026 12:57:41, Status: Normal Completion
+                                                          

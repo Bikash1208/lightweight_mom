@@ -117,6 +117,13 @@ def main():
         # PEC cap behind the wave-port sheet
         zp = Z_FLANGE + SMA_PORT_Z
         cap = need(m.create_cylinder("Z", [0, 0, zp - CAP_T], 2.6926, CAP_T, name="SMA_CAP", material="pec"), "CAP")
+        # 2026.1 requires every port edge backed by PEC: replace the STEP disc (r 2.6926 > outer conductor r 2.667) by the coax annulus r 0.635..2.0574 (edges on the PEC pin and the PEC outer wall), PEC cap behind it
+        m.delete(circ)
+        sh_o = need(m.create_circle("XY", [0, 0, zp], 2.0574, name="SMA_PORT_O"), "PORT_SHEET_O")
+        sh_i = need(m.create_circle("XY", [0, 0, zp], 0.635, name="SMA_PORT_I"), "PORT_SHEET_I")
+        need(m.subtract(sh_o, sh_i.name, keep_originals=False), "PORT_SHEET_SUB")
+        m["SMA_PORT_O"].name = "SMA_PORT"
+        circ = "SMA_PORT"
         wp = h.wave_port(assignment=circ, integration_line=[[0.635, 0, zp], [2.0574, 0, zp]], modes=1, impedance=50,
                          name="Port1", renormalize=True, deembed=0)
         need(wp, "WAVE_PORT_FAILED")
@@ -130,9 +137,6 @@ def main():
         setup.props["BasisOrder"] = 1
         setup.props["DrivenSolverType"] = "Direct"
         need(setup.update(), "SETUP_UPDATE")
-        if a.sweep:
-            h.create_linear_count_sweep(setup="Setup1", unit="GHz", start_frequency=4.5, stop_frequency=7.0, num_of_freq_points=26,
-                                        name="Sweep1", sweep_type="Interpolating", save_fields=False)
         need(h.insert_infinite_sphere(theta_start=0, theta_stop=180, theta_step=2, phi_start=0, phi_stop=360, phi_step=2, name="Global"), "SPHERE")
         st["objects"] = len(m.object_names)
         st["boundaries"] = [b.name for b in h.boundaries]
@@ -146,20 +150,42 @@ def main():
             st["phase"] = "SOLVING"; st["solve_start_utc"] = now()
             status_path.write_text(json.dumps(st, indent=1, default=str))
             t0 = time.monotonic()
-            need(h.analyze_setup("Setup1", cores=a.cores, use_auto_settings=False, blocking=True), "SOLVE_FAILED")
+            ok = h.analyze_setup("Setup1", cores=a.cores, use_auto_settings=False, blocking=True)
             st["wall_s"] = round(time.monotonic() - t0, 1)
-            need(h.save_project(), "POST_SAVE")
+            h.save_project()
             try:
-                sw = "Setup1 : Sweep1" if a.sweep else "Setup1 : LastAdaptive"
-                sd = h.post.get_solution_data(expressions=["S(Port1,Port1)"], setup_sweep_name=sw)
-                fr, re = sd.get_expression_data(formula="real"); _, im = sd.get_expression_data(formula="imag")
-                st["S11"] = {"f_ghz": [float(x) for x in fr], "re": [float(x) for x in re], "im": [float(x) for x in im]}
+                st["aedt_messages"] = [str(x)[:300] for x in list(h.odesktop.GetMessages("", "", 0))[-40:]]
             except BaseException as e:
-                st["S11_error"] = repr(e)
+                st["aedt_messages_error"] = repr(e)
             try:
                 prof = Path(h.export_profile("Setup1", output_file=str(out / "solve.prof"))); st["profile_path"] = str(prof)
             except BaseException as e:
                 st["profile_error"] = repr(e)
+            status_path.write_text(json.dumps(st, indent=1, default=str))
+            need(ok, "SOLVE_FAILED")
+            try:
+                sd = h.post.get_solution_data(expressions=["S(Port1,Port1)"], setup_sweep_name="Setup1 : LastAdaptive")
+                fr, re = sd.get_expression_data(formula="real"); _, im = sd.get_expression_data(formula="imag")
+                st["S11"] = {"f_ghz": [float(x) for x in fr], "re": [float(x) for x in re], "im": [float(x) for x in im]}
+            except BaseException as e:
+                st["S11_error"] = repr(e)
+            st["phase"] = "ADAPTIVE_COMPLETE"
+            status_path.write_text(json.dumps(st, indent=1, default=str))
+            if a.sweep:
+                h.create_linear_count_sweep(setup="Setup1", unit="GHz", start_frequency=4.5, stop_frequency=7.0, num_of_freq_points=26,
+                                            name="Sweep1", sweep_type="Interpolating", save_fields=False)
+                h.save_project()
+                t1 = time.monotonic()
+                ok2 = h.analyze_setup("Setup1", cores=a.cores, use_auto_settings=False, blocking=True)
+                st["sweep_wall_s"] = round(time.monotonic() - t1, 1)
+                h.save_project()
+                try:
+                    sd = h.post.get_solution_data(expressions=["S(Port1,Port1)"], setup_sweep_name="Setup1 : Sweep1")
+                    fr, re = sd.get_expression_data(formula="real"); _, im = sd.get_expression_data(formula="imag")
+                    st["sweep_S11"] = {"f_ghz": [float(x) for x in fr], "re": [float(x) for x in re], "im": [float(x) for x in im]}
+                except BaseException as e:
+                    st["sweep_error"] = repr(e)
+                need(ok2, "SWEEP_FAILED")
             st["phase"] = "COMPLETE"
         status_path.write_text(json.dumps(st, indent=1, default=str))
         print(st["phase"], flush=True)

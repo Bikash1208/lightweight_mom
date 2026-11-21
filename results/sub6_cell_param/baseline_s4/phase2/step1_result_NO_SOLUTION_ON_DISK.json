@@ -1,0 +1,26 @@
+{
+ "pid": 33112,
+ "setups": [
+  [
+   "Setup1",
+   false
+  ]
+ ],
+ "dB(S(Port1,Port1))": null,
+ "ang_deg(S(Port1,Port1))": null,
+ "mag(S(Port1,Port1))": null,
+ "re(S(Port1,Port1))": null,
+ "im(S(Port1,Port1))": null,
+ "re(Z0(Port1))": null,
+ "im(Z0(Port1))": null,
+ "re(Zo(Port1))": null,
+ "re(Gamma(Port1))": null,
+ "im(Gamma(Port1))": null,
+ "re(Zin(Port1))": null,
+ "im(Zin(Port1))": null,
+ "re(Z(Port1,Port1))": null,
+ "im(Z(Port1,Port1))": null,
+ "re(PortZO(Port1))": null,
+ "mag(Y(Port1,Port1))": null,
+ "error": "Traceback (most recent call last):\n  File \"C:\\work\\lwmom_s4\\.venv\\lib\\site-packages\\ansys\\aedt\\core\\internal\\grpc_plugin_dll_class.py\", line 125, in __Invoke__\n    ret = _retry_ntimes(\n  File \"C:\\work\\lwmom_s4\\.venv\\lib\\site-packages\\ansys\\aedt\\core\\generic\\general_methods.py\", line 736, in _retry_ntimes\n    raise AttributeError(f\"Error in Executing Method {function.__name__}.\")\nAttributeError: Error in Executing Method InvokeAedtObjMethod.\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"C:\\work\\lwmom_s4\\results\\sub6_cell_param\\baseline_s4\\phase2\\step1_readonly.py\", line 37, in <module>\n    xyz, e = fld(name, pts); r = np.hypot(xyz[:, 0], xyz[:, 1]); fin = np.isfinite(e)\n  File \"C:\\work\\lwmom_s4\\results\\sub6_cell_param\\baseline_s4\\phase2\\step1_readonly.py\", line 29, in fld\n    ok = h.post.export_field_file(quantity=\"E\", solution=sw, output_file=str(f), sample_points=pts, export_in_si_system=False, intrinsics={\"Freq\": \"5.68GHz\", \"Phase\": \"0deg\"})\n  File \"C:\\work\\lwmom_s4\\.venv\\lib\\site-packages\\ansys\\aedt\\core\\generic\\general_methods.py\", line 265, in wrapper\n    return raise_exception_or_return_false(e)\n  File \"C:\\work\\lwmom_s4\\.venv\\lib\\site-packages\\ansys\\aedt\\core\\generic\\general_methods.py\", line 234, in raise_exception_or_return_false\n    raise e\n  File \"C:\\work\\lwmom_s4\\.venv\\lib\\site-packages\\ansys\\aedt\\core\\generic\\general_methods.py\", line 250, in wrapper\n    out = user_function(*args, **kwargs)\n  File \"C:\\work\\lwmom_s4\\.venv\\lib\\site-packages\\ansys\\aedt\\core\\visualization\\post\\post_common_3d.py\", line 941, in export_field_file\n    self.ofieldsreporter.ExportToFile(\n  File \"C:\\work\\lwmom_s4\\.venv\\lib\\site-packages\\ansys\\aedt\\core\\internal\\grpc_plugin_dll_class.py\", line 148, in DynamicFunc\n    return self.__Invoke__(methodName, args)\n  File \"C:\\work\\lwmom_s4\\.venv\\lib\\site-packages\\ansys\\aedt\\core\\internal\\grpc_plugin_dll_class.py\", line 138, in __Invoke__\n    raise GrpcApiError(f\"Failed to execute gRPC AEDT command: {funcName}\")\nansys.aedt.core.internal.errors.GrpcApiError: Failed to execute gRPC AEDT command: ExportToFile\n"
+}

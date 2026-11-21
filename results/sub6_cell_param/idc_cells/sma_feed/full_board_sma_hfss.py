@@ -131,7 +131,7 @@ def main():
         setup.props["DrivenSolverType"] = "Direct"
         need(setup.update(), "SETUP_UPDATE")
         if a.sweep:
-            h.create_linear_count_sweep(setup="Setup1", units="GHz", start_frequency=4.5, stop_frequency=7.0, num_of_freq_points=26,
+            h.create_linear_count_sweep(setup="Setup1", unit="GHz", start_frequency=4.5, stop_frequency=7.0, num_of_freq_points=26,
                                         name="Sweep1", sweep_type="Interpolating", save_fields=False)
         need(h.insert_infinite_sphere(theta_start=0, theta_stop=180, theta_step=2, phi_start=0, phi_stop=360, phi_step=2, name="Global"), "SPHERE")
         st["objects"] = len(m.object_names)

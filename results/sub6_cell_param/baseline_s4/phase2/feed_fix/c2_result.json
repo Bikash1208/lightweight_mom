@@ -1,0 +1,76 @@
+{
+ "mode": "c1+c2",
+ "cores": 16,
+ "pid": 31360,
+ "setup_before": {
+  "MinimumPasses": "1",
+  "MaximumPasses": "1",
+  "DrivenSolverType": "Direct Solver"
+ },
+ "hole_face_ids": [
+  103
+ ],
+ "mesh_ops": [
+  "ML_PORT",
+  "ML_PIN",
+  "ML_HOLE"
+ ],
+ "port_reassigned": true,
+ "new_port_area": [
+  11.935774428967356
+ ],
+ "boundaries": [
+  [
+   "Rad__3MINXK",
+   "Radiation"
+  ],
+  [
+   "Port1",
+   "Lumped Port"
+  ]
+ ],
+ "objects_count": 523,
+ "wall_s": 284.9,
+ "analyze_ok": true,
+ "saved": true,
+ "results_dir_exists": true,
+ "tets": [
+  "1940979",
+  "477073",
+  "567104",
+  "586708",
+  "400472",
+  "400472",
+  "586711",
+  "400476",
+  "400476"
+ ],
+ "max_mem_gb": [
+  "10.1"
+ ],
+ "solve_types": [
+  "MCS",
+  "TAU"
+ ],
+ "dB(S(Port1,Port1))": -11.619519398077946,
+ "mag(S(Port1,Port1))": 0.26243637489328775,
+ "ang_deg(S(Port1,Port1))": -136.68035805670957,
+ "re(Z(Port1,Port1))": 32.091510009088175,
+ "im(Z(Port1,Port1))": -12.410870055165553,
+ "accepted_power": 0.9311271491328698,
+ "E_port_face_by_r": {
+  "0.7": 16650.57,
+  "1.0": 8357.89,
+  "1.4": 5218.89,
+  "1.8": 3919.98
+ },
+ "aedt_warnings": [
+  "Project: BOARD_R150_V31_BOTH, Design: GATE_BOTH (Modal Network), [error]  Script macro error: Failed to compute face center as the face is not planar.\n (12:15:28 PM  Nov 21, 2026)",
+  "Project: BOARD_R150_V31_BOTH, Design: GATE_BOTH (Modal Network), [error]  Script macro error: Failed to compute face center as the face is not planar.\n (12:15:28 PM  Nov 21, 2026)",
+  "Project: BOARD_R150_V31_BOTH, Design: GATE_BOTH (Modal Network), [warning]  Geometry deletion/modification caused the mesh operation: 'ML_PORT' to be rendered invalid. The mesh operation has been deleted as a result. (12:15:29 PM  Nov 21, 2026)",
+  "Project: BOARD_R150_V31_BOTH, Design: GATE_BOTH (Modal Network), [warning]  Renormalizing the port impedance will not impact the field results if the 'Include Port Post Processing Effects' is disabled in Edit Sources. (12:15:30 PM  Nov 21, 2026)",
+  "Project: BOARD_R150_V31_BOTH, Design: GATE_BOTH (Modal Network), [warning]  Adaptive Passes did not converge based on specified criteria. (12:20:16 PM  Nov 21, 2026)",
+  "Project: BOARD_R150_V31_BOTH, Design: GATE_BOTH (Modal Network), [warning]  The variable  'Phase' doesn't have an associated sweep and is excluded from the definition of trace. (12:20:17 PM  Nov 21, 2026)"
+ ],
+ "results_dir_exists_final": true
+}

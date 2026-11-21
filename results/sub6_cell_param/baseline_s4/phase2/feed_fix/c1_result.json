@@ -1,0 +1,72 @@
+{
+ "mode": "c1",
+ "cores": 16,
+ "pid": 25760,
+ "setup_before": {
+  "MinimumPasses": "1",
+  "MaximumPasses": "1",
+  "DrivenSolverType": "Direct Solver"
+ },
+ "hole_face_ids": [
+  103
+ ],
+ "mesh_ops": [
+  "ML_PORT",
+  "ML_PIN",
+  "ML_HOLE"
+ ],
+ "boundaries": [
+  [
+   "Rad__3MINXK",
+   "Radiation"
+  ],
+  [
+   "Port1",
+   "Lumped Port"
+  ]
+ ],
+ "objects_count": 523,
+ "wall_s": 430.1,
+ "analyze_ok": true,
+ "saved": true,
+ "results_dir_exists": true,
+ "tets": [
+  "1942191",
+  "477759",
+  "578900",
+  "598792",
+  "413879",
+  "413879",
+  "598794",
+  "413883",
+  "413883"
+ ],
+ "max_mem_gb": [
+  "10.4"
+ ],
+ "solve_types": [
+  "MCS",
+  "TAU"
+ ],
+ "dB(S(Port1,Port1))": -8.355426372359695e-07,
+ "mag(S(Port1,Port1))": 0.9999999038046036,
+ "ang_deg(S(Port1,Port1))": 179.55953334980282,
+ "re(Z(Port1,Port1))": 2.4049205568992454e-06,
+ "im(Z(Port1,Port1))": 0.19219077880522317,
+ "accepted_power": 1.923907836376415e-07,
+ "E_port_face_by_r": {
+  "0.7": 116.83,
+  "1.0": 28.33,
+  "1.4": 17.43,
+  "1.8": 25.38
+ },
+ "aedt_warnings": [
+  "Project: BOARD_R150_V31_BOTH, Design: GATE_BOTH (Modal Network), [error]  Script macro error: Failed to compute face center as the face is not planar.\n (12:07:27 PM  Nov 21, 2026)",
+  "Project: BOARD_R150_V31_BOTH, Design: GATE_BOTH (Modal Network), [error]  Script macro error: Failed to compute face center as the face is not planar.\n (12:07:27 PM  Nov 21, 2026)",
+  "Project: BOARD_R150_V31_BOTH, Design: GATE_BOTH (Modal Network), [warning]  8 of outlines on high priority represent faces are not preserved well. (12:09:35 PM  Nov 21, 2026)",
+  "Project: BOARD_R150_V31_BOTH, Design: GATE_BOTH (Modal Network), [warning]  Adaptive Passes did not converge based on specified criteria. (12:14:38 PM  Nov 21, 2026)",
+  "Project: BOARD_R150_V31_BOTH, Design: GATE_BOTH (Modal Network), [warning]  The variable  'Phase' doesn't have an associated sweep and is excluded from the definition of trace. (12:14:38 PM  Nov 21, 2026)",
+  "Project: BOARD_R150_V31_BOTH, Design: GATE_BOTH (Modal Network), [warning]  The variable  'Phase' doesn't have an associated sweep and is excluded from the definition of trace. (12:14:39 PM  Nov 21, 2026)"
+ ],
+ "results_dir_exists_final": true
+}

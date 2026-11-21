@@ -1,0 +1,143 @@
+{
+ "pid": 20564,
+ "n_objects": 523,
+ "non_metal": {
+  "AIR": [
+   "vacuum",
+   [
+    -201.0,
+    -201.0,
+    -18.464,
+    201.0,
+    201.0,
+    40.035
+   ]
+  ],
+  "BIAS_RT5880": [
+   "rt5880_gate",
+   [
+    -186.0,
+    -186.0,
+    -3.464,
+    186.0,
+    186.0,
+    -3.21
+   ]
+  ],
+  "SUBSTRATE": [
+   "rt5880_gate",
+   [
+    -186.0,
+    -186.0,
+    -3.175,
+    186.0,
+    186.0,
+    0.0
+   ]
+  ],
+  "ABSORBER": [
+   "absorber_15_10",
+   [
+    -186.0,
+    -186.0,
+    0.0,
+    186.0,
+    186.0,
+    30.035
+   ]
+  ],
+  "PORT": [
+   "",
+   [
+    -2.05,
+    -2.05,
+    -3.175,
+    2.05,
+    2.05,
+    -3.175
+   ]
+  ]
+ },
+ "metal_objects": {
+  "METAL_PEC": [
+   "pec",
+   [
+    -0.635,
+    -0.635,
+    -3.175,
+    0.635,
+    0.635,
+    8.925
+   ],
+   15.3279
+  ],
+  "METAL_PEC_1": [
+   "pec",
+   [
+    -186.0,
+    -186.0,
+    -3.21,
+    186.0,
+    186.0,
+    -3.175
+   ],
+   3803.5668
+  ],
+  "METAL_PEC_2": [
+   "pec",
+   [
+    40.95,
+    133.75,
+    0.0,
+    51.85,
+    144.65,
+    0.035
+   ],
+   2.3777
+  ]
+ },
+ "metal_materials": [
+  "pec"
+ ],
+ "pin_candidates": {
+  "METAL_PEC": [
+   [
+    -0.635,
+    -0.635,
+    -3.175,
+    0.635,
+    0.635,
+    8.925
+   ],
+   "pec"
+  ]
+ },
+ "metal_near_axis_above_z0": [],
+ "port": [
+  [
+   "Port1",
+   "50ohm",
+   null
+  ]
+ ],
+ "boundaries": [
+  [
+   "Rad__3MINXK",
+   "Radiation"
+  ],
+  [
+   "Port1",
+   "Lumped Port"
+  ]
+ ],
+ "mesh_ops": [],
+ "setups": [
+  [
+   "Setup1",
+   "Direct Solver"
+  ]
+ ],
+ "generate_mesh_ok": true,
+ "mesh_wall_s": 154.1,
+ "error": "Traceback (most recent call last):\n  File \"C:\\work\\lwmom_s4\\results\\sub6_cell_param\\baseline_s4\\phase2\\step2_mesh_only.py\", line 30, in <module>\n    ms = h.export_mesh_stats(\"Setup1\", mesh_path=str(W/\"mesh_stats.ms\"))\n  File \"C:\\work\\lwmom_s4\\.venv\\lib\\site-packages\\ansys\\aedt\\core\\generic\\general_methods.py\", line 275, in wrapper\n    return raise_exception_or_return_false(e)\n  File \"C:\\work\\lwmom_s4\\.venv\\lib\\site-packages\\ansys\\aedt\\core\\generic\\general_methods.py\", line 234, in raise_exception_or_return_false\n    raise e\n  File \"C:\\work\\lwmom_s4\\.venv\\lib\\site-packages\\ansys\\aedt\\core\\generic\\general_methods.py\", line 250, in wrapper\n    out = user_function(*args, **kwargs)\nTypeError: FieldAnalysis3D.export_mesh_stats() got an unexpected keyword argument 'mesh_path'\n"
+}

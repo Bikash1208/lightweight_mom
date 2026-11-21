@@ -1,0 +1,7 @@
+p = r'C:\Users\Bikash\Desktop\lwmom_labB\results\sub6_cell_param\idc_cells\HANDOFF_2026-11-19.md'
+t = '''
+## 92. Correction: the all-diode board in both states WAS already solved (V2, old probe feed, 2026-11-21); the SMA diode runs are a repeat; user decision (2026-11-21)
+Sections 56-57 hold V2 state 1 (ON-A) and state 2 (OFF-D) full-board results on the old feed (HFSS 2026 R1): ON-A vs BOTH RHCP -0.58 dB / LHCP -2.64 dB; OFF-D LHCP suppression 4.71 dB (FAIL vs ~9). Section 58 lists the OFF state Zr 2.5 / Zx +12.0 as a pending remote job. My earlier reply "this exact board has not been solved before" came from a grep that missed V2 and was WRONG. The SMA-feed ONC solve (BAR90 beam-on 24.0-j234.0, 2025.1) differs only in feed and diode value; the feed swap was -0.17/-0.02 dB on 2025.1 (not tested on 2026.1).
+User decision: SKIP state 2 on the SMA board; go straight to the bias-and-via board (section 55 plan: B-ALL-DIODE-BIASVIA on top of V2: rim cuts x 4.30..5.76, y +-0.15, cap sheets 0.5 x 0.3, vias at (0, +-3.3), one-cell dry run first; section 54 requires the two-DC-half isolation check via separate_bodies before any via board). SMA ONC state 1 left running (PID 49248/76440, 8 cores, solve_ONC): read S11 and peaks vs SMA BOTH on 2025.1 when done, no further work. Rule: before launching any board search the handoff for a prior solve of the same physics under any name or feed.
+'''
+open(p, 'a', encoding='utf-8').write(t)
